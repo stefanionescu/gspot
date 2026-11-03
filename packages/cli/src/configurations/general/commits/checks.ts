@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { remember } from '#cli/system/cache.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -20,6 +21,8 @@ import {
     MESSAGE_REFERENCES,
     GIT_COMMIT_MESSAGE_ARGUMENTS,
 } from '#cli/config/configurations/general.ts';
+
+const COMMENT_CHARACTER = Symbol('comment character');
 
 /**
 Checks every pushed commit message, including empty commits that change no files.
@@ -69,7 +72,8 @@ export async function checkCommitlintPushed(session: CheckSession, planned: Plan
 }
 
 /**
-Read a commit message without the comment lines and the diff that Git adds to the message file.
+Read a commit message without the comment lines and the diff that Git adds to the message file. The checks of one run
+share one read of `core.commentChar`.
 
 @param session the repository and its tools.
 @param messageFile the file that Git passes to the commit-msg hook.
@@ -78,7 +82,11 @@ export async function readCommitMessage(session: CheckSession, messageFile: stri
     const text = readFileSync(messageFile, 'utf8');
     const scissors = COMMIT_SCISSORS.exec(text);
     const comment =
-        scissors === null ? await readGitSetting(session.root, 'core.commentChar') : scissors[0].slice(0, 1);
+        scissors === null
+            ? await remember(session.cache, COMMENT_CHARACTER, session.root, () =>
+                  readGitSetting(session.root, 'core.commentChar'),
+              )
+            : scissors[0].slice(0, 1);
     const prefix = comment?.length === 1 ? comment : '#';
     return { text: text.slice(0, scissors?.index ?? text.length), prefix };
 }

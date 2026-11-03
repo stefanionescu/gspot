@@ -19,7 +19,7 @@ import { mkdir, unlink, readFile, appendFile } from 'node:fs/promises';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { readTreeStatus, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 import {
     TSC_PUSH_OPTIONS,
@@ -76,7 +76,7 @@ test.each(LAST_FILE_CHANGES)(
         const session = await openSession(sandbox.path);
         await replaceChildScopeChecks(session);
         const selected =
-            selection === 'staged' ? await readStagedPaths(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
+            selection === 'staged' ? await readTreeStatus(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
         const revision = {
             selection:
                 'staged' in selected

@@ -54,8 +54,6 @@ export const GIT_EMPTY_INDEX_ARGUMENTS = ['read-tree', '--empty'] as const;
 
 export const GIT_UPDATE_INDEX_ARGUMENTS = ['update-index', '-z', '--index-info'] as const;
 
-export const GIT_WRITE_TREE_ARGUMENTS = ['write-tree'] as const;
-
 export const GIT_HASH_FORMAT_ARGUMENTS = ['rev-parse', '--show-object-format'] as const;
 
 export const GIT_INIT_ARGUMENTS = ['init', '--quiet'] as const;

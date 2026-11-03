@@ -82,22 +82,13 @@ export const UNFETCHED_PUSH_MESSAGE = 'The remote tip {hash} of {ref} is not in 
 
 export const GIT_MERGE_BASE_ARGUMENTS = ['merge-base', '--'] as const;
 
-export const GIT_STAGED_DIFF_ARGUMENTS = [
-    'diff',
-    '--relative',
-    '--cached',
-    '--name-only',
-    '--no-renames',
-    '-z',
-] as const;
-
 export const GIT_CHANGED_COMMITS_ARGUMENTS = ['rev-list', '--reverse'] as const;
-
-export const GIT_STAGED_QUIET_ARGUMENTS = ['diff', '--cached', '--quiet'] as const;
 
 export const GIT_DIFF_NAMES_ARGUMENTS = ['diff', '--relative', '--name-only', '--no-renames', '-z'] as const;
 
 export const GIT_SHALLOW_ARGUMENTS = ['rev-parse', '--is-shallow-repository'] as const;
+
+export const GIT_WRITE_TREE_ARGUMENTS = ['write-tree'] as const;
 
 export const REMOTE_HEAD_FIELD_COUNT = 2;
 

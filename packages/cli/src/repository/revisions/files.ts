@@ -1,20 +1,29 @@
+import { join } from 'node:path';
+import { copyFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
-import { runGit, runGitBytes } from '#cli/repository/git/run.ts';
+import { runGit, readGitText, runGitBytes } from '#cli/repository/git/run.ts';
 import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
 import {
     INDEX_LINE,
+    TRAILING_NEWLINE,
     GIT_HEAD_ARGUMENTS,
     GIT_BLOBS_ARGUMENTS,
     GIT_LS_TREE_ARGUMENTS,
+    GIT_WRITE_TREE_ARGUMENTS,
     UNREADABLE_HISTORY_MESSAGE,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
 } from '#cli/config/repository/git.ts';
+
+const GIT_INDEX_PATH_ARGUMENTS = ['rev-parse', '--path-format=absolute', '--git-path', 'index'] as const;
+
+const PRIVATE_INDEX_FILE = 'index';
 
 /**
 Collect the validated blobs.
@@ -127,6 +136,26 @@ export async function readCommittedTexts(
         cancelSignal,
     );
     return new Map(files.map((file, index) => [file.path, (blobs[index] as Buffer).toString('utf8')]));
+}
+
+/**
+Write the tree of the index through a private copy of the index file. `git write-tree` locks the index it writes,
+so a copy keeps `.git/index.lock` free for the user's `git add` or `git commit` beside the check.
+
+@param root the folder where Git runs.
+@param cancelSignal stops the Git commands.
+@returns the tree hash.
+*/
+export async function readIndexTree(root: string, cancelSignal?: AbortSignal): Promise<string> {
+    const indexPath = await readGitText(root, GIT_INDEX_PATH_ARGUMENTS, { cancelSignal });
+    using folder = createTemporaryFolder();
+    const privateIndex = join(folder.path, PRIVATE_INDEX_FILE);
+    copyFileSync(indexPath.replace(TRAILING_NEWLINE, ''), privateIndex);
+    const tree = await readGitText(root, GIT_WRITE_TREE_ARGUMENTS, {
+        cancelSignal,
+        env: { GIT_INDEX_FILE: privateIndex },
+    });
+    return tree.replace(TRAILING_NEWLINE, '');
 }
 
 /**

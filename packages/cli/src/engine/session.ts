@@ -13,9 +13,9 @@ import type { Session, SessionBase } from '#cli/types/tools.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import type { Repository, RepositoryListing } from '#cli/types/repository.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { buildScopeSettings, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import type { Repository, UntrackedFiles, RepositoryListing } from '#cli/types/repository.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 
 function buildScopes(
@@ -45,15 +45,17 @@ async function readSessionRepository({
     configurationsByName,
     cache,
     listing,
+    untracked,
     unreadablePaths,
 }: {
     settings: Settings;
     configurationsByName: ReadonlyMap<string, Configuration>;
     cache: RunCache;
     listing: RepositoryListing | undefined;
+    untracked: UntrackedFiles | undefined;
     unreadablePaths: string[];
 }): Promise<Repository> {
-    const listed = listing ?? (await listRepositoryFiles(cache));
+    const listed = listing ?? (await listRepositoryFiles(cache, untracked));
     const selected = new Map(
         ['', ...settings.scopes.keys()].map((path) => [
             path,
@@ -95,6 +97,7 @@ settings or configuration choices.
 @param options.cache the run cache.
 @param options.toolCache the cache of the tool lookups, which pushed revisions and a --fix session share.
 @param options.listing the files of the repository, or none to list them.
+@param options.untracked the untracked files that a status read of this run found, or none to list them.
 @param options.settings the settings to use, or none to read them from the repository.
 @param options.unreadablePaths the paths of a copy with names outside UTF-8.
 @param options.resources the resources that the caller disposes when the run ends.
@@ -107,6 +110,7 @@ export async function openSession(
         cache = createRunCache(root),
         toolCache = createRunCache(toolsRoot),
         listing,
+        untracked,
         settings = readSettings(readSettingsText(root).text, root),
         unreadablePaths = [],
         resources = [],
@@ -119,6 +123,7 @@ export async function openSession(
         configurationsByName,
         cache,
         listing,
+        untracked,
         unreadablePaths,
     });
     const scopes = buildScopes(settings, repository, configurationsByName);

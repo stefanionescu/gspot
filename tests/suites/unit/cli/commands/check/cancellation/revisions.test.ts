@@ -18,7 +18,7 @@ import { BASH_SYNTAX_CHECK, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config
 import { SIGNAL_EXITS, AUTHORED_SCRIPT, CHECK_STOPPED_MESSAGE } from '#tests/config/commands/check.ts';
 import { waitForExit, waitForFile, captureChild, spawnCommand, limitCommand } from '#tests/setup/system/processes.ts';
 
-async function prepareStagedCancellation(root: string, operation: 'diff' | 'init' | 'cat-file') {
+async function prepareStagedCancellation(root: string, operation: 'status' | 'init' | 'cat-file') {
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'source.sh': 'echo indexed\n',
@@ -72,10 +72,10 @@ async function assertStagedRetry(
 }
 
 test.skipIf(isWindows)(
-    'canceling check --staged during git diff exits with the signal code, keeps the index and the working file, and a second run passes',
+    'canceling check --staged during git status exits with the signal code, keeps the index and the working file, and a second run passes',
     async () => {
         await using sandbox = await testdir();
-        await using paused = await prepareStagedCancellation(sandbox.path, 'diff');
+        await using paused = await prepareStagedCancellation(sandbox.path, 'status');
         expect(await readdir(paused.scratch)).toStrictEqual([]);
         await stopStagedCancellation(paused, 'SIGTERM', 143);
         await assertStagedRetry(sandbox.path, paused);
@@ -202,7 +202,7 @@ test.skipIf(isWindows)(
 
 async function fakePausingGit(
     folder: string,
-    options: { operation: 'diff' | 'init' | 'cat-file'; marker: string; pauseOnCall: number },
+    options: { operation: 'status' | 'init' | 'cat-file'; marker: string; pauseOnCall: number },
 ): Promise<Record<string, string>> {
     const executable = Bun.which('git');
     if (executable === null) throw new Error('The pausing Git fake requires Git on PATH.');

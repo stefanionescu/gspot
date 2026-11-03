@@ -8,17 +8,18 @@ import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { copyValePackages } from '#cli/engine/copies/vale.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import type { GitFile, Revision } from '#cli/types/repository.ts';
+import { runGit, readGitText } from '#cli/repository/git/run.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
+import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/repository/files.ts';
-import { runGit, readGitText, readGitPaths } from '#cli/repository/git/run.ts';
+import type { GitFile, Revision, TreeStatus } from '#cli/types/repository.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { visitGitBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
 import type { CopyFile, RevisionCopy, CopyIndexFile, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
-import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS, GIT_DIFF_NAMES_ARGUMENTS } from '#cli/config/repository/git.ts';
+import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
 
 import {
@@ -31,7 +32,6 @@ import {
     OWNER_WRITABLE_FOLDER,
     GIT_SET_HEAD_ARGUMENTS,
     DEPENDENCY_REVISION_NOTE,
-    GIT_WRITE_TREE_ARGUMENTS,
     GIT_EMPTY_INDEX_ARGUMENTS,
     GIT_VERIFY_HEAD_ARGUMENTS,
     GIT_HASH_FORMAT_ARGUMENTS,
@@ -164,10 +164,11 @@ function findCaseCollision(indexFiles: GitFile[]): [string, string] | undefined 
 
 async function listWorkingTreeMatches(
     root: string,
-    indexFiles: GitFile[],
+    { indexFiles, status }: { indexFiles: GitFile[]; status: TreeStatus | undefined },
     cancelSignal: AbortSignal | undefined,
 ): Promise<ReadonlySet<GitFile>> {
-    const changed = new Set(await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal }));
+    const { unstaged } = status ?? (await readTreeStatus(root, cancelSignal));
+    const changed = new Set(unstaged);
     return new Set(
         indexFiles.filter(({ path, mode }) => mode !== GITLINK_MODE && mode !== SYMLINK_MODE && !changed.has(path)),
     );
@@ -262,7 +263,7 @@ the index from the working tree, and takes every other file from its Git blob. T
 Git commands use the copied revision.
 
 @param root the checkout with the Git objects and installed dependencies.
-@param source the revision to copy.
+@param source the revision to copy; an index source may carry the status that the caller read.
 @param cancelSignal stops the copy.
 */
 export async function copyRevision(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<RevisionCopy> {
@@ -281,7 +282,7 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
         const tree = treeLine.replace(TRAILING_NEWLINE, '');
         const cloned =
             source.kind === 'index'
-                ? await listWorkingTreeMatches(toplevel, indexFiles, cancelSignal)
+                ? await listWorkingTreeMatches(toplevel, { indexFiles, status: source.status }, cancelSignal)
                 : new Set<GitFile>();
         await writeRevisionFiles(toplevel, copy.path, { indexFiles, cloned }, cancelSignal);
         copyValePackages(

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
-import { writeFile } from 'node:fs/promises';
+import { expect } from 'bun:test';
+import { readFile, writeFile } from 'node:fs/promises';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -15,6 +16,15 @@ import {
     NESTED_SCOPE_FILES,
     TEAMS_MIGRATION_PATH,
 } from '#tests/config/setup/sandboxes.ts';
+
+/**
+Check that a push check left the HEAD commit, the settings, and the working-tree bytes of the push repository alone.
+*/
+export async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
+    expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);
+    expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
+    expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
+}
 
 /**
 Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests, and return their

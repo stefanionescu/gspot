@@ -26,6 +26,7 @@ import type {
     Repository,
     ScopeFolder,
     TrackedFile,
+    UntrackedFiles,
     RepositoryListing,
     RepositoryReadOptions,
 } from '#cli/types/repository.ts';
@@ -57,17 +58,21 @@ List the tracked files and the untracked files that Git does not ignore. Each fi
 attributes.
 
 @param cache the run cache.
+@param untracked the untracked files that a status read of this run found, or none to list them.
 */
-export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryListing> {
+export async function listRepositoryFiles(cache: RunCache, untracked?: UntrackedFiles): Promise<RepositoryListing> {
     const root = cache.root;
-    const unreadablePaths: string[] = [];
+    const unreadablePaths = [...(untracked?.unreadablePaths ?? [])];
     const indexed = await readGitListing(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths);
-    const untracked = await readGitListing(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths);
+    const untrackedListing =
+        untracked === undefined
+            ? await readGitListing(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths)
+            : untracked.paths.join('\0');
     const index = indexed
         .split('\0')
         .filter(Boolean)
         .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema));
-    const listedFiles = listTrackedFiles(root, index, untracked);
+    const listedFiles = listTrackedFiles(root, index, untrackedListing);
     const attributes = await readAttributes(
         root,
         listedFiles.map((file) => file.path),

@@ -5,26 +5,39 @@ import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
-import { isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
-import type { PushRevision, PushedRevisions } from '#cli/types/repository.ts';
 import { NO_PENDING_REFS, EMPTY_PUSH_MESSAGE } from '#cli/config/commands/reports.ts';
+import type { PushRevision, UntrackedFiles, PushedRevisions } from '#cli/types/repository.ts';
 import type { PushReport, CheckOptions, RevisionCheckResult } from '#cli/types/commands/reports.ts';
+
+type CleanHead = { hash: string; untracked: UntrackedFiles };
+
+async function readCleanHead(
+    root: string,
+    pushed: PushedRevisions,
+    cancelSignal: AbortSignal,
+): Promise<CleanHead | undefined> {
+    const head = await readHead(root, cancelSignal);
+    if (head === undefined || pushed.revisions.every(({ hash }) => hash !== head)) return undefined;
+    const { hasStagedChanges, unstaged, untracked } = await readTreeStatus(root, cancelSignal);
+    const isClean = !hasStagedChanges && unstaged.length === 0 && untracked.paths.length === 0;
+    return isClean ? { hash: head, untracked } : undefined;
+}
 
 async function checkRevisionTree(
     root: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,
-    revision: PushRevision,
+    { revision, cleanHead }: { revision: PushRevision; cleanHead: CleanHead | undefined },
 ): Promise<RevisionCheckResult> {
     const { hash, base, paths, commits, range, shallow } = revision;
     const source = {
         toolsRoot: root,
         selection: { content: 'commit', reference: hash, base, paths, commits, range, shallow },
     } as const;
-    const head = await readHead(root, cancelSignal);
-    if (revision.hash === head && (await isWorkingTreeClean(root, cancelSignal)))
-        return await runTreeCheck(root, options, cancelSignal, source);
+    if (revision.hash === cleanHead?.hash)
+        return await runTreeCheck(root, options, cancelSignal, { ...source, untracked: cleanHead.untracked });
     using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, cancelSignal);
     return await runTreeCheck(copy.root, options, cancelSignal, {
         ...source,
@@ -37,8 +50,9 @@ async function runRevisionCheck(
     root: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,
-    revision: PushRevision,
+    checked: { revision: PushRevision; cleanHead: CleanHead | undefined },
 ): Promise<RevisionCheckResult | undefined> {
+    const { revision } = checked;
     if (revision.paths?.length === 0 && revision.commits.length === 0) return { skipped: 'no changed paths' };
     try {
         const settings = await readGitLines(root, ['ls-tree', '--name-only', revision.hash, '--', SETTINGS_FILE], {
@@ -46,7 +60,7 @@ async function runRevisionCheck(
         });
         return settings.length === 0
             ? { skipped: 'the commit has no gspot.toml' }
-            : await checkRevisionTree(root, options, cancelSignal, revision);
+            : await checkRevisionTree(root, options, cancelSignal, checked);
     } catch (error) {
         if (!cancelSignal.aborted) throw error;
         return undefined;
@@ -95,8 +109,9 @@ export async function runPushCheck(
     const text: string[] = selected.revisions.length === 0 && selected.skipped.length === 0 ? [EMPTY_PUSH_MESSAGE] : [];
     let revisionCount = 0;
     const toolCache = createRunCache(root);
+    const cleanHead = await readCleanHead(root, selected, cancelSignal);
     for (const revision of selected.revisions) {
-        const result = await runRevisionCheck(root, { ...options, toolCache }, cancelSignal, revision);
+        const result = await runRevisionCheck(root, { ...options, toolCache }, cancelSignal, { revision, cleanHead });
         if (result === undefined) break;
         revisionCount += 1;
         if ('skipped' in result) {

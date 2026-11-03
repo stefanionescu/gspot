@@ -2,21 +2,38 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { utimes, readFile, writeFile } from 'node:fs/promises';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { NO_UPSTREAM_MESSAGE } from '#tests/config/setup/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { readTreeStatus, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
-test('staged paths of an unborn index count its unstaged edits', async () => {
-    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
+test('the status of an unborn index lists its staged, unstaged, and untracked paths', async () => {
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n', 'notes.txt': 'draft\n' });
 
     runGitStep(sandbox.path, ['add', 'source.ts']);
-    expect(await readStagedPaths(sandbox.path)).toStrictEqual({ staged: ['source.ts'], unstaged: 0 });
+    expect(await readTreeStatus(sandbox.path)).toStrictEqual({
+        staged: ['source.ts'],
+        unstaged: [],
+        untracked: { paths: ['notes.txt'], unreadablePaths: [] },
+        hasStagedChanges: true,
+    });
     await writeFile(join(sandbox.path, 'source.ts'), 'export const answer = 42;\n');
-    expect(await readStagedPaths(sandbox.path)).toStrictEqual({ staged: ['source.ts'], unstaged: 1 });
+    const { unstaged } = await readTreeStatus(sandbox.path);
+    expect(unstaged).toStrictEqual(['source.ts']);
+});
+
+test('a status read leaves the index of a stat-dirty tree unwritten', async () => {
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
+    commitAll(sandbox.path);
+    const index = join(sandbox.path, '.git', 'index');
+    const written = await readFile(index);
+    await utimes(join(sandbox.path, 'source.ts'), new Date(0), new Date(0));
+    const { unstaged } = await readTreeStatus(sandbox.path);
+    expect(unstaged).toStrictEqual([]);
+    expect(await readFile(index)).toStrictEqual(written);
 });
 
 test('staged and branch comparisons keep deleted paths', async () => {
@@ -24,7 +41,7 @@ test('staged and branch comparisons keep deleted paths', async () => {
 
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['rm', 'source.ts']);
-    const removed = await readStagedPaths(sandbox.path);
+    const removed = await readTreeStatus(sandbox.path);
     expect(removed.staged).toStrictEqual(['source.ts']);
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual(['source.ts']);
@@ -35,20 +52,20 @@ test('staged and branch comparisons keep both paths of a rename across folders',
 
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
-    const moved = await readStagedPaths(sandbox.path);
+    const moved = await readTreeStatus(sandbox.path);
     expect(moved.staged).toStrictEqual(['api/source.ts', 'web/source.ts']);
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
 });
 
-test('staged paths report a broken or missing Git repository instead of an empty list', async () => {
+test('a status read reports a broken or missing Git repository instead of an empty status', async () => {
     await using sandbox = await testdir();
-    const error = await captureRejection(readStagedPaths(sandbox.path));
-    expect(error.message).toStartWith('Git diff failed');
+    const error = await captureRejection(readTreeStatus(sandbox.path));
+    expect(error.message).toStartWith('Git status failed');
     runGitStep(sandbox.path, ['init']);
     await writeFile(join(sandbox.path, '.git/index'), 'corrupt index');
-    const diffError = await captureRejection(readStagedPaths(sandbox.path));
-    expect(diffError.message).toStartWith('Git diff failed');
+    const statusError = await captureRejection(readTreeStatus(sandbox.path));
+    expect(statusError.message).toStartWith('Git status failed');
 });
 
 test('a branch comparison refuses invalid references without reading them as options', async () => {

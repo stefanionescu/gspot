@@ -228,7 +228,7 @@ export type ConfigurationSelection = {
     };
 };
 
-export type Revision = { kind: 'index' } | { kind: 'commit'; hash: string };
+export type Revision = { kind: 'index'; status?: TreeStatus } | { kind: 'commit'; hash: string };
 
 export type PushRevision = {
     base: string;
@@ -267,7 +267,14 @@ export type MergeBase = { hash?: string; note?: string };
 
 export type ChangedPaths = { reference: string; paths?: string[]; commits?: string[]; note?: string };
 
-export type StagedPaths = { staged: string[]; unstaged: number };
+export type UntrackedFiles = { paths: string[]; unreadablePaths: string[] };
+
+export type TreeStatus = {
+    staged: string[];
+    unstaged: string[];
+    untracked: UntrackedFiles;
+    hasStagedChanges: boolean;
+};
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 

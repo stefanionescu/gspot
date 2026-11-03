@@ -9,15 +9,15 @@ import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
+import { readIndexTree } from '#cli/repository/revisions/files.ts';
+import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
 import { printProgress, buildEmptyRunReport } from '#cli/engine/report.ts';
 import { writeProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
-import { readStagedPaths, hasStagedChanges, isWorkingTreeClean } from '#cli/repository/revisions/changes.ts';
-import { FIX_FLAG, BASE_FLAG, STAGED_FLAG, PROGRESS_CLEAR, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/engine.ts';
+import { FIX_FLAG, BASE_FLAG, STAGED_FLAG, PROGRESS_CLEAR } from '#cli/config/engine.ts';
 
 import {
     STAGE_FLAG,
@@ -179,21 +179,26 @@ async function runStagedCheck(
 ): Promise<CommandResult<CheckCommandJson>> {
     const started = new Date();
     await assertSetupStaged(root, cancelSignal);
-    const { staged: stagedPaths, unstaged } = await readStagedPaths(root, cancelSignal);
-    if (stagedPaths.length === 0 && !(await hasStagedChanges(root, cancelSignal))) {
+    const status = await readTreeStatus(root, cancelSignal);
+    if (!status.hasStagedChanges) {
         const json = buildEmptyRunReport(options.stage ?? 'all', started, [NOTHING_STAGED_MESSAGE]);
         return { text: `${NOTHING_STAGED_MESSAGE}\n`, json, exitCode: 0 };
     }
-    const selection = { content: 'index', paths: stagedPaths, unstagedChanges: unstaged } as const;
-    if (stagedPaths.length === 0 || (await isWorkingTreeClean(root, cancelSignal))) {
-        const tree = await readGitText(root, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
+    const { staged: stagedPaths, unstaged, untracked } = status;
+    const unstagedPaths = new Set(unstaged);
+    const selection = {
+        content: 'index',
+        paths: stagedPaths,
+        unstagedChanges: stagedPaths.filter((path) => unstagedPaths.has(path)).length,
+    } as const;
+    if (stagedPaths.length === 0 || (unstaged.length === 0 && untracked.paths.length === 0))
         return await runTreeCheck(root, options, cancelSignal, {
             toolsRoot: root,
             started,
-            selection: { ...selection, reference: tree.replace(TRAILING_NEWLINE, '') },
+            selection: { ...selection, reference: await readIndexTree(root, cancelSignal) },
+            untracked,
         });
-    }
-    using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
+    using copy = await copyRevision(root, { kind: 'index', status }, cancelSignal);
     return await runTreeCheck(copy.root, options, cancelSignal, {
         toolsRoot: root,
         started,

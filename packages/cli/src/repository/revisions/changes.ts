@@ -1,9 +1,17 @@
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
-import type { MergeBase, StagedPaths, ChangedPaths } from '#cli/types/repository.ts';
-import { runGit, readGitText, readGitLines, readGitPaths, buildGitError } from '#cli/repository/git/run.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { decodeGitPaths } from '#cli/repository/git/output.ts';
+import type { MergeBase, TreeStatus, ChangedPaths } from '#cli/types/repository.ts';
 
+import {
+    runGit,
+    readGitText,
+    runGitBytes,
+    readGitLines,
+    readGitPaths,
+    buildGitError,
+} from '#cli/repository/git/run.ts';
 import {
     ORIGIN_HEAD,
     HEAD_SUFFIX,
@@ -18,14 +26,31 @@ import {
     GIT_HEAD_NAME_ARGUMENTS,
     GIT_DIFF_NAMES_ARGUMENTS,
     GIT_MERGE_BASE_ARGUMENTS,
-    GIT_STAGED_DIFF_ARGUMENTS,
     GIT_HASH_EXISTS_ARGUMENTS,
-    GIT_STAGED_QUIET_ARGUMENTS,
     GIT_REMOTE_HEADS_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
     GIT_LOCAL_BRANCHES_ARGUMENTS,
     GIT_CHANGED_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/git.ts';
+
+// Git opens a submodule only to find dirty content, which no check reads, and that step fails on a gitlink path that
+// is a link. The recorded commit of a submodule still counts.
+const GIT_STATUS_ARGUMENTS = [
+    'status',
+    '--porcelain=v1',
+    '-z',
+    '--no-renames',
+    '--untracked-files=all',
+    '--ignore-submodules=dirty',
+] as const;
+
+const GIT_NO_OPTIONAL_LOCKS = { GIT_OPTIONAL_LOCKS: '0' } as const;
+
+const STATUS_PATH_START = 3;
+
+const UNCHANGED_STATUS = ' ';
+
+const UNTRACKED_STATUS = '?';
 
 async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
     if (COMMIT_HASH_PATTERN.test(compared)) {
@@ -102,30 +127,43 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
 }
 
 /**
-Read the staged paths, with deletions and both sides of renames, and count paths with unstaged changes.
+Read the state of the index and the working tree with one `git status` that takes no lock, so a check beside the
+user's `git add` or `git commit` never holds or waits for `.git/index.lock`.
 
-@param root the folder where Git runs.
-@param cancelSignal stops the Git commands.
-@returns the staged paths, sorted, and the unstaged count.
-*/
-export async function readStagedPaths(root: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
-    const cached = await readGitPaths(root, GIT_STAGED_DIFF_ARGUMENTS, { cancelSignal });
-    const changed = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
-    const staged = cached.toSorted((a, b) => compareText(a, b));
-    const dirty = new Set(changed);
-    return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
-}
-
-/**
-Check whether the index differs from `HEAD`. A staged name outside UTF-8 counts, though readStagedPaths leaves it out.
-
-@param root the folder where Git runs.
+@param root the top folder of the working tree; Git prints status paths relative to it.
 @param cancelSignal stops the Git command.
+@returns the UTF-8 staged, unstaged, and untracked paths, and whether any entry, of any name, is staged.
 */
-export async function hasStagedChanges(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
-    const result = await runGit(root, GIT_STAGED_QUIET_ARGUMENTS, { cancelSignal });
-    if (result.code > 1) throw buildGitError(root, GIT_STAGED_QUIET_ARGUMENTS, result);
-    return result.code === 1;
+export async function readTreeStatus(root: string, cancelSignal?: AbortSignal): Promise<TreeStatus> {
+    const result = await runGitBytes(root, GIT_STATUS_ARGUMENTS, { cancelSignal, env: GIT_NO_OPTIONAL_LOCKS });
+    if (result.code !== 0) throw buildGitError(root, GIT_STATUS_ARGUMENTS, result);
+    const records = Buffer.from(result.stdout)
+        .toString('latin1')
+        .split('\0')
+        .filter((record) => record !== '');
+    const tracked = records.filter((record) => !record.startsWith(UNTRACKED_STATUS));
+    const listPaths = (column: number): string[] =>
+        tracked
+            .filter((record) => record[column] !== UNCHANGED_STATUS)
+            .map((record) => decodeUtf8(Buffer.from(record.slice(STATUS_PATH_START), 'latin1')))
+            .filter((path) => path !== undefined);
+    const unreadablePaths: string[] = [];
+    const untracked = decodeGitPaths(
+        Buffer.from(
+            records
+                .filter((record) => record.startsWith(UNTRACKED_STATUS))
+                .map((record) => record.slice(STATUS_PATH_START))
+                .join('\0'),
+            'latin1',
+        ),
+        unreadablePaths,
+    );
+    return {
+        staged: listPaths(0).toSorted((a, b) => compareText(a, b)),
+        unstaged: listPaths(1),
+        untracked: { paths: untracked.split('\0').filter((path) => path !== ''), unreadablePaths },
+        hasStagedChanges: tracked.some((record) => record[0] !== UNCHANGED_STATUS),
+    };
 }
 
 /**
@@ -147,28 +185,16 @@ export async function readChangedPaths(
     const base = await readMergeBase(root, compared, cancelSignal);
     if (base.hash === undefined) return { reference: compared, ...(base.note !== undefined && { note: base.note }) };
     const merged = base.hash;
-    const committed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
-    const working = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
-    const untracked = await readGitPaths(root, GIT_UNTRACKED_FILES_ARGUMENTS, { cancelSignal });
+    const committed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, merged, 'HEAD', '--'], { cancelSignal });
+    const { staged, unstaged, untracked } = await readTreeStatus(root, cancelSignal);
     const commits = await readGitLines(root, [...GIT_CHANGED_COMMITS_ARGUMENTS, `${merged}..HEAD`, '--'], {
         cancelSignal,
     });
     return {
         reference: compared,
-        paths: [...new Set([...committed, ...working, ...untracked])].toSorted((a, b) => compareText(a, b)),
+        paths: [...new Set([...committed, ...staged, ...unstaged, ...untracked.paths])].toSorted((a, b) =>
+            compareText(a, b),
+        ),
         commits,
     };
-}
-
-/**
-Check whether the working tree holds what the index holds, with no untracked file.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the Git commands.
-*/
-export async function isWorkingTreeClean(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
-    const changed = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
-    if (changed.length > 0) return false;
-    const untracked = await readGitPaths(root, GIT_UNTRACKED_FILES_ARGUMENTS, { cancelSignal });
-    return untracked.length === 0;
 }
