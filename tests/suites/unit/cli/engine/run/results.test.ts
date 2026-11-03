@@ -1,7 +1,8 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/engine/run.ts';
+import * as locate from '#cli/tools/locate.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
@@ -10,6 +11,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CANCELED_CHECK_NOTE } from '#tests/config/setup/sandboxes.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
@@ -65,6 +67,26 @@ test('a check whose code fails because the run was canceled reports the cancella
     const result = await running;
     expect(result.report.checks).toMatchObject([{ check: 'site/build', status: 'error', note: CANCELED_CHECK_NOTE }]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
+});
+
+test('a run canceled during its tool lookups reports the check canceled', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['spelling']),
+        'notes.md': 'Notes.\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const controller = new AbortController();
+    const session = await openSession(sandbox.path);
+    session.cancelSignal = controller.signal;
+    using _binPaths = spyOn(locate, 'readToolBinPaths').mockImplementation(() => {
+        controller.abort(130);
+        return Promise.resolve({ folders: [] });
+    });
+    const running = runChecks(session, buildRunOptions({ only: ['spelling/typos'] }));
+    const result = await running;
+    expect(result.report.checks).toMatchObject([
+        { check: 'spelling/typos', status: 'error', note: CANCELED_CHECK_NOTE },
+    ]);
 });
 
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {

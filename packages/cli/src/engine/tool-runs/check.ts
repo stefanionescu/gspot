@@ -1,7 +1,6 @@
 import { join, relative } from 'node:path';
 import { getTool } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
-import { findToolPath } from '#cli/tools/inspect.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
@@ -13,13 +12,14 @@ import { stripCoverageArguments } from '#cli/engine/plan.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { readToolCommandPrefix } from '#cli/tools/packages.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { lookUpTool, findToolPath } from '#cli/tools/inspect.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER } from '#cli/config/engine.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import { runToolProcess, buildSecondaryToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
 import { measureSpan, buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
+import type { CheckCode, CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
 import type { FolderRun, CommandRun, CommandBatch, CommandSetup, Substitutions } from '#cli/types/engine/tool-runs.ts';
 
 import {
@@ -270,6 +270,29 @@ export async function runCommandCheck(
               options,
           })
         : { ...base, ...secondaryToolFailure };
+}
+
+/**
+Look up the tool and the secondary tools of each command check once, so that the checks read them from the tool cache.
+
+@param session the repository and its tools.
+@param checks the checks of the run.
+@param codes the code of each check; a check with built-in code runs no command.
+*/
+export async function lookUpCommandTools(
+    session: CheckSession,
+    checks: PlannedCheck[],
+    codes: ReadonlyMap<PlannedCheck, CheckCode | undefined>,
+): Promise<void> {
+    await Promise.allSettled(
+        checks.flatMap((planned) => {
+            if (planned.tool === undefined || codes.get(planned)?.check !== undefined) return [];
+            const cwd = selectCommandFolder(session.root, planned);
+            const names = listSecondaryTools(planned.scope, planned.check, stripCoverageArguments(planned, {}));
+            const tools = [planned.tool, ...names.map((name) => getTool(readConfigurations().values(), name))];
+            return tools.map((tool) => lookUpTool(session, tool, cwd));
+        }),
+    );
 }
 
 /**

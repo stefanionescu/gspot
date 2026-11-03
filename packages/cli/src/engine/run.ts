@@ -5,6 +5,7 @@ import { availableParallelism } from 'node:os';
 import { remember } from '#cli/system/cache.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
+import { setImmediate } from 'node:timers/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
@@ -17,10 +18,10 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { runFixers, listConflictedPaths } from '#cli/engine/fixes.ts';
 import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findToolPath, findMissingDependencies } from '#cli/tools/inspect.ts';
+import { runCommandCheck, lookUpCommandTools } from '#cli/engine/tool-runs/check.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths, formatReproduceCommand } from '#cli/engine/results.ts';
 
 import type {
@@ -187,8 +188,12 @@ function finishResult(run: Run, ran: CheckResult): CheckResult {
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
+    await lookUpCommandTools(run.session, checks, run.codes);
+    // Built-in checks hold the main thread, so they wait one turn of the event loop and the tools start first.
+    const toolsStarted = setImmediate();
     const settled = await Promise.allSettled(
         checks.map(async (planned) => {
+            if (run.codes.get(planned)?.check !== undefined) await toolsStarted;
             const result = finishResult(run, await runPlannedCheck(run, planned));
             if (result.status === 'passed' || result.status === 'failed') run.baselineRun.finished.push(planned);
             run.progress.unfinished.delete(planned);
