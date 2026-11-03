@@ -212,8 +212,6 @@ export const SETTING_ONLY_PLACEHOLDER = /^\{setting:(?<name>[a-z\d_.-]+)\}$/u;
 
 export const FILES_PLACEHOLDER = /^\{files(?::prefix=(?<prefix>[^}]*))?\}$/u;
 
-export const COPIES_FOLDER = '.gspot-copies';
-
 export const JSCONFIG_FILE = 'jsconfig.json';
 
 export const FILE_PLACEHOLDER = '{file}';

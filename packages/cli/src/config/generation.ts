@@ -1,7 +1,7 @@
-import { COPIES_FOLDER } from '#cli/config/engine.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import type { Group } from '#cli/types/repository.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
 import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
 import { SQL_FILES, PYTHON_FILES } from '#cli/config/configurations/python.ts';

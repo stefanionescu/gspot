@@ -281,11 +281,4 @@ type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string
 
 export type GitEnvironment = { variables: Record<string, string | undefined> } | { failure: SpawnResult };
 
-export type GitRepository = { folder: string; environment: Record<string, string | undefined> };
-
-export type GitLookup = GitRepository | { failure: SpawnResult };
-
-export type GitVariableGroups = {
-    isolated: Record<string, undefined>;
-    overrides: Record<string, string | undefined>;
-};
+export type GitLookup = { root: string; environment: Record<string, string | undefined> } | { failure: SpawnResult };

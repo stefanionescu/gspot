@@ -187,11 +187,9 @@ export const GIT_FOLDER_VARIABLE = 'GIT_DIR';
 
 export const GIT_LOCAL_VARIABLES_ARGUMENTS = ['rev-parse', '--local-env-vars'] as const;
 
-export const GIT_SOURCE_ARGUMENTS = ['rev-parse', '--is-bare-repository', '--absolute-git-dir'] as const;
-
 export const GIT_TOP_LEVEL_ARGUMENTS = ['rev-parse', '--show-toplevel'] as const;
 
-export const GIT_FOLDER_ARGUMENTS = ['rev-parse', '--absolute-git-dir'] as const;
+export const COPIES_FOLDER = '.gspot-copies';
 
 export const GIT_WORK_TREE_VARIABLE = 'GIT_WORK_TREE';
 

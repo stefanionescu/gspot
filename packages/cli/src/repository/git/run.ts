@@ -1,23 +1,22 @@
-import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
+import { resolve, relative } from 'node:path';
+import { isInside } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { runProcess, streamProcess } from '#cli/system/processes.ts';
+import type { GitLookup, GitEnvironment } from '#cli/types/repository.ts';
 import type { SpawnResult, StdoutReader, CancelableSpawnOptions } from '#cli/types/system.ts';
-import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/repository.ts';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
-    GIT_LOCALE,
     GIT_PROGRAM,
+    COPIES_FOLDER,
     TRAILING_NEWLINE,
     GIT_PATH_VARIABLES,
     GIT_FOLDER_VARIABLE,
     GIT_HOOKS_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     NOT_REPOSITORY_CODE,
-    GIT_FOLDER_ARGUMENTS,
-    GIT_SOURCE_ARGUMENTS,
     GIT_SETTING_ARGUMENTS,
     GIT_CREATION_COMMANDS,
     GIT_WORK_TREE_VARIABLE,
@@ -27,8 +26,6 @@ import {
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
 } from '#cli/config/repository/git.ts';
-
-const folderEnvironments = new Map<string, Promise<GitEnvironment>>();
 
 const localVariableReads = new Map<string, Promise<SpawnResult>>();
 
@@ -41,61 +38,35 @@ async function readInheritedGitEnvironment(origin: string): Promise<GitLookup> {
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
-    const source = await runProcess([GIT_PROGRAM, ...GIT_SOURCE_ARGUMENTS], {
-        cwd: origin,
-        env,
-    });
-    if (source.code !== 0) return { failure: source };
-    const line = source.stdout.indexOf('\n');
-    const isBare = source.stdout.slice(0, line) === 'true';
-    const folder = source.stdout.slice(line + 1).replace(TRAILING_NEWLINE, '');
+    const worktree = await runProcess([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], { cwd: origin, env });
+    if (worktree.code !== 0) return { failure: worktree };
+    const root = worktree.stdout.replace(TRAILING_NEWLINE, '');
     if (
-        !isBare &&
         readEnvironmentVariable(GIT_FOLDER_VARIABLE) !== undefined &&
         readEnvironmentVariable(GIT_WORK_TREE_VARIABLE) === undefined
-    ) {
-        const worktree = await runProcess([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], {
-            cwd: origin,
-            env,
-        });
-        if (worktree.code !== 0) return { failure: worktree };
-        env[GIT_WORK_TREE_VARIABLE] = worktree.stdout.replace(TRAILING_NEWLINE, '');
-    }
-    return { folder, environment: env };
+    )
+        env[GIT_WORK_TREE_VARIABLE] = root;
+    return { root: realpathSync(root), environment: env };
 }
 
-async function readFolderGitEnvironment(
-    root: string,
-    source: GitRepository,
-    { isolated, overrides }: GitVariableGroups,
-): Promise<GitEnvironment> {
-    const target = await runProcess([GIT_PROGRAM, ...GIT_FOLDER_ARGUMENTS], {
-        cwd: root,
-        env: { ...isolated, ...overrides, ...GIT_LOCALE },
-    });
-    if (isOutsideRepository(target)) return { variables: isolated };
-    if (target.code !== 0) return { failure: target };
-    const isSameRepository = realpathSync(source.folder) === realpathSync(target.stdout.replace(TRAILING_NEWLINE, ''));
-    return { variables: isSameRepository ? source.environment : isolated };
-}
-
-async function selectFolderEnvironment(
+async function selectWorkTreeVariables(
     cwd: string,
     origin: string,
-    groups: GitVariableGroups,
+    isolated: Record<string, undefined>,
 ): Promise<GitEnvironment> {
     const repositoryRead = inheritedRepositories.get(origin) ?? readInheritedGitEnvironment(origin);
     inheritedRepositories.set(origin, repositoryRead);
     const repository = await repositoryRead;
     if ('failure' in repository) return repository;
-    const folder = folderEnvironments.get(cwd) ?? readFolderGitEnvironment(cwd, repository, groups);
-    folderEnvironments.set(cwd, folder);
-    return await folder;
+    const local = relative(repository.root, realpathSync(cwd));
+    const isWorkTree = isInside(local) && !isInside(relative(COPIES_FOLDER, local));
+    return { variables: isWorkTree ? repository.environment : isolated };
 }
 
 /**
-Build the environment for one Git command. Git lists the repository-local variables and the worktree settings once for
-each working folder of the process, and each folder resolves once; the caller overrides apply last.
+Build the environment for one Git command. Git lists the repository-local variables and the work tree once for each
+working folder of the process. A command in that work tree inherits the variables with absolute paths. A command in a
+check copy under .gspot-copies, or outside the work tree, runs without them. The caller overrides apply last.
 
 @param cwd the repository folder.
 @param command the executable and its arguments, literally.
@@ -128,10 +99,7 @@ export async function buildGitEnvironment(
     const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
     if (GIT_CREATION_COMMANDS.some((words) => words.every((word, index) => command[index] === word)))
         return { variables: { ...isolated, ...explicit } };
-    const overrides = Object.fromEntries(
-        Object.entries(explicit).filter(([name]) => !localVariables.includes(foldVariableName(name))),
-    );
-    const environment = await selectFolderEnvironment(cwd, origin, { isolated, overrides });
+    const environment = await selectWorkTreeVariables(cwd, origin, isolated);
     return 'failure' in environment ? environment : { variables: { ...environment.variables, ...explicit } };
 }
 

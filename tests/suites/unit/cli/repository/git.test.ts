@@ -88,14 +88,16 @@ test('Git attributes apply unset and unspecified changes in order', () => {
     expect(mergeAttributes(['text', '-diff', 'eol=lf', '!text'])).toStrictEqual({ diff: 'unset', eol: 'lf' });
 });
 
-test('in a hook, Git reads the hook index in its repository, a nested repository reads its own, and init makes a new one', async () => {
-    await using sandbox = await testdir({ '.gitignore': 'nested/\ncreated/\n', 'source.txt': 'committed\n' });
-    await writeFile(join(sandbox.path, 'nested.txt'), 'outside the nested repository\n');
-    const nested = join(sandbox.path, 'nested');
+test('in a hook, Git reads the hook index in its repository, a check copy and a repository outside read their own, and init makes a new one', async () => {
+    await using sandbox = await testdir({ '.gitignore': '.gspot-copies/\ncreated/\n', 'source.txt': 'committed\n' });
+    await using outside = await testdir({ 'outer.txt': 'outer\n' });
+    await writeFile(join(sandbox.path, 'nested.txt'), 'outside the check copy\n');
+    const copy = join(sandbox.path, '.gspot-copies', 'copy');
     commitAll(sandbox.path);
-    runGitStep(sandbox.path, ['init', '-q', nested]);
-    await writeFile(join(nested, 'inner.txt'), 'inner\n');
-    commitAll(nested);
+    runGitStep(sandbox.path, ['init', '-q', copy]);
+    await writeFile(join(copy, 'inner.txt'), 'inner\n');
+    commitAll(copy);
+    commitAll(outside.path);
     const index = join(sandbox.path, '.git', 'hook-index');
     await copyFile(join(sandbox.path, '.git', 'index'), index);
     await writeFile(join(sandbox.path, 'staged.txt'), 'staged\n');
@@ -114,7 +116,8 @@ test('in a hook, Git reads the hook index in its repository, a nested repository
             'source.txt',
             'staged.txt',
         ]);
-        expect(await readGitLines(nested, ['ls-files'], {})).toStrictEqual(['inner.txt']);
+        expect(await readGitLines(copy, ['ls-files'], {})).toStrictEqual(['inner.txt']);
+        expect(await readGitLines(outside.path, ['ls-files'], {})).toStrictEqual(['outer.txt']);
         const standard = join(sandbox.path, '.git', 'index');
         expect(await readGitLines(sandbox.path, ['ls-files'], { env: { GIT_INDEX_FILE: standard } })).toStrictEqual([
             '.gitignore',
