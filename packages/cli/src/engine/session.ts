@@ -7,13 +7,13 @@ import { readSettingsText } from '#cli/settings/file.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
-import { selectToolConfigurations } from '#cli/engine/tools.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type { Session, SessionBase } from '#cli/types/tools.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { pinProjectTypescript, selectToolConfigurations } from '#cli/engine/tools.ts';
 import { buildScopeSettings, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import type { Repository, UntrackedFiles, RepositoryListing } from '#cli/types/repository.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
@@ -141,6 +141,6 @@ export async function openSession(
         cache,
         toolCache,
     };
-    const toolConfigurations = selectToolConfigurations(base, configuredChecks);
+    const toolConfigurations = pinProjectTypescript(selectToolConfigurations(base, configuredChecks), base);
     return { ...base, toolConfigurations, ...selectPackageManagers(base, toolConfigurations) };
 }

@@ -5,12 +5,15 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, listPackagePins } from '#cli/tools/pins.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS } from '#tests/config/engine/run.ts';
+import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
     await using sandbox = await createGitSandbox({
@@ -88,3 +91,19 @@ test('Prettier plugins join the selected tools even though checks do not name th
             .toSorted(compareText),
     ).toStrictEqual(['prettier-plugin-astro', 'prettier-plugin-svelte']);
 });
+
+test.each([...TYPESCRIPT_PIN_CASES])(
+    'the tool project pins the TypeScript of the project for $name: $isProjectPin',
+    async ({ files, untracked, isProjectPin }) => {
+        await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': buildSandboxSettings(['typescript']) });
+        const tracked = ['gspot.toml', ...Object.keys(files)].filter(
+            (path) => !(untracked as readonly string[]).includes(path),
+        );
+        runGitStep(sandbox.path, ['add', '--', ...tracked]);
+        const session = await openSession(sandbox.path);
+        const expected = isProjectPin ? '6.0.3' : getTool(readConfigurations().values(), 'tsc').version;
+        expect(listPackagePins(session.toolConfigurations).npm['typescript']).toBe(expected);
+        const [planned] = planChecks(session, { stage: 'push', only: ['typescript/tsc'] });
+        expect(planned?.tool?.version).toBe(expected);
+    },
+);

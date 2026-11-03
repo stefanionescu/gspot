@@ -1,4 +1,6 @@
+import semver from 'semver';
 import type { Scope } from '#cli/types/settings.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool, findPackagePin } from '#cli/tools/pins.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -7,8 +9,44 @@ import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
 import { isSettingEmpty, findSystemSkip } from '#cli/engine/skips.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
+import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
+import { PACKAGE_JSON, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
+
+const TYPESCRIPT_PACKAGE = 'typescript';
+
+const TYPESCRIPT_ESLINT_TOOL = 'typescript-eslint';
+
+/**
+Read the TypeScript version that the tracked root lockfile resolves. An untracked lockfile does not count, so every
+clone reads the same version.
+
+@param session the repository files and the run cache.
+*/
+function readLockedTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
+    const { cache, repository } = session;
+    const tracked = new Set(
+        (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path),
+    );
+    const lockfile = JAVASCRIPT_LOCKFILES.find((name) => findText(cache, name) !== undefined);
+    if (lockfile === undefined || !tracked.has(lockfile)) return undefined;
+    return semver.valid(readLockedVersions(cache, '')?.get(TYPESCRIPT_PACKAGE)) ?? undefined;
+}
+
+/**
+Read the TypeScript version that the root package.json declares: an exact version as written, or for a range the
+version that the tracked root lockfile resolves.
+
+@param session the repository files and the run cache.
+@returns undefined when the root declares no TypeScript, or no version can be read.
+*/
+function readProjectTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
+    const root = session.repository.dependencyFiles.find(({ path }) => path === PACKAGE_JSON);
+    const specifier = root?.installed[TYPESCRIPT_PACKAGE];
+    if (specifier === undefined) return undefined;
+    return semver.valid(specifier) ?? readLockedTypescript(session);
+}
 
 function isToolUsed(scopes: Scope[], conditions: Tool['when']): boolean {
     return (
@@ -121,6 +159,32 @@ export function selectToolConfigurations(session: SessionBase, checks: ScopeChec
         tools: configuration.tools
             .filter(({ when: conditions }) => isToolUsed(session.scopes, conditions))
             .filter((tool) => toolNames.has(tool.name)),
+    }));
+}
+
+/**
+Pin the TypeScript of the tool project to the version that the root package.json declares, when typescript-eslint
+supports that version, so that type-aware ESLint reads the project with the compiler that builds it. Otherwise the
+shipped pin stays. The tool project, its lockfile, doctor, and the TypeScript checks all read this pin.
+
+@param configurations the tool configurations of the session.
+@param session the repository files and the run cache.
+*/
+export function pinProjectTypescript(
+    configurations: Configuration[],
+    session: Pick<SessionBase, 'cache' | 'repository'>,
+): Configuration[] {
+    const range = getTool(configurations, TYPESCRIPT_ESLINT_TOOL).peers?.[TYPESCRIPT_PACKAGE];
+    const version = range === undefined ? undefined : readProjectTypescript(session);
+    if (range === undefined || version === undefined || !semver.satisfies(version, range)) return configurations;
+    return configurations.map((configuration) => ({
+        ...configuration,
+        tools: configuration.tools.map((tool) => {
+            const npm = tool.installers['npm'];
+            return npm?.name === TYPESCRIPT_PACKAGE
+                ? { ...tool, version, installers: { ...tool.installers, npm: { ...npm, version } } }
+                : tool;
+        }),
     }));
 }
 

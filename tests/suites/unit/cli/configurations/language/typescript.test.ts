@@ -1,11 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
+import { getTool } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -252,4 +255,14 @@ test('a template tsconfig that extends an uninstalled package is a finding of it
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'templates/app/tsconfig.json', rule: 'unreadable' },
     ]);
+});
+
+test('the typescript-eslint pin records the TypeScript range of the installed package', async () => {
+    const tool = getTool(readConfigurations().values(), 'typescript-eslint');
+    const installed = JSON.parse(await readFile(join(toolModules, 'typescript-eslint/package.json'), 'utf8')) as {
+        version: string;
+        peerDependencies: { typescript: string };
+    };
+    expect(installed.version).toBe(tool.version as string);
+    expect(tool.peers).toStrictEqual({ typescript: installed.peerDependencies.typescript });
 });

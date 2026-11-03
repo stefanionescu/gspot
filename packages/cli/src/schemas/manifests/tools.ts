@@ -165,6 +165,12 @@ const toolSchema = z
             .optional(),
         eslint: z.strictObject({ extensions: z.string().regex(EXTENSION_PATTERN).array().min(1) }).optional(),
         requires: z.string().min(1).array().optional(),
+        peers: z
+            .record(
+                z.string().min(1),
+                z.string().refine((range) => semver.validRange(range) !== null, 'A peer range is a semver range.'),
+            )
+            .optional(),
         when: toolConditionSchema.array().min(1).optional(),
         off: z
             .strictObject({

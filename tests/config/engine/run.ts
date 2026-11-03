@@ -186,3 +186,41 @@ export const SCOPE_CHECK_FILES = {
     'apps/backend/supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
     'apps/backend/client.ts': 'const credentialName = "SUPABASE_SERVICE_ROLE_KEY";\n',
 } as const;
+
+const RANGE_PACKAGE = '{"name":"example","private":true,"devDependencies":{"typescript":"^6.0.3"}}\n';
+
+const PNPM_TYPESCRIPT_LOCK =
+    "lockfileVersion: '9.0'\n\nimporters:\n\n  .:\n    devDependencies:\n      typescript:\n        specifier: ^6.0.3\n        version: 6.0.3\n";
+
+export const TYPESCRIPT_PIN_CASES = [
+    {
+        name: 'an exact version',
+        files: { 'package.json': '{"name":"example","private":true,"devDependencies":{"typescript":"6.0.3"}}\n' },
+        untracked: [],
+        isProjectPin: true,
+    },
+    {
+        name: 'a range that the tracked lockfile resolves',
+        files: { 'package.json': RANGE_PACKAGE, 'pnpm-lock.yaml': PNPM_TYPESCRIPT_LOCK },
+        untracked: [],
+        isProjectPin: true,
+    },
+    {
+        name: 'a range with an untracked lockfile',
+        files: { 'package.json': RANGE_PACKAGE, 'pnpm-lock.yaml': PNPM_TYPESCRIPT_LOCK },
+        untracked: ['pnpm-lock.yaml'],
+        isProjectPin: false,
+    },
+    {
+        name: 'a range without a lockfile',
+        files: { 'package.json': RANGE_PACKAGE },
+        untracked: [],
+        isProjectPin: false,
+    },
+    {
+        name: 'a version that typescript-eslint does not support',
+        files: { 'package.json': '{"name":"example","private":true,"devDependencies":{"typescript":"3.9.10"}}\n' },
+        untracked: [],
+        isProjectPin: false,
+    },
+] as const;

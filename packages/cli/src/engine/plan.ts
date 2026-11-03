@@ -42,7 +42,10 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
     const { check, configuration } = scopeCheck;
     const rootScope = getRootScope(session.scopes);
     const name = findToolName(check);
-    const tool = name === undefined ? undefined : getTool(readConfigurations().values(), name);
+    const tool =
+        name === undefined
+            ? undefined
+            : getTool([...session.toolConfigurations, ...readConfigurations().values()], name);
     const plannedCheck: PlannedCheck = {
         scope: isRepositoryRun(check) ? rootScope : scope,
         check,

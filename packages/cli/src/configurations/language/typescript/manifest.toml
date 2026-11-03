@@ -20,6 +20,7 @@ prefixes = ["tsconfig"]
 kind = "package"
 name = "typescript-eslint"
 npm = "typescript-eslint"
+peers = { typescript = ">=4.8.4 <6.1.0" }
 requires = ["tsc"]
 rule_prefix = "@typescript-eslint"
 rule_url = "https://typescript-eslint.io/rules/{rule}"
