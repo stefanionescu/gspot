@@ -3,9 +3,9 @@ import { findText } from '#cli/system/files/reads.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { isInScope, extractExtension } from '#cli/system/paths.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import { joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
+import { isInScope, escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { RUNTIME_TAG, EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
 
@@ -65,11 +65,13 @@ function findContentEvidence(
     contents: ScopeContents,
 ): DetectionEvidence | undefined {
     for (const [path, pattern] of Object.entries(detect.content)) {
-        const target = joinScope(contents.scope, path);
-        const file = contents.files.find((each) => each.path === target);
-        if (file === undefined) continue;
-        const text = findText(root, file.path);
-        if (text !== undefined && new RegExp(pattern, 'u').test(text)) return { evidence: file.path };
+        const isTarget = buildPathMatcher([joinScope(escapeGlob(contents.scope), path)]);
+        const file = contents.files.find((each) => {
+            if (!isTarget(each.path)) return false;
+            const text = findText(root, each.path);
+            return text !== undefined && new RegExp(pattern, 'u').test(text);
+        });
+        if (file !== undefined) return { evidence: file.path };
     }
     return undefined;
 }

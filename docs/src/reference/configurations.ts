@@ -46,7 +46,11 @@ function formatRuleFiles(configuration: CliReference['configurations'][number]):
 }
 
 function formatLintRulesOff(configuration: CliReference['configurations'][number]): string {
-    const rows = configuration.eslint.rules_off.map((exclusion) => [
+    const exclusions: Array<{ rules: string[]; files?: string[] | undefined; reason: string }> = [
+        ...configuration.eslint.rules_off,
+        ...configuration.markdownlint.rules_off,
+    ];
+    const rows = exclusions.map((exclusion) => [
         exclusion.rules.map((rule) => `\`${rule}\``).join(', '),
         exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? ALL_FILES_LABEL,
         exclusion.reason,

@@ -1,0 +1,13 @@
+allowed_words = ["MkDocs"]
+
+[configuration]
+description = "MkDocs sites: the Markdown rules that the indented bodies of admonitions, details blocks, and content tabs break stay off."
+requires = ["markdown"]
+title = "MkDocs"
+
+[detect]
+content = { "**/mkdocs.yml" = '(?:^|\n)[\t ]*(?:-[\t ]*)?(?:admonition|pymdownx\.(?:details|tabbed))\b', "**/mkdocs.yaml" = '(?:^|\n)[\t ]*(?:-[\t ]*)?(?:admonition|pymdownx\.(?:details|tabbed))\b' }
+
+[[markdownlint.rules_off]]
+reason = "markdownlint reads the four-space body of an admonition, a details block, or a content tab as an indented code block, and the link references inside it as unused."
+rules = ["MD046", "MD053"]

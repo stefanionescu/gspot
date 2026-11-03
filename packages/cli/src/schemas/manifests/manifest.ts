@@ -238,6 +238,9 @@ export const manifestSchema = z
                 required_tools: z.string().min(1).array().default([]),
             })
             .prefault({}),
+        markdownlint: z
+            .strictObject({ rules_off: rulesOffSchema.omit({ files: true }).array().default([]) })
+            .prefault({}),
         shared_prefixes: z.strictObject({ prefixes: stringsSchema, kinds: stringsSchema }).prefault({}),
         ignored_paths: z.string().min(1).array().default([]),
         route_files: z.string().min(1).array().default([]),

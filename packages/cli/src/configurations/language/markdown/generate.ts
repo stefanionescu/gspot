@@ -11,7 +11,8 @@ import {
 } from '#cli/config/configurations/language.ts';
 
 /**
-Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, and your own rule options.
+Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, your own rule options, and the rules
+that the selected configurations of the scope turn off.
 
 @param planned the config file to build.
 */
@@ -37,6 +38,9 @@ export function buildMarkdownlintFile(planned: PlannedConfig): string {
     });
     for (const [rule, ruleOptions] of Object.entries(options))
         document[rule] = { ...(typeof document[rule] === 'object' && document[rule]), ...ruleOptions };
-    Object.assign(document, Object.fromEntries(listDisabledRules(planned).map((rule) => [rule, false])));
+    const configurationRules = planned.scope.configurations
+        .flatMap(({ markdownlint }) => markdownlint.rules_off)
+        .flatMap(({ rules }) => rules);
+    for (const rule of [...listDisabledRules(planned), ...configurationRules]) document[rule] = false;
     return JSON.stringify(document, null, JSON_INDENT);
 }

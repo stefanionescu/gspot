@@ -115,6 +115,27 @@ export const PRISMA_SCHEMA_CASES = [
     { name: 'an unrelated text file', path: 'notes.txt', source: 'provider = "postgresql"\n', detected: false },
 ] as const;
 
+export const MKDOCS_CASES = [
+    {
+        name: 'admonitions in a nested mkdocs.yml',
+        path: 'docs/mkdocs.yml',
+        source: 'site_name: Example\nmarkdown_extensions:\n  - admonition\n  - toc:\n      permalink: true\n',
+        detected: true,
+    },
+    {
+        name: 'content tabs with options',
+        path: 'mkdocs.yaml',
+        source: 'markdown_extensions:\n  - pymdownx.tabbed:\n      alternate_style: true\n',
+        detected: true,
+    },
+    {
+        name: 'no indented extension',
+        path: 'mkdocs.yml',
+        source: 'markdown_extensions:\n  - toc\n  # - admonition\n',
+        detected: false,
+    },
+] as const;
+
 export const RUNTIME_DETECTION_CASES = [
     ...(['node'] as const).flatMap((runtime) =>
         [

@@ -15,6 +15,7 @@ import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
+    MKDOCS_CASES,
     PRISMA_SCHEMA_CASES,
     PYTHON_DEPENDENCY_CASES,
     RUNTIME_DETECTION_CASES,
@@ -144,6 +145,17 @@ test.each(
         ).toStrictEqual({ configuration: 'postgres', group: 'database', evidence: 'other/prisma/schema.prisma' });
     },
 );
+
+test.each([...MKDOCS_CASES])('mkdocs is detected from $name: $detected', async ({ path, source, detected }) => {
+    await using sandbox = await createGitSandbox({ [path]: source });
+    const repository = await readTestRepository(sandbox.path);
+    expect(
+        detectConfigurations(
+            { root: sandbox.path, files: repository.files, dependencyFiles: [] },
+            readConfigurations(),
+        ).filter((detection) => detection.configuration === 'mkdocs'),
+    ).toStrictEqual(detected ? [{ configuration: 'mkdocs', group: 'framework', evidence: path }] : []);
+});
 
 test('Testing Library is detected only in the scope that declares it', async () => {
     const dependency = '@testing-library/react';
