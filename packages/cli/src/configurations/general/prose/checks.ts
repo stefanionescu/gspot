@@ -44,20 +44,19 @@ async function runValeOnPaths(
     command: string[],
     folder: string,
 ): Promise<CheckFinding[]> {
-    const findings: CheckFinding[] = [];
     const batches = splitFileArguments(
         routes.map((route) => join(session.root, route.path)),
         command,
         process.platform,
     );
-    for (const batch of batches) {
-        const result = await runCheckTool(session, planned, [...command, ...batch], {
-            cwd: folder,
-        });
-        assertValeRan(result);
-        findings.push(...parseOutput(planned.check, result.stdout, result.stderr, { root: session.root, cwd: folder }));
-    }
-    return findings;
+    const findings = await Promise.all(
+        batches.map(async (batch) => {
+            const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: folder });
+            assertValeRan(result);
+            return parseOutput(planned.check, result.stdout, result.stderr, { root: session.root, cwd: folder });
+        }),
+    );
+    return findings.flat();
 }
 
 async function runValeOnStdin(
@@ -119,7 +118,8 @@ async function listFileDates(session: CheckSession, file: TrackedFile): Promise<
 }
 
 /**
-Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere.
+Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere. Every batch starts at
+once, and the process limit of the session bounds how many run.
 
 @param session the repository and its tools.
 @param planned the scope to check.
@@ -129,16 +129,13 @@ export async function checkVale(session: CheckSession, planned: PlannedCheck): P
     const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfig), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfig));
     const groups = listRouteBatches(planned.files.filter((file) => file.kind === 'source'));
-    const batches: Array<Promise<CheckFinding[]>> = [];
-    for (const group of groups) {
-        const [first] = group;
-        batches.push(
-            first.mode === 'path'
-                ? Promise.resolve(await runValeOnPaths(session, planned, group, command, folder))
-                : runValeOnStdin(session, planned, first, command, folder),
-        );
-    }
-    const results = await Promise.all(batches);
+    const results = await Promise.all(
+        groups.map((group) =>
+            group[0].mode === 'path'
+                ? runValeOnPaths(session, planned, group, command, folder)
+                : runValeOnStdin(session, planned, group[0], command, folder),
+        ),
+    );
     return results.flat();
 }
 
