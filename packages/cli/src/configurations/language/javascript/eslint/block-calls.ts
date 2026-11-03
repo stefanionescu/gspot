@@ -22,6 +22,14 @@ import {
     ESLINT_PACKAGE_IMPORTERS,
 } from '#cli/config/configurations/javascript.ts';
 
+const IDENTIFIER_SEPARATOR = /[^\w$]/gu;
+
+const SHARED_LIST_SUFFIX = 'List';
+
+const EMPTY_LIST = '[]';
+
+type ListCounts = Map<string, { key: string; count: number }>;
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Each printed call records its import here, at one place.
 function serializeCall(writer: EslintFileWriter, name: string, args: string[]): string {
     writer.functions.add(name);
@@ -39,13 +47,18 @@ function serializeReference(writer: EslintFileWriter, { package: name, path }: E
     return value + keys.map((key) => `[${JSON.stringify(key)}]`).join('');
 }
 
-function serializeValue(writer: EslintFileWriter, value: unknown): string {
+// A shared list prints as its constant name. The constant prints the list itself, and declares the shared lists inside it
+// first, because a module reads its constants in order.
+function serializeValue(writer: EslintFileWriter, value: unknown, constantList?: unknown): string {
     const text = JSON.stringify(
         value,
         (_key, member: unknown) => {
-            const name = Array.isArray(member) ? writer.sharedLists.get(JSON.stringify(member)) : undefined;
+            const name =
+                member !== constantList && Array.isArray(member)
+                    ? writer.sharedLists.get(JSON.stringify(member))
+                    : undefined;
             if (name === undefined) return member;
-            writer.constants.set(name, JSON.stringify(member, null, JSON_INDENT));
+            if (!writer.constants.has(name)) writer.constants.set(name, serializeValue(writer, member, member));
             return SHARED_LIST_MARK + name;
         },
         JSON_INDENT,
@@ -171,24 +184,7 @@ function isSameBlock(left: PlannedEslintBlock, right: PlannedEslintBlock): boole
     return left.fields.files !== undefined && right.fields.files !== undefined && isDeepStrictEqual(first, second);
 }
 
-/**
-Build the name that a generated module gives an imported package or a configuration module.
-
-@param name the package or configuration name.
-*/
-export function buildImportName(name: string): string {
-    const unscoped = name.replace(PACKAGE_SCOPE_MARK, '');
-    return unscoped.replaceAll(NAME_SEPARATOR, (_, letter: string) => letter.toUpperCase());
-}
-
-/**
-Print blocks in order: each with the files of its scope, and adjacent blocks that differ only in their files as one
-block. A block prints its fields, the presets it extends, and the calls that finish it.
-
-@param writer the level, the code files, and the imports of the file.
-@param blocks the blocks of the file.
-*/
-export function buildBlockList(writer: EslintFileWriter, blocks: PlannedEslintBlock[]): string[] {
+function placeBlocks(writer: EslintFileWriter, blocks: PlannedEslintBlock[]): PlannedEslintBlock[] {
     const merged: PlannedEslintBlock[] = [];
     for (const block of blocks) {
         const placed = { ...block, fields: buildScopeFields(writer, block) };
@@ -203,5 +199,68 @@ export function buildBlockList(writer: EslintFileWriter, blocks: PlannedEslintBl
                 },
             };
     }
-    return merged.map((block) => buildBlockCalls(writer, block));
+    return merged;
+}
+
+function countList(counts: ListCounts, list: unknown[], key: string): boolean {
+    const text = JSON.stringify(list);
+    const counted = counts.get(text);
+    if (counted !== undefined) {
+        counted.count += 1;
+        return false;
+    }
+    counts.set(text, { key, count: 1 });
+    return true;
+}
+
+// A list takes the key of the object member that holds it, so a list inside a list takes the key of the outer list. The
+// lists inside a repeated list count once, with the first copy.
+function countLists(value: unknown, key: string, counts: ListCounts): void {
+    if (typeof value !== 'object' || value === null) return;
+    const isList = Array.isArray(value);
+    if (isList && !countList(counts, value, key)) return;
+    for (const [name, member] of Object.entries(value)) countLists(member, isList ? key : name, counts);
+}
+
+function nameRepeatedLists(writer: EslintFileWriter, blocks: PlannedEslintBlock[]): Map<string, string> {
+    const counts: ListCounts = new Map();
+    for (const { fields } of blocks) {
+        const { files: _files, ...values } = fields;
+        countLists(values, '', counts);
+    }
+    const shared = new Map(writer.sharedLists);
+    const names = new Set(shared.values());
+    for (const [text, { key, count }] of counts) {
+        if (text === EMPTY_LIST || count === 1 || shared.has(text)) continue;
+        const base = buildImportName(key).replaceAll(IDENTIFIER_SEPARATOR, '') + SHARED_LIST_SUFFIX;
+        let name = base;
+        for (let index = 2; names.has(name); index += 1) name = base + String(index);
+        names.add(name);
+        shared.set(text, name);
+    }
+    return shared;
+}
+
+/**
+Build the name that a generated module gives an imported package or a configuration module.
+
+@param name the package or configuration name.
+*/
+export function buildImportName(name: string): string {
+    const unscoped = name.replace(PACKAGE_SCOPE_MARK, '');
+    return unscoped.replaceAll(NAME_SEPARATOR, (_, letter: string) => letter.toUpperCase());
+}
+
+/**
+Print groups of blocks in order: each block with the files of its scope, and adjacent blocks that differ only in their
+files as one block. A block prints its fields, the presets it extends, and the calls that finish it. A list that more
+than one place of the groups holds prints once, as a constant at the top of the file, named after its key.
+
+@param writer the level, the code files, and the imports of the file.
+@param groups the blocks of the file, in groups that print apart.
+*/
+export function buildBlockLists(writer: EslintFileWriter, groups: PlannedEslintBlock[][]): string[][] {
+    const placed = groups.map((blocks) => placeBlocks(writer, blocks));
+    const fileWriter = { ...writer, sharedLists: nameRepeatedLists(writer, placed.flat()) };
+    return placed.map((blocks) => blocks.map((block) => buildBlockCalls(fileWriter, block)));
 }

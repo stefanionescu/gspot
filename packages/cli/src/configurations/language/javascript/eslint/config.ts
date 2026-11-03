@@ -11,7 +11,7 @@ import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ign
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listLocalPlugins } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
-import { buildBlockList, buildImportName } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
+import { buildBlockLists, buildImportName } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
 import { listConfigurationBlocks } from '#cli/configurations/language/javascript/eslint/configuration-blocks.ts';
 import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 
@@ -69,7 +69,8 @@ function buildConfigurationFiles(
             modules: new Map<string, string>(),
             constants: new Map<string, string>(),
         };
-        const body = `export default [\n${buildBlockList(fileWriter, configurationBlocks).join(',\n')},\n];\n`;
+        const [blockTexts = []] = buildBlockLists(fileWriter, [configurationBlocks]);
+        const body = `export default [\n${blockTexts.join(',\n')},\n];\n`;
         return {
             importName: buildImportName(configuration.name) + CONFIGURATION_BLOCKS_SUFFIX,
             module: relative(folder, path),
@@ -136,19 +137,18 @@ export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
         planned.targetPath,
         new Set(plugins.map((name) => blockWriter.rulePrefixes.get(name))),
     );
+    const [openingTexts = [], closingTexts = []] = buildBlockLists(
+        blockWriter,
+        [
+            buildOpeningBlocks(eslintFile, { plugins, local: localPlugins }, boundaryBlocks, ignoredGlobs),
+            buildClosingBlocks(eslintFile),
+        ].map((blocks) => blocks.map((block) => ({ ...block, label: ESLINT_BASE_LABEL }))),
+    );
     const blockTexts = [
         `${ESLINT_INDENT}${JSON.stringify({ ignores: ignoredGlobs }, null, JSON_INDENT)}`,
-        ...buildBlockList(
-            blockWriter,
-            buildOpeningBlocks(eslintFile, { plugins, local: localPlugins }, boundaryBlocks, ignoredGlobs).map(
-                (block) => ({ ...block, label: ESLINT_BASE_LABEL }),
-            ),
-        ),
+        ...openingTexts,
         ...configurationFiles.map(({ importName }) => `${ESLINT_INDENT}...${importName}`),
-        ...buildBlockList(
-            blockWriter,
-            buildClosingBlocks(eslintFile).map((block) => ({ ...block, label: ESLINT_BASE_LABEL })),
-        ),
+        ...closingTexts,
     ];
     const body = serializeExport(blockTexts, blockWriter);
     for (const { importName, module } of configurationFiles) blockWriter.modules.set(importName, module);
