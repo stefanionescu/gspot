@@ -106,6 +106,7 @@ export type InitScan = {
     pinPath?: string | undefined;
     lintCommands: LintCommand[];
     carryover: CarryoverRow[];
+    crlfPaths: string[];
 };
 
 export type InitPlan = {

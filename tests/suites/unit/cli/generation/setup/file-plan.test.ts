@@ -43,6 +43,18 @@ test.each([
     expect(plan.lintFolders).toStrictEqual([]);
 });
 
+test('the init plan asks for git add --renormalize when the index holds CRLF files', async () => {
+    await using sandbox = await createGitSandbox({ 'notes.txt': 'one\r\ntwo\r\n', 'kept.txt': 'kept\n' });
+    runGitStep(sandbox.path, ['add', '.']);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.write.find(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual({
+        path: ATTRIBUTES_PLAN_ROW.path,
+        note: `${ATTRIBUTES_PLAN_ROW.note}; then run git add --renormalize . for the 1 file that the index holds with CRLF`,
+    });
+});
+
 test('init leaves an unsupported CI pipeline in place and names it in the plan', async () => {
     await using sandbox = await createGitSandbox({ 'bitbucket-pipelines.yml': '{}\n' });
     const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);

@@ -14,7 +14,6 @@ import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { parseAttributePatterns } from '#cli/repository/git/output.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
@@ -30,9 +29,7 @@ import {
     listProjectInstallLines,
 } from '#cli/generation/ci.ts';
 import {
-    LF_ATTRIBUTES,
     NPM_TOOL_PROJECT,
-    AUTO_LF_ATTRIBUTES,
     CI_SYSTEMS_SETTING,
     GIT_ATTRIBUTES_BLOCK,
     ATTRIBUTE_GLOB_CHARACTERS,
@@ -65,29 +62,13 @@ function buildAttributePattern(path: string): string {
     return `"${quoted}"`;
 }
 
-function buildAttributesBlock(outsidePaths: string[], authored: string): string {
-    const hasAutoLineEndings = parseAttributePatterns(authored, '.').some(
-        ({ pattern, attributes }) =>
-            pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
-    );
-    const block = hasAutoLineEndings
-        ? GIT_ATTRIBUTES_BLOCK.split('\n')
-              .filter((line) => !line.endsWith(` ${LF_ATTRIBUTES}`))
-              .join('\n')
-        : GIT_ATTRIBUTES_BLOCK;
-    const suffix = hasAutoLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
-    const lines = outsidePaths
-        .toSorted((left, right) => compareText(left, right))
-        .map((path) => `${buildAttributePattern(path)} linguist-generated${suffix}`);
-    return [block, ...lines].join('\n');
-}
-
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
     const { settings, cache } = session;
     const outsidePaths = listWrittenPaths(session, buildConfigs(session)).map((path) => path.slice(1));
-    const text = findText(cache, GITATTRIBUTES_FILE) ?? '';
-    const authored = stripBlock(text, { path: GITATTRIBUTES_FILE });
-    generated.blocks.push({ path: GITATTRIBUTES_FILE, body: buildAttributesBlock(outsidePaths, authored) });
+    const generatedLines = outsidePaths
+        .toSorted((left, right) => compareText(left, right))
+        .map((path) => `${buildAttributePattern(path)} linguist-generated`);
+    generated.blocks.push({ path: GITATTRIBUTES_FILE, body: [GIT_ATTRIBUTES_BLOCK, ...generatedLines].join('\n') });
     if (!settings.rule_files.enabled) return;
     const agents = findText(cache, AGENTS_FILE) ?? '';
     const agentsText = stripBlock(agents, { path: AGENTS_FILE });

@@ -21,6 +21,7 @@ import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { readPrettierScripts } from '#cli/generation/setup/format.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
 import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
@@ -114,6 +115,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         pinPath,
         lintCommands: listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
         carryover: carryover.rows,
+        crlfPaths: await listCrlfIndexPaths(root),
     };
     const plan = planInitFiles(planning, { settings, requirements: applicable, generated });
     return {

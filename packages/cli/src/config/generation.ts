@@ -91,18 +91,12 @@ export const GITHUB_EXPRESSION_START = '${{';
 export const GITHUB_EXPRESSION_MESSAGE =
     'GitHub expands "${{" in a workflow command before the shell runs it. Remove "${{" from ci.setup_command and from the scope paths.';
 
-export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
-
 export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
 
 export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
 
-export const LF_ATTRIBUTES = 'text eol=lf';
-
-export const GIT_ATTRIBUTES_BLOCK = `${GSPOT_FOLDER}/** linguist-generated
-${GSPOT_FOLDER}/** ${LF_ATTRIBUTES}
-.gitignore ${LF_ATTRIBUTES}
-.gitattributes ${LF_ATTRIBUTES}`;
+export const GIT_ATTRIBUTES_BLOCK = `* text=auto eol=lf
+${GSPOT_FOLDER}/** linguist-generated`;
 
 export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;
 

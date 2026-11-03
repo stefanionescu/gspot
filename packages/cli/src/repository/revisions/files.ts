@@ -8,8 +8,8 @@ import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
-import { runGit, readGitText, runGitBytes, readGitLines, runGitStream } from '#cli/repository/git/run.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
+import { runGit, readGitText, runGitBytes, readGitLines, readGitPaths, runGitStream } from '#cli/repository/git/run.ts';
 
 import {
     INDEX_LINE,
@@ -31,6 +31,10 @@ const GIT_BLOB_SIZES_ARGUMENTS = ['cat-file', '--batch-check=%(objectname) %(obj
 const BLOB_SIZE = /^\d+$/u;
 
 const BLOB_SIZE_FIELDS = 2;
+
+const GIT_LINE_ENDINGS_ARGUMENTS = ['ls-files', '--eol', '-z'] as const;
+
+const CRLF_INDEX_LINE = /^i\/(?:crlf|mixed)\s/u;
 
 /**
 Collect the validated blobs.
@@ -140,6 +144,20 @@ export async function readBlobSizes(
             return BLOB_SIZE.test(size) ? [[hash, Number(size)]] : [];
         }),
     );
+}
+
+/**
+List the files whose index blob holds CRLF line endings, which `* text=auto eol=lf` turns to LF only after
+`git add --renormalize .`.
+
+@param root the folder where Git runs.
+@param cancelSignal stops the command.
+*/
+export async function listCrlfIndexPaths(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
+    const records = await readGitPaths(root, GIT_LINE_ENDINGS_ARGUMENTS, { cancelSignal });
+    return records
+        .filter((record) => CRLF_INDEX_LINE.test(record))
+        .map((record) => record.slice(record.indexOf('\t') + 1));
 }
 
 /**

@@ -22,7 +22,7 @@ import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-f
 import { NESTED_YAML, CONFIG_PROJECT, NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 
 test.each(['absent', 'authored', 'managed'])(
-    '%s attributes keep LF in generated files, also in a scope folder with a space',
+    '%s attributes keep LF in every text file, also in a scope folder with a space',
     async (source) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['security', 'format'], {
@@ -40,7 +40,8 @@ test.each(['absent', 'authored', 'managed'])(
 
         const generated = buildGeneratedFiles(await openSession(sandbox.path));
         const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!;
-        expect(attributes.body.includes(' text eol=lf')).toBe(source !== 'authored');
+        expect(attributes.body).toStartWith('* text=auto eol=lf\n.gspot/** linguist-generated\n');
+        expect(attributes.body).not.toContain(' text eol=lf');
         await writeFile(
             join(sandbox.path, '.gitattributes'),
             `${source === 'authored' ? '* text=auto eol=lf\n' : ''}${attributes.body}\n`,
@@ -50,7 +51,7 @@ test.each(['absent', 'authored', 'managed'])(
         const read = runGitStep(sandbox.path, ['check-attr', 'eol', '--', ...outside, 'nested/.editorconfig']);
         expect(read.split('\n')).toStrictEqual([
             ...outside.map((path) => `${path}: eol: lf`),
-            `nested/.editorconfig: eol: ${source === 'authored' ? 'lf' : 'unspecified'}`,
+            'nested/.editorconfig: eol: lf',
         ]);
     },
 );

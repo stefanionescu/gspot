@@ -140,6 +140,15 @@ function buildGeneratedRow(path: string, conflicts: ConflictingConfigs): InitFil
     };
 }
 
+function buildAttributesRow(crlfPaths: string[]): InitFileRow {
+    if (crlfPaths.length === 0) return ATTRIBUTES_ROW;
+    const files = formatCount(crlfPaths.length, 'file');
+    return {
+        ...ATTRIBUTES_ROW,
+        note: `${ATTRIBUTES_ROW.note}; then run git add --renormalize . for the ${files} that the index holds with CRLF`,
+    };
+}
+
 function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs, tracked: Set<string>): InitFileRow[] {
     return [...generated.files, ...generated.blocks.filter(({ path }) => !tracked.has(path))]
         .filter(({ path }) => !isGspotPath(path) && path !== ATTRIBUTES_ROW.path)
@@ -180,6 +189,7 @@ export function planInitFiles(
     const { repository, repositorySetup, conflicts } = scan;
     const tracked = new Set(repository.files.map((file) => file.path));
     const hasAttributes = tracked.has(ATTRIBUTES_ROW.path);
+    const attributesRow = buildAttributesRow(scan.crlfPaths);
     const blockRows = generated.blocks
         .filter(({ path }) => tracked.has(path) && path !== ATTRIBUTES_ROW.path)
         .map(({ path }) => ({ path, note: ADDS_BLOCK_NOTE }));
@@ -190,7 +200,7 @@ export function planInitFiles(
         },
         { path: `${GSPOT_FOLDER}/`, note: GSPOT_FOLDER_NOTE },
         ...buildToolProjectRows(requirements),
-        ...(hasAttributes ? [] : [ATTRIBUTES_ROW]),
+        ...(hasAttributes ? [] : [attributesRow]),
         ...buildGeneratedRows(generated, conflicts, tracked),
     ];
     return {
@@ -214,7 +224,7 @@ export function planInitFiles(
             ...repositorySetup.hooks.map(({ path }) => ({ path, note: FOREIGN_HOOK_NOTE })),
         ],
         change: [
-            ...(hasAttributes ? [ATTRIBUTES_ROW] : []),
+            ...(hasAttributes ? [attributesRow] : []),
             ...(scan.pinPath === undefined ? [] : [{ path: scan.pinPath, note: `pins gspot ${cliPackage.version}` }]),
             ...blockRows,
             ...conflicts.changed,
