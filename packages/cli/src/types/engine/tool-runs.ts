@@ -20,6 +20,7 @@ export type Finding = {
     line?: number | undefined;
     column?: number;
     rule?: string;
+    fingerprint?: string;
     help?: string;
 };
 

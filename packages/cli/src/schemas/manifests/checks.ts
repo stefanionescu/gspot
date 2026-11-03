@@ -25,6 +25,10 @@ const outputFieldsSchema = z.strictObject({
     line: z.string().describe('For json: the field that holds the line.').optional(),
     column: z.string().describe('For json: the field that holds the column.').optional(),
     rule: z.string().describe('For json: the field that holds the lint rule.').optional(),
+    fingerprint: z
+        .string()
+        .describe('For json: the field that names this one finding, which the rule of an ignore can name.')
+        .optional(),
     message: z
         .union([z.string(), z.string().array()])
         .describe('For json: the field that holds the message, or the fields that join into it.')

@@ -77,6 +77,8 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
     setPosition(finding, format.line_base ?? 1, getField('line'), getField('column'));
     const rule = getField('rule');
     if (rule !== undefined) finding.rule = rule;
+    const fingerprint = getField('fingerprint');
+    if (fingerprint !== undefined) finding.fingerprint = fingerprint;
     return finding;
 }
 

@@ -111,6 +111,33 @@ test.each([...INVALID_FINDING_REPORTS])(
     },
 );
 
+test('a gitleaks finding names its rule ID and keeps its fingerprint in a field of its own', () => {
+    const check = getShippedCheck('secrets/gitleaks-staged');
+    const stdout = JSON.stringify([
+        {
+            RuleID: 'generic-api-key',
+            Description: 'Detected a key.',
+            File: 'src/key.ts',
+            StartLine: 2,
+            StartColumn: 7,
+            Fingerprint: 'src/key.ts:generic-api-key:2',
+        },
+    ]);
+    expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toStrictEqual([
+        {
+            check: check.id,
+            file: 'src/key.ts',
+            line: 2,
+            column: 7,
+            rule: 'generic-api-key',
+            fingerprint: 'src/key.ts:generic-api-key:2',
+            message: 'Detected a key.',
+            help: check.help,
+            fixable: false,
+        },
+    ]);
+});
+
 test('a markdownlint JSON result becomes a finding', async () => {
     await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });
 

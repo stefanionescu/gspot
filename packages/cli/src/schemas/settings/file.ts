@@ -45,7 +45,7 @@ export const ignoreSchema = z
                 'The check to ignore: a shipped check or a command check. Leave it out to keep the paths out of every check.',
         }),
         rule: z.string().optional().meta({
-            description: 'One lint rule of that check.',
+            description: 'One lint rule of that check, or the fingerprint of one finding.',
         }),
         paths: nonemptyPathsSchema.optional().meta({
             description: 'Where the ignore applies.',

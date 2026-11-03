@@ -42,11 +42,23 @@ function assertSecretFindings(result: CheckResult | undefined, output: string, p
     expect(result?.status).toBe('failed');
     expect(
         result?.findings
-            .map(({ file, rule, line, column }) => ({ file, rule, line, column }))
+            .map(({ file, rule, fingerprint, line, column }) => ({ file, rule, fingerprint, line, column }))
             .toSorted((left, right) => compareText(left.file, right.file)),
     ).toStrictEqual([
-        { file: 'credential,é.py', rule: `${prefix}credential,é.py:generic-api-key:1`, line: 1, column: 1 },
-        { file: 'identity.py', rule: `${prefix}identity.py:aws-access-token:1`, line: 1, column: 22 },
+        {
+            file: 'credential,é.py',
+            rule: 'generic-api-key',
+            fingerprint: `${prefix}credential,é.py:generic-api-key:1`,
+            line: 1,
+            column: 1,
+        },
+        {
+            file: 'identity.py',
+            rule: 'aws-access-token',
+            fingerprint: `${prefix}identity.py:aws-access-token:1`,
+            line: 1,
+            column: 22,
+        },
     ]);
     for (const token of [AWS_KEY_ID, API_TOKEN]) expect(output).not.toContain(token);
 }
@@ -147,8 +159,13 @@ test('secrets/gitleaks-pushed drops a finding only when an ignore names its exac
     );
     expect(reviewed.code, reviewed.stdout + reviewed.stderr).toBe(1);
     const findings = (JSON.parse(reviewed.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings;
-    expect(findings?.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual([
-        { file: 'credential,é.py', rule: `${leaked}:credential,é.py:generic-api-key:1`, line: 1 },
+    expect(findings?.map(({ file, rule, fingerprint, line }) => ({ file, rule, fingerprint, line }))).toStrictEqual([
+        {
+            file: 'credential,é.py',
+            rule: 'generic-api-key',
+            fingerprint: `${leaked}:credential,é.py:generic-api-key:1`,
+            line: 1,
+        },
     ]);
     for (const token of [AWS_KEY_ID, API_TOKEN]) expect(reviewed.stdout + reviewed.stderr).not.toContain(token);
     const credentialIgnore = {

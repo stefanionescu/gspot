@@ -133,9 +133,9 @@ function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
         (finding) =>
             !isWritten(finding.file) &&
             ignore.every((record) => {
-                const isOtherFinding = (['check', 'rule'] as const).some(
-                    (key) => record[key] !== undefined && record[key] !== finding[key],
-                );
+                const isOtherFinding =
+                    (record.check !== undefined && record.check !== finding.check) ||
+                    (record.rule !== undefined && record.rule !== finding.rule && record.rule !== finding.fingerprint);
                 return isOtherFinding || (record.paths !== undefined && !buildPathMatcher(record.paths)(finding.file));
             }),
     );
