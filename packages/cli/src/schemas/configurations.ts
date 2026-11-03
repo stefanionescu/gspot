@@ -48,15 +48,6 @@ export const osvLicenseReportSchema = z.object({
     results: osvResultSchema.array().default([]),
 });
 
-const alertSchema = z.object({
-    Line: z.int().positive(),
-    Span: z.tuple([z.int().positive(), z.int().positive()]),
-    Check: z.string().min(1),
-    Message: z.string().min(1),
-});
-
-export const valeOutputSchema = z.record(z.string().min(1), alertSchema.array());
-
 const buildSchema = z.object({
     context: z.string().optional(),
     dockerfile: z.string().optional(),

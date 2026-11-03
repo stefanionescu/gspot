@@ -55,6 +55,9 @@ export const outputSchema = z
                     .literal('typos')
                     .meta({ description: 'Read typos JSON and convert byte offsets to character columns.' }),
                 z.literal('taplo').meta({ description: 'Read Taplo syntax errors and formatting differences.' }),
+                z
+                    .literal('vale')
+                    .meta({ description: 'Read Vale JSON alerts by file, with locations and rule names.' }),
                 z.literal('json').meta({
                     description: 'Read JSON findings using list, children, and fields to select report entries.',
                 }),

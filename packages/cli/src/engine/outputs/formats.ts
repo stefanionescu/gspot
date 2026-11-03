@@ -6,6 +6,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
+import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
 import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
 import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
 import { parseRegexFindings, parseGroupedFindings } from '#cli/engine/outputs/text.ts';
@@ -52,6 +53,7 @@ export const OUTPUT_FORMATS = {
     },
     knip: { parse: parseKnipFindings, namesFiles: () => true, namesRules: () => true },
     semgrep: { parse: parseSemgrepFindings, namesFiles: () => true, namesRules: () => true },
+    vale: { parse: parseValeFindings, namesFiles: () => true, namesRules: () => true },
     regex: {
         parse: parseRegexFindings,
         namesFiles: (output) => (output.pattern ?? '').includes(FILE_GROUP),

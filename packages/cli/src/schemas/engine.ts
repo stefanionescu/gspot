@@ -66,6 +66,15 @@ export const semgrepOutputSchema = z.object({
     errors: errorSchema.array(),
 });
 
+const valeAlertSchema = z.object({
+    Line: z.int().positive(),
+    Span: z.tuple([z.int().positive(), z.int().positive()]),
+    Check: z.string().min(1),
+    Message: z.string().min(1),
+});
+
+export const valeOutputSchema = z.record(z.string().min(1), valeAlertSchema.array());
+
 export const reportedTypoSchema = z.object({
     type: z.literal('typo'),
     path: z.string().min(1),

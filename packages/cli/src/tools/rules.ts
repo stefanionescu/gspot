@@ -6,9 +6,12 @@ import { getTool } from '#cli/tools/pins.ts';
 import { isInside } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readFileSync, realpathSync } from 'node:fs';
+import { findText } from '#cli/system/files/reads.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { join, dirname, resolve, relative } from 'node:path';
+import { hasValePackages } from '#cli/tools/installers/vale.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
@@ -16,7 +19,8 @@ import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
 import type { LintRuleDocs, RuleToolSearch, RuleDocsOptions } from '#cli/types/tools.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
-import { ruffRuleSchema, installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools.ts';
+import { VALE_TOOL, VALE_STYLES_PATH, VALE_RULE_IDENTIFIER, VALE_PACKAGES_MESSAGE } from '#cli/config/tools/vale.ts';
+import { ruffRuleSchema, valeRuleSchema, installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools.ts';
 
 import {
     ESLINT_BUILTIN_RULES,
@@ -171,6 +175,20 @@ function findRulePage(
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, () => rule.slice(prefix.length + 1));
 }
 
+function readValeRule(root: string, identifier: string): LintRuleDocs | undefined {
+    if (!VALE_RULE_IDENTIFIER.test(identifier)) return undefined;
+    if (!hasValePackages(root)) throw new GspotError('tool', VALE_PACKAGES_MESSAGE);
+    for (const folder of [VALE_STYLES_PATH, GSPOT_PATHS.valePackages]) {
+        const path = `${folder}/${identifier.replace('.', '/')}.yml`;
+        const text = findText(root, path);
+        if (text !== undefined) {
+            const { message, link } = parseYamlFile(path, text, valeRuleSchema);
+            return { description: message, ...(link !== undefined && { url: link }) };
+        }
+    }
+    return undefined;
+}
+
 async function readRuffRule(
     root: string,
     identifier: string,
@@ -236,9 +254,13 @@ export async function readLintRuleDocs(
         readMiseBinPaths,
     }: RuleDocsOptions = {},
 ): Promise<LintRuleDocs | undefined> {
-    if (tool === 'ruff') return readRuffRule(root, identifier, timeoutSeconds);
-    if (tool === 'markdownlint-cli2') return readMarkdownlintRule(root, identifier);
-    if (tool === 'swiftlint') return readSwiftlintRule(root, identifier, { timeoutSeconds, readMiseBinPaths });
+    const readRule = new Map<string, () => LintRuleDocs | undefined | Promise<LintRuleDocs | undefined>>([
+        ['ruff', () => readRuffRule(root, identifier, timeoutSeconds)],
+        ['markdownlint-cli2', () => readMarkdownlintRule(root, identifier)],
+        [VALE_TOOL, () => readValeRule(root, identifier)],
+        ['swiftlint', () => readSwiftlintRule(root, identifier, { timeoutSeconds, readMiseBinPaths })],
+    ]).get(tool);
+    if (readRule !== undefined) return readRule();
     if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool)) return readManifestRuleDocs(tool, identifier);
     const rule = await readInstalledRule(root, tool, identifier);
     return rule === undefined ? undefined : getRuleMetadata(rule, findRulePage(tool, identifier, readConfigurations()));

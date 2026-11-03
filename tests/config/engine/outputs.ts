@@ -13,6 +13,7 @@ export const CHECK_OUTPUTS = [
     { format: 'knip' },
     { format: 'semgrep' },
     { format: 'typos' },
+    { format: 'vale' },
 ] as const;
 
 export const OUTPUT_PARSE_RESULTS = {
@@ -43,6 +44,10 @@ export const OUTPUT_PARSE_RESULTS = {
     typos: {
         empty: { findings: [] },
         foreign: { error: 'Typos printed output that gspot cannot read.' },
+    },
+    vale: {
+        empty: { error: 'Vale printed output that gspot cannot read.' },
+        foreign: { error: 'Vale printed output that gspot cannot read.' },
     },
 } as const;
 

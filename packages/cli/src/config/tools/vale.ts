@@ -5,6 +5,10 @@ export const VALE_STYLES_PATH = `${GSPOT_PATHS.configurations}/general/prose/sty
 
 export const VALE_TOOL = 'vale';
 
+export const VALE_PACKAGES_MESSAGE = 'The Vale packages are not installed. Run gspot install.';
+
+export const VALE_RULE_IDENTIFIER = /^[\w-]+\.[\w-]+$/u;
+
 export const PROSE_GRAMMARS: Readonly<Record<string, Omit<ProseRoute, 'path'> & { format?: string }>> = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },

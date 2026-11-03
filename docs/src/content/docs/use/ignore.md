@@ -24,8 +24,8 @@ To ignore a dependency advisory, give its ID as the rule:
 gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason "<why>"
 ```
 
-For ESLint, Stylelint, Ruff, Markdownlint, and SwiftLint, `gspot ignore --rule` checks the installed rule catalog before
-saving the ignore.
+For ESLint, Stylelint, Ruff, Markdownlint, SwiftLint, and Vale, `gspot ignore --rule` checks the installed rule catalog
+before saving the ignore.
 A check that does not report rule IDs refuses `--rule`.
 
 To remove the ignore:

@@ -254,6 +254,7 @@ example = "`We shipped this change last week.` reports `gspot.history`. Say what
 help = "Rewrite the sentence the alert names, or add a real name and its reason to the `spelling.allowed_words` setting."
 level = "all"
 name = "vale"
+output = { format = "vale" }
 stage = "commit"
 summary = "Checks prose against the complete gspot style and the upstream packages in Markdown, and the comment rules in code comments."
 tool = "vale"
@@ -264,6 +265,7 @@ example = "A commit message that says `We should simply retry` reports `gspot.mo
 help = "Rewrite the sentence that the alert names."
 level = "all"
 name = "commit-message"
+output = { format = "vale" }
 stage = "message"
 summary = "Runs the word rules of WRITING.md on a new commit message, with session identifiers and home paths."
 tool = "vale"

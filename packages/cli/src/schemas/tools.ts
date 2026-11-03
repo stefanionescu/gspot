@@ -60,6 +60,8 @@ export const ruleDocumentationSchema = z.object({
     url: z.string().exactOptional(),
 });
 
+export const valeRuleSchema = z.object({ message: z.string(), link: z.string().optional() });
+
 export const ruffRuleSchema = z.object({
     name: z.string(),
     summary: z.string(),
