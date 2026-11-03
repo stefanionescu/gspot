@@ -42,8 +42,7 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
                     if (typeof tool !== 'string') return tool;
                     const found = toolsByName.get(tool);
                     if (found === undefined)
-                        throw new GspotError(
-                            'configuration',
+                        throw new Error(
                             `The configuration manifest for ${configuration.name} is not valid:\ntool ${tool} has no declaration.`,
                         );
                     return found;
@@ -65,8 +64,7 @@ function parseManifest(text: string, folder: string): ParsedManifest {
         },
     });
     if (!result.success)
-        throw new GspotError(
-            'configuration',
+        throw new Error(
             [
                 `The configuration manifest for ${posix.basename(folder)} is not valid:`,
                 ...new Set(result.error.issues.flatMap((issue) => formatZodIssue(issue))),
