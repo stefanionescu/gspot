@@ -27,6 +27,9 @@ import {
     CONFIGURATION_LIST_SEPARATOR,
 } from '#cli/config/commands/edits.ts';
 
+const CONFIGURATIONS_CONFLICT_MESSAGE =
+    '--configurations cannot run with --no-configurations. Give the names, or select none.';
+
 async function runInitCommand(root: string, options: InitOptions): Promise<CommandResult<InitJson>> {
     if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
@@ -57,7 +60,8 @@ async function runInitCommand(root: string, options: InitOptions): Promise<Comma
     };
 }
 
-function parseConfigurationNames(value: string, previous: string[] | false | undefined): string[] {
+function parseConfigurationNames(value: string, previous: InitFlags['configurations']): string[] {
+    if (previous === false) throw new GspotError('arguments', CONFIGURATIONS_CONFLICT_MESSAGE);
     const names = value
         .split(CONFIGURATION_LIST_SEPARATOR)
         .map((name) => name.trim())
@@ -66,7 +70,7 @@ function parseConfigurationNames(value: string, previous: string[] | false | und
     return [...(Array.isArray(previous) ? previous : []), ...names];
 }
 
-function assertTemplateFlags(from: string | undefined, configurations: string[] | false | undefined): void {
+function assertTemplateFlags(from: string | undefined, configurations: InitFlags['configurations']): void {
     if (from === undefined || configurations === undefined) return;
     const flag = configurations === false ? '--no-configurations' : '--configurations';
     throw new GspotError(
@@ -80,7 +84,14 @@ export const INIT_COMMAND: CommandDefinition<[], InitFlags> = {
     options: [
         { flags: FROM_OPTION },
         { flags: CONFIGURATIONS_OPTION, parse: parseConfigurationNames },
-        { flags: NO_CONFIGURATIONS_FLAG },
+        {
+            flags: NO_CONFIGURATIONS_FLAG,
+            // Commander passes a negated flag through its parser with no value, so the parser sees earlier names.
+            parse: (_value: string | undefined, previous: InitFlags['configurations']): false => {
+                if (Array.isArray(previous)) throw new GspotError('arguments', CONFIGURATIONS_CONFLICT_MESSAGE);
+                return false;
+            },
+        },
         { flags: LEVEL_OPTION, choices: LEVELS },
     ],
     run: async (_arguments, { from, configurations, level }, { root, cwd }) => {

@@ -63,6 +63,12 @@ async function runScanCommand(
 export const SCAN_COMMAND: CommandDefinition<[], ScanFlags> = {
     name: 'scan',
     options: [{ flags: MARKDOWN_FLAG }],
-    run: async (_arguments, flags, { root }) =>
-        await runCancelableCommand((cancelSignal) => runScanCommand(root, flags, cancelSignal), SCAN_STOPPED_MESSAGE),
+    run: async (_arguments, flags, { root }) => {
+        if (flags.markdown === true && flags.json === true)
+            throw new GspotError('arguments', '--markdown cannot run with --json. Choose one format.');
+        return await runCancelableCommand(
+            (cancelSignal) => runScanCommand(root, flags, cancelSignal),
+            SCAN_STOPPED_MESSAGE,
+        );
+    },
 };

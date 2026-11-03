@@ -32,6 +32,18 @@ test('scan refuses a repository that already has a gspot.toml', async () => {
     );
 });
 
+test('scan refuses --markdown with --json before it copies the repository', async () => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['scan', '--markdown', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: '--markdown cannot run with --json. Choose one format.',
+    });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
 test('scan reports its run and the plan of init, and leaves the repository as it was', async () => {
     await using sandbox = await createGitSandbox({
         '.env.example': 'OTHER=\n',

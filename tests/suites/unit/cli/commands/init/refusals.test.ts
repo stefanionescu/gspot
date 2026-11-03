@@ -26,6 +26,22 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
+test.each([
+    ['--configurations', 'bash', '--no-configurations'],
+    ['--no-configurations', '--configurations', 'bash'],
+])('init %s %s %s refuses the two selections and writes nothing', async (...flags) => {
+    await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+    commitAll(sandbox.path);
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', ...flags]);
+    expect(result).toStrictEqual({
+        code: 2,
+        stdout: '',
+        stderr: '--configurations cannot run with --no-configurations. Give the names, or select none.\n',
+    });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
 test('init refuses an unreadable package.json before writing', async () => {
     await using sandbox = await createGitSandbox({ 'package.json': '{', 'source.ts': 'export {};\n' });
 

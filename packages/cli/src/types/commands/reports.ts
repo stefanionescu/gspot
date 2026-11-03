@@ -214,7 +214,7 @@ export type CheckFacts = {
     minVersions: Record<string, string>;
 };
 
-export type ScanFlags = { markdown?: boolean };
+export type ScanFlags = { markdown?: boolean; json?: boolean };
 
 export type ScanCategory = { name: string; count: number; examples: Finding[] };
 
