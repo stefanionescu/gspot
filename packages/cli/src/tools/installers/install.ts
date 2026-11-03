@@ -75,16 +75,15 @@ async function repairTools(install: ToolInstall, tools: Tool[], miseBinPaths: st
 Build what every install step reads from the session.
 
 @param session the repository and its settings.
-@param input the repository handle, generated files, and tools of the checks.
+@param input the repository handle, generated files, tools of the checks, and the mise program.
 */
-async function buildToolInstall(
+export async function buildToolInstall(
     session: Session,
-    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
+    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools' | 'misePath'>,
 ): Promise<ToolInstall> {
     const configurations = session.toolConfigurations;
     const steps: Array<readonly string[]> = [];
     const tools = listDistinctTools(configurations);
-    const misePath = findProgram(MISE_TOOL);
     return {
         session,
         packageManager: await readInstallPackageManager(session),
@@ -92,7 +91,6 @@ async function buildToolInstall(
         releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
         ...input,
         tools,
-        misePath,
         steps,
     };
 }
@@ -108,7 +106,7 @@ export async function installTools(
     session: Session,
     input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
 ): Promise<InstallResult> {
-    const context = await buildToolInstall(session, input);
+    const context = await buildToolInstall(session, { ...input, misePath: findProgram(MISE_TOOL) });
     const { steps } = context;
     await assertPackageManagerVersion(context);
     writeToolProjects(context);

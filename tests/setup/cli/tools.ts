@@ -6,15 +6,13 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import type { ToolProjectFiles } from '#tests/types/setup.ts';
-import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
+import { buildToolInstall } from '#cli/tools/installers/install.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import { listMisePins, listPackagePins, listDistinctTools, buildPythonProjectTable } from '#cli/tools/pins.ts';
+import { listMisePins, listPackagePins, buildPythonProjectTable } from '#cli/tools/pins.ts';
 import type { Session, ToolSearch, ToolInstall, NpmToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
 
 /**
@@ -43,34 +41,9 @@ Build the tool install for a sandbox.
 @param writer holds the repository lock and saves files.
 */
 export async function buildSandboxToolInstall(session: Session, writer: Files): Promise<ToolInstall> {
-    const pin = session.packageManager;
-    const packageManager =
-        pin === undefined
-            ? undefined
-            : await readToolPackageManager(
-                  session.toolsRoot,
-                  pin,
-                  session.settings.tool_timeout_seconds,
-                  session.cache,
-              );
-    return {
-        session,
-        packageManager:
-            packageManager === undefined
-                ? undefined
-                : {
-                      ...packageManager,
-                      command: pin?.name === packageManager.name ? pin : { name: packageManager.name },
-                  },
-        pythonSettings: readPythonSettings(session.root),
-        releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
-        writer,
-        generated: buildGeneratedFiles(session),
-        tools: listDistinctTools(session.toolConfigurations),
-        checkTools: listHostCheckTools(session.configuredChecks),
-        misePath: undefined,
-        steps: [],
-    };
+    const generated = buildGeneratedFiles(session);
+    const checkTools = listHostCheckTools(session.configuredChecks);
+    return await buildToolInstall(session, { writer, generated, checkTools, misePath: undefined });
 }
 
 /**
