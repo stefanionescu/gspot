@@ -40,15 +40,19 @@ test('Bats lifecycle hooks are called by the runner', async () => {
     expect(await runSandboxCheck(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
 });
 
-test('a function call stays in its own script until the caller sources a library', async () => {
+test('a call from any script in the scope counts, without a source line', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
-        'first.sh': '#!/usr/bin/env bash\n_show() { echo first; }\n_show\n',
-        'second.sh': '#!/usr/bin/env bash\n_show() { echo second; }\n',
+        'helpers/aliases.sh': '#!/usr/bin/env bash\n_create_aliases() { printf ready; }\n_unused() { printf idle; }\n',
+        'setup.d/postfix.sh': '#!/usr/bin/env bash\n_create_aliases\n',
+        'test/helper/common.bash': '#!/usr/bin/env bash\n_start_server() { printf ready; }\n',
+        'test/server.bats': '#!/usr/bin/env bats\nload helper/common\n\n@test "starts" {\n  _start_server\n}\n',
     });
     const found = await runSandboxCheck(sandbox.path, 'bash/unused-functions');
-    expect(found.map(({ file }) => file)).toStrictEqual(['second.sh']);
-    await writeFile(join(sandbox.path, 'first.sh'), '#!/usr/bin/env bash\nsource ./second.sh\n_show\n');
+    expect(found.map(({ file, message }) => ({ file, message }))).toStrictEqual([
+        { file: 'helpers/aliases.sh', message: 'No script in this scope calls _unused. Delete it, or call it.' },
+    ]);
+    await writeFile(join(sandbox.path, 'setup.d/postfix.sh'), '#!/usr/bin/env bash\n_create_aliases\n_unused\n');
     expect(await runSandboxCheck(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
 });
 

@@ -1,17 +1,19 @@
 import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import { BATS_HOOKS, MAIN_FUNCTION, NEVER_CALLED_RULE } from '#cli/config/configurations/bash.ts';
-import { readScripts, listFunctionCalls } from '#cli/configurations/language/bash/checks/scripts.ts';
 
 /**
-Report functions with no callers. Exclude main and the bats hooks.
+Report functions that no script in the scope calls. A script can call a function that another script defines, because
+a main script sources its helpers together, and bats loads them. Exclude main and the bats hooks.
 
 @param session the repository and its tools.
 @param planned the scope scripts to read.
 */
 export async function checkUnusedFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
+    const called = new Set(scripts.flatMap((file) => file.calls.map((call) => call.name)));
     const bats = new Set(planned.files.filter((file) => file.tags.includes('bats')).map((file) => file.path));
     return scripts.flatMap((file) => {
         return file.functions
@@ -19,7 +21,7 @@ export async function checkUnusedFunctions(session: Session, planned: PlannedChe
                 (scriptFunction) =>
                     scriptFunction.name !== MAIN_FUNCTION &&
                     !(bats.has(file.path) && BATS_HOOKS.has(scriptFunction.name)) &&
-                    listFunctionCalls(scripts, file, scriptFunction.name).length === 0,
+                    !called.has(scriptFunction.name),
             )
             .map((scriptFunction) => ({
                 file: file.path,
