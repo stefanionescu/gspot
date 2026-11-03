@@ -26,7 +26,7 @@ import {
     AUTHENTICATION_REQUIRED_MESSAGE,
 } from '#tests/config/setup/sandboxes.ts';
 
-test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
+test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s: apply keeps a stale lockfile and install repairs it',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
@@ -63,7 +63,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     },
 );
 
-test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
+test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s keeps a conflicted lockfile through apply until the packageManager pin is fixed, and install repairs it',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
@@ -101,7 +101,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     },
 );
 
-test.each([...PACKAGE_MANAGER_CASES])(
+test.concurrent.each([...PACKAGE_MANAGER_CASES])(
     '%s from %s keeps the authored package files and the lockfile, and a reinstall follows the tool manager',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
@@ -159,7 +159,7 @@ test.each([...PACKAGE_MANAGER_CASES])(
     },
 );
 
-test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
+test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     'a fresh clone of a %s project from %s installs the committed lockfile twice and leaves tracked files unchanged',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
