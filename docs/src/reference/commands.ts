@@ -30,8 +30,9 @@ function formatCommand(command: CommandReference): string {
         `\`${argument.name}\``,
         `${argument.description}. ${argument.required ? 'Required.' : 'Optional.'}` + formatChoices(argument),
     ]);
+    const globalOptions: Readonly<Record<string, string>> = CLI_REFERENCE.globalOptions;
     const optionRows = command.options
-        .filter((option) => !Object.hasOwn(CLI_REFERENCE.globalOptions, option.flags))
+        .filter((option) => globalOptions[option.flags] !== option.description)
         .map((option) => [`\`${option.flags}\``, `${option.description}.` + formatChoices(option)]);
     const blocks = [
         formatText(command.description),

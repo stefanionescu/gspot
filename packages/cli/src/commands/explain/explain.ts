@@ -5,7 +5,6 @@ import { findText } from '#cli/system/files/reads.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
-import { VERBOSE_FLAG } from '#cli/config/commands/reports.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
@@ -68,7 +67,6 @@ function explainSubject(session: Session | undefined, { subject, cwd }: { subjec
 export const EXPLAIN_COMMAND: CommandDefinition<[string, string | undefined], { verbose?: true }> = {
     name: 'explain',
     arguments: [{ term: '<subject>' }, { term: '[rule]' }],
-    options: [{ flags: VERBOSE_FLAG }],
     run: async ([subject, rule], { verbose }, location) =>
         await runExplainCommand(location, subject, rule, verbose === true),
 };

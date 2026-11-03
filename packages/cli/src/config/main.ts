@@ -10,7 +10,12 @@ export const COMMANDS_HELP_MESSAGE = 'Run gspot --help to see the commands.';
 
 export const HELP_WIDTH = 80;
 
-export const GLOBAL_OPTIONS = { '--version': 'Print the version', '-h, --help': 'Print help' } as const;
+export const GLOBAL_OPTIONS = {
+    '--verbose': 'Print more detail, such as the stack of an internal error',
+    '--json': 'Print the report as JSON',
+    '--version': 'Print the version',
+    '-h, --help': 'Print help',
+} as const;
 
 export const PROGRAM_EXIT_CODES = [
     ['0', 'The command finished. For check: no findings remain.'],
@@ -38,6 +43,8 @@ export const UNKNOWN_COMMAND_ERROR_CODE = 'commander.unknownCommand';
 export const UNKNOWN_OPTION_ERROR_CODE = 'commander.unknownOption';
 
 export const JSON_FLAG = '--json';
+
+export const VERBOSE_FLAG = '--verbose';
 
 export const HELP_ERROR_CODE = 'commander.help';
 

@@ -22,7 +22,7 @@ test('unexpected check failures hide their stack until verbose while operational
     const concise = parseCheckReport(await runGspot(sandbox.path, [...command, '--json']));
     expect(concise.code).toBe(2);
     expect(concise.report.checks[0]?.note).toBe(
-        `repository/encoding stopped because of an internal error in gspot. Report it at ${cliPackage.bugs.url}.`,
+        `repository/encoding stopped because of an internal error in gspot. Report it at ${cliPackage.bugs.url}, with the stack that --verbose prints.`,
     );
     expect(concise.stdout).not.toContain('Private failure stack');
     const verbose = parseCheckReport(await runGspot(sandbox.path, [...command, '--verbose', '--json']));

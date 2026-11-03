@@ -36,7 +36,7 @@ test('apply starts no npm, and install reports a failed npm version lookup', asy
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('an unexpected error during install prints the internal error once and changes nothing', async () => {
+test('an unexpected error during install prints the internal error once, its stack with --verbose, and changes nothing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown']),
         'README.md': '# Example\n',
@@ -52,12 +52,17 @@ test('an unexpected error during install prints the internal error once and chan
         return buildProcessResult();
     });
     const message =
-        'gspot stopped because of an internal error. Report it at https://github.com/stefanionescu/gspot/issues.';
+        'gspot stopped because of an internal error. Report it at https://github.com/stefanionescu/gspot/issues, with the stack that --verbose prints.';
     const failed = await runGspot(sandbox.path, ['install', '--json']);
     expect(failed.code).toBe(2);
     expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'unexpected', message });
     expect(failed.stdout).not.toContain('Unexpected process failure.');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const verbose = await runGspot(sandbox.path, ['install', '--verbose', '--json']);
+    expect(verbose.code).toBe(2);
+    const { error, stack } = JSON.parse(verbose.stdout) as { error: string; stack: string };
+    expect(error).toBe('unexpected');
+    expect(stack).toContain('Unexpected process failure.');
 });
 
 test('install writes the tool projects again when an edit changed one', async () => {

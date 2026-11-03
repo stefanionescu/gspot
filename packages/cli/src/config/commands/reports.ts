@@ -27,8 +27,6 @@ export const BASE_OPTION = '--base <ref>';
 
 export const HOOK_OPTION = '--hook <hook>';
 
-export const VERBOSE_FLAG = '--verbose';
-
 export const PUSH_INPUT_MESSAGE = 'Git sent pre-push input that is not UTF-8 text.';
 
 export const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';

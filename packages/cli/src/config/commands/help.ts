@@ -37,7 +37,6 @@ export const COMMAND_HELP = {
             '--no-configurations': 'Select no configurations at the root',
             '--level <level>':
                 'Start at this level. The plan then replaces your tool configs for the checks of this level',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The plan was written.'],
@@ -51,9 +50,7 @@ export const COMMAND_HELP = {
         description:
             'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\nOnly the mise commands of gspot read .gspot/mise.toml, and only while it holds what gspot wrote.\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\nAfter the install, install inspects each tool, as doctor does, and installs the ones that fail again in a forced form.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
         arguments: {},
-        options: {
-            '--json': 'Print the result as JSON',
-        },
+        options: {},
         exitCodes: [
             ['0', 'The tools are installed.'],
             ['1', 'A tool is still missing or fails after a forced install. The output names it and the reason.'],
@@ -68,9 +65,7 @@ export const COMMAND_HELP = {
         description:
             'Write the generated files again from gspot.toml: the tool settings, the rule files, the Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
         arguments: {},
-        options: {
-            '--json': 'Print the result as JSON',
-        },
+        options: {},
         exitCodes: [
             ['0', 'The generated files were written.'],
             ['2', 'gspot.toml is not valid, or apply could not finish.'],
@@ -96,7 +91,6 @@ export const COMMAND_HELP = {
                 'Compare with this branch, tag, or commit; an empty, all-zero, or absent full hash checks every file',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
             '--verbose': 'Also print the passed, off, and skipped checks, each command, and each ignore',
-            '--json': 'Print the report as JSON',
         },
         exitCodes: [
             ['0', 'Every check that ran passed.'],
@@ -114,7 +108,6 @@ export const COMMAND_HELP = {
         arguments: {},
         options: {
             '--prune': 'Remove what the checks no longer find, and add nothing',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'gspot.baseline.json was written.'],
@@ -133,7 +126,6 @@ export const COMMAND_HELP = {
         },
         options: {
             '--scope <path>': 'Select them in this scope, relative to the repository root (default: the root)',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The configurations were added, or they were already selected.'],
@@ -152,7 +144,6 @@ export const COMMAND_HELP = {
         options: {
             '--scope <path>': 'Remove them from this scope, relative to the repository root (default: the root)',
             '--reason <text>': 'Why you remove them (required)',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The configurations were removed, or none of them was selected.'],
@@ -172,7 +163,6 @@ export const COMMAND_HELP = {
         options: {
             '--reason <text>': 'Why you change it. Needed when the change makes a check weaker',
             '--scope <path>': 'Change it in this scope, relative to the repository root (default: the root)',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The setting was written, or it already had this value.'],
@@ -191,7 +181,6 @@ export const COMMAND_HELP = {
         },
         options: {
             '--scope <path>': 'Change it in this scope, relative to the repository root (default: the root)',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The value was removed, or there was no value to remove.'],
@@ -212,7 +201,6 @@ export const COMMAND_HELP = {
             '--rule <rule>': 'Turn off only this lint rule',
             '--paths <path>':
                 'Turn it off for one path or glob relative to the current folder; repeat for more (default: every path)',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The ignore was written, or it already existed.'],
@@ -232,7 +220,6 @@ export const COMMAND_HELP = {
         options: {
             '--rule <rule>': 'Remove only the ignores of this lint rule',
             '--paths <path>': 'Remove one path or glob relative to the current folder from ignores; repeat for more',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The ignores were removed or changed, or no ignore matched.'],
@@ -248,9 +235,7 @@ export const COMMAND_HELP = {
         arguments: {
             '[configurations|settings]': 'What to list',
         },
-        options: {
-            '--json': 'Print the result as JSON',
-        },
+        options: {},
         exitCodes: [
             ['0', 'The list was printed.'],
             ['2', 'gspot.toml is not valid, or list could not finish.'],
@@ -269,7 +254,6 @@ export const COMMAND_HELP = {
         },
         options: {
             '--verbose': 'Print the full rule explanation',
-            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The explanation was printed.'],
@@ -286,9 +270,7 @@ export const COMMAND_HELP = {
         description:
             'Find setup problems: missing or wrong tool versions, Git hooks that do not run, and configurations that the repository needs but does not select.\n\nEach problem line says how to fix it: a command, or what to change. doctor changes nothing.',
         arguments: {},
-        options: {
-            '--json': 'Print the result as JSON',
-        },
+        options: {},
         exitCodes: [
             ['0', 'No problem found.'],
             ['1', 'A tool or a Git hook is not ready, or the repository pins another gspot version.'],

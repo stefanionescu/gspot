@@ -39,6 +39,7 @@ import {
     JSON_FLAG,
     USAGE_LINE,
     HELP_WIDTH,
+    VERBOSE_FLAG,
     VERSION_FLAG,
     PIN_COMMANDS,
     INVALID_VALUE,
@@ -103,7 +104,7 @@ function printFailure(error: unknown, program: Command, commandArguments: string
     }
     const separator = commandArguments.indexOf('--');
     const flags = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
-    printUnexpectedError(error, flags.includes('--verbose'));
+    printUnexpectedError(error, flags.includes(VERBOSE_FLAG));
     return EXIT_ERROR;
 }
 
@@ -175,8 +176,9 @@ function addCommandDefinition(program: Command, definition: CommandDefinition): 
     for (const argument of definedArguments)
         command.addArgument(buildArgument(argument, help.arguments[argument.term]));
     for (const option of options) command.addOption(buildOption(option, help.options[option.flags]));
+    command.option(VERBOSE_FLAG, help.options[VERBOSE_FLAG] ?? GLOBAL_OPTIONS[VERBOSE_FLAG]);
+    command.option(JSON_FLAG, help.options[JSON_FLAG] ?? GLOBAL_OPTIONS[JSON_FLAG]);
     command.helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG]);
-    command.option(JSON_FLAG, help.options[JSON_FLAG]);
     command.configureHelp({ helpWidth: HELP_WIDTH, styleDescriptionText: (text) => text.replaceAll(CODE_MARK, '') });
     const exitCodes = formatExitCodes(help.exitCodes, command.createHelp());
     command.addHelpText('after', `\nExit codes:\n${exitCodes}\n\nExample:\n  ${help.example}\n`);
@@ -195,7 +197,8 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
         .description(cliPackage.description)
         .enablePositionalOptions()
         .option(VERSION_FLAG, GLOBAL_OPTIONS[VERSION_FLAG])
-        .option(JSON_FLAG)
+        .option(JSON_FLAG, GLOBAL_OPTIONS[JSON_FLAG])
+        .option(VERBOSE_FLAG, GLOBAL_OPTIONS[VERBOSE_FLAG])
         .helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG])
         .helpCommand(false)
         .exitOverride();
@@ -229,7 +232,7 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
     for (const definition of definitions) {
         const command = addCommandDefinition(program, definition);
         command.action(async () => {
-            onResult(await definition.run(command.processedArgs, command.opts(), location));
+            onResult(await definition.run(command.processedArgs, command.optsWithGlobals(), location));
         });
     }
     program.configureHelp({ helpWidth: HELP_WIDTH, formatHelp: () => formatProgramHelp(program) });

@@ -28,7 +28,6 @@ import {
     HOOK_OPTION,
     BASE_OPTION,
     CHANGED_FLAG,
-    VERBOSE_FLAG,
     CHECK_STAGES,
     STAGE_OPTION,
     CHECK_INPUT_HOOKS,
@@ -256,7 +255,6 @@ export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {
         { flags: BASE_OPTION },
         { flags: FIX_FLAG },
         { flags: HOOK_OPTION, choices: CHECK_INPUT_HOOKS, hidden: true },
-        { flags: VERBOSE_FLAG },
     ],
     run: async ([paths], flags, location) => await runCheckCommand(paths, flags, location),
 };

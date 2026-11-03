@@ -136,3 +136,11 @@ test('check treats --version after the separator as a file path', async () => {
         checks: [{ check: 'repository/encoding', status: 'passed' }],
     });
 });
+
+test('--verbose before the command reaches check, which then prints its passed checks', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), 'notes.txt': 'plain\n' });
+    runGitStep(sandbox.path, ['add', '.']);
+    const checked = await runGspot(sandbox.path, ['--verbose', 'check', '--only', 'repository/encoding']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(checked.stdout).toMatch(/^passed +repository\/encoding +\d+ files? /mu);
+});

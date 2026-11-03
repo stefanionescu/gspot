@@ -76,7 +76,7 @@ Describe an unexpected failure without exposing its implementation details.
 export function formatUnexpectedError(subject: string): string {
     const location = subject === 'gspot' ? '' : ' in gspot';
     const page = cliPackage.bugs.url;
-    return `${subject} stopped because of an internal error${location}. Report it at ${page}.`;
+    return `${subject} stopped because of an internal error${location}. Report it at ${page}, with the stack that --verbose prints.`;
 }
 
 /**
