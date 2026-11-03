@@ -22,6 +22,14 @@ const FIXABLE_CHECK = stringify({
     ],
 });
 
+async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof createGitSandbox>>> {
+    return await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: FIXABLE_CHECK }),
+        'broken.txt': 'input\n',
+        'other.txt': 'input\n',
+    });
+}
+
 test('a rerun line quotes a check name and protects a path beginning with a dash', async () => {
     const tables = stringify({
         command_check: [
@@ -55,11 +63,7 @@ test('a rerun line quotes a check name and protects a path beginning with a dash
 });
 
 test('a fixable finding prints the fix command of its check, and that command changes only the reported file', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: FIXABLE_CHECK }),
-        'broken.txt': 'input\n',
-        'other.txt': 'input\n',
-    });
+    await using sandbox = await createFixableSandbox();
     runGitStep(sandbox.path, ['add', '-A']);
     const printed = await runGspot(sandbox.path, ['check', '--staged']);
     const command = 'gspot check --fix --only project/fixable broken.txt';
@@ -78,4 +82,11 @@ test('a fixable finding in a file with merge-conflict markers prints no fix comm
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'project/fixable', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks[0]).not.toHaveProperty('fixCommand');
+});
+
+test('a run of every file prints the fix command without files when the fix covers each reported file', async () => {
+    await using sandbox = await createFixableSandbox();
+    const printed = await runGspot(sandbox.path, ['check', '--only', 'project/fixable']);
+    expect(printed.code, printed.stdout + printed.stderr).toBe(1);
+    expect(printed.stdout).toContain('  fix: gspot check --fix --only project/fixable\n');
 });

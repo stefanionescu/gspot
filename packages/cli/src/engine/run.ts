@@ -182,15 +182,20 @@ function formatReproduceCommand(checkId: string, scopeArgument: string | undefin
 }
 
 function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCommand'> {
+    const { options, session } = run;
     const fixable = [...new Set(result.findings.filter((finding) => finding.fixable).map(({ file }) => file))];
-    const conflicted = new Set(listConflictedPaths(run.session.root, fixable));
-    const files = fixable.filter((file) => !conflicted.has(file));
-    if (run.options.fix || files.length === 0) return {};
-    const paths = files.map((file) => {
-        const path = convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, file)));
+    const conflicted = new Set(listConflictedPaths(session.root, fixable));
+    const files = new Set(fixable.filter((file) => !conflicted.has(file)));
+    if (options.fix || files.size === 0) return {};
+    const command = [CHECK_COMMAND, FIX_FLAG, '--only', quoteArgument(result.check)];
+    const isEveryFileChecked = options.paths === undefined && options.selection?.paths === undefined;
+    if (isEveryFileChecked && result.findings.every(({ file }) => files.has(file)))
+        return { fixCommand: command.join(' ') };
+    const paths = [...files].map((file) => {
+        const path = convertToPosixPath(relative(options.cwd, join(session.toolsRoot, file)));
         return quoteArgument(path.startsWith('-') ? `./${path}` : path);
     });
-    return { fixCommand: [CHECK_COMMAND, FIX_FLAG, '--only', quoteArgument(result.check), ...paths].join(' ') };
+    return { fixCommand: [...command, ...paths].join(' ') };
 }
 
 function finishResult(run: Run, ran: CheckResult): CheckResult {
