@@ -8,7 +8,7 @@ repository in these steps:
 
 1. Run `gspot scan`. It changes nothing in your repository, and prints the plan of `gspot init`.
 2. Commit your config files, so that Git holds the versions that init replaces.
-3. Run `gspot init`, then `gspot install`.
+3. Run `gspot init`. It also installs the tools and turns on the Git hooks.
 4. Work through the table and the list of commands that `gspot scan` printed.
 5. Run `gspot baseline` to keep the findings that predate gspot.
 
@@ -18,7 +18,8 @@ repository in these steps:
 the default level and changes nothing in your repository.
 
 When the repository does not pin gspot, init adds the pin to `package.json`, or to `mise.toml` in a repository without
-a `package.json`. Init installs nothing, so its last line names the install to run before `gspot install`.
+a `package.json`. Its last line then names the install of your package manager, which installs the pinned gspot that
+the Git hooks run.
 
 The level decides which tools run and which config files init replaces. To start at level `all`:
 
@@ -33,7 +34,7 @@ The plan has these parts:
 
 | Part                                           | What gspot does                                                                                                                 | What you do                                                                     |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `write`                                        | Writes `gspot.toml`, `.gspot/`, and the generated files.                                                                        | Commit them after `gspot install`.                                              |
+| `write`                                        | Writes `gspot.toml`, `.gspot/`, and the generated files.                                                                        | Commit them after `gspot init`.                                                 |
 | `delete`                                       | Deletes the config files that gspot replaces, such as `.eslintrc.json` and `ruff.toml`. Git keeps them: `git show HEAD:<path>`. | Read the table of what init carries.                                            |
 | `keep`                                         | Keeps tool sections in shared files, such as `[tool.ruff]` in `pyproject.toml`, and your CI files.                              | Delete each tool section. `gspot/conflicting-configs` reports it until it goes. |
 | `change`                                       | Adds its managed block to `.gitattributes`, and sets keys in your own files, such as the Stylelint fields of `package.json`.    | Review the change.                                                              |
@@ -99,8 +100,8 @@ Each tool reads its rules from one place:
 | ESLint       | `eslint --print-config`       | `gspot scan` only | `tools.eslint.rules`       |
 | Stylelint    | `stylelint --print-config`    | `gspot scan` only | `tools.stylelint.rules`    |
 
-gspot resolves its own ESLint and Stylelint rules through the plugins that `gspot install` adds, and init installs
-nothing. Run `gspot scan` before init to see their table. commitlint, ESLint, and Stylelint print your rules through
+gspot resolves its own ESLint and Stylelint rules through the plugins that `gspot install` adds, and init plans before
+it installs them. Run `gspot scan` before init to see their table. commitlint, ESLint, and Stylelint print your rules through
 the copy in your `node_modules`, so run your package manager's install first.
 
 gspot does not compare the other replaced configs. The plan lists each of them under `delete`. init reads the settings

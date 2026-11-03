@@ -13,12 +13,14 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version', async () => {
     await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
         '.gitignore': 'home/\n',
         home: {},
@@ -26,6 +28,7 @@ test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned ve
     await using programs = await testdir();
 
     commitAll(sandbox.path);
+    await applyGeneratedFiles(sandbox.path);
     const bin = programs.path;
     const gitPath = Bun.which('git');
     expect(gitPath).not.toBeNull();
@@ -37,8 +40,6 @@ test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned ve
         HOME: join(sandbox.path, 'home'),
         MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
     };
-    const initialized = await spawnGspot(sandbox.path, ['init', '--configurations', 'bash'], environment);
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const check = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json'], environment),
     );

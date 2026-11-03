@@ -48,14 +48,14 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
    installs a few more tools. Suggest \`basic\`, the default, for an existing codebase, and \`all\` for a new
    repository or one that agents write. The level decides which config files the plan replaces.
 4. Run \`gspot init --level <level>\`. It prints the plan and writes the settings, generated files, and hooks
-   without asking a question. CI stays off; \`gspot doctor\` suggests how to enable it.
+   without asking a question. Then it installs the pinned tools and turns on the Git hooks. If it names a program
+   that it cannot install, tell the user. \`gspot doctor\` lists what is missing. CI stays off; \`gspot doctor\`
+   suggests how to enable it.
    After init, \`gspot add <configuration>\` and \`gspot remove <configuration> --reason "<why>"\` change the selection.
-5. Run \`gspot install\`. It installs the pinned tools and turns on the Git hooks. If it names a program that it
-   cannot install, tell the user. \`gspot doctor\` lists what is missing.
-6. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
+5. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
    before you fix findings in other files.
-7. Ask the user whether to accept the other findings with \`gspot baseline\`, and run it only after the user agrees.
-8. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
+6. Ask the user whether to accept the other findings with \`gspot baseline\`, and run it only after the user agrees.
+7. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
 
 ## Rules for daily work
 

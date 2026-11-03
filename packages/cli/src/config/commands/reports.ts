@@ -223,6 +223,6 @@ export const SCAN_CARRYOVER_TITLE = 'What gspot init would carry over and drop';
 
 export const SCAN_NEXT_STEPS_TITLE = 'Next steps';
 
-export const SCAN_NEXT_STEPS = ['init', 'install', 'check --fix', 'baseline'] as const;
+export const SCAN_NEXT_STEPS = ['init', 'check --fix', 'baseline'] as const;
 
 export const BYTES_PER_MEGABYTE = 1_048_576;

@@ -112,7 +112,8 @@ export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox
 }
 
 /**
-Run init in a sandbox, set its level and configurations, and install its tools.
+Run init in a sandbox at its level, which installs the tools, and remove the configurations that it leaves out. After
+a removal, install the tools of the remaining configurations, unless the plan asks for no install.
 */
 export async function initSandbox(
     sandbox: Sandbox,
@@ -127,8 +128,8 @@ export async function initSandbox(
         options.configurations.length === 0
             ? ['--no-configurations']
             : options.configurations.flatMap((configuration) => ['--configurations', configuration]);
-    const initialized = await runGspotStep(sandbox, ['init', ...configurations, '--json']);
-    if (options.level !== undefined) await runGspotStep(sandbox, ['set', 'level', options.level]);
+    const level = options.level === undefined ? [] : ['--level', options.level];
+    const initialized = await runGspotStep(sandbox, ['init', ...configurations, ...level, '--json']);
     const excluded = options.without ?? [];
     for (const configuration of excluded)
         await runGspotStep(sandbox, [
@@ -137,6 +138,6 @@ export async function initSandbox(
             '--reason',
             'The sandbox exercises selected checks without this configuration.',
         ]);
-    if (options.install !== false) await runGspotStep(sandbox, ['install']);
+    if (options.install !== false && excluded.length > 0) await runGspotStep(sandbox, ['install']);
     return initialized;
 }

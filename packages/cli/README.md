@@ -32,25 +32,25 @@ Run these commands in the root folder of a repository that has a `package.json`:
 ```shell
 bun add --dev --exact @gspothq/cli
 bunx --no-install gspot init
-bunx --no-install gspot install
 bunx --no-install gspot check
 ```
 
 1. `bun add` adds gspot as a development dependency, pinned to one version.
 2. `gspot init` prints its plan and writes `gspot.toml`, the config files, the rules for coding agents, and the Git
-   hooks. CI stays off until you enable it. `gspot doctor` suggests the commands for your provider.
-3. `gspot install` installs the pinned tools and turns on the Git hooks. With mise, it also installs the programs that
-   do not come from npm or PyPI. Without mise, it names each program that you must install yourself.
-4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
+   hooks. Then it installs the pinned tools and turns on the Git hooks.
+3. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
 
-To accept the findings that exist today, run `gspot baseline` after `gspot install`, and commit the
+With mise, init also installs the programs that do not come from npm or PyPI. Without mise, it names each program that
+you must install yourself. CI stays off until you enable it. `gspot doctor` suggests the commands for your provider.
+
+To accept the findings that exist today, run `gspot baseline` after `gspot init`, and commit the
 `gspot.baseline.json` file it writes. `gspot check` then fails only on new findings and on secrets.
 
 gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. Init writes without
 asking, so run `gspot scan` first to read its plan.
 
-Commit `gspot.toml` and the files that `gspot init` and `gspot install` wrote. In each new clone, install the
-dependencies first, then run the install command above.
+Commit `gspot.toml` and the files that `gspot init` wrote. In each new clone, install the dependencies first, then run
+`gspot install`.
 
 The [Quickstart](https://generativespotting.com/start/quickstart/) gives a prompt that lets your coding agent do the
 setup.

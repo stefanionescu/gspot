@@ -25,10 +25,10 @@ export const COMMAND_HELP = {
         example: 'gspot scan --markdown',
     },
     init: {
-        summary: 'Find what this repository needs, then write gspot.toml and the generated files',
+        summary: 'Find what this repository needs, write gspot.toml and the generated files, and install the tools',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: config files for the tools, rule files for coding agents, and Git hooks. CI starts off; turn it on with `gspot set ci.enabled true`.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so `git show HEAD:<path>` can restore it. init installs nothing and runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
+            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: config files for the tools, rule files for coding agents, and Git hooks. CI starts off; turn it on with `gspot set ci.enabled true`.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so `git show HEAD:<path>` can restore it. Then init installs the tools and turns on the Git hooks, as `gspot install` does. It runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
             '--from <file>': "Start from another repository's gspot.toml",
@@ -39,8 +39,10 @@ export const COMMAND_HELP = {
                 'Start at this level. The plan then replaces your tool configs for the checks of this level',
         },
         exitCodes: [
-            ['0', 'The plan was written.'],
+            ['0', 'The plan was written, and the tools are installed.'],
+            ['1', 'The plan was written, and a tool is still missing. The output names it and the reason.'],
             ['2', 'An argument is not valid, or init could not finish.'],
+            ['130, 143', 'Installation stopped because of Ctrl-C or SIGTERM. The written files stay.'],
         ],
         example: 'gspot init --level all',
     },

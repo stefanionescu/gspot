@@ -82,11 +82,14 @@ holds repository-relative paths.
 
 The object of `gspot init --json` also has the [generated-file fields](#generated-files).
 
-| Field          | Meaning                           |
-| -------------- | --------------------------------- |
-| `root`         | The repository folder.            |
-| `plan`         | The plan that `init` prints.      |
-| `settingsText` | The text of the new `gspot.toml`. |
+| Field          | Meaning                                                                  |
+| -------------- | ------------------------------------------------------------------------ |
+| `root`         | The repository folder.                                                   |
+| `plan`         | The plan that `init` prints.                                             |
+| `settingsText` | The text of the new `gspot.toml`.                                        |
+| `installed`    | One line per install step that changed something, as in `gspot install`. |
+| `missing`      | What stays missing after the install, with what to do about it.          |
+| `steps`        | The commands that the install ran, as argument lists.                    |
 
 `plan` holds `level`, `configurations`, the file lists `write`, `delete`, `keep`, `change`, and `lintFolders`, and the
 lists `lintCommands` and `carryover`. Each row of `lintCommands` has `file`, `line`, `source`, `command`, `tool`, and `fix`.

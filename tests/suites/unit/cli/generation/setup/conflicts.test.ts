@@ -1,5 +1,5 @@
-import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
@@ -8,6 +8,7 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -23,6 +24,7 @@ import { GOOGLE_PYPROJECT, EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/lang
 import {
     INIT_FILES,
     SQL_COMMAND_CHECK,
+    EMPTY_TOOL_INSTALL,
     SQL_SEARCH_ARGUMENTS,
     SYNCPACK_PACKAGE_FILES,
 } from '#tests/config/setup/sandboxes.ts';
@@ -44,6 +46,7 @@ import {
 test.each([...HOOKS_PATH_CASES])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses ($hooksPath)',
     async ({ hooksPath, line }) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox({
             'hooks/use-thing.ts': HOOK_NAMED_SOURCE,
             ...(hooksPath !== '' && { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' }),
@@ -60,6 +63,7 @@ test.each([...HOOKS_PATH_CASES])(
 );
 
 test('the init plan deletes the conflicting config files and lists the lint folder', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(INIT_FILES);
 
     commitAll(sandbox.path);
@@ -85,6 +89,7 @@ test('the init plan deletes the conflicting config files and lists the lint fold
 });
 
 test.each(['setup.cfg'])('init leaves a shared %p in place and names its SQLFluff section', async (path) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, { [path]: SHARED_SETUP_CONFIG, 'query.sql': 'SELECT 1;\n' });
     await chmod(join(sandbox.path, path), 0o640);
@@ -104,6 +109,7 @@ async function assertFileKept(root: string, path: string, previous: string): Pro
 }
 
 test('init deletes the .sqlfluffignore of the db package, and project/read-sql then checks db/accounts.sql', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(SQL_PACKAGE_FILES);
 
     commitAll(sandbox.path);
@@ -127,6 +133,7 @@ test('init deletes the .sqlfluffignore of the db package, and project/read-sql t
 });
 
 test('init keeps a linked shared file and the bytes and mode of the file it links to', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, { 'settings/shared.cfg': LINKED_SETUP_CONFIG, 'query.sql': 'SELECT 1;\n' });
     const target = join(sandbox.path, 'settings/shared.cfg');
@@ -148,6 +155,7 @@ test('init keeps a linked shared file and the bytes and mode of the file it link
 test.each([...REPLACED_PYPROJECT_TABLES])(
     'init names the $table table it leaves in pyproject.toml',
     async ({ configuration, text, source, note, generated }) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox({});
         const path = 'pyproject.toml';
         const previous = `${GOOGLE_PYPROJECT}[tool.unrelated]\nkeep = true\n\n${text}`;
@@ -166,6 +174,7 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
 );
 
 test('at level basic, init keeps the config files of checks that are off', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(INACTIVE_CONFIGURATIONS);
 
     commitAll(sandbox.path);
@@ -185,6 +194,7 @@ test('at level basic, init keeps the config files of checks that are off', async
 test.each([...STYLELINT_REPLACEMENT_CASES])(
     'init replaces your .stylelintrc.mjs so that Stylelint still finds its settings at both levels: $name',
     async ({ scope, packageText, command: initCommand, changed, unchangedFiles }) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         const packagePath = posix.join(scope, 'package.json');
         const stylesheet = posix.join(scope, 'source.css');
         const authoredConfiguration = posix.join(scope, '.stylelintrc.mjs');
@@ -198,8 +208,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
         const command = buildProgramCommand('checks/stylelint', stylesheet);
         const before = await runCommand(command, { cwd: sandbox.path });
-        expect(before.code, before.stdout + before.stderr).toBe(0);
-        expect(before.stdout).toBe('[]');
+        expect(before, before.stderr).toMatchObject({ code: 0, stdout: '[]' });
         const written = await runGspot(sandbox.path, [...initCommand, '--json']);
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const plan = (JSON.parse(written.stdout) as InitJson).plan;
@@ -231,6 +240,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
 );
 
 test('init replaces an authored Syncpack file and keeps syncpack.config.cts and .mts', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         ...SYNCPACK_PACKAGE_FILES,
         [SYNCPACK_FILE.file]: SYNCPACK_FILE.source,

@@ -9,18 +9,13 @@ import type { ApplyReport } from '#cli/types/generation.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
-import {
-    UPDATED_AGENTS,
-    FORMAT_SETTINGS,
-    EMPTY_TOOL_INSTALL,
-    PRETTIER_PATH_IGNORE,
-} from '#tests/config/commands/edits.ts';
+import { UPDATED_AGENTS, FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/edits.ts';
 
 test('install leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

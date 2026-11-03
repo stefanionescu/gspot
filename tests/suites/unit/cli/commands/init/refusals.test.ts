@@ -1,19 +1,22 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { PACKAGE_JSON_ERROR } from '#tests/config/setup/programs.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 import { PRESERVE_SOURCE, UNCOMMITTED_FORMAT_CASES } from '#tests/config/generation/plan.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
 
     commitAll(sandbox.path);
@@ -30,6 +33,7 @@ test.each([
     { flags: ['--configurations', 'bash', '--no-configurations'] },
     { flags: ['--no-configurations', '--configurations', 'bash'] },
 ])('init $flags refuses the two selections and writes nothing', async ({ flags }) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
@@ -43,6 +47,7 @@ test.each([
 });
 
 test('init refuses an unreadable package.json before writing', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'package.json': '{', 'source.ts': 'export {};\n' });
 
     await assertRefusalWithoutWrites(sandbox.path, ['init'], {
@@ -52,6 +57,7 @@ test('init refuses an unreadable package.json before writing', async () => {
 });
 
 test('init in a repository that already has gspot.toml exits 2 and changes nothing', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
@@ -66,6 +72,7 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
 });
 
 test('init without a terminal writes the plan and preserves authored files', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'control.txt': PRESERVE_SOURCE });
 
     const accepted = await runGspot(sandbox.path, ['init']);
@@ -76,6 +83,7 @@ test('init without a terminal writes the plan and preserves authored files', asy
 });
 
 test('a linked .gspot folder stops init, and nothing outside changes', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({ 'project/entry.sh': 'echo example\n', 'outside/sentinel': 'authored\n' });
     const project = join(sandbox.path, 'project');
     runGitStep(project, ['init', '--quiet']);
@@ -91,6 +99,7 @@ test('a linked .gspot folder stops init, and nothing outside changes', async () 
 });
 
 test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from HEAD: $state', async (variant) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const { path } = variant;
     await using sandbox = await testdir({ 'source.js': 'export const count = 1;\n' });
     await prepareUncommittedFormat(sandbox.path, variant);

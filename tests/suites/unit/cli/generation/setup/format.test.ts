@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -10,6 +10,8 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
+import * as installers from '#cli/tools/installers/install.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
 import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carryover.ts';
 
@@ -24,6 +26,7 @@ import {
 test.each(INVALID_PRETTIER_OPTIONS)(
     'init drops $field of $file, which gspot.toml cannot hold, and goes on',
     async ({ file, field, text }) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await testdir({
             ...FORMAT_WORKSPACE_FILES,
             'source.js': 'export const value = 1;\n',
@@ -47,6 +50,7 @@ async function readInitFormatOptions(root: string, commandArguments: string[]): 
 }
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({ 'source.txt': 'source\n', ...files });
     commitAll(sandbox.path);
     const options = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
@@ -54,6 +58,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
 });
 
 test('init reads the format settings of each scope', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(SCOPE_FORMAT_FILES);
     await createFileTree(sandbox.path, FORMAT_WORKSPACE_FILES);
     commitAll(sandbox.path);
@@ -77,6 +82,7 @@ test('init reads the format settings of each scope', async () => {
 });
 
 test('init turns Prettier overrides and the Ruff quote style into format overrides', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         '.prettierrc.json': JSON.stringify({
             tabWidth: 4,
@@ -95,6 +101,7 @@ test('init turns Prettier overrides and the Ruff quote style into format overrid
 });
 
 test('init leaves out an override that matches no tracked file', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         '.editorconfig': '[*]\nindent_size = 2\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n',
         'source.js': 'export const value = 1;\n',
@@ -109,6 +116,7 @@ test('init leaves out an override that matches no tracked file', async () => {
 test.each([...UNREADABLE_PRETTIER_FILES])(
     'init names the format settings it cannot read from $path',
     async ({ path, text }) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await testdir({
             [path]: text,
             'source.js': 'export const count = 1;\n',
@@ -132,6 +140,7 @@ test.each([
     { path: 'prettier.config.mjs', text: 'export default { printWidth: 100, semi: false };\n' },
     { path: '.prettierrc.cjs', text: 'module.exports = { printWidth: 100, semi: false };\n' },
 ])('init reads the JavaScript Prettier config $path', async ({ path, text }) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({ [path]: text, 'source.js': 'export const count = 1;\n' });
     commitAll(sandbox.path);
     const formats = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
@@ -139,6 +148,7 @@ test.each([
 });
 
 test('init runs no Prettier config outside the root and the scopes', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         'tests/samples/prettier.config.mjs':
             "import { writeFileSync } from 'node:fs';\nwriteFileSync(new URL('ran', import.meta.url), '');\nexport default {};\n",
@@ -150,6 +160,7 @@ test('init runs no Prettier config outside the root and the scopes', async () =>
 });
 
 test('init carries the bracket, arrow, and prose options of Prettier', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         '.prettierrc.json': '{"bracketSpacing":false,"arrowParens":"avoid","proseWrap":"always"}',
         'source.ts': 'export {};\n',
@@ -160,6 +171,7 @@ test('init carries the bracket, arrow, and prose options of Prettier', async () 
 });
 
 test('init carries the Ruff line length, indent, and quotes into the Python override', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         'pyproject.toml':
             '[project]\nname = "app"\n\n[tool.ruff]\nline-length = 100\nindent-width = 3\n\n[tool.ruff.format]\nquote-style = "single"\nindent-style = "tab"\n',
@@ -179,6 +191,7 @@ test('init carries the Ruff line length, indent, and quotes into the Python over
 });
 
 test('init preserves tabs, semicolons and trailing commas from Prettier', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         '.prettierrc.json': '{"useTabs":true,"semi":false,"trailingComma":"none"}',
         'source.ts': 'export {};\n',
@@ -193,6 +206,7 @@ test('init preserves tabs, semicolons and trailing commas from Prettier', async 
 });
 
 test('init gives code without a style config the defaults of each formatter', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({
         'main.py': 'value = 1\n',
         'App.swift': 'let value = 1\n',
@@ -215,6 +229,7 @@ test('init gives code without a style config the defaults of each formatter', as
 });
 
 test('init writes the formatter defaults once, for the Python files of every scope', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(WORKSPACE_PYTHON_FILES);
     commitAll(sandbox.path);
     const options = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
@@ -223,6 +238,7 @@ test('init writes the formatter defaults once, for the Python files of every sco
 });
 
 test('init keeps the house style for a repository without code', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({ 'README.md': '# Project\n', '.gitignore': 'dist/\n' });
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);

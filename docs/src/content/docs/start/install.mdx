@@ -35,8 +35,9 @@ The tools that your checks run need these:
 {`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`}.
 Node.js 22 ships an older npm, so run `npm install --global npm@latest` there.
 
-`gspot init` prints the configurations it selects and writes its plan without asking. `gspot scan` prints the plan of
-the default level and changes nothing in your repository. After init, `gspot doctor` lists the missing tools.
+`gspot init` prints the configurations it selects, writes its plan without asking, and installs the tools. `gspot scan`
+prints the plan of the default level and changes nothing in your repository. After init, `gspot doctor` lists the
+missing tools.
 
 ### Systems
 
@@ -73,7 +74,7 @@ last column shows.
     </tbody>
 </table>
 
-Then run `gspot init` and `gspot install`, as the [Quickstart](/start/quickstart/) shows. With mise, `--pin` writes the
+Then run `gspot init`, as the [Quickstart](/start/quickstart/) shows. With mise, `--pin` writes the
 exact gspot version to `mise.toml`. mise requires approval for a new npm package or one with few downloads;
 `allow_low_downloads=true` approves gspot.
 

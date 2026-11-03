@@ -1,13 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import * as installers from '#cli/tools/installers/install.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
@@ -19,6 +21,7 @@ import {
 } from '#tests/config/generation/settings.ts';
 
 test('init --from copies the settings that fit any repository and lists each one it leaves out', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using team = await testdir({ 'gspot.toml': TEAM_TEMPLATE });
     await using sandbox = await createGitSandbox({});
     const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
@@ -49,6 +52,7 @@ test('init --from copies the settings that fit any repository and lists each one
 test.each(TEMPLATE_REFUSALS)(
     'init --from refuses $name, names the file, and writes nothing',
     async ({ files, from, message }) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox(files);
         const before = await readTree(sandbox.path);
         const result = await runGspot(sandbox.path, ['init', '--from', from]);
@@ -61,6 +65,7 @@ test.each(TEMPLATE_REFUSALS)(
 test.each(['--configurations', '--no-configurations'])(
     'init refuses --from beside %s before it reads anything',
     async (flag) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox({});
         const result = await runGspot(sandbox.path, [
             'init',
@@ -77,6 +82,7 @@ test.each(['--configurations', '--no-configurations'])(
 );
 
 test('init --from adds the detected configurations to the ones of the file', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using team = await testdir({ 'gspot.toml': 'configurations = ["markdown"]\n' });
     await using sandbox = await createGitSandbox({ 'main.py': 'PORT = 8080\n' });
     const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
@@ -86,6 +92,7 @@ test('init --from adds the detected configurations to the ones of the file', asy
 });
 
 test('in a monorepo, a framework of the file goes to the scope that detects it', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using team = await testdir({ 'gspot.toml': 'configurations = ["react"]\n' });
     await using sandbox = await createGitSandbox(TEMPLATE_SCOPE_FILES);
     const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
@@ -97,6 +104,7 @@ test('in a monorepo, a framework of the file goes to the scope that detects it',
 });
 
 test('what init reads from this repository wins over the file', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using team = await testdir({
         'gspot.toml': 'configurations = ["typescript"]\nlevel = "all"\n[format]\nindent_width = 8\n',
     });
@@ -112,6 +120,7 @@ test('what init reads from this repository wins over the file', async () => {
 });
 
 test('the comments of copied keys stay and the template preface is replaced', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using team = await testdir({ 'gspot.toml': COMMENTED_TEMPLATE });
     await using sandbox = await createGitSandbox({});
     const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml')]);

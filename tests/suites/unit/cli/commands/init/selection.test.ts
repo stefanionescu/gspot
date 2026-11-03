@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
@@ -14,7 +14,9 @@ import type { InitJson } from '#cli/types/commands/edits.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
@@ -37,6 +39,7 @@ async function listPlannedConfigurations(root: string): Promise<string[]> {
 test.each([...CONFIGURATION_CHOICES])(
     'init with --configurations %j keeps the always-selected configurations',
     async (row) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         const { configurations } = row;
         const flags =
             configurations === undefined
@@ -60,6 +63,7 @@ test.each([...CONFIGURATION_CHOICES])(
 );
 
 test('init combines repeated and comma-separated configuration names', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'sample.txt': 'Example.\n' });
     const result = await runGspot(sandbox.path, [
         'init',
@@ -75,6 +79,7 @@ test('init combines repeated and comma-separated configuration names', async () 
 });
 
 test('init leaves javascript out of a root package.json with only tool dependencies and selects it in the app package scope', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'package.json': TOOL_ONLY_PACKAGE,
         'app/package.json': '{"name":"example-app","private":true}\n',
@@ -97,6 +102,7 @@ test('init leaves javascript out of a root package.json with only tool dependenc
 });
 
 test('the JavaScript tools and the ESLint config file appear only after gspot add javascript for a new Node script, at both levels', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'package.json': TOOL_ONLY_PACKAGE,
         'source.py': 'VALUE = 1\n',
@@ -136,6 +142,7 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
 });
 
 test('init selects a suggested language only when the repository holds its files', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const files = {
         'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"vue":"3.5.22"}}\n',
         'src/Greeting.vue': `<script setup>
@@ -165,6 +172,7 @@ const name = 1;
 });
 
 test('init proposes a scope for a Swift package, not for a lint-only package, and says that its eslint pin moved to .gspot/package.json', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(PLATFORM_PROJECT_FILES);
 
     commitAll(sandbox.path);
@@ -181,6 +189,7 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
 test.each([...NEXTJS_LOCALE_CASES])(
     'a named Next.js configuration list wins over locale dependency detection: %j',
     async ({ dependency, named, isSelected }) => {
+        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox({
             'package.json': JSON.stringify({
                 name: 'translated-app',
@@ -199,6 +208,7 @@ test.each([...NEXTJS_LOCALE_CASES])(
 );
 
 test('init proposes workspace scopes without a lockfile, and writes nothing when the workspace file is broken', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const files = {
         'package.json': '{"private":true,"packageManager":"pnpm@9.0.0","workspaces":["packages/*"]}',
         'packages/api/package.json': '{"name":"api"}',
@@ -224,6 +234,7 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
 });
 
 test('init keeps root Docker and GitHub configurations beside an app scope', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         Dockerfile: 'FROM scratch\n',
         '.github/workflows/test.yml': 'name: Test\non: push\njobs: {}\n',
@@ -240,6 +251,7 @@ test('init keeps root Docker and GitHub configurations beside an app scope', asy
 });
 
 test('init names an uninstalled tsconfig extension and the dependency install step', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'package.json': '{"name":"example-app","private":true}',
         'tsconfig.json': '{"extends":"@tsconfig/node22/tsconfig.json"}',

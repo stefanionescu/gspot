@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { expect } from 'bun:test';
 import { Readable } from 'node:stream';
+import { spyOn, expect } from 'bun:test';
 import { runProgram } from '#cli/main.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/system/git.ts';
@@ -8,10 +8,12 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/edits.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
 import type { CancelableSpawnOptions } from '#cli/types/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import type { RunReport, FixReport, CheckResult } from '#cli/types/engine/run.ts';
 import type { Sandbox, FindingRow, StdinOptions, ProcessOutput, ScopeFindingRow } from '#tests/types/setup.ts';
@@ -57,13 +59,15 @@ export async function runGspot(
 }
 
 /**
-Commit a folder and run init on it with --json. The result holds the plan and the settings that init writes.
+Commit a folder and run init on it with --json, with an install of the tools that installs nothing. The result holds
+the plan and the settings that init writes.
 */
 export async function runInit(
     root: string,
     commandArguments: readonly string[] = [],
 ): Promise<Required<Pick<InitJson, 'plan'>> & { settings: TomlTable }> {
     commitAll(root);
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const result = await runGspot(root, ['init', '--json', ...commandArguments]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan, settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;

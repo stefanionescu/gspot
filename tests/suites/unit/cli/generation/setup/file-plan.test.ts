@@ -1,13 +1,15 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/edits.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { WORKSPACE_PYTHON_FILES } from '#tests/config/generation/settings.ts';
 
@@ -27,6 +29,7 @@ test.each([
         attributes: 'change',
     },
 ] as const)('the init plan keeps the project TypeScript pin and lists $name', async ({ files, attributes }) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'package.json': '{"name":"example","private":true,"type":"module","devDependencies":{"typescript":"^5.0.0"}}\n',
         ...files,
@@ -44,6 +47,7 @@ test.each([
 });
 
 test('the init plan asks for git add --renormalize when the index holds CRLF files', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'notes.txt': 'one\r\ntwo\r\n', 'kept.txt': 'kept\n' });
     runGitStep(sandbox.path, ['add', '.']);
     const result = await runGspot(sandbox.path, ['init', '--json']);
@@ -56,6 +60,7 @@ test('the init plan asks for git add --renormalize when the index holds CRLF fil
 });
 
 test('init leaves an unsupported CI pipeline in place and names it in the plan', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'bitbucket-pipelines.yml': '{}\n' });
     const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -64,6 +69,7 @@ test('init leaves an unsupported CI pipeline in place and names it in the plan',
 });
 
 test('the init plan lists each submodule once and reads none of it', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir();
     await using outside = await createGitSandbox({});
     await createFileTree(sandbox.path, { 'README.md': 'Repository\n' });
@@ -81,6 +87,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
 });
 
 test('init plans no scope for an old lint folder, and --level all replaces the config files of that level', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(QUALITY_PACKAGE_FILES);
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json', '--level', 'all']);
@@ -95,6 +102,7 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
 });
 
 test('the init plan names the line of each lint command and leaves the file alone', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const manifest = '{\n  "private": true,\n  "scripts": { "lint": "eslint ." }\n}\n';
     await using sandbox = await createGitSandbox({ 'package.json': manifest, 'main.js': 'export const value = 1;\n' });
     commitAll(sandbox.path);
@@ -115,6 +123,7 @@ test('the init plan names the line of each lint command and leaves the file alon
 });
 
 test('init names the crlf setting of your .editorconfig as dropped', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ '.editorconfig': 'root = true\n\n[*]\nend_of_line = crlf\n' });
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
@@ -126,6 +135,7 @@ test('init names the crlf setting of your .editorconfig as dropped', async () =>
 });
 
 test('init lists your .editorconfig under write and not under delete when the generated one replaces it', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const authored = 'root = true\n[*]\nindent_style = space\nindent_size = 2\n';
     await using sandbox = await createGitSandbox({ '.editorconfig': authored });
     commitAll(sandbox.path);
@@ -139,6 +149,7 @@ test('init lists your .editorconfig under write and not under delete when the ge
 });
 
 test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that apply', async ({ changes }) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir({ 'control.txt': PRESERVE_SOURCE });
 
     commitAll(sandbox.path);
@@ -154,6 +165,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
 });
 
 test('init leaves CI off with a GitHub origin and names the commands that turn it on', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n' });
     runGitStep(sandbox.path, ['remote', 'add', 'origin', 'https://github.com/example/project.git']);
     const result = await runGspot(sandbox.path, ['init']);
@@ -168,6 +180,7 @@ test('init leaves CI off with a GitHub origin and names the commands that turn i
 });
 
 test('init lists at most five unchecked paths of an unsupported extension', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'package.json': '{"private":true}\n',
         infra: Object.fromEntries(
@@ -185,6 +198,7 @@ test('init lists at most five unchecked paths of an unsupported extension', asyn
 });
 
 test('init distinguishes named, required and always selected configurations', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'source.ts': 'export {};\n',
         'tsconfig.json': '{}\n',
@@ -198,6 +212,7 @@ test('init distinguishes named, required and always selected configurations', as
 });
 
 test('init identifies a configuration detected from a file', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ Dockerfile: 'FROM node:24\n' });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -206,6 +221,7 @@ test('init identifies a configuration detected from a file', async () => {
 });
 
 test('the init plan prints each scope, folds the always-selected configurations, and shows gspot.toml', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ ...WORKSPACE_PYTHON_FILES, 'AGENTS.md': '# Agents\n' });
     const result = await runGspot(sandbox.path, ['init']);
     expect(result.code, result.stdout + result.stderr).toBe(0);

@@ -91,7 +91,8 @@ export type IgnoreTarget = { unmatched: string; removed: string };
 
 export type UnsetOptions = { root: string; cwd: string; key: string; keys: string[]; scope?: string | undefined };
 
-export type InitJson = { root: string; plan: InitPlan; settingsText: string } & ApplyReport;
+export type InitJson = { root: string; plan: InitPlan; settingsText: string } & ApplyReport &
+    Pick<InstallCommandJson, 'installed' | 'missing' | 'steps'>;
 
 export type ConfigurationsOptions = { root: string; cwd: string; configurations: string[]; scope?: string | undefined };
 

@@ -241,3 +241,5 @@ export const TEAMS_MIGRATION_PATH = 'migrations/20240201_teams.sql';
 export const IGNORE_ALL_PATTERN = '*\n';
 
 export const CHANGED_CONTEXT = 'changed context';
+
+export const EMPTY_TOOL_INSTALL = { installed: [], missing: [], notes: [], steps: [] };

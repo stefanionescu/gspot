@@ -84,7 +84,7 @@ test('the text report prints each section with its rows', async () => {
     expect(text).toContain('  eslint  2.0s\n');
     expect(text).toContain('What gspot init would do\n  configurations\n');
     expect(text).toEndWith(
-        '  mise exec -- gspot init\n  mise exec -- gspot install\n  mise exec -- gspot check --fix\n  mise exec -- gspot baseline\n',
+        '  mise exec -- gspot init\n  mise exec -- gspot check --fix\n  mise exec -- gspot baseline\n',
     );
 });
 
@@ -94,7 +94,7 @@ test('the Markdown report uses headings and lists, and fences the plan', async (
     expect(text).toContain('## Secrets: 1 finding\n\n- src/key.ts:2  secrets/gitleaks-staged generic-api-key');
     expect(text).toContain('## What gspot init would do\n\n```text\nconfigurations\n');
     expect(text).toEndWith(
-        '- mise exec -- gspot init\n- mise exec -- gspot install\n- mise exec -- gspot check --fix\n- mise exec -- gspot baseline\n',
+        '- mise exec -- gspot init\n- mise exec -- gspot check --fix\n- mise exec -- gspot baseline\n',
     );
 });
 

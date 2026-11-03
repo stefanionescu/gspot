@@ -52,7 +52,7 @@ export function buildSetupReference(): SetupReference[] {
             start: runner.command,
             add,
             prerequisites,
-            lines: [...prerequisites, add, `${runner.command} init`, `${runner.command} install`],
+            lines: [...prerequisites, add, `${runner.command} init`],
             clone: [
                 ...(frozen.length === 0 ? [] : [frozen.join(' ')]),
                 `${runner.command} install`,
