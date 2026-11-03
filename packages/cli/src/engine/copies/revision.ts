@@ -3,22 +3,19 @@ import { GspotError } from '#cli/system/errors.ts';
 import { setImmediate } from 'node:timers/promises';
 import { openFiles } from '#cli/system/files/open.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { writeCopyFiles } from '#cli/engine/copies/files.ts';
-import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { copyValePackages } from '#cli/engine/copies/vale.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { writeRevisionFiles } from '#cli/engine/copies/files.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { runGit, readGitText } from '#cli/repository/git/run.ts';
+import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
-import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
+import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
-import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/repository/files.ts';
-import type { GitFile, Revision, TreeStatus } from '#cli/types/repository.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { visitGitBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
-import type { CopyFile, RevisionCopy, CopyIndexFile, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
+import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
+import { statSync, lstatSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
 import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
 
@@ -29,7 +26,6 @@ import {
     GIT_HASH_ARGUMENTS,
     GIT_PATH_ARGUMENTS,
     GIT_ALTERNATES_PATH,
-    OWNER_WRITABLE_FOLDER,
     GIT_SET_HEAD_ARGUMENTS,
     DEPENDENCY_REVISION_NOTE,
     GIT_EMPTY_INDEX_ARGUMENTS,
@@ -155,86 +151,6 @@ async function selectRevisionDependencies(
     return { dependencies, ...note };
 }
 
-function findCaseCollision(indexFiles: GitFile[]): [string, string] | undefined {
-    const seen = new Map<string, string>();
-    for (const { path } of indexFiles) {
-        const earlier = seen.get(path.toLowerCase());
-        if (earlier !== undefined) return [earlier, path];
-        seen.set(path.toLowerCase(), path);
-    }
-    return undefined;
-}
-
-async function listWorkingTreeMatches(
-    root: string,
-    { indexFiles, status }: { indexFiles: GitFile[]; status: TreeStatus | undefined },
-    cancelSignal: AbortSignal | undefined,
-): Promise<ReadonlySet<GitFile>> {
-    const { unstaged } = status ?? (await readTreeStatus(root, cancelSignal));
-    const changed = new Set(unstaged);
-    return new Set(
-        indexFiles.filter(({ path, mode }) => mode !== GITLINK_MODE && mode !== SYMLINK_MODE && !changed.has(path)),
-    );
-}
-
-async function* listBlobFiles(
-    blobs: AsyncIterable<readonly [string, Buffer]>,
-    filesByHash: Map<string, CopyIndexFile[]>,
-): AsyncGenerator<CopyFile> {
-    for await (const [hash, bytes] of blobs) {
-        const files = filesByHash.get(hash) ?? [];
-        for (const indexFile of files) yield { indexFile, bytes };
-    }
-}
-
-async function writeRevisionFiles(
-    root: string,
-    copyRoot: string,
-    { indexFiles, cloned }: { indexFiles: GitFile[]; cloned: ReadonlySet<GitFile> },
-    cancelSignal?: AbortSignal,
-): Promise<void> {
-    const collision = findCaseCollision(indexFiles);
-    const upper = copyRoot.toUpperCase();
-    if (collision !== undefined && upper !== copyRoot && statSync(upper, { throwIfNoEntry: false }) !== undefined)
-        throw new GspotError(
-            'copy',
-            `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
-        );
-    for (const indexFile of indexFiles) {
-        if (indexFile.mode !== GITLINK_MODE) continue;
-        const target = join(copyRoot, ...splitSystemPath(indexFile.path));
-        mkdirSync(target, { recursive: true, mode: OWNER_WRITABLE_FOLDER });
-        chmodSync(target, OWNER_WRITABLE_FOLDER);
-    }
-    const clonedPaths = [...cloned].map(({ path }) => path);
-    await writeCopyFiles({ root, target: copyRoot, files: clonedPaths, dependencies: [], cancelSignal });
-    for (const isLinked of [false, true]) {
-        const selected = Map.groupBy(
-            indexFiles.filter(
-                (indexFile): indexFile is CopyIndexFile =>
-                    indexFile.mode !== GITLINK_MODE &&
-                    (indexFile.mode === SYMLINK_MODE) === isLinked &&
-                    !cloned.has(indexFile),
-            ),
-            (indexFile) => indexFile.hash,
-        );
-        await visitGitBlobs(
-            copyRoot,
-            selected.keys().toArray(),
-            async (blobs) => {
-                await writeCopyFiles({
-                    root,
-                    target: copyRoot,
-                    files: listBlobFiles(blobs, selected),
-                    dependencies: [],
-                    cancelSignal,
-                });
-            },
-            cancelSignal,
-        );
-    }
-}
-
 async function initializeRevisionCopy(
     toplevel: string,
     copyRoot: string,
@@ -284,11 +200,7 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
         await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });
         const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
         const tree = treeLine.replace(TRAILING_NEWLINE, '');
-        const cloned =
-            source.kind === 'index'
-                ? await listWorkingTreeMatches(toplevel, { indexFiles, status: source.status }, cancelSignal)
-                : new Set<GitFile>();
-        await writeRevisionFiles(toplevel, copy.path, { indexFiles, cloned }, cancelSignal);
+        await writeRevisionFiles(toplevel, copy.path, { indexFiles, source }, cancelSignal);
         copyValePackages(
             toplevel,
             copy.path,

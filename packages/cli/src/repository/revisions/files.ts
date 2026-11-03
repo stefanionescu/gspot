@@ -8,6 +8,7 @@ import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
+import { runGit, readGitText, runGitBytes, readGitLines, runGitStream } from '#cli/repository/git/run.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
 import {
@@ -24,6 +25,12 @@ import {
 const GIT_INDEX_PATH_ARGUMENTS = ['rev-parse', '--path-format=absolute', '--git-path', 'index'] as const;
 
 const PRIVATE_INDEX_FILE = 'index';
+
+const GIT_BLOB_SIZES_ARGUMENTS = ['cat-file', '--batch-check=%(objectname) %(objectsize)'] as const;
+
+const BLOB_SIZE = /^\d+$/u;
+
+const BLOB_SIZE_FIELDS = 2;
 
 /**
 Collect the validated blobs.
@@ -106,6 +113,33 @@ export async function visitGitBlobs(
     );
     if (result.code !== 0)
         throw new GspotError('git', `Git could not read the objects of this revision: ${result.stderr.trim()}`);
+}
+
+/**
+Read the size of each blob with one Git process.
+
+@param root the folder where Git runs.
+@param hashes full blob object IDs.
+@param cancelSignal stops the command.
+@returns the size of each blob that Git holds, by object ID.
+*/
+export async function readBlobSizes(
+    root: string,
+    hashes: string[],
+    cancelSignal?: AbortSignal,
+): Promise<Map<string, number>> {
+    const requested = [...new Set(hashes)];
+    if (requested.length === 0) return new Map();
+    const lines = await readGitLines(root, GIT_BLOB_SIZES_ARGUMENTS, {
+        cancelSignal,
+        stdin: `${requested.join('\n')}\n`,
+    });
+    return new Map(
+        lines.flatMap((line): Array<[string, number]> => {
+            const [hash = '', size = ''] = line.split(' ', BLOB_SIZE_FIELDS);
+            return BLOB_SIZE.test(size) ? [[hash, Number(size)]] : [];
+        }),
+    );
 }
 
 /**

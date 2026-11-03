@@ -19,7 +19,7 @@ import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/engine/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { mkdir, readdir, symlink, copyFile, readFile, readlink, writeFile } from 'node:fs/promises';
+import { rm, mkdir, readdir, symlink, copyFile, readFile, readlink, writeFile } from 'node:fs/promises';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();
@@ -191,4 +191,16 @@ test('an index copy clones the files that match the index, and takes a changed f
     expect(cloned.some((source) => source.endsWith('kept.txt'))).toBe(true);
     expect(cloned.some((source) => source.endsWith('edited.txt'))).toBe(false);
     expect(await readFile(join(copy.root, 'edited.txt'), 'utf8')).toBe('staged\n');
+});
+
+test('an index copy holds the LF bytes of the index for a file that core.autocrlf checks out with CRLF', async () => {
+    await using sandbox = await testdir({ 'source.txt': 'one\ntwo\n', 'kept.txt': 'kept' });
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['config', 'core.autocrlf', 'true']);
+    await rm(join(sandbox.path, 'source.txt'));
+    runGitStep(sandbox.path, ['checkout', '--', 'source.txt']);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('one\r\ntwo\r\n');
+    using copy = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe('one\ntwo\n');
+    expect(await readFile(join(copy.root, 'kept.txt'), 'utf8')).toBe('kept');
 });
