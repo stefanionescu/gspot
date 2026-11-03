@@ -46,3 +46,21 @@ test('source HTML leaves layout to Prettier while built pages keep their existin
         else for (const rule of ['attr-case', 'attr-quotes', 'element-case']) expect(rules).toContain(rule);
     }
 });
+
+test.each([
+    ['a Starlight site', '{"private":true,"dependencies":{"@astrojs/starlight":"0.0.0-test"}}', []],
+    ['another site', '{"private":true}', ['no-implicit-button-type', 'unique-landmark']],
+])('the built pages of %s report the markup that its packages write: %j', async (_name, packageJson, expected) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['html', 'site']),
+        'package.json': packageJson,
+        'index.html': '<!doctype html><title>Root</title>',
+    });
+    const outputs = buildGeneratedFiles(await openSession(sandbox.path)).files;
+    const file = outputs.find(({ path }) => path.endsWith('/site/html-validate.json'))!;
+    const page =
+        '<!doctype html><html lang="en"><head><title>Example</title></head><body><nav><a href="/">Home</a></nav><nav><a href="/docs/">Docs</a></nav><button>Copy</button></body></html>';
+    const report = await new HtmlValidate(JSON.parse(file.content) as ConfigData).validateString(page);
+    const rules = new Set(report.results.flatMap(({ messages }) => messages.map(({ ruleId }) => ruleId)));
+    expect(['no-implicit-button-type', 'unique-landmark'].filter((rule) => rules.has(rule))).toStrictEqual(expected);
+});
