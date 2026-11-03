@@ -78,15 +78,15 @@ starts with `!` has no place in an ignore, so the table lists it as dropped.
 
 gspot compares the names and options of your rules with the rules it runs. The table prints one row per replaced config:
 
-| Group                                 | Meaning                                                                           | What you do                                                 |
-| ------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| covered                               | gspot runs the rule the same way.                                                 | Nothing.                                                    |
-| carried over                          | init wrote the rule into `gspot.toml`.                                            | Nothing.                                                    |
-| other options, to set after init      | gspot runs the rule with other options, and only `gspot scan` could compare them. | Set them in `tools.<tool>.rules` if you want to keep them.  |
-| needs a reason                        | You turned off a rule that gspot runs, or gave it a looser limit.                 | Fix the findings, or run the `gspot ignore` line it names.  |
-| keep with a plugin record             | The rule comes from a plugin that gspot does not install.                         | Add a [plugin record](/configure/lint-rules/#plugins).      |
-| keep with a command check of your own | gspot does not run the rule, and no plugin record can add it.                     | Keep it with a [command check](/configure/command-checks/). |
-| dropped                               | `gspot.toml` has no place for it.                                                 | Decide whether you still need it.                           |
+| Group                                 | Meaning                                                                                                                                                                                           | What you do                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| covered                               | gspot runs the rule the same way.                                                                                                                                                                 | Nothing.                                                    |
+| carried over                          | init wrote the rule into `gspot.toml`. An `ignore <rule>` entry is a rule you turned off, or gave a looser limit: init wrote an `[[ignore]]` record with the reason "Carried over from `<file>`." | Nothing. Replace the reason with your own when you know it. |
+| other options, to set after init      | gspot runs the rule with other options, and only `gspot scan` could compare them.                                                                                                                 | Set them in `tools.<tool>.rules` if you want to keep them.  |
+| needs a reason                        | `gspot scan` found an ESLint or Stylelint rule that you turned off, or gave a looser limit.                                                                                                       | Fix the findings, or run the `gspot ignore` line it names.  |
+| keep with a plugin record             | The rule comes from a plugin that gspot does not install.                                                                                                                                         | Add a [plugin record](/configure/lint-rules/#plugins).      |
+| keep with a command check of your own | gspot does not run the rule, and no plugin record can add it.                                                                                                                                     | Keep it with a [command check](/configure/command-checks/). |
+| dropped                               | `gspot.toml` has no place for it.                                                                                                                                                                 | Decide whether you still need it.                           |
 
 Each tool reads its rules from one place:
 

@@ -71,19 +71,13 @@ export const CARRYOVER_ROW_CASES = [
         name: 'a Ruff rule that a carried selector holds',
         files: { 'ruff.toml': 'select = ["E", "F", "T20"]\nignore = ["E501"]\n', 'main.py': 'VALUE = 1\n' },
         path: 'ruff.toml',
-        row: { carried: ['E'], reasons: ['gspot ignore python/ruff --rule E501 --reason "<why>"'] },
+        row: { carried: ['E', 'ignore E501'], reasons: [] },
     },
     {
         name: 'Ruff rules that the selector ALL holds',
         files: { 'ruff.toml': '[lint]\nselect = ["ALL"]\nignore = ["E", "D"]\n', 'main.py': 'VALUE = 1\n' },
         path: 'ruff.toml',
-        row: {
-            carried: ['ALL'],
-            reasons: [
-                'gspot ignore python/ruff --rule E --reason "<why>"',
-                'gspot ignore python/ruff --rule D --reason "<why>"',
-            ],
-        },
+        row: { carried: ['ALL', 'ignore E', 'ignore D'], reasons: [] },
     },
     {
         name: 'the prettier key of package.json',

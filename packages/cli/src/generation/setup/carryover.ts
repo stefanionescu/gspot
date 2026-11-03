@@ -1,21 +1,18 @@
 import { posix } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { TRAILING_SLASH } from '#cli/config/system.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { EDITORCONFIG_FILE } from '#cli/config/generation.ts';
-import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
 import { listUnparsedCiFiles } from '#cli/repository/lint-commands.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
+import { readIgnoreFiles, convertIgnorePattern } from '#cli/generation/setup/ignore-files.ts';
 import { readRuffOptions, readPrettierOptions, buildPrettierOverrides } from '#cli/generation/setup/format.ts';
 import { convertRule, compareRules, compareRuffRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
 
@@ -29,13 +26,11 @@ import type {
     MarkdownlintConfig,
 } from '#cli/types/generation.ts';
 import {
-    IGNORE_FILES,
     CARRIED_TOOLS,
-    LEADING_SLASH,
+    RUFF_CHECK_ID,
     RUFF_CHECK_IDS,
     EMPTY_CARRYOVER,
     RUFF_STYLE_KEYS,
-    COMMENT_PATTERN,
     RUFF_FORMAT_KEYS,
     COMMITLINT_TARGET,
     PRINTED_RULE_TOOLS,
@@ -56,58 +51,13 @@ import {
     MARKDOWNLINT_RETIRED_RULES,
 } from '#cli/config/repository/setup.ts';
 
-function convertIgnorePattern(pattern: string, folder: string, tracked: string[]): string | undefined {
-    const inFolder = tracked.filter((path) => folder === '' || path.startsWith(`${folder}/`));
-    const base = pattern.replace(LEADING_SLASH, '').replace(TRAILING_SLASH, '');
-    const isAnchored = pattern.slice(0, -1).includes('/');
-    const glob = joinScope(folder, isAnchored ? base : `**/${base}`);
-    return [glob, `${glob}/**`].find((selector) => {
-        const isMatched = buildPathMatcher([selector]);
-        return inFolder.some((path) => isMatched(path));
-    });
-}
-
-function convertIgnoreFile(path: string, text: string, tracked: string[]): { paths: string[]; dropped: string[] } {
-    const folder = posix.dirname(path) === '.' ? '' : posix.dirname(path);
-    const patterns = text
-        .split(LINE_BREAK)
-        .map((line) => line.trim())
-        .filter((line) => line !== '' && !COMMENT_PATTERN.test(line));
-    const kept = patterns.filter((pattern) => !pattern.startsWith('!'));
-    const paths = kept.flatMap((pattern) => convertIgnorePattern(pattern, folder, tracked) ?? []);
-    return { paths: [...new Set(paths)], dropped: patterns.filter((pattern) => pattern.startsWith('!')) };
-}
-
-function readIgnoreFiles({ repository, tools }: CarryoverInput): CarryoverSection {
-    const tracked = repository.files.filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`)).map(({ path }) => path);
-    const owned = IGNORE_FILES.filter(({ tool }) => tools.has(tool)).flatMap(({ file, tool, check }) =>
-        tracked
-            .filter((path) => posix.basename(path) === file)
-            .map((path) => ({ path, tool, check, text: findText(repository.root, path) ?? '' })),
-    );
-    const converted = owned.map((each) => ({ ...each, ...convertIgnoreFile(each.path, each.text, tracked) }));
-    return {
-        tools: {},
-        ignore: converted
-            .filter(({ paths }) => paths.length > 0)
-            .map(({ path, paths, check }) => ({ check, paths, reason: `${IGNORE_REASON_START} ${path}.` })),
-        rows: converted.map(({ path, tool, paths, dropped }) => ({
-            ...CARRYOVER_ROW_START,
-            path,
-            tool,
-            carried: paths,
-            dropped,
-        })),
-    };
-}
-
 function readRuffCarryover(input: CarryoverInput): CarryoverSection {
     const { repository, tools, configurations, level } = input;
     const found = tools.has('ruff') ? readRuffOptions(repository.root) : undefined;
     if (found === undefined) return EMPTY_CARRYOVER;
     const { path, options } = found;
     const shipped = configurations.flatMap(({ ruff }) => [...ruff.basic, ...(level === 'all' ? ruff.all : [])]);
-    const { rules, row } = compareRuffRules({ path, options, shipped });
+    const { rules, ignores, row } = compareRuffRules({ path, options, shipped });
     const tracked = repository.files.map((file) => file.path);
     const excludes = [...(options.exclude ?? []), ...(options['extend-exclude'] ?? [])];
     const paths = excludes.flatMap((pattern) => convertIgnorePattern(pattern, '', tracked) ?? []);
@@ -118,7 +68,15 @@ function readRuffCarryover(input: CarryoverInput): CarryoverSection {
     ];
     return {
         tools: rules.length === 0 ? {} : { ruff: { rules } },
-        ignore: paths.length === 0 ? [] : RUFF_CHECK_IDS.map((check) => ({ check, paths, reason })),
+        ignore: [
+            ...(paths.length === 0 ? [] : RUFF_CHECK_IDS.map((check) => ({ check, paths, reason }))),
+            ...ignores.map(({ rule, file }) => ({
+                check: RUFF_CHECK_ID,
+                rule,
+                ...(file !== undefined && { paths: [file] }),
+                reason,
+            })),
+        ],
         rows: [{ ...row, carried: [...row.carried, ...format, ...paths] }],
     };
 }
@@ -147,7 +105,8 @@ function readGeneratedFile(session: CarryoverInput['session'], target: string): 
     return parseJsonFile(target, generated?.content ?? '{}');
 }
 
-function buildToolCarryover({ setting, tool, path, compared, options, dropped }: ToolCarryoverInput): CarryoverSection {
+function buildToolCarryover(input: ToolCarryoverInput): CarryoverSection {
+    const { setting, check, tool, path, compared, options, dropped } = input;
     const held = Map.groupBy(
         options,
         ([rule, value]) => toolsSchema.shape[setting].safeParse({ rules: { [rule]: value } }).success,
@@ -158,12 +117,16 @@ function buildToolCarryover({ setting, tool, path, compared, options, dropped }:
         path,
         tool,
         covered: compared.covered,
-        carried: carried.map(([rule]) => rule),
-        reasons: compared.reasons,
+        carried: [...carried.map(([rule]) => rule), ...compared.weakened.map((rule) => `ignore ${rule}`)],
         dropped: [...dropped, ...compared.added, ...(held.get(false) ?? []).map(([rule]) => rule)],
     };
     const rules = Object.fromEntries(carried);
-    return { tools: carried.length === 0 ? {} : { [setting]: { rules } }, ignore: [], rows: [row] };
+    const reason = `${IGNORE_REASON_START} ${path}.`;
+    return {
+        tools: carried.length === 0 ? {} : { [setting]: { rules } },
+        ignore: compared.weakened.map((rule) => ({ check, rule, reason })),
+        rows: [row],
+    };
 }
 
 function readMarkdownlintCarryover({ repository, session, tools }: CarryoverInput): CarryoverSection {
@@ -189,6 +152,7 @@ function readMarkdownlintCarryover({ repository, session, tools }: CarryoverInpu
     });
     return buildToolCarryover({
         setting: 'markdownlint',
+        check: MARKDOWNLINT_CHECK_ID,
         tool: 'markdownlint-cli2',
         path: found.path,
         compared,
@@ -216,6 +180,7 @@ async function readCommitlintCarryover({ repository, session, tools }: Carryover
     });
     return buildToolCarryover({
         setting: 'commitlint',
+        check: COMMITLINT_CHECK_ID,
         tool: 'commitlint',
         path: config.path,
         compared,

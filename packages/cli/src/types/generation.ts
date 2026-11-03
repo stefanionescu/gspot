@@ -153,6 +153,7 @@ export type CarryoverSection = { tools: TomlTable; ignore: readonly TomlTable[];
 
 export type ToolCarryoverInput = {
     setting: 'markdownlint' | 'commitlint';
+    check: string;
     tool: string;
     path: string;
     compared: ComparedRules;
@@ -198,13 +199,17 @@ export type RuleComparison = {
 export type ComparedRules = {
     covered: number;
     options: Map<string, unknown[]>;
-    reasons: string[];
+    weakened: string[];
     added: string[];
 };
 
 export type RuffRuleInput = { path: string; options: RuffOptions; shipped: string[] };
 
-export type RuffRules = { rules: string[]; row: CarryoverRow };
+export type RuffRules = {
+    rules: string[];
+    ignores: Array<{ rule: string; file: string | undefined }>;
+    row: CarryoverRow;
+};
 
 export type PrintedRules = {
     root: string;

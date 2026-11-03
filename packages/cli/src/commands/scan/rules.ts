@@ -1,9 +1,11 @@
+import { quoteArgument } from '#cli/system/text.ts';
 import { compareRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
 import type { RuleRead, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 
 import {
     RULE_PRINT_FLAG,
     PRINTED_RULE_TOOLS,
+    REASON_PLACEHOLDER,
     CARRYOVER_ROW_START,
     NOT_COMPARED_MESSAGE,
 } from '#cli/config/repository/setup.ts';
@@ -73,7 +75,9 @@ export async function compareInstalledRules(root: string, reads: RuleRead[]): Pr
                 tool,
                 covered: compared.covered,
                 differing: [...compared.options].map(([rule, options]) => `${rule} ${JSON.stringify(options)}`),
-                reasons: compared.reasons,
+                reasons: compared.weakened.map(
+                    (rule) => `gspot ignore ${check} --rule ${quoteArgument(rule)} --reason ${REASON_PLACEHOLDER}`,
+                ),
                 plugins: (added.get(true) ?? []).map((rule) => `${rule} ${JSON.stringify(user.get(rule)?.options)}`),
                 commandChecks: added.get(false) ?? [],
             };

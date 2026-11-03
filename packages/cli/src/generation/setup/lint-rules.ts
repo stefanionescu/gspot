@@ -1,12 +1,19 @@
 import { runTool } from '#cli/tools/run.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument } from '#cli/system/text.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
 import { printedRulesSchema } from '#cli/schemas/generation.ts';
 import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
+import {
+    LIMIT_RULE,
+    FIRST_NUMBER,
+    RUFF_ANY_PREFIX,
+    RUFF_ALL_SELECTOR,
+    CARRYOVER_ROW_START,
+    PRINT_TIMEOUT_SECONDS,
+} from '#cli/config/repository/setup.ts';
 import type {
     RuffRules,
     RuleState,
@@ -17,16 +24,6 @@ import type {
     RuffRuleInput,
     RuleComparison,
 } from '#cli/types/generation.ts';
-import {
-    LIMIT_RULE,
-    FIRST_NUMBER,
-    RUFF_CHECK_ID,
-    RUFF_ANY_PREFIX,
-    RUFF_ALL_SELECTOR,
-    REASON_PLACEHOLDER,
-    CARRYOVER_ROW_START,
-    PRINT_TIMEOUT_SECONDS,
-} from '#cli/config/repository/setup.ts';
 
 function isWeakerRule(rule: string, user: unknown[], shipped: unknown[]): boolean {
     const value = FIRST_NUMBER.exec(JSON.stringify(user))?.[0];
@@ -34,16 +31,9 @@ function isWeakerRule(rule: string, user: unknown[], shipped: unknown[]): boolea
     return LIMIT_RULE.test(rule) && value !== undefined && limit !== undefined && Number(value) > Number(limit);
 }
 
-function formatIgnoreLine(check: string, rule: string, file?: string): string {
-    const anchored = file?.includes('/') === false ? `**/${file}` : file;
-    const paths = anchored === undefined ? '' : ` --paths ${quoteArgument(anchored)}`;
-    const name = quoteArgument(rule);
-    return `gspot ignore ${check} --rule ${name}${paths} --reason ${REASON_PLACEHOLDER}`;
-}
-
 function classifyRule(rule: string, state: RuleState, shipped: RuleState | undefined): keyof ComparedRules {
     if (shipped?.on !== true) return state.on ? 'added' : 'covered';
-    if (!state.on || isWeakerRule(rule, state.options, shipped.options)) return 'reasons';
+    if (!state.on || isWeakerRule(rule, state.options, shipped.options)) return 'weakened';
     return isDeepStrictEqual(state.options, shipped.options) ? 'covered' : 'options';
 }
 
@@ -63,7 +53,7 @@ export function convertRule(value: unknown, hasSeverity: boolean): RuleState {
 /**
 Compare the names and options of the rules of a replaced config with what gspot runs. The same rule counts as covered.
 A rule that gspot runs with other options carries over, unless the options give a weaker limit. A rule that the user
-turned off, or weakened, needs a reason. The caller decides what happens to a rule that gspot does not run.
+turned off, or weakened, carries over as an ignore. The caller decides what happens to a rule that gspot does not run.
 
 @param input the check, the rules of the user, and what gspot runs.
 */
@@ -72,7 +62,7 @@ export function compareRules(input: RuleComparison): ComparedRules {
     return {
         covered: groups.get('covered')?.length ?? 0,
         options: new Map((groups.get('options') ?? []).map(([rule, { options }]) => [rule, options])),
-        reasons: (groups.get('reasons') ?? []).map(([rule]) => formatIgnoreLine(input.check, rule)),
+        weakened: (groups.get('weakened') ?? []).map(([rule]) => rule),
         added: (groups.get('added') ?? []).map(([rule]) => rule),
     };
 }
@@ -80,7 +70,7 @@ export function compareRules(input: RuleComparison): ComparedRules {
 /**
 Compare the selectors of a Ruff config with the selectors that gspot runs. A selector counts as covered when a selector
 of gspot holds it: E5 holds E501, and A holds A001 but no selector of another Ruff plugin. A rule that the config turns
-off needs a reason when a shipped or a carried selector holds it.
+off carries over as an ignore when a shipped or a carried selector holds it.
 
 @param input the Ruff settings, and the selectors that gspot runs.
 */
@@ -100,15 +90,18 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
         ...[...(lint.ignore ?? []), ...(lint['extend-ignore'] ?? [])].map((rule) => ({ rule, file: undefined })),
         ...perFile.flatMap(([file, ignored]) => ignored.map((rule) => ({ rule, file }))),
     ];
+    const ignores = turnedOff
+        .filter(({ rule }) => runsAfterInit.test(rule))
+        .map(({ rule, file }) => ({ rule, file: file === undefined || file.includes('/') ? file : `**/${file}` }));
     const row: CarryoverRow = {
         ...CARRYOVER_ROW_START,
         path,
         tool: 'ruff',
         covered: selected.length - added.length,
-        carried: rules,
-        reasons: turnedOff
-            .filter(({ rule }) => runsAfterInit.test(rule))
-            .map(({ rule, file }) => formatIgnoreLine(RUFF_CHECK_ID, rule, file)),
+        carried: [
+            ...rules,
+            ...ignores.map(({ rule, file }) => (file === undefined ? `ignore ${rule}` : `ignore ${rule} in ${file}`)),
+        ],
         dropped: [
             ...Object.entries({ '': options, 'lint.': options.lint, 'format.': options.format }).flatMap(
                 ([prefix, table]) => (table?.dropped ?? []).map((key) => `${prefix}${key}`),
@@ -117,7 +110,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
             ...turnedOff.map(({ rule }) => rule).filter((rule) => !RUFF_SELECTOR.test(rule)),
         ],
     };
-    return { rules, row };
+    return { rules, ignores, row };
 }
 
 /**
