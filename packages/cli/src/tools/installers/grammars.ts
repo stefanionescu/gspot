@@ -62,8 +62,9 @@ Download each grammar that the repository needs and the shared folder lacks.
 @returns the line about the grammars that it downloaded, or an empty string.
 */
 export async function installGrammars(install: ToolInstall): Promise<string> {
-    let downloaded = 0;
-    for (const grammar of listRepositoryGrammars(install))
-        if (await downloadGrammar(grammar, install.session)) downloaded += 1;
+    const downloads = await Promise.all(
+        listRepositoryGrammars(install).map((grammar) => downloadGrammar(grammar, install.session)),
+    );
+    const downloaded = downloads.filter(Boolean).length;
     return downloaded === 0 ? '' : `installed ${formatCount(downloaded, GRAMMAR_TOOL_NOUN)}`;
 }
