@@ -208,11 +208,6 @@ const forwardingFilesSchema = z.strictObject({
     reason: nonemptyStringSchema,
 });
 
-const exportNamesSchema = z.strictObject({
-    files: z.string().min(1).array().min(1),
-    names: z.string().min(1).array().min(1),
-});
-
 const commitlintTableSchema = z.strictObject({ rules: z.record(z.string(), z.json().array()).default({}) });
 
 const namingTableSchema = z.strictObject({
@@ -237,7 +232,6 @@ export const manifestSchema = z
                 all_level_rules: allLevelRulesSchema.prefault([]),
                 selectors: selectorSchema.array().default([]),
                 rules_off: rulesOffSchema.array().default([]),
-                export_names: exportNamesSchema.array().default([]),
                 forwarding_files: forwardingFilesSchema.array().default([]),
                 client_environment: clientEnvironmentSchema.array().default([]),
                 required_tools: z.string().min(1).array().default([]),

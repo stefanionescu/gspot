@@ -4,7 +4,8 @@ import plugin from '#eslint-plugin/plugin.ts';
 
 test('the recommended preset reports the rules of its level, and the all preset adds the others', () => {
     const linter = new Linter({ configType: 'flat', cwd: '/repo' });
-    const source = "'use client';\nexport function readKey() {\n    return process.env.SECRET_KEY;\n}\n";
+    const source =
+        "'use client';\nfunction readKey() {\n    return process.env.SECRET_KEY;\n}\nexport const key = readKey();\n";
     const options = { filename: '/repo/app/page.js' };
     const recommended: object[] = [plugin.configs.recommended];
     expect(linter.verify(source, recommended, options).map(({ ruleId }) => ruleId)).toStrictEqual([

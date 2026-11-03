@@ -49,8 +49,9 @@ test('level all keeps an if-else helper, whose ternary form gspot/no-trivial-fun
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}',
         'branch.js':
-            "export function countLabel(count) {\n    if (count === 1) return 'one item';\n    else return 'many items';\n}\n",
-        'ternary.js': "export function countLabel(count) {\n    return count === 1 ? 'one item' : 'many items';\n}\n",
+            "function countLabel(count) {\n    if (count === 1) return 'one item';\n    else return 'many items';\n}\nexport const label = countLabel(2);\n",
+        'ternary.js':
+            "function countLabel(count) {\n    return count === 1 ? 'one item' : 'many items';\n}\nexport const label = countLabel(2);\n",
     });
     const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['branch.js', 'ternary.js'], rules)).toStrictEqual([

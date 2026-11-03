@@ -16,13 +16,12 @@ test('Next.js keeps its project root and pages rule with a pages scope', async (
     expect(config.settings['next']).toStrictEqual({ rootDir: sandbox.path });
 });
 
-test('at level all, a route handler that Next.js calls by name is not a trivial function', async () => {
-    const routeSource = 'export async function GET() {\n    return Response.json([]);\n}\n';
+test('at level all, a route handler that Next.js calls by name is not a trivial function, and a helper with one caller is', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'nextjs'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module","dependencies":{"next":"0.0.0-test"}}',
-        'app/items/route.js': routeSource,
-        'lib/items.js': routeSource,
+        'app/items/route.js': 'export async function GET() {\n    return Response.json([]);\n}\n',
+        'lib/items.js': 'function listItems() {\n    return [];\n}\nexport const items = listItems();\n',
     });
     const eslint = await buildEslint(sandbox.path);
     const findings = await listLintFindings(

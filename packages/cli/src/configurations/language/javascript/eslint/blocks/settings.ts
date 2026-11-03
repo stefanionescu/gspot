@@ -111,7 +111,6 @@ function buildTrivialRules(
 ): Record<string, unknown> {
     const limitRules = getRequired(LIMIT_RULES_BY_CHECK, ESLINT_CHECK, 'limit rules');
     const tables = scope.configurations.map(({ eslint }) => eslint);
-    const exportNames = tables.flatMap(({ export_names }) => export_names);
     const forwardingFiles = tables.flatMap(({ forwarding_files }) => forwarding_files.flatMap(({ files }) => files));
     return {
         [TRIVIAL_FILES_RULE]: [
@@ -130,7 +129,6 @@ function buildTrivialRules(
                     limitRules[TRIVIAL_FUNCTIONS_RULE] as string,
                     language,
                 ),
-                ...(exportNames.length > 0 && { exportNames }),
             },
         ],
     };

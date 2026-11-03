@@ -1,11 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
-export type TrivialFunctionsOptions = [
-    {
-        trivialFunctionStatements: number;
-        exportNames: ReadonlyArray<{ files: readonly string[]; names: readonly string[] }>;
-    },
-];
+export type TrivialFunctionsOptions = [{ trivialFunctionStatements: number }];
 
 export type ReturnScope = {
     codePath: TSESLint.CodePath;

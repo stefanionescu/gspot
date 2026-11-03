@@ -83,7 +83,7 @@ test.each(['all'] as const)(
             "import { start } from './start.js';\nexport function boot() { start(); }\n",
         );
         const publicFindings = await listTrivialFindings(sandbox.path, settings);
-        expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
+        expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual([]);
     },
 );
 

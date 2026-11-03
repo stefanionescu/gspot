@@ -24,12 +24,20 @@ buildRuleTester().run<
         'class A { constructor(public value: number) {} }',
         'class A { @decorate method() { return 1; } }',
         'const options = { nested: { onValue(value) { write(value); } } }; consume(options);',
+        'function format(count) { return String(count); } write(format(1)); write(format(2));',
+        'const format = (count) => String(count); write(format(1)); consume(format);',
+        'const count = (n) => n === 0 ? 0 : count(n - 1); count(2);',
+        'export function local() { return 1; }',
+        'function local() { return 1; } export { local };',
+        'function local() { return 1; } export default local;',
+        'export const local = () => 1;',
+        'export default function local() { return 1; }',
+        'export const handler = ready ? () => first() : () => second();',
     ],
     invalid: [
         ...[
             'function Row() { return <div />; } export function List() { setup(); configure(); return <Row />; }',
             'function count(n) { return n === 0 ? 0 : count(n - 1); }',
-            'const count = (n) => n === 0 ? 0 : count(n - 1); count(2);',
             'const count = function recurse(n) { return n === 0 ? 0 : recurse(n - 1); }; count(2);',
             '(function count(n) { return n === 0 ? 0 : count(n - 1); })(2);',
             'function assertText(value: unknown): asserts value is string { if (typeof value !== "string") throw new Error(); }',
@@ -63,16 +71,11 @@ buildRuleTester().run<
             '(ready ? (() => work()) : fallback)();',
             '(function () { work(); })();',
             'function local() { type Signature = typeof local; return 1; }',
-            'export function local() { return 1; }',
-            'function local() { return 1; } export { local };',
-            'export const local = () => 1;',
-            'export default function local() { return 1; }',
             'function noop() {} export function build() { setup(); configure(); return noop; }',
-        ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
-        ...[
-            'export const handler = ready ? () => first() : () => second();',
             'function subscribe(listener) { return store.subscribe(listener); } export function useValue() { return useSyncExternalStore(subscribe, getSnapshot); }',
-        ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }, { messageId: 'trivial' as const }] })),
+            'function format(count) { return String(count); } write(format(1));',
+            'function unused() { return 1; }',
+        ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
         {
             code: 'function outer() { function inner() {} }',
             errors: [{ messageId: 'trivial' }, { messageId: 'trivial' }],
@@ -90,52 +93,19 @@ buildRuleTester().run<
 buildRuleTester().run<
     keyof (typeof plugin.rules)['no-trivial-functions']['meta']['messages'],
     [Partial<TrivialFunctionsOptions[0]>]
->('no-trivial-functions overloads and framework exports', plugin.rules['no-trivial-functions'], {
+>('no-trivial-functions overloads and exports', plugin.rules['no-trivial-functions'], {
     valid: [
         'function parse(value: string): number;\nfunction parse(value: number): number;\nfunction parse(value: unknown) { return Number(value); }',
         'export function parse(value: string): number;\nexport function parse(value: number): number;\nexport function parse(value: unknown) { return Number(value); }',
         'class Parser { parse(value: string): number;\nparse(value: number): number;\nparse(value: unknown) { return Number(value); } }',
-        ...(
-            [
-                ['/repo/app/items/route.ts', 'export async function GET() { return Response.json(items); }'],
-                [
-                    '/repo/app/items/route.ts',
-                    'export const POST = async (request: Request) => Response.json(await request.json());',
-                ],
-                ['/repo/app/page.tsx', 'export default function Page() { return <main />; }'],
-                ['/repo/app/page.tsx', 'export async function generateMetadata() { return { title: "Items" }; }'],
-            ] as const
-        ).map(([filename, code]) => ({
-            code,
-            filename,
-            options: [
-                {
-                    exportNames: [
-                        { files: ['**/app/**/route.ts'], names: ['GET', 'POST'] },
-                        { files: ['**/app/**/page.tsx'], names: ['default', 'generateMetadata'] },
-                    ],
-                },
-            ] as const,
-        })),
+        'export async function GET() { return Response.json(items); }',
+        'export const POST = async (request: Request) => Response.json(await request.json());',
+        'export default function Page() { return <main />; }',
     ],
     invalid: [
         {
-            code: 'export async function GET() { return Response.json(items); }',
-            filename: '/repo/lib/items.ts',
-            options: [{ exportNames: [{ files: ['**/app/**/route.ts'], names: ['GET'] }] }],
-            errors: [{ messageId: 'trivial', data: { name: "async function 'GET'", statements: '1 statement' } }],
-        },
-        {
-            code: 'export async function PUT() { return Response.json(items); }',
-            filename: '/repo/app/items/route.ts',
-            options: [{ exportNames: [{ files: ['**/app/**/route.ts'], names: ['GET'] }] }],
-            errors: [{ messageId: 'trivial', data: { name: "async function 'PUT'", statements: '1 statement' } }],
-        },
-        {
             code: 'async function GET() { return Response.json(items); }\nGET();',
-            filename: '/repo/app/items/route.ts',
-            options: [{ exportNames: [{ files: ['**/app/**/route.ts'], names: ['GET'] }] }],
-            errors: [{ messageId: 'trivial' }],
+            errors: [{ messageId: 'trivial', data: { name: "async function 'GET'", statements: '1 statement' } }],
         },
         {
             code: 'declare function parse(value: string): number;\nfunction other(value: unknown) { return Number(value); }',

@@ -66,18 +66,6 @@ allowed_names = ["NODE_ENV", "SITE", "ASSETS_PREFIX"]
 files = ["**/*.astro/*.{js,ts}"]
 public_prefixes = ["PUBLIC_"]
 
-[[eslint.export_names]]
-files = ["**/pages/**/*.{js,ts}"]
-names = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "ALL", "getStaticPaths"]
-
-[[eslint.export_names]]
-files = ["**/pages/**/*.astro"]
-names = ["getStaticPaths"]
-
-[[eslint.export_names]]
-files = ["**/middleware.{js,ts}", "**/middleware/index.{js,ts}"]
-names = ["onRequest"]
-
 [[eslint.forwarding_files]]
 files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
 reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."

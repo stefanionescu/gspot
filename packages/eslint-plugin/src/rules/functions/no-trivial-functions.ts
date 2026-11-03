@@ -1,10 +1,8 @@
-import picomatch from 'picomatch';
 import { createRule } from '../../rule.ts';
+import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { type FunctionNode } from '../../types/plugin.ts';
-import { findPathInFolder } from '../../language/modules.ts';
-import { PLUGIN_PREFIX, FUNCTION_NODES } from '../../config/plugin.ts';
 import { type TrivialFunctionsOptions } from '../../types/functions.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     ONE_STATEMENT,
@@ -17,6 +15,8 @@ import {
     TRIVIAL_FUNCTION_STATEMENTS,
     TRIVIAL_FUNCTION_OPTIONS_SCHEMA,
 } from '../../config/functions.ts';
+
+const EXPORT_REFERENCE_PARENTS: ReadonlySet<string> = new Set(['ExportSpecifier', 'ExportDefaultDeclaration']);
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
@@ -108,10 +108,23 @@ function getExportName(node: FunctionNode): string | undefined {
     return isExportedConstant && parent.id.type === AST_NODE_TYPES.Identifier ? parent.id.name : undefined;
 }
 
-function isRequired(node: FunctionNode, exportNames: ReadonlySet<string>): boolean {
-    if (isFrameworkMember(node) || isOverloadedMethod(node) || isOverloadedFunction(node)) return true;
-    const name = getExportName(node);
-    return name !== undefined && exportNames.has(name);
+function findVariable(node: FunctionNode, source: TSESLint.SourceCode): TSESLint.Scope.Variable | undefined {
+    const holder = node.type === AST_NODE_TYPES.FunctionDeclaration ? undefined : getOutermostValue(node).parent;
+    if (holder?.type === AST_NODE_TYPES.VariableDeclarator && holder.id.type === AST_NODE_TYPES.Identifier)
+        return source.getDeclaredVariables(holder)[0];
+    const name = node.id?.name;
+    return name === undefined
+        ? undefined
+        : source.getDeclaredVariables(node).find((variable) => variable.name === name);
+}
+
+function isShared(node: FunctionNode, source: TSESLint.SourceCode): boolean {
+    if (getExportName(node) !== undefined) return true;
+    const references = findVariable(node, source)?.references.filter((reference) => reference.init !== true) ?? [];
+    return (
+        references.length > 1 ||
+        references.some(({ identifier }) => EXPORT_REFERENCE_PARENTS.has(identifier.parent.type))
+    );
 }
 
 function isInlineValue(node: FunctionNode): boolean {
@@ -126,16 +139,16 @@ function isInlineValue(node: FunctionNode): boolean {
 export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>({
     name: 'no-trivial-functions',
     meta: {
-        defaultOptions: [{ trivialFunctionStatements: TRIVIAL_FUNCTION_STATEMENTS, exportNames: [] }],
+        defaultOptions: [{ trivialFunctionStatements: TRIVIAL_FUNCTION_STATEMENTS }],
         type: 'suggestion',
         docs: {
             example:
-                'The function `function one() { return 1; }` reports `trivial`. Replace its calls with the value `1` and delete the function. A function written inline as a value has no name and is not reported: a callback argument, an array element, a return value, or a member of an object literal. The implementation of an overload set is not reported, and neither is a route export that a framework calls by name, such as `export async function GET() { return Response.json(items); }` in a Next.js route file. Another function that must stay, such as a method that an interface calls by name, gets a suppression comment with its reason.',
+                'The function `function one() { return 1; }` with the one call `total(one())` reports `trivial`. Replace the call with `total(1)` and delete the function. A function that two places use, or that the module exports, is not reported.',
             level: 'all',
             description:
-                'Reports every function except inline values at or under the `trivialFunctionStatements` limit: function declarations, functions assigned to a name, and the methods, accessors, and constructors of classes, exported or not. The count includes nested callbacks. A function written inline as a value is not reported: a callback argument, an array element, a return value, a default value, or an assignment to a member. No member of an object literal is reported: methods, accessors, and function values alike. A decorated method and a constructor with parameter properties are not reported, because a framework calls them. Other class methods are reported. The implementation of an overloaded function or method is not reported, because the overload signatures need it. In a file that matches the `files` of an `exportNames` entry, a function exported under one of its `names` is not reported, because the framework calls it by that name.',
+                'Reports a function of `trivialFunctionStatements` statements or fewer, nested callbacks included, when the module does not export it and at most one place in the file uses it. A class method is reported however many places call it. A function written inline as a value, a decorated method, and the implementation of an overload set are not reported.',
             why: 'An unnecessary function adds another name and another place to read.',
-            fix: 'Inline the function at its call sites and delete it. Keep a function whose identity matters, such as a listener that code adds and removes by name, and give its suppression that reason.',
+            fix: 'Inline the function at its call site and delete it. Keep a function whose identity matters, such as a listener that code adds and removes by name, and give its suppression that reason.',
         },
         schema: [TRIVIAL_FUNCTION_OPTIONS_SCHEMA],
         messages: {
@@ -144,24 +157,17 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
     },
     create(context, [options]) {
         const limit = options.trivialFunctionStatements;
-        const path = findPathInFolder(
-            (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
-            context.physicalFilename,
-        );
-        const exportNames = new Set(
-            options.exportNames
-                .filter(({ files }) => path !== undefined && picomatch([...files], { dot: true })(path))
-                .flatMap(({ names }) => names),
-        );
+        const source = context.sourceCode;
         return {
             [`${FUNCTION_SELECTOR}:exit`](node: FunctionNode) {
-                const count = countStatements(node, context.sourceCode.visitorKeys);
-                if (count > limit || isInlineValue(node) || isRequired(node, exportNames)) return;
+                const count = countStatements(node, source.visitorKeys);
+                const isRequired = isFrameworkMember(node) || isOverloadedMethod(node) || isOverloadedFunction(node);
+                if (isRequired || count > limit || isInlineValue(node) || isShared(node, source)) return;
                 context.report({
                     node,
                     messageId: 'trivial',
                     data: {
-                        name: ASTUtils.getFunctionNameWithKind(node, context.sourceCode),
+                        name: ASTUtils.getFunctionNameWithKind(node, source),
                         statements: count === 1 ? ONE_STATEMENT : `${String(count)} statements`,
                     },
                 });
