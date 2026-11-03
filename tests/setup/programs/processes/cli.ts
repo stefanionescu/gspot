@@ -12,4 +12,4 @@ if (option === SIGNAL_MARKER_OPTION && marker !== undefined)
     });
 process.argv = [process.execPath, 'gspot', ...call];
 const { runProgram } = await import('#cli/main.ts');
-process.exitCode = await runProgram(call);
+process.exitCode = await runProgram(call, process.cwd());

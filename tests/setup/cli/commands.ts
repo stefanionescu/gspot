@@ -29,8 +29,8 @@ export function listScopeFindingRows(report: RunReport): ScopeFindingRow[] {
 }
 
 /**
-Run gspot in this process over a folder with color off and CI set, and capture what it writes. It restores the
-environment variables it sets.
+Run gspot in this process over a folder with color off and CI set, and capture what it writes. The command gets the
+folder as an argument, so the process folder stays as it is. It restores the environment variables it sets.
 */
 export async function runGspot(
     cwd: string,
@@ -38,7 +38,6 @@ export async function runGspot(
     environment: Record<string, string> = {},
     options: StdinOptions = {},
 ): Promise<ProcessOutput> {
-    const previousFolder = process.cwd();
     using output = captureTerminal();
     const { stdout, stderr } = output;
     const variables: Record<string, string> = { ...GSPOT_ENVIRONMENT, ...environment };
@@ -50,11 +49,9 @@ export async function runGspot(
                 value: Readable.from([Buffer.from(options.stdin)]),
                 configurable: true,
             });
-        process.chdir(cwd);
-        const code = await runProgram([...commandArguments]);
+        const code = await runProgram([...commandArguments], cwd);
         return { code, stdout: stdout.join(''), stderr: stderr.join('') };
     } finally {
-        process.chdir(previousFolder);
         Object.defineProperty(process, 'stdin', stdin);
     }
 }

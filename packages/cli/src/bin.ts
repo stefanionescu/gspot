@@ -19,7 +19,7 @@ for (const event of FATAL_ERROR_EVENTS)
 const runtimeError = validateRuntimeVersion(process.versions, cliPackage.engines);
 if (runtimeError === undefined) {
     const { runProgram } = await import('#cli/main.ts');
-    process.exitCode = await runProgram(commandArguments);
+    process.exitCode = await runProgram(commandArguments, process.cwd());
 } else {
     printError({ error: 'runtime', message: runtimeError });
     process.exitCode = EXIT_ERROR;
