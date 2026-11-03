@@ -90,9 +90,10 @@
 }
 
 .tools ul {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 20px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px 0;
     margin-block-start: 24px;
     padding: 0;
     list-style: none;
@@ -100,6 +101,7 @@
 
 .tools li {
     display: flex;
+    flex: 0 0 25%;
     flex-direction: column;
     align-items: center;
     gap: 8px;
@@ -132,8 +134,17 @@
 
 @media (width >= 50rem) {
     .tools ul {
-        grid-template-columns: repeat(8, minmax(0, 1fr));
-        gap: 24px 8px;
+        row-gap: 24px;
+    }
+
+    .tools li {
+        flex-basis: 20%;
+    }
+}
+
+@media (width >= 72rem) {
+    .tools li {
+        flex-basis: 10%;
     }
 }
 

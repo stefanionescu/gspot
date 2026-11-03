@@ -1,0 +1,20 @@
+TypeScript brand terms, from https://www.typescriptlang.org/branding/
+
+The TypeScript name and logo belong to Microsoft. This site shows the single color variant
+of the TypeScript mark, unmodified, from the asset on that page.
+
+Recommendations
+Please use the blue TypeScript mark above as the primary logo for TypeScript.
+This is the right logo for blog posts, news articles, giveaway stickers and general marketing for yourself.
+The “TS” in the logo is white, not transparent by default.
+There is a capital “S” in TypeScript, just like in JavaScript.
+
+Alternatives
+Single color variant which has the “TS” cut out, useful for when you need a single color design.
+Full lettermark version of the TypeScript logo.
+
+Please Don't
+Use the TypeScript logos for your application/product.
+Modify the shape of the logos when used.
+Integrate the TypeScript logo into your application's logo.
+Name a product which implies TypeScript's endorsement of the product.

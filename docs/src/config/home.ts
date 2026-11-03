@@ -1,12 +1,14 @@
 export const HOME_TITLE = 'Lint the code your AI agent writes';
 export const TOOLS = [
     { name: 'ESLint', icon: 'eslint.svg' },
+    { name: 'TypeScript', icon: 'typescript.svg' },
     { name: 'Prettier', icon: 'prettier.svg' },
     { name: 'Ruff', icon: 'ruff.svg' },
     { name: 'Stylelint', icon: 'stylelint.svg' },
     { name: 'ShellCheck', icon: 'shellcheck.png' },
-    { name: 'Semgrep', icon: 'semgrep.svg' },
     { name: 'Knip', icon: 'knip.svg' },
+    { name: 'Gitleaks', icon: 'gitleaks.png' },
+    { name: 'OSV-Scanner', icon: 'osv-scanner.svg' },
     { name: 'Trivy', icon: 'trivy.svg' },
 ] as const;
 export const USE_CASES = [
