@@ -209,3 +209,32 @@ test.each(['basic'] as const)('%s keeps core bug checks and TypeScript recommend
         );
     }
 });
+
+test.each(LEVELS)('level %s reports the unicorn style rules only at level all', async (level) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level }),
+        'package.json': '{"private":true,"type":"module"}',
+        'style.js': [
+            "import { EventEmitter } from 'node:events';",
+            'export const readLast = (values) => values[values.length - 1];',
+            'export const sum = (values) => { let total = 0; values.forEach((value) => { total += value; }); return total; };',
+            'export const isMissing = (value) => isNaN(value);',
+            'export const pick = (ready) => { if (!ready) { return 0; } else { return 1; } };',
+            "export const greet = (name) => { name = name || 'guest'; return name; };",
+            'export class Bus extends EventEmitter {}',
+        ].join('\n'),
+    });
+    const rules = [
+        'unicorn/prefer-at',
+        'unicorn/no-for-each',
+        'unicorn/prefer-number-properties',
+        'unicorn/no-negated-condition',
+        'unicorn/prefer-default-parameters',
+        'unicorn/prefer-event-target',
+    ];
+    const eslint = await buildEslint(sandbox.path);
+    const findings = await listLintFindings(eslint, sandbox.path, ['style.js'], rules);
+    expect(findings.map(({ rule, line }) => [line, rule])).toStrictEqual(
+        level === 'all' ? rules.map((rule, index) => [index + 2, rule]) : [],
+    );
+});
