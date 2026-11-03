@@ -156,8 +156,16 @@ export const USER_DEFAULTS_DECLARATION = /\b(\w+)\s*[:=]\s*UserDefaults\b/gu;
 
 export const PLIST_READ_EXPRESSION = /^Bundle\.main\.(?:infoDictionary\??|object)$/u;
 
+export const SWIFT_SECURITY_RULES = {
+    keychain: 'keychain-accessible-always',
+    weakHash: 'weak-hash-algorithm',
+    log: 'secret-in-log',
+    defaults: 'secret-in-userdefaults',
+    plist: 'secret-in-plist',
+};
+
 const WEAK_HASH = {
-    rule: 'weak-hash-algorithm',
+    rule: SWIFT_SECURITY_RULES.weakHash,
     message: 'MD5 and SHA-1 are broken. Use SHA-256 or stronger from CryptoKit.',
 };
 
@@ -165,7 +173,7 @@ export const UNSAFE_SWIFT_NAMES: ReadonlyMap<string, { rule: string; message: st
     [
         'kSecAttrAccessibleAlways',
         {
-            rule: 'keychain-accessible-always',
+            rule: SWIFT_SECURITY_RULES.keychain,
             message: 'This Keychain class opens the item on a locked device. Choose the class the item needs.',
         },
     ],
@@ -176,13 +184,16 @@ export const UNSAFE_SWIFT_NAMES: ReadonlyMap<string, { rule: string; message: st
 ]);
 
 export const SWIFT_SECRET_FINDINGS = {
-    log: { rule: 'secret-in-log', message: 'The log may write a token, password, or credential. Redact it.' },
+    log: {
+        rule: SWIFT_SECURITY_RULES.log,
+        message: 'The log may write a token, password, or credential. Redact it.',
+    },
     defaults: {
-        rule: 'secret-in-userdefaults',
+        rule: SWIFT_SECURITY_RULES.defaults,
         message: 'UserDefaults stores this secret unencrypted. Keep it in the Keychain.',
     },
     plist: {
-        rule: 'secret-in-plist',
+        rule: SWIFT_SECURITY_RULES.plist,
         message: 'Info.plist ships this secret unencrypted in the app. Read it from the Keychain.',
     },
 };
