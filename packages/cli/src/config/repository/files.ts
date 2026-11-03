@@ -265,6 +265,8 @@ export const MARKDOWN_EXTENSION = '.md';
 
 export const TEXT_ATTRIBUTE = 'text';
 
+export const DIFF_ATTRIBUTE = 'diff';
+
 export const EXECUTABLE_BITS = 0o111;
 
 export const GIT_INDEX_FILES_ARGUMENTS = ['ls-files', '--stage', '-z'] as const;
@@ -284,6 +286,7 @@ export const GIT_CHECK_ATTRIBUTES_ARGUMENTS = [
     GENERATED_ATTRIBUTE,
     VENDORED_ATTRIBUTE,
     TEXT_ATTRIBUTE,
+    DIFF_ATTRIBUTE,
     FILTER_ATTRIBUTE,
 ] as const;
 

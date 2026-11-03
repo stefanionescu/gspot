@@ -110,7 +110,7 @@ line
 
 export const CLASSIFICATION_FILES = {
     '.gitattributes':
-        'generated/* linguist-generated\ngenerated/declared.ts -linguist-generated linguist-vendored\nassets/** -text\n',
+        'generated/* linguist-generated\ngenerated/declared.ts -linguist-generated linguist-vendored\nassets/** binary\n',
     'types.ts': '// This file was automatically generated\nexport type A = 1;\n',
     'generated/x.ts': '// This file was automatically generated\nexport const x = 1;\n',
     'generated/declared.ts': '// This file was automatically generated\nexport const declared = 1;\n',

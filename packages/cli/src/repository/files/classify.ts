@@ -38,6 +38,7 @@ import {
     FILENAME_TAGS,
     DOTENV_PREFIX,
     TEXT_ATTRIBUTE,
+    DIFF_ATTRIBUTE,
     ENV_SPLIT_FLAG,
     SHEBANG_PREFIX,
     EXTENSION_TAGS,
@@ -74,7 +75,7 @@ function findAttributeKind(attributes: Record<string, string> | undefined): File
     if (generated !== undefined && SET_VALUES.has(generated)) return { kind: 'generated', origin: GITATTRIBUTES_FILE };
     const vendored = attributes[VENDORED_ATTRIBUTE];
     if (vendored !== undefined && SET_VALUES.has(vendored)) return { kind: 'vendored', origin: GITATTRIBUTES_FILE };
-    const isBinary = attributes[TEXT_ATTRIBUTE] === UNSET_STATE || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
+    const isBinary = attributes[DIFF_ATTRIBUTE] === UNSET_STATE || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
     return isBinary ? { kind: 'binary', origin: GITATTRIBUTES_FILE } : undefined;
 }
 

@@ -25,7 +25,7 @@ test('Git attributes win over the generated files of configurations', async () =
         }),
         ...TYPE_DECLARATION_FILES,
         '.gitattributes':
-            '/next-env.d.ts linguist-vendored\n/worker-configuration.d.ts linguist-vendored\napp/next-env.d.ts -text !linguist-vendored\napp/worker-configuration.d.ts !linguist-vendored\n',
+            '/next-env.d.ts linguist-vendored\n/worker-configuration.d.ts linguist-vendored\napp/next-env.d.ts -diff !linguist-vendored\napp/worker-configuration.d.ts !linguist-vendored\n',
     });
     runGitStep(sandbox.path, ['add', '.']);
     const session = await openSession(sandbox.path);
@@ -69,6 +69,18 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     expect(files.get('vendor/lib.js')).toMatchObject({ kind: 'vendored', kindOrigin: 'folder' });
     expect(files.get('assets/a.bin')).toMatchObject({ kind: 'binary', kindOrigin: '.gitattributes' });
     expect(files.get('src/a.ts')).toMatchObject({ kind: 'source', kindOrigin: 'default' });
+});
+
+test('a -text line keeps text files as source, and the content of a file marks it binary', async () => {
+    await using sandbox = await createGitSandbox({ '.gitattributes': '* -text\n', 'src/index.ts': 'export {};\n' });
+    await writeFile(join(sandbox.path, 'image.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]));
+    runGitStep(sandbox.path, ['add', '.']);
+    const repository = await readTestRepository(sandbox.path);
+    expect(Object.fromEntries(repository.files.map(({ path, kind }) => [path, kind]))).toStrictEqual({
+        '.gitattributes': 'source',
+        'image.png': 'binary',
+        'src/index.ts': 'source',
+    });
 });
 
 test('.git/info/attributes marks a file generated while the working .gitattributes holds invalid UTF-8', async () => {
