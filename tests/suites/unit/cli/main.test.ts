@@ -4,6 +4,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { NEEDS_GIT_MESSAGE, VERSION_ARGUMENTS, MALFORMED_SETTINGS, JSON_ARGUMENT_ERRORS } from '#tests/config/main.ts';
@@ -109,6 +110,14 @@ test.each([[], ['check']])('the help of %p fits 80 columns', async (...commandAr
     const help = await runGspot(sandbox.path, [...commandArguments, '--help']);
     expect(help.code).toBe(0);
     expect(help.stdout.split('\n').filter((line) => line.length > 80)).toStrictEqual([]);
+});
+
+test.each(Object.keys(COMMAND_HELP))('the help of %s prints its commands without code marks', async (command) => {
+    await using sandbox = await testdir();
+    const help = await runGspot(sandbox.path, [command, '--help']);
+    expect(help.code).toBe(0);
+    expect(help.stdout).toContain(`Usage: gspot ${command} `);
+    expect(help.stdout).not.toContain('`');
 });
 
 test('list names its choices as the argument', async () => {

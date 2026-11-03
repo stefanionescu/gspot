@@ -11,7 +11,7 @@ export const COMMAND_HELP = {
         summary: 'Try gspot on a copy of this repository, and change nothing',
         group: 'Set up a repository:',
         description:
-            'Copy the files that Git tracks, as you staged them, into .gspot-copies/. In the copy, gspot writes what init writes, installs the tools, and runs every check at the default level with no fixes. It deletes the copy at the end.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, how long each tool took on this scan, the plan of init, and the next steps.\n\nscan keeps no cache of its own. npm, uv, and mise keep their download caches, so a second scan downloads no tool again. Each scan still asks GitHub for the pinned releases, so set GITHUB_TOKEN if you scan often. mise installs its tools for the whole machine. After init, run gspot check instead.',
+            'Copy the files that Git tracks, as you staged them, into .gspot-copies/. In the copy, gspot writes what init writes, installs the tools, and runs every check at the default level with no fixes. It deletes the copy at the end.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, how long each tool took on this scan, the plan of init, and the next steps.\n\nscan keeps no cache of its own. npm, uv, and mise keep their download caches, so a second scan downloads no tool again. Each scan still asks GitHub for the pinned releases, so set GITHUB_TOKEN if you scan often. mise installs its tools for the whole machine. After init, run `gspot check` instead.',
         arguments: {},
         options: {
             '--markdown': 'Print the report as Markdown, to paste into a pull request or a chat',
@@ -28,7 +28,7 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: config files for the tools, rule files for coding agents, and Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so git show HEAD:<path> can restore it. init installs nothing and runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
+            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: config files for the tools, rule files for coding agents, and Git hooks. CI starts off; turn it on with `gspot set ci.enabled true`.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so `git show HEAD:<path>` can restore it. init installs nothing and runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
             '--from <file>': "Start from another repository's gspot.toml",
@@ -63,7 +63,7 @@ export const COMMAND_HELP = {
         summary: 'Write the generated files again from gspot.toml',
         group: 'Set up a repository:',
         description:
-            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
+            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run `gspot install` when apply says the tools changed.',
         arguments: {},
         options: {},
         exitCodes: [
@@ -104,7 +104,7 @@ export const COMMAND_HELP = {
         summary: 'Accept the findings that exist now, so that only new findings fail',
         group: 'Run the checks:',
         description:
-            'Run the commit and push checks on every file, and write gspot.baseline.json: a count per file, check, and lint rule. gspot check then subtracts those counts, so a file fails only when it gains a finding. Commit the file.\n\nFindings of secrets/* and gspot/* checks stay out: a committed secret needs rotation, not acceptance. Fixable findings stay out too, because gspot check --fix fixes them, so run it first.\n\nThe check gspot/baseline reports each count that the checks no longer find. --prune lowers those counts and adds none, so the file only shrinks; a check that cannot run keeps its counts. For a permanent decision with a reason, use gspot ignore.',
+            'Run the commit and push checks on every file, and write gspot.baseline.json: a count per file, check, and lint rule. `gspot check` then subtracts those counts, so a file fails only when it gains a finding. Commit the file.\n\nFindings of secrets/* and gspot/* checks stay out: a committed secret needs rotation, not acceptance. Fixable findings stay out too, because `gspot check --fix` fixes them, so run it first.\n\nThe check gspot/baseline reports each count that the checks no longer find. --prune lowers those counts and adds none, so the file only shrinks; a check that cannot run keeps its counts. For a permanent decision with a reason, use `gspot ignore`.',
         arguments: {},
         options: {
             '--prune': 'Remove what the checks no longer find, and add nothing',
@@ -120,9 +120,9 @@ export const COMMAND_HELP = {
         summary: 'Add configurations',
         group: 'Change gspot.toml:',
         description:
-            'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nTo find the configurations that new code needs, run gspot check --only gspot/detected-configurations. It prints the gspot add line to run for each scope.\n\nRun gspot install next when the configurations need new tools.',
+            'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nTo find the configurations that new code needs, run `gspot check --only gspot/detected-configurations`. It prints the `gspot add` line to run for each scope.\n\nRun `gspot install` next when the configurations need new tools.',
         arguments: {
-            '<configuration...>': 'Configuration names, such as pytest. Run gspot list to see them',
+            '<configuration...>': 'Configuration names, such as pytest. Run `gspot list` to see them',
         },
         options: {
             '--scope <path>': 'Select them in this scope, relative to the repository root (default: the root)',
@@ -137,7 +137,7 @@ export const COMMAND_HELP = {
         summary: 'Remove configurations, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Remove configurations, then write the generated files again. gspot.toml records the removal and your reason, so gspot doctor does not suggest them again. gspot add undoes it.\n\ngspot refuses to remove a configuration that another selected configuration needs.',
+            'Remove configurations, then write the generated files again. gspot.toml records the removal and your reason, so `gspot doctor` does not suggest them again. `gspot add` undoes it.\n\ngspot refuses to remove a configuration that another selected configuration needs.',
         arguments: {
             '<configuration...>': 'Configuration names',
         },
@@ -155,9 +155,9 @@ export const COMMAND_HELP = {
         summary: 'Change a setting',
         group: 'Change gspot.toml:',
         description:
-            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run gspot unset <setting> <items...>. For a setting that holds a table, such as tools.eslint.rules, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run gspot ignore <check> --reason "<why>". Write other records, such as [[command_check]], by hand.',
+            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run `gspot unset <setting> <items...>`. For a setting that holds a table, such as tools.eslint.rules, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run `gspot ignore <check> --reason "<why>"`. Write other records, such as [[command_check]], by hand.',
         arguments: {
-            '<setting>': 'The setting name, such as limits.max_file_lines. Run gspot list settings to see them',
+            '<setting>': 'The setting name, such as limits.max_file_lines. Run `gspot list settings` to see them',
             '<values...>': 'The new value: every item of a list, or the table keys to add',
         },
         options: {
@@ -192,7 +192,7 @@ export const COMMAND_HELP = {
         summary: 'Ignore a check, or one lint rule, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Ignore a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. gspot check --verbose prints them with their reasons.',
+            'Ignore a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. `gspot check --verbose` prints them with their reasons.',
         arguments: {
             '[check]': 'The check, such as python/ruff. Leave it out to keep --paths out of every check',
         },
@@ -231,7 +231,7 @@ export const COMMAND_HELP = {
         summary: 'List the configurations or the settings',
         group: 'Look up:',
         description:
-            'List the selected and the available configurations, with the state of each check in each scope. gspot list settings lists each setting, its value, and where the value comes from.\n\nlist changes nothing.',
+            'List the selected and the available configurations, with the state of each check in each scope. `gspot list settings` lists each setting, its value, and where the value comes from.\n\nlist changes nothing.',
         arguments: {
             '[configurations|settings]': 'What to list',
         },
