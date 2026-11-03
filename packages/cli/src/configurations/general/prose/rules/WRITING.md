@@ -26,7 +26,7 @@ and temporary notes out of shipped content. Examples use fictional people, safe 
 
 <!-- level: all -->
 
-Use active voice. Address the reader as you in procedures. Use imperatives for requirements and
+Use active voice in documentation. Address the reader as you in procedures. Use imperatives for requirements and
 label optional steps. Put a condition before its action and keep one main idea per sentence. Name the subject instead of
 relying on an ambiguous pronoun.
 

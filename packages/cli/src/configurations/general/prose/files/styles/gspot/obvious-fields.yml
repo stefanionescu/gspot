@@ -1,7 +1,7 @@
 # Adapted from RedHat.ObviousTerms; see ../LICENSES.md.
 extends: existence
 level: suggestion
-message: Consider not documenting %s because it is self-explanatory.
+message: Do not document %s. Its name already says what it holds.
 scope: sentence
 action:
     name: remove
