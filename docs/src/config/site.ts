@@ -10,10 +10,6 @@ export const DOCS_PATH = '/start/overview/';
 
 export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
 
-export const FAVICON = '/favicon.ico';
-
-export const APPLE_TOUCH_ICON = '/apple-touch-icon.png';
-
 export const THEME_STORAGE_KEY = 'starlight-theme';
 
 export const THEME_SWITCH_LABELS = { dark: 'Switch to light theme', light: 'Switch to dark theme' } as const;

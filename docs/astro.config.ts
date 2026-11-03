@@ -5,16 +5,14 @@ import starlightLlmsTxt from 'starlight-llms-txt';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { defineConfig, passthroughImageService } from 'astro/config';
 import { LLMS_PAGES, AGENT_STEPS, AGENT_EVALUATION } from '#docs/reference/setup.ts';
+import { SIDEBAR, EDIT_URL, SITE_TITLE, REPOSITORY_URL, README_OPENING_BLOCKS } from '#docs/config/site.ts';
 
-import {
-    SIDEBAR,
-    FAVICON,
-    EDIT_URL,
-    SITE_TITLE,
-    REPOSITORY_URL,
-    APPLE_TOUCH_ICON,
-    README_OPENING_BLOCKS,
-} from '#docs/config/site.ts';
+const FAVICON = '/favicon.svg';
+const ICONS = [
+    { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+    { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+    { rel: 'manifest', href: '/manifest.webmanifest' },
+] as const;
 
 function readReadmeSentence(): string {
     const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
@@ -59,7 +57,7 @@ export default defineConfig({
                     ...LLMS_PAGES,
                 }),
             ],
-            head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } }],
+            head: ICONS.map((attrs) => ({ tag: 'link', attrs })),
             components: {
                 Head: './src/components/starlight/Head.astro',
                 Header: './src/components/starlight/Header.astro',
