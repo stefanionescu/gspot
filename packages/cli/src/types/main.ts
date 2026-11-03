@@ -38,7 +38,7 @@ export type CliReference = {
     schema: z.core.JSONSchema.JSONSchema;
     setup: SetupReference[];
     runners: typeof START_RUNNERS;
-    runtimeMinimums: { node: string; bun: string };
+    runtimeMinimums: { node: string };
     packageManagerMinimums: typeof RELEASE_AGE_VERSIONS;
     levelSummaries: Record<Level, string>;
     allLevelTools: string[];

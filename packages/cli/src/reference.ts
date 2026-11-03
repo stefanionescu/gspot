@@ -120,10 +120,7 @@ export function readCliReference(): CliReference {
         schema: buildJsonSchema(),
         setup: buildSetupReference(),
         runners: START_RUNNERS,
-        runtimeMinimums: {
-            node: semver.minVersion(cliPackage.engines.node)?.version as string,
-            bun: semver.minVersion(cliPackage.engines.bun)?.version as string,
-        },
+        runtimeMinimums: { node: semver.minVersion(cliPackage.engines.node)?.version as string },
         packageManagerMinimums: RELEASE_AGE_VERSIONS,
         levelSummaries: { basic: LEVEL_SUMMARY, all: ALL_LEVEL_SUMMARY },
         allLevelTools: [...new Set(checks.flatMap(({ tools }) => tools))]

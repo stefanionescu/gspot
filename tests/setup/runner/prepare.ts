@@ -4,8 +4,8 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { writeNodeCommand } from '#tests/setup/system/fakes.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { findMisePin, buildMiseInstall, listDistinctTools } from '#cli/tools/pins.ts';
@@ -29,7 +29,11 @@ await runNpmPack(TEST_RUN_FOLDER, [
 const paths = await installTestTools();
 
 if (process.argv[2] !== 'e2e') {
-    await writeProgramCommand(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH, 'processes/cli');
+    await writeNodeCommand(
+        TEST_RUN_FOLDER,
+        GSPOT_LAUNCHER_PATH,
+        join(REPOSITORY_ROOT, 'packages/cli', cliPackage.bin.gspot),
+    );
     await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 }
 

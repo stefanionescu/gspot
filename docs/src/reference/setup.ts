@@ -31,7 +31,7 @@ to format, the tools, the megabytes, and the seconds per hook.`;
 export const AGENT_STEPS = `## Steps for coding agents
 
 Set up gspot in the repository of the user. Run each command at the root of the repository. gspot needs Git and
-Node.js ${runtimeMinimums.node} or newer, and Bun ${runtimeMinimums.bun} or newer when Bun runs it. A package manager that holds new
+Node.js ${runtimeMinimums.node} or newer. A package manager that holds new
 releases, such as pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: ${CONJUNCTION_FORMAT.format(
     RELEASE_AGE_EXCLUSIONS.map(({ label, key }) => `${key} for ${label}`),
 )}.

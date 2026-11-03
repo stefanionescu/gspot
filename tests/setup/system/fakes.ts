@@ -19,6 +19,14 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
 
+async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
+    const windowsCommand = command.map((word) => '"' + word.replaceAll('"', '""').replaceAll('%', '%%') + '"');
+    await writeFile(`${target}.cmd`, `@echo off\r\n${windowsCommand.join(' ')} %*\r\n`);
+    await chmod(target, EXECUTABLE_FILE);
+}
+
 /**
 Replace the child command found by this path or program name, or without a name every child command but Git. Run the
 others normally, and record only the replaced commands. Without a replacement, the replaced commands run normally too.
@@ -84,12 +92,17 @@ export async function writeProgramCommand(
     ...programArguments: string[]
 ): Promise<string> {
     const target = join(folder, path);
-    const command = buildProgramCommand(program, ...programArguments);
-    await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
-    const windowsCommand = command.map((word) => '"' + word.replaceAll('"', '""').replaceAll('%', '%%') + '"');
-    await writeFile(`${target}.cmd`, `@echo off\r\n${windowsCommand.join(' ')} %*\r\n`);
-    await chmod(target, EXECUTABLE_FILE);
+    await writeLauncher(target, buildProgramCommand(program, ...programArguments));
+    return dirname(target);
+}
+
+/**
+Write a Unix and a Windows command that runs a script on the Node.js of `PATH` before the arguments it gets. Name it
+without the Windows suffix, and return the folder to put on `PATH`.
+*/
+export async function writeNodeCommand(folder: string, path: string, script: string): Promise<string> {
+    const target = join(folder, path);
+    await writeLauncher(target, ['node', script]);
     return dirname(target);
 }
 

@@ -37,7 +37,6 @@
         "src/configurations/*/*/files/**"
     ],
     "engines": {
-        "bun": ">=1.4.3",
         "node": ">=22.22.3"
     },
     "dependencies": {
