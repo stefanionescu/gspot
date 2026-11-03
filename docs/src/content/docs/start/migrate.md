@@ -70,8 +70,9 @@ repository without code gets the defaults of gspot: 4 spaces, 120 columns, and s
 
 ## Ignored paths
 
-`.prettierignore`, `.eslintignore`, and the Ruff `exclude` and `extend-exclude` settings become `[[ignore]]` records with
-paths. init keeps a pattern when it matches a tracked file, because gspot reads only tracked files. A pattern that
+`.prettierignore`, `.eslintignore`, the Ruff `exclude` and `extend-exclude` settings, and the pyright `include` and
+`exclude` settings become `[[ignore]]` records with paths. A pyright `include` becomes an ignore of each folder of
+Python files that it leaves out. init keeps a pattern when it matches a tracked file, because gspot reads only tracked files. A pattern that
 starts with `!` has no place in an ignore, so the table lists it as dropped.
 
 ## Rules

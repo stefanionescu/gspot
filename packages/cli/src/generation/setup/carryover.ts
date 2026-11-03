@@ -10,6 +10,7 @@ import { EDITORCONFIG_FILE } from '#cli/config/generation.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
 import { listUnparsedCiFiles } from '#cli/repository/lint-commands.ts';
+import { readPyrightCarryover } from '#cli/generation/setup/pyright.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
 import { readIgnoreFiles, convertIgnorePattern } from '#cli/generation/setup/ignore-files.ts';
@@ -259,6 +260,7 @@ export async function readCarryover(input: CarryoverInput): Promise<Carryover> {
         { ...EMPTY_CARRYOVER, rows: [...listPrettierRows(input), ...listUncomparedRows(input)] },
         readIgnoreFiles(input),
         readRuffCarryover(input),
+        readPyrightCarryover(input),
         readMarkdownlintCarryover(input),
         await readCommitlintCarryover(input),
         {
