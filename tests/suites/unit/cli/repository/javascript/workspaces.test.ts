@@ -41,6 +41,17 @@ test.each([...OUTSIDE_WORKSPACE_FILES])(
     },
 );
 
+test('a workspace package.json that starts with a byte order mark stays a workspace folder', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{}',
+        'pnpm-workspace.yaml': 'packages: ["packages/*"]\n',
+        'packages/marked/package.json': '\u{FEFF}{"name":"marked"}',
+        'packages/plain/package.json': '{"name":"plain"}',
+    });
+
+    expect(listWorkspaceFolders(sandbox.path)).toStrictEqual(['packages/marked', 'packages/plain']);
+});
+
 test('workspace detection does not parse an unused lower-priority file', async () => {
     await using sandbox = await testdir(INACTIVE_LERNA_FILES);
 

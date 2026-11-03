@@ -1,41 +1,105 @@
+import { z } from 'zod';
+import { existsSync } from 'node:fs';
+import { globSync } from 'tinyglobby';
 import { remember } from '#cli/system/cache.ts';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
-import { join, posix, dirname, relative } from 'node:path';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import { findContainedPath } from '#cli/system/files/reads.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { PnpmTool, RushTool, LernaTool } from '@manypkg/tools';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
+import { join, posix, dirname, resolve, relative } from 'node:path';
+import { findText, findContainedPath } from '#cli/system/files/reads.ts';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/javascript.ts';
 import { convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
-function listWorkspacePackages(root: string): Package[] {
-    let file = PACKAGE_JSON;
+const workspaceGlobsSchema = z.object({ packages: z.string().array().optional() });
+
+/**
+List the folders that workspace globs match and that hold a package.json, as the workspace tools do. gspot reads each
+package.json itself later, so a byte order mark, which Node accepts, does not stop the listing.
+
+@param root the repository root that the globs start from.
+@param globs the workspace globs, with ! before an excluded one.
+*/
+function expandWorkspaceGlobs(root: string, globs: string[]): string[] {
+    return globSync(globs, { cwd: root, onlyDirectories: true, ignore: ['**/node_modules'], expandDirectories: false })
+        .map((folder) => resolve(root, folder))
+        .toSorted(compareText)
+        .filter((folder) => existsSync(join(folder, PACKAGE_JSON)))
+        .map((folder) => relative(root, folder));
+}
+
+/**
+Read one workspace file, and name the file when its tool cannot parse it.
+
+@param file the workspace file that the read depends on.
+@param read the read through the workspace tool.
+*/
+function readWorkspaceFile<Value>(file: string, read: () => Value): Value {
     try {
-        const packageJson = readPackageJson(root, PACKAGE_JSON);
-        for (const [tool, path] of [
-            [PnpmTool, PNPM_WORKSPACE_FILE],
-            [LernaTool, LERNA_FILE],
-            [RushTool, RUSH_FILE],
-        ] as const) {
-            file = path;
-            if (!tool.isMonorepoRootSync(root)) continue;
-            return tool.getPackagesSync(root).packages;
-        }
-        if (packageJson?.workspaces === undefined) return [];
-        file = PACKAGE_JSON;
-        return YarnTool.getPackagesSync(root).packages;
+        return read();
     } catch (error) {
         if (!(error instanceof Error) || error instanceof GspotError) throw error;
         throw new GspotError('filesystem', `${file} is not a valid workspace file: ${error.message}. Fix the file.`, {
             cause: error,
         });
     }
+}
+
+/**
+List the workspace package folders of the first workspace file that declares them, and name that file when it does not
+parse.
+
+@param root the repository root.
+*/
+function listWorkspacePackages(root: string): string[] {
+    const packageJson = readPackageJson(root, PACKAGE_JSON);
+    const sources = [
+        {
+            file: PNPM_WORKSPACE_FILE,
+            isRoot: () => PnpmTool.isMonorepoRootSync(root),
+            list: () =>
+                expandWorkspaceGlobs(
+                    root,
+                    parseYamlFile(PNPM_WORKSPACE_FILE, findText(root, PNPM_WORKSPACE_FILE) ?? '', workspaceGlobsSchema)
+                        .packages ?? [],
+                ),
+        },
+        {
+            file: LERNA_FILE,
+            isRoot: () => LernaTool.isMonorepoRootSync(root),
+            list: () =>
+                expandWorkspaceGlobs(
+                    root,
+                    parseJsonFile(LERNA_FILE, findText(root, LERNA_FILE) ?? '', workspaceGlobsSchema).packages ?? [
+                        'packages/*',
+                    ],
+                ),
+        },
+        {
+            file: RUSH_FILE,
+            isRoot: () => RushTool.isMonorepoRootSync(root),
+            list: () => RushTool.getPackagesSync(root).packages.map((found) => found.relativeDir),
+        },
+        {
+            file: PACKAGE_JSON,
+            isRoot: () => packageJson?.workspaces !== undefined,
+            list: () => {
+                const workspaces = packageJson?.workspaces ?? [];
+                return expandWorkspaceGlobs(root, Array.isArray(workspaces) ? workspaces : workspaces.packages);
+            },
+        },
+    ];
+    const source = sources.find(({ file, isRoot }) => readWorkspaceFile(file, isRoot));
+    return source === undefined ? [] : readWorkspaceFile(source.file, source.list);
 }
 
 const WORKSPACE_SOURCES = Symbol('workspace sources');
@@ -124,12 +188,12 @@ List the folders of the npm workspaces that the repository declares, without the
 export function listWorkspaceFolders(root: string): string[] {
     const packages = listWorkspacePackages(root);
     for (const found of packages)
-        if (findContainedPath(root, found.relativeDir) === undefined)
+        if (findContainedPath(root, found) === undefined)
             throw new GspotError(
                 'filesystem',
-                `Workspace package ${found.relativeDir} leaves the repository. Remove it from the workspace list, or replace the link with a folder in the repository.`,
+                `Workspace package ${found} leaves the repository. Remove it from the workspace list, or replace the link with a folder in the repository.`,
             );
-    return packages.map((found) => convertToPosixPath(found.relativeDir)).filter((path) => path !== '' && path !== '.');
+    return packages.map((found) => convertToPosixPath(found)).filter((path) => path !== '' && path !== '.');
 }
 
 /**
