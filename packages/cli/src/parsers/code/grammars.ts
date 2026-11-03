@@ -36,21 +36,37 @@ function readGrammar(grammar: GrammarName): Buffer {
     }
 }
 
+async function readLanguage(grammar: GrammarName): Promise<Language> {
+    const bytes = readGrammar(grammar);
+    try {
+        return await Language.load(bytes);
+    } catch (error) {
+        throw new GspotError(
+            'tool',
+            `The ${grammar} grammar in ${buildGrammarPath(grammar)} is damaged. Run gspot install.`,
+            { cause: error },
+        );
+    }
+}
+
 async function buildParser(grammar: GrammarName): Promise<Parser> {
     if (grammar === 'swift') for (const flag of SWIFT_WASM_FLAGS) setFlagsFromString(flag);
     grammars.runtime ??= Parser.init();
     await grammars.runtime;
-    const language = await Language.load(readGrammar(grammar));
+    const language = await readLanguage(grammar);
     const parser = new Parser();
     parser.setLanguage(language);
     return parser;
 }
 
 function getParser(grammar: GrammarName): Promise<Parser> {
-    let parser = grammars.parsers.get(grammar);
+    const path = buildGrammarPath(grammar);
+    let parser = grammars.parsers.get(path);
     if (parser === undefined) {
         parser = buildParser(grammar);
-        grammars.parsers.set(grammar, parser);
+        grammars.parsers.set(path, parser);
+        // A missing or damaged grammar stays out of the cache, so the next parse reads the file that install wrote.
+        parser.catch(() => grammars.parsers.delete(path));
     }
     return parser;
 }

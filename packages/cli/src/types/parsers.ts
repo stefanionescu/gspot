@@ -93,7 +93,7 @@ export type SourceTree<Grammar extends GrammarName = GrammarName> = {
 
 export type ParserGrammars = {
     runtime: Promise<void> | undefined;
-    parsers: Map<GrammarName, Promise<Parser>>;
+    parsers: Map<string, Promise<Parser>>;
     parses: number;
 };
 

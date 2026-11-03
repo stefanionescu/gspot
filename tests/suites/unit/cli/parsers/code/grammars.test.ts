@@ -1,7 +1,11 @@
+import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 test('parsed source copies remain usable after the run releases its resources', async () => {
     const cache = createRunCache(process.cwd());
@@ -28,4 +32,14 @@ test('a long parse pass lets the event loop run', async () => {
         using _tree = await parseSource('bash', 'echo ready\n');
     }
     expect(hasLoopRun).toBe(true);
+});
+
+test('a damaged grammar names its file and the command that restores it', async () => {
+    await using cache = await testdir({ 'gspot/grammars/python.wasm': 'damaged' });
+    using _environment = overrideEnvironment({ XDG_CACHE_HOME: cache.path });
+    const error = await captureRejection(parseSource('python', 'value = 1\n'));
+    expect(error).toMatchObject({
+        name: 'GspotError',
+        message: `The python grammar in ${join(cache.path, 'gspot/grammars/python.wasm')} is damaged. Run gspot install.`,
+    });
 });

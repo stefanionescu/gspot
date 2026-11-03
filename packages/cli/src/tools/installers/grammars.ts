@@ -1,13 +1,15 @@
-import { dirname } from 'node:path';
 import { createHash } from 'node:crypto';
+import { dirname, basename } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
+import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { downloadArchive } from '#cli/tools/installers/vale.ts';
+import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
 import { GRAMMAR_TOOL_NOUN } from '#cli/config/tools/installers.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { ToolInstall, DownloadSession } from '#cli/types/tools.ts';
-import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 
 import {
@@ -31,7 +33,8 @@ function listRepositoryGrammars(install: ToolInstall): GrammarName[] {
 }
 
 /**
-Download a grammar into the shared folder and check it against its SHA-256 value, unless that folder holds it.
+Download a grammar into the shared folder and check it against its SHA-256 value, unless that folder holds it. The
+grammar moves into place from a staged file, because checks in other repositories read the shared folder at any time.
 
 @param grammar the grammar to download.
 @param session the time limit and the cancel signal of the download.
@@ -45,7 +48,7 @@ export async function downloadGrammar(grammar: GrammarName, session: DownloadSes
     if (createHash('sha256').update(bytes).digest('hex') !== sha256)
         throw new GspotError('install', `The ${grammar} grammar failed SHA-256 verification.`);
     mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, bytes);
+    replaceBoundedFile({ root: dirname(path) }, basename(path), { bytes, mode: OWNER_WRITABLE_FILE });
     return true;
 }
 
