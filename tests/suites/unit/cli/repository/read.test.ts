@@ -7,7 +7,6 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { INDEX_LINE_FAILURE } from '#tests/config/setup/languages.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
@@ -125,7 +124,9 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, isSymlink: false },
     ]);
     const error = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
-    expect(error.message).toBe(INDEX_LINE_FAILURE);
+    expect(error.message).toBe(
+        'source.txt has unresolved merge conflicts. Resolve them with git add or git rm, then check again.',
+    );
 });
 
 test('the index keeps deleted tracked paths and encoded names and leaves out untracked files', async () => {

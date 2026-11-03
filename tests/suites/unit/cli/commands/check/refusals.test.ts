@@ -8,12 +8,12 @@ import type { CommandFailureJson } from '#cli/types/system.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { limitCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { CLEAN_BASH_SCRIPT, INDEX_LINE_FAILURE } from '#tests/config/setup/languages.ts';
 import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
@@ -109,7 +109,9 @@ test('a staged check during a merge conflict exits 2, names the conflict, and le
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(INDEX_LINE_FAILURE);
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
+        'source.txt has unresolved merge conflicts. Resolve them with git add or git rm, then check again.',
+    );
     expect(await readdir(temporary.path)).toStrictEqual([]);
 });
 

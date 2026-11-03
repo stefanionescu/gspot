@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { gitFileSchema } from '#cli/schemas/repository.ts';
 import { OCTAL_RADIX, LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/parsers.ts';
@@ -217,13 +218,17 @@ export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[]): G
 }
 
 /**
-Turn index entries into revision entries, and refuse conflicts.
+Turn index entries into revision entries, and refuse conflicts with the paths that hold them.
 
 @param indexFiles the validated index listing.
 */
 export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {
-    if (indexFiles.some((indexFile) => indexFile.stage !== 0))
-        throw new GspotError('git', UNSUPPORTED_GIT_FILE_MESSAGE);
+    const conflicted = [...new Set(indexFiles.filter(({ stage }) => stage !== 0).map(({ path }) => path))];
+    if (conflicted.length > 0)
+        throw new GspotError(
+            'git',
+            `${formatNameList(conflicted)} ${conflicted.length === 1 ? 'has' : 'have'} unresolved merge conflicts. Resolve them with git add or git rm, then check again.`,
+        );
     return indexFiles.map(({ mode, hash, path }) => ({ mode, hash, path }));
 }
 

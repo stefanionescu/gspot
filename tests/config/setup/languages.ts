@@ -126,9 +126,6 @@ rm -rf -- \"\$tmp\"; \
 false || :" EXIT
 `;
 
-export const INDEX_LINE_FAILURE =
-    'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
-
 const PYTHON_PROJECT_OPTIONS = `requires-python = ">=3.12"
 dependencies = []
 `;
