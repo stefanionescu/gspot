@@ -5,6 +5,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('check names a package.json that does not parse, which gives the run no dependencies', async () => {
@@ -18,7 +19,7 @@ test('check names a package.json that does not parse, which gives the run no dep
     );
 });
 
-test('check warns once for missing hooks, skips the warning for pre-push, and stops warning after installation', async () => {
+test('check warns once for missing hooks, skips the warning for pre-push, and stops warning once the hooks run', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
         'source.txt': 'valid text\n',
@@ -38,6 +39,11 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
     expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
     expect(pushed.stderr).not.toContain('[warn]');
     await installHooks(await openSession(sandbox.path), []);
+    const missing = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
+    expect(missing.stderr).toStartWith(
+        '[warn] .gspot/hooks/pre-commit is missing, so Git skips the pre-commit checks. Run gspot apply.\n',
+    );
+    await applyGeneratedFiles(sandbox.path);
     const installed = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(installed.stderr).toMatch(/^done {2}repository\/encoding {2}\d+\.\ds\n$/u);

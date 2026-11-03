@@ -7,6 +7,7 @@ import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -30,6 +31,7 @@ test.each([false, true])(
                 '--line',
                 cliPackage.version,
             );
+        await applyGeneratedFiles(sandbox.path);
         runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
         const folders = [process.execPath, Bun.which('git') ?? ''].map((path) => dirname(path));
         using _environment = overrideEnvironment({ PATH: folders.join(delimiter) });

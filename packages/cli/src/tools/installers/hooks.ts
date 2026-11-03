@@ -1,10 +1,11 @@
 import { resolve } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { statSync, readFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { runGit } from '#cli/repository/git/run.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
 import type { Session, HookName, HookPlan, HookStatus, ScopeCheck } from '#cli/types/tools.ts';
 
@@ -45,6 +46,16 @@ async function planHooks(session: Session): Promise<HookPlan> {
     };
 }
 
+function listBrokenHooks(root: string, names: HookName[]): string[] {
+    return names.flatMap((name) => {
+        const path = `${GSPOT_PATHS.hooks}/${name}`;
+        const stats = statSync(resolve(root, path), { throwIfNoEntry: false });
+        if (stats?.isFile() !== true) return [`${path} is missing, so Git skips the ${name} checks. Run gspot apply.`];
+        const isExecutable = process.platform === 'win32' || (stats.mode & EXECUTABLE_BITS) !== 0;
+        return isExecutable ? [] : [`${path} is not executable, so Git skips the ${name} checks. Run gspot apply.`];
+    });
+}
+
 function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], name: HookName): boolean {
     const paths = HOOK_FOLDER_KINDS.has(hook.kind)
         ? hook.files.filter((file) => file === name).map((file) => resolve(root, hook.path, file))
@@ -72,7 +83,8 @@ export async function installHooks(session: Session, steps: Array<readonly strin
 }
 
 /**
-Check whether the hooks in the settings run in this repository.
+Check whether the hooks in the settings run in this repository. Git skips a hook file that is missing or, off Windows,
+not executable without a word, so each hook of gspot must be a file with an executable bit.
 
 @param session the settings, runner, and configured checks.
 @param repository the Git repository whose hooks to inspect.
@@ -81,7 +93,12 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
     const { settings } = session;
     if (!settings.hooks.enabled) return { ready: true, text: 'none' };
     const { hooksPath, hooks: foreign } = await readHooks(repository);
-    if (hooksPath === GSPOT_PATHS.hooks) return { ready: true, text: 'installed', tool: 'gspot' };
+    if (hooksPath === GSPOT_PATHS.hooks) {
+        const broken = listBrokenHooks(repository.root, listHookNames(session.configuredChecks));
+        return broken.length === 0
+            ? { ready: true, text: 'installed', tool: 'gspot' }
+            : { ready: false, tool: 'gspot', lines: broken, text: `not ready; ${broken.join(' ')}` };
+    }
     if (foreign.length > 0) {
         const isReady = listHookNames(session.configuredChecks).every((name) =>
             foreign.some((hook) => hasHookCommand(repository.root, hook, name)),

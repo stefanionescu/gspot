@@ -7,10 +7,11 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { rm, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/config/tools/installers.ts';
@@ -152,6 +153,7 @@ test('a core.hooksPath that names the gspot hooks as an absolute, ./, or slash-e
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
     });
+    await applyGeneratedFiles(sandbox.path);
     const session = await openSession(sandbox.path);
     const root = session.repository.root;
     for (const hooksPath of [join(root, GSPOT_PATHS.hooks), `./${GSPOT_PATHS.hooks}`, `${GSPOT_PATHS.hooks}/`]) {
@@ -161,6 +163,36 @@ test('a core.hooksPath that names the gspot hooks as an absolute, ./, or slash-e
             text: 'installed',
         });
     }
+});
+
+test('the gspot hooks are not ready while a hook file is missing', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+    });
+    await applyGeneratedFiles(sandbox.path);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', GSPOT_PATHS.hooks]);
+    await rm(join(sandbox.path, GSPOT_PATHS.hooks, 'pre-push'));
+    const session = await openSession(sandbox.path);
+    expect(await readHookStatus(session, session.repository)).toStrictEqual({
+        ready: false,
+        tool: 'gspot',
+        lines: ['.gspot/hooks/pre-push is missing, so Git skips the pre-push checks. Run gspot apply.'],
+        text: 'not ready; .gspot/hooks/pre-push is missing, so Git skips the pre-push checks. Run gspot apply.',
+    });
+});
+
+test.skipIf(isWindows)('the gspot hooks are not ready while a hook file is not executable', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+    });
+    await applyGeneratedFiles(sandbox.path);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', GSPOT_PATHS.hooks]);
+    await chmod(join(sandbox.path, GSPOT_PATHS.hooks, 'pre-commit'), 0o644);
+    const session = await openSession(sandbox.path);
+    expect(await readHookStatus(session, session.repository)).toMatchObject({
+        ready: false,
+        lines: ['.gspot/hooks/pre-commit is not executable, so Git skips the pre-commit checks. Run gspot apply.'],
+    });
 });
 
 test('hooks already set to .gspot/hooks need no command or note', async () => {
