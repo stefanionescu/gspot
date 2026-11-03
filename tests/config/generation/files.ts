@@ -102,9 +102,7 @@ export const LINUX_PIPELINE = {
     packageManager: { name: 'npm' as const, version: '11.10.1' },
     operatingSystems: ['linux' as const],
     linuxRunner: 'ubuntu-24.04' as const,
-    lockfiles: ['package-lock.json', 'web/pnpm-lock.yaml'],
     projectInstall: [],
-    packageManagers: ['npm' as const, 'pnpm' as const],
     testChecks: [],
 };
 

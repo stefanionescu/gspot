@@ -40,18 +40,6 @@ test.each<Partial<Pipeline>>([{ setupCommand: ['echo', '${{ secrets.DEPLOY_KEY }
     },
 );
 
-test('the cache key escapes apostrophes without restoring another key', () => {
-    const steps = (
-        parse(
-            buildGithubWorkflow({ ...LINUX_PIPELINE, lockfiles: [...LINUX_PIPELINE.lockfiles, "team's/bun.lock"] })
-                .content,
-        ) as GithubWorkflow
-    ).jobs['lint']!.steps;
-    const restore = steps.find((step) => step.name === 'Restore caches')!;
-    expect(restore.with?.['key']).toContain("'team''s/bun.lock'");
-    expect(restore.with?.['restore-keys']).toBeUndefined();
-});
-
 test('two operating systems get one job each, and the Linux job uses the configured runner', () => {
     const workflow = parse(
         buildGithubWorkflow({

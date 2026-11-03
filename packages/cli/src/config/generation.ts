@@ -7,33 +7,6 @@ import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
 import { SQL_FILES, PYTHON_FILES } from '#cli/config/configurations/python.ts';
 import { BASELINE_FILE, GITATTRIBUTES_FILE, GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
 
-export const CACHED_PATHS = {
-    linux: {
-        mise: ['~/.cache/mise/downloads-cas'],
-        npm: ['~/.npm/_cacache'],
-        pnpm: ['~/.local/share/pnpm/store'],
-        yarn: ['~/.cache/yarn', '~/.yarn/berry/cache'],
-        bun: ['~/.bun/install/cache'],
-        uv: ['~/.cache/uv'],
-    },
-    macos: {
-        mise: ['~/Library/Caches/mise/downloads-cas'],
-        npm: ['~/.npm/_cacache'],
-        pnpm: ['~/Library/pnpm/store'],
-        yarn: ['~/Library/Caches/Yarn', '~/.yarn/berry/cache'],
-        bun: ['~/.bun/install/cache'],
-        uv: ['~/.cache/uv'],
-    },
-    windows: {
-        mise: [`\${{ runner.temp }}/mise/downloads-cas`],
-        npm: ['~/AppData/Local/npm-cache/_cacache'],
-        pnpm: ['~/AppData/Local/pnpm/store'],
-        yarn: ['~/AppData/Local/Yarn/Cache', '~/AppData/Local/Yarn/Berry/cache'],
-        bun: ['~/.bun/install/cache'],
-        uv: ['~/AppData/Local/uv/cache'],
-    },
-} as const;
-
 export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
 export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
@@ -44,24 +17,9 @@ export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: `\${{ github.token }}
 
 export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 
-export const CI_CACHE_FILES = [
-    GSPOT_PATHS.npmProject,
-    `${GSPOT_FOLDER}/*lock*`,
-    GSPOT_PATHS.pythonProject,
-    GSPOT_PATHS.miseProject,
-] as const;
-
 export const CI_JOB_NAME = 'lint';
 
 export const CI_TESTS_JOB_NAME = 'tests';
-
-export const CI_CACHE_STEP = 'cache';
-
-export const CI_CACHE_PREFIX = `gspot-\${{ runner.os }}-\${{ runner.arch }}-`;
-
-export const CI_CACHE_MISS_CONDITION = `steps.${CI_CACHE_STEP}.outputs.cache-hit != 'true'`;
-
-export const CI_CACHE_SAVED_KEY = `\${{ steps.${CI_CACHE_STEP}.outputs.cache-primary-key }}`;
 
 export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false } as const;
 
@@ -101,12 +59,10 @@ export const GITLAB_RULES = [
 
 export const CI_STEP_NAMES = {
     checkout: 'Check out source',
-    restoreCache: 'Restore caches',
     mise: 'Set up mise',
     setup: 'Set up the project',
     projectInstall: 'Install project dependencies',
     install: 'Install gspot tools',
-    saveCache: 'Save caches',
     check: 'Lint',
     gspot: 'Install gspot',
 } as const;

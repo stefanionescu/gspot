@@ -22,13 +22,9 @@ import {
     CI_JOB_NAME,
     GITLAB_RULES,
     GITLAB_CACHE,
-    CACHED_PATHS,
     CI_DIFF_LINES,
-    CI_CACHE_STEP,
     CI_STEP_NAMES,
     GITHUB_EVENTS,
-    CI_CACHE_FILES,
-    CI_CACHE_PREFIX,
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
     GITLAB_VARIABLES,
@@ -42,12 +38,10 @@ import {
     CI_INSTALL_COMMAND,
     GITHUB_CONCURRENCY,
     CI_TIMEOUT_MINUTES,
-    CI_CACHE_SAVED_KEY,
     GITHUB_PUSH_CONDITION,
     MISE_TOKEN_ENVIRONMENT,
     GITHUB_BASE_EXPRESSION,
     GITHUB_EXPRESSION_START,
-    CI_CACHE_MISS_CONDITION,
     GITHUB_EXPRESSION_MESSAGE,
 } from '#cli/config/generation.ts';
 
@@ -72,13 +66,6 @@ function buildJob(
 ): Record<string, unknown> {
     const machine = CI_PINS.githubRunners[platform];
     const tools = buildGspotTools(pipeline);
-    const hashed = [...CI_CACHE_FILES, ...pipeline.lockfiles]
-        .map((path) => `'${path.replaceAll("'", "''")}'`)
-        .join(', ');
-    const cache = {
-        key: `${CI_CACHE_PREFIX}${pipeline.version}-\${{ hashFiles(${hashed}) }}`,
-        path: `${[...CACHED_PATHS[platform].mise, ...pipeline.packageManagers.flatMap((name) => CACHED_PATHS[platform][name])].join('\n')}\n`,
-    };
     return {
         'runs-on': platform === 'linux' ? pipeline.linuxRunner : machine.label,
         'timeout-minutes': CI_TIMEOUT_MINUTES,
@@ -86,12 +73,6 @@ function buildJob(
         defaults: { run: { shell: 'bash' } },
         steps: [
             { name: CI_STEP_NAMES.checkout, uses: buildActionPin(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
-            {
-                name: CI_STEP_NAMES.restoreCache,
-                id: CI_CACHE_STEP,
-                uses: buildActionPin(CI_PINS.actions.restoreCache),
-                with: cache,
-            },
             {
                 name: CI_STEP_NAMES.mise,
                 uses: buildActionPin(CI_PINS.actions.mise),
@@ -109,12 +90,6 @@ function buildJob(
                 ? []
                 : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
             { name: CI_STEP_NAMES.install, run: [CI_INSTALL_COMMAND, ...CI_DIFF_LINES.github].join('\n') },
-            {
-                name: CI_STEP_NAMES.saveCache,
-                if: CI_CACHE_MISS_CONDITION,
-                uses: buildActionPin(CI_PINS.actions.saveCache),
-                with: { key: CI_CACHE_SAVED_KEY, path: cache.path },
-            },
             {
                 name: CI_STEP_NAMES.check,
                 env: { [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION },
@@ -160,6 +135,15 @@ function buildFrozenInstall(session: Session, scopePath: string, lockfile: Froze
     const uv = findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin;
     const runner = name === undefined ? uv : readProjectPackageManager(session, scopePath, name);
     return buildPackageManagerCommand(runner, buildFrozenInstallArguments(lockfile, runner.version));
+}
+
+function listProjectLockfiles(session: Session): string[] {
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    return session.scopes.flatMap(({ path: scopePath }) =>
+        (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
+            .map((lockfile) => joinScope(scopePath, lockfile))
+            .filter((path) => tracked.has(path)),
+    );
 }
 
 /**
@@ -222,20 +206,6 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
         },
     });
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
-}
-
-/**
-List the tracked lockfiles of the root and of each scope.
-
-@param session the repository and its scopes.
-*/
-export function listProjectLockfiles(session: Session): string[] {
-    const tracked = new Set(session.repository.files.map((file) => file.path));
-    return session.scopes.flatMap(({ path: scopePath }) =>
-        (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
-            .map((lockfile) => joinScope(scopePath, lockfile))
-            .filter((path) => tracked.has(path)),
-    );
 }
 
 /**

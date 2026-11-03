@@ -1,4 +1,3 @@
-import { basename } from 'node:path/posix';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
@@ -10,11 +9,11 @@ import { getSettingValue } from '#cli/settings/inherit.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
+import type { Pipeline, RuleFile } from '#cli/types/generation.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import { parseAttributePatterns } from '#cli/repository/git/output.ts';
 import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
@@ -23,13 +22,11 @@ import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/g
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import { buildMiseInstall, listNpmProjectPins, buildPythonProjectTable } from '#cli/tools/pins.ts';
-import type { Pipeline, RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation.ts';
 
 import {
     listTestChecks,
     buildGithubWorkflow,
     buildGitlabWorkflow,
-    listProjectLockfiles,
     listProjectInstallLines,
 } from '#cli/generation/ci.ts';
 import {
@@ -42,21 +39,9 @@ import {
     ATTRIBUTE_QUOTED_CHARACTERS,
 } from '#cli/config/generation.ts';
 
-function listWorkflowPackageManagers(session: Session, generated: Generation, lockfiles: string[]): CiPackageManager[] {
-    const packageManagers = new Set<CiPackageManager>(
-        lockfiles.map((path) => FROZEN_INSTALLS[basename(path) as FrozenLockfile][0]),
-    );
-    if (generated.files.some(({ path }) => path === GSPOT_PATHS.npmProject) && session.toolPackageManager !== undefined)
-        packageManagers.add(session.toolPackageManager);
-    if (generated.files.some(({ path }) => path === GSPOT_PATHS.pythonProject)) packageManagers.add('uv');
-    return [...packageManagers].toSorted(compareText);
-}
-
 function addWorkflow(session: Session, generated: Generation): void {
     const { settings, scopes } = session;
     if (settings.ci?.enabled !== true) return;
-    const lockfiles = listProjectLockfiles(session);
-    const packageManagers = listWorkflowPackageManagers(session, generated, lockfiles);
     const available = buildAvailableSettings(listSelectedConfigurations(scopes), settings.level);
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
@@ -67,8 +52,6 @@ function addWorkflow(session: Session, generated: Generation): void {
             operatingSystems: getSettingValue(available, settings, CI_SYSTEMS_SETTING, '')
                 ?.value as Pipeline['operatingSystems'],
             linuxRunner: settings.ci.linux_runner,
-            lockfiles,
-            packageManagers,
             testChecks: listTestChecks(session),
         }),
     );

@@ -21,16 +21,6 @@ export const CI_PINS = {
             sha: '2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca',
             version: 'v5.1.1',
         },
-        restoreCache: {
-            name: 'actions/cache/restore',
-            sha: '55cc8345863c7cc4c66a329aec7e433d2d1c52a9',
-            version: 'v6.1.0',
-        },
-        saveCache: {
-            name: 'actions/cache/save',
-            sha: '55cc8345863c7cc4c66a329aec7e433d2d1c52a9',
-            version: 'v6.1.0',
-        },
     },
     githubRunners: {
         linux: { label: 'ubuntu-24.04', arch: 'x64' },

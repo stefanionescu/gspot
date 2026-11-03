@@ -125,11 +125,6 @@ gspot quotes each argument, so spaces, quotes, and `$` reach the command as plai
 The gspot installation step gives mise the job token as `MISE_GITHUB_TOKEN`; `gspot install` downloads the exact URLs of
 the mise lockfile under `.gspot/`. In other pipelines, set `MISE_GITHUB_TOKEN` yourself.
 
-The GitHub job caches mise and the package managers used by project lockfiles and the tool projects in `.gspot/`.
-It uses each runner system's cache paths. It restores only an exact match for the cache key, including the lockfile
-hashes; it never falls back to a cache with different lockfiles. A cache miss installs the tools, then saves the new
-cache immediately after installation, even when later checks report findings.
-
 ## Your own pipeline
 
 Use your own pipeline when your project installs private packages, or when its tests need a database or another
@@ -156,7 +151,7 @@ Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means 
 program gives exit 2, and the report names it. `gspot check --json` prints the report as JSON.
 
 Do not cache or upload credentials. To cache downloads and installed tools, key the cache on the gspot
-version, the files in `.gspot/` that pin the tools, and your lockfiles, as the GitHub job does.
+version, the files in `.gspot/` that pin the tools, and your lockfiles.
 
 ## Turn CI off
 
