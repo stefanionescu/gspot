@@ -201,9 +201,9 @@ export const IGNORE_FILES = [
     { file: '.eslintignore', tool: 'eslint', check: 'javascript/eslint' },
 ] as const;
 
-export const RUFF_CHECK_ID = 'python/ruff';
+export const RUFF_CHECK = 'python/ruff';
 
-export const RUFF_CHECK_IDS = [RUFF_CHECK_ID, 'python/ruff-format'] as const;
+export const RUFF_CHECK_IDS = [RUFF_CHECK, 'python/ruff-format'] as const;
 
 export const RUFF_FORMAT_KEYS = ['line-length', 'indent-width'] as const;
 

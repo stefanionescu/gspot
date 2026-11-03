@@ -118,8 +118,6 @@ export const RUFF_PATH_RULES = {
 
 export const RUFF_CONSOLE_RULES = ['T20'] as const;
 
-export const RUFF_CHECK = 'python/ruff';
-
 export const BASEDPYRIGHT_CHECK = 'python/basedpyright';
 
 export const SQLFLUFF_CAPITALISATION = {

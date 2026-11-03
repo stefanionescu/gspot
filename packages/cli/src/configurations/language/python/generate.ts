@@ -6,6 +6,7 @@ import { findText } from '#cli/system/files/reads.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
+import { RUFF_CHECK } from '#cli/config/repository/setup.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
@@ -17,7 +18,6 @@ import { getTable, getLimit, listIgnores, selectFormat } from '#cli/settings/sco
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 
 import {
-    RUFF_CHECK,
     RUFF_ISORT,
     PYTHON_FILES,
     RUFF_PATH_RULES,
