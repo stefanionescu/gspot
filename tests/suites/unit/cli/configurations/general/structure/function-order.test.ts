@@ -4,19 +4,27 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('a private Python function below a public one is reported, and the moved function is not', async () => {
+test('a private Python function below a public one is reported unless a function above calls it, and the moved function is not', async () => {
     await using sandbox = await createGitSandbox({
         'rows.py': `def _strip(value):
     return value.strip()
 
 
 def load_rows(text):
-    return [_parse_row(line) for line in text.splitlines()]
+    return [_split_row(line) for line in text.splitlines()]
+
+
+def _split_row(line):
+    return _strip(line).split(",")
 
 
 @cache
 def _parse_row(line):
     return _strip(line).split(",")
+
+
+def parse_rows(text):
+    return [_parse_row(line) for line in text.splitlines()]
 
 
 def __getattr__(name):
@@ -27,10 +35,10 @@ def __getattr__(name):
     const findings = await runSandboxCheck(sandbox.path, 'structure/function-order');
     expect(findings.map(({ line, rule, message }) => ({ line, rule, message }))).toStrictEqual([
         {
-            line: 9,
+            line: 13,
             rule: 'private-below-public',
             message:
-                'The private function _parse_row sits below the public function load_rows. Move _parse_row above load_rows.',
+                'The private function _parse_row sits below the public function load_rows, and no function above it calls it. Move _parse_row above load_rows, or below a function that calls it.',
         },
     ]);
     await writeFile(
@@ -46,7 +54,7 @@ def load_rows(text):
     expect(await runSandboxCheck(sandbox.path, 'structure/function-order')).toStrictEqual([]);
 });
 
-test('a private or fileprivate Swift function below an internal one is reported, and methods are not', async () => {
+test('a private or fileprivate Swift function below an internal one is reported unless a function above calls it, and methods are not', async () => {
     await using sandbox = await createGitSandbox({
         'Sources/Report.swift': String.raw`private func trim(_ value: String) -> String {
     value.trimmingCharacters(in: .whitespaces)
@@ -60,8 +68,12 @@ fileprivate func format(_ value: String) -> String {
     "[\(value)]"
 }
 
+fileprivate func quote(_ value: String) -> String {
+    "\"\(value)\""
+}
+
 public func print(_ value: String) {
-    Swift.print(render(value))
+    Swift.print(render(quote(value)))
 }
 
 struct Report {
@@ -74,11 +86,11 @@ struct Report {
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/function-order');
     expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: 'Sources/Report.swift', line: 9, rule: 'private-below-public' },
+        { file: 'Sources/Report.swift', line: 13, rule: 'private-below-public' },
     ]);
 });
 
-test('a private JavaScript or TypeScript function or function constant below an exported one is reported', async () => {
+test('a private JavaScript or TypeScript function or function constant below an exported one is reported unless a function above calls it', async () => {
     await using sandbox = await createGitSandbox({
         'src/rows.ts': `function first(): number {
     return 1;
@@ -115,13 +127,10 @@ async function run() {}
         'src/rows.ts:5',
         'src/rows.ts:7',
         'src/rows.ts:11',
-        'src/tool.mjs:2',
-        'src/view.tsx:4',
     ]);
-    expect([findings[0]?.message, findings[3]?.message]).toStrictEqual([
-        'The private function late sits below the public function run. Move late above run.',
-        'The private function run sits below the public function default. Move run above default.',
-    ]);
+    expect(findings[0]?.message).toBe(
+        'The private function late sits below the public function run, and no function above it calls it. Move late above run, or below a function that calls it.',
+    );
 });
 
 test('a run narrowed to one file reports only that file', async () => {

@@ -105,14 +105,14 @@ summary = "Finds named Python, Swift, and Bash functions at or under `limits.min
 why = "A function of one statement makes the reader jump for nothing."
 
 [[check]]
-example = "A TypeScript file whose `function parseRow` sits below `export function loadRows` reports `private-below-public`. Move `parseRow` above `loadRows`."
+example = "A TypeScript file whose `function parseRow` sits below `export function loadRows`, and that no function above `parseRow` calls, reports `private-below-public`. Move `parseRow` above `loadRows`, or below the function that calls it."
 files = { extensions = [".py", ".swift", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"], kinds = ["source"] }
-help = "Move each private function above the first public function of its file."
+help = "Move each private function above the first public function of its file, or below a function that calls it."
 level = "all"
 name = "function-order"
 stage = "commit"
-summary = "Finds a private top-level function below a public one in Python, Swift, JavaScript, and TypeScript. A Python name that starts with `_` is private, and so is a Swift function marked `private` or `fileprivate`. In JavaScript and TypeScript, a function declaration or a constant set to a function is private unless the module exports it."
-why = "When private functions come first in every file, a reader knows where the public functions of a file start."
+summary = "Finds a private top-level function below a public one in Python, Swift, JavaScript, and TypeScript, unless a function above it calls it. A Python name that starts with `_` is private, and so is a Swift function marked `private` or `fileprivate`. In JavaScript and TypeScript, a function declaration or a constant set to a function is private unless the module exports it."
+why = "When each private function sits above the public functions, or below the function that calls it, a reader finds a helper next to the code that uses it."
 
 [[check]]
 example = "A Swift `do { ... }` without `catch` reports `bare-block`. Move its statements into a function named after their step, or remove the `do`."
