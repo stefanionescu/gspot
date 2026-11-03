@@ -94,6 +94,9 @@ name = "vulture"
 pypi = "vulture"
 version = "2.16"
 
+[[tool.when]]
+level = "all"
+
 [ruff]
 basic = [
     "A",
@@ -410,6 +413,7 @@ why = "An import that works through somebody else's dependency breaks the day th
 example = "A function that no Python file of the scope calls reports `unused-function`. Delete it. A file of hooks that a framework calls by name gets an ignore for its path."
 files = { extensions = [".py"] }
 help = "Delete the unused definition or the unreachable code."
+level = "all"
 name = "vulture"
 runs = "scope"
 stage = "push"
