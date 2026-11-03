@@ -59,19 +59,17 @@ export const OCTAL_BYTE_WIDTH = 3;
 
 export const GIT_REMOTE_HEADS_ARGUMENTS = ['for-each-ref', '--format=%(refname)%09%(symref)', 'refs/remotes'] as const;
 
-export const HEAD_SUFFIX = '/HEAD';
-
 export const GIT_HEAD_NAME_ARGUMENTS = ['rev-parse', '--symbolic-full-name', 'HEAD'] as const;
 
 export const GIT_UPSTREAM_ARGUMENTS = ['for-each-ref', '--format=%(upstream)', '--'] as const;
 
-export const ORIGIN_HEAD = 'refs/remotes/origin/HEAD';
+export const ORIGIN_REMOTE = 'origin';
 
 export const REMOTES_PREFIX = 'refs/remotes/';
 
 export const BRANCHES_PREFIX = 'refs/heads/';
 
-export const DEFAULT_BRANCH_REFS = ['refs/heads/main', 'refs/heads/master'] as const;
+export const DEFAULT_BRANCHES = ['main', 'master'] as const;
 
 export const GIT_IS_ANCESTOR_ARGUMENTS = ['merge-base', '--is-ancestor'] as const;
 
@@ -91,9 +89,6 @@ export const GIT_SHALLOW_ARGUMENTS = ['rev-parse', '--is-shallow-repository'] as
 export const GIT_WRITE_TREE_ARGUMENTS = ['write-tree'] as const;
 
 export const REMOTE_HEAD_FIELD_COUNT = 2;
-
-export const NO_UPSTREAM_MESSAGE =
-    'No upstream or origin/HEAD is available. Use --base <ref> to name a branch, tag, or commit.';
 
 export const HISTORY_CUT_MESSAGE = ' History is cut; run git fetch --unshallow.';
 

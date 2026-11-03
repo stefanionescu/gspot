@@ -58,16 +58,15 @@ test('--changed compares with the merge base, names its base, and a folder argum
     ).toStrictEqual(['api/source.txt', 'web/source.txt']);
 });
 
-test('--changed without an upstream names the fix, and uses the remote default branch', async () => {
+test('--changed without an upstream names the replacement command, and uses origin/main without origin/HEAD', async () => {
     await using sandbox = await testdir();
     await prepareChangedRepository(sandbox.path, { '.gitignore': `${GSPOT_FOLDER}/\n`, 'api/source.txt': 'before' });
     runGitStep(sandbox.path, ['init', '-b', 'topic']);
     commitAll(sandbox.path);
-    const absent = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']);
+    const absent = await runGspot(sandbox.path, ['check', '--changed', '--stage', 'commit', '--json']);
     expect(absent.code).toBe(2);
     expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toBe(NO_UPSTREAM_MESSAGE);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
-    runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     await writeFile(join(sandbox.path, 'api/source.txt'), 'changed');
     const defaultRange = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed']);
     expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);

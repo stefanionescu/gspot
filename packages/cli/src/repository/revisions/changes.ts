@@ -13,12 +13,12 @@ import {
     buildGitError,
 } from '#cli/repository/git/run.ts';
 import {
-    ORIGIN_HEAD,
-    HEAD_SUFFIX,
+    ORIGIN_REMOTE,
     COMMIT_SUFFIX,
+    REMOTES_PREFIX,
     EMPTY_BASE_HASH,
+    DEFAULT_BRANCHES,
     COMMIT_HASH_PATTERN,
-    NO_UPSTREAM_MESSAGE,
     HISTORY_CUT_MESSAGE,
     GIT_SHALLOW_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
@@ -65,40 +65,57 @@ async function explainInvalidBase(root: string, compared: string, cancelSignal?:
 }
 
 /**
-List the symbolic `HEAD` of each remote.
+List the refs under `refs/remotes`, each with the ref that it points to when it is symbolic.
 
 @param root the folder where Git runs.
-@param cancelSignal stops the Git reads.
-@returns each `HEAD` name and the branch that it points to.
+@param cancelSignal stops the Git read.
+@returns each remote ref, mapped to its target, or to an empty string for a ref that is not symbolic.
 */
-export async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<Array<[string, string]>> {
-    const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, {
-        cancelSignal,
-    });
-    return lines.flatMap((line): Array<[string, string]> => {
-        const [name, target] = line.split('\t', REMOTE_HEAD_FIELD_COUNT);
-        const isHead = name !== undefined && name.endsWith(HEAD_SUFFIX) && target !== undefined && target !== '';
-        return isHead ? [[name, target]] : [];
-    });
+export async function listRemoteRefs(root: string, cancelSignal?: AbortSignal): Promise<ReadonlyMap<string, string>> {
+    const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, { cancelSignal });
+    return new Map(
+        lines.map((line): [string, string] => {
+            const [name = '', target = ''] = line.split('\t', REMOTE_HEAD_FIELD_COUNT);
+            return [name, target];
+        }),
+    );
 }
 
 /**
-Read the upstream or remote default branch.
+Find the default branch of a remote: the branch that its `HEAD` names, else its `main` or `master` branch.
+
+@param remoteRefs the refs that listRemoteRefs read.
+@param remote the name of the remote.
+@returns the branch name, or undefined when the remote has none of them.
+*/
+export function findRemoteDefaultBranch(remoteRefs: ReadonlyMap<string, string>, remote: string): string | undefined {
+    const prefix = `${REMOTES_PREFIX}${remote}/`;
+    const target = remoteRefs.get(`${prefix}HEAD`);
+    if (target?.startsWith(prefix) === true) return target.slice(prefix.length);
+    return DEFAULT_BRANCHES.find((branch) => remoteRefs.has(`${prefix}${branch}`));
+}
+
+/**
+Read the branch to compare with: the upstream of the current branch, else the default branch of origin.
 
 @param root the folder where Git runs.
 @param cancelSignal stops the Git reads.
+@param remoteRefs the remote refs, when the run listed them already.
 @returns an empty string without a branch.
 */
-export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): Promise<string> {
+export async function readDefaultRef(
+    root: string,
+    cancelSignal?: AbortSignal,
+    remoteRefs?: ReadonlyMap<string, string>,
+): Promise<string> {
     const head = await readGitText(root, GIT_HEAD_NAME_ARGUMENTS, { cancelSignal });
     const upstreamText = await readGitText(root, [...GIT_UPSTREAM_ARGUMENTS, head.trim()], {
         cancelSignal,
     });
     const upstream = upstreamText.trim();
     if (upstream !== '') return upstream;
-    const heads = await listRemoteHeads(root, cancelSignal);
-    const preferred = heads.find(([name]) => name === ORIGIN_HEAD);
-    return preferred?.[1] ?? '';
+    const branch = findRemoteDefaultBranch(remoteRefs ?? (await listRemoteRefs(root, cancelSignal)), ORIGIN_REMOTE);
+    return branch === undefined ? '' : `${REMOTES_PREFIX}${ORIGIN_REMOTE}/${branch}`;
 }
 
 /**
@@ -170,18 +187,14 @@ export async function readTreeStatus(root: string, cancelSignal?: AbortSignal): 
 Read the files and commits that changed after a ref.
 
 @param root the folder where Git runs.
-@param reference the git ref to compare against; absent selects the upstream or the default branch of origin.
+@param compared the git ref to compare against.
 @param cancelSignal stops the Git commands.
 */
 export async function readChangedPaths(
     root: string,
-    reference: string | undefined,
+    compared: string,
     cancelSignal?: AbortSignal,
 ): Promise<ChangedPaths> {
-    const compared = reference ?? (await readDefaultRef(root, cancelSignal));
-    if (reference === undefined && compared === '') {
-        throw new GspotError('git', NO_UPSTREAM_MESSAGE);
-    }
     const base = await readMergeBase(root, compared, cancelSignal);
     if (base.hash === undefined) return { reference: compared, ...(base.note !== undefined && { note: base.note }) };
     const merged = base.hash;

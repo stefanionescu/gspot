@@ -6,9 +6,14 @@ import { GspotError } from '#cli/system/errors.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
-import { readMergeBase, readDefaultRef, listRemoteHeads } from '#cli/repository/revisions/changes.ts';
 import type { PushLine, Comparison, PushSearch, PushRevision, PushedRevisions } from '#cli/types/repository.ts';
 
+import {
+    readMergeBase,
+    readDefaultRef,
+    listRemoteRefs,
+    findRemoteDefaultBranch,
+} from '#cli/repository/revisions/changes.ts';
 import {
     NOT_FLAG,
     TREE_SUFFIX,
@@ -16,15 +21,14 @@ import {
     ABSENT_HASH,
     HASH_PATTERN,
     REMOTES_FLAG,
-    REMOTES_PREFIX,
     BRANCHES_PREFIX,
+    DEFAULT_BRANCHES,
     NON_COMMIT_REASON,
     GIT_LOG_ARGUMENTS,
     DELETED_REF_REASON,
     GIT_TREE_ARGUMENTS,
     GIT_PEEL_ARGUMENTS,
     FORCE_PUSH_MESSAGE,
-    DEFAULT_BRANCH_REFS,
     PEEL_FAILURE_MESSAGE,
     GIT_REMOTE_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
@@ -93,17 +97,17 @@ async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): 
 }
 
 async function readComparison(search: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
-    const { root, cancelSignal } = search;
+    const { root, cancelSignal, remoteRefs } = search;
     if (!ABSENT_HASH.test(remoteHash) && search.commits.has(remoteHash)) {
         const previous = search.commits.get(remoteHash);
         if (previous === undefined)
-            return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
+            return { base: await readPushBase(root, cancelSignal, remoteRefs), changed: undefined, range: [hash] };
         const changed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, previous, hash, '--'], { cancelSignal });
         return { base: previous, changed, range: [hash, `^${previous}`] };
     }
     const range = [hash, NOT_FLAG, search.remote === undefined ? REMOTES_FLAG : `${REMOTES_FLAG}=${search.remote}`];
     const changed = await readGitPaths(root, [...GIT_LOG_ARGUMENTS, ...range, '--'], { cancelSignal });
-    return { base: await readPushBase(root, cancelSignal), changed, range };
+    return { base: await readPushBase(root, cancelSignal, remoteRefs), changed, range };
 }
 
 async function buildRevision(search: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
@@ -138,15 +142,9 @@ function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
     duplicate.commits = [...new Set([...duplicate.commits, ...revision.commits])];
 }
 
-async function listDefaultBranches(
-    root: string,
-    remote: string | undefined,
-    cancelSignal?: AbortSignal,
-): Promise<readonly string[]> {
-    const prefix = `${REMOTES_PREFIX}${remote ?? ''}/`;
-    const heads = await listRemoteHeads(root, cancelSignal);
-    const target = heads.find(([name]) => name === `${prefix}HEAD`)?.[1];
-    return target === undefined ? DEFAULT_BRANCH_REFS : [`${BRANCHES_PREFIX}${target.slice(prefix.length)}`];
+function listDefaultBranches(remoteRefs: ReadonlyMap<string, string>, remote: string | undefined): string[] {
+    const branch = remote === undefined ? undefined : findRemoteDefaultBranch(remoteRefs, remote);
+    return (branch === undefined ? DEFAULT_BRANCHES : [branch]).map((name) => `${BRANCHES_PREFIX}${name}`);
 }
 
 async function assertFastForward(search: PushSearch, line: PushLine): Promise<void> {
@@ -175,8 +173,12 @@ async function addPushLine(search: PushSearch, pushed: PushedRevisions, line: Pu
     addRevision(pushed, await buildRevision(search, line, commit));
 }
 
-async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const compared = await readDefaultRef(root, cancelSignal);
+async function readPushBase(
+    root: string,
+    cancelSignal?: AbortSignal,
+    remoteRefs?: ReadonlyMap<string, string>,
+): Promise<string> {
+    const compared = await readDefaultRef(root, cancelSignal, remoteRefs);
     if (compared !== '') {
         const base = await readMergeBase(root, compared, cancelSignal);
         if (base.hash !== undefined) return base.hash;
@@ -207,12 +209,14 @@ export async function readPushedRevisions(
     const isShallow = shallowAnswer.trim() === 'true';
     const remotes = remote === undefined ? [] : await readGitLines(root, GIT_REMOTE_ARGUMENTS, { cancelSignal });
     const remoteName = remotes.find((name) => name === remote);
+    const remoteRefs = await listRemoteRefs(root, cancelSignal);
     const context: PushSearch = {
         root: root,
         cancelSignal,
         commits: await readPeeledCommits(root, lines, cancelSignal),
         remote: remoteName,
-        defaultBranches: await listDefaultBranches(root, remoteName, cancelSignal),
+        remoteRefs,
+        defaultBranches: listDefaultBranches(remoteRefs, remoteName),
         boundaries: isShallow ? await readShallowBoundaries(root, cancelSignal) : new Set<string>(),
     };
     const result: PushedRevisions = { revisions: [], skipped: [] };

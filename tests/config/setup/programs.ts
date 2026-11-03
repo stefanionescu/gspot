@@ -3,7 +3,7 @@ import { SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
 export const LINGUIST_GENERATED_PATTERN = 'emitted/** linguist-generated\n';
 
 export const NO_UPSTREAM_MESSAGE =
-    'No upstream or origin/HEAD is available. Use --base <ref> to name a branch, tag, or commit.';
+    'No upstream, origin/HEAD, origin/main, or origin/master names a branch to compare with. Use --base <ref> to name a branch, tag, or commit.';
 
 export const CHECK_COMMAND = 'gspot check';
 

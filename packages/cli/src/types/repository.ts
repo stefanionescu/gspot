@@ -260,6 +260,7 @@ export type PushSearch = {
     cancelSignal: AbortSignal | undefined;
     commits: Map<string, string | undefined>;
     remote: string | undefined;
+    remoteRefs: ReadonlyMap<string, string>;
     boundaries: Set<string>;
 };
 

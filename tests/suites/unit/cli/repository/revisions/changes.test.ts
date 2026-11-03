@@ -6,9 +6,8 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { utimes, readFile, writeFile } from 'node:fs/promises';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
-import { NO_UPSTREAM_MESSAGE } from '#tests/config/setup/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTreeStatus, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { readDefaultRef, readTreeStatus, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 test('the status of an unborn index lists its staged, unstaged, and untracked paths', async () => {
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n', 'notes.txt': 'draft\n' });
@@ -98,8 +97,9 @@ test('a new branch compares with the remote default without losing unpushed comm
     runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
     runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
-    const { reference, commits } = await readChangedPaths(sandbox.path, undefined);
-    expect(reference).toBe('refs/remotes/origin/main');
+    const compared = await readDefaultRef(sandbox.path);
+    expect(compared).toBe('refs/remotes/origin/main');
+    const { commits } = await readChangedPaths(sandbox.path, compared);
     expect(commits).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
 });
 
@@ -112,11 +112,13 @@ test('a branch comparison includes untracked files but excludes ignored files', 
     expect(changed.paths).toStrictEqual(['new.ts']);
 });
 
-test('a detached comparison without a remote default explains how to select one', async () => {
+test('without an upstream or origin/HEAD, the default branch is origin/main, then origin/master', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
     commitAll(sandbox.path);
-    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     runGitStep(sandbox.path, ['checkout', '--detach', '--quiet']);
-    const upstreamError = await captureRejection(readChangedPaths(sandbox.path, undefined));
-    expect(upstreamError.message).toBe(NO_UPSTREAM_MESSAGE);
+    expect(await readDefaultRef(sandbox.path)).toBe('');
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/master', 'HEAD']);
+    expect(await readDefaultRef(sandbox.path)).toBe('refs/remotes/origin/master');
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    expect(await readDefaultRef(sandbox.path)).toBe('refs/remotes/origin/main');
 });

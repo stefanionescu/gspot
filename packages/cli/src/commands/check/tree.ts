@@ -12,10 +12,10 @@ import type { RunSelection } from '#cli/types/engine/plan.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { FixReport, RunReport, RunOptions } from '#cli/types/engine/run.ts';
 import type { CheckOptions, RevisionSource } from '#cli/types/commands/reports.ts';
+import { readDefaultRef, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
@@ -90,6 +90,17 @@ async function warnMissingHooks(session: Session, revision: RevisionSource | und
     if (!hooks.ready) printWarning('The Git hooks are not installed in this clone. Run gspot install.');
 }
 
+async function readComparedRef(root: string, options: CheckOptions, cancelSignal: AbortSignal): Promise<string> {
+    if (options.base !== undefined) return options.base;
+    const compared = await readDefaultRef(root, cancelSignal);
+    if (compared === '')
+        throw new GspotError(
+            'git',
+            'No upstream, origin/HEAD, origin/main, or origin/master names a branch to compare with. Use --base <ref> to name a branch, tag, or commit.',
+        );
+    return compared;
+}
+
 async function readSelection(
     session: Session,
     options: CheckOptions,
@@ -98,7 +109,8 @@ async function readSelection(
     if (options.messageFile !== undefined)
         return { selection: { content: 'message', messageFile: options.messageFile } };
     if (options.base === undefined && options.changed !== true) return { selection: { content: 'working-tree' } };
-    const changed = await readChangedPaths(session.root, options.base, cancelSignal);
+    const compared = await readComparedRef(session.root, options, cancelSignal);
+    const changed = await readChangedPaths(session.root, compared, cancelSignal);
     const note = changed.note === undefined ? {} : { note: changed.note };
     if (changed.paths === undefined) return { selection: { content: 'working-tree' }, ...note };
     const { reference, paths, commits } = changed;
