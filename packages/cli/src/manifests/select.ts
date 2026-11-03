@@ -110,7 +110,7 @@ export function assertConfigurationsEditable(
     if (name !== undefined)
         throw new GspotError(
             'arguments',
-            `gspot selects ${name} by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.`,
+            `gspot selects ${name} by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To ignore one check, run gspot ignore.`,
         );
 }
 

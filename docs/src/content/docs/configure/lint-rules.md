@@ -65,7 +65,7 @@ gspot set tools.eslint.rules '{ eqeqeq = ["always", { null = "ignore" }] }'
 The table holds options only. gspot refuses a severity, such as `eqeqeq = "off"`:
 
 ```text
-This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".
+This table holds options only, without a severity; the level decides which rules run. To ignore eqeqeq, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".
 ```
 
 Options for a rule that no block turns on stop ESLint when it loads the config. The error names the rule.

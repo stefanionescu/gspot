@@ -97,7 +97,7 @@ const eslintTableSchema = z.strictObject({
     rules: eslintRulesSchema.default({}).meta({
         configurations: ['javascript'],
         description:
-            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs. gspot refuses options for a rule of level all at a lower level, and ESLint refuses options for a rule that no block turns on. Accept a finding with `gspot ignore javascript/eslint --rule <rule> --reason "<why>"`.',
+            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs. gspot refuses options for a rule of level all at a lower level, and ESLint refuses options for a rule that no block turns on. Ignore a finding with `gspot ignore javascript/eslint --rule <rule> --reason "<why>"`.',
     }),
     override: z
         .strictObject({
@@ -135,7 +135,7 @@ const markdownlintSchema = z.strictObject({
     rules: markdownlintRulesSchema.default({}).meta({
         configurations: ['markdown'],
         description:
-            'Option tables by Markdown rule ID, such as MD024; the level decides which rules run. Accept a finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.',
+            'Option tables by Markdown rule ID, such as MD024; the level decides which rules run. Ignore a finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.',
     }),
 });
 
@@ -227,7 +227,7 @@ const ruffSchema = z.strictObject({
         .meta({
             configurations: ['python'],
             description:
-                'Ruff rules or rule prefixes to run on top of the rules of the level, such as ANN. Accept a finding with `gspot ignore python/ruff --rule <rule> --reason "<why>"`.',
+                'Ruff rules or rule prefixes to run on top of the rules of the level, such as ANN. Ignore a finding with `gspot ignore python/ruff --rule <rule> --reason "<why>"`.',
         }),
 });
 
@@ -241,7 +241,7 @@ export const toolsSchema = z.strictObject({
             rules: stylelintRulesSchema.default({}).meta({
                 configurations: ['css'],
                 description:
-                    'Options for Stylelint rules, which stay errors. gspot refuses options for a rule of level all at a lower level, and Stylelint reports a rule that it does not know. Accept a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.',
+                    'Options for Stylelint rules, which stay errors. gspot refuses options for a rule of level all at a lower level, and Stylelint reports a rule that it does not know. Ignore a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.',
             }),
             plugins: stylelintPluginsSchema,
         })

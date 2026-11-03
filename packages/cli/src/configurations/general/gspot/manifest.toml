@@ -28,7 +28,7 @@ help = "Delete the file or the line that the message names, or replace the line 
 name = "conflicting-configs"
 runs = "once"
 stage = "commit"
-summary = "Finds the settings file of a tool that gspot writes settings for, such as `.commitlintrc.json` while commitlint runs, and what still calls or repeats such a tool: package scripts, lint-staged entries, hook lines, pre-commit entries, CI steps, repeated devDependencies, and the settings of black, flake8, isort, and mypy."
+summary = "Finds a tool config that a generated config file replaces, such as `.commitlintrc.json` while commitlint runs, and what still calls or repeats such a tool: package scripts, lint-staged entries, hook lines, pre-commit entries, CI steps, repeated devDependencies, and the settings of black, flake8, isort, and mypy."
 why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing, and an lint command fails or runs a second lint stack beside gspot."
 
 [[check]]

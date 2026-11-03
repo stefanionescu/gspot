@@ -49,7 +49,7 @@ test('add security exits 2, names gspot set level, and writes nothing', async ()
     await assertRefusalWithoutWrites(sandbox.path, ['add', 'security'], {
         error: 'arguments',
         message:
-            'gspot selects security by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.',
+            'gspot selects security by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To ignore one check, run gspot ignore.',
     });
 });
 

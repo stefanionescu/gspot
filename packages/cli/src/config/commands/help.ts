@@ -28,7 +28,7 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so git show HEAD:<path> can restore it. init installs nothing and runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
+            'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: config files for the tools, rule files for coding agents, and Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so git show HEAD:<path> can restore it. init installs nothing and runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
             '--from <file>': "Start from another repository's gspot.toml",
@@ -63,7 +63,7 @@ export const COMMAND_HELP = {
         summary: 'Write the generated files again from gspot.toml',
         group: 'Set up a repository:',
         description:
-            'Write the generated files again from gspot.toml: the tool settings, the rule files, the Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
+            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
         arguments: {},
         options: {},
         exitCodes: [
@@ -189,18 +189,18 @@ export const COMMAND_HELP = {
         example: 'gspot unset level',
     },
     ignore: {
-        summary: 'Turn off a check, or one lint rule, with a reason',
+        summary: 'Ignore a check, or one lint rule, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Turn off a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. gspot check --verbose prints them with their reasons.',
+            'Ignore a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. gspot check --verbose prints them with their reasons.',
         arguments: {
             '[check]': 'The check, such as python/ruff. Leave it out to keep --paths out of every check',
         },
         options: {
-            '--reason <text>': 'Why you turn it off (required)',
-            '--rule <rule>': 'Turn off only this lint rule',
+            '--reason <text>': 'Why you ignore it (required)',
+            '--rule <rule>': 'Ignore only this lint rule',
             '--paths <path>':
-                'Turn it off for one path or glob relative to the current folder; repeat for more (default: every path)',
+                'Ignore it for one path or glob relative to the current folder; repeat for more (default: every path)',
         },
         exitCodes: [
             ['0', 'The ignore was written, or it already existed.'],

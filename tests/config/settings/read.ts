@@ -96,7 +96,7 @@ export const KEY_PATH_CASES = [
         options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n' },
         correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
         where: [
-            'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+            'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To ignore eqeqeq, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
         ],
     },
 ] as const;

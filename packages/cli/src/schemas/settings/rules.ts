@@ -33,7 +33,7 @@ function formatRuleHelp(issue: z.core.$ZodIssue, checkId: string): string {
     const path = issue.path;
     const rule = path[path.indexOf('rules') + 1];
     const quoted = quoteArgument(String(rule));
-    return `This table holds options only, without a severity; the level decides which rules run. To turn ${quoted} off, run gspot ignore ${checkId} --rule ${quoted} --reason "<why>".`;
+    return `This table holds options only, without a severity; the level decides which rules run. To ignore ${quoted}, run gspot ignore ${checkId} --rule ${quoted} --reason "<why>".`;
 }
 
 /**
@@ -86,7 +86,7 @@ export const commitlintSchema = z
         rules: commitlintRulesSchema.default({}).meta({
             configurations: ['commits'],
             description:
-                'Options for active commitlint rules, by rule name: an always/never condition and an optional value, without a severity; the level decides which rules run. Accept a finding with `gspot ignore commits/commitlint --rule <rule> --reason "<why>"`.',
+                'Options for active commitlint rules, by rule name: an always/never condition and an optional value, without a severity; the level decides which rules run. Ignore a finding with `gspot ignore commits/commitlint --rule <rule> --reason "<why>"`.',
         }),
     })
     .optional();

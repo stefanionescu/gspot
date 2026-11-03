@@ -40,7 +40,7 @@ export const ignoreSchema = z
     .strictObject({
         check: z.string().optional().meta({
             description:
-                'The check whose findings you accept: a shipped check or a command check. Leave it out to keep the paths out of every check.',
+                'The check to ignore: a shipped check or a command check. Leave it out to keep the paths out of every check.',
         }),
         rule: z.string().optional().meta({
             description: 'One lint rule of that check.',
@@ -49,7 +49,7 @@ export const ignoreSchema = z
             description: 'Where the ignore applies.',
         }),
         reason: z.string({ error: 'needs a reason. Add reason = "..." to this record.' }).meta({
-            description: 'Why you accept the findings.',
+            description: 'Why you ignore the findings.',
         }),
     })
     .superRefine((ignore, context) => {

@@ -56,7 +56,7 @@ export const GENERATED_FILE_RULE_DOCS = {
     },
     absent: {
         description: 'Each file that the settings generate exists.',
-        why: 'A tool without its generated settings file runs with its own defaults.',
+        why: 'A tool without its generated config file runs with its own defaults.',
         fix: GENERATED_FILE_FINDINGS.absent.help,
         example: 'A deleted `.editorconfig` reports `absent`.',
     },
@@ -64,13 +64,14 @@ export const GENERATED_FILE_RULE_DOCS = {
         description: 'Each file that gspot wrote belongs to a selected configuration.',
         why: 'A file of a configuration that is no longer selected still sets up its tool.',
         fix: GENERATED_FILE_FINDINGS.stray.help,
-        example: 'A settings file of a configuration that `gspot remove` took out reports `stray`.',
+        example: 'A generated file of a configuration that `gspot remove` took out reports `stray`.',
     },
 } as const satisfies Readonly<Record<keyof typeof GENERATED_FILE_FINDINGS, LintRuleDocs>>;
 
 export const CONFLICTING_CONFIG_RULE_DOCS = {
     [GSPOT_RULES.conflictingConfig]: {
-        description: 'The repository holds no settings file of its own for a tool that gspot writes settings for.',
+        description:
+            'The repository holds no tool config of its own for a tool that gspot writes a generated config file for.',
         why: 'The tool reads only the settings that gspot writes, so the other file misleads readers.',
         fix: 'Carry each rule that you still need into `gspot.toml`, then delete the file or section.',
         example: '`.commitlintrc.json` while gspot runs commitlint reports `conflicting-config`.',
