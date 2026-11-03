@@ -7,6 +7,7 @@ import { miseToolsSchema } from '#cli/schemas/parsers.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { readText, findText } from '#cli/system/files/reads.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
@@ -68,9 +69,9 @@ function validateLockfileHosts(session: Session, path: string, hosts: Set<string
     });
 }
 
-function listForeignLockfiles(planned: PlannedCheck): CheckFinding[] {
+function listForeignLockfiles(files: PlannedCheck['files']): CheckFinding[] {
     const pathsByPackageManager = new Map<string, string>();
-    for (const file of planned.files) {
+    for (const file of files) {
         const lockfile = LOCKFILES.find((each) => each.file === posix.basename(file.path));
         const kind =
             lockfile !== undefined && 'configuration' in lockfile && lockfile.configuration === 'javascript'
@@ -179,9 +180,10 @@ scope.
 */
 export function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
+    const files = planned.files.filter(({ path }) => !isGspotPath(path));
     return [
-        ...listForeignLockfiles(planned),
-        ...planned.files.flatMap(({ path }) => {
+        ...listForeignLockfiles(files),
+        ...files.flatMap(({ path }) => {
             return (JAVASCRIPT_LOCKFILES as readonly string[]).includes(posix.basename(path))
                 ? validateLockfileHosts(session, path, hosts)
                 : [];

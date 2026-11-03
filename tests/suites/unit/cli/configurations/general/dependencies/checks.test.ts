@@ -152,6 +152,17 @@ test('dependencies/lockfiles reports the lockfile of a second package manager in
     expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
 });
 
+test("dependencies/lockfiles leaves gspot's own tool lockfile out of the scope", async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { level: 'all' }),
+        'package.json': '{"private":true}\n',
+        'package-lock.json': '{"lockfileVersion":3,"packages":{}}\n',
+        '.gspot/pnpm-lock.yaml':
+            "lockfileVersion: '9.0'\npackages:\n  a@1.0.0:\n    resolution: {tarball: http://untrusted.invalid/a.tgz}\n",
+    });
+    expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
+});
+
 test.each([...LOCKFILE_DOWNLOAD_CASES])(
     '$path checks download fields without treating metadata URLs as registries: $name',
     async ({ path, text, lines }) => {
