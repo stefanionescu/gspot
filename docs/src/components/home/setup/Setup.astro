@@ -2,7 +2,7 @@
 import { Icon } from '@astrojs/starlight/components';
 import { CURL_COMMAND } from '#docs/config/reference.ts';
 import { URL_BREAK, COPIED_MESSAGE, COPY_FAILED_MESSAGE } from '#docs/config/home.ts';
-import { setup, LLMS_URL, AGENT_PROMPT, LLMS_COMMAND } from '#docs/reference/setup.ts';
+import { setup, LLMS_URL, AGENT_PROMPT, LLMS_COMMAND, SCAN_COMMAND } from '#docs/reference/setup.ts';
 
 const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
@@ -12,6 +12,7 @@ const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
     class="setup"
     data-mode="human"
     data-prompt={AGENT_PROMPT}
+    data-scan={SCAN_COMMAND}
     data-copied={COPIED_MESSAGE}
     data-copy-failed={COPY_FAILED_MESSAGE}
 >
@@ -37,6 +38,17 @@ const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
                 data-mode="agent"
             >
                 Agent
+            </button>
+            <button
+                type="button"
+                role="tab"
+                id="mode-try"
+                aria-controls="panel-try"
+                aria-selected="false"
+                tabindex="-1"
+                data-mode="try"
+            >
+                Try
             </button>
         </div>
         <div class="setup-tools">
@@ -83,6 +95,10 @@ const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
                 {promptEnd}
             </p>
         </div>
+        <div class="setup-panel" role="tabpanel" id="panel-try" aria-labelledby="mode-try" tabindex="0" hidden>
+            <pre class="commands"><span class="cmd"><span class="prompt" aria-hidden="true">$ </span>{SCAN_COMMAND}</span></pre>
+            <p class="try-note">Runs the checks on a copy of your repository. Your files stay as they are.</p>
+        </div>
     </div>
     <span class="sr-only" role="status" data-copy-status></span>
 </home-setup>
@@ -91,7 +107,7 @@ const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
     class HomeSetup extends HTMLElement {
         connectedCallback(): void {
             const manager = this.querySelector('select') as HTMLSelectElement;
-            const commands = [...this.querySelectorAll<HTMLPreElement>('pre.commands')];
+            const commands = [...this.querySelectorAll<HTMLPreElement>('pre[data-manager]')];
             const copy = this.querySelector('[data-copy]') as HTMLButtonElement;
             const status = this.querySelector('[data-copy-status]') as HTMLElement;
             const tablist = this.querySelector('[role="tablist"]') as HTMLElement;
@@ -112,22 +128,30 @@ const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
                 });
             }
             tablist.addEventListener('keydown', (event) => {
-                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                const current = tabs.indexOf(event.target as HTMLButtonElement);
+                const targets = new Map([
+                    ['ArrowLeft', tabs.at(current - 1)],
+                    ['ArrowRight', tabs[(current + 1) % tabs.length]],
+                    ['Home', tabs[0]],
+                    ['End', tabs.at(-1)],
+                ]);
+                const next = targets.get(event.key);
+                if (next === undefined) return;
                 event.preventDefault();
-                let next = tabs.find((tab) => tab !== event.target);
-                if (event.key === 'Home') next = tabs[0];
-                else if (event.key === 'End') next = tabs.at(-1);
-                next?.click();
-                next?.focus();
+                next.click();
+                next.focus();
             });
             copy.addEventListener('click', async () => {
+                const texts: Record<string, string | undefined> = {
+                    agent: this.dataset['prompt'],
+                    try: this.dataset['scan'],
+                };
                 const text =
-                    this.dataset['mode'] === 'agent'
-                        ? (this.dataset['prompt'] as string)
-                        : commands
-                              .filter((pre) => !pre.hidden)
-                              .flatMap((pre) => [...pre.querySelectorAll('.command-text')].map((line) => line.textContent))
-                              .join('\n');
+                    texts[this.dataset['mode'] as string] ??
+                    commands
+                        .filter((pre) => !pre.hidden)
+                        .flatMap((pre) => [...pre.querySelectorAll('.command-text')].map((line) => line.textContent))
+                        .join('\n');
                 try {
                     await navigator.clipboard.writeText(text);
                     status.textContent = this.dataset['copied'] as string;

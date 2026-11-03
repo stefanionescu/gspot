@@ -18,7 +18,7 @@ export const LLMS_URL = `${CLI_REFERENCE.package.homepage}/llms.txt`;
 
 export const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
 
-const SCAN_COMMAND = `npx ${CLI_REFERENCE.package.name} scan`;
+export const SCAN_COMMAND = `npx ${CLI_REFERENCE.package.name} scan`;
 
 export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} and follow its steps.`;
 
