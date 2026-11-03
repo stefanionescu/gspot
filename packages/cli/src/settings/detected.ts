@@ -10,8 +10,9 @@ import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { TSCONFIG_FILE, PBXPROJ_SUFFIX } from '#cli/config/parsers.ts';
-import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { isInScope, joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import type { TomlTable, DetectedScopes, ScopeConfigurations, ImportExtensionStyle } from '#cli/types/settings.ts';
 
@@ -31,6 +32,8 @@ import {
     JAVASCRIPT_CONFIGURATION,
     TRANSLATIONS_CONFIGURATION,
 } from '#cli/config/settings/detected.ts';
+
+const TS_SUFFIX_IMPORT = /(?:\bfrom|\bimport)\s*(?:\(\s*)?["']\.{1,2}\/[^"']*\.[cm]?tsx?["']/u;
 
 function buildOpenApiTable(selection: ScopeConfigurations, { repository, scopes }: DetectedScopes): TomlTable {
     const openapi = selection.selected.find((configuration) => configuration.name === OPENAPI_CONFIGURATION);
@@ -103,13 +106,26 @@ function detectImportExtension(
         : undefined;
 }
 
+function hasTsImports(repository: Repository, scopePath: string, cache: RunCache): boolean {
+    const extensions = listTaggedExtensions('typescript');
+    return repository.files.some(
+        (file) =>
+            file.kind === 'source' &&
+            isInScope(file.path, scopePath) &&
+            extensions.includes(posix.extname(file.path)) &&
+            TS_SUFFIX_IMPORT.test(findText(cache, file.path) ?? ''),
+    );
+}
+
 function buildImportExtensionTable(selection: ScopeConfigurations, repository: Repository, cache: RunCache): TomlTable {
     if (selection.selected.every(({ name }) => name !== JAVASCRIPT_CONFIGURATION)) return {};
     const style = detectImportExtension(repository, selection.scope, cache);
+    if (style === undefined) return {};
     const hasFrameworkStyle = selection.selected.some((configuration) =>
         Object.hasOwn(configuration.defaults, IMPORT_EXTENSION_SETTING),
     );
-    if (style === undefined || (hasFrameworkStyle && style !== 'js')) return {};
+    const isSuffixRequired = style === 'js' || (style === 'ts' && hasTsImports(repository, selection.scope, cache));
+    if (hasFrameworkStyle && !isSuffixRequired) return {};
     const table: TomlTable = {};
     setKey(table, IMPORT_EXTENSION_SETTING, style);
     return table;

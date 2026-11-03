@@ -52,6 +52,22 @@ test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', asyn
     expect(findValueAt(parse(output.settingsText), ['javascript', 'import_extension'])).toBe(expected);
 });
 
+test.each([
+    ["import { value } from './value.ts';\n", 'ts'],
+    ["import { value } from './value';\n", undefined],
+])('a tsconfig that allows .ts imports wins over React only when the imports use .ts: %j', async (source, expected) => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"private":true,"type":"module","dependencies":{"react":"19.1.1"}}',
+        'tsconfig.json': '{"compilerOptions":{"allowImportingTsExtensions":true,"noEmit":true}}',
+        'src/main.ts': source,
+        'src/value.ts': 'export const value = 1;\n',
+    });
+    const result = await runGspot(sandbox.path, ['init', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    expect(findValueAt(parse(output.settingsText), ['javascript', 'import_extension'])).toBe(expected);
+});
+
 test('a nodenext tsconfig wins over the React import extension', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': '{"private":true,"workspaces":["packages/ui"]}',
