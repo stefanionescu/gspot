@@ -87,24 +87,32 @@ test('check --verbose prints every finding and the command', async () => {
     expect(result.stdout).toContain(`  $ ${passingCommand.join(' ')}`);
 });
 
-test('findings share help only when their explain command also matches', () => {
+test.each([
+    { name: 'one rule', extra: [{ line: 9 }], help: ['  help: Quote it. gspot explain bash/shellcheck SC2086'] },
+    {
+        name: 'two rules',
+        extra: [{ line: 9 }, { line: 12, rule: 'SC2000' }],
+        help: ['  help: Quote it. gspot explain bash/shellcheck <rule>'],
+    },
+    {
+        name: 'a finding with its own help',
+        extra: [{ line: 12, help: 'Split it.' }],
+        help: [
+            '  help: Quote it. gspot explain bash/shellcheck SC2086',
+            '  help: Split it. gspot explain bash/shellcheck SC2086',
+        ],
+    },
+])('a failed check prints each help once, after its findings: $name', ({ extra, help }) => {
     const [shellcheck] = FAILED_CHECK_REPORT.checks;
     const [finding] = shellcheck.findings;
-    const shared: RunReport = {
-        ...FAILED_CHECK_REPORT,
-        checks: [
-            {
-                ...shellcheck,
-                findings: [finding, { ...finding, line: 9 }, { ...finding, line: 12, rule: 'SC2000' }],
-            },
-        ],
-    };
-    const text = stripVTControlCharacters(formatRunReport(shared, { verbose: false }));
-    expect(text.match(/help: Quote it\. gspot explain bash\/shellcheck SC2086/gu)).toHaveLength(1);
-    expect(text.match(/help: Quote it\. gspot explain bash\/shellcheck SC2000/gu)).toHaveLength(1);
-    expect(text).toMatch(
-        /a\.sh:9:3[^\n]*\n {2}help: Quote it\. gspot explain bash\/shellcheck SC2086\n {2}a\.sh:12:3/u,
+    const findings = [finding, ...extra.map((fields) => ({ ...finding, ...fields }))];
+    const text = stripVTControlCharacters(
+        formatRunReport({ ...FAILED_CHECK_REPORT, checks: [{ ...shellcheck, findings }] }, { verbose: false }),
     );
+    const lines = text.split('\n');
+    const last = lines.findLastIndex((line) => line.startsWith('  a.sh:'));
+    expect(lines.slice(last + 1, last + 1 + help.length)).toStrictEqual(help);
+    expect(text.match(/help:/gu)).toHaveLength(help.length);
 });
 
 test('findings explain a lint rule and a built-in check with working commands', () => {

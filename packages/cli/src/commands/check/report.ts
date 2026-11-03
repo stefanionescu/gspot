@@ -12,7 +12,7 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
-import type { FixReport, RunReport, CheckResult, FindingOptions } from '#cli/types/engine/run.ts';
+import type { FixReport, RunReport, CheckResult } from '#cli/types/engine/run.ts';
 
 import {
     FIX_LABEL,
@@ -44,8 +44,7 @@ function formatLocation(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-function formatFinding(finding: Finding, next: Finding | undefined, options: FindingOptions): string[] {
-    const { verbose, help: checkHelp } = options;
+function formatFinding(finding: Finding, { verbose }: { verbose: boolean }): string[] {
     const rule =
         finding.rule === undefined || finding.rule === finding.check || Object.hasOwn(CHECK_STATUS_COLORS, finding.rule)
             ? ''
@@ -63,16 +62,27 @@ function formatFinding(finding: Finding, next: Finding | undefined, options: Fin
                 .split(LINE_BREAK)
                 .map((line) => `    ${line}`),
         );
-    const help = formatFindingHelp(finding, checkHelp);
-    if (next === undefined || formatFindingHelp(next, checkHelp) !== help)
-        lines.push(`  ${styleText('dim', 'help:', { stream: process.stdout })} ${help}`);
     return lines;
 }
 
-function formatFindingHelp(finding: Finding, checkHelp: string | undefined): string {
-    const command = finding.explain ?? formatExplainCommand(finding);
-    const help = (finding.help ?? checkHelp)?.replaceAll(CODE_MARK, '');
-    return help === undefined || help === '' ? command : `${help} ${command}`;
+/**
+Print each help text once after the findings of a check. The explain command names the rule when every finding of
+that help shares one, and a rule placeholder when they name several.
+
+@param findings the findings that the report shows.
+@param result the check, and its help that a finding of its own help replaces.
+*/
+function formatHelpLines(findings: readonly Finding[], result: Pick<CheckResult, 'check' | 'help'>): string[] {
+    const groups = Map.groupBy(findings, (finding) => (finding.help ?? result.help ?? '').replaceAll(CODE_MARK, ''));
+    return [...groups].map(([help, group]) => {
+        const [command, ...others] = new Set(group.map((finding) => finding.explain ?? formatExplainCommand(finding)));
+        const explain =
+            command !== undefined && others.length === 0
+                ? command
+                : `gspot explain ${quoteArgument(result.check)} <rule>`;
+        const text = help === '' ? explain : `${help} ${explain}`;
+        return `  ${styleText('dim', 'help:', { stream: process.stdout })} ${text}`;
+    });
 }
 
 function formatCheckTail(result: CheckResult): string {
@@ -82,15 +92,16 @@ function formatCheckTail(result: CheckResult): string {
         : `${formatCount(result.fileCount, 'file')}  ${(result.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
 }
 
-function formatFindings({ findings, help }: CheckResult, { verbose }: { verbose: boolean }): string[] {
+function formatFindings(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
+    const { findings } = result;
     const shown = verbose ? findings : findings.slice(0, FINDINGS_SHOWN);
-    const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1], { verbose, help }));
+    const lines = shown.flatMap((finding) => formatFinding(finding, { verbose }));
     const hidden = findings.length - shown.length;
     if (hidden > 0) {
         const message = `and ${String(hidden)} more (--verbose prints every finding)`;
         lines.push(`  ${styleText('dim', message, { stream: process.stdout })}`);
     }
-    return lines;
+    return [...lines, ...formatHelpLines(shown, result)];
 }
 
 function formatReportLine(result: CheckResult, tail: string): string {

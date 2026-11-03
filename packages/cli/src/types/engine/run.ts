@@ -105,8 +105,6 @@ export type CheckRunOptions = {
     baselineRun: BaselineRun;
 };
 
-export type FindingOptions = { verbose: boolean; help: string | undefined };
-
 export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[]; notes?: string[] };
 
 export type BuiltInCheck = (
