@@ -13,6 +13,7 @@ import {
     ACRONYM_MESSAGE,
     ACRONYM_PATTERN,
     BANNED_HEADINGS,
+    FILE_NAME_PATTERN,
     VALE_REGEX_SYMBOLS,
     HEADING_CASE_STYLE,
     BANNED_HEADING_MESSAGE,
@@ -56,7 +57,8 @@ function listAllowedWords(session: Session): string[] {
 }
 
 /**
-Build the `heading-case` style of Vale: sentence case for titles and headings, with the accepted vocabulary.
+Build the `heading-case` style of Vale: sentence case for titles and headings, except for the accepted vocabulary and
+file names. A file name is code, and a front matter title cannot format it as code.
 
 @param planned the generated config file and scope.
 */
@@ -66,7 +68,7 @@ export function buildHeadingCaseStyle(planned: PlannedConfig): string {
         ...HEADING_CASE_STYLE,
         extends: 'capitalization',
         level: 'error',
-        exceptions: listExceptions(listAllowedWords(planned.session)),
+        exceptions: [...listExceptions(listAllowedWords(planned.session)), FILE_NAME_PATTERN],
     });
 }
 

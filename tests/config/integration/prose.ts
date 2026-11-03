@@ -222,6 +222,30 @@ Use <api-token> in the command.
             },
         ],
     },
+    {
+        rule: 'heading-case',
+        path: 'scripts.md',
+        source: `---
+title: package.json scripts
+---
+
+## tsconfig.base.json options
+
+Read the settings.
+`,
+        findings: [],
+    },
+    {
+        rule: 'heading-case',
+        path: 'repository.md',
+        source: `---
+title: settings for the repository
+---
+
+Read the settings.
+`,
+        findings: [{ line: 2, rule: 'gspot.heading-case' }],
+    },
 ] as const;
 
 export const CORRECTED_LINK_TEXT_GUIDE = `# Guide

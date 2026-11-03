@@ -25,6 +25,23 @@ test('your banned headings and the shipped ones reach the heading style once', a
     expect(tokens.filter((token) => token === String.raw`(?:\b|^)project layout(?:\b|$)`)).toHaveLength(1);
 });
 
+test('the heading-case exceptions accept a file name and refuse a plain word, a sentence end, and a version', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+        'guide.md': '# Guide\n',
+    });
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
+    const target = getManifestTarget('prose', 'styles/gspot/heading-case.yml');
+    const { exceptions } = parse(files.find(({ path }) => path === target)!.content) as { exceptions: string[] };
+    const exception = new RegExp(String.raw`\b(?:${exceptions.join('|')})\b`);
+    const words = ['package.json', 'tsconfig.base.json', 'docs/guide.md', 'settings', 'repository.', 'v1.2'];
+    expect(words.filter((word) => exception.test(word))).toStrictEqual([
+        'package.json',
+        'tsconfig.base.json',
+        'docs/guide.md',
+    ]);
+});
+
 test.each([...PROSE_STYLE_CASES])(
     'Vale keeps the configured $name rule and its message',
     async ({ name, expected }) => {

@@ -16,6 +16,8 @@ export const HEADING_CASE_STYLE = {
     match: '$sentence',
 } as const;
 
+export const FILE_NAME_PATTERN = String.raw`[\w-]+(?:\.[\w-]+)*\.[A-Za-z]\w*`;
+
 export const LENGTH_STYLES = {
     item: {
         extends: 'occurrence',
