@@ -57,7 +57,7 @@ async function createNpmLockfile(
     const run = await runPackageManager(install, {
         runFolder,
         packageManager,
-        commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, install.releaseAgeDays),
+        commandArguments: prepareReleaseAge(lockfileArguments, packageManager, install.releaseAgeDays),
         failure: LOCKFILE_FAILURE,
         environment: install.registryEnvironment,
     });
@@ -183,10 +183,15 @@ export async function installNpmTools(install: NpmToolInstall): Promise<string> 
     const { root, toolConfigurations } = install.session;
     const packageManager = install.packageManager;
     assertSettingsFree(install);
+    const installArguments = PACKAGE_MANAGER_ARGUMENTS[packageManager.name].install;
     await runPackageManager(install, {
         runFolder: join(root, GSPOT_FOLDER),
         packageManager,
-        commandArguments: [...PACKAGE_MANAGER_ARGUMENTS[packageManager.name].install],
+        // pnpm holds new releases back by default, so its install needs the hold and the exclusions of the lock step.
+        commandArguments:
+            packageManager.name === 'pnpm'
+                ? prepareReleaseAge(installArguments, packageManager, install.releaseAgeDays)
+                : [...installArguments],
         failure: INSTALL_FAILURE,
         environment: install.registryEnvironment,
     });

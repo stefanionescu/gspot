@@ -1,36 +1,30 @@
 import { join } from 'node:path';
-import { stringify } from 'yaml';
 import { writeFileSync } from 'node:fs';
 import type { PackageManager } from '#cli/types/repository.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { GSPOT_PACKAGES, MINUTES_PER_DAY, SECONDS_PER_DAY, RELEASE_AGE_FILES } from '#cli/config/tools/installers.ts';
 
 /**
-Set the minimum release age for the tool project lockfile: pass flags to npm, and write local settings for pnpm. Bun
-reads the file that writeBunReleaseAge writes.
+Add the minimum release age to an npm or pnpm command. Bun reads the file that writeBunReleaseAge writes.
 The gspot packages install at the version of the CLI, so the hold skips them.
 
-@param runFolder the temporary folder that the package manager runs in.
 @param command the arguments to run.
 @param packageManager the manager and its version.
 @param days how long a new release waits.
 */
-export function prepareReleaseAge(
-    runFolder: string,
-    command: readonly string[],
-    packageManager: PackageManager,
-    days: number,
-): string[] {
+export function prepareReleaseAge(command: readonly string[], packageManager: PackageManager, days: number): string[] {
     if (packageManager.name === 'npm')
         return [
             ...command,
             `--min-release-age=${String(days)}`,
             ...GSPOT_PACKAGES.map((name) => `--min-release-age-exclude=${name}`),
         ];
-    if (packageManager.name === 'pnpm') {
-        const hold = { minimumReleaseAge: days * MINUTES_PER_DAY, minimumReleaseAgeExclude: [...GSPOT_PACKAGES] };
-        writeFileSync(join(runFolder, RELEASE_AGE_FILES.pnpm), stringify(hold));
-    }
+    if (packageManager.name === 'pnpm')
+        return [
+            ...command,
+            `--config.minimum-release-age=${String(days * MINUTES_PER_DAY)}`,
+            ...GSPOT_PACKAGES.map((name) => `--config.minimum-release-age-exclude=${name}`),
+        ];
     return [...command];
 }
 

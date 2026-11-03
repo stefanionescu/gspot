@@ -4,14 +4,8 @@ import { test, expect } from 'bun:test';
 import { readdir, readFile } from 'node:fs/promises';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
 
-test('an npm tool lockfile gets the minimum release age as flags and writes no file', async () => {
-    await using sandbox = await testdir();
-    const hold = prepareReleaseAge(
-        sandbox.path,
-        ['install', '--package-lock-only'],
-        { name: 'npm', version: '11.19.0' },
-        7,
-    );
+test('an npm tool lockfile gets the minimum release age as flags and writes no file', () => {
+    const hold = prepareReleaseAge(['install', '--package-lock-only'], { name: 'npm', version: '11.19.0' }, 7);
     expect(hold).toStrictEqual([
         'install',
         '--package-lock-only',
@@ -23,7 +17,7 @@ test('an npm tool lockfile gets the minimum release age as flags and writes no f
 
 test('a Bun run reads the release age from the bunfig.toml that it gets with --config', async () => {
     await using sandbox = await testdir();
-    const hold = prepareReleaseAge(sandbox.path, ['install', '--lockfile-only'], { name: 'bun', version: '1.4.3' }, 7);
+    const hold = prepareReleaseAge(['install', '--lockfile-only'], { name: 'bun', version: '1.4.3' }, 7);
     expect(hold).toStrictEqual(['install', '--lockfile-only']);
     expect(await readdir(sandbox.path)).toStrictEqual([]);
     const path = writeBunReleaseAge(sandbox.path, 7);
@@ -38,18 +32,15 @@ test('a Bun run reads the release age from the bunfig.toml that it gets with --c
     });
 });
 
-test('a pnpm tool lockfile reads the minimum release age from pnpm-workspace.yaml', async () => {
-    await using sandbox = await testdir();
-    const hold = prepareReleaseAge(
-        sandbox.path,
-        ['install', '--lockfile-only'],
-        { name: 'pnpm', version: '10.30.0' },
-        7,
-    );
-    expect(hold).toStrictEqual(['install', '--lockfile-only']);
-    const contents = Bun.YAML.parse(await readFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'utf8'));
-    expect(contents).toStrictEqual({
-        minimumReleaseAge: 10_080,
-        minimumReleaseAgeExclude: ['@gspothq/cli', '@gspothq/eslint-plugin'],
-    });
-});
+test.each(['--lockfile-only', '--frozen-lockfile'])(
+    'a pnpm install %s gets the minimum release age and the gspot exclusions as flags',
+    (flag) => {
+        expect(prepareReleaseAge(['install', flag], { name: 'pnpm', version: '11.28.10' }, 7)).toStrictEqual([
+            'install',
+            flag,
+            '--config.minimum-release-age=10080',
+            '--config.minimum-release-age-exclude=@gspothq/cli',
+            '--config.minimum-release-age-exclude=@gspothq/eslint-plugin',
+        ]);
+    },
+);

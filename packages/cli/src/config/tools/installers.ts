@@ -242,7 +242,7 @@ export const NPMRC_SETTINGS_MESSAGE = 'The .npmrc settings are not valid.';
 
 export const SECONDS_PER_DAY = 86_400;
 
-export const RELEASE_AGE_FILES = { bun: 'bunfig.toml', pnpm: 'pnpm-workspace.yaml' } as const;
+export const RELEASE_AGE_FILES = { bun: 'bunfig.toml' } as const;
 
 export const GSPOT_PACKAGES = ['@gspothq/cli', '@gspothq/eslint-plugin'] as const;
 
