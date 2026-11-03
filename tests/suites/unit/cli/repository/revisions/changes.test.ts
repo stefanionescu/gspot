@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { utimes, readFile, writeFile } from 'node:fs/promises';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -121,4 +122,19 @@ test('without an upstream or origin/HEAD, the default branch is origin/main, the
     expect(await readDefaultRef(sandbox.path)).toBe('refs/remotes/origin/master');
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     expect(await readDefaultRef(sandbox.path)).toBe('refs/remotes/origin/main');
+});
+
+test('an unknown base in a shallow clone says that the clone is shallow and how deep to fetch', async () => {
+    await using sandbox = await testdir();
+    const source = join(sandbox.path, 'source');
+    runGitStep(sandbox.path, ['init', '-q', '-b', 'main', source]);
+    await writeFile(join(source, 'source.ts'), 'export {};\n');
+    commitAll(source);
+    await writeFile(join(source, 'source.ts'), 'export const changed = 1;\n');
+    commitAll(source);
+    runGitStep(sandbox.path, ['clone', '-q', '--depth=1', pathToFileURL(source).href, 'checkout']);
+    const error = await captureRejection(readChangedPaths(join(sandbox.path, 'checkout'), 'HEAD~1'));
+    expect(error.message).toBe(
+        'HEAD~1 is not a branch, tag, or commit in this repository. Local branches: main. This clone is shallow and lacks older commits. Fetch the full history with git fetch --unshallow, or set the fetch depth of the checkout to 0.',
+    );
 });

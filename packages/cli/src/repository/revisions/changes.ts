@@ -19,7 +19,6 @@ import {
     EMPTY_BASE_HASH,
     DEFAULT_BRANCHES,
     COMMIT_HASH_PATTERN,
-    HISTORY_CUT_MESSAGE,
     GIT_SHALLOW_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
     REMOTE_HEAD_FIELD_COUNT,
@@ -46,6 +45,9 @@ const GIT_STATUS_ARGUMENTS = [
 
 const GIT_NO_OPTIONAL_LOCKS = { GIT_OPTIONAL_LOCKS: '0' } as const;
 
+const SHALLOW_CLONE_HELP =
+    ' This clone is shallow and lacks older commits. Fetch the full history with git fetch --unshallow, or set the fetch depth of the checkout to 0.';
+
 const STATUS_PATH_START = 3;
 
 const UNCHANGED_STATUS = ' ';
@@ -58,9 +60,11 @@ async function explainInvalidBase(root: string, compared: string, cancelSignal?:
         if (presence.code !== 0) return { note: `Checked every file: base ${compared} is not present in this clone.` };
     }
     const branches = await readGitLines(root, GIT_LOCAL_BRANCHES_ARGUMENTS, { cancelSignal });
+    const shallow = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
+    const help = shallow.trim() === 'true' ? SHALLOW_CLONE_HELP : '';
     throw new GspotError(
         'arguments',
-        `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.`,
+        `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.${help}`,
     );
 }
 
@@ -139,7 +143,7 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
     });
     if (base.code === 0) return { hash: base.stdout.trim() };
     const shallow = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
-    const help = shallow.trim() === 'true' ? HISTORY_CUT_MESSAGE : '';
+    const help = shallow.trim() === 'true' ? SHALLOW_CLONE_HELP : '';
     throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
 }
 

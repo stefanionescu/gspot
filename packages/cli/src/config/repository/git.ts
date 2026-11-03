@@ -90,8 +90,6 @@ export const GIT_WRITE_TREE_ARGUMENTS = ['write-tree'] as const;
 
 export const REMOTE_HEAD_FIELD_COUNT = 2;
 
-export const HISTORY_CUT_MESSAGE = ' History is cut; run git fetch --unshallow.';
-
 export const GIT_LS_TREE_ARGUMENTS = ['ls-tree', '-r', '-z'] as const;
 
 export const GIT_BLOBS_ARGUMENTS = ['cat-file', '--batch'] as const;
