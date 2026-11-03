@@ -59,7 +59,7 @@ function writeMisePin(writer: Files): void {
     const text = tools?.bytes.toString('utf8') ?? '';
     const document = parseTomlFile(MISE_CONFIG_FILE, text, miseToolsSchema);
     const pin = { version: cliPackage.version, ...GSPOT_MISE_OPTIONS };
-    const node = document.tools?.[MISE_NODE_TOOL] === undefined ? { [MISE_NODE_TOOL]: SETUP_NODE_VERSION } : {};
+    const node = document.tools[MISE_NODE_TOOL] === undefined ? { [MISE_NODE_TOOL]: SETUP_NODE_VERSION } : {};
     const next = { ...document, tools: { ...node, ...document.tools, [GSPOT_MISE_TOOL]: pin } };
     const patched = patch(text, next);
     writer.write(MISE_CONFIG_FILE, {

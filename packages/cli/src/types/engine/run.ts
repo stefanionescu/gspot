@@ -50,7 +50,7 @@ export type Run = {
     progress: { finished: number; total: number; unfinished: Set<PlannedCheck> };
 };
 
-export type BaselineRun = {
+type BaselineRun = {
     unused: Map<string, BaselineCount[]>;
     finished: PlannedCheck[];
     paths: string[] | undefined;

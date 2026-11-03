@@ -135,7 +135,10 @@ test('prose/commit-message runs Vale with the config of the gspot style alone, w
     const valeResult = buildProcessResult({ stdout: JSON.stringify({ 'stdin.md': [VALE_ALERT] }) });
     const run = resources.use(fakeCommands().mockResolvedValue(valeResult));
     const planned = planSandboxCheck(session, 'prose/commit-message');
-    const findings = await getBuiltInCheck('prose/commit-message', { content: 'message', messageFile })(session, planned);
+    const findings = await getBuiltInCheck('prose/commit-message', { content: 'message', messageFile })(
+        session,
+        planned,
+    );
     expect(run.mock.calls.map(([command]) => command.slice(1, 3))).toStrictEqual([
         ['--config', join(session.root, GSPOT_PATHS.valeMessageConfig)],
     ]);

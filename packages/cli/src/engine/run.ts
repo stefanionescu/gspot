@@ -21,7 +21,7 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { runFixers, listConflictedPaths } from '#cli/engine/fixes.ts';
 import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findToolPath, findMissingDependencies } from '#cli/tools/inspect.ts';
-import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/engine/results.ts';
+import { buildBaseResult, runBuiltInCheck, normalizeResultPaths, formatReproduceCommand } from '#cli/engine/results.ts';
 
 import type {
     Run,
@@ -36,13 +36,9 @@ import type {
 } from '#cli/types/engine/run.ts';
 import {
     FIX_FLAG,
-    HOOK_FLAG,
-    BASE_FLAG,
     DOCKER_TOOL,
-    STAGED_FLAG,
     CHECK_COMMAND,
     FAILED_STATUSES,
-    SHORT_HASH_LENGTH,
     DOCKER_DAEMON_NOTE,
     CANCELED_CHECK_NOTE,
     DOCKER_MISSING_MESSAGE,
@@ -157,29 +153,6 @@ function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
         ...result,
         findings: result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file)),
     };
-}
-
-function listSelectionArguments(selection: RunSelection): string[] {
-    const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;
-    const words = base === undefined ? [] : [BASE_FLAG, quoteArgument(base)];
-    if (selection.messageFile !== undefined)
-        words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(selection.messageFile));
-    if (selection.content === 'index') words.push(STAGED_FLAG);
-    return words;
-}
-
-function formatReproduceCommand(checkId: string, scopeArgument: string | undefined, options: RunOptions): string {
-    const { pathArguments: paths, selection = { content: 'working-tree' } } = options;
-    const isScopeTarget = scopeArgument !== undefined && selection.messageFile === undefined && paths.length === 0;
-    const targets = isScopeTarget ? [scopeArgument] : paths;
-    const words = [
-        CHECK_COMMAND,
-        ...targets.map((path) => quoteArgument(path.startsWith('-') ? `./${path}` : path)),
-        '--only',
-        quoteArgument(checkId),
-        ...listSelectionArguments(selection),
-    ];
-    return words.join(' ');
 }
 
 function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCommand'> {

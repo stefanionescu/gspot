@@ -6,12 +6,27 @@ import { setImmediate } from 'node:timers/promises';
 import type { Check } from '#cli/types/manifests.ts';
 import { canReadRuleDocs } from '#cli/tools/rules.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
-import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import type { CheckCode, CheckResult, CheckSession, BuiltInCheck, CheckRunOptions } from '#cli/types/engine/run.ts';
+import { type RunSelection, type PlannedCheck } from '#cli/types/engine/plan.ts';
+
+import type {
+    CheckCode,
+    RunOptions,
+    CheckResult,
+    CheckSession,
+    BuiltInCheck,
+    CheckRunOptions,
+} from '#cli/types/engine/run.ts';
+import {
+    HOOK_FLAG,
+    BASE_FLAG,
+    STAGED_FLAG,
+    CHECK_COMMAND,
+    SHORT_HASH_LENGTH,
+    INCOMPLETE_STATUSES,
+} from '#cli/config/engine.ts';
 
 /**
 Tell whether a check has a rule catalog: rule docs in its code, or a tool whose rules gspot reads. Only then can gspot
@@ -171,4 +186,38 @@ export function normalizeResultPaths(session: Session, result: CheckResult): Che
         note = note?.replaceAll(root, () => session.toolsRoot);
     }
     return { ...result, ...(command !== undefined && { command }), ...(note !== undefined && { note }) };
+}
+
+function listSelectionArguments(selection: RunSelection): string[] {
+    const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;
+    const words = base === undefined ? [] : [BASE_FLAG, quoteArgument(base)];
+    if (selection.messageFile !== undefined)
+        words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(selection.messageFile));
+    if (selection.content === 'index') words.push(STAGED_FLAG);
+    return words;
+}
+
+/**
+Format the command that runs one check again on what this run selected.
+
+@param checkId the check to run.
+@param scopeArgument the scope folder, relative to the working folder, or undefined for the root.
+@param options the paths and the selection of the run.
+*/
+export function formatReproduceCommand(
+    checkId: string,
+    scopeArgument: string | undefined,
+    options: Pick<RunOptions, 'pathArguments' | 'selection'>,
+): string {
+    const { pathArguments: paths, selection = { content: 'working-tree' } } = options;
+    const isScopeTarget = scopeArgument !== undefined && selection.messageFile === undefined && paths.length === 0;
+    const targets = isScopeTarget ? [scopeArgument] : paths;
+    const words = [
+        CHECK_COMMAND,
+        ...targets.map((path) => quoteArgument(path.startsWith('-') ? `./${path}` : path)),
+        '--only',
+        quoteArgument(checkId),
+        ...listSelectionArguments(selection),
+    ];
+    return words.join(' ');
 }

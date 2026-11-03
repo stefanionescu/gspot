@@ -86,7 +86,7 @@ export async function checkGitleaksStaged(
     const isRepositoryWide =
         selection === undefined ||
         (selection.content === 'working-tree' && selection.paths === undefined && selection.reference === undefined);
-    if (options.command !== undefined || !isRepositoryWide) return runCommandCheck(session, planned, options);
+    if (!isRepositoryWide || options.command !== undefined) return runCommandCheck(session, planned, options);
     const command = (planned.check.command as string[])
         .filter((argument) => argument !== GITLEAKS_STAGED_FLAG)
         .map((argument) => {

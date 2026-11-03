@@ -7,8 +7,8 @@ import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
-import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 import { runGit, readGitText, runGitBytes, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
+import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
 import {
     INDEX_LINE,

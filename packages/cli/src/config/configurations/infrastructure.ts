@@ -106,7 +106,6 @@ export const WORKFLOW_SHAPE_MESSAGES = {
 
 export const PULL_REQUEST_TRIGGERS: ReadonlySet<string> = new Set(['pull_request', 'pull_request_target']);
 
-
 export const FLOATING_RUNNER = /-latest$/u;
 
 export const UPLOAD_ARTIFACT_ACTION = 'actions/upload-artifact@';

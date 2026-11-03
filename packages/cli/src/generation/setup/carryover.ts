@@ -27,8 +27,8 @@ import type {
     MarkdownlintConfig,
 } from '#cli/types/generation.ts';
 import {
-    CARRIED_TOOLS,
     RUFF_CHECK,
+    CARRIED_TOOLS,
     RUFF_CHECK_IDS,
     EMPTY_CARRYOVER,
     RUFF_STYLE_KEYS,

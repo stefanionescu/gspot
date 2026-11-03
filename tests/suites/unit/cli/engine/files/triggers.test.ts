@@ -253,7 +253,11 @@ test.each([
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['rm', 'docs/guide.md']);
     const session = await openSession(sandbox.path);
-    const [links] = planChecks(session, { stage: 'commit', only: ['links'], selection: { content: 'index', paths: ['docs/guide.md'] } });
+    const [links] = planChecks(session, {
+        stage: 'commit',
+        only: ['links'],
+        selection: { content: 'index', paths: ['docs/guide.md'] },
+    });
     expect(links!.triggerPaths).toStrictEqual(triggers);
     expect(isActive(links!)).toBe(triggers.length > 0);
 });

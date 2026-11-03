@@ -94,7 +94,6 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         sessionOptions: { cache, listing },
     });
     const { session, pinPath } = choosePin(root, planned);
-    const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const detected = [...new Set(repositorySetup.conflictingConfigs.map(({ tool }) => tool))].toSorted(compareText);
@@ -109,7 +108,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         repositorySetup,
         configurations: proposed,
         scopes: session.scopes,
-        everySelected,
+        everySelected: listSelectedConfigurations(session.scopes),
         conflicts,
         template: options.template,
         pinPath,
