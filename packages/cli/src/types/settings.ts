@@ -67,10 +67,8 @@ export type SettingKey = { path: string[]; name: string };
 
 export type RemovedConfiguration = { name: string; scope: string; reason: string };
 
-export type SelectedConfigurations = {
-    configurations: string[];
-    scopes: Map<string, { configurations: string[]; removed_configurations: string[] }>;
-    removed_configurations: string[];
+export type SelectedConfigurations = Pick<ParsedSettings, 'configurations' | 'removed_configurations'> & {
+    scopes: Map<string, Pick<ParsedSettings, 'configurations' | 'removed_configurations'>>;
 };
 
 export type Scope = {
@@ -137,11 +135,8 @@ export type Settings = Omit<
 > & {
     written: TomlTable;
     level: NonNullable<ParsedSettings['level']>;
-    configurations: string[];
-    removed_configurations: string[];
     structure: StructureSettings;
     tools: ParsedTools;
-    test_files: string[];
     ignore: IgnoreRecord[];
     commandChecks: Record<string, CommandCheck>;
     hooks: Defined<Required<ParsedSettings['hooks']>>;
