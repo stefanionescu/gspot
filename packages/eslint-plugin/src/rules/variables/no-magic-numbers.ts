@@ -26,6 +26,37 @@ function isCallArgument(node: TSESTree.Node): boolean {
     return !isTable && parent.arguments.includes(node as TSESTree.CallExpressionArgument);
 }
 
+function isSplitLimit(node: TSESTree.Node): boolean {
+    const call = node.parent;
+    if (call?.type !== AST_NODE_TYPES.CallExpression || call.arguments[1] !== node) return false;
+    const { callee } = call;
+    return (
+        callee.type === AST_NODE_TYPES.MemberExpression &&
+        callee.property.type === AST_NODE_TYPES.Identifier &&
+        callee.property.name === 'split'
+    );
+}
+
+function findArrayPattern(node: TSESTree.Node, child: TSESTree.Node): TSESTree.ArrayPattern | undefined {
+    if (node.type === AST_NODE_TYPES.VariableDeclarator && node.init === child)
+        return node.id.type === AST_NODE_TYPES.ArrayPattern ? node.id : undefined;
+    if (node.type === AST_NODE_TYPES.AssignmentExpression && node.right === child)
+        return node.left.type === AST_NODE_TYPES.ArrayPattern ? node.left : undefined;
+    return undefined;
+}
+
+function isPatternSize(node: TSESTree.Node): boolean {
+    if (node.type !== AST_NODE_TYPES.Literal || typeof node.value !== 'number') return false;
+    let child: TSESTree.Node = node;
+    for (let ancestor = node.parent; !FUNCTION_NODES.has(ancestor.type); ancestor = ancestor.parent) {
+        const pattern = findArrayPattern(ancestor, child);
+        if (pattern !== undefined) return pattern.elements.length === node.value;
+        if (ancestor.type === AST_NODE_TYPES.Program || ancestor.type.endsWith('Statement')) return false;
+        child = ancestor;
+    }
+    return false;
+}
+
 function isConstantValue(node: TSESTree.Node): boolean {
     for (let ancestor: TSESTree.Node = node; ancestor.type !== AST_NODE_TYPES.Program; ancestor = ancestor.parent) {
         if (FUNCTION_NODES.has(ancestor.type) || isCallArgument(ancestor)) return false;
@@ -41,7 +72,7 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
         type: 'suggestion',
         docs: {
             example:
-                'The call `setTimeout(retry, 3000)` reports `noMagic`. Name the delay, such as `const RETRY_DELAY_MS = 3000;` at module level, and pass the constant. `const SIZES = [16, 32, 64];` and `const TIMEOUT_MS = 60 * 1000;` pass, because the constant names its numbers. `export const server = app.listen(8080);` reports `noMagic`, because `server` names the server, not the port.',
+                'The call `setTimeout(retry, 3000)` reports `noMagic`. Name the delay, such as `const RETRY_DELAY_MS = 3000;` at module level, and pass the constant. `const SIZES = [16, 32, 64];` and `const TIMEOUT_MS = 60 * 1000;` pass, because the constant names its numbers. `export const server = app.listen(8080);` reports `noMagic`, because `server` names the server, not the port. `const [key, value] = line.split("=", 2);` passes, because the two names give the split limit its meaning.',
             level: 'none',
             description:
                 'Reports the numbers that @typescript-eslint/no-magic-numbers reports, except inside the initializer of a module-level `const`: literals, arrays, object property values, arithmetic, unary minus, `as` or `satisfies`, and the argument of `new Map` or `new Set`. An argument of another call or `new` is reported there too, because the constant names the result, not the number. It takes the options of @typescript-eslint/no-magic-numbers and needs that package installed.',
@@ -67,7 +98,11 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
                 options: { value: ESLintUtils.applyDefault(rule.meta.defaultOptions, context.options) },
                 report: {
                     value: (descriptor: TSESLint.ReportDescriptor<string>) => {
-                        if ('node' in descriptor && 'parent' in descriptor.node && isConstantValue(descriptor.node))
+                        const node = 'node' in descriptor && 'parent' in descriptor.node ? descriptor.node : undefined;
+                        if (
+                            node !== undefined &&
+                            [isConstantValue, isSplitLimit, isPatternSize].some((test) => test(node))
+                        )
                             return;
                         context.report(descriptor as TSESLint.ReportDescriptor<'noMagic' | 'useConst'>);
                     },

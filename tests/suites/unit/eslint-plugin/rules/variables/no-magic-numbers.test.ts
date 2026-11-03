@@ -17,6 +17,12 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['m
                 code: 'setTimeout(retry, 3000);',
                 options: [{ ignore: [3000] }],
             },
+            { name: 'split limit', code: "function read(line) { return line.split('=', 2); }" },
+            {
+                name: 'sizes of a destructuring pattern',
+                code: 'function read(values) { const [first, second] = values.slice(0, 2); [head, , tail] = values.slice(3); return [first, second]; }',
+                options: [{ ignore: [0] }],
+            },
         ],
         invalid: [
             { code: 'let timeout = 3000;', options: [{ enforceConst: true }], errors: [{ messageId: 'useConst' }] },
@@ -60,6 +66,20 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['m
                 errors: [{ messageId: 'noMagic' }, { messageId: 'noMagic' }],
             },
             { code: 'type Size = 12;', errors: [{ messageId: 'noMagic' }] },
+            {
+                name: 'a number that differs from the pattern size, and a split separator position',
+                code: 'function read(values, line) { const [first, second] = values.slice(0, 3); return [first, second, line.split(2, 5)]; }',
+                options: [{ ignore: [0] }],
+                errors: [
+                    { messageId: 'noMagic', data: { raw: '3' } },
+                    { messageId: 'noMagic', data: { raw: '2' } },
+                ],
+            },
+            {
+                name: 'a pattern size in another statement',
+                code: 'function read(values) { const [first, second] = values; return values.slice(2); }',
+                errors: [{ messageId: 'noMagic', data: { raw: '2' } }],
+            },
         ],
     },
 );
