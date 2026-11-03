@@ -410,6 +410,7 @@ export const DENO_CHECK_FAILED_MESSAGE = 'The deno check command failed.';
 
 export const SUPABASE_CHECK_RULES = {
     bucketPolicy: 'bucket-policy',
+    typeError: 'type-error',
     serviceRoleKey: 'service-role-key',
     verifyJwt: 'verify-jwt',
 } as const;

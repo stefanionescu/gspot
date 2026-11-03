@@ -106,7 +106,7 @@ function parseDenoCheckError(session: Session, entrypoint: string, stderr: strin
     return {
         file,
         line: Number(place?.['line'] ?? 1),
-        rule: 'type-error',
+        rule: SUPABASE_CHECK_RULES.typeError,
         message: first.trim(),
     };
 }

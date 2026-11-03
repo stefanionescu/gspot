@@ -1,5 +1,3 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
-import { UNUSED_ASSET_RULE } from '#cli/config/configurations/framework.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 export const GENERATOR_IGNORED_FOLDERS = [NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER] as const;
@@ -46,15 +44,6 @@ export const COMPILER_OPTIONS = {
 export const NESTJS_COMPILER_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true } as const;
 
 export const TYPESCRIPT_TSCONFIG_CHECK = 'typescript/tsconfig';
-
-export const UNUSED_ASSET_RULE_DOCS = {
-    [UNUSED_ASSET_RULE]: {
-        description: 'No page, stylesheet, or script names a file under an assets folder.',
-        why: 'The file ships with every deploy, and nobody can tell whether a page still needs it.',
-        fix: 'Delete the file, or name it in the page, stylesheet, or script that loads it.',
-        example: '`src/assets/old-logo.png`, which no page or stylesheet names, reports `unused-asset`.',
-    },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
 
 export const DOCSTRING_STYLES = ['google', 'numpy', 'sphinx'] as const;
 

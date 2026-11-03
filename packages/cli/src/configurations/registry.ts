@@ -6,7 +6,6 @@ import { checkAllowed } from '#cli/configurations/general/licenses/checks.ts';
 import { checkSemgrep } from '#cli/configurations/general/security/checks.ts';
 import { checkFences } from '#cli/configurations/language/markdown/checks.ts';
 import { checkExpoDoctor } from '#cli/configurations/framework/expo/checks.ts';
-import { UNUSED_ASSET_RULE_DOCS } from '#cli/config/configurations/registry.ts';
 import { checkNextjsTsc } from '#cli/configurations/framework/nextjs/checks.ts';
 import { checkPaths } from '#cli/configurations/general/naming/checks/paths.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
@@ -78,6 +77,11 @@ import {
     checkStaleLockfile,
     checkPackageManagerPin,
 } from '#cli/configurations/general/dependencies/checks.ts';
+import {
+    SITEMAP_RULE_DOCS,
+    TRANSLATION_RULE_DOCS,
+    UNUSED_ASSET_RULE_DOCS,
+} from '#cli/config/configurations/rule-docs/framework.ts';
 import {
     checkLychee,
     checkSitemap,
@@ -156,6 +160,20 @@ import {
     REQUIRED_FILE_RULE_DOCS,
     PACKAGE_MANAGER_PIN_DOCS,
 } from '#cli/config/configurations/rule-docs/general.ts';
+import {
+    ASSET_RULE_DOCS,
+    HEADER_RULE_DOCS,
+    XCSTRINGS_RULE_DOCS,
+    DENO_CHECK_RULE_DOCS,
+    INSTRUCTION_RULE_DOCS,
+    DOCKERIGNORE_RULE_DOCS,
+    ROW_SECURITY_RULE_DOCS,
+    BUILD_SETTING_RULE_DOCS,
+    STORAGE_POLICY_RULE_DOCS,
+    WORKFLOW_SHAPE_RULE_DOCS,
+    MIGRATION_ORDER_RULE_DOCS,
+    EDITED_MIGRATION_RULE_DOCS,
+} from '#cli/config/configurations/rule-docs/infrastructure.ts';
 
 export const CHECK_CODE: Record<string, CheckCode> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
@@ -168,7 +186,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'bash/shellcheck': { run: checkShellcheck },
     'bash/unread-arguments': { check: checkUnreadArguments },
     'bash/unused-functions': { check: checkUnusedFunctions },
-    'cloudflare/headers': { check: checkHeaders },
+    'cloudflare/headers': { check: checkHeaders, ruleDocs: HEADER_RULE_DOCS },
     'cloudflare/redirects': { check: checkRedirects },
     'commits/commitlint-pushed': { run: checkCommitlintPushed },
     'commits/references': { check: checkReferences, ruleDocs: REFERENCE_RULE_DOCS },
@@ -177,8 +195,8 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'dependencies/package-manager-pin': { check: checkPackageManagerPin, ruleDocs: PACKAGE_MANAGER_PIN_DOCS },
     'dependencies/stale-lockfile': { check: checkStaleLockfile },
     'docker/compose': { run: checkCompose },
-    'docker/dockerignore': { check: checkDockerignore },
-    'docker/instructions': { check: checkInstructions },
+    'docker/dockerignore': { check: checkDockerignore, ruleDocs: DOCKERIGNORE_RULE_DOCS },
+    'docker/instructions': { check: checkInstructions, ruleDocs: INSTRUCTION_RULE_DOCS },
     'docker/trivy-image': { check: checkTrivyImage },
     'docs/missing-paths': { check: checkMissingPaths, ruleDocs: MISSING_PATH_RULE_DOCS },
     'docs/required-files': { check: checkRequiredFiles, ruleDocs: REQUIRED_FILE_RULE_DOCS },
@@ -188,7 +206,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
     'gspot/baseline': { check: checkBaseline, runsLast: true },
-    'github-actions/workflow-shape': { check: checkWorkflowShape },
+    'github-actions/workflow-shape': { check: checkWorkflowShape, ruleDocs: WORKFLOW_SHAPE_RULE_DOCS },
     'gspot/detected-configurations': { check: checkDetectedConfigurations },
     'gspot/generated-files': { check: checkGeneratedFiles, ruleDocs: GENERATED_FILE_RULE_DOCS },
     'gspot/conflicting-configs': { check: checkConflictingConfigs, ruleDocs: CONFLICTING_CONFIG_RULE_DOCS },
@@ -206,11 +224,11 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'nextjs/tsc': { run: checkNextjsTsc },
     'nginx/syntax': { check: checkSyntax },
     'postgres/definer-search-path': { check: checkDefinerSearchPath },
-    'postgres/edited-migrations': { check: checkEditedMigrations },
+    'postgres/edited-migrations': { check: checkEditedMigrations, ruleDocs: EDITED_MIGRATION_RULE_DOCS },
     'postgres/foreign-key-indexes': { check: checkForeignKeyIndexes },
     'postgres/grants': { check: checkGrants },
-    'postgres/migration-order': { check: checkMigrationOrder },
-    'postgres/row-level-security': { check: checkRowLevelSecurity },
+    'postgres/migration-order': { check: checkMigrationOrder, ruleDocs: MIGRATION_ORDER_RULE_DOCS },
+    'postgres/row-level-security': { check: checkRowLevelSecurity, ruleDocs: ROW_SECURITY_RULE_DOCS },
     'prose/commit-message': { check: checkCommitMessage },
     'prose/dates': { check: checkDates },
     'prose/vale': { check: checkVale },
@@ -234,7 +252,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'site/html-validate': { check: checkHtmlValidate },
     'site/lychee': { check: checkLychee },
     'site/purgecss': { check: checkPurgecss },
-    'site/sitemap': { check: checkSitemap },
+    'site/sitemap': { check: checkSitemap, ruleDocs: SITEMAP_RULE_DOCS },
     'site/unused-assets': { check: checkSiteUnusedAssets, ruleDocs: UNUSED_ASSET_RULE_DOCS },
     'structure/environment-readers': { check: checkEnvironmentReaders },
     'structure/file-folder-clashes': { check: checkFileFolderClashes },
@@ -246,10 +264,10 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'structure/long-files': { check: checkLongFiles },
     'structure/shared-prefixes': { check: checkSharedPrefixes },
     'structure/trivial-functions': { check: checkTrivialFunctions, ruleDocs: TRIVIAL_FUNCTION_RULE_DOCS },
-    'supabase/deno-check': { check: checkDenoCheck },
+    'supabase/deno-check': { check: checkDenoCheck, ruleDocs: DENO_CHECK_RULE_DOCS },
     'supabase/deno-lint': { check: checkDenoLint },
     'supabase/service-role-key': { check: checkServiceRoleKey },
-    'supabase/storage-policies': { check: checkStoragePolicies },
+    'supabase/storage-policies': { check: checkStoragePolicies, ruleDocs: STORAGE_POLICY_RULE_DOCS },
     'supabase/verify-jwt': { check: checkVerifyJwt },
     'svelte/svelte-check': { check: checkSvelteCheck },
     'swift/build': { check: checkSwiftBuild },
@@ -259,17 +277,17 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'swift/security': { check: checkSwiftSecurity, ruleDocs: SWIFT_SECURITY_RULE_DOCS },
     'swift/skip-reasons': { check: checkSkipReasons },
     'swift/swiftlint-analyze': { check: checkSwiftlintAnalyze },
-    'translations/messages': { check: checkMessages },
+    'translations/messages': { check: checkMessages, ruleDocs: TRANSLATION_RULE_DOCS },
     'typescript/tsc': { run: checkTsc },
     'typescript/tsconfig': { check: checkTsconfig, ruleDocs: TSCONFIG_RULE_DOCS },
     'vue/vue-tsc': { run: checkTsc },
     'xcode/app-transport-security': { check: checkAppTransportSecurity },
-    'xcode/assets': { check: checkAssets },
-    'xcode/build-settings': { check: checkBuildSettings },
+    'xcode/assets': { check: checkAssets, ruleDocs: ASSET_RULE_DOCS },
+    'xcode/build-settings': { check: checkBuildSettings, ruleDocs: BUILD_SETTING_RULE_DOCS },
     'xcode/entitlements': { check: checkEntitlements },
     'xcode/files-without-target': { check: checkFilesWithoutTarget },
     'xcode/unused-assets': { check: checkXcodeUnusedAssets },
-    'xcode/xcstrings': { check: checkXcstrings },
+    'xcode/xcstrings': { check: checkXcstrings, ruleDocs: XCSTRINGS_RULE_DOCS },
 };
 
 /**
