@@ -90,7 +90,7 @@ export const SAFETY_RULE_DOCS = {
         example: '`git fetch origin || true` reports `ignored-failure`.',
     },
     [SAFETY_RULES.echo]: {
-        description: 'Messages print with `printf`, not `echo`.',
+        description: 'At level `all`, messages print with `printf`, not `echo`.',
         why: '`echo` treats options and backslashes in different ways on different systems.',
         fix: 'Write `printf \'%s\\n\' "<message>"`.',
         example: '`echo "$message"` reports `echo`.',
@@ -126,7 +126,7 @@ export const SAFETY_RULE_DOCS = {
         example: '`eval "git $arguments"` reports `eval`.',
     },
     'function-keyword': {
-        description: 'No function definition uses the `function` keyword.',
+        description: 'At level `all`, no function definition uses the `function` keyword.',
         why: 'The keyword is a Bash extension that adds nothing to the portable form.',
         fix: BASH_FORM_MESSAGES['function-keyword'],
         example: '`function cleanup {` reports `function-keyword`; `cleanup() {` does not.',
@@ -138,7 +138,7 @@ export const SAFETY_RULE_DOCS = {
         example: '`typeset count=0` reports `typeset`.',
     },
     'combined-redirect': {
-        description: 'Redirects write `>file 2>&1`, not `&>`.',
+        description: 'At level `all`, redirects write `>file 2>&1`, not `&>`.',
         why: '`&>` is a Bash extension, and a reader can mistake it for a background job.',
         fix: BASH_FORM_MESSAGES['combined-redirect'],
         example: '`make &>build.log` reports `combined-redirect`.',

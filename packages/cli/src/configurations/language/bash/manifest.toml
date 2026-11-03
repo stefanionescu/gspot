@@ -140,5 +140,5 @@ example = "`killall worker` reports `broad-kill`. Stop the one process by its ID
 help = "Stop one process by its ID, delete only paths the script created, handle each failure, and write the form that the message names."
 name = "safety"
 stage = "commit"
-summary = "Finds broad process kills, recursive deletes outside traps that remove mktemp paths, and the syntax that BASH.md forbids: `function`, `typeset`, `&>`, `|&`, brace `for`, `echo`, `eval`, `bash -lc`, GNU `timeout`, `curl` without `--fail`, and a download that runs in a shell. At level all, also reports discarded failures, `set -x`, `seq` loops, and a script-level or saved `IFS`."
+summary = "Finds broad process kills, recursive deletes outside traps that remove mktemp paths, and the syntax that BASH.md forbids: `typeset`, `|&`, brace `for`, `eval`, `bash -lc`, GNU `timeout`, `curl` without `--fail`, and a download that runs in a shell. At level all, also reports the `function` keyword, `&>`, `echo`, discarded failures, `set -x`, `seq` loops, and a script-level or saved `IFS`."
 why = "Each of these lets a script silently destroy something by mistake."

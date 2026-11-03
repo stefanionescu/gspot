@@ -94,7 +94,14 @@ test.each([
     expect(findings.map((finding) => finding.rule)).toStrictEqual([...rules]);
 });
 
-test.each(['set -x', 'for index in $(seq 1 3); do :; done', 'IFS=,'])('level basic permits %s', async (source) => {
+test.each([
+    'set -x',
+    'for index in $(seq 1 3); do :; done',
+    'IFS=,',
+    'function greet { :; }',
+    'ls &>/dev/null',
+    'echo done',
+])('level basic permits %s', async (source) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': `#!/usr/bin/env bash\n${source}\n`,

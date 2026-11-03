@@ -58,8 +58,8 @@ function listCommandFindings(
 }
 
 /**
-Reports each unsafe process kill or removal and each form that BASH.md forbids, and at level `all`, each discarded
-failure, `set -x`, `seq` loop, and script-level `IFS`.
+Reports each unsafe process kill or removal and each form that BASH.md forbids. The style forms, discarded failures,
+`set -x`, `seq` loops, and script-level `IFS` report at level `all` only.
 
 @param session the repository and its tools.
 @param planned the scope scripts and level.

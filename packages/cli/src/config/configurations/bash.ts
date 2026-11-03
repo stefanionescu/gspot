@@ -97,7 +97,12 @@ export const BASH_FORM_MESSAGES: Readonly<Record<BashForm, string>> = {
         'Nobody can read a script that runs as it downloads. Download it to a file, check it, then run it.',
 };
 
-export const ALL_LEVEL_FORMS: ReadonlySet<BashForm> = new Set(['seq-loop', 'script-ifs']);
+export const ALL_LEVEL_FORMS: ReadonlySet<BashForm> = new Set([
+    'function-keyword',
+    'combined-redirect',
+    'seq-loop',
+    'script-ifs',
+]);
 
 const GNU_TIMEOUT = {
     rule: SAFETY_RULES.gnuTimeout,
@@ -105,7 +110,7 @@ const GNU_TIMEOUT = {
 };
 
 export const COMMAND_FORMS: Readonly<Record<string, BashCommandForm | undefined>> = {
-    echo: { rule: SAFETY_RULES.echo, message: 'Write messages with `printf`, not `echo`.' },
+    echo: { rule: SAFETY_RULES.echo, message: 'Write messages with `printf`, not `echo`.', allLevel: true },
     eval: { rule: SAFETY_RULES.evalCommand, message: '`eval` runs a string as code. Build the command in an array.' },
     timeout: GNU_TIMEOUT,
     gtimeout: GNU_TIMEOUT,
