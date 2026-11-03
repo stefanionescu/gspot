@@ -4,7 +4,7 @@ generated = ["next-env.d.ts"]
 route_files = ["page.*", "route.*", "layout.*", "default.*", "template.*", "loading.*", "error.*", "global-error.*", "not-found.*"]
 
 [configuration]
-description = "Next.js apps: the framework and hooks rules, and server code that never reaches the client. A Semgrep rule refuses ignoreBuildErrors and ignoreDuringBuilds in next.config."
+description = "Next.js apps: the framework and hooks rules, and server code that never reaches the client. An ESLint rule refuses ignoreBuildErrors and ignoreDuringBuilds in next.config."
 requires = ["typescript", "react", "react-dom"]
 suggests = ["css"]
 title = "Next.js"
