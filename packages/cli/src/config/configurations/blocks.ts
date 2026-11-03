@@ -168,14 +168,14 @@ export const TYPESCRIPT_EXTENSION_MAP = [
 
 export const IMPORT_BOUNDARY_FOLDERS = ['*/*'] as const;
 
-export const ESLINT_LIMIT_OPTIONS: Readonly<Record<string, Readonly<Record<string, boolean>>>> = {
+export const ESLINT_LIMIT_OPTIONS: Readonly<Record<string, Readonly<Record<string, boolean | string>>>> = {
     'max-lines': { skipBlankLines: true, skipComments: true },
     'max-lines-per-function': { skipBlankLines: true, skipComments: true, IIFEs: true },
     'max-params': {},
     'max-depth': {},
     'max-statements': {},
     'max-nested-callbacks': {},
-    complexity: {},
+    complexity: { variant: 'modified' },
 };
 
 export const ENVIRONMENT_SELECTOR = {

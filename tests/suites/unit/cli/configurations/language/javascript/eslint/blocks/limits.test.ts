@@ -48,6 +48,28 @@ test('a JavaScript file takes the JavaScript limits, and a TypeScript file the T
     ]);
 });
 
+test('a switch counts once against the cyclomatic limit, however many cases it has', async () => {
+    await using sandbox = await testdir();
+    const cases = ['red', 'green', 'blue', 'cyan', 'gray', 'pink', 'gold', 'navy']
+        .map((color, index) => `case '${color}': return ${String(index)};`)
+        .join(' ');
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: '[limits.javascript]\nmax_cyclomatic_complexity = 3\n',
+            level: 'all',
+        }),
+        'package.json': '{"private":true,"type":"module"}',
+        'example.js': [
+            `export function name(color) { switch (color) { ${cases} default: return -1; } }`,
+            'export function choose(value) { if (value > 2) return 2; if (value > 1) return 1; if (value > 0) return 0; return -1; }',
+        ].join('\n'),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['example.js'], ['complexity'])).toStrictEqual([
+        { file: 'example.js', rule: 'complexity', line: 2 },
+    ]);
+});
+
 test('a scope that lowers a limit gets it in its own files, and the root keeps its own limit', async () => {
     await using sandbox = await testdir();
     const source = 'export function add(first, second, third) { return first + second + third; }\n';
