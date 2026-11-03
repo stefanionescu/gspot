@@ -73,6 +73,15 @@ function hasExtensionlessSources(planned: PlannedConfig, importStyle: string): b
     );
 }
 
+function isAuthoredSelection(authored: ParsedTsconfig | undefined, jsconfig: ParsedTsconfig | undefined): boolean {
+    if (authored === undefined) return false;
+    const { allowJs, checkJs } = authored.options;
+    const isJavascriptProject = jsconfig !== undefined || allowJs === true || checkJs === true;
+    return (
+        isJavascriptProject && SOURCE_SELECTION_FIELDS.some((field) => findValueAt(authored.raw, [field]) !== undefined)
+    );
+}
+
 /**
 Build jsconfig.json: the JavaScript type-checking project and its scoped source selectors.
 
@@ -105,9 +114,7 @@ export function buildJsconfigFile(planned: PlannedConfig): string {
     };
     const jsconfig: Record<string, unknown> = { compilerOptions };
     const isExtensionless = hasExtensionlessSources(planned, importStyle);
-    const hasSourceSelection = SOURCE_SELECTION_FIELDS.some(
-        (field) => findValueAt(jsconfigOwner?.raw, [field]) !== undefined,
-    );
+    const hasSourceSelection = isAuthoredSelection(authored, jsconfigOwner);
     if (!hasSourceSelection)
         jsconfig['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${prefix}**/*.${extension}`);
     if (authored === undefined) {

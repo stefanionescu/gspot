@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { join, dirname, resolve } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
@@ -39,6 +40,24 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
     expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
     expect(jsconfig.exclude).toContain('../../../../vendor');
     expect(jsconfig.exclude).toContain(`../../../../${GSPOT_FOLDER}/**`);
+});
+
+test.each([
+    ['checks JavaScript', '"allowJs":true,"checkJs":true', ['lib/command.js']],
+    ['checks only TypeScript', '"strict":true', ['lib/command.js', 'tests/command.test.js']],
+])('a tsconfig that %s gives the JavaScript files of its include or all of them', async (_name, options, expected) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript']),
+        'tsconfig.json': `{"compilerOptions":{${options}},"include":["lib/**/*.js","lib/**/*.ts"]}`,
+        'lib/command.js': 'export const command = 1;\n',
+        'tests/command.test.js': 'export const tested = 1;\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const jsconfig = join(sandbox.path, getManifestTarget('javascript', 'jsconfig.json'));
+    const host = { ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => undefined };
+    const fileNames = ts.getParsedCommandLineOfConfigFile(jsconfig, {}, host)?.fileNames ?? [];
+    const scripts = fileNames.map((path) => path.slice(sandbox.path.length + 1)).filter((path) => path.endsWith('.js'));
+    expect(scripts.toSorted(compareText)).toStrictEqual(expected);
 });
 
 test.each(['all'] as const)('JavaScript implicit parameters follow level %s', async (level) => {
