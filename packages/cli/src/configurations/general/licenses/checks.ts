@@ -3,14 +3,15 @@ import { realpathSync } from 'node:fs';
 import { CheckStop } from '#cli/system/errors.ts';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
+import { listCheckedFiles } from '#cli/engine/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
@@ -20,8 +21,8 @@ import type { LockedPackage, AllowedPackage } from '#cli/types/configurations/ge
 import {
     ANY_VERSION,
     LICENSE_RULES,
-    OSV_EXCLUDE_FLAG,
     OSV_SCANNER_NAME,
+    OSV_LOCKFILE_FLAG,
     OSV_LICENSES_FLAG,
     OSV_FINDINGS_CODE,
     EMPTY_SCAN_MESSAGE,
@@ -31,21 +32,16 @@ import {
 
 async function readLockedPackages(session: CheckSession, planned: PlannedCheck): Promise<LockedPackage[]> {
     const { allowed } = getTable(planned.scope.settings, 'licenses');
-    const folder = join(session.root, planned.scope.path);
-    const nested = listNestedScopes(
-        session.scopes.map(({ path }) => path),
-        planned.scope.path,
-    );
+    const lockfiles = listCheckedFiles(session.scopes, planned).filter(({ path }) => !isGspotPath(path));
     const result = await runCheckTool(
         session,
         planned,
         [
             ...OSV_LICENSE_COMMAND,
-            ...nested.flatMap((path) => [OSV_EXCLUDE_FLAG, posix.relative(planned.scope.path, path)]),
             `${OSV_LICENSES_FLAG}=${allowed.join(',')}`,
-            folder,
+            ...lockfiles.map(({ path }) => OSV_LOCKFILE_FLAG + posix.relative(planned.scope.path, path)),
         ],
-        { cwd: folder },
+        { cwd: join(session.root, planned.scope.path) },
     );
     if (result.code > OSV_FINDINGS_CODE)
         throw new CheckStop('error', `osv-scanner did not run: ${formatOutputTail(result)}`);

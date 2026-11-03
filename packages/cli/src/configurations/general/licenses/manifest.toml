@@ -6,10 +6,12 @@ title = "Licenses"
 
 [files]
 filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "uv.lock", "poetry.lock", "pdm.lock", "Pipfile.lock", "requirements.txt"]
+kinds = ["source", "generated"]
 
 [[check]]
 example = "A dependency with a license outside `licenses.allowed` reports a finding for that version. Replace it, or write a `[[licenses.allowed_package]]` record with its name, version, and the license in a reason."
 help = "Replace the package, or write a [[licenses.allowed_package]] record by hand with its name, exact version, and a reason naming the license."
+large_files = true
 name = "allowed"
 needs = ["network"]
 runs = "scope"

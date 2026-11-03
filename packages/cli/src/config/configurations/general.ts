@@ -1,4 +1,3 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { RUNNER_NAMES } from '#cli/config/repository/setup.ts';
 
 export const YAML_REQUIRED_NAMES = new Set([
@@ -216,12 +215,9 @@ export const OSV_LICENSE_COMMAND = [
     'json',
     '--all-packages',
     '--allow-no-lockfiles',
-    '--recursive',
-    '--experimental-exclude',
-    GSPOT_FOLDER,
 ] as const;
 
-export const OSV_EXCLUDE_FLAG = '--experimental-exclude';
+export const OSV_LOCKFILE_FLAG = '--lockfile=:';
 
 export const OSV_LICENSES_FLAG = '--licenses';
 
