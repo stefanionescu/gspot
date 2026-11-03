@@ -1,72 +1,38 @@
 import { posix } from 'node:path';
+import type { TableRow } from 'mdast';
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { ReferencePage } from '#docs/types/pages.ts';
+import { gfmTableToMarkdown } from 'mdast-util-gfm-table';
+import { findAndReplace } from 'mdast-util-find-and-replace';
+import { toMarkdown, type Options } from 'mdast-util-to-markdown';
+import { REFERENCE_PATH, SECTION_HEADING, REFERENCE_FOLDERS, TABLE_HEADING_LEVEL } from '#docs/config/reference.ts';
 
-import {
-    REFERENCE_PATH,
-    SECTION_HEADING,
-    REFERENCE_FOLDERS,
-    REFERENCE_FENCE_END,
-    TABLE_HEADING_LEVEL,
-    REFERENCE_CODE_FENCE,
-    REFERENCE_INLINE_TOKENS,
-    REFERENCE_TEXT_ENTITIES,
-    REFERENCE_CODE_ENTITIES,
-    REFERENCE_CODE_CHARACTERS,
-} from '#docs/config/reference.ts';
+const OPTION_FLAG = /(?<![\w-])--(?:[a-z][a-z-]*)?(?![\w-])/gu;
+const LITERAL_CONSTRUCTS = ['htmlFlow', 'htmlText', 'autolink', 'attention', 'characterReference'];
+const MARKDOWN_OPTIONS: Options = { bullet: '-', fences: true, extensions: [gfmTableToMarkdown()] };
 
-function listCodeFences(text: string): Array<readonly [number, number]> {
-    const ranges: Array<readonly [number, number]> = [];
-    let fence: RegExpExecArray | undefined;
-    for (const marker of text.matchAll(REFERENCE_CODE_FENCE)) {
-        if (fence === undefined) {
-            fence = marker;
-            continue;
-        }
-        const line = marker[0].trim();
-        if (!line.startsWith(fence[1] as string) || !REFERENCE_FENCE_END.test(line)) continue;
-        ranges.push([fence.index, marker.index + marker[0].length]);
-        fence = undefined;
-    }
-    if (fence !== undefined) ranges.push([fence.index, text.length]);
-    return ranges;
+function buildTableRow(cells: readonly string[]): TableRow {
+    return {
+        type: 'tableRow',
+        children: cells.map((cell) => {
+            const [block] = fromMarkdown(formatText(cell.replaceAll('\n', ' '))).children;
+            if (block !== undefined && block.type !== 'paragraph')
+                throw new Error(`A table cell holds a ${block.type}: ${cell}`);
+            return { type: 'tableCell', children: block?.children ?? [] };
+        }),
+    };
 }
 
-function findCodeEnd(text: string, delimiter: string | undefined, start: number): number {
-    if (delimiter === undefined) return -1;
-    let end = text.indexOf(delimiter, start);
-    while (end !== -1 && (text[end - 1] === '`' || text[end + delimiter.length] === '`')) {
-        end = text.indexOf(delimiter, end + delimiter.length);
-    }
-    return end;
-}
-
-function formatInlineCode(text: string): string {
-    const singleLine = text.replaceAll('\n', ' ');
-    const content =
-        singleLine.startsWith(' ') && singleLine.endsWith(' ') && singleLine.trim() !== ''
-            ? singleLine.slice(1, -1)
-            : singleLine;
-    return `<code>${content.replaceAll(REFERENCE_CODE_CHARACTERS, (character) => REFERENCE_CODE_ENTITIES[character] as string)}</code>`;
-}
-
-function formatInlineText(text: string): string {
-    let result = '';
-    let cursor = 0;
-    for (const token of text.matchAll(REFERENCE_INLINE_TOKENS)) {
-        if (token.index < cursor) continue;
-        result += text.slice(cursor, token.index);
-        cursor = token.index + token[0].length;
-        const { delimiter, flag } = token.groups as Record<string, string | undefined>;
-        const end = findCodeEnd(text, delimiter, cursor);
-        if (end !== -1) {
-            result += formatInlineCode(text.slice(cursor, end));
-            cursor = end + token[0].length;
-            continue;
-        }
-        const literal = REFERENCE_TEXT_ENTITIES[token[0]] ?? token[0];
-        result += flag === undefined ? literal : formatInlineCode(token[0]);
-    }
-    return result + text.slice(cursor);
+function formatHeadingHtml(title: string, level: number, anchor: string): string {
+    const [block] = fromMarkdown(formatText(title)).children;
+    if (block?.type !== 'paragraph') throw new Error(`A heading needs text: ${title}`);
+    const content = block.children.map((node) => {
+        if (node.type !== 'text' && node.type !== 'inlineCode')
+            throw new Error(`A heading with an anchor holds only text and code: ${title}`);
+        const text = node.value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        return node.type === 'text' ? text : `<code>${text}</code>`;
+    });
+    return `<h${String(level)} id="${anchor}">${content.join('')}</h${String(level)}>`;
 }
 
 /**
@@ -83,34 +49,30 @@ export function buildReferencePage(title: string, description: string, body: str
 }
 
 /**
-Escape outside text while keeping Markdown fences and rendering inline code safely, including pipes in table cells.
+Write text from the CLI, a manifest, or this site as Markdown that shows it as written. The text keeps its code spans,
+code blocks, links, and lists, while HTML, emphasis, entities, and angle-bracket links stay literal text. A bare `--`
+or an option such as `--hook` becomes code, so the renderer keeps its hyphens.
 
 @param text prose, CLI help, or a manifest description that may contain Markdown code
 */
 export function formatText(text: string): string {
-    let cursor = 0;
-    const segments = listCodeFences(text).flatMap(([start, end]) => {
-        const prose = formatInlineText(text.slice(cursor, start));
-        cursor = end;
-        return [prose, text.slice(start, end)];
-    });
-    return segments.join('') + formatInlineText(text.slice(cursor));
+    const tree = fromMarkdown(text, { extensions: [{ disable: { null: LITERAL_CONSTRUCTS } }] });
+    findAndReplace(tree, [OPTION_FLAG, (flag: string) => ({ type: 'inlineCode', value: flag }) as const]);
+    return toMarkdown(tree, MARKDOWN_OPTIONS).trimEnd();
 }
 
 /**
 Format a section under a heading, or nothing for empty text.
 
-@param title the heading
+@param title the heading, in Markdown
 @param body the Markdown text
 @param level the heading level
-@param anchor the explicit HTML heading ID; with it, the title holds HTML
+@param anchor the explicit HTML heading ID
 */
 export function formatSection(title: string, body: string, level = TABLE_HEADING_LEVEL, anchor?: string): string {
     if (body === '') return '';
     const heading =
-        anchor === undefined
-            ? `${'#'.repeat(level)} ${title}`
-            : `<h${String(level)} id="${anchor}">${title}</h${String(level)}>`;
+        anchor === undefined ? `${'#'.repeat(level)} ${formatText(title)}` : formatHeadingHtml(title, level, anchor);
     return `\n${heading}\n\n${body}\n`;
 }
 
@@ -123,8 +85,8 @@ Format a Markdown table.
 */
 export function formatTable(header: readonly string[], rows: ReadonlyArray<readonly string[]>): string {
     if (rows.length === 0) return '';
-    const cells = rows.map((row) => row.map((cell) => formatText(cell).replaceAll('\n', ' ')));
-    return [header, header.map(() => '---'), ...cells].map((line) => `| ${line.join(' | ')} |`).join('\n');
+    const table = { type: 'table', children: [header, ...rows].map((cells) => buildTableRow(cells)) } as const;
+    return toMarkdown({ type: 'root', children: [table] }, MARKDOWN_OPTIONS).trimEnd();
 }
 
 /**

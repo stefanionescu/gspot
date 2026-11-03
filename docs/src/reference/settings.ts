@@ -88,7 +88,7 @@ function formatSettingKeys(nodes: SettingReference[], headingLevel: number): str
     return nodes
         .map((node) =>
             formatSection(
-                `<code>${formatText(node.key)}</code>`,
+                `\`${node.key}\``,
                 formatSetting(node),
                 headingLevel,
                 buildSettingAnchor(node.key, node.kind),
@@ -106,7 +106,7 @@ function formatVariantSection(node: SettingReference, headingLevel: number): str
         .filter(([, tables]) => tables.length > 0);
     const names = languages.map(({ name }) => `\`${name}\``).join(', ');
     return formatSection(
-        `<code>${formatText(pattern)}</code>`,
+        `\`${pattern}\``,
         `The keys of \`[${node.key}]\` for one language: ${names}. ` +
             `A key you leave out takes the value of \`[${node.key}]\`.\n` +
             (categories.length === 0
@@ -130,7 +130,7 @@ function formatSettingTable(node: SettingReference, headingLevel: number): strin
     const header = node.kind === 'record' ? `[[${node.key}]]` : `[${node.key}]`;
     const keys = node.children.filter((child) => child.kind === 'value');
     return formatSection(
-        `<code>${formatText(header)}</code>`,
+        `\`${header}\``,
         (node.description === undefined ? '' : `${formatText(node.description)}\n\n`) +
             (node.key === 'naming' ? BANNED_NAME_MESSAGE : '') +
             (keys.length === 0 ? '' : `${formatSettingKeys(keys, headingLevel + 1)}\n`) +

@@ -5,7 +5,12 @@
         "@fontsource-variable/geist": "5.3.0",
         "@fontsource-variable/geist-mono": "5.3.0",
         "@gspothq/cli": "workspace:*",
+        "@types/mdast": "4.0.4",
         "astro": "7.3.8",
+        "mdast-util-find-and-replace": "3.0.3",
+        "mdast-util-from-markdown": "2.0.3",
+        "mdast-util-gfm-table": "2.0.0",
+        "mdast-util-to-markdown": "2.1.2",
         "satteri": "0.10.5",
         "starlight-llms-txt": "0.12.0"
     },

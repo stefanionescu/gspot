@@ -178,31 +178,6 @@ export const MINOR_HEADING_LEVEL = 4;
 export const DOCS_SOURCE_NAME = 'gspot-docs';
 export const REFERENCE_IDS_KEY = 'reference-ids';
 export const PAGES_FOLDER = 'src/content/docs';
-export const REFERENCE_CODE_FENCE = /^ {0,3}(`{3,}|~{3,})[^\n]*\n?/gmu;
-export const REFERENCE_FENCE_END = /^(?:`+|~+)$/u;
-export const REFERENCE_INLINE_TOKENS = /(?<delimiter>`+)|(?<flag>(?<![\w-])--[a-z][a-z-]*)|[&<>|]/gu;
-export const REFERENCE_TEXT_ENTITIES: Readonly<Record<string, string>> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '|': '&#124;',
-};
-
-export const REFERENCE_CODE_CHARACTERS = /[&<>|[\]*_~`\\"'-]/gu;
-export const REFERENCE_CODE_ENTITIES: Readonly<Record<string, string>> = {
-    ...REFERENCE_TEXT_ENTITIES,
-    '[': '&#91;',
-    ']': '&#93;',
-    '*': '&#42;',
-    _: '&#95;',
-    '~': '&#126;',
-    '`': '&#96;',
-    '\\': '&#92;',
-    '"': '&#34;',
-    "'": '&#39;',
-    '-': '&#45;',
-};
-
 export const RELEASE_AGE_EXCLUSIONS = [
     { label: 'pnpm', key: 'minimumReleaseAgeExclude', file: 'pnpm-workspace.yaml' },
     { label: 'Bun', key: 'install.minimumReleaseAgeExcludes', file: 'bunfig.toml' },
