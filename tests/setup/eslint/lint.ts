@@ -56,7 +56,6 @@ export async function buildEslint(root: string, options?: Pick<ESLint.Options, '
         ...options,
         cwd: root,
         overrideConfigFile: join(root, getConfigPath(session, 'eslint', scope)),
-        overrideConfig: { languageOptions: { parserOptions: { noWarnOnMultipleProjects: true } } },
     });
 }
 

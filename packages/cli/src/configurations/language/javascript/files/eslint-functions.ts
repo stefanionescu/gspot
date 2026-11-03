@@ -312,12 +312,12 @@ config shares one resolver.
 */
 export function setImportLookup(
     block: JavascriptBlock,
-    createImportLookup: (options: { project: string[] }) => unknown,
+    createImportLookup: (options: { project: string[] } & Record<string, unknown>) => unknown,
     projects: string[],
 ): JavascriptBlock {
     const importLookup =
         importLookups.get(createImportLookup) ??
-        createImportLookup({ project: projects.map((project) => join(root, project)) });
+        createImportLookup({ project: projects.map((project) => join(root, project)), noWarnOnMultipleProjects: true });
     importLookups.set(createImportLookup, importLookup);
     return { ...block, settings: { ...block.settings, 'import-x/resolver-next': [importLookup] } };
 }
@@ -334,7 +334,9 @@ export function setBoundaryLookup(block: JavascriptBlock, projects: string[]): J
         ...block,
         settings: {
             ...block.settings,
-            'import/resolver': { typescript: { project: projects.map((project) => join(root, project)) } },
+            'import/resolver': {
+                typescript: { project: projects.map((project) => join(root, project)), noWarnOnMultipleProjects: true },
+            },
         },
     };
 }
