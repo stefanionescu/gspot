@@ -16,12 +16,7 @@ import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/configurations/reg
 import type { GeneratorRun, GeneratorOutput } from '#cli/types/configurations/general.ts';
 import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/engine/tool-runs/placeholders.ts';
 
-function listMissingOutputs(
-    session: CheckSession,
-
-    outputs: GeneratorOutput[],
-    commandText: string,
-): CheckFinding[] {
+function listMissingOutputs(session: CheckSession, outputs: GeneratorOutput[], commandText: string): CheckFinding[] {
     return outputs
         .filter((target) => {
             try {
