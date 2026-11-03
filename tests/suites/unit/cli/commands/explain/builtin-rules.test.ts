@@ -9,7 +9,7 @@ test('explain reads built-in YAML rule fixes without an installed tool and rejec
     expect(explained.code, explained.stderr).toBe(0);
     expect(explained.stdout).toContain('What to do:');
     expect(explained.stdout).toContain('gspot ignore data-files/yaml --rule documents --paths');
-    expect(explained.stdout.indexOf('What to do:')).toBeLessThan(explained.stdout.indexOf('Turn it off'));
+    expect(explained.stdout.indexOf('What to do:')).toBeLessThan(explained.stdout.indexOf('Ignore it'));
     expect(explained.stdout).not.toContain('undefined');
     const refused = await runGspot(sandbox.path, ['explain', 'data-files/yaml', 'document']);
     expect(refused.code).toBe(2);

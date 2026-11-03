@@ -75,8 +75,6 @@ export const RERUN_LABEL = 'rerun:';
 
 export const NOT_SET = 'not set';
 
-export const ASK_BEFORE_TURNING_OFF = 'Ask the user before you turn a check off.';
-
 export const OFF_LABEL = 'off';
 
 export const CANCELED_RUN_MESSAGE = 'A signal stopped the run.';

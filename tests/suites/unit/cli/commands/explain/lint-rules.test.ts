@@ -73,9 +73,9 @@ test('explain reads installed rule metadata without executing generated configur
     const described = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'gspot/no-trivial-functions']);
     for (const label of ['Why:', 'What to do:', 'Example:']) {
         expect(described.stdout).toContain(label);
-        expect(described.stdout.indexOf(label)).toBeLessThan(described.stdout.indexOf('Turn it off'));
+        expect(described.stdout.indexOf(label)).toBeLessThan(described.stdout.indexOf('Ignore it'));
     }
-    expect(described.stdout).toContain('Ask the user before you turn a rule off (SUPPRESSIONS.md).');
+    expect(described.stdout).toContain('Ask the user before you ignore a rule (SUPPRESSIONS.md).');
     for (const [check, rule] of UNKNOWN_RULES) {
         const refused = await runGspot(sandbox.path, ['explain', check, rule]);
         expect(refused.code).toBe(2);

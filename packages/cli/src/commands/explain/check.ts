@@ -15,6 +15,12 @@ import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 
+import {
+    LINT_RULE_LABELS,
+    REPOSITORY_COMMAND,
+    RUN_IN_COPY_MESSAGE,
+    SELECTED_YES_MESSAGE,
+} from '#cli/config/commands/reports.ts';
 import type {
     CheckFacts,
     CheckIgnore,
@@ -22,13 +28,6 @@ import type {
     CheckExplanation,
     LintRuleExplanation,
 } from '#cli/types/commands/reports.ts';
-import {
-    LINT_RULE_LABELS,
-    REPOSITORY_COMMAND,
-    RUN_IN_COPY_MESSAGE,
-    SELECTED_YES_MESSAGE,
-    ASK_BEFORE_TURNING_OFF,
-} from '#cli/config/commands/reports.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
     return (session?.settings.ignore ?? [])
@@ -108,9 +107,9 @@ function formatCheckExplanation(facts: CheckExplanation): string {
         ...(facts.condition?.setting === undefined ? [] : [`Required setting: ${facts.condition.setting}`]),
         ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer.`),
         '',
-        ASK_BEFORE_TURNING_OFF,
-        `Turn it off for some paths: ${facts.turnOff.paths}`,
-        ...(facts.turnOff.rule === undefined ? [] : [`Turn one of its lint rules off: ${facts.turnOff.rule}`]),
+        'Ask the user before you ignore a check.',
+        `Ignore it for some paths: ${facts.turnOff.paths}`,
+        ...(facts.turnOff.rule === undefined ? [] : [`Ignore one of its lint rules: ${facts.turnOff.rule}`]),
         ...(facts.runInCopy === true ? [RUN_IN_COPY_MESSAGE] : []),
         ...(settings.length === 0
             ? []
@@ -157,9 +156,9 @@ function formatLintRuleLines(facts: LintRuleExplanation): string[] {
         ...(facts.explanation === undefined ? [] : ['', facts.explanation]),
         ...pageLines,
         '',
-        'Ask the user before you turn a rule off (SUPPRESSIONS.md).',
-        `Turn it off everywhere: ${facts.turnOff.everywhere}`,
-        `Turn it off for some paths: ${facts.turnOff.paths}`,
+        'Ask the user before you ignore a rule (SUPPRESSIONS.md).',
+        `Ignore it everywhere: ${facts.turnOff.everywhere}`,
+        `Ignore it for some paths: ${facts.turnOff.paths}`,
         ...(facts.changeOptions === undefined ? [] : [`Change its options: ${facts.changeOptions}`]),
     ];
 }
@@ -230,7 +229,7 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
 }
 
 /**
-Explain one lint rule: its page, its description from the installed tool, and how to turn it off or change its
+Explain one lint rule: its page, its description from the installed tool, and how to ignore it or change its
 options. ESLint and Stylelint rules must exist in the tools that gspot installed.
 
 @param root the repository root, whose tool project holds ESLint and Stylelint.

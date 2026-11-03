@@ -31,14 +31,14 @@ test('a path explanation names its scope and kind, and shows the checks that the
     expect(result.stdout).toMatch(/^ {2}\S+ {2}\w+ {2}off \(level\)$/mu);
 });
 
-test('explain asks before it offers to turn a check off', async () => {
+test('explain asks before it offers to ignore a check', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
     const result = await runGspot(sandbox.path, ['explain', 'bash/shellcheck']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const lines = result.stdout.split('\n');
-    const question = lines.indexOf('Ask the user before you turn a check off.');
+    const question = lines.indexOf('Ask the user before you ignore a check.');
     expect(question).toBeGreaterThan(-1);
-    expect(lines[question + 1]).toStartWith('Turn it off for some paths: gspot ignore bash/shellcheck');
+    expect(lines[question + 1]).toStartWith('Ignore it for some paths: gspot ignore bash/shellcheck');
 });
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
