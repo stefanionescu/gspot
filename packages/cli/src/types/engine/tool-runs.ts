@@ -81,11 +81,9 @@ export type ReportedTypo = z.infer<typeof reportedTypoSchema>;
 
 export type ToolProcessResult = { result: SpawnResult; failure: ProcessFailure | undefined };
 
-export type CheckToolProgram = { tool: string; modulePath: string };
-
 export type CheckToolOptions = Pick<CommandLaunch, 'cwd'> &
     Partial<Pick<CommandLaunch, 'env'>> &
-    Pick<SpawnOptions, 'stdin'>;
+    Pick<SpawnOptions, 'stdin'> & { tool?: string };
 
 export type CommandArgument = string | { file: true };
 

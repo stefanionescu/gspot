@@ -13,7 +13,7 @@ import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
 import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
+import type { CheckTool, CheckToolOptions, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
 
 async function readCheckTool(
     session: CheckSession,
@@ -99,23 +99,23 @@ Run the tool of a check with the tool time limit and failure handling.
 
 @param session the repository and its tools.
 @param planned the check and scope.
-@param command the executable name and arguments, or a shipped program that drives the tool through its JavaScript API.
-@param options how to start the process.
+@param command the tool name and its arguments. With `options.tool`, the program that drives that tool, which gets the
+path of the tool as its last argument.
+@param options how to start the process, and the tool to find when the command starts another program.
 */
 export async function runCheckTool(
     session: CheckSession,
     planned: PlannedCheck,
-    command: readonly string[] | CheckToolProgram,
+    command: readonly string[],
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
     const { name, path, start, env } = await readCheckTool(
         session,
         planned,
-        'tool' in command ? command.tool : (command[0] as string),
+        options.tool ?? (command[0] as string),
         options,
     );
-    const commandArguments =
-        'tool' in command ? [process.execPath, command.modulePath, path] : [...start, ...command.slice(1)];
+    const commandArguments = options.tool === undefined ? [...start, ...command.slice(1)] : [...command, path];
     const secondaryTools = listSecondaryTools(planned.scope, planned.check);
     const toolEnvironment = await buildSecondaryToolEnvironment(session, secondaryTools, env);
     const { result, failure } = await session.limitProcess(() =>

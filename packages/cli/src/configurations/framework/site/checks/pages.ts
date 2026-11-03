@@ -172,15 +172,12 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
     const config = join(session.root, getConfigPath(session, planned, PURGECSS_TOOL));
-    const result = await runCheckTool(
-        session,
-        planned,
-        {
-            tool: PURGECSS_TOOL,
-            modulePath: join(import.meta.dirname, PURGECSS_PROCESS + extname(import.meta.filename)),
-        },
-        { cwd: build.folder, stdin: JSON.stringify({ config, css: sheets, content: PURGECSS_CONTENT }) },
-    );
+    const program = join(import.meta.dirname, PURGECSS_PROCESS + extname(import.meta.filename));
+    const result = await runCheckTool(session, planned, [process.execPath, program], {
+        cwd: build.folder,
+        stdin: JSON.stringify({ config, css: sheets, content: PURGECSS_CONTENT }),
+        tool: PURGECSS_TOOL,
+    });
     if (result.code !== 0) throw new CheckStop('error', `Unused CSS analysis failed: ${result.stderr}`);
     const report = parseToolOutput('PurgeCSS', result.stdout, purgecssOutputSchema);
     const styles = await readScopeStyles(session, planned);
