@@ -19,6 +19,7 @@ gspot.baseline.json
 docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
 packages/cli/README.md
+tests/setup/sandboxes/test-tools.lock
 
 # Paths that configurations leave out
 **/.dev.vars

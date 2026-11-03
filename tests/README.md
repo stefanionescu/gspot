@@ -10,6 +10,14 @@ mise install
 mise run setup
 ```
 
+The setup installs the test tools from `tests/setup/sandboxes/test-tools.lock`. When an npm pin of a manifest changes, the
+setup stops at that lockfile. Then update the lockfile:
+
+```bash
+bun install --cwd node_modules/.test-tools --linker isolated
+cp node_modules/.test-tools/bun.lock tests/setup/sandboxes/test-tools.lock
+```
+
 Choose a suite:
 
 | Command                     | Coverage                                                                                                                                          |

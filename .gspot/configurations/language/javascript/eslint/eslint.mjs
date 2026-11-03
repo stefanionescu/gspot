@@ -89,6 +89,7 @@ export default setRuleOptions(defineConfig([
         "prettier.config.mjs",
         "packages/cli/README.md",
         "**/CHANGELOG.md",
+        "tests/setup/sandboxes/test-tools.lock",
         "docs/worker-configuration.d.ts",
         "docs/cloudflare-env.d.ts",
         "**/node_modules/**",
