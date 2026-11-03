@@ -1,6 +1,9 @@
 import { overlayTable } from '#cli/settings/edit.ts';
+import { formatNameList } from '#cli/system/text.ts';
+import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
+import { LEADING_COMMENTS } from '#cli/config/generation.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
@@ -8,7 +11,6 @@ import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
-import { LEADING_COMMENTS, HAND_EDIT_RECORDS } from '#cli/config/generation.ts';
 import type { Repository, ProposedConfigurations } from '#cli/types/repository.ts';
 
 function buildSettingsTable(
@@ -43,6 +45,16 @@ function buildSettingsTable(
     });
 }
 
+function formatSettingsPreface(): string {
+    const records = Object.keys(RECORD_FIELDS)
+        .filter((name) => name !== 'ignore')
+        .map((name) => `[[${name}]]`);
+    return [
+        `# Change these settings with ${formatSettingsCommands()}, and the configurations with \`gspot add\` or \`remove\`.`,
+        `# Write the ${formatNameList(records)} records by hand.`,
+    ].join('\n');
+}
+
 /**
 Build the gspot.toml text for a settings draft.
 
@@ -58,8 +70,7 @@ export function buildInitSettings(
 ): string {
     const document = buildSettingsTable(draft, repository, configurationsByName);
     delete document['ci'];
-    const preface = `# Change these settings with ${formatSettingsCommands()}. ${HAND_EDIT_RECORDS}`;
-    return `${preface}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
+    return `${formatSettingsPreface()}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }
 
 /**

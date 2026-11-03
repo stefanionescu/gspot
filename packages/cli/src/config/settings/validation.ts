@@ -36,7 +36,7 @@ export const SETTINGS_ENCODING_MESSAGE = 'gspot.toml must contain valid UTF-8 te
 
 export const TOML_FORMAT = { inlineTableStart: 1, bracketSpacing: false, trailingComma: false } as const;
 
-export const SETTINGS_PREFACE = /^(?:# Change these settings[^\n]*\n)?/u;
+export const SETTINGS_PREFACE = /^(?:# Change these settings[^\n]*\n(?:# Write the \[\[[^\n]*\n)?)?/u;
 
 export const OWN_FILES_ONLY = 'only its own files';
 

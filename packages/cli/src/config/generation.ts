@@ -316,8 +316,6 @@ export const PRETTIER_SCRIPT_NAME = /^(?:\.prettierrc|prettier\.config)\.[cm]?[j
 
 export const PYTHON_TAG = 'python';
 
-export const HAND_EDIT_RECORDS = '[[scope]], [[command_check]], and [[import_rule]] take a hand edit.';
-
 export const LEADING_COMMENTS = /^(?:#[^\n]*\n|[ \t]*\n)*/u;
 
 export const FORMAT_CONFIGURATION = 'format';

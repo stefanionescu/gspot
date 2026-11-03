@@ -51,7 +51,7 @@ test('a key set in a later scope writes a table that an earlier scope extends wi
     ]);
 });
 
-test('setting level keeps the opening init comment first', async () => {
+test('setting level keeps the opening init comments first', async () => {
     await using sandbox = await createGitSandbox({});
     const cache = createRunCache(sandbox.path);
     const configurationsByName = readConfigurations();
@@ -69,8 +69,9 @@ test('setting level keeps the opening init comment first', async () => {
     const edit = readSettingsFile(sandbox.path);
     setKey(edit.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, edit);
-    const [opening] = result.text.split('\n', 1);
-    expect(opening).toBe(text.split('\n', 1)[0]);
+    const preface = text.split('\n').filter((line) => line.startsWith('# '));
+    expect(preface.length).toBeGreaterThan(1);
+    expect(result.text.split('\n').slice(0, preface.length + 1)).toStrictEqual([...preface, 'level = "all"']);
     expect(result.settings.level).toBe('all');
 });
 
