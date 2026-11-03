@@ -108,6 +108,12 @@ export const LOCKED_VERSION_CASES = [
         text: 'importers:\n  .:\n    dependencies:\n      react: {specifier: 17.0.2, version: 17.0.2}\n  app:\n    dependencies:\n      react: {specifier: ^18.3.0, version: 18.3.1}\n    devDependencies:\n      react-dom: {specifier: 18.3.1, version: 18.3.1(react@18.3.1)}\npackages:\n  react@17.0.2: {}\n  react@18.3.1: {}\n  react-dom@18.3.1: {}\n',
     },
     {
+        name: 'pnpm 12 lock of the package manager and the project',
+        file: 'pnpm-lock.yaml',
+        folder: '',
+        text: "---\nlockfileVersion: '9.0'\nimporters:\n  .:\n    packageManagerDependencies:\n      pnpm: {specifier: 12.16.1, version: 12.16.1}\npackages:\n  pnpm@12.16.1: {}\n---\nlockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      react: {specifier: ^18.3.0, version: 18.3.1}\n      react-dom: {specifier: 18.3.1, version: 18.3.1(react@18.3.1)}\npackages:\n  react@18.3.1: {}\n  react-dom@18.3.1: {}\n",
+    },
+    {
         name: 'Yarn classic',
         file: 'yarn.lock',
         folder: '',

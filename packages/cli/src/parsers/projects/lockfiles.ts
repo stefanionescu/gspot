@@ -7,7 +7,7 @@ import type { LockfileName } from '#cli/types/parsers.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 
 import {
@@ -60,8 +60,22 @@ function parseBunVersions(path: string, text: string, folder: string): Map<strin
     );
 }
 
+/**
+Read the project lock of a pnpm lockfile. pnpm 12, and pnpm 11 with devEngines.packageManager, write the lock of the
+package manager itself as a first YAML document, and the project lock after it. Both documents hold importers.
+
+@param path the lockfile, for the error.
+@param text the lockfile contents.
+*/
+function readPnpmProjectLock(path: string, text: string): unknown {
+    const documents = parseYamlDocuments(path, text);
+    return (
+        documents.findLast((document) => isTable(document) && Object.hasOwn(document, 'importers')) ?? documents.at(-1)
+    );
+}
+
 function parsePnpmVersions(path: string, text: string, folder: string): Map<string, string> {
-    const { importers } = parseYamlFile(path, text, pnpmLockfileSchema);
+    const { importers } = parseFileFields(path, readPnpmProjectLock(path, text), pnpmLockfileSchema);
     const workspace = dependencySectionsSchema.safeParse(importers[folder === '' ? PNPM_ROOT_IMPORTER : folder]);
     if (!workspace.success) return new Map();
     return new Map(
@@ -107,7 +121,7 @@ function parseYarnLockfile(path: string, text: string): Record<string, unknown> 
 function parseLockfileDocument(path: string, text: string): unknown {
     const name = posix.basename(path);
     if (name === 'yarn.lock') return parseYarnLockfile(path, text);
-    if (name.endsWith('.yaml')) return parseYamlFile(path, text);
+    if (name.endsWith('.yaml')) return readPnpmProjectLock(path, text);
     return name === 'uv.lock' ? parseTomlFile(path, text) : parseJsonFile(path, text);
 }
 
@@ -187,7 +201,8 @@ export const SPECIFIER_PARSERS: Readonly<
             ([key]) => !key.includes(NPM_PACKAGE_FOLDER),
         ),
     'bun.lock': (path, text) => Object.entries(parseJsonFile(path, text, bunLockfileSchema).workspaces),
-    'pnpm-lock.yaml': (path, text) => Object.entries(parseYamlFile(path, text, pnpmLockfileSchema).importers),
+    'pnpm-lock.yaml': (path, text) =>
+        Object.entries(parseFileFields(path, readPnpmProjectLock(path, text), pnpmLockfileSchema).importers),
 };
 
 /**
