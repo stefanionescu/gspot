@@ -22,7 +22,7 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/commands/edits.ts", "packages/cli/src/types/configurations/general.ts", "packages/cli/src/types/configurations/infrastructure.ts", "packages/cli/src/types/configurations/language.ts", "packages/cli/src/types/engine/plan.ts", "packages/cli/src/types/engine/tool-runs.ts", "packages/cli/src/types/engine/run.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/repository.ts", "packages/cli/src/types/tools.ts", "packages/cli/src/types/settings.ts"]
+paths = ["packages/cli/src/types/configurations/general.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/repository.ts", "packages/cli/src/types/settings.ts"]
 categories = ["properties"]
 allowed_names = ["default_all", "language_defaults", "path_role", "reason_values", "reason_when", "removed_configurations", "test_files"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
@@ -65,12 +65,12 @@ allowed_names = ["customSyntax"]
 reason = "Stylelint names its parser option customSyntax."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/parsers.ts", "packages/cli/src/types/tools.ts"]
+paths = ["packages/cli/src/types/parsers.ts"]
 allowed_names = ["objects"]
 reason = "Xcode project files name the object table objects."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/types/configurations/language.ts"]
+paths = ["packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest names the source after its markdownlint-cli2 target, and the placeholder uses that name."
 
@@ -105,7 +105,7 @@ allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/parsers.ts", "packages/cli/src/types/tools.ts"]
+paths = ["packages/cli/src/types/parsers.ts"]
 allowed_names = ["raw"]
 reason = "toml-patch and the TypeScript compiler API name the source text raw."
 
@@ -115,12 +115,12 @@ allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "selectEntryFiles", "entry", "en
 reason = "knip names its start files entry, and tools.knip.entry passes them on."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/commands/edits.ts", "packages/cli/src/types/commands/reports.ts", "packages/cli/src/types/settings.ts", "packages/cli/src/types/manifests.ts"]
+paths = ["packages/cli/src/types/settings.ts", "packages/cli/src/types/manifests.ts"]
 allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/general/data-files/**", "packages/cli/src/configurations/general/data-files/checks.ts", "packages/cli/src/types/configurations/general.ts", "packages/cli/src/configurations/general/data-files/generate.ts", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/config/integration/general.ts", "tests/suites/integration/configurations/general/data-files.test.ts"]
+paths = ["packages/cli/src/configurations/general/data-files/**", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/suites/integration/configurations/general/data-files.test.ts"]
 allowed_names = ["data-files", "data-files.test"]
 reason = "These files and folders take the name of the data-files configuration."
 
@@ -310,11 +310,6 @@ reason = "As checked on 2026-10-31, only glob 14.0.2 fixes the AbortSignal bypas
 
 [[ignore]]
 check = "dependencies/osv-scanner"
-rule = "GHSA-ch52-4w7c-c8xp"
-reason = "As checked on 2026-10-20, no release fixes the max-stale flaw: bun.lock holds 4.2.0, and 4.3.0 changes only Vary handling. Astro and make-fetch-happen use it in the docs and tests workspaces, which share no cached responses between users."
-
-[[ignore]]
-check = "dependencies/osv-scanner"
 rule = "GHSA-g3hv-75wg-m249"
 reason = "As checked on 2026-10-31, only minimatch 11.0.1 fixes the globparts denial of service, and ESLint, typescript-estree, and @npmcli/map-workspaces require minimatch ^10. Their patterns come from the repository's own config and package.json workspaces."
 
@@ -384,18 +379,6 @@ reason = "Each group folder keeps the code of a configuration at <group>/<config
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["packages/cli/src/configurations/{database,framework,general,infrastructure,language,library,platform,testing}/*/*.ts"]
-reason = "A configuration folder also holds its manifest.toml and rules/, which the check does not count."
-
-[[ignore]]
-check = "structure/lone-files"
-rule = "lone-file"
-paths = ["docs/src/pages/index.astro"]
-reason = "Astro builds the routes of the site only from files in src/pages/."
-
-[[ignore]]
-check = "structure/lone-files"
-rule = "lone-file"
 paths = ["docs/src/schemas/content.ts"]
 reason = "AGENTS.md keeps every schema in a schemas folder, and the docs site declares one schema."
 
@@ -411,19 +394,9 @@ paths = ["**/{checks,configurations}/{database,framework,general,infrastructure,
 reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
 
 [[ignore]]
-check = "structure/pass-through-folders"
-paths = ["packages/cli/src/configurations/{database,framework,general,infrastructure,language,library,platform,testing}/*"]
-reason = "A configuration folder also holds its manifest.toml and rules/, which the check does not count."
-
-[[ignore]]
 check = "structure/shared-prefixes"
 paths = ["docs/src/content.config.ts"]
 reason = "Astro fixes this name beside the content folder."
-
-[[ignore]]
-check = "structure/shared-prefixes"
-paths = ["tests/suites/unit/cli/configurations/framework/react*.test.ts"]
-reason = "The react and react-dom configurations name these tests, after their npm packages."
 
 [[ignore]]
 check = "structure/shared-prefixes"
