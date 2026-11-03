@@ -163,6 +163,14 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
 });
 
+test('the doctor text puts the command of a suggestion after a colon', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    const result = await runGspot(sandbox.path, ['doctor']);
+    expect(result.stdout).toMatch(
+        /^ {2}bash +no files in \. yet; remove it if none are planned: gspot remove bash --reason "<why>"$/mu,
+    );
+});
+
 test.each([...CI_PREFERENCE_CASES])(
     'with CI off, doctor names the commands for the CI of $name',
     async ({ tracked, remote, ci }) => {

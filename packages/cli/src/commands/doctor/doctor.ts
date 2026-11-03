@@ -29,13 +29,14 @@ import {
     VERSION_GAP,
     CI_OFF_NOTES,
     CI_FILE_NOTES,
-    COLUMN_WIDTHS,
     REMOTE_URL_USER,
     TOOL_STATE_COLORS,
     REMOTE_URL_SCHEME,
     ORIGIN_URL_SETTING,
     SUGGESTION_SECTIONS,
 } from '#cli/config/commands/reports.ts';
+
+const COLUMN_WIDTHS = { label: 9, name: 34 } as const;
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';
@@ -63,11 +64,10 @@ function formatSuggestions(suggestions: Suggestions): string[] {
             command: suggestion.command,
         }));
         const nameWidth = Math.max(COLUMN_WIDTHS.name, ...cells.map(({ name }) => name.length));
-        const detailWidth = Math.max(COLUMN_WIDTHS.note, ...cells.map(({ detail }) => detail.length));
         const rows = cells.map(({ name, detail, command }) =>
             command === undefined
                 ? `  ${name.padEnd(nameWidth)} ${detail}`
-                : `  ${name.padEnd(nameWidth)} ${detail.padEnd(detailWidth)} ${command}`,
+                : `  ${name.padEnd(nameWidth)} ${detail}: ${command}`,
         );
         return rows.length === 0 ? [] : [title, ...rows, ''];
     });

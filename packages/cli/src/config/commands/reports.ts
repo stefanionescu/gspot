@@ -106,8 +106,6 @@ export const TOOL_STATE_COLORS = {
     system: 'dim',
 } as const;
 
-export const COLUMN_WIDTHS = { label: 9, name: 34, note: 30 } as const;
-
 export const SUGGESTION_SECTIONS = [
     { key: 'suggested', title: 'suggested, not selected' },
     { key: 'undetected', title: 'selected, but no files yet' },
