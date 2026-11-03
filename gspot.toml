@@ -358,7 +358,7 @@ reason = "This literal supplies a deliberate misspelling to the spelling checks 
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["**/{checks,configurations}/{database,framework,general,infrastructure,language,library,platform,testing}/*"]
+paths = ["**/configurations/{database,framework,general,infrastructure,language,library,platform,testing}/*"]
 reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
 
 [[ignore]]
@@ -375,7 +375,7 @@ reason = "The manifest loader discovers config files in files/ and names each of
 
 [[ignore]]
 check = "structure/pass-through-folders"
-paths = ["**/{checks,configurations}/{database,framework,general,infrastructure,language,library,platform,testing}"]
+paths = ["**/configurations/{database,framework,general,infrastructure,language,library,platform,testing}"]
 reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
 
 [[ignore]]
