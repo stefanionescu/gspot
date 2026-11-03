@@ -127,19 +127,20 @@ You can edit the other keys of that file.
 These folder rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` in this
 repository.
 
-Here they override four shipped rules:
+Here they override three shipped rules:
 
-- WORKING.md keeps "one copy of each table of values, in the module that uses it."
 - NAMING.md says "Prefer feature folders to top-level type buckets."
 - ZOD.md says "Put a runtime schema with the feature that owns the contract."
 - TYPESCRIPT.md asks for a module-level constant per number.
 
 ### Values, types, and schemas
 
-- `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` keep fixed values in `config/`,
-  TypeScript types in `types/`, and runtime schemas in `schemas/`, and a folder of code holds only code. Other files
-  declare no module-level literal constants, types, or schemas. A value computed at import time stays with the
-  behavior that uses it.
+- `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` keep the fixed values, TypeScript
+  types, and runtime schemas that two or more modules read in `config/`, `types/`, and `schemas/`.
+- A value, type, or schema with one reader sits at the top of the module that reads it, as WORKING.md says. A value
+  computed at import time stays with the behavior that uses it.
+- Move a value only when you change the code that reads it. It moves into its reader when one module reads it, and
+  into the shared file when a second module starts to read it. Do not move values in a separate sweep.
 - Each of these folders holds one file per layer: `config/<layer>.ts`, `types/<layer>.ts`, and `schemas/<layer>.ts`.
 - The CLI layers follow the folders under "Commands and layers." Layer `main` serves `main.ts`, `bin.ts`, and
   `reference.ts`.
