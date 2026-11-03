@@ -28,20 +28,23 @@ async function writeLauncher(target: string, command: readonly string[]): Promis
 }
 
 /**
-Replace the child command found by this path or program name, or without a name every child command but Git. Run the
-others normally, and record only the replaced commands. Without a replacement, the replaced commands run normally too.
+Replace the child commands that match: the command found by this path or program name, the commands that this test
+accepts, or without a match every child command but Git. Run the others normally, through any fake set up before, and
+record only the replaced commands. Without a replacement, the replaced commands run normally too.
 */
-export function fakeCommands(name?: string, spawn?: typeof runProcess): Mock<typeof runProcess> {
+export function fakeCommands(
+    match?: string | ((command: readonly string[]) => boolean),
+    spawn?: typeof runProcess,
+): Mock<typeof runProcess> {
     const unfaked = processes.runProcess;
     const spy = spyOn(processes, 'runProcess');
     const run = spy.getMockImplementation() ?? unfaked;
     const fake = mock(spawn ?? run);
     spy.mockImplementation((command, options) => {
         const program = command[0] ?? '';
-        const isReplaced =
-            name === undefined
-                ? program !== GIT_PROGRAM
-                : [program, basename(program), parse(program).name].includes(name);
+        let isReplaced = program !== GIT_PROGRAM;
+        if (typeof match === 'function') isReplaced = match(command);
+        else if (match !== undefined) isReplaced = [program, basename(program), parse(program).name].includes(match);
         return isReplaced ? fake(command, options) : run(command, options);
     });
     return Object.assign(fake, {
@@ -64,20 +67,23 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
         }),
     );
     resources.use(spyOn(locate, 'readToolBinPaths').mockResolvedValue({ folders: [folder] }));
-    const unfaked = processes.runProcess;
-    const spy = spyOn(processes, 'runProcess');
-    const run = spy.getMockImplementation() ?? unfaked;
-    spy.mockImplementation(async (command, options) => {
-        const executable = command[0]!;
-        const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(executable)));
+    const findVersionPin = (command: readonly string[]): Tool | undefined => {
+        const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(command[0] ?? '')));
         const versionCommand = pin?.version_command ?? ['--version'];
-        if (pin === undefined || command.slice(1).join(' ') !== versionCommand.join(' '))
-            return await run(command, options);
-        const version = pin.version ?? pin.min_version;
-        if (version === undefined) throw new Error(`The test has no declared version for ${executable}.`);
-        return buildProcessResult({ stdout: version });
-    });
-    resources.use(spy);
+        return command.slice(1).join(' ') === versionCommand.join(' ') ? pin : undefined;
+    };
+    resources.use(
+        fakeCommands(
+            (command) => findVersionPin(command) !== undefined,
+            (command) => {
+                const pin = findVersionPin(command);
+                const version = pin?.version ?? pin?.min_version;
+                return version === undefined
+                    ? Promise.reject(new Error(`The test has no declared version for ${String(command[0])}.`))
+                    : Promise.resolve(buildProcessResult({ stdout: version }));
+            },
+        ),
+    );
     return resources;
 }
 
