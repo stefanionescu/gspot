@@ -92,7 +92,6 @@ export const WORKFLOW_SHAPE_RULES = {
     continueOnError: 'continue-on-error',
     runExpression: 'run-expression',
     pullRequestConcurrency: 'pull-request-concurrency',
-    pushConcurrency: 'push-concurrency',
     retention: 'artifact-retention',
 } as const;
 
@@ -102,13 +101,11 @@ export const WORKFLOW_SHAPE_MESSAGES = {
     continueOnError: 'Put a reason comment above this `continue-on-error`.',
     runExpression: 'Pass this expression through the `env` of the step, and read it as a quoted shell variable.',
     pullRequestConcurrency: 'This workflow runs for pull requests. Add a `concurrency` group keyed by the ref.',
-    pushConcurrency: 'This workflow runs only on a push. Remove `concurrency`: its result records that commit.',
     retention: 'Set `retention-days` on this `upload-artifact` step.',
 } as const;
 
 export const PULL_REQUEST_TRIGGERS: ReadonlySet<string> = new Set(['pull_request', 'pull_request_target']);
 
-export const PUSH_TRIGGER = 'push';
 
 export const FLOATING_RUNNER = /-latest$/u;
 

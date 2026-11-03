@@ -24,7 +24,6 @@ import {
 } from 'yaml';
 import {
     GIT_FOLDER,
-    PUSH_TRIGGER,
     ACTION_FILES,
     GITHUB_FOLDER,
     FLOATING_RUNNER,
@@ -144,11 +143,8 @@ function listConcurrencyHits(document: Document & { contents: YAMLMap }): Workfl
     const triggers = listTriggers(document);
     const group = findKey(document.contents, 'concurrency');
     const anchor = findKey(document.contents, 'on') ?? (document.contents.items[0]?.key as Scalar);
-    if (triggers.some((trigger) => PULL_REQUEST_TRIGGERS.has(trigger)))
-        return group === undefined ? [{ kind: 'pullRequestConcurrency', node: anchor }] : [];
-    return group !== undefined && triggers.every((trigger) => trigger === PUSH_TRIGGER)
-        ? [{ kind: 'pushConcurrency', node: group }]
-        : [];
+    const isPullRequestRun = triggers.some((trigger) => PULL_REQUEST_TRIGGERS.has(trigger));
+    return isPullRequestRun && group === undefined ? [{ kind: 'pullRequestConcurrency', node: anchor }] : [];
 }
 
 /**

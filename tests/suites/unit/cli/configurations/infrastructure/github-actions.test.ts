@@ -184,11 +184,10 @@ jobs:
     expect(await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape')).toStrictEqual([]);
 });
 
-test('workflow-shape reports a push-only workflow with a concurrency group', async () => {
+test('workflow-shape accepts a push-only workflow with a concurrency group', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['github-actions']),
         '.github/workflows/release.yml': 'on: push\nconcurrency:\n    group: release\njobs: {}\n',
     });
-    const findings = await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape');
-    expect(findings.map(({ line, rule }) => [line, rule])).toStrictEqual([[2, 'push-concurrency']]);
+    expect(await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape')).toStrictEqual([]);
 });

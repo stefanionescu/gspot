@@ -107,12 +107,6 @@ export const WORKFLOW_SHAPE_RULE_DOCS = {
         fix: 'Add a top-level `concurrency` group whose key includes the ref.',
         example: 'A workflow `on: pull_request` without `concurrency` reports `pull-request-concurrency`.',
     },
-    [WORKFLOW_SHAPE_RULES.pushConcurrency]: {
-        description: 'A workflow that runs only on a push has no `concurrency` group.',
-        why: 'A group can cancel the run of a commit, and the result of each push records that commit.',
-        fix: 'Delete the `concurrency` block.',
-        example: 'A workflow `on: push` with `concurrency:` reports `push-concurrency`.',
-    },
     [WORKFLOW_SHAPE_RULES.retention]: {
         description: 'Each `actions/upload-artifact` step sets `retention-days`.',
         why: 'Artifacts otherwise stay for the default of the repository and use its storage.',
