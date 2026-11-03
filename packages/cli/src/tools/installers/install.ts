@@ -1,7 +1,10 @@
 import type { Tool } from '#cli/types/manifests.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { findProgram } from '#cli/system/programs.ts';
+import { UV_LOCKFILE } from '#cli/config/manifests.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
-import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
@@ -9,13 +12,14 @@ import { installGrammars } from '#cli/tools/installers/grammars.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
 import { installMiseTools, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
-import { findMisePin, findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import { repairToolProjects, installToolProjects } from '#cli/tools/installers/projects.ts';
+import { lookUpTool, inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { findMisePin, findPackagePin, findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
 import type { Session, BrokenTool, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
+import { repairToolProjects, listStaleLockfiles, installToolProjects } from '#cli/tools/installers/projects.ts';
 
 async function readInstallPackageManager(session: Session): Promise<ToolPackageManager | undefined> {
     const pin = session.packageManager;
@@ -72,6 +76,40 @@ async function repairTools(install: ToolInstall, tools: Tool[], miseBinPaths: st
 }
 
 /**
+Tell whether install has nothing to change: the tool project files and their lockfiles match the settings, the hooks
+run, and every tool that install puts in place passes the inspection of doctor. A Python project with a uv lockfile
+never counts as done, because install syncs its environment on every run.
+
+@param install the session, the tool project files, and the tools of the checks.
+*/
+async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
+    const { session, generated, writer, checkTools } = install;
+    const isWritten = generated.files.every(
+        ({ path, content }) => writer.read(path)?.bytes.toString('utf8') === content,
+    );
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    const hasLockedProject = session.scopes.some(
+        ({ path }) => tracked.has(joinScope(path, UV_LOCKFILE)) && tracked.has(joinScope(path, PYPROJECT_TOML)),
+    );
+    const hooks = await readHookStatus(session, session.repository);
+    if (!isWritten || hasLockedProject || !hooks.ready || listStaleLockfiles(session, generated.files).length > 0)
+        return false;
+    const host = { platform: getOperatingSystem(), arch: process.arch };
+    const search = { ...session, runsVersionCommand: true };
+    const availabilities = await Promise.all(
+        install.tools
+            .filter(
+                (tool) =>
+                    findMissingBuild(tool, host) === undefined &&
+                    (findPackagePin(tool) !== undefined ||
+                        (findMisePin(tool) !== undefined && checkTools.has(tool.name))),
+            )
+            .map(async (tool) => buildToolAvailability(tool, await lookUpTool(search, tool, session.root))),
+    );
+    return availabilities.every((availability) => !('status' in availability));
+}
+
+/**
 Build what every install step reads from the session.
 
 @param session the repository and its settings.
@@ -97,7 +135,7 @@ export async function buildToolInstall(
 
 /**
 Install the tools in their tool projects, inspect each one, reinstall the ones that fail, and set the hooks of this
-clone.
+clone. When every tool already passes, install only adds the Vale packages and grammars that are missing.
 
 @param session the repository to install for.
 @param input the repository handle, generated files, and tools of the checks.
@@ -109,6 +147,11 @@ export async function installTools(
     const context = await buildToolInstall(session, { ...input, misePath: findProgram(MISE_TOOL) });
     const { steps } = context;
     await assertPackageManagerVersion(context);
+    if (await isEveryToolInstalled(context)) {
+        const { folders } = await readToolBinPaths(session);
+        const added = [await installValePackages(context, folders), await installGrammars(context)];
+        return { installed: added.filter(Boolean), missing: [], notes: [], steps };
+    }
     writeToolProjects(context);
     const mise = await installMiseTools(context);
     const projects = await installToolProjects(context, mise.binPaths);

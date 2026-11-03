@@ -63,6 +63,10 @@ test('a repeated npm install keeps the lockfile and the modules with the registr
         if (!isOnline) registry[Symbol.dispose]();
         const next = await spawnGspot(root, ['install', '--json']);
         expect(next.code, next.stdout + next.stderr).toBe(0);
+        expect(JSON.parse(next.stdout)).toMatchObject({
+            summary: 'No change: every tool is installed.',
+            installed: [],
+        });
         expect(await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8')).toBe(lockfile);
         expect(
             registry.requests.filter((request) => request !== 'GET /npm'),
