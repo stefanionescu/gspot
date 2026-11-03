@@ -1,5 +1,5 @@
 [configuration]
-description = "Express services: security rules for request handlers."
+description = "Express services: request data passed straight to SQL text, res.send(), or res.redirect(), and values or stack traces in the error a client reads."
 requires = ["javascript"]
 suggests = ["openapi"]
 title = "Express"
