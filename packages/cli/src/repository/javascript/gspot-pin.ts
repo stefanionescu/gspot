@@ -1,10 +1,11 @@
 import semver from 'semver';
+import { patch } from '@decimalturn/toml-patch';
 import type { Files } from '#cli/types/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { parse, patch } from '@decimalturn/toml-patch';
+import { miseToolsSchema } from '#cli/schemas/parsers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -87,10 +88,9 @@ export function writeGspotPin(writer: Files): void {
     }
     const tools = writer.read(MISE_CONFIG_FILE);
     const text = tools?.bytes.toString('utf8') ?? '';
-    const document = parse(text) as { tools?: Record<string, unknown> };
+    const document = parseTomlFile(MISE_CONFIG_FILE, text, miseToolsSchema);
     const pin = { version: cliPackage.version, ...GSPOT_MISE_OPTIONS };
-    const next = { ...document, tools: { ...document.tools, [GSPOT_MISE_TOOL]: pin } };
-    const patched = patch(text, next);
+    const patched = patch(text, { ...document, tools: { ...document.tools, [GSPOT_MISE_TOOL]: pin } });
     writer.write(MISE_CONFIG_FILE, {
         bytes: Buffer.from(patched.endsWith('\n') ? patched : `${patched}\n`),
         mode: tools?.mode ?? OWNER_WRITABLE_FILE,

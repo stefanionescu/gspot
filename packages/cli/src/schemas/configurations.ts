@@ -15,10 +15,6 @@ export const failureMessageSchema = z.string();
 
 export const purgecssOutputSchema = z.object({ file: z.string().min(1), rejected: z.string().array() }).array();
 
-export const miseToolsSchema = z.looseObject({
-    tools: z.record(z.string(), z.unknown()).default({}),
-});
-
 const cloneLocationSchema = z.object({
     name: z.string().min(1),
     start: z.int().positive(),

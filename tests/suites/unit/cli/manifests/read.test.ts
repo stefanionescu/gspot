@@ -76,6 +76,13 @@ test.each([...MANIFEST_INVARIANT_CASES])(
     },
 );
 
+test('a manifest with invalid TOML names its file and line', () => {
+    const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + 'broken = \n' }];
+    expect(() => parseConfigurations(manifests)).toThrow(
+        new RegExp(String.raw`^${EXAMPLE_MANIFEST_FOLDER}/manifest\.toml:\d+:\d+ is not valid TOML: `, 'u'),
+    );
+});
+
 test('a reference to an undeclared tool names the configuration and missing declaration', () => {
     const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + '[[tool]]\nname = "absent"\n' }];
     expect(() => parseConfigurations(manifests)).toThrow(

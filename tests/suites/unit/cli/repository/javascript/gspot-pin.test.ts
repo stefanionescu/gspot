@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -31,6 +32,18 @@ test('the pin of a repository with neither file writes a mise.toml with a final 
     expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe(
         `[tools]\n"npm:${cliPackage.name}" = { version = "${cliPackage.version}", allow_low_downloads = "true" }\n`,
     );
+});
+
+test('a mise.toml whose tools field is not a table refuses the pin and names the file', async () => {
+    await using sandbox = await createGitSandbox({ 'mise.toml': 'tools = "node"\n' });
+    const error = await captureRejection(
+        Promise.try(() => {
+            writeGspotPin(openFiles(sandbox.path));
+        }),
+    );
+    expect(error).toBeInstanceOf(GspotError);
+    expect(error.message).toStartWith('mise.toml');
+    expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe('tools = "node"\n');
 });
 
 test('the pin of a repository without package.json is a mise tool beside the others', async () => {

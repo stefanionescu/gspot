@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
-import { parse as parseToml } from '@decimalturn/toml-patch';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
@@ -54,7 +54,7 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
 }
 
 function parseManifest(text: string, folder: string): ParsedManifest {
-    const parsed = parseToml(text) as Record<string, unknown>;
+    const parsed = parseTomlFile(`${folder}/${MANIFEST_FILE}`, text);
     const result = manifestSchema.safeParse({
         ...parsed,
         folder: folder,

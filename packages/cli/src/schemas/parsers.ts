@@ -165,6 +165,10 @@ export const miseTasksSchema = z.object({
     tasks: z.record(z.string(), taskValueSchema).default({}),
 });
 
+export const miseToolsSchema = z.looseObject({
+    tools: z.record(z.string(), z.unknown()).default({}),
+});
+
 export const tsconfigSchema = z.looseObject({
     compilerOptions: z.record(z.string(), z.unknown()).optional(),
 });
