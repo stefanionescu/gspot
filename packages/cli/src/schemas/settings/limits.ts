@@ -41,7 +41,7 @@ export const limitFields = {
         configurations: ['structure'],
         description:
             'The highest cognitive score one function may have; the score grows as the function gets harder to follow.',
-        default: 8,
+        default: 15,
     }),
     max_cyclomatic_complexity: allowReasonedValue(z.int().min(0).max(Number.MAX_SAFE_INTEGER), {
         configurations: ['structure'],
