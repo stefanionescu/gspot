@@ -70,6 +70,27 @@ test('a switch counts once against the cyclomatic limit, however many cases it h
     ]);
 });
 
+test('a scope that lowers only its TypeScript limit keeps the JavaScript limit in its JavaScript files', async () => {
+    await using sandbox = await testdir();
+    const source = 'export function add(first, second, third) { return first + second + third; }\n';
+    const typedSource = source.replace('(first, second, third)', '(first: number, second: number, third: number)');
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
+            tables: '[[scope]]\npath = "child"\n[scope.limits.typescript]\nmax_function_parameters = 2\n',
+            level: 'all',
+        }),
+        'package.json': '{"private":true,"type":"module"}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*.ts"]}',
+        'child/example.js': source,
+        'child/example.ts': typedSource,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const files = ['child/example.js', 'child/example.ts'];
+    expect(await listLintFindings(eslint, sandbox.path, files, ['max-params'])).toStrictEqual([
+        { file: 'child/example.ts', rule: 'max-params', line: 1 },
+    ]);
+});
+
 test('a scope that lowers a limit gets it in its own files, and the root keeps its own limit', async () => {
     await using sandbox = await testdir();
     const source = 'export function add(first, second, third) { return first + second + third; }\n';

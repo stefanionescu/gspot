@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { getRequired } from '#cli/system/tables.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
 import { getLimit, getTable } from '#cli/settings/scopes.ts';
@@ -43,10 +44,13 @@ export function buildScopeLimitRules(settings: ScopeSettings): EslintLevelRules 
 
 /**
 Build a limit block for each scope whose limits differ from its parent, deeper scopes last. The root compares with the
-scope that owns the file, whose limits the base blocks hold.
+scope that owns the file, whose limits the base blocks hold. A block holds only the rules that change, because ESLint
+keeps the earlier blocks' other rules for the same files.
 
 @param planned the planned ESLint file.
-@returns two blocks for each scope with its own limits: one for its code files and one for its JavaScript files.
+@returns up to two blocks for each scope with its own limits: one for its code files and one for its JavaScript files.
+The JavaScript block also restates each rule that the code block changes, because the code block reaches JavaScript
+files too.
 */
 export function buildLimitRuleBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles'>,
@@ -57,12 +61,20 @@ export function buildLimitRuleBlocks(
     return buildScopeOverrideBlocks(session.scopes, {
         base: planned.scope,
         read: ({ settings }) => buildScopeLimitRules(settings),
-        build: ({ scope, value }) => {
+        build: ({ scope, parent, value }) => {
+            const inherited = buildScopeLimitRules((parent ?? planned.scope).settings);
             const javascriptFiles = [buildExtensionGlob('javascript'), ...buildNodePatterns(nodeFiles, scope.path)];
+            const code = Object.entries(value.code).filter(
+                ([rule, options]) => !isDeepStrictEqual(options, inherited.code[rule]),
+            );
+            const changed = new Set(code.map(([rule]) => rule));
+            const javascript = Object.entries(value.javascript).filter(
+                ([rule, options]) => changed.has(rule) || !isDeepStrictEqual(options, inherited.javascript[rule]),
+            );
             return [
-                { scope: scope.path, ...splitGlobs(['**/*']), rules: value.code },
-                { scope: scope.path, ...splitGlobs(javascriptFiles), rules: value.javascript },
-            ];
+                { scope: scope.path, ...splitGlobs(['**/*']), rules: Object.fromEntries(code) },
+                { scope: scope.path, ...splitGlobs(javascriptFiles), rules: Object.fromEntries(javascript) },
+            ].filter((block) => Object.keys(block.rules).length > 0);
         },
     });
 }
