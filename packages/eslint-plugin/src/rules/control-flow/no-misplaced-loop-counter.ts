@@ -1,5 +1,5 @@
 import { createRule } from '../../rule.ts';
-import { haveSameTokens, listDescendants } from '../../language/syntax.ts';
+import { listChildren, haveSameTokens } from '../../language/syntax.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listAssignedNodes(node: TSESTree.Node): TSESTree.Node[] {
@@ -17,6 +17,16 @@ function listCallTargets(node: TSESTree.Node): TSESTree.Node[] {
     let target: TSESTree.Node = node.callee;
     while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
     return target.type === AST_NODE_TYPES.Identifier ? [target] : [];
+}
+
+function listDescendants(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): TSESTree.Node[] {
+    const nodes: TSESTree.Node[] = [];
+    const pending = [node];
+    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+        nodes.push(next);
+        pending.push(...listChildren(next, visitorKeys).toReversed());
+    }
+    return nodes;
 }
 
 function listUpdatedNodes(update: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {

@@ -1,4 +1,3 @@
-import { getExpressionValue } from './expressions.ts';
 import { REGEXP_CONSTRUCTOR } from '../config/regex.ts';
 import { type AST, parseRegExpLiteral } from '@eslint-community/regexpp';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -56,16 +55,4 @@ export function buildRegexVisitors(
         if (regex !== undefined) check(node, regex);
     };
     return { 'Literal[regex]': inspect, NewExpression: inspect, CallExpression: inspect };
-}
-
-/**
-Read the regular expression that a node holds, following a variable that gets one value.
-
-@param node the expression or variable name to read.
-@param source the file that holds the node.
-*/
-export function traceRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
-    const value = getExpressionValue(node, source);
-    if (value === undefined) return undefined;
-    return getRegex(value, source);
 }

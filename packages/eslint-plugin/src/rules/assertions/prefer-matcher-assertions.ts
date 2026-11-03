@@ -1,9 +1,10 @@
 import { createRule } from '../../rule.ts';
 import type { FileContext } from '../../types/plugin.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
-import { requiresVersion, readPackageFacts } from '../../libraries/packages.ts';
+import { compareVersions, readPackageFacts } from '../../libraries/packages.ts';
 import type { MatcherSuggestion, ComparisonAssertion } from '../../types/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { VERSION_SPACES, VERSION_PATTERN, VERSION_WILDCARD, VERSION_ALTERNATIVES } from '../../config/libraries.ts';
 
 import {
     VALUE_KINDS,
@@ -196,6 +197,21 @@ function getLocatorSuggestion(assertion: ComparisonAssertion, source: TSESLint.S
     if (getter === undefined) return undefined;
     const matcher = getLocatorMatcher(ASTUtils.getPropertyName(getter), assertion, source);
     return matcher === undefined ? undefined : `await expect(${source.getText(getter.object)}).${matcher}`;
+}
+
+function requiresVersion(range: string, minimum: readonly number[]): boolean {
+    const alternatives = range
+        .split(VERSION_ALTERNATIVES)
+        .map((alternative) => alternative.trim().split(VERSION_SPACES));
+    const lowerBounds = alternatives.map((comparators) =>
+        comparators.flatMap((comparator) => {
+            const groups = VERSION_PATTERN.exec(comparator)?.groups;
+            const isLowerBound = groups !== undefined && !(groups['operator'] ?? '').startsWith('<');
+            const fields = (groups?.['number'] ?? '').split('.');
+            return isLowerBound ? [fields.map((field) => (VERSION_WILDCARD.test(field) ? 0 : Number(field)))] : [];
+        }),
+    );
+    return lowerBounds.every((versions) => versions.some((version) => compareVersions(version, minimum) >= 0));
 }
 
 function canUseJasmineSize(context: FileContext): boolean {

@@ -136,22 +136,6 @@ export function listChildren(node: TSESTree.Node, visitorKeys: TSESLint.SourceCo
 }
 
 /**
-List a node and every node below it, parents before children.
-
-@param node the root of the walk.
-@param visitorKeys the child keys of each node type.
-*/
-export function listDescendants(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): TSESTree.Node[] {
-    const nodes: TSESTree.Node[] = [];
-    const pending = [node];
-    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-        nodes.push(next);
-        pending.push(...listChildren(next, visitorKeys).toReversed());
-    }
-    return nodes;
-}
-
-/**
 Identify a type that only forwards its name and generic parameters to another type.
 
 @param node the alias declaration.

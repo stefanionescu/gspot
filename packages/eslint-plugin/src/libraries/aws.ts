@@ -284,18 +284,6 @@ export function getCdkProperty(source: Readonly<TSESLint.SourceCode>, result: Cd
 }
 
 /**
-Get the literal value that a result holds.
-
-@param result the value.
-@returns the value of the literal, or undefined when the result holds no literal.
-*/
-export function getCdkLiteral(result: CdkResult): unknown {
-    const { node, status } = result;
-    if (status !== 'found' || node.type !== AST_NODE_TYPES.Literal) return undefined;
-    return node.value;
-}
-
-/**
 List the string literals that a result holds, as one value or as the elements of an array.
 
 @param source the source code of the file.

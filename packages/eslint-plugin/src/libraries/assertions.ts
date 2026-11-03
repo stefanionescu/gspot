@@ -16,7 +16,6 @@ import type {
 } from '../types/assertions.ts';
 import {
     EXPECT_SETUP,
-    CHAI_TERMINALS,
     GLOBAL_EXPECTS,
     NODE_TEST_NAME,
     TYPE_ASSERTION,
@@ -240,13 +239,6 @@ function isRunnerAssertion(
     return isRunner || isCypress || (styles.globalExpect && isGlobalExpect(node, source));
 }
 
-function getChainEnd(node: TSESTree.MemberExpression): TSESTree.MemberExpression | undefined {
-    let top = node;
-    while (top.parent.type === AST_NODE_TYPES.MemberExpression && top.parent.object === top && !top.parent.computed)
-        top = top.parent;
-    return top === node ? undefined : top;
-}
-
 /**
 Read an assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, Cypress, or node:assert that the file can use. It reads a
 predicate on one value or a comparison of two values.
@@ -289,19 +281,4 @@ export function readAssertionKind(node: TSESTree.CallExpression, context: FileCo
     if (TYPE_ASSERTION.test(name)) return 'type';
     if (isScript) return 'script';
     return isRunnerAssertion(node, name, styles, source) ? 'runner' : undefined;
-}
-
-/**
-Check whether a property chain of chai forms a complete assertion: one that ends in a call or in a property such as
-`true` or `exist`.
-
-@param node the node to read.
-*/
-export function isChaiPropertyAssertion(node: TSESTree.Node): boolean {
-    const top =
-        node.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(node) === 'should'
-            ? getChainEnd(node)
-            : undefined;
-    const isCall = top?.parent.type === AST_NODE_TYPES.CallExpression && top.parent.callee === top;
-    return top !== undefined && (isCall || CHAI_TERMINALS.has(ASTUtils.getPropertyName(top)));
 }

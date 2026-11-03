@@ -2,15 +2,8 @@ import { createRule } from '../../rule.ts';
 import type { CdkResult } from '../../types/aws.ts';
 import { listArgumentValues } from '../../language/expressions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../../libraries/aws.ts';
 
-import {
-    getCdkName,
-    getCdkResult,
-    getCdkLiteral,
-    getCdkArgument,
-    getCdkProperty,
-    listCdkTableIssues,
-} from '../../libraries/aws.ts';
 import {
     RDS_INSTANCE,
     PUBLIC_SUBNET,
@@ -38,6 +31,12 @@ function isPrivateInterface(source: Readonly<TSESLint.SourceCode>, networkInterf
         ASTUtils.getPropertyName(node.callee) === SUBNET_SELECTION_METHOD;
     const type = isSelection ? getCdkProperty(source, getCdkArgument(source, subnet, 0), 'subnetType') : undefined;
     return type?.status === 'found' && PRIVATE_SUBNETS.has(getCdkName(source, type.node));
+}
+
+function getCdkLiteral(result: CdkResult): unknown {
+    const { node, status } = result;
+    if (status !== 'found' || node.type !== AST_NODE_TYPES.Literal) return undefined;
+    return node.value;
 }
 
 function findPublicInterface(source: Readonly<TSESLint.SourceCode>, options: CdkResult): TSESTree.Node | undefined {

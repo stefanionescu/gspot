@@ -83,23 +83,6 @@ export const TEST_FRAMEWORK_DEPENDENCIES = [
     'vitest',
 ];
 
-export const CHAI_TERMINALS: ReadonlySet<string | null> = new Set([
-    'Arguments',
-    'NaN',
-    'arguments',
-    'empty',
-    'exist',
-    'extensible',
-    'false',
-    'finite',
-    'frozen',
-    'null',
-    'ok',
-    'sealed',
-    'true',
-    'undefined',
-]);
-
 export const ASSERTION_TEXT = /\b(?:expect|assert|should)\b/u;
 
 export const CHECKED_TEST_CALLEE = /^(?:it|specify|test)(?:\.(?:only|skip))?$/u;

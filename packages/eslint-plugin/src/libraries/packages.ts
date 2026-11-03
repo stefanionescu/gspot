@@ -50,11 +50,6 @@ function listManifestFolders(context: FileContext): string[] {
     return folders;
 }
 
-function compareVersions(left: readonly number[], right: readonly number[]): number {
-    const differences = right.map((value, position) => (left[position] ?? 0) - value);
-    return differences.find((difference) => difference !== 0) ?? 0;
-}
-
 function bumpVersion(numbers: number[], kind: string): number[] {
     let position = numbers.length - 1;
     if (kind === 'caret')
@@ -159,6 +154,18 @@ export function isModuleUsed(
 }
 
 /**
+Compare two versions field by field, with a missing field of the left version read as 0.
+
+@param left the version to compare, as major, minor, and patch numbers.
+@param right the version to compare it with.
+@returns a negative number when left is lower, 0 when the two are equal, and a positive number when left is higher.
+*/
+export function compareVersions(left: readonly number[], right: readonly number[]): number {
+    const differences = right.map((value, position) => (left[position] ?? 0) - value);
+    return differences.find((difference) => difference !== 0) ?? 0;
+}
+
+/**
 Check whether a package.json version range allows a version at or above a minimum.
 
 @param range the range from package.json.
@@ -179,28 +186,6 @@ export function allowsVersion(range: string, minimum: readonly number[]): boolea
             return difference > 0 || (difference === 0 && ceiling?.isInclusive === true);
         }),
     );
-}
-
-/**
-Check whether every version that a package.json range allows sits at or above a minimum. A range without a lower bound,
-or one that does not have the form of a version range, does not.
-
-@param range the range from package.json.
-@param minimum the lowest version, as major, minor, and patch numbers.
-*/
-export function requiresVersion(range: string, minimum: readonly number[]): boolean {
-    const alternatives = range
-        .split(VERSION_ALTERNATIVES)
-        .map((alternative) => alternative.trim().split(VERSION_SPACES));
-    const lowerBounds = alternatives.map((comparators) =>
-        comparators.flatMap((comparator) => {
-            const groups = VERSION_PATTERN.exec(comparator)?.groups;
-            const isLowerBound = groups !== undefined && !(groups['operator'] ?? '').startsWith('<');
-            const fields = (groups?.['number'] ?? '').split('.');
-            return isLowerBound ? [fields.map((field) => (VERSION_WILDCARD.test(field) ? 0 : Number(field)))] : [];
-        }),
-    );
-    return lowerBounds.every((versions) => versions.some((version) => compareVersions(version, minimum) >= 0));
 }
 
 /**

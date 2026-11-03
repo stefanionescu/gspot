@@ -4,7 +4,7 @@ import type { TypeReader } from '../../types/plugin.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
 import { listChildNodes } from '../../libraries/testing.ts';
 import type { AssertionSearch } from '../../types/assertions.ts';
-import { readAssertionKind, isChaiPropertyAssertion } from '../../libraries/assertions.ts';
+import { readAssertionKind } from '../../libraries/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -18,6 +18,23 @@ import {
     TEST_FRAMEWORK_IMPORTS,
     TEST_FRAMEWORK_DEPENDENCIES,
 } from '../../config/assertions/evidence.ts';
+
+const CHAI_TERMINALS: ReadonlySet<string | null> = new Set([
+    'Arguments',
+    'NaN',
+    'arguments',
+    'empty',
+    'exist',
+    'extensible',
+    'false',
+    'finite',
+    'frozen',
+    'null',
+    'ok',
+    'sealed',
+    'true',
+    'undefined',
+]);
 
 function getTestCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const callback = node.arguments.at(1);
@@ -64,6 +81,22 @@ function hasCalleeAssertion(node: TSESTree.CallExpression, search: AssertionSear
     const body = getLocalBody(variable?.defs.at(0)?.node);
     const text = body !== undefined || search.types === undefined ? '' : getImportedText(callee, search.types);
     return body === undefined ? ASSERTION_TEXT.test(text) : hasAssertion(body, search);
+}
+
+function getChainEnd(node: TSESTree.MemberExpression): TSESTree.MemberExpression | undefined {
+    let top = node;
+    while (top.parent.type === AST_NODE_TYPES.MemberExpression && top.parent.object === top && !top.parent.computed)
+        top = top.parent;
+    return top === node ? undefined : top;
+}
+
+function isChaiPropertyAssertion(node: TSESTree.Node): boolean {
+    const top =
+        node.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(node) === 'should'
+            ? getChainEnd(node)
+            : undefined;
+    const isCall = top?.parent.type === AST_NODE_TYPES.CallExpression && top.parent.callee === top;
+    return top !== undefined && (isCall || CHAI_TERMINALS.has(ASTUtils.getPropertyName(top)));
 }
 
 function isEvidence(node: TSESTree.Node, search: AssertionSearch): boolean {
