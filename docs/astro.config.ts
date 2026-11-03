@@ -11,11 +11,8 @@ import {
     FAVICON,
     EDIT_URL,
     SITE_TITLE,
-    SOCIAL_IMAGE,
     REPOSITORY_URL,
     APPLE_TOUCH_ICON,
-    SOCIAL_IMAGE_ALT,
-    SOCIAL_IMAGE_SIZE,
     README_OPENING_BLOCKS,
 } from '#docs/config/site.ts';
 
@@ -62,19 +59,7 @@ export default defineConfig({
                     ...LLMS_PAGES,
                 }),
             ],
-            head: [
-                {
-                    tag: 'meta',
-                    attrs: {
-                        property: 'og:image',
-                        content: `${cliPackage.homepage}${SOCIAL_IMAGE}`,
-                    },
-                },
-                { tag: 'meta', attrs: { property: 'og:image:width', content: String(SOCIAL_IMAGE_SIZE.width) } },
-                { tag: 'meta', attrs: { property: 'og:image:height', content: String(SOCIAL_IMAGE_SIZE.height) } },
-                { tag: 'meta', attrs: { property: 'og:image:alt', content: SOCIAL_IMAGE_ALT } },
-                { tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } },
-            ],
+            head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } }],
             components: {
                 Head: './src/components/starlight/Head.astro',
                 Header: './src/components/starlight/Header.astro',
