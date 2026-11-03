@@ -70,6 +70,7 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     if (isUnfinishedResult) messages.push(result.shortMessage);
     return {
         code: isErrored && code === 0 ? FAILED_CODE : code,
+        signal: result.signal,
         stdout: result.stdout ?? '',
         stderr: messages.filter(Boolean).join('\n'),
         missing: isMissing,

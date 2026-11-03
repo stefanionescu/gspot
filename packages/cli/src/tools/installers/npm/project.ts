@@ -96,10 +96,8 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
             }),
         );
         const explanation = await explainReleaseAgeHold(install, output, releases);
-        throw new GspotError(
-            'install',
-            `${explanation}${packageManager.name} ${failure} (exit ${String(result.code)}).\n${output}`,
-        );
+        const exit = result.signal === undefined ? `exit ${String(result.code)}` : `stopped by ${result.signal}`;
+        throw new GspotError('install', `${explanation}${packageManager.name} ${failure} (${exit}).\n${output}`);
     }
     return { environment: env, credentials };
 }

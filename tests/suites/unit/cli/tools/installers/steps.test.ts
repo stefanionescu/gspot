@@ -1,10 +1,13 @@
 import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { explainReleaseAgeHold, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 
 const ESLINT_RELEASE = {
     label: 'eslint@10.13.0',
@@ -45,4 +48,14 @@ test.each([
     expect(await explainReleaseAgeHold(install, output, [ESLINT_RELEASE, prettier])).toBe(expected);
     expect(await explainReleaseAgeHold(install, 'HTTP 403 Forbidden', [ESLINT_RELEASE])).toBe('');
     expect(await explainReleaseAgeHold({ ...install, releaseAgeDays: 0 }, output, [ESLINT_RELEASE])).toBe('');
+});
+
+test.skipIf(isWindows)('an install step that a signal stops names the signal in place of an exit code', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const command = buildProgramCommand('fakes/tool', '--signal', 'SIGKILL');
+    const error = await captureRejection(
+        runRequiredInstallStep(install, command, { cwd: sandbox.path, step: 'installing', name: 'npm installation' }),
+    );
+    expect(error.message).toStartWith('npm installation failed (stopped by SIGKILL):\n');
 });

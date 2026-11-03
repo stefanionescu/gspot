@@ -87,10 +87,8 @@ async function runUv(
         const output = redactInstallOutput(result, credentials);
         const pins = listPackagePins(install.session.toolConfigurations).python;
         const explanation = await explainReleaseAgeHold(install, output, listPythonReleases(pins));
-        throw new GspotError(
-            'install',
-            `${explanation}uv ${String(commandArguments[0])} failed (exit ${String(result.code)}).\n${output}`,
-        );
+        const exit = result.signal === undefined ? `exit ${String(result.code)}` : `stopped by ${result.signal}`;
+        throw new GspotError('install', `${explanation}uv ${String(commandArguments[0])} failed (${exit}).\n${output}`);
     }
     return result;
 }

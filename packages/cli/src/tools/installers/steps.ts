@@ -74,11 +74,9 @@ export async function runRequiredInstallStep(
 ): Promise<SpawnResult> {
     const { name, ...spawn } = options;
     const result = await runInstallStep(install, command, spawn);
+    const exit = result.signal === undefined ? `exit ${String(result.code)}` : `stopped by ${result.signal}`;
     if (result.code !== 0)
-        throw new GspotError(
-            'install',
-            `${name} failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
-        );
+        throw new GspotError('install', `${name} failed (${exit}):\n${redactInstallOutput(result, [])}`);
     return result;
 }
 

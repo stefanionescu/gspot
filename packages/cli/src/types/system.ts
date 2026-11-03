@@ -45,6 +45,7 @@ export type ErrorCode =
 
 export type SpawnResult = {
     code: number;
+    signal?: string | undefined;
     stdout: string;
     stderr: string;
     missing: boolean;
@@ -74,7 +75,7 @@ export type ProcessTermination = {
 
 export type SpawnCompletion = Pick<
     Result<{ encoding: 'utf8'; reject: false }>,
-    'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stderr' | 'timedOut' | 'isCanceled'
+    'code' | 'exitCode' | 'signal' | 'failed' | 'shortMessage' | 'stderr' | 'timedOut' | 'isCanceled'
 > & { stdout?: string | undefined; cause?: unknown };
 
 export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
