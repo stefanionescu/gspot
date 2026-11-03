@@ -15,6 +15,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { CAFE_SOURCE_PATH, GENERATE_ARGUMENTS, WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
 
 import {
     expandCommand,
@@ -22,12 +23,6 @@ import {
     replacePlaceholders,
     buildFileCommandLines,
 } from '#cli/engine/tool-runs/placeholders.ts';
-import {
-    CAFE_SOURCE_PATH,
-    SHFMT_INDENT_CASES,
-    GENERATE_ARGUMENTS,
-    WORKSPACE_SCOPE_CASES,
-} from '#tests/config/engine/tool-runs.ts';
 
 async function writeListSetting(root: string, placeholder: string, generateCommand: readonly string[]): Promise<void> {
     const command = [
@@ -170,29 +165,6 @@ test('per-file commands keep the arguments after the file', async () => {
         environment: { TOOL_RELEASE: 'v3.4.0' },
     });
 });
-
-test.each([...SHFMT_INDENT_CASES])(
-    'format $style indentation supplies shfmt -i $expected',
-    async ({ style, width, expected }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['format', 'bash'], {
-                level: 'all',
-                tables: stringify({ format: { indent_style: style, indent_width: width } }),
-            }),
-            'sample.sh': 'echo example\n',
-        });
-
-        const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
-        const [planned] = planChecks(session, { stage: 'all', only: ['bash/shfmt'] });
-        const command = buildCommandLaunch(planned!, {
-            session,
-            command: planned!.check.command!,
-            root: session.root,
-            toolPath: process.execPath,
-        });
-        expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);
-    },
-);
 
 test('scalar placeholders select generated pointer files, scope, and boolean settings', async () => {
     await using sandbox = await createGitSandbox({

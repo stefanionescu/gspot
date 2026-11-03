@@ -68,15 +68,15 @@ summary = "Runs ShellCheck over shell scripts and sourced files, with its stable
 why = "ShellCheck catches the quoting, globbing, and exit-status mistakes that make a script fail on the one input nobody tested."
 
 [[check]]
-command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
+command = ["shfmt", "-d", "{files}"]
 example = "`if true;then echo hello;fi` differs from the shfmt output. Run `gspot check --fix` to add the spacing and line breaks."
 files = { tags = ["bash", "sh", "bats"] }
-fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
+fix = ["shfmt", "-w", "{files}"]
 help = "Run the `fix:` command that the report prints, or `shfmt -w` on one file."
 name = "shfmt"
 output = { format = "regex", pattern = "^(?:--- )?(?<file>.+?)(?:\\.orig$|:(?<line>\\d+):(?<column>\\d+): (?<message>.+)$)", message = "This script is not formatted the way shfmt formats it.", fixable = "^--- " }
 stage = "commit"
-summary = "Checks that every shell script matches the shfmt output."
+summary = "Checks that every shell script matches the shfmt output. shfmt reads its layout from `.editorconfig`, as editors do when they format on save."
 why = "One formatter means diffs show what changed, not how someone's editor indents."
 
 [[check]]

@@ -24,6 +24,11 @@ import {
     EDITORCONFIG_FIXED_SECTIONS,
 } from '#cli/config/configurations/general.ts';
 
+const SHFMT_CONFIGURATION = 'bash';
+
+// shfmt reads these keys, and no other tool does. They sit under [*] because shell scripts may have no extension.
+const SHFMT_EDITORCONFIG_OPTIONS = { switch_case_indent: true, simplify: true } as const;
+
 function buildSectionPath(pattern: string, scopePath: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))
         throw new GspotError(
@@ -96,14 +101,16 @@ function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
 }
 
 /**
-Build .editorconfig: the EditorConfig sections of this repository.
+Build .editorconfig: the EditorConfig sections of this repository, and the shfmt layout when a scope selects Bash.
 
 @param planned the config file to build.
 */
 export function buildEditorconfigFile(planned: PlannedConfig): string {
     const { format } = planned.scope.settings.tables;
     const settings = planned.session.settings;
-
+    const hasBash = planned.session.scopes.some(({ configurations }) =>
+        configurations.some(({ name }) => name === SHFMT_CONFIGURATION),
+    );
     const sections = [
         {
             path: '*',
@@ -111,6 +118,7 @@ export function buildEditorconfigFile(planned: PlannedConfig): string {
                 ...EDITORCONFIG_FIXED_SECTIONS['*'],
                 indent_style: format.indent_style,
                 indent_size: format.indent_width,
+                ...(hasBash && SHFMT_EDITORCONFIG_OPTIONS),
             },
         },
         ...Object.entries(EDITORCONFIG_FIXED_SECTIONS)

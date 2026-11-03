@@ -36,6 +36,23 @@ test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     },
 );
 
+test.each([
+    { configurations: ['bash'], shfmt: '\nswitch_case_indent = true\nsimplify = true' },
+    { configurations: [], shfmt: '' },
+])('EditorConfig holds the shfmt layout when $configurations is selected', async ({ configurations, shfmt }) => {
+    const settings = { configurations, format: { indent_style: 'space', indent_width: 4 } };
+    const text = await buildGeneratedFile(stringify(settings), '.editorconfig', { 'run.sh': 'echo ready\n' });
+    expect(text).toContain(`[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4${shfmt}
+
+`);
+});
+
 test('Prettier loads the selected plugin through the root pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['svelte']),

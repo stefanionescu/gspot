@@ -92,11 +92,6 @@ export const REGEX_OUTPUT_CASES = [
     { title: 'a passing run that prints nothing has no findings', result: {}, expected: { findings: [] } },
 ];
 
-export const SHFMT_INDENT_CASES = [
-    { style: 'space', width: 6, expected: '6' },
-    { style: 'tab', width: 6, expected: '0' },
-] as const;
-
 export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
 
 export const WORKSPACE_SCOPE_CASES = [

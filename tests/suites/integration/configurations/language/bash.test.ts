@@ -190,15 +190,25 @@ test('shfmt reports a syntax error as a finding and passes after the script is r
     expect(correction.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
-test('shfmt reports and fixes script formatting with tabs', async () => {
+test.each([
+    {
+        name: 'the case indent and simplify rules of the generated .editorconfig',
+        tables: '',
+        path: 'bin/release',
+        source: '#!/usr/bin/env bash\ncount=1\ncase "$1" in\nup) printf "%s\\n" $(( $count + 1 )) ;;\nesac\n',
+        fixed: '#!/usr/bin/env bash\ncount=1\ncase "$1" in\n    up) printf "%s\\n" $((count + 1)) ;;\nesac\n',
+    },
+    {
+        name: 'tabs',
+        tables: '[format]\nindent_style = "tab"\nindent_width = 4\n',
+        path: 'example.sh',
+        source: 'if true; then\n  echo ready\nfi\n',
+        fixed: 'if true; then\n\techo ready\nfi\n',
+    },
+])('shfmt reports and fixes script formatting with $name', async ({ tables, path, source, fixed }) => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash', 'format'], {
-            tables: '[format]\nindent_style = "tab"\nindent_width = 4\n',
-        }),
-        'example.sh': `if true; then
-  echo ready
-fi
-`,
+        'gspot.toml': buildSandboxSettings(['bash', 'format'], { tables }),
+        [path]: source,
     });
 
     await applyThenInstall(sandbox.path);
@@ -207,7 +217,7 @@ fi
     expect(broken.exitCode, JSON.stringify(broken)).toBe(1);
     const correction = parseCheckReport(await spawnGspot(sandbox.path, [...command, '--fix'])).report;
     expect(correction.exitCode, JSON.stringify(correction)).toBe(0);
-    expect(await readFile(join(sandbox.path, 'example.sh'), 'utf8')).toBe('if true; then\n\techo ready\nfi\n');
+    expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(fixed);
     const verified = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(verified.exitCode, JSON.stringify(verified)).toBe(0);
 });
