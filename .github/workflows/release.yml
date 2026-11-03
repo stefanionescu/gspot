@@ -1,0 +1,35 @@
+# Publishes both npm packages and deploys the docs site when mise run release pushes a CLI tag.
+name: release
+on:
+    push:
+        tags: ['v*']
+permissions:
+    contents: read
+jobs:
+    publish:
+        defaults:
+            run:
+                shell: bash
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        permissions:
+            actions: read
+            contents: read
+            id-token: write
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+              with:
+                  version: '2026.10.7'
+                  install_args: bun node npm@11.19.0 npm:wrangler
+                  cache: false
+            - run: mise run setup
+            - run: mise run publish "${GITHUB_REF_NAME}"
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  NPM_CONFIG_PROVENANCE: 'true'
+            - run: mise run docs:deploy
+              env:
+                  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

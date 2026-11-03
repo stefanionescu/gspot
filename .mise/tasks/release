@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-#MISE description="Tag a tested main commit whose npm pins are past the release hold, publish both npm packages, deploy the docs site, create the GitHub release from the CHANGELOG.md section of the CLI version, and set the repository description and homepage from the CLI package."
-#MISE depends=["build"]
+#MISE description="Tag a tested main commit whose npm pins are past the release hold, so that the release workflow publishes both npm packages and deploys the docs site. Then create the GitHub release from the CHANGELOG.md section of the CLI version, and set the repository description and homepage from the CLI package."
 set -euo pipefail
+
+# shellcheck source=.mise/release/workflows.sh
+source .mise/release/workflows.sh
 
 # assert_release_commit: Refuses a release unless main has no changes and both workflows passed on HEAD.
 assert_release_commit() {
     local branch
     local changes
     local commit
-    local workflow
-    local conclusion
 
     branch=$(git branch --show-current) || return 1
     changes=$(git status --porcelain) || return 1
@@ -18,14 +18,7 @@ assert_release_commit() {
         return 1
     fi
     commit=$(git rev-parse HEAD) || return 1
-    for workflow in tests.yml gspot.yml; do
-        conclusion=$(gh run list --workflow "${workflow}" --commit "${commit}" --json conclusion --jq '.[0].conclusion') || return 1
-        if [[ ${conclusion} != success ]]; then
-            printf '%s has not passed on %s.\n' "${workflow}" "${commit}" >&2
-            return 1
-        fi
-    done
-    npm whoami >/dev/null || return 1
+    assert_workflows_passed "${commit}"
 }
 
 # assert_version_raised: Refuses a package whose code changed since the tag of a version that npm already serves.
@@ -42,21 +35,6 @@ assert_version_raised() {
         printf '%s changed since %s, which npm serves. Raise its version first.\n' "${folder}" "${tag}" >&2
         return 1
     fi
-}
-
-# publish_package: Publishes a package version that npm does not serve yet.
-# Arguments:
-#   Package folder.
-#   Package name and version.
-publish_package() {
-    local folder="$1"
-    local spec="$2"
-
-    if npm view "${spec}" version >/dev/null 2>&1; then
-        printf '%s is already on npm.\n' "${spec}"
-        return 0
-    fi
-    npm publish "./${folder}" || return 1
 }
 
 # push_tag: Tags HEAD unless the tag exists, and pushes the tag unless origin has it.
@@ -140,9 +118,6 @@ main() {
     bun .mise/release/pin-ages.ts || exit 1
     push_tag "${plugin_tag}"
     push_tag "${cli_tag}"
-    publish_package packages/eslint-plugin "${plugin_spec}"
-    publish_package packages/cli "${cli_spec}"
-    mise run docs:deploy || exit 1
     create_release "${cli_tag}" "${notes}"
     description=$(npm pkg get description --prefix packages/cli | jq -r .) || exit 1
     homepage=$(npm pkg get homepage --prefix packages/cli | jq -r .) || exit 1

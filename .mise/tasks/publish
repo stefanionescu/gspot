@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#MISE description="Publish the versions of both npm packages that npm does not serve yet, from a CLI tag on a commit that passed CI. The release workflow runs it with npm trusted publishing."
+#MISE depends=["build"]
+#USAGE arg "<tag>" help="The pushed CLI tag, such as v0.4.0"
+set -euo pipefail
+: "${usage_tag:?mise must provide the tag}"
+
+# shellcheck source=.mise/release/workflows.sh
+source .mise/release/workflows.sh
+
+# publish_package: Publishes a package version that npm does not serve yet.
+# Arguments:
+#   Package folder.
+#   Package name and version.
+publish_package() {
+    local folder="$1"
+    local spec="$2"
+
+    if npm view "${spec}" version >/dev/null 2>&1; then
+        printf '%s is already on npm.\n' "${spec}"
+        return 0
+    fi
+    npm publish "./${folder}" || return 1
+    printf 'published %s\n' "${spec}"
+}
+
+main() {
+    local commit
+    local plugin_spec
+    local cli_spec
+
+    plugin_spec=$(npm pkg get name version --prefix packages/eslint-plugin | jq -r '"\(.name)@\(.version)"') || exit 1
+    cli_spec=$(npm pkg get name version --prefix packages/cli | jq -r '"\(.name)@\(.version)"') || exit 1
+    if [[ ${usage_tag} != "v${cli_spec##*@}" ]]; then
+        printf 'The tag %s does not name the CLI version %s.\n' "${usage_tag}" "${cli_spec##*@}" >&2
+        exit 1
+    fi
+    commit=$(git rev-parse HEAD) || exit 1
+    assert_workflows_passed "${commit}"
+    publish_package packages/eslint-plugin "${plugin_spec}"
+    publish_package packages/cli "${cli_spec}"
+}
+
+main "$@"

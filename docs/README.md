@@ -12,8 +12,8 @@ settings, and ESLint plugin reference pages from the implementation. `src/config
 ## Deployment
 
 Run `mise run docs:deploy` to build and deploy the site to the `gspot-docs` Worker at `generativespotting.com`, with
-your Wrangler login. This task publishes documentation without publishing npm packages. The release task also deploys
-the site.
+your Wrangler login. This task publishes documentation without publishing npm packages. The release workflow also
+deploys the site, with the `CLOUDFLARE_API_TOKEN` secret, when `mise run release` pushes a CLI tag.
 
 ## Asset licenses
 
