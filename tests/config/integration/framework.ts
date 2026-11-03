@@ -182,7 +182,7 @@ export function Greeting({ name }: Readonly<{ name: string }>): ReactNode {
 `;
 
 const COUNTER = `// A test component.
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 /**
 Counts, some of the time.

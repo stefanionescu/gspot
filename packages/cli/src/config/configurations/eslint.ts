@@ -59,14 +59,14 @@ const SORTING_RULES = {
     'perfectionist/sort-imports': [
         'error',
         {
-            type: 'line-length',
+            type: 'alphabetical',
             ignoreCase: false,
-            groups: ['singleline-import', 'multiline-import'],
-            fallbackSort: { type: 'alphabetical', order: 'asc' },
+            groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'unknown'],
+            newlinesBetween: 1,
             useExperimentalDependencyDetection: false,
         },
     ],
-    'perfectionist/sort-named-imports': ['error', { type: 'line-length', ignoreCase: false }],
+    'perfectionist/sort-named-imports': ['error', { type: 'alphabetical', ignoreCase: false }],
     'perfectionist/sort-exports': [
         'error',
         {

@@ -6,8 +6,12 @@ export const SORT_RULES = [
 ] as const;
 
 export const SORT_CASES = [
-    { source: "import { bbb, a, cc } from 'x';\n", fixed: "import { a, cc, bbb } from 'x';\n" },
+    { source: "import { bbb, a, cc } from 'x';\n", fixed: "import { a, bbb, cc } from 'x';\n" },
     { source: 'export { bbb, a, cc };\n', fixed: 'export { a, cc, bbb };\n' },
+    {
+        source: "import { run } from '#app/run.ts';\nimport { z } from 'zod';\nimport { readFileSync } from 'node:fs';\nimport { join } from 'node:path';\n",
+        fixed: "import { readFileSync } from 'node:fs';\nimport { join } from 'node:path';\n\nimport { z } from 'zod';\n\nimport { run } from '#app/run.ts';\n",
+    },
     {
         source: `// File header
 import { bb } from 'bb';
