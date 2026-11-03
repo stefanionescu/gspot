@@ -44,6 +44,21 @@ test('lint commands: a lint-staged entry counts, and so does the hook line that 
     ]);
 });
 
+test('lint commands: a lint-staged entry names its own line when a script runs the same command', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify(
+            { scripts: { format: 'prettier --write' }, 'lint-staged': { '*.ts': 'prettier --write' } },
+            null,
+            2,
+        ),
+    });
+    const rows = await listRows(sandbox.path);
+    expect(rows.map(({ line, source }) => [line, source])).toStrictEqual([
+        [3, 'script'],
+        [6, 'lint-staged'],
+    ]);
+});
+
 test('lint commands: a pre-commit entry counts by its id, and a CI step that runs pre-commit', async () => {
     await using sandbox = await createGitSandbox({
         '.pre-commit-config.yaml':

@@ -55,10 +55,10 @@ function findCalledTool(command: string, search: CommandSearch, seen = new Set<s
         .find((tool) => tool !== undefined);
 }
 
-function findLine(text: string, needle: string): number {
+function findLine(text: string, needle: string, from = 1): number {
     const lines = text.split(LINE_BREAK);
-    const index = lines.findIndex((line) => line.includes(needle));
-    return Math.max(index + 1, 1);
+    const index = lines.findIndex((line, lineIndex) => lineIndex >= from - 1 && line.includes(needle));
+    return index === -1 ? from : index + 1;
 }
 
 function buildRow(place: LintCommandPlace, command: string, search: CommandSearch, words = command): LintCommand[] {
@@ -208,11 +208,15 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
     const scripts = new Map(packages.flatMap(({ manifest }) => Object.entries(manifest.scripts)));
     const search = { ...input, scripts };
     const staged = [
-        ...packages.flatMap(({ place, manifest }) =>
-            manifest[LINT_STAGED_KEY].flatMap((command) =>
-                buildRow({ ...place, source: 'lint-staged' }, command, search),
-            ),
-        ),
+        ...packages.flatMap(({ place, manifest }) => {
+            const keyLine = findLine(place.text, `"${LINT_STAGED_KEY}"`);
+            return manifest[LINT_STAGED_KEY].flatMap((command) =>
+                buildRow({ ...place, source: 'lint-staged' }, command, search).map((row) => ({
+                    ...row,
+                    line: findLine(place.text, row.command, keyLine),
+                })),
+            );
+        }),
         ...places.filter(({ source }) => source === 'lint-staged').flatMap((place) => parseLineRows(place, search)),
     ];
     const preCommit = places
