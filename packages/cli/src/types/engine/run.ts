@@ -79,6 +79,7 @@ export type RunReport = {
     started: string;
     duration: number;
     checks: readonly CheckResult[];
+    skippedCount: Readonly<Partial<Record<NonNullable<CheckResult['cause']>, number>>>;
     ignores: readonly IgnoreRecord[];
     baselined: Readonly<Record<string, number>>;
     unstagedChanges: number;

@@ -77,6 +77,7 @@ export function buildEmptyRunReport(stage: RunOptions['stage'], started: Date, n
         started: started.toISOString(),
         duration,
         checks: [],
+        skippedCount: {},
         ignores: [],
         baselined: {},
         unstagedChanges: 0,
@@ -87,7 +88,8 @@ export function buildEmptyRunReport(stage: RunOptions['stage'], started: Date, n
 }
 
 /**
-Build the check results, detected configuration warning, and exit status of a finished run.
+Build the check results, detected configuration warning, and exit status of a finished run. Without --verbose, the
+report leaves out each check that no file selected, as the text does, and counts it under its cause.
 
 @param run the planned checks and their results.
 */
@@ -105,6 +107,10 @@ export function buildRunReport(run: FinishedRun): RunReport {
             check.check.help,
         ),
     );
+    const skipped = Map.groupBy(
+        checks.filter(({ status }) => status === 'skipped'),
+        ({ cause = 'no-files' }) => cause,
+    );
     const failed = listFailedChecks(checks, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
@@ -117,7 +123,10 @@ export function buildRunReport(run: FinishedRun): RunReport {
     return {
         ...(comparison !== undefined && { comparison }),
         ...buildEmptyRunReport(options.stage, started, notes),
-        checks: checks.map(({ reportNotes: _notes, span: _span, ...check }) => check),
+        checks: checks
+            .filter(({ cause }) => options.verbose === true || cause !== 'no-files')
+            .map(({ reportNotes: _notes, span: _span, ...check }) => check),
+        skippedCount: Object.fromEntries([...skipped].map(([cause, group]) => [cause, group.length])),
         ignores: session.settings.ignore,
         baselined,
         unstagedChanges: options.selection?.unstagedChanges ?? 0,

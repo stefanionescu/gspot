@@ -162,7 +162,7 @@ function formatSummary(report: RunReport): string {
     const failed = report.checks.filter((check) => check.status === 'failed');
     const passed = report.checks.filter((check) => check.status === 'passed').length;
     const off = report.checks.filter((check) => OFF_CAUSES.has(check.cause ?? '')).length;
-    const skipped = report.checks.filter((check) => check.status === 'skipped').length - off;
+    const skipped = Object.values(report.skippedCount).reduce((total, count) => total + count, 0) - off;
     const findings = failed.reduce((count, check) => count + check.findings.length, 0);
     const text = [
         ...(failed.length === 0

@@ -38,20 +38,25 @@ test('coverage stripping leaves your own checks and given arguments unchanged', 
     ]);
 });
 
-test('a project check with no matching files is skipped even when its scope holds another language', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python', 'bash']),
-        'source.sh': 'echo example\n',
-    });
+test.each([
+    { verbose: false, checks: [] },
+    { verbose: true, checks: [{ check: 'python/ruff', status: 'skipped', cause: 'no-files', findings: [] }] },
+])(
+    'a project check with no matching files is skipped even when its scope holds another language: verbose $verbose',
+    async ({ verbose, checks }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['python', 'bash']),
+            'source.sh': 'echo example\n',
+        });
 
-    const session = await openSession(sandbox.path);
-    const options = buildRunOptions({ only: ['python/ruff'] });
-    const result = await runChecks(session, options);
-    expect(result.report.exitCode).toBe(0);
-    expect(result.report.checks).toMatchObject([
-        { check: 'python/ruff', status: 'skipped', cause: 'no-files', findings: [] },
-    ]);
-});
+        const session = await openSession(sandbox.path);
+        const options = buildRunOptions({ only: ['python/ruff'], verbose });
+        const result = await runChecks(session, options);
+        expect(result.report.exitCode).toBe(0);
+        expect(result.report.checks).toMatchObject(checks);
+        expect(result.report.skippedCount).toStrictEqual({ 'no-files': 1 });
+    },
+);
 
 test.each([...SCOPE_WIDE_IGNORE_CASES])(
     'an ignore of a whole scope keeps the replaced check running there and nowhere else: $paths',

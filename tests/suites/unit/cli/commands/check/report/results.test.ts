@@ -158,6 +158,7 @@ test('the report prints planned skips once with their reason only in verbose out
     const skipped: RunReport = {
         ...FAILED_CHECK_REPORT,
         checks: [{ ...check, status: 'skipped', cause: 'condition', note: 'disabled', findings: [] }],
+        skippedCount: { condition: 1 },
     };
     expect(formatRunReport(skipped, { verbose: false })).not.toContain('bash/shellcheck');
     expect(formatRunReport(skipped, { verbose: true })).toContain('skipped  bash/shellcheck  disabled');

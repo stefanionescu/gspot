@@ -125,7 +125,8 @@ gspot neither computes nor includes those diffs.
 | `started`         | Start time as an ISO 8601 timestamp.                                                                                            |
 | `duration`        | Elapsed run time in milliseconds.                                                                                               |
 | `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference.                                    |
-| `checks`          | The result of every planned check, skipped ones included, with their findings.                                                  |
+| `checks`          | The result of each planned check, with its findings. A check that no file selects appears only with `--verbose`.                |
+| `skippedCount`    | The number of skipped checks for each `cause`, the checks that no file selects included.                                        |
 | `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                                                     |
 | `baselined`       | The findings that `gspot.baseline.json` subtracted, as a count per check.                                                       |
 | `unstagedChanges` | Number of changed files left out when the run reads the staging area.                                                           |
