@@ -144,7 +144,7 @@ export type Settings = Omit<
     scopes: Map<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
 };
 
-export type CommandCheck = Check & {
+type CommandCheck = Check & {
     command: string[];
     files: NonNullable<Check['files']>;
 };

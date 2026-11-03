@@ -3,18 +3,23 @@ import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
-import type { CommandCheck } from '#cli/types/settings.ts';
+import type { Session, ScopeCheck } from '#cli/types/tools.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import type { Session, ScopeCheck, LintRuleDocs } from '#cli/types/tools.ts';
 import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import type { CheckFacts, CheckIgnore, Explanation } from '#cli/types/commands/reports.ts';
 
+import type {
+    CheckFacts,
+    CheckIgnore,
+    Explanation,
+    CheckExplanation,
+    LintRuleExplanation,
+} from '#cli/types/commands/reports.ts';
 import {
     LINT_RULE_LABELS,
     REPOSITORY_COMMAND,
@@ -59,7 +64,6 @@ function buildCheckFacts(
     const crashPattern =
         toolName === undefined ? undefined : getTool(configurationsByName.values(), toolName).crash_pattern;
     return {
-        source: configuration === undefined ? REPOSITORY_COMMAND : `${configuration.name} configuration`,
         settings,
         ruleFiles,
         crashPattern,
@@ -75,51 +79,42 @@ function formatCheckIgnore(ignore: CheckIgnore): string {
     return `  ${target}: ${ignore.reason}  (undo: ${ignore.command})`;
 }
 
-function formatRepositoryUse(
-    session: Session | undefined,
-    commandCheck: CommandCheck | undefined,
-    configuration: Configuration | undefined,
-): string[] {
+function formatRepositoryUse(facts: CheckExplanation): string[] {
     const lines: string[] = [];
-    if (commandCheck !== undefined)
-        lines.push(`Command: ${quoteCommand(commandCheck.command)}`, `Paths: ${commandCheck.files.paths.join(', ')}`);
-    if (session && configuration !== undefined)
+    if (facts.command !== undefined)
+        lines.push(`Command: ${quoteCommand(facts.command)}`, `Paths: ${(facts.paths ?? []).join(', ')}`);
+    if (facts.selected !== undefined)
         lines.push(
-            isConfigurationSelected(session.scopes, configuration.name)
+            facts.selected
                 ? SELECTED_YES_MESSAGE
-                : `Selected in this repository: no (gspot add ${configuration.name})`,
+                : `Selected in this repository: no (gspot add ${String(facts.configuration)})`,
         );
+    if (facts.ignores.length > 0)
+        lines.push('Ignored in this repository:', ...facts.ignores.map((ignore) => formatCheckIgnore(ignore)));
     return lines;
 }
 
-function formatCheckExplanation(
-    session: Session | undefined,
-    found: Pick<ScopeCheck, 'check' | 'configuration'>,
-    commandCheck: CommandCheck | undefined,
-    facts: CheckFacts,
-): string {
-    const { check, configuration } = found;
-    const { source, settings, ruleFiles, minVersions } = facts;
+function formatCheckExplanation(facts: CheckExplanation): string {
+    const { settings, ruleFiles, minVersions } = facts;
+    const source = facts.configuration === undefined ? REPOSITORY_COMMAND : `${facts.configuration} configuration`;
     const lines = [
-        `${check.id}  (${source}, ${check.stage} stage, ${check.level} level)`,
+        `${facts.check}  (${source}, ${facts.stage} stage, ${facts.level} level)`,
         '',
-        `What it looks for: ${check.summary.replaceAll(CODE_MARK, '')}`,
-        `Why it matters: ${check.why.replaceAll(CODE_MARK, '')}`,
-        `What to do: ${check.help.replaceAll(CODE_MARK, '')}`,
-        ...(check.when?.setting === undefined ? [] : [`Required setting: ${check.when.setting}`]),
+        `What it looks for: ${facts.summary.replaceAll(CODE_MARK, '')}`,
+        `Why it matters: ${facts.why.replaceAll(CODE_MARK, '')}`,
+        `What to do: ${facts.help.replaceAll(CODE_MARK, '')}`,
+        ...(facts.condition?.setting === undefined ? [] : [`Required setting: ${facts.condition.setting}`]),
         ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer.`),
         '',
         ASK_BEFORE_TURNING_OFF,
         `Turn it off for some paths: ${facts.turnOff.paths}`,
         ...(facts.turnOff.rule === undefined ? [] : [`Turn one of its lint rules off: ${facts.turnOff.rule}`]),
-        ...(check.run_in_copy === true ? [RUN_IN_COPY_MESSAGE] : []),
+        ...(facts.runInCopy === true ? [RUN_IN_COPY_MESSAGE] : []),
         ...(settings.length === 0
             ? []
             : [`Settings that change it: ${settings.join(', ')} (gspot set <setting> <value>)`]),
         ...(ruleFiles.length === 0 ? [] : [`Rule files that state it: ${ruleFiles.join(', ')}`]),
-        ...formatRepositoryUse(session, commandCheck, configuration),
-        ...(facts.ignores.length === 0 ? [] : ['Ignored in this repository:']),
-        ...facts.ignores.map((ignore) => formatCheckIgnore(ignore)),
+        ...formatRepositoryUse(facts),
     ];
     return `${lines.join('\n')}\n`;
 }
@@ -133,41 +128,35 @@ function formatBuiltinRuleIgnore(check: Check): string | undefined {
         : `gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(rule)} --reason "<why>"`;
 }
 
-function formatRuleOptions(tool: string | undefined, identifier: string, configuration: Configuration): string[] {
-    if (tool === undefined) return [];
+function formatRuleOptions(
+    tool: string | undefined,
+    identifier: string,
+    configuration: Configuration,
+): string | undefined {
+    if (tool === undefined) return undefined;
     const key = `tools.${tool}.rules`;
     const settings = SETTINGS_BY_CONFIGURATION.get(configuration.name);
-    if (settings?.some((setting) => setting.name === key) !== true) return [];
+    if (settings?.some((setting) => setting.name === key) !== true) return undefined;
     const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
-    return [`Change its options: gspot set ${quoteArgument(key)} ${ruleExample}`];
+    return `gspot set ${quoteArgument(key)} ${ruleExample}`;
 }
 
-function formatLintRuleLines(
-    found: { check: Check; configuration: Configuration },
-    rule: {
-        tool: string | undefined;
-        identifier: string;
-        page: string | undefined;
-        docs: LintRuleDocs;
-        verbose: boolean;
-    },
-): string[] {
-    const { check, configuration } = found;
-    const { tool, identifier, page, docs } = rule;
-    const optionLines = formatRuleOptions(tool, identifier, configuration);
-    const pageLines = page === undefined ? [] : [`The tool's page: ${page}`];
-    if (page === undefined && tool !== undefined) pageLines.push(`Read the ${tool} documentation for ${identifier}.`);
+function formatLintRuleLines(facts: LintRuleExplanation): string[] {
+    const { tool, rule, page } = facts;
+    const pageLines = page === null ? [] : [`The tool's page: ${page}`];
+    if (page === null && tool !== undefined) pageLines.push(`Read the ${tool} documentation for ${rule}.`);
+    const docs = { ...facts, description: facts.description ?? undefined };
     return [
-        `${check.id} ${identifier}`,
+        `${facts.check} ${rule}`,
         '',
         ...LINT_RULE_LABELS.flatMap(([key, label]) => (docs[key] === undefined ? [] : [`${label}: ${docs[key]}`])),
-        ...(rule.verbose && docs.explanation !== undefined ? ['', docs.explanation] : []),
+        ...(facts.explanation === undefined ? [] : ['', facts.explanation]),
         ...pageLines,
         '',
         'Ask the user before you turn a rule off (SUPPRESSIONS.md).',
-        `Turn it off everywhere: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --reason "<why>"`,
-        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --paths "<path>" --reason "<why>"`,
-        ...optionLines,
+        `Turn it off everywhere: ${facts.turnOff.everywhere}`,
+        `Turn it off for some paths: ${facts.turnOff.paths}`,
+        ...(facts.changeOptions === undefined ? [] : [`Change its options: ${facts.changeOptions}`]),
     ];
 }
 
@@ -185,6 +174,39 @@ function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
     return found;
 }
 
+function buildCheckExplanation(
+    found: Pick<ScopeCheck, 'check' | 'configuration'>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
+    session: Session | undefined,
+): CheckExplanation {
+    const { check, configuration } = found;
+    const described = buildCheckFacts(check, configuration, configurationsByName, session);
+    const selected =
+        session === undefined || configuration === undefined
+            ? undefined
+            : isConfigurationSelected(session.scopes, configuration.name);
+    return {
+        check: check.id,
+        ...(configuration === undefined
+            ? { command: check.command, paths: check.files?.paths }
+            : { configuration: configuration.name }),
+        stage: check.stage,
+        level: check.level,
+        summary: check.summary,
+        why: check.why,
+        help: check.help,
+        condition: check.when,
+        crashPattern: described.crashPattern,
+        runInCopy: check.run_in_copy,
+        minVersions: described.minVersions,
+        turnOff: { ...described.turnOff, rule: described.turnOff.rule ?? formatBuiltinRuleIgnore(check) },
+        settings: described.settings,
+        ruleFiles: described.ruleFiles,
+        ...(selected !== undefined && { selected }),
+        ignores: described.ignores,
+    };
+}
+
 /**
 Explain a shipped check or a command check.
 
@@ -199,31 +221,8 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
         listChecksById(configurationsByName.values()).get(checkId) ??
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;
-    const { check, configuration } = found;
-    const facts = buildCheckFacts(check, configuration, configurationsByName, session);
-    facts.turnOff.rule ??= formatBuiltinRuleIgnore(check);
-    return {
-        kind: 'check',
-        subject: checkId,
-        text: formatCheckExplanation(session, found, commandCheck, facts),
-        facts: {
-            check: checkId,
-            ...(configuration === undefined
-                ? { command: check.command, paths: check.files?.paths }
-                : { configuration: configuration.name }),
-            stage: check.stage,
-            level: check.level,
-            summary: check.summary,
-            why: check.why,
-            help: check.help,
-            condition: check.when,
-            crashPattern: facts.crashPattern,
-            runInCopy: check.run_in_copy,
-            settings: facts.settings,
-            ruleFiles: facts.ruleFiles,
-            ignores: facts.ignores,
-        },
-    };
+    const facts = buildCheckExplanation(found, configurationsByName, session);
+    return { kind: 'check', subject: checkId, text: formatCheckExplanation(facts), facts };
 }
 
 /**
@@ -252,22 +251,27 @@ export async function explainLintRule(
         : undefined;
     const docs = await readCheckRuleDocs(root, found.check, identifier, session);
     if (docs === undefined) return undefined;
-    const page = docs.url;
-    const lines = formatLintRuleLines(found, { tool, identifier, page, docs, verbose: verbose === true });
+    const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;
+    const facts: LintRuleExplanation = {
+        tool,
+        rule: identifier,
+        check: found.check.id,
+        page: docs.url ?? null,
+        description: docs.description ?? null,
+        why: docs.why,
+        fix: docs.fix,
+        example: docs.example,
+        explanation: verbose === true ? docs.explanation : undefined,
+        turnOff: {
+            everywhere: `${ignore} --reason "<why>"`,
+            paths: `${ignore} --paths "<path>" --reason "<why>"`,
+        },
+        changeOptions: formatRuleOptions(tool, identifier, found.configuration),
+    };
     return {
         kind: 'lint-rule',
         subject: `${checkId} ${identifier}`,
-        text: `${lines.join('\n')}\n`,
-        facts: {
-            tool,
-            rule: identifier,
-            check: found.check.id,
-            page: page ?? null,
-            description: docs.description ?? null,
-            why: docs.why,
-            fix: docs.fix,
-            example: docs.example,
-            explanation: verbose === true ? docs.explanation : undefined,
-        },
+        text: `${formatLintRuleLines(facts).join('\n')}\n`,
+        facts,
     };
 }

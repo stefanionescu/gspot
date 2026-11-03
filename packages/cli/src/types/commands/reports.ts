@@ -118,7 +118,7 @@ export type Explanation = { subject: string; text: string } & (
     | { kind: 'path'; facts: PathExplanation }
 );
 
-type CheckExplanation = {
+export type CheckExplanation = {
     check: string;
     configuration?: string;
     command?: readonly string[] | undefined;
@@ -131,12 +131,15 @@ type CheckExplanation = {
     condition: Check['when'];
     crashPattern: string | undefined;
     runInCopy: boolean | undefined;
+    minVersions: Record<string, string>;
+    turnOff: CheckDescription['turnOff'];
     settings: string[];
     ruleFiles: string[];
+    selected?: boolean;
     ignores: CheckIgnore[];
 };
 
-type LintRuleExplanation = {
+export type LintRuleExplanation = {
     tool: string | undefined;
     rule: string;
     check: string;
@@ -146,6 +149,8 @@ type LintRuleExplanation = {
     fix: string | undefined;
     example: string | undefined;
     explanation: string | undefined;
+    turnOff: { everywhere: string; paths: string };
+    changeOptions: string | undefined;
 };
 
 type SettingExplanation = {
@@ -206,7 +211,6 @@ export type ConfigurationExplanation = {
 
 export type CheckFacts = {
     turnOff: CheckDescription['turnOff'];
-    source: string;
     settings: string[];
     ruleFiles: string[];
     crashPattern: string | undefined;

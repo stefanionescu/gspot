@@ -192,37 +192,42 @@ after its check, such as `gspot explain javascript/eslint no-console --json`.
 
 ### `check`
 
-| Field           | Meaning                                                                       |
-| --------------- | ----------------------------------------------------------------------------- |
-| `check`         | The check ID.                                                                 |
-| `configuration` | When present, the configuration of a shipped check.                           |
-| `command`       | When present, the command of a `[[command_check]]`.                           |
-| `paths`         | When present, the paths of a `[[command_check]]`.                             |
-| `stage`         | The stage that runs the check.                                                |
-| `level`         | The level that turns the check on.                                            |
-| `summary`       | What the check looks for.                                                     |
-| `why`           | Why it matters.                                                               |
-| `help`          | How to fix a finding.                                                         |
-| `condition`     | When present, what must hold for the check to run.                            |
-| `crashPattern`  | When present, the output that marks a crash of the tool.                      |
-| `runInCopy`     | When present, whether the check runs on a copy of the files.                  |
-| `settings`      | The settings that change the check.                                           |
-| `ruleFiles`     | The rule files that state the check.                                          |
-| `ignores`       | The ignores of `gspot.toml` that name the check, with `reason` and `command`. |
+| Field           | Meaning                                                                        |
+| --------------- | ------------------------------------------------------------------------------ |
+| `check`         | The check ID.                                                                  |
+| `configuration` | When present, the configuration of a shipped check.                            |
+| `command`       | When present, the command of a `[[command_check]]`.                            |
+| `paths`         | When present, the paths of a `[[command_check]]`.                              |
+| `stage`         | The stage that runs the check.                                                 |
+| `level`         | The level that turns the check on.                                             |
+| `summary`       | What the check looks for.                                                      |
+| `why`           | Why it matters.                                                                |
+| `help`          | How to fix a finding.                                                          |
+| `condition`     | When present, what must hold for the check to run.                             |
+| `crashPattern`  | When present, the output that marks a crash of the tool.                       |
+| `runInCopy`     | When present, whether the check runs on a copy of the files.                   |
+| `minVersions`   | The oldest version of each runtime or tool that the check needs.               |
+| `turnOff`       | The `gspot ignore` command for some paths, and for one lint rule when present. |
+| `settings`      | The settings that change the check.                                            |
+| `ruleFiles`     | The rule files that state the check.                                           |
+| `selected`      | When present, whether a scope selects the configuration of the check.          |
+| `ignores`       | The ignores of `gspot.toml` that name the check, with `reason` and `command`.  |
 
 ### `lint-rule`
 
-| Field         | Meaning                                                      |
-| ------------- | ------------------------------------------------------------ |
-| `tool`        | When present, the tool that reports the rule.                |
-| `rule`        | The rule ID.                                                 |
-| `check`       | The check that runs the rule.                                |
-| `page`        | The rule's documentation link, or `null`.                    |
-| `description` | The rule's description, or `null`.                           |
-| `why`         | When present, why the rule matters.                          |
-| `fix`         | When present, how to fix a finding.                          |
-| `example`     | When present, an example.                                    |
-| `explanation` | When present, the full explanation, which needs `--verbose`. |
+| Field           | Meaning                                                                      |
+| --------------- | ---------------------------------------------------------------------------- |
+| `tool`          | When present, the tool that reports the rule.                                |
+| `rule`          | The rule ID.                                                                 |
+| `check`         | The check that runs the rule.                                                |
+| `page`          | The rule's documentation link, or `null`.                                    |
+| `description`   | The rule's description, or `null`.                                           |
+| `why`           | When present, why the rule matters.                                          |
+| `fix`           | When present, how to fix a finding.                                          |
+| `example`       | When present, an example.                                                    |
+| `explanation`   | When present, the full explanation, which needs `--verbose`.                 |
+| `turnOff`       | The `gspot ignore` commands for the rule, `everywhere` and for some `paths`. |
+| `changeOptions` | When present, the `gspot set` command that changes the options of the rule.  |
 
 ### `configuration`
 

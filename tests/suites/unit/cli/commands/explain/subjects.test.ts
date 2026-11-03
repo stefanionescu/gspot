@@ -182,6 +182,22 @@ test('explain of a check says whether its configuration is selected and names th
     ).toStrictEqual(['Selected in this repository: no (gspot add docker)']);
 });
 
+test.each([
+    { subject: ['bash/shellcheck'], fields: { kind: 'check', selected: true } },
+    { subject: ['data-files/yaml', 'documents'], fields: { kind: 'lint-rule' } },
+])('explain --json carries each command that its text prints: $subject', async ({ subject, fields }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash', 'data-files']) });
+    const text = await runGspot(sandbox.path, ['explain', ...subject]);
+    const json = await runGspot(sandbox.path, ['explain', ...subject, '--json']);
+    expect(json.code, json.stderr).toBe(0);
+    const commands = text.stdout
+        .split('\n')
+        .flatMap((line) => /: (?<command>gspot .+)$/u.exec(line)?.groups?.['command'] ?? []);
+    expect(commands.length).toBeGreaterThan(1);
+    for (const command of commands) expect(json.stdout).toContain(JSON.stringify(command).slice(1, -1));
+    expect(JSON.parse(json.stdout)).toMatchObject(fields);
+});
+
 test('explain --json reports every field of a configuration', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['explain', 'engineering', '--json']);
