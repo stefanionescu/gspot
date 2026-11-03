@@ -45,6 +45,13 @@ import { buildRuffFile, buildBasedpyrightFile } from '#cli/configurations/langua
 import { buildTrivyFile, buildHadolintFile } from '#cli/configurations/infrastructure/docker/generate.ts';
 
 import {
+    VOCAB_LINE,
+    TOKEN_IGNORES,
+    MIN_ALERT_LINE,
+    VALE_STYLES_PATH,
+    ALL_FILES_SECTION,
+} from '#cli/config/tools/vale.ts';
+import {
     buildPrettierFile,
     buildEditorconfigFile,
     buildPrettierignoreFile,
@@ -81,6 +88,16 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'format/.editorconfig': buildEditorconfigFile,
     'prose/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
     'prose/vale.ini': buildValeIniFile,
+    'prose/commit-message.ini': (planned) =>
+        [
+            `StylesPath = ${relative(dirname(planned.targetPath), VALE_STYLES_PATH)}`,
+            MIN_ALERT_LINE,
+            VOCAB_LINE,
+            '',
+            ALL_FILES_SECTION,
+            'BasedOnStyles = gspot',
+            `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
+        ].join('\n'),
     'prose/styles/gspot/heading-case.yml': buildHeadingCaseStyle,
     'prose/styles/gspot/paragraph-length.yml': (planned) => buildLengthStyle(planned, 'paragraph'),
     'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,

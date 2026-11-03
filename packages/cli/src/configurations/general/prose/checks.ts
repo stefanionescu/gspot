@@ -147,17 +147,16 @@ Runs the word rules on a new commit message, with the comment lines that Git add
 */
 export async function checkCommitMessage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (planned.messageFile === undefined) return [];
-    if (!hasValePackages(session.toolsRoot)) throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
     const { text, prefix } = await readCommitMessage(session, planned.messageFile);
     const lines = text.split('\n').map((line) => (line.startsWith(prefix) ? '' : line));
-    const folder = dirname(join(session.root, GSPOT_PATHS.valeConfig));
+    const folder = dirname(join(session.root, GSPOT_PATHS.valeMessageConfig));
     const result = await runCheckTool(
         session,
         planned,
         [
             VALE_TOOL,
             CONFIG_FLAG,
-            join(session.root, GSPOT_PATHS.valeConfig),
+            join(session.root, GSPOT_PATHS.valeMessageConfig),
             ...VALE_ARGUMENTS,
             '--ext=.md',
             `--filter=.Name in ${JSON.stringify(VALE_MESSAGE_RULES)}`,

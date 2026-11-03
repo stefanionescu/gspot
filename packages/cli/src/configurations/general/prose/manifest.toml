@@ -24,6 +24,11 @@ tool = "vale"
 
 [[config_file]]
 level = "all"
+target = "commit-message.ini"
+tool = "vale"
+
+[[config_file]]
+level = "all"
 target = "styles/gspot/acronyms.yml"
 tool = "vale"
 

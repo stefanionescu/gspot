@@ -124,6 +124,26 @@ test('the Vale check fails before running Vale when the Vale packages are not in
     expect(run).not.toHaveBeenCalled();
 });
 
+test('prose/commit-message runs Vale with the config of the gspot style alone, without the Vale packages', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+    });
+    const messageFile = join(sandbox.path, '.git', 'COMMIT_EDITMSG');
+    await writeFile(messageFile, 'fix(cli): keep the file\n\nRetry it.\n');
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
+    const valeResult = buildProcessResult({ stdout: JSON.stringify({ 'stdin.md': [VALE_ALERT] }) });
+    const run = resources.use(fakeCommands().mockResolvedValue(valeResult));
+    const planned = { ...planSandboxCheck(session, 'prose/commit-message'), messageFile };
+    const findings = await getBuiltInCheck('prose/commit-message')(session, planned);
+    expect(run.mock.calls.map(([command]) => command.slice(1, 3))).toStrictEqual([
+        ['--config', join(session.root, GSPOT_PATHS.valeMessageConfig)],
+    ]);
+    expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+        { file: '', rule: VALE_ALERT.Check, message: `Line 1: ${VALE_ALERT.Message}` },
+    ]);
+});
+
 test('prose/dates reports dates in Markdown text and code comments, not in code', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'markdown', 'typescript']),
