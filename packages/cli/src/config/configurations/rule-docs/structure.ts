@@ -65,15 +65,16 @@ export const IMPORT_RULE_DOCS = {
 
 export const TRIVIAL_FUNCTION_RULE_DOCS = {
     [TRIVIAL_FUNCTION_RULES.trivialFunction]: {
-        description: 'A named function has more statements than `limits.<language>.min_function_statements`.',
+        description:
+            'A named function has `limits.<language>.min_function_statements` statements or fewer, and one place in the scope calls it at most.',
         why: 'A function of one or two statements adds a name to read and hides the code that it calls.',
-        fix: 'Move the body into each caller, and delete the function. When a framework calls it by name, ignore the finding.',
-        example: '`function getName(user) { return user.name; }` reports `trivial-function`.',
+        fix: 'Move the body into its caller, and delete the function. When a framework calls it by name, ignore the finding.',
+        example: 'A Python `def full_name(user): return user.name` that one line calls reports `trivial-function`.',
     },
     [TRIVIAL_FUNCTION_RULES.trivialFile]: {
-        description: 'A file holds code of its own, not only imports and re-exports.',
+        description: 'A file holds only imports, re-exports, and aliases, and no code of its own.',
         why: 'A file that only forwards code adds a step between the caller and the code.',
         fix: 'Point each import at the module that defines the code, then delete the file.',
-        example: 'A `user/index.ts` that holds only `export * from "./user.ts";` reports `trivial-file`.',
+        example: 'A Python `shop/models.py` that holds only `from .cart import Cart` reports `trivial-file`.',
     },
 } as const satisfies Readonly<Record<string, LintRuleDocs>>;
