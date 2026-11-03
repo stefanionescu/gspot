@@ -101,3 +101,22 @@ test('astro check reads a TypeScript diagnostic from colored output, and its cra
     );
     expect(crashed).toStrictEqual({ note: 'astro/astro-check failed with exit 1:\nResult (1 file): \n- 1 error' });
 });
+
+test.each([
+    { name: 'a module of a tool that fails to load', advice: true },
+    { name: 'a tool that fails at run time', advice: false },
+])('a crash note names gspot install only for $name', async ({ advice }) => {
+    await using sandbox = await testdir();
+    const check = { ...BASE_CHECK, exit_codes: [2] };
+    const module = `file://${sandbox.path}/.gspot/node_modules/prettier/internal/cli.mjs:12`;
+    const stderr = advice
+        ? `${module}\nSyntaxError: The requested module '../index.mjs' does not provide an export named 'format'\n    at ModuleJob._instantiate (node:internal/modules/esm/module_job:180:21)\n`
+        : `${module}\nTypeError: Cannot read properties of undefined\n    at run (${module}:4)\n`;
+    const note = parseCommandFindings(
+        { check },
+        buildProcessResult({ code: 1, stderr }),
+        { cwd: sandbox.path, root: sandbox.path },
+        {},
+    ).note;
+    expect(note?.endsWith('\nA tool in .gspot/node_modules failed to load. Run gspot install.')).toBe(advice);
+});

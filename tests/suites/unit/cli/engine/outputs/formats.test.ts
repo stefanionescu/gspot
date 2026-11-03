@@ -279,3 +279,26 @@ test.each([false, true])(
         ]);
     },
 );
+
+test('an unexplained failure of a tool that fails to load ends with gspot install', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'source.js': 'export const ready = true;\n',
+    });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'commit', only: ['format/prettier'] })[0]!;
+    const state: CommandRun = { root: sandbox.path, cwd: sandbox.path, findings: [], failed: false };
+    const stderr = `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '${sandbox.path}/.gspot/node_modules/prettier/index.mjs'\n`;
+    addCommandLine(
+        planned,
+        getTool(readConfigurations().values(), 'prettier'),
+        {
+            commandLine: { commandArguments: ['prettier'] },
+            result: buildProcessResult({ code: 1, stderr }),
+            findings: [],
+        },
+        state,
+    );
+    expect(state.findings.map(({ message }) => message)).toStrictEqual([
+        `${stderr.trim()}\nA tool in .gspot/node_modules failed to load. Run gspot install.`,
+    ]);
+});

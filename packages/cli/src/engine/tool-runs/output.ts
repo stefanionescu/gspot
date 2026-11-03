@@ -2,6 +2,7 @@ import { statSync } from 'node:fs';
 import { CheckStop } from '#cli/system/errors.ts';
 import { measureSpan } from '#cli/engine/results.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -28,6 +29,25 @@ import type {
     CommandLineOutput,
 } from '#cli/types/engine/tool-runs.ts';
 
+// Node prints one of these when a module fails to resolve or parse, before the tool runs.
+const MODULE_FAILURE =
+    /\b(?:ERR_MODULE_NOT_FOUND|MODULE_NOT_FOUND|ERR_REQUIRE_ESM|ERR_PACKAGE_PATH_NOT_EXPORTED|ERR_UNSUPPORTED_DIR_IMPORT|ERR_INVALID_PACKAGE_CONFIG)\b|Cannot find (?:module|package)|does not provide an export named|^SyntaxError: /mu;
+
+const BROKEN_TOOL_ADVICE = `A tool in ${GSPOT_PATHS.nodeModules} failed to load. Run gspot install.`;
+
+/**
+End a crash message with the install command when a module under the tool folder failed to load, because install
+replaces a damaged or partial tool there.
+
+@param text the crash message.
+@param result the output that names the module.
+*/
+function addInstallAdvice(text: string, result: Pick<SpawnResult, 'stdout' | 'stderr'>): string {
+    const output = `${result.stderr}\n${result.stdout}`.replaceAll('\\', '/');
+    const isBrokenTool = MODULE_FAILURE.test(output) && output.includes(`${GSPOT_PATHS.nodeModules}/`);
+    return isBrokenTool ? `${text}\n${BROKEN_TOOL_ADVICE}` : text;
+}
+
 function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, file: string | undefined): Finding {
     const emptyOutputText = `${tool.name} exited ${String(result.code)}`;
     let text: string;
@@ -41,7 +61,7 @@ function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, 
     return {
         check: check.id,
         file: file === undefined ? '' : convertToPosixPath(file),
-        message: text,
+        message: addInstallAdvice(text, result),
         help: check.help,
         fixable: false,
     };
@@ -72,7 +92,7 @@ function formatCrash(planned: OutputCheck, result: SpawnResult, options: { verbo
     const failure = `${planned.tool?.name ?? planned.check.id} failed with exit ${String(result.code)}`;
     const errors = options.verbose === true ? '' : formatOutputTail({ stdout: '', stderr: result.stderr }, '', options);
     const detail = errors === '' ? formatOutputTail(result, '', options) : errors;
-    return detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`;
+    return detail === '' ? `${failure} and printed nothing.` : addInstallAdvice(`${failure}:\n${detail}`, result);
 }
 
 function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {
