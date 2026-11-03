@@ -22,7 +22,9 @@ test('install downloads the grammars of the repository once, and refuses other b
         Object.assign(() => Promise.resolve(new Response('other bytes')), { preconnect: fetch.preconnect }),
     );
     const refused = await captureRejection(installGrammars(install));
-    expect(refused.message).toBe('The bash grammar failed SHA-256 verification.');
+    expect(refused.message).toBe(
+        'The bash grammar failed SHA-256 verification, so gspot kept no copy. Run gspot install again, and check that no proxy rewrites the download.',
+    );
     expect(existsSync(join(cache.path, 'gspot/grammars/bash.wasm'))).toBe(false);
     request.mockImplementation(
         Object.assign(() => Promise.resolve(new Response(bytes)), { preconnect: fetch.preconnect }),

@@ -31,7 +31,8 @@ test('apply starts no npm, and install reports a failed npm version lookup', asy
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
     expect(JSON.parse(structured.stdout)).toMatchObject({
         error: 'install',
-        message: 'Cannot determine the npm version for the tool project.',
+        message:
+            'Cannot determine the npm version for the tool project. Check that npm --version runs in the repository, then run gspot install again.',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

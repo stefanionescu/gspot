@@ -125,7 +125,10 @@ export function listWorkspaceFolders(root: string): string[] {
     const packages = listWorkspacePackages(root);
     for (const found of packages)
         if (findContainedPath(root, found.relativeDir) === undefined)
-            throw new GspotError('filesystem', `Workspace package leaves the repository: ${found.relativeDir}`);
+            throw new GspotError(
+                'filesystem',
+                `Workspace package ${found.relativeDir} leaves the repository. Remove it from the workspace list, or replace the link with a folder in the repository.`,
+            );
     return packages.map((found) => convertToPosixPath(found.relativeDir)).filter((path) => path !== '' && path !== '.');
 }
 

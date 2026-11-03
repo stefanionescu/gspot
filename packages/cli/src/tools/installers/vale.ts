@@ -57,7 +57,7 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
         if (sha256 !== release.sha256)
             throw new GspotError(
                 'install',
-                `The Vale package ${name} failed SHA-256 verification. gspot kept the installed packages.`,
+                `The Vale package ${name} failed SHA-256 verification. gspot kept the installed packages. Run gspot install again, and check that no proxy rewrites the download.`,
             );
         const path = join(folder, `${name}.zip`);
         writeFileSync(path, bytes);

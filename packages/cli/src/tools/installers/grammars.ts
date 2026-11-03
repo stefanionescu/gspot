@@ -46,7 +46,10 @@ export async function downloadGrammar(grammar: GrammarName, session: DownloadSes
     if (existsSync(path) && createHash('sha256').update(readFileSync(path)).digest('hex') === sha256) return false;
     const bytes = await downloadArchive(session, { url, name: grammar, limit: GRAMMAR_ARCHIVE_LIMIT });
     if (createHash('sha256').update(bytes).digest('hex') !== sha256)
-        throw new GspotError('install', `The ${grammar} grammar failed SHA-256 verification.`);
+        throw new GspotError(
+            'install',
+            `The ${grammar} grammar failed SHA-256 verification, so gspot kept no copy. Run gspot install again, and check that no proxy rewrites the download.`,
+        );
     mkdirSync(dirname(path), { recursive: true });
     replaceBoundedFile({ root: dirname(path) }, basename(path), { bytes, mode: OWNER_WRITABLE_FILE });
     return true;

@@ -36,7 +36,7 @@ test.each([...OUTSIDE_WORKSPACE_FILES])(
 
         const root = join(sandbox.path, 'project');
         await symlink('../../outside', join(root, 'packages/linked'), 'dir');
-        expect(() => listWorkspaceFolders(root)).toThrow(`Workspace package leaves the repository: ${join(escaped)}`);
+        expect(() => listWorkspaceFolders(root)).toThrow(`Workspace package ${join(escaped)} leaves the repository.`);
         expect(listWorkspaceFolders(join(root, 'packages'))).toStrictEqual([]);
     },
 );

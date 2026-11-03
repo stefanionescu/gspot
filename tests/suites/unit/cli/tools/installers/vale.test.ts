@@ -99,7 +99,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     const install = await buildSandboxToolInstall(session, writer);
     const error = await captureRejection(installValePackages(install, [miseBin]));
     expect(error.message).toBe(
-        'The Vale package Google failed SHA-256 verification. gspot kept the installed packages.',
+        'The Vale package Google failed SHA-256 verification. gspot kept the installed packages. Run gspot install again, and check that no proxy rewrites the download.',
     );
     expect(install.steps).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(

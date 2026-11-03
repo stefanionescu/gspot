@@ -141,7 +141,10 @@ export async function readPackageManagerVersion(
             timeoutSeconds,
         });
         if (result.code !== 0)
-            throw new GspotError('install', `Cannot determine the ${name} version for the tool project.`);
+            throw new GspotError(
+                'install',
+                `Cannot determine the ${name} version for the tool project. Check that ${name} --version runs in the repository, then run gspot install again.`,
+            );
         const parsed = packageManagerSchema.safeParse({ name, version: result.stdout.trim() });
         if (!parsed.success)
             throw new GspotError(
