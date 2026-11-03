@@ -150,6 +150,7 @@ export type StaleFile = {
 export type CheckGeneration = {
     buildConfigs: (session: Session) => ConfigTargets;
     listStaleFiles: (session: Session, options: Pick<CheckRunOptions, 'verbose'>) => StaleFile[];
+    listWrittenPaths: (session: Session) => string[];
 };
 
 export type CheckSession = Session & {

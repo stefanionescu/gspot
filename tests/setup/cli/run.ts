@@ -3,6 +3,8 @@ import type { Session } from '#cli/types/tools.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { convertToGlobs } from '#cli/configurations/ignores.ts';
+import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -61,6 +63,8 @@ The production generators, called only when a check needs their output.
 export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,
     listStaleFiles: (session, options) => listStaleFiles(session, buildGeneratedFiles(session), options),
+    listWrittenPaths: (session) =>
+        convertToGlobs(buildIgnoreSections(session, buildConfigs(session)).filter(({ key }) => key === 'gspot')),
 };
 
 /**

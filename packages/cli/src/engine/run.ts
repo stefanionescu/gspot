@@ -50,6 +50,10 @@ import {
 
 const DOCKER_AVAILABILITY = Symbol('docker availability');
 
+const WRITTEN_FILES = Symbol('written files');
+
+const GSPOT_CHECK_PREFIX = 'gspot/';
+
 async function findMissingDocker(
     session: CheckSession,
     planned: PlannedCheck,
@@ -117,15 +121,26 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
     }
 }
 
+function findWrittenFile(run: Run, result: CheckResult): (path: string) => boolean {
+    const { session } = run;
+    if (result.findings.length === 0 || result.check.startsWith(GSPOT_CHECK_PREFIX)) return () => false;
+    return remember(session.cache, WRITTEN_FILES, session.root, () =>
+        buildPathMatcher(session.generation.listWrittenPaths(session)),
+    );
+}
+
 function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
     const { ignore } = run.session.settings;
-    const kept = result.findings.filter((finding) =>
-        ignore.every((record) => {
-            const isOtherFinding = (['check', 'rule'] as const).some(
-                (key) => record[key] !== undefined && record[key] !== finding[key],
-            );
-            return isOtherFinding || (record.paths !== undefined && !buildPathMatcher(record.paths)(finding.file));
-        }),
+    const isWritten = findWrittenFile(run, result);
+    const kept = result.findings.filter(
+        (finding) =>
+            !isWritten(finding.file) &&
+            ignore.every((record) => {
+                const isOtherFinding = (['check', 'rule'] as const).some(
+                    (key) => record[key] !== undefined && record[key] !== finding[key],
+                );
+                return isOtherFinding || (record.paths !== undefined && !buildPathMatcher(record.paths)(finding.file));
+            }),
     );
     const { findings } = subtractBaseline({ ...result, findings: kept }, run);
     if (result.status !== 'passed' && result.status !== 'failed') return { ...result, findings };
