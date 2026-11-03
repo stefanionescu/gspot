@@ -57,6 +57,8 @@ export const NPM_TOOL = 'npm';
 
 export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';
 
+export const GSPOT_PACKAGES = ['@gspothq/cli', '@gspothq/eslint-plugin'] as const;
+
 export const GSPOT_MISE_OPTIONS = { allow_low_downloads: 'true' } as const;
 
 export const JSON_INDENT_PATTERN = /^[\t ]+(?=")/mu;

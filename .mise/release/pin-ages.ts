@@ -3,8 +3,9 @@ import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
+import { MILLISECONDS_PER_DAY } from '#cli/config/tools/installers.ts';
 import { generalTableSchemas } from '#cli/schemas/settings/general.ts';
-import { GSPOT_PACKAGES, MILLISECONDS_PER_DAY } from '#cli/config/tools/installers.ts';
 
 type PinRelease = { pin: string; released: number };
 

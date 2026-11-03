@@ -8,6 +8,7 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
 import type { PackageJson, DependencyFile } from '#cli/types/parsers.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
@@ -88,7 +89,8 @@ export function readPackageJson(source: string | RunCache, path: string): Packag
 }
 
 /**
-List the tool-only packages: each package.json that holds only declared npm tools and Git hook packages.
+List the tool-only packages: each package.json that holds only declared npm tools, Git hook packages, and the gspot
+packages that init pins.
 
 @param dependencyFiles the parsed files.
 @param configurations the configurations that declare the npm tools.
@@ -103,7 +105,15 @@ export function listToolOnlyPackages(
             .filter((dependencyFile) => {
                 if (dependencyFile.kind !== PACKAGE_JSON) return false;
                 const names = Object.keys(dependencyFile.installed);
-                return names.length > 0 && names.every((name) => npmNames.has(name) || HOOK_PACKAGES.has(name));
+                return (
+                    names.length > 0 &&
+                    names.every(
+                        (name) =>
+                            npmNames.has(name) ||
+                            HOOK_PACKAGES.has(name) ||
+                            (GSPOT_PACKAGES as readonly string[]).includes(name),
+                    )
+                );
             })
             .map((dependencyFile) => dependencyFile.path),
     );

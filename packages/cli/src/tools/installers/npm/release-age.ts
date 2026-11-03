@@ -2,7 +2,8 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import type { PackageManager } from '#cli/types/repository.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-import { GSPOT_PACKAGES, MINUTES_PER_DAY, SECONDS_PER_DAY, RELEASE_AGE_FILES } from '#cli/config/tools/installers.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
+import { MINUTES_PER_DAY, SECONDS_PER_DAY, RELEASE_AGE_FILES } from '#cli/config/tools/installers.ts';
 
 /**
 Add the minimum release age to an npm or pnpm command. Bun reads the file that writeBunReleaseAge writes.

@@ -251,3 +251,20 @@ test('init names an uninstalled tsconfig extension and the dependency install st
         'tsconfig.json extends @tsconfig/node22/tsconfig.json, which is not installed. Install the project dependencies, then run the command again.\n',
     );
 });
+
+test('init in a workspace whose root package.json holds only tools writes what the detection check expects', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"name":"root","private":true,"devDependencies":{"typescript":"5.9.3"}}\n',
+        'pnpm-workspace.yaml': 'packages:\n  - "packages/*"\n',
+        'packages/a/package.json': '{"name":"a","version":"1.0.0","dependencies":{"is-number":"7.0.0"}}\n',
+        'packages/a/src/util.js': 'export const value = 1;\n',
+        'packages/b/package.json': '{"name":"b","version":"1.0.0","dependencies":{"is-number":"7.0.0"}}\n',
+        'packages/b/src/util.js': 'export const value = 2;\n',
+    });
+    commitAll(sandbox.path);
+    const initialized = await runGspot(sandbox.path, ['init']);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toContain('@gspothq/cli');
+    const checked = await runGspot(sandbox.path, ['check', '--only', 'gspot/detected-configurations']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+});
