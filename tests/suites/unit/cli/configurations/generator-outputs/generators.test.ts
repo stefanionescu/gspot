@@ -1,6 +1,6 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { join, basename } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -46,7 +46,9 @@ test.each([...GENERATOR_CASES])(
         const error = await captureRejection(
             runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, { check: checkGeneratorOutputs }, {}),
         );
-        expect(error.message).toBe('The generator command failed: Generation failed\nfailure');
+        expect(error.message).toBe(
+            `The ${basename(process.execPath)} command failed (exit 1): Generation failed\nfailure`,
+        );
         await writeFile(join(sandbox.path, 'schema.txt'), 'changed');
         const stale = await runCheckCode(
             buildCheckSession(session, CHECK_GENERATION),

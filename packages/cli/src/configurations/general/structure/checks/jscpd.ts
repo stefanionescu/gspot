@@ -54,8 +54,7 @@ export async function checkJscpd(session: CheckSession, planned: PlannedCheck): 
     const config = join(workFolder.path, JSCPD_CONFIG_FILE);
     writeFileSync(config, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));
     const commandArguments = [JSCPD_TOOL, CONFIG_FLAG, config, ...JSCPD_ARGUMENTS, OUTPUT_FLAG, workFolder.path];
-    const result = await runCheckTool(session, planned, commandArguments, { cwd: session.root });
-    if (result.code !== 0) throw new CheckStop('error', `The jscpd command failed: ${formatOutputTail(result)}`);
+    const result = await runCheckTool(session, planned, commandArguments, { cwd: session.root, exitCodes: [] });
     let bytes: Buffer;
     try {
         bytes = readBytes(workFolder.path, JSCPD_REPORT_FILE);

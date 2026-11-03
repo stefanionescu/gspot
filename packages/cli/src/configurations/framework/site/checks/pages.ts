@@ -148,8 +148,10 @@ export async function checkHtmlValidate(session: CheckSession, planned: PlannedC
     ];
     const findings: CheckFinding[] = [];
     for (const batch of splitFileArguments(pages, command, process.platform)) {
-        const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: build.cwd });
-        if (![0, 1].includes(result.code)) throw new CheckStop('error', `HTML validation failed: ${result.stderr}`);
+        const result = await runCheckTool(session, planned, [...command, ...batch], {
+            cwd: build.cwd,
+            exitCodes: [1],
+        });
         const parsed = parseOutput(planned.check, readBytes(reports.path, HTML_VALIDATE_OUTPUT).toString('utf8'), '', {
             root: build.root,
             cwd: build.folder,
@@ -177,8 +179,8 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
         cwd: build.folder,
         stdin: JSON.stringify({ config, css: sheets, content: PURGECSS_CONTENT }),
         tool: PURGECSS_TOOL,
+        exitCodes: [],
     });
-    if (result.code !== 0) throw new CheckStop('error', `Unused CSS analysis failed: ${result.stderr}`);
     const report = parseToolOutput('PurgeCSS', result.stdout, purgecssOutputSchema);
     const styles = await readScopeStyles(session, planned);
     return report.flatMap((sheet) =>

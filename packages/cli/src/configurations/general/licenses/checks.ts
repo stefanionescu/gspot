@@ -12,7 +12,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
@@ -41,10 +40,8 @@ async function readLockedPackages(session: CheckSession, planned: PlannedCheck):
             `${OSV_LICENSES_FLAG}=${allowed.join(',')}`,
             ...lockfiles.map(({ path }) => OSV_LOCKFILE_FLAG + posix.relative(planned.scope.path, path)),
         ],
-        { cwd: join(session.root, planned.scope.path) },
+        { cwd: join(session.root, planned.scope.path), exitCodes: [OSV_FINDINGS_CODE] },
     );
-    if (result.code > OSV_FINDINGS_CODE)
-        throw new CheckStop('error', `osv-scanner did not run: ${formatOutputTail(result)}`);
     const { results } = parseToolOutput(OSV_SCANNER_NAME, result.stdout, osvLicenseReportSchema);
     const root = realpathSync(session.root);
     return results.flatMap(({ source, packages }) =>

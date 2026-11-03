@@ -7,7 +7,6 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
@@ -189,7 +188,7 @@ export async function checkSyntax(session: CheckSession, planned: PlannedCheck):
     const paths = listSourcePaths(planned.files, [NGINX_CONFIG_FILE]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createTemporaryFolder();
-    const certificate = await runCheckTool(
+    await runCheckTool(
         session,
         planned,
         [
@@ -200,13 +199,8 @@ export async function checkSyntax(session: CheckSession, planned: PlannedCheck):
             OPENSSL_CERTIFICATE_FLAG,
             join(workFolder.path, NGINX_CERTIFICATE_FILE),
         ],
-        { cwd: workFolder.path },
+        { cwd: workFolder.path, exitCodes: [] },
     );
-    if (certificate.code !== 0)
-        throw new CheckStop(
-            'error',
-            `The openssl command could not write the temporary certificate: ${formatOutputTail(certificate)}`,
-        );
     const findings: CheckFinding[] = [];
     const checked = new Set<string>();
     for (const path of paths) {

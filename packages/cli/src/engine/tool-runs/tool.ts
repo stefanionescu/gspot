@@ -1,8 +1,8 @@
 import { runTool } from '#cli/tools/run.ts';
 import { getTool } from '#cli/tools/pins.ts';
-import { dirname, delimiter } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
+import { dirname, basename, delimiter } from 'node:path';
 import { listSecondaryTools } from '#cli/engine/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
@@ -32,7 +32,14 @@ async function readCheckTool(
     return { name: tool.name, path: availability.path, start, env };
 }
 
-function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: number): ProcessFailure | undefined {
+function findProcessFailure(
+    result: SpawnResult,
+    {
+        name,
+        timeoutSeconds,
+        exitCodes,
+    }: { name: string; timeoutSeconds: number; exitCodes: readonly number[] | undefined },
+): ProcessFailure | undefined {
     if (result.canceled) return { status: 'error', note: `${name} was canceled.` };
     if (result.timedOut)
         return {
@@ -50,22 +57,27 @@ function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: n
             status: 'error',
             note: `${name} could not run: ${result.stderr.trim()}`,
         };
+    if (exitCodes !== undefined && result.code !== 0 && !exitCodes.includes(result.code))
+        return {
+            status: 'error',
+            note: `The ${basename(name)} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`,
+        };
     return undefined;
 }
 
 /**
-Run a tool process and classify a failure.
+Run a tool process and classify a failure. With exit codes, any other nonzero exit code is a failure too.
 
 @param commandArguments the executable and expanded arguments.
-@param options the process options and tool name for a failure note.
+@param options the process options, the tool name for a failure note, and the nonzero exit codes that mean findings.
 */
 export async function runToolProcess(
     commandArguments: string[],
-    options: ToolRunOptions & { name: string },
+    options: ToolRunOptions & { name: string; exitCodes?: readonly number[] },
 ): Promise<ToolProcessResult> {
-    const { name, ...processOptions } = options;
+    const { name, exitCodes, ...processOptions } = options;
     const result = await runTool(commandArguments, processOptions);
-    return { result, failure: findProcessFailure(result, name, options.timeoutSeconds) };
+    return { result, failure: findProcessFailure(result, { name, timeoutSeconds: options.timeoutSeconds, exitCodes }) };
 }
 
 /**
@@ -101,7 +113,8 @@ Run the tool of a check with the tool time limit and failure handling.
 @param planned the check and scope.
 @param command the tool name and its arguments. With `options.tool`, the program that drives that tool, which gets the
 path of the tool as its last argument.
-@param options how to start the process, and the tool to find when the command starts another program.
+@param options how to start the process, the tool to find when the command starts another program, and the nonzero
+exit codes that mean findings. With `exitCodes`, any other nonzero exit code stops the check with an error.
 */
 export async function runCheckTool(
     session: CheckSession,
@@ -109,18 +122,14 @@ export async function runCheckTool(
     command: readonly string[],
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
-    const { name, path, start, env } = await readCheckTool(
-        session,
-        planned,
-        options.tool ?? (command[0] as string),
-        options,
-    );
-    const commandArguments = options.tool === undefined ? [...start, ...command.slice(1)] : [...command, path];
+    const { tool, ...launch } = options;
+    const { name, path, start, env } = await readCheckTool(session, planned, tool ?? (command[0] as string), launch);
+    const commandArguments = tool === undefined ? [...start, ...command.slice(1)] : [...command, path];
     const secondaryTools = listSecondaryTools(planned.scope, planned.check);
     const toolEnvironment = await buildSecondaryToolEnvironment(session, secondaryTools, env);
     const { result, failure } = await session.limitProcess(() =>
         runToolProcess(commandArguments, {
-            ...options,
+            ...launch,
             env: toolEnvironment,
             cancelSignal: session.cancelSignal,
             timeoutSeconds: session.settings.tool_timeout_seconds,

@@ -39,10 +39,7 @@ import {
     TEST_RUNNER_MESSAGE,
     XCODE_COVERAGE_FLAGS,
     SWIFT_CODECOV_COMMAND,
-    SWIFT_CODECOV_MESSAGE,
     SWIFT_DESCRIBE_COMMAND,
-    SWIFT_DESCRIBE_MESSAGE,
-    COVERAGE_VIEWER_MESSAGE,
     MISSING_COVERAGE_MESSAGE,
     SWIFT_TESTING_FAILURE_LINE,
 } from '#cli/config/configurations/builds.ts';
@@ -93,10 +90,9 @@ async function measurePackageCoverage(
     }
     const reported = await runCheckTool(session, planned, [...SWIFT_CODECOV_COMMAND, SCRATCH_PATH_FLAG, plan.scratch], {
         cwd,
+        exitCodes: [],
     });
-    if (reported.code !== 0) throw new CheckStop('error', formatOutputTail(reported, SWIFT_CODECOV_MESSAGE));
-    const described = await runCheckTool(session, planned, SWIFT_DESCRIBE_COMMAND, { cwd });
-    if (described.code !== 0) throw new CheckStop('error', formatOutputTail(described, SWIFT_DESCRIBE_MESSAGE));
+    const described = await runCheckTool(session, planned, SWIFT_DESCRIBE_COMMAND, { cwd, exitCodes: [] });
     const reportPath = reported.stdout.trim();
     const coverage = files.read(convertToPosixPath(relative(plan.folder, reportPath)));
     const text = coverage === undefined ? undefined : decodeUtf8(coverage.bytes);
@@ -122,12 +118,7 @@ async function measureXcodeCoverage(
             `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, TEST_RUNNER_MESSAGE)}`,
         );
     }
-    const viewed = await runCheckTool(session, planned, [...XCCOV_COMMAND, bundle], { cwd });
-    if (viewed.code !== 0)
-        throw new CheckStop(
-            'error',
-            `The test run wrote no coverage report: ${formatOutputTail(viewed, COVERAGE_VIEWER_MESSAGE)}`,
-        );
+    const viewed = await runCheckTool(session, planned, [...XCCOV_COMMAND, bundle], { cwd, exitCodes: [] });
     return { ...parseToolOutput('xccov', viewed.stdout, xccovSchema), failures: [] };
 }
 

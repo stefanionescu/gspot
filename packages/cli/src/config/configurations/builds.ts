@@ -117,15 +117,9 @@ export const COVERAGE_RULE = 'coverage';
 
 export const SWIFT_TESTS_MESSAGE = 'Swift tests failed';
 
-export const SWIFT_CODECOV_MESSAGE = 'Swift did not report its coverage path';
-
-export const SWIFT_DESCRIBE_MESSAGE = 'Swift could not describe its package targets';
-
 export const MISSING_COVERAGE_MESSAGE = 'Swift produced no UTF-8 coverage report at its reported path.';
 
 export const TEST_RUNNER_MESSAGE = 'The test runner printed no error output.';
-
-export const COVERAGE_VIEWER_MESSAGE = 'The coverage viewer printed no error output.';
 
 export const XCTEST_FAILURE_LINE = /^(?<file>.+?):(?<line>\d+): error: -\[.+?\] : (?<message>.+)$/u;
 

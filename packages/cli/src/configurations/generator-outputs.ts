@@ -1,5 +1,6 @@
 import { join, posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
@@ -8,9 +9,7 @@ import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding, Substitutions } from '#cli/types/engine/tool-runs.ts';
 import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/configurations/registry.ts';
@@ -167,9 +166,7 @@ export async function checkGeneratorOutputs(session: CheckSession, planned: Plan
     const commands = buildFileCommandLines(commandArguments, selected);
     let stdout = '';
     for (const commandLine of commands) {
-        const result = await runCheckTool(session, planned, commandLine.commandArguments, { cwd });
-        if (result.code !== 0)
-            throw new CheckStop('error', `The generator command failed: ${formatOutputTail(result)}`);
+        const result = await runCheckTool(session, planned, commandLine.commandArguments, { cwd, exitCodes: [] });
         stdout = result.stdout;
     }
     const after = readOutputContents(outputFiles);

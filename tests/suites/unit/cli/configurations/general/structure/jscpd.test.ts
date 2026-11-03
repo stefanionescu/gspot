@@ -39,7 +39,7 @@ test.each([1, 0])(
         expect(folders, JSON.stringify(failed.report)).toHaveLength(1);
         expect(failed.report.checks).toMatchObject([{ check: 'structure/jscpd', status: 'error', findings: [] }]);
         expect(failed.report.checks[0]!.note).toBe(
-            `The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
+            `The jscpd command ${code === 0 ? 'wrote no report' : 'failed (exit 1)'}: The scanner could not write its report.`,
         );
         expect(existsSync(folders[0]!)).toBe(false);
     },

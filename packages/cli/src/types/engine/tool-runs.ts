@@ -83,7 +83,7 @@ export type ToolProcessResult = { result: SpawnResult; failure: ProcessFailure |
 
 export type CheckToolOptions = Pick<CommandLaunch, 'cwd'> &
     Partial<Pick<CommandLaunch, 'env'>> &
-    Pick<SpawnOptions, 'stdin'> & { tool?: string };
+    Pick<SpawnOptions, 'stdin'> & { tool?: string; exitCodes?: readonly number[] };
 
 export type CommandArgument = string | { file: true };
 
