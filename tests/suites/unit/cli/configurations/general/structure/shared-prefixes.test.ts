@@ -11,6 +11,16 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { PREFIX_TREE, NEST_SUFFIX_FILES, NESTJS_PREFIX_RESULTS } from '#tests/config/configurations/structure/files.ts';
 
+test("shared-prefixes and file-folder-clashes leave gspot's own file names out", async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'gspot.baseline.json': '{}\n',
+        'gspot/index.ts': 'export const name = "gspot";\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'structure/shared-prefixes')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'structure/file-folder-clashes')).toStrictEqual([]);
+});
+
 test('shared-prefixes groups files and folders once, and honors an ignore and a raised limit', async () => {
     const settings = buildSandboxSettings(['typescript'], { level: 'all' });
     await using sandbox = await createGitSandbox({

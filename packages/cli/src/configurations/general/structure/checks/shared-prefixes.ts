@@ -18,6 +18,7 @@ import {
     TYPE_FILE_CASE,
     COMPANION_SUFFIX,
     INDEX_BASE_NAMES,
+    GSPOT_FIXED_NAMES,
     SHARED_PREFIX_RULE,
 } from '#cli/config/configurations/structure.ts';
 
@@ -53,7 +54,8 @@ function listTypeNamedFiles(session: Session, planned: PlannedCheck): Set<string
 }
 
 /**
-Reports each prefix that at least `limits.min_shared_prefix_files` siblings in a folder share.
+Reports each prefix that at least `limits.min_shared_prefix_files` siblings in a folder share. gspot fixes the names of
+gspot.toml and gspot.baseline.json, so they share no prefix.
 
 @param session the repository and its tools.
 @param planned the scope files and limit.
@@ -64,7 +66,7 @@ export function checkSharedPrefixes(session: Session, planned: PlannedCheck): Ch
         planned.scope.configurations.flatMap((configuration) => configuration.shared_prefixes.prefixes),
     );
     const kinds = new Set(planned.scope.configurations.flatMap((configuration) => configuration.shared_prefixes.kinds));
-    const tree = buildFolderTree(planned.files);
+    const tree = buildFolderTree(planned.files.filter(({ path }) => !GSPOT_FIXED_NAMES.has(path)));
     const typeNamed = listTypeNamedFiles(session, planned);
     const codeFiles = new Set(
         listCodeFiles(planned)

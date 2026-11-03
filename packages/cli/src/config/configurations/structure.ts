@@ -2,9 +2,11 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
-import { SHEBANG_TAG, SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { SHEBANG_TAG, BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 
 const APPLY_HELP = 'Run gspot apply.';
+
+export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE, BASELINE_FILE]);
 
 export const GENERATED_FILE_FINDINGS = {
     changed: { message: 'This generated file is out of date.', help: APPLY_HELP },

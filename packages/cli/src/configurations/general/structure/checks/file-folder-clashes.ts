@@ -2,17 +2,18 @@ import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
-import { FILE_FOLDER_CLASH_RULE } from '#cli/config/configurations/structure.ts';
+import { GSPOT_FIXED_NAMES, FILE_FOLDER_CLASH_RULE } from '#cli/config/configurations/structure.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 
 /**
-Reports each file whose name without its extension matches the name of a sibling folder.
+Reports each file whose name without its extension matches the name of a sibling folder. gspot fixes the names of
+gspot.toml and gspot.baseline.json, so they clash with no folder.
 
 @param _session the repository and its tools.
 @param planned the scope files.
 */
 export function checkFileFolderClashes(_session: Session, planned: PlannedCheck): CheckFinding[] {
-    const files = listCodeFiles(planned);
+    const files = listCodeFiles(planned).filter(({ path }) => !GSPOT_FIXED_NAMES.has(path));
     const tree = buildFolderTree(planned.files);
     return files.flatMap((file) => {
         const stem = extractBaseName(file.path);
