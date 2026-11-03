@@ -1,24 +1,51 @@
 #!/usr/bin/env bash
-#MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit. A shard such as 1/3 runs one part of the suite."
+#MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit. A shard such as 1/3 runs one part of the suite. Test files, then bun test options such as -t <name>, narrow the run."
 #MISE depends=["packages:eslint-plugin:build"]
 #USAGE arg "[suite]" default="unit" {
 #USAGE   choices "unit" "integration" "e2e"
 #USAGE }
 #USAGE arg "[shard]"
+#USAGE arg "[arguments]..." var=#true
 set -euo pipefail
 : "${usage_suite:?mise must provide the selected test suite}"
 
-test_run_folder="$(mktemp -d)" || exit 1
-trap 'rm -rf -- "${test_run_folder}"' EXIT
-export TEST_RUN_FOLDER="${test_run_folder}"
+# main: Runs the suite, or the given test files of it, with the suite's preload and time limit.
+# Arguments:
+#   $1: the suite.
+#   $2: a shard such as 1/3, when it has that form.
+#   $@: test files, then bun test options.
+main() {
+    local shard=""
+    local paths=()
 
-if [[ ${usage_suite} == unit ]]; then
-    bun test --timeout=60000 --parallel --no-isolate ${usage_shard:+"--shard=${usage_shard}"} \
-        --preload ./tests/setup/runner/unit.ts ./tests/suites/unit
-else
-    mise run build
-    bun tests/setup/runner/prepare.ts "${usage_suite}"
-    bun test --timeout=360000 --parallel ${usage_shard:+"--shard=${usage_shard}"} \
-        --preload ./tests/setup/runner/integration.ts \
-        "./tests/suites/${usage_suite}"
-fi
+    if [[ $# -gt 0 ]]; then
+        shift
+    fi
+    if [[ $# -gt 0 && $1 =~ ^[0-9]+/[0-9]+$ ]]; then
+        shard="$1"
+        shift
+    fi
+    while [[ $# -gt 0 && $1 != -* ]]; do
+        paths+=("$1")
+        shift
+    done
+    if [[ ${#paths[@]} -eq 0 ]]; then
+        paths=("./tests/suites/${usage_suite}")
+    fi
+
+    TEST_RUN_FOLDER="$(mktemp -d)" || return 1
+    trap 'rm -rf -- "${TEST_RUN_FOLDER}"' EXIT
+    export TEST_RUN_FOLDER
+
+    if [[ ${usage_suite} == unit ]]; then
+        bun test --timeout=60000 --parallel --no-isolate ${shard:+"--shard=${shard}"} \
+            --preload ./tests/setup/runner/unit.ts "$@" "${paths[@]}"
+    else
+        mise run build
+        bun tests/setup/runner/prepare.ts "${usage_suite}"
+        bun test --timeout=360000 --parallel ${shard:+"--shard=${shard}"} \
+            --preload ./tests/setup/runner/integration.ts "$@" "${paths[@]}"
+    fi
+}
+
+main "$@"

@@ -75,6 +75,7 @@ style, how long each tool took on this scan, and the plan of `gspot init`.
 - [Commands](https://generativespotting.com/reference/commands/): every command, its options, and its exit codes.
 - [ESLint plugin](https://generativespotting.com/reference/eslint-plugin/): the lint rules of gspot, for ESLint with or
   without gspot.
+- [Tests](https://github.com/stefanionescu/gspot/blob/main/tests/README.md): run the test suites, or one test file.
 - [Issues](https://github.com/stefanionescu/gspot/issues): report a problem.
 
 ## License

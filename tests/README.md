@@ -23,6 +23,13 @@ it when the run ends, and it sets the time limit of each test. Integration and e
 packages. Integration runs install pinned tools, and end-to-end runs get their tools from `gspot install`. These suites
 need network access and take longer than the unit suite.
 
+To run one test file, or the tests whose name matches, put the files after the suite, then any `bun test` options:
+
+```bash
+mise run test unit tests/suites/unit/cli/main.test.ts
+mise run test unit tests/suites/unit/cli/main.test.ts -t "version"
+```
+
 A direct `bun test` run needs `TEST_RUN_FOLDER`, a `--preload` file from `tests/setup/runner/`, and the `--timeout` of
 its suite from `.mise/tasks/test`.
 
