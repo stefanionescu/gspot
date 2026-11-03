@@ -10,7 +10,7 @@ dependencies = ["zustand"]
 
 [[eslint.selectors]]
 message = "Pass a selector, such as useCartStore((state) => state.items), so the component re-renders only for what it reads."
-selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0], CallExpression[callee.name='useStore'][arguments.length=1]"
+selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0], Program:has(ImportDeclaration[source.value='zustand'] > ImportSpecifier[imported.name='useStore']) CallExpression[callee.name='useStore'][arguments.length=1]"
 
 [[eslint.selectors]]
 level = "all"

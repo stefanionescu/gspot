@@ -37,6 +37,8 @@ const memberText = <input type="text" value="a" {...form.register("choice")} />;
 } as const;
 
 export const SELECTOR_LIBRARY_FILES = {
+    'counter.js':
+        "import { useStore } from './store.js';\nexport function readCount() {\n    return useStore((state) => state.count);\n}\n",
     'cart.js':
         "import { useStore } from 'zustand';\nimport { cartStore, useCartStore } from './store.js';\nexport function readCart() {\n    const whole = useCartStore();\n    const all = useStore(cartStore);\n    return [whole, all];\n}\n",
     'form.js':

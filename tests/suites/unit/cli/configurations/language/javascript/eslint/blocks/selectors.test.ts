@@ -92,11 +92,11 @@ test('store, form and procedure selectors distinguish validated calls and unrela
             tables: '[trpc]\nrouter_files = ["source.js"]\n',
         }),
         'source.js':
-            'useStore(cartStore);\nuseForm(options);\nuseForm({ ...options });\nuseForm({ defaultValues: { nested: { resolver: 1 } } });\npublicProcedure.query(resolve);\nprotectedProcedure.use(logger).query(resolve);\nt.procedure.query(resolve);\npool.query(sql);\nbyId.query(resolve);\ngetClient().query(sql);\npublicProcedure.input(schema).use(logger).mutation(resolve);\n',
+            "import { useStore } from 'zustand';\nuseStore(cartStore);\nuseForm(options);\nuseForm({ ...options });\nuseForm({ defaultValues: { nested: { resolver: 1 } } });\npublicProcedure.query(resolve);\nprotectedProcedure.use(logger).query(resolve);\nt.procedure.query(resolve);\npool.query(sql);\nbyId.query(resolve);\ngetClient().query(sql);\npublicProcedure.input(schema).use(logger).mutation(resolve);\n",
     });
     const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual(
-        [1, 4, 5, 6, 7].map((line) => ({ file: 'source.js', rule: 'gspot/restricted-syntax', line })),
+        [2, 5, 6, 7, 8].map((line) => ({ file: 'source.js', rule: 'gspot/restricted-syntax', line })),
     );
 });
 
