@@ -103,7 +103,7 @@ test('init leaves out an override that matches no tracked file', async () => {
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
-    expect(settingsText).not.toContain('override');
+    expect((parse(settingsText) as TomlTable)['format']).not.toHaveProperty('override');
 });
 
 test.each([...UNREADABLE_PRETTIER_FILES])(
