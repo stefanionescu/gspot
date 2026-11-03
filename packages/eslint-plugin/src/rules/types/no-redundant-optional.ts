@@ -30,7 +30,7 @@ export const noRedundantOptional = createRule<[], 'optional'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports an optional property whose type also includes `undefined`, written in a union or, with type information, through a type alias declared in the project. It reports nothing when the project sets `exactOptionalPropertyTypes`, because there the two mean different things.',
+                'Reports an optional property whose type also includes `undefined`, written in a union or, with type information, through a type alias, unless the project sets `exactOptionalPropertyTypes`.',
             why: 'Without exactOptionalPropertyTypes, `?` already adds `undefined` to the type, so writing both says the same thing twice.',
             fix: 'Remove `?` when the property must be present, or remove `undefined` from the type.',
             example: '`type User = { name?: string | undefined };` reports `optional`. Write `name?: string`.',

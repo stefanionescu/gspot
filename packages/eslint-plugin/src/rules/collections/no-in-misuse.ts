@@ -10,8 +10,9 @@ export const noInMisuse = createRule<[], 'misuse'>({
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports `in` with an array on its right side, when the left side is not a number and not a quoted array method name. It needs type information and reports nothing without it.',
+                'Reports `in` with an array on its right side, when the left side is not a number and not a quoted array method name.',
             why: '`in` tests indexes and property names, not values, so `"b" in ["a", "b"]` is false.',
             fix: 'Use `includes` to test for a value: `items.includes(value)`.',
             example: '`if (name in names)` reports `misuse`. Write `if (names.includes(name))`.',

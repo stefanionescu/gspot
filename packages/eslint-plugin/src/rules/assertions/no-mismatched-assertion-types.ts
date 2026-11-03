@@ -63,8 +63,9 @@ export const noMismatchedAssertionTypes = createRule<[], 'incompatible'>({
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports a strict or deep equality assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, Cypress, or node:assert whose two values have primitive types that never match, such as a string and a number. A union matches when one of its members can. It needs the type information of a TypeScript project. It skips values typed `any`, values assigned from such a value, and calls of a method that the file replaces.',
+                'Reports a strict or deep equality assertion whose two values have primitive types that never match, such as a string and a number.',
             why: 'Values of different primitive types never compare equal, so the assertion always fails, or always passes when negated, whatever the code under test does.',
             fix: 'Compare values of the same type: convert one side, such as `String(count)`, or assert the value that the code returns.',
             example:

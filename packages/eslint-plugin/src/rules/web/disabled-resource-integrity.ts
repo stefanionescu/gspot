@@ -52,8 +52,9 @@ export const disabledResourceIntegrity = createRule<[], 'missingBoth' | 'missing
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'In files with TypeScript type information, finds `<script>` elements that `document.createElement` makes and that load a versioned file from another host, such as `https://cdn.example.com/lib@1.2.3/lib.js`, without an `integrity` hash and `crossOrigin = "anonymous"`.',
+                'Finds `<script>` elements that `document.createElement` makes and that load a versioned file from another host without an `integrity` hash and `crossOrigin = "anonymous"`.',
             why: 'Without a subresource integrity check, the page runs whatever script the other host serves, also after an attacker changes it.',
             fix: 'Set `integrity` to the hash of the expected file and `crossOrigin` to `"anonymous"`.',
             example:

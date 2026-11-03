@@ -68,7 +68,7 @@ export const noUpdatedLoopCounter = createRule<[], 'counter'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a plain assignment to a for loop counter inside the loop body, and an update of the counter in the update clause of a nested loop. `++`, `--`, compound assignments, and an assignment beside a `splice` call with the counter pass, because they skip or revisit items on purpose.',
+                'Reports a plain assignment to a `for` loop counter inside the loop body, and an update of the counter in the update clause of a nested loop.',
             why: 'Setting the counter inside the body hides how the loop advances, and often makes it skip items or never stop.',
             fix: 'Change the counter only in the update clause, or use a while loop when the body decides how far to move.',
             example: '`for (let index = 0; index < size; index++) { index = next(index); }` reports `counter`.',

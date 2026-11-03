@@ -67,8 +67,9 @@ export const noUselessIntersection = createRule<[], 'empty' | 'absorbing'>({
         type: 'suggestion',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports an intersection with `any` or `never`, and a member of an intersection that has no members: `null`, `undefined`, `void`, `{}`, or an interface without members that extends nothing. A `string & {}` member of a union, and `{}` beside a mapped type, a generic reference, or a type parameter, pass. It needs type information and reports nothing without it.',
+                'Reports an intersection with `any` or `never`, and an intersection member that has no members, such as `null`, `undefined`, `void`, or `{}`.',
             why: 'Such an intersection is always `any` or `never`, or one of its members adds nothing, so it does not say what the reader expects.',
             fix: 'Remove the member that adds nothing, or write the type that the intersection should have.',
             example: '`type User = Person & {};` reports `empty`. Write `type User = Person;`.',

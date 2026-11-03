@@ -43,8 +43,7 @@ export const noForcedUiActions = createRule<[], 'force'>({
         type: 'suggestion',
         docs: {
             level: 'recommended',
-            description:
-                'Reports `{ force: true }` on a Cypress action of a `cy` chain, such as `click` or `type`, in projects that depend on Cypress, and on a Playwright action of a locator, such as `click` or `fill`, in files that use Playwright.',
+            description: 'Reports `{ force: true }` on a Cypress or Playwright action, such as `click` or `type`.',
             why: 'A forced action skips the checks that the element is visible, enabled, and not covered, so the test passes where a user could not act.',
             fix: 'Remove the option, and wait for the element to be ready, or fix what covers it.',
             example:

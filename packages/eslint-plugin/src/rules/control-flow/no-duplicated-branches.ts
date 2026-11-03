@@ -79,7 +79,7 @@ export const noDuplicatedBranches = createRule<[], 'branch' | 'all' | 'ternary'>
         docs: {
             level: 'recommended',
             description:
-                'Reports a multiline branch of an if chain or switch that repeats an earlier branch, each branch of a chain without an else or default when all branches are the same, a chain or switch whose else or default does the same as every other branch, and a conditional expression whose two results are the same.',
+                'Reports a branch of an `if` chain or `switch` that repeats an earlier branch, a chain whose branches all do the same, and a conditional expression whose two results are the same.',
             why: 'Two branches with the same code usually mean that one branch was copied and not changed, or that the condition does nothing.',
             fix: 'Change the branch that should differ. When the branches really do the same, merge their conditions, or remove the condition.',
             example:

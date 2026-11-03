@@ -74,7 +74,7 @@ export const noIncompleteAssertions = createRule<[], 'complete' | 'call'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a statement that starts an assertion and stops before it asserts: `expect(value)` alone, a chain of `expect`, `assert`, or `should` that ends on a word such as `to` or `be`, a matcher such as `equal` that the statement does not call, and `expect.soft` or `expect.poll` alone.',
+                'Reports a statement that starts an assertion and stops before it asserts, such as `expect(value)` alone, or a chain of `expect`, `assert`, or `should` that ends on `to`, `be`, or an uncalled matcher.',
             why: 'An assertion that is never called checks nothing, and the test passes whatever the value is.',
             fix: 'Finish the assertion with the matcher that checks the value, and call it.',
             example: '`expect(total).to.equal;` reports `call`. Write `expect(total).to.equal(3);`.',

@@ -51,8 +51,9 @@ export const preferReadonlyProps = createRule<[], 'mutable' | 'mark'>({
         hasSuggestions: true,
         docs: {
             level: 'all',
+            requiresTypeChecking: true,
             description:
-                'Reports the typed props of a React function component whose properties are not all read-only: a function declaration with an uppercase name and one parameter that returns JSX. It needs the type information of a TypeScript project, and reads nothing without it.',
+                'Reports the typed props of a React function component whose properties are not all read-only.',
             why: 'React treats props as immutable. A read-only type lets the compiler reject a write to them.',
             fix: 'Wrap the type in `Readonly`, or mark each property `readonly`.',
             example:

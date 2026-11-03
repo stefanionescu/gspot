@@ -49,7 +49,7 @@ export const noMisplacedAssertions = createRule<[], 'misplaced'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports an assertion statement of chai, sinon, supertest, node:assert, node:test, uvu, aws-cdk, Vitest, Bun, Cypress, or a global `expect` that runs in the callback of a suite such as `describe`, or at the top of a file that declares tests. At the top of a file without tests, it reports only the assertions that need a test runner, such as `expect` of Vitest, and leaves a script that asserts with node:assert or chai.',
+                'Reports an assertion statement that runs in the callback of a suite such as `describe`, or at the top of a file that declares tests, instead of inside a test.',
             why: 'A suite callback runs while the runner collects the tests, and the top of a file runs when the runner loads it, so a failure there aborts the whole file instead of failing one test, or runs before the setup that the tests need.',
             fix: 'Move the assertion into a test, or into a hook such as `beforeEach`.',
             example:

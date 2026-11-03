@@ -74,7 +74,7 @@ export const noEqualLoopCondition = createRule<[], 'equality'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a for loop that steps its counter with `++`, `--`, `+=`, or `-=` and stops on an equality test of that counter. A loop that steps by one toward a literal end with `!=` or `!==`, and does not read its counter in the body, passes.',
+                'Reports a `for` loop that steps its counter with `++`, `--`, `+=`, or `-=` and stops on an equality test of that counter.',
             why: 'A counter that steps past its end value never equals it, so the loop does not stop.',
             fix: 'Compare the counter with `<`, `<=`, `>`, or `>=`.',
             example:

@@ -96,7 +96,7 @@ export const noVueUpdatedWrites = createRule<[], 'loop'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a write to a `ref` or `reactive` value of Vue in an `onUpdated` callback or an `updated` option when no condition guards it and each run changes the value: an increment, a compound assignment, or a value computed from the same state, `Date.now`, `Math.random`, or `performance.now`.',
+                'Reports an unguarded write to a Vue `ref` or `reactive` value in an `onUpdated` callback or an `updated` option when each run changes the value, such as an increment.',
             why: 'Vue runs the hook after each update, and the write schedules the next update, so the component loops until Vue stops it.',
             fix: 'Guard the write with a condition that stops changing the value, or move it to a watcher or an event callback.',
             example:

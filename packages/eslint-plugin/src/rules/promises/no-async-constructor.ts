@@ -53,8 +53,8 @@ export const noAsyncConstructor = createRule<[], 'async'>({
         type: 'problem',
         docs: {
             level: 'recommended',
-            description:
-                'Reports a statement of a class constructor that calls something returning a promise. Calls inside functions that the constructor defines pass, and so does `this.ready = Promise.resolve()`. It needs type information and reports nothing without it.',
+            requiresTypeChecking: true,
+            description: 'Reports a statement of a class constructor that calls something that returns a promise.',
             why: 'A constructor cannot await, so the object is returned before the work finishes, and a rejection goes unhandled.',
             fix: 'Move the asynchronous work into an async factory function or an `init` method that callers await.',
             example: '`constructor() { this.load(); }` reports `async` when `load` returns a promise.',

@@ -24,7 +24,7 @@ export const noUnvalidatedJsonBody = createRule<[], 'unvalidated'>({
         docs: {
             level: 'none',
             description:
-                'Reports `await req.json()` and `await request.json()` whose result no schema parses: neither as the first argument of `parse`, `safeParse`, `parseAsync`, or `safeParseAsync`, nor through a variable that a later `parse` or `safeParse` reads. No config turns it on; gspot turns it on for the Supabase edge functions.',
+                'Reports `await req.json()` and `await request.json()` whose result no schema parses with `parse` or `safeParse`. No config turns it on; gspot turns it on for the Supabase edge functions.',
             why: 'A request body comes from the client, so any field can be missing or of the wrong type. Code that trusts it can write bad data or fail in ways that leak details.',
             fix: 'Parse the body with a schema, such as a Zod schema, before the code reads it.',
             example:

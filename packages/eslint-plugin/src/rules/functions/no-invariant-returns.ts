@@ -93,7 +93,7 @@ export const noInvariantReturns = createRule<[], 'invariant'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a function with two or more return statements that all return the same literal value, or the same variable that nothing changes. A function that can end without a return, returns without a value, or throws passes. A function also passes when every branch that returns the literal calls or assigns something first, or, for a variable, when a branch calls or assigns something without returning.',
+                'Reports a function with two or more return statements that all return the same literal value, or the same variable that nothing changes.',
             why: 'A function that always returns the same value tells its caller nothing, so its return value or its branches are probably wrong.',
             fix: 'Return the value that each branch should give, or remove the return value and the code that checks it.',
             example: '`function isValid(value) { if (value) return true; return true; }` reports `invariant`.',

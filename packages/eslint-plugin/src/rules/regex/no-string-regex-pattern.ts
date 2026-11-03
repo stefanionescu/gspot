@@ -10,8 +10,8 @@ export const noStringRegexPattern = createRule<[], 'pattern'>({
         type: 'problem',
         docs: {
             level: 'recommended',
-            description:
-                'Reports a string passed as the pattern of `match`, `matchAll`, or `search` on a string. It needs type information and reports nothing without it.',
+            requiresTypeChecking: true,
+            description: 'Reports a string passed as the pattern of `match`, `matchAll`, or `search` on a string.',
             why: 'These methods compile a string argument as a regular expression, so `.` or `?` in it change the match, and the regular expression rules cannot check a pattern hidden in a string.',
             fix: 'Pass a regular expression literal, or `new RegExp(pattern)` when the pattern is built at run time.',
             example: '`title.match("v1.2")` reports `pattern`. Write `title.match(/v1\\.2/u)`.',

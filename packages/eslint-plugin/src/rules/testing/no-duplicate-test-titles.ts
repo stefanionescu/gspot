@@ -62,7 +62,7 @@ export const noDuplicateTestTitles = createRule<[], 'duplicate'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a test whose static title repeats the title of an earlier test of the same suite, in files that import a test framework or whose package.json depends on one. It also reads the tests that a local function declares when the suite calls it. Skipped and parameterized suites are not checked.',
+                'Reports a test whose static title repeats the title of an earlier test of the same suite, including the tests that a local function declares when the suite calls it.',
             why: 'Two tests with one title look like one test in a report, so a failure points to the wrong test.',
             fix: 'Give each test of a suite its own title, or delete the copy.',
             example: '`it("adds", a); it("adds", b);` reports `duplicate` on the second title.',

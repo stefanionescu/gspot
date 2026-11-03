@@ -2,6 +2,7 @@ import type { TSESLint, TSESTree, ParserServicesWithTypeInformation } from '@typ
 
 export type RuleDocs = {
     level: 'recommended' | 'all' | 'none';
+    requiresTypeChecking?: boolean;
     description: string;
     why: string;
     fix: string;

@@ -118,7 +118,7 @@ export const preferNativeLodash = createRule<[], NativeMessageId>({
         docs: {
             level: 'all',
             description:
-                'Reports a call of a method of lodash, lodash-es, or Underscore.js that the language provides, such as `isArray`, `keys`, or `uniq`, when the configured ECMAScript version has it. For a method that also accepts objects, such as `map` or `filter`, it reports only a call whose collection is an array or a string, in the source or by the type information of a TypeScript project, with a function as its callback.',
+                'Reports a call of a lodash, lodash-es, or Underscore.js method that the configured ECMAScript version provides, such as `isArray` or `uniq`, and of `map` or `filter` on a value that the source or its types show is an array.',
             why: 'A native method needs no dependency, and every reader knows it.',
             fix: 'Call the native method. Check nullish values first, because the library accepts them.',
             example: '`_.isArray(value)` reports `direct`. Write `Array.isArray(value)`.',

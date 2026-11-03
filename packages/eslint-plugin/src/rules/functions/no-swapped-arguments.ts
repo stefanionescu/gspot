@@ -141,7 +141,7 @@ export const noSwappedArguments = createRule<[], 'swapped'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a call that passes two variables named like two parameters of the called function, each at the position of the other parameter. With type information, the rule reads the parameters from the resolved signature and the two arguments need the same type. Without it, the rule reads local functions only. A call inside an `if` or a ternary that compares the two names, a comparator that reverses its two parameters, and a call under a key such as `reverse` or `rtl` do not count.',
+                'Reports a call that passes two variables named like two parameters of the called function, each at the position of the other. Without type information, it reads local functions only.',
             why: 'Arguments with the names of the parameters in another order usually mean that the caller swapped them by mistake.',
             fix: 'Pass the arguments in the order of the parameters, or rename the variables when the swap is deliberate.',
             example: '`function divide(dividend, divisor) {} divide(divisor, dividend);` reports `swapped`.',

@@ -80,7 +80,7 @@ export const noClientEnvironment = createRule<ClientEnvironmentOptions, 'private
                 'In a module beginning with `"use client"`, `const key = process.env.SECRET;` reports `private`. Move the secret read and the work that needs it to a server module. A genuinely public URL can use `process.env.NEXT_PUBLIC_URL` in the client. Never rename a secret to make it public. See [Next.js environment variables](https://nextjs.org/docs/app/guides/environment-variables).',
             level: 'recommended',
             description:
-                'Finds private environment reads in client modules, including process.env, Bun.env, Deno.env.get, and import.meta.env, also through a variable that holds process, Bun, or Deno, or the env that a destructuring takes from one. Deno.env.get reads the name in its first argument. The publicPrefixes and allowedNames options name public values. gspot sets client and publicPrefixes for the client code of the frameworks that use a prefix instead of a use-client directive.',
+                'Finds private environment reads in client modules, such as `process.env.SECRET_KEY`, `Bun.env`, `Deno.env.get`, and `import.meta.env`. The `publicPrefixes` and `allowedNames` options name the public values.',
             why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },

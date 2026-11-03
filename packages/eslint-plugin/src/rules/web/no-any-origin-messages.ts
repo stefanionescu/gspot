@@ -150,8 +150,9 @@ export const noAnyOriginMessages = createRule<[], 'anyTarget' | 'unverifiedOrigi
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'In files with TypeScript type information, finds `postMessage` calls on a window with the target origin `*`, and `message` listeners on a window, through `addEventListener` or `onmessage`, that never compare `event.origin` in an `if` statement.',
+                'Finds `postMessage` calls on a window with the target origin `*`, and `message` listeners on a window that never compare `event.origin` in an `if` statement.',
             why: 'A message sent to `*` reaches any page that the window shows, and a listener that does not check the origin accepts messages from any site.',
             fix: 'Pass the exact origin of the receiver to `postMessage`, and return early in the listener when `event.origin` is not a trusted origin.',
             example:

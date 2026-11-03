@@ -34,8 +34,9 @@ export const noSelectorParameter = createRule<[], 'selector'>({
         type: 'suggestion',
         docs: {
             level: 'all',
+            requiresTypeChecking: true,
             description:
-                'Reports a boolean parameter that the only statement of a function tests to choose between two actions: an `if` with an `else`, or a conditional expression whose branches have side effects. Callback arguments, JSX handlers, and `on*` handler properties do not count. The rule needs type information.',
+                'Reports a boolean parameter that the only statement of a function tests to choose between two actions.',
             why: 'A boolean that selects the behavior makes one function do two jobs, and each call site reads as an unexplained `true` or `false`.',
             fix: 'Split the function into one function for each action, and call the one that fits.',
             example:

@@ -76,7 +76,7 @@ export const noConstantAssertions = createRule<[], 'constant' | 'fresh' | 'ident
         docs: {
             level: 'recommended',
             description:
-                'Reports an assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, or node:assert whose result does not depend on the code under test: a predicate or an equality on constant values, a predicate on a value created in place, and an identity check against an array, object, function, class, regular expression, or `new` value created in place.',
+                'Reports an assertion whose result does not depend on the code under test, such as an equality of two constants or an identity check against an object created in place.',
             why: 'An assertion that always passes, or always fails for a reason the test cannot change, checks nothing about the code.',
             fix: 'Assert the value that the code under test returns. Compare a new object or array with a deep equality matcher.',
             example: '`expect(true).toBe(true)` reports `constant`. Write `expect(isReady()).toBe(true)`.',

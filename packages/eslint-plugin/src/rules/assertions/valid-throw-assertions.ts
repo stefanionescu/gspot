@@ -123,7 +123,7 @@ export const validThrowAssertions = createRule<[], 'async' | 'value' | 'rejectio
         docs: {
             level: 'recommended',
             description:
-                'Reports `toThrow` and `toThrowError` assertions of the `expect` that Jest, Vitest, or Bun export when the value passed to `expect` is an async function, or, with the type information of a TypeScript project, a value that is not a function, such as the result of a call.',
+                'Reports a `toThrow` or `toThrowError` assertion whose `expect` value is an async function, or, with type information, a value that is not a function, such as the result of a call.',
             why: 'The matcher calls the function and catches what it throws while it runs. An async function returns a rejected promise instead of throwing, and a value that is not a function has already thrown, or never will, before the matcher runs.',
             fix: 'Wrap the code in a function, such as `expect(() => parse(text)).toThrow()`. For an async function, assert the rejection: `await expect(load()).rejects.toThrow()`.',
             example: '`expect(parse(text)).toThrow()` reports `value`. Write `expect(() => parse(text)).toThrow()`.',

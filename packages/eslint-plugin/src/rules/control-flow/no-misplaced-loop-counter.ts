@@ -58,7 +58,7 @@ export const noMisplacedLoopCounter = createRule<[], 'misplaced'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a for loop whose update and body change none of the values that its stop condition reads. A change counts the targets of assignments, `++` and `--`, and the object of a method call. A condition that reads no value passes.',
+                'Reports a `for` loop whose update and body change none of the values that its stop condition reads.',
             why: 'A loop that updates one value and tests another usually updates the wrong counter, and may never stop.',
             fix: 'Update the value that the condition tests, or test the value that the update changes.',
             example: '`for (let row = 0; row < rows; column++)` reports `misplaced`. Update `row` instead.',

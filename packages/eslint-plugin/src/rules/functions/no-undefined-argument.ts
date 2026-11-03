@@ -22,8 +22,9 @@ export const noUndefinedArgument = createRule<[], 'undefined'>({
         type: 'suggestion',
         docs: {
             level: 'all',
+            requiresTypeChecking: true,
             description:
-                'Reports `undefined` passed as the last argument for a parameter that is optional or has a default value. It needs type information and reports nothing without it.',
+                'Reports `undefined` passed as the last argument for a parameter that is optional or has a default value.',
             why: 'An optional parameter is already `undefined` when the argument is left out, so the explicit value only adds noise.',
             fix: 'Remove the last argument.',
             example:

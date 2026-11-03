@@ -48,8 +48,9 @@ export const noVoidArrayCallback = createRule<[], 'void'>({
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports a callback passed to an array method that uses its result, such as `map`, `filter`, `find`, `some`, `every`, `reduce`, `flatMap`, `sort`, and `toSorted`, or as the second argument of `Array.from`, when every call signature of the callback returns `void`. A function written inline with a block body does not count, because `array-callback-return` reports it. The rule needs type information.',
+                'Reports a callback whose every call signature returns `void`, passed to an array method that uses its result, such as `map`, `filter`, or `reduce`, or as the second argument of `Array.from`.',
             why: 'These methods use the value that the callback returns, so a callback that returns nothing makes them produce `undefined` values, empty results, or an unchanged order.',
             fix: 'Pass a callback that returns the value the method needs, or call `forEach` when only the side effects matter.',
             example: '`declare function log(value: number): void; [1, 2].map(log);` reports `void` at `log`.',

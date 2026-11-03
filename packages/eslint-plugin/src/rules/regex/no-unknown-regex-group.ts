@@ -84,7 +84,7 @@ export const noUnknownRegexGroup = createRule<[], 'unknown'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a read of `groups.name` or `indices.groups.name`, or a destructured name of `groups`, on the result of `exec`, `match`, or `matchAll` when the regular expression has no capturing group of that name. The result must sit in a variable, and the regular expression must be a literal or a variable with one known value.',
+                'Reports a read of a named group, such as `match.groups.name`, on the result of `exec`, `match`, or `matchAll` when the regular expression has no capturing group of that name.',
             why: 'A missing group name reads `undefined`, usually because the name has a typo or the group was renamed.',
             fix: 'Read a group name that the regular expression defines, or add the named group.',
             example: '`const date = /(?<year>\\d+)/u.exec(text); date?.groups?.day;` reports `unknown`.',

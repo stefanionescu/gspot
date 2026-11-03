@@ -11,7 +11,7 @@ export const noDefaultUtilityImports = createRule<[], 'named' | 'method'>({
         docs: {
             level: 'all',
             description:
-                'Reports a default import of lodash, lodash-es, rxjs, rambda, or validator without a namespace import beside it, when the package.json range of the library allows a version with named or per-method imports: lodash and lodash-es 4.0.0, rxjs 7.2.0, rambda 0.8.8, and validator 12.1.0. A library without a valid version range in package.json is not checked.',
+                'Reports a default import of lodash, lodash-es, rxjs, rambda, or validator when the version range in package.json allows named or per-method imports.',
             why: 'A default import pulls the whole library into the bundle, even when the code uses one function.',
             fix: 'Import the functions you use by name, or import each lodash or validator method from its own path.',
             example: '`import _ from "lodash";` reports `method`. Write `import map from "lodash/map";`.',

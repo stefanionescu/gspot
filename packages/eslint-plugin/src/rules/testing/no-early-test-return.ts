@@ -40,7 +40,7 @@ export const noEarlyTestReturn = createRule<[], EarlyReturnFramework>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a test whose body starts with `if (condition) return;` and goes on with more statements. It reads the framework from the imports, then from package.json: Mocha, Vitest, Playwright, node:test, and Bun. Jest, Jasmine, AVA, and QUnit have no skip call inside a test, so their files are not checked.',
+                'Reports a test whose body starts with `if (condition) return;` and goes on with more statements, in Mocha, Vitest, Playwright, node:test, and Bun files.',
             why: 'A test that returns early passes without checking anything, and the report counts it as passed instead of skipped.',
             fix: "Skip the test through the framework, so the report shows it as skipped: `this.skip()` in Mocha, the context's `skip()` in Vitest and node:test, `test.skip(condition)` in Playwright, and `test.skipIf(condition)` in Bun.",
             example:

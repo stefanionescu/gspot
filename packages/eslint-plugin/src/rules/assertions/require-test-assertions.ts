@@ -123,7 +123,7 @@ export const requireTestAssertions = createRule<[], 'missing'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a test of Mocha, Jasmine, Jest, Vitest, Bun, Playwright, Cypress, or node:test, an `it`, `specify`, or `test` call with a callback, that runs no assertion of chai, sinon, supertest, node:assert, node:test, uvu, aws-cdk, Vitest, Bun, Cypress, or a global `expect`. It reads the functions of the file that the test calls, and, with the type information of a TypeScript project, the text of the functions it imports. A test that passes an error to its `done` callback counts as one that asserts.',
+                'Reports a test, an `it`, `specify`, or `test` call with a callback, that runs no assertion, through the functions of the file that it calls and, with type information, the functions that it imports.',
             why: 'A test without an assertion passes whatever the code does, so it checks only that the code does not throw.',
             fix: 'Assert the result of the code under test.',
             example:

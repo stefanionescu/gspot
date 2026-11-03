@@ -53,8 +53,7 @@ export const noEmptyCollection = createRule<[], 'empty'>({
         type: 'problem',
         docs: {
             level: 'recommended',
-            description:
-                'Reports a read of a local array, map, or set when every write of the variable stores an empty collection and every other use only reads it: a reading method call, an element read, or the subject of a `for...of` or `for...in` loop.',
+            description: 'Reports a read of a local array, map, or set that every write leaves empty.',
             why: 'A collection that nothing fills stays empty, so each read of it returns nothing and the code around it does no work.',
             fix: 'Fill the collection before the reads, or remove the collection and the code that reads it.',
             example:

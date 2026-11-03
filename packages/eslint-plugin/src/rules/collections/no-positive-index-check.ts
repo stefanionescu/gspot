@@ -25,8 +25,8 @@ export const noPositiveIndexCheck = createRule<[], 'positive'>({
         type: 'problem',
         docs: {
             level: 'recommended',
-            description:
-                'Reports `array.indexOf(value) > 0` on an array. It needs type information and reports nothing without it.',
+            requiresTypeChecking: true,
+            description: 'Reports `array.indexOf(value) > 0` on an array.',
             why: '`indexOf` returns 0 for the first element, so `> 0` misses a value at the start of the array.',
             fix: 'Use `array.includes(value)`, or compare with `>= 0` or `!== -1`.',
             example: '`if (roles.indexOf(role) > 0)` reports `positive`. Write `if (roles.includes(role))`.',

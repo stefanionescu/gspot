@@ -53,7 +53,7 @@ export const noUnenclosedMultilineBlock = createRule<[], 'unenclosed'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a statement after an if, for, or while whose body has no braces, when its layout makes it look like part of that body: it sits on the same line as the body, at the same indent as an indented body, or indented under a body that shares the line of its condition.',
+                'Reports a statement after an `if`, `for`, or `while` without braces whose layout makes it look like part of that body.',
             why: 'Without braces, only the first statement belongs to the body, so the next statement runs every time even though it looks conditional.',
             fix: 'Add braces around every statement that belongs to the body, or move the next statement to its own line at the outer indent.',
             example: '`if (isReady)\\n    start();\\n    notify();` reports `unenclosed` at `notify();`.',

@@ -63,7 +63,7 @@ export const dompurifyUnsafeConfig = createRule<[], 'unsafe'>({
         docs: {
             level: 'recommended',
             description:
-                'Finds `DOMPurify.sanitize` configurations that let dangerous markup through: tags such as `script` and `iframe` in `ADD_TAGS` or `ALLOWED_TAGS`, event handler attributes in `ADD_ATTR` or `ALLOWED_ATTR`, URL attributes in `ADD_URI_SAFE_ATTR`, an `ALLOWED_URI_REGEXP` without a leading `^`, and unsafe values of `ALLOW_UNKNOWN_PROTOCOLS`, `WHOLE_DOCUMENT`, `SAFE_FOR_XML`, `SANITIZE_DOM`, and `RETURN_TRUSTED_TYPE`.',
+                'Finds `DOMPurify.sanitize` configurations that let dangerous markup through, such as `script` in `ADD_TAGS`, an event handler attribute in `ADD_ATTR`, or `ALLOW_UNKNOWN_PROTOCOLS` set to `true`.',
             why: 'These options let script and event handler markup through the sanitizer, so an attacker can inject code into the page.',
             fix: 'Keep the default configuration, or allow only harmless tags and attributes.',
             example:

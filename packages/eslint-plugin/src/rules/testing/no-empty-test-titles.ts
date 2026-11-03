@@ -11,8 +11,7 @@ export const noEmptyTestTitles = createRule<[], 'empty'>({
         type: 'suggestion',
         docs: {
             level: 'recommended',
-            description:
-                'Reports a test or suite with a callback whose title is an empty or blank string, in files that import a test framework or whose package.json depends on one: Mocha, Jest, Vitest, Bun, node:test, or Playwright. Parameterized and skipped tests are not checked.',
+            description: 'Reports a test or suite with a callback whose title is an empty or blank string.',
             why: 'The title is what a failure report shows. An empty title gives the reader nothing to find the failing test by.',
             fix: 'Name the behavior that the test checks.',
             example: '`it("", run)` reports `empty`. Write `it("adds the tax to the total", run)`.',

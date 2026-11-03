@@ -21,8 +21,9 @@ export const noLeakedJsxNumber = createRule<[], 'leaked' | 'convert'>({
         hasSuggestions: true,
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports the left side of `&&` inside a JSX expression when its type is a number or a bigint, and also a string in files that import React Native. It needs the type information of a TypeScript project, and reads nothing without it.',
+                'Reports the left side of `&&` inside a JSX expression when its type is a number or a bigint, and also a string in files that import React Native.',
             why: 'React renders a falsy number such as 0 instead of nothing, and React Native fails on a string outside a Text element.',
             fix: 'Turn the condition into a boolean, such as `count > 0` or `Boolean(name)`.',
             example: '`{count && <Badge />}` with a number `count` reports `leaked`. Write `{count > 0 && <Badge />}`.',

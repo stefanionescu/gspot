@@ -24,8 +24,7 @@ export const noEmptyTestFile = createRule<[], 'empty'>({
         type: 'suggestion',
         docs: {
             level: 'recommended',
-            description:
-                'Reports a file named `*.test.*`, `*.spec.*`, or `*.cy.*` that declares no test: no `it`, `test`, `specify`, or `Deno.test` call in any of their forms, no titled Playwright `test.skip`, `test.fail`, or `test.fixme`, no `ruleTester.run`, and no other `.run` call with a title and an object of cases.',
+            description: 'Reports a file named `*.test.*`, `*.spec.*`, or `*.cy.*` that declares no test.',
             why: 'A test file without tests passes and checks nothing, so it hides that the tests it should hold are gone.',
             fix: 'Add the tests that the file is named for, or delete the file.',
             example:

@@ -26,7 +26,7 @@ export const noBitwiseInCondition = createRule<[], 'bitwise'>({
         docs: {
             level: 'all',
             description:
-                'Reports the only `&` or `|` of a file when it joins operands that are not numbers and sits in the test of an if, a loop, or a conditional expression. A file with other bitwise operations passes, because it works with bits on purpose.',
+                'Reports the only `&` or `|` of a file when it joins operands that are not numbers in the test of an `if`, a loop, or a conditional expression.',
             why: 'A lone `&` or `|` in a condition is usually a mistyped `&&` or `||`, which also skips short-circuit evaluation.',
             fix: 'Write `&&` or `||`. If the bitwise operation is intended, compare its result with a number.',
             example: '`if (isReady & hasData)` reports `bitwise`. Write `if (isReady && hasData)`.',

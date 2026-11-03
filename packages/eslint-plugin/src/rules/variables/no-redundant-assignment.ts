@@ -199,7 +199,7 @@ export const noRedundantAssignment = createRule<[], 'redundant'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports an assignment of a literal, or of a variable that holds one literal, to a variable that already holds that same literal on every path that reaches the assignment. The rule follows the code paths of one function, and skips variables declared without a value, parameters, names that start with `_`, compound assignments, loop setups, and variables that another function also uses.',
+                'Reports an assignment of a literal to a variable that already holds that same literal on every code path that reaches the assignment.',
             why: 'An assignment that cannot change the value suggests that the code meant to assign something else, and it hides which value the code relies on.',
             fix: 'Remove the assignment, or assign the value that the code meant to store.',
             example: '`let mode = "fast"; if (ready) mode = "fast";` reports `redundant` at the second `"fast"`.',

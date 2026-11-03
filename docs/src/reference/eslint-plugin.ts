@@ -14,6 +14,7 @@ import {
     NO_OPTIONS_MESSAGE,
     ESLINT_FIX_MESSAGE,
     MINOR_HEADING_LEVEL,
+    TYPE_INFORMATION_MESSAGE,
     SUBSECTION_HEADING_LEVEL,
     DEFAULT_OPTION_DESCRIPTION,
 } from '#docs/config/reference.ts';
@@ -84,7 +85,10 @@ function formatRuleConfigs(name: string): string {
 function formatRuleSection(name: string, rule: (typeof plugin.rules)[keyof typeof plugin.rules]): string {
     const { docs } = rule.meta;
     if (docs === undefined) throw new Error(`The plugin rule ${name} has no docs.`);
-    const facts = formatRuleConfigs(name) + (rule.meta.fixable === undefined ? '' : ESLINT_FIX_MESSAGE);
+    const facts =
+        formatRuleConfigs(name) +
+        (rule.meta.fixable === undefined ? '' : ESLINT_FIX_MESSAGE) +
+        (docs.requiresTypeChecking === true ? TYPE_INFORMATION_MESSAGE : '');
     const sections = [
         formatSection('Why', formatText(docs.why), MINOR_HEADING_LEVEL),
         formatSection(HELP_HEADING, formatText(docs.fix), MINOR_HEADING_LEVEL),

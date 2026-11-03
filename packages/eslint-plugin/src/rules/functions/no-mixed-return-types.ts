@@ -86,8 +86,9 @@ export const noMixedReturnTypes = createRule<[], 'mixed'>({
         type: 'suggestion',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports a function whose `return` statements return values of different kinds, such as a string in one branch and a number or an object in another, when its inferred return type is a union of those kinds. `null`, `undefined`, `any`, and a returned `this` do not count, and neither does a documented `@returns` tag or a `string | true` result. The rule needs type information.',
+                'Reports a function whose `return` statements return values of different kinds, such as a string in one branch and a number in another.',
             why: 'A caller of a function that returns different kinds of values has to test the kind of each result before it can use it.',
             fix: 'Return one kind of value from every branch, or split the function so that each part returns one kind.',
             example: '`function read(raw: boolean) { if (raw) return "1"; return 1; }` reports `mixed`.',

@@ -12,7 +12,7 @@ export const noNestedVitestMock = createRule<[], 'scope'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a `vi.mock()` or `vitest.mock()` call that is not a statement of its own at the top of the module: inside a function, a block, or an expression. It reads `vi` and `vitest` imported from Vitest, or as globals in files that use Vitest.',
+                'Reports a `vi.mock()` or `vitest.mock()` call that is not a statement of its own at the top of the module, such as one inside a function, a block, or an expression.',
             why: 'Vitest moves every `vi.mock()` call to the top of the file before the imports run. A call inside a test or a condition still runs first and for every test, so it cannot mock for one test or at run time.',
             fix: 'Move the call to the top level of the module, or use `vi.doMock()` to mock at run time.',
             example:

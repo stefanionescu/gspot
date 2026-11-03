@@ -113,7 +113,7 @@ export const noFloatingPointEquality = createRule<[], 'equality'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports an exact comparison with a value that binary floating point cannot store exactly: `==`, `===`, `!=`, `!==`, a switch case, and a pair of `<=` and `>=` that pins one value. A decimal literal that is a binary fraction, such as `0.5`, and arithmetic that gives a whole number pass.',
+                'Reports an exact comparison with a value that binary floating point cannot store exactly, such as `total === 0.3`, a `switch` case, or a pair of `<=` and `>=` that pins one value.',
             why: 'A decimal such as 0.1 has no exact binary form, so `0.1 + 0.2 === 0.3` is false.',
             fix: 'Compare the difference with a tolerance, such as `Math.abs(total - 0.3) < Number.EPSILON`, or compare whole numbers of the smallest unit.',
             example: '`if (total === 0.3)` reports `equality`. Write `if (Math.abs(total - 0.3) < 1e-9)`.',

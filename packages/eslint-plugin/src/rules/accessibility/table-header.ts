@@ -29,7 +29,7 @@ export const tableHeader = createRule<[], 'missingHeader'>({
         docs: {
             level: 'recommended',
             description:
-                'Finds JSX `<table>` elements without a full row or a full column of `<th>` cells, unless the table is a layout table, hidden with `aria-hidden`, or a wrapper that receives its content through spread props. A table whose structure comes from components or expressions passes.',
+                'Finds a JSX `<table>` without a full row or a full column of `<th>` cells, unless it is a layout table or hidden with `aria-hidden`.',
             why: 'Screen readers use header cells to tell users which row and column a data cell belongs to.',
             fix: 'Mark the cells of the first row or the first column as `<th>`.',
             example:

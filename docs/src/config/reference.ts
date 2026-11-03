@@ -152,6 +152,9 @@ export const NO_CONFIG_MESSAGE = 'No config turns it on; turn it on in your ESLi
 
 export const ESLINT_FIX_MESSAGE = ' `eslint --fix` fixes it.';
 
+export const TYPE_INFORMATION_MESSAGE =
+    ' The rule needs the type information of a TypeScript project, and reports nothing without it.';
+
 export const BANNED_NAME_MESSAGE =
     'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name override.\n\n';
 

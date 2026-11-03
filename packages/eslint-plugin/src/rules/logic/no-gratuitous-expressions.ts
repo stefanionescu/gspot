@@ -79,7 +79,7 @@ export const noGratuitousExpressions = createRule<[], 'decided'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a condition operand whose value an enclosing `if` statement already decided: an identifier tested truthy or falsy by the `if` whose block holds the operand, and not written in that block or another function. A literal `true` or `false` as an `if` test also counts.',
+                'Reports a condition operand whose value an enclosing `if` statement already decided, and a literal `true` or `false` as an `if` test.',
             why: 'A condition with a known result is dead logic: one branch never runs, or the test does nothing, and the code reads as if it could.',
             fix: 'Remove the test whose result is known, or move the code so that the test can change the outcome.',
             example: '`if (ready) { if (ready) start(); }` reports `decided` at the second `ready`.',

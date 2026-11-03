@@ -12,7 +12,7 @@ export const requireReduceInitialValue = createRule<[], 'initial'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports `reduce` called on an array with a callback and no initial value. With type information it checks every array; without it, an array literal and a variable whose one value is an array literal.',
+                'Reports `reduce` called on an array with a callback and no initial value. Without type information, it reads only array literals and variables that hold one.',
             why: '`reduce` without an initial value throws on an empty array, and uses the first element as the start value, which may have the wrong type.',
             fix: 'Pass the start value as the second argument, such as `items.reduce((sum, item) => sum + item, 0)`.',
             example:

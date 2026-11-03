@@ -142,7 +142,7 @@ export const noAnyOriginPolicy = createRule<[], 'permissive'>({
         docs: {
             level: 'recommended',
             description:
-                'Finds CORS policies that let any site read the responses: an `Access-Control-Allow-Origin` header of `*` in `http.createServer` handlers, the `cors` middleware in `app.use` or `router.use` with no `origin` or an `origin` of `*` or `true`, and Express route handlers that copy the request `Origin` header into `Access-Control-Allow-Origin` without comparing it.',
+                'Finds CORS policies that let any site read the responses: an `Access-Control-Allow-Origin` of `*`, the `cors` middleware with no origin or an origin of `*` or `true`, and a handler that copies the request `Origin` unchecked.',
             why: 'A permissive CORS policy lets any site read the responses that a signed-in user receives.',
             fix: 'Allow only the origins that need access: set `origin` to a list of trusted sites, and compare a request origin with that list before you send it back.',
             example:

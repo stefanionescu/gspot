@@ -56,8 +56,9 @@ export const noMisleadingArrayReverse = createRule<[], 'mutation'>({
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports `reverse` or `sort` on an array variable or property when the result is used as a value, such as in an assignment to another name or an argument. A call that stands alone as a statement, that is returned, or that assigns the array to itself passes. It needs type information and reports nothing without it.',
+                'Reports `reverse` or `sort` on an array variable or property whose result the code uses as a value, such as in an assignment to another name, because the call also changes the array.',
             why: '`reverse` and `sort` change the array in place, so code that reads the result as a new array also changes the original.',
             fix: 'Use `toReversed()` or `toSorted()`, or call the method in its own statement.',
             example:

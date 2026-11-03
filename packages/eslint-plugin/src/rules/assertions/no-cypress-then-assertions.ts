@@ -160,7 +160,7 @@ export const noCypressThenAssertions = createRule<[], 'retry' | 'should'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a `.then()` callback on a chain of Cypress DOM queries, such as `cy.get(selector).find(child)`, when the callback only asserts with the global `expect` or `assert` on the element it receives, through constants and values it reads from that element. It reads files whose name marks them as tests, such as `.cy.ts` files.',
+                'Reports a `.then()` callback on a chain of Cypress DOM queries, such as `cy.get(selector)`, when the callback only asserts on the element that it receives.',
             why: 'Cypress runs a `.then()` callback once, so its assertions fail when the page has not settled yet. A `.should()` callback runs again until its assertions pass or the command times out.',
             fix: 'Replace `.then()` with `.should()`.',
             example:

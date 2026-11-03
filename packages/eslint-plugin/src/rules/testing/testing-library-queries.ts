@@ -78,7 +78,7 @@ export const testingLibraryQueries = createRule<[], 'presence' | 'absence' | 'th
         docs: {
             level: 'recommended',
             description:
-                'Reports a Testing Library `screen` query of the wrong kind: a `queryBy*` query in a presence assertion such as `toBeInTheDocument`, a `getBy*` query in an absence assertion such as `not.toBeInTheDocument` or `toBeNull`, and a `getBy*` or `findBy*` query that `waitForElementToBeRemoved` reads. Assertions inside `waitFor` are not checked. The fix swaps `getBy` and `queryBy`.',
+                'Reports a Testing Library `screen` query of the wrong kind: `queryBy*` in a presence assertion, `getBy*` in an absence assertion, and `getBy*` or `findBy*` that `waitForElementToBeRemoved` reads.',
             why: 'A `getBy*` query throws when the element is missing, so an absence assertion never sees a missing element. A `queryBy*` query returns null, so a presence failure loses the error that lists the page.',
             fix: 'Use `getBy*` to assert that an element is present, and `queryBy*` to assert that it is absent or to wait for it to go.',
             example:

@@ -52,7 +52,7 @@ export const maxRegexComplexity = createRule<[{ threshold: number }], 'complex'>
         docs: {
             level: 'all',
             description:
-                'Reports a regular expression whose complexity passes `threshold`, 20 by default. Each quantifier and lookaround adds its nesting depth, each further alternative adds one more for the first, and each character class and backreference adds one. Quantifiers, lookarounds, character classes, and groups with alternatives deepen the nesting.',
+                'Reports a regular expression whose complexity passes `threshold`. Quantifiers, lookarounds, alternatives, character classes, and backreferences add to the score, and nesting adds more.',
             why: 'A long, nested regular expression is hard to read and to change without breaking a case.',
             fix: 'Split the expression into smaller named parts, or check parts of the input with plain code.',
             example:

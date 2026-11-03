@@ -61,7 +61,7 @@ export const noUnexplainedTestSkips = createRule<[], 'skipped'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a skipped test or suite that has no comment with a reason on the line above, on its line, or on the line below. It reads the test framework from package.json: Jasmine `xit` and `xdescribe`; Jest, Vitest, Mocha, and Cypress `.skip` and the `x` aliases; Playwright `test.skip(title)` and `test.describe.skip(title)`; and in other projects the node:test `{ skip: true }` option and a `t.skip()` call without a message.',
+                'Reports a skipped test or suite, such as `it.skip` or `xdescribe`, with no comment that gives a reason on the line above, on its line, or on the line below.',
             why: 'A skipped test stops checking its code. Without a reason, nobody knows when to turn it back on or whether to delete it.',
             fix: 'Delete the test, fix it so it runs, or write the reason in a comment next to it.',
             example:

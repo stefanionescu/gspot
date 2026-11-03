@@ -46,7 +46,7 @@ export const noUnusedCollection = createRule<[], 'unused'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a local variable that holds an array, map, or set when the code only stores collections in it, writes its elements, or calls its writing methods, such as `push`, `set`, and `add`, and never reads its contents. Exported variables do not count.',
+                'Reports a local array, map, or set that the code only writes, such as through `push`, `set`, or `add`, and never reads.',
             why: 'Filling a collection that nothing reads costs time and memory and often means that the code forgot to use the result.',
             fix: 'Read the collection where its contents matter, or remove it and the writes to it.',
             example: '`const names = []; names.push(name);` with no other use reports `unused` at `names`.',

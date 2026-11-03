@@ -243,7 +243,7 @@ export const preferMatcherAssertions = createRule<[], 'matcher' | 'length' | 're
         docs: {
             level: 'all',
             description:
-                'Reports an equality assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, or Cypress that a dedicated matcher expresses: a comparison with `null`, `undefined`, `NaN`, or a `length`, and a comparison of a boolean expression with `true` or `false`, such as `===`, `instanceof`, a numeric `<`, or a string `includes` call. A Playwright locator state or value read in place, such as `await locator.isVisible()`, reports the web-first matcher.',
+                'Reports an equality assertion that a dedicated matcher expresses, such as a comparison with `null`, `NaN`, or a `length`, a boolean expression compared with `true`, or an awaited Playwright locator state such as `isVisible()`.',
             why: 'A dedicated matcher reads like the intent, and its failure message shows the value it received instead of `expected true, received false`.',
             fix: 'Apply the suggestion, or write the matcher that the message names.',
             example: '`expect(items.length).toBe(2)` reports `length`. Write `expect(items).toHaveLength(2)`.',

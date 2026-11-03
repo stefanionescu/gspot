@@ -22,7 +22,7 @@ export const restrictedSyntax = createRule<RestrictedSyntaxOptions, 'restricted'
             example:
                 'With the option `{ selector: "TSEnumDeclaration", message: "Use a literal union instead of an enum." }`, `enum Color { Red }` reports `restricted` with that message. With `files: ["src/**"]`, a file outside `src/` does not report it.',
             description:
-                'Reports each node that an option selector matches, with the message of that option, like the core no-restricted-syntax. Each option can name the `files` it applies to and the `ignores` it skips, as globs relative to `settings.gspot.root`, or to the working folder of ESLint. One rule holds every selector of a folder, so a later block never drops the selectors of another, and the core no-restricted-syntax stays free for your own selectors.',
+                'Reports each node that an option selector matches, with the message of that option, like the core no-restricted-syntax. Each option can name the `files` it applies to and the `ignores` it skips.',
             why: 'A pattern that a project bans should report everywhere it applies, with the reason in the message.',
             fix: 'Follow the message of the finding, which names the shape to write instead.',
         },

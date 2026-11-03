@@ -146,7 +146,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
                 'The function `function one() { return 1; }` with the one call `total(one())` reports `trivial`. Replace the call with `total(1)` and delete the function. A function that two places use, or that the module exports, is not reported.',
             level: 'all',
             description:
-                'Reports a function of `trivialFunctionStatements` statements or fewer, nested callbacks included, when the module does not export it and at most one place in the file uses it. A class method is reported however many places call it. A function written inline as a value, a decorated method, and the implementation of an overload set are not reported.',
+                'Reports a function of `trivialFunctionStatements` statements or fewer, nested callbacks included, that the module does not export and that at most one place in the file uses, and a class method of that size.',
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call site and delete it. Keep a function whose identity matters, such as a listener that code adds and removes by name, and give its suppression that reason.',
         },

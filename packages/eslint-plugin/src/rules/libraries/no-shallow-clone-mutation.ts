@@ -107,7 +107,7 @@ export const noShallowCloneMutation = createRule<[], 'shared'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a write, an update, a `delete`, or a call of a mutating method such as `push` on a nested property, two or more static members deep, of a variable whose only value comes from `clone` of lodash, lodash-es, or underscore. An earlier assignment in the same function that replaces the parent object with a fresh object or a deep clone does not count.',
+                'Reports a write or a mutating call, such as `push`, on a nested property two or more members deep of a variable whose value comes from the shallow `clone` of lodash, lodash-es, or underscore.',
             why: 'A shallow clone shares its nested objects with the original, so a change to a nested property changes the original value too.',
             fix: 'Copy with `structuredClone()` or `_.cloneDeep()` when the copy needs its own nested values, or replace the parent object before the write.',
             example: '`const copy = _.clone(settings); copy.theme.color = "red";` reports `shared`.',

@@ -42,8 +42,9 @@ export const noIgnoredReturn = createRule<[], 'ignored' | 'map'>({
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports a call statement that drops the result of a method without side effects on a string, number, array, Date, Math, or RegExp value, such as `name.trim();` or `items.concat(more);`. `replace` with a callback, and `find` with an inline callback that assigns a value, pass. It needs type information and reports nothing without it.',
+                'Reports a call statement that drops the result of a method without side effects on a string, number, array, Date, Math, or RegExp value, such as `name.trim();`.',
             why: 'These methods return a new value and change nothing, so a call whose result is dropped does nothing.',
             fix: 'Use the result, such as `name = name.trim();`, or delete the call. Use `forEach` instead of `map` to run a callback for each item.',
             example: '`title.toUpperCase();` reports `ignored`. Write `title = title.toUpperCase();`.',

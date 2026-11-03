@@ -102,7 +102,7 @@ export const noComponentDebounce = createRule<[], 'function' | 'class'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a call of `debounce` or `throttle` from lodash, lodash-es, or Underscore.js in the body of a React function component or hook, a function whose name starts with an uppercase letter or with `use`, or in the `render` method of a React class component. A call inside `useMemo` or `useCallback`, passed to `useRef`, or assigned to `ref.current` behind a check that the ref is empty does not count.',
+                'Reports a call of `debounce` or `throttle` from lodash, lodash-es, or Underscore.js in the body of a React function component, a hook, or a `render` method, outside `useMemo`, `useCallback`, and a ref.',
             why: 'The component calls the function again on each render, so each render creates a new timer, and the debounced or throttled function never waits as intended.',
             fix: 'Move the call out of the component, or keep the function across outputMethods with `useMemo`, `useRef`, or an instance property.',
             example:

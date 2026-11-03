@@ -114,7 +114,7 @@ export const preferTestTable = createRule<[], 'table'>({
         docs: {
             level: 'all',
             description:
-                'Reports three or more `it` or `test` cases of one block whose bodies match token for token, except for at most three literal values, in Jest, Vitest, Playwright, and Bun files. Each case needs a static title and at least two statements.',
+                'Reports three or more `it` or `test` cases of one block whose bodies match token for token except for at most three literal values.',
             why: 'Copies of one test differ only in their data, so a reader must compare them line by line, and a fix must change each copy.',
             fix: 'Write one test with `test.each` and a table of the values that differ.',
             example:

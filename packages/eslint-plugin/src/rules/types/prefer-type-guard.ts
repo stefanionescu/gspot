@@ -57,7 +57,7 @@ export const preferTypeGuard = createRule<[], 'guard'>({
         docs: {
             level: 'all',
             description:
-                'Reports a function or method of one parameter, or of none for `this`, whose only statement returns a check that a member of a cast value exists: `(value as Fish).swim !== undefined`, `Boolean((value as Fish).swim)`, or `!!(value as Fish).swim`. A function with a type predicate passes.',
+                'Reports a function of one parameter without a type predicate whose only statement returns a check that a member of a cast value exists, such as `(value as Fish).swim !== undefined`.',
             why: 'The check narrows nothing for the caller, who has to cast the value again after a true result.',
             fix: 'Declare the result as a type predicate, such as `function isFish(value: Pet): value is Fish`.',
             example:

@@ -14,7 +14,7 @@ export const noIndexImports = createRule<[], 'index'>({
             example:
                 'The import `import { a } from "./index.js";` reports `index`. If `a.js` declares the value, use `import { a } from "./a.js";`.',
             description:
-                'Finds an import that names an index file instead of the module that declares the value: imports, re-exports, dynamic and type imports, import-equals declarations, require calls, and the module paths of Vitest and Jest mocks. It reads paths that start with ./, ../, @/, ~/, or #. Folder imports such as ./lib and resource imports with a query such as ?raw are not reported.',
+                'Finds an import, re-export, `require`, or test mock path that names an index file instead of the module that declares the value.',
             why: 'An import that names an index file hides the module that declares the value.',
             fix: 'Import from the leaf module directly.',
         },

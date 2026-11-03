@@ -78,7 +78,7 @@ export const noAsyncSuiteCallbacks = createRule<
         docs: {
             level: 'recommended',
             description:
-                'Reports an async callback of `describe`, `context`, or `suite` in Jest, Mocha, and Cypress files: the `async` keyword when the callback awaits nothing, the first `await` otherwise, and a call of a local async function that declares tests after an `await`.',
+                'Reports an async callback of `describe`, `context`, or `suite` in Jest, Mocha, and Cypress files, and a call in a suite of a local async function that declares tests after an `await`.',
             why: 'The runner collects the tests of a suite when it calls the callback, and it does not wait for a promise. A test declared after an `await` never runs, and nothing reports it.',
             fix: 'Make the suite callback synchronous. Move the async setup into a `beforeAll` or `beforeEach` hook, or into the test that needs it.',
             example:

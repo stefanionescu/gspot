@@ -91,7 +91,7 @@ export const noGlobalsShadowing = createRule<[], 'declaration' | 'assignment'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a variable, function, parameter, or catch binding named after a built-in global of JavaScript, such as `Object`, `NaN`, or `parseInt`, or named `arguments`, and an assignment or update of one of these names. `undefined` is reported only where it gets a value. The names of `Object.prototype` members and `escape` and `unescape` pass.',
+                'Reports a variable, function, parameter, or catch binding named after a built-in global of JavaScript, such as `Object` or `parseInt`, and an assignment or update of one of these names.',
             why: 'A local name that hides a built-in makes the built-in unreachable in that scope, and readers expect the standard behavior.',
             fix: 'Rename the binding, or stop assigning to the built-in.',
             example:

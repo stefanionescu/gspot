@@ -73,7 +73,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             example:
                 'With `@/*` mapped to `src/*`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `alias`. Correct the import to `import { a } from "@/turn/a.js";`. With folders `api` and `supabase`, a relative import from `api` into `supabase` reports `escape`.',
             description:
-                'Finds relative imports that leave the nearest boundary folder: imports, re-exports, dynamic and type imports, import-equals declarations, and require calls. By default every second-level folder, such as `src/cart` or `packages/shop`, is a boundary. Set folders to project paths or folder globs to choose other boundaries. Paths and aliases are relative to `settings.gspot.root`, or to the working folder of ESLint.',
+                'Finds relative imports that leave the nearest boundary folder, every second-level folder such as `src/cart` by default. The `folders` option names other boundaries.',
             why: 'Relative paths between folders couple separate parts of a project to the tree shape.',
             fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists, and keeps a query such as `?raw`. Otherwise, add an alias for the target in package.json `imports`, or in tsconfig `paths` when a bundler resolves them, run gspot apply, and import through it. Or move the shared code into a package that both folders depend on, and import its package name.',
         },

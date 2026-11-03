@@ -40,8 +40,9 @@ export const noTryPromise = createRule<[], 'open' | 'caught'>({
         type: 'problem',
         docs: {
             level: 'recommended',
+            requiresTypeChecking: true,
             description:
-                'Reports a try statement whose body only starts promises: a promise that nothing awaits, chains, or catches escapes the catch clause, and a try around promises that all have `.catch` adds nothing. A try body with an `await` or a call that returns no promise passes. It needs type information and reports nothing without it.',
+                'Reports a `try` statement whose body only starts promises that it does not await, because the `catch` clause never sees their rejections.',
             why: 'A catch clause sees only errors thrown while the try body runs, not a promise that rejects later.',
             fix: 'Await the promise inside the try, or handle its rejection with `.catch` and remove the try.',
             example:

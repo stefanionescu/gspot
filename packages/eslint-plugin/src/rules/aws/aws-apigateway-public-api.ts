@@ -65,7 +65,7 @@ export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
         docs: {
             level: 'recommended',
             description:
-                'Finds API Gateway methods and routes without authorization: `CfnMethod` and `CfnRoute` constructions that leave out `authorizationType` or set it to `NONE`, and `addMethod` calls on a `RestApi` resource tree with `AuthorizationType.NONE` or with neither their own `authorizationType` nor a default one.',
+                'Finds API Gateway methods and routes without authorization, such as a `CfnMethod` or `CfnRoute` without an `authorizationType`, or an `addMethod` call with `AuthorizationType.NONE`.',
             why: 'A method without authorization lets anyone on the internet call the API.',
             fix: 'Set `authorizationType` to an authorizer, such as `AuthorizationType.IAM` or `AuthorizationType.COGNITO`, on the method or in `defaultMethodOptions`.',
             example:

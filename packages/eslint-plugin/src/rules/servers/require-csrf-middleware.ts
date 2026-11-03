@@ -33,7 +33,7 @@ export const requireCsrfMiddleware = createRule<[], 'ignoredMethod' | 'unprotect
         docs: {
             level: 'recommended',
             description:
-                'In a file that imports `csurf`, finds `post`, `put`, `delete`, and `patch` routes that come before any `use` of the `csurf` middleware and do not pass it themselves. It also finds `ignoreMethods` options of `csurf` that skip a method other than GET, HEAD, and OPTIONS.',
+                'In a file that imports `csurf`, finds `post`, `put`, `delete`, and `patch` routes that run without the `csurf` middleware, and an `ignoreMethods` option that skips a method other than GET, HEAD, and OPTIONS.',
             why: 'A route that changes data without a CSRF check lets another site send that change in the name of a signed-in user.',
             fix: 'Add the `csurf` middleware with `app.use` before the routes, or pass it to each route that changes data. Keep only safe methods in `ignoreMethods`.',
             example:

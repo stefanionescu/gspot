@@ -71,7 +71,7 @@ export const noElementOverwrite = createRule<[], 'overwrite'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a statement that writes the same index or key of a collection as an earlier statement of an unbroken run of writes to that collection: `items[key] = value`, `map.set(key, value)`, and `set.add(key)`. A literal or a variable name counts as the key, and a write whose value reads the collection passes.',
+                'Reports a statement that writes the same index or key of a collection as an earlier statement of an unbroken run of writes, such as `items[key] = value` or `map.set(key, value)`.',
             why: 'The second write replaces the first before anything reads it, which usually means one key is wrong.',
             fix: 'Correct the key that should differ, or delete the write whose value is lost.',
             example: '`labels[0] = "first"; labels[0] = "second";` reports `overwrite` at the second write.',

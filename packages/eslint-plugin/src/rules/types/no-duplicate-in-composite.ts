@@ -9,7 +9,7 @@ export const noDuplicateInComposite = createRule<[], 'duplicate'>({
         docs: {
             level: 'recommended',
             description:
-                'Reports a member of a union or intersection type that repeats the text of an earlier member, such as `string | string`. It needs no type information, so it also finds repeated names that do not resolve.',
+                'Reports a member of a union or intersection type that repeats the text of an earlier member, such as `string | string`.',
             why: 'A repeated member adds nothing to the type, and often stands where a different member was meant.',
             fix: 'Remove the repeated member, or replace it with the type that was meant.',
             example: '`type Id = string | number | string;` reports `duplicate` at the second `string`.',

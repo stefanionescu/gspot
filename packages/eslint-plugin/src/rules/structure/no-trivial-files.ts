@@ -144,10 +144,10 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial' | 'reexp
         type: 'suggestion',
         docs: {
             example:
-                'A file containing only `import { value } from "./owner"; export { value };` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. `export { value } from "./owner";` reports `reexport` once, in any file. With `reexports: "index-only"`, a file named index may re-export, and reports `barrel` when it exports more names than it declares and more than `indexExports`.',
+                'A file containing only `import { value } from "./owner"; export { value };` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. `export { value } from "./owner";` reports `reexport` once, in any file. With `reexports: "index-only"`, a file named index may re-export, and reports `barrel` when it exports more names than it declares and more than `indexExports`. A file that the nearest package.json names in `exports`, `main`, or `bin` passes, because other packages import it by that path.',
             level: 'all',
             description:
-                'Reports each `export … from`, and a file whose other top-level statements are only imports and aliases, such as `export const name = owner.name;`, `export type Alias = Owner;`, or `export type Alias<T> = Owner<T>;`. A type that gives a generic its arguments, such as `export type UserBox = Box<User>;`, defines a type and is not an alias. With `reexports: "index-only"`, files named index may re-export and forward, up to `indexExports` names when they export more names than they declare. A file that matches `forwardingFiles` may only forward, but still reports each re-export. A file that the nearest package.json names in `exports`, `main`, or `bin` is not reported, because other packages import it by that path.',
+                'Reports each `export … from`, and a file whose other top-level statements are only imports and aliases. With `reexports: "index-only"`, an index file may re-export up to `indexExports` names.',
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Import re-exported values from the modules that define them, and use the original name of each alias. Then delete the forwarding file or the re-export. Split an index file that exports too many names.',
         },
