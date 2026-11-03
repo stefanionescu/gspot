@@ -231,7 +231,19 @@ const ruffSchema = z.strictObject({
         }),
 });
 
-export const toolsSchema = z.strictObject({
+/**
+Give each tool table its description in the global registry, where the editor schema and the reference read it.
+
+@param tables the table schemas by tool.
+@returns the same tables.
+*/
+function describeToolTables<Tables extends Record<string, z.ZodType>>(tables: Tables): Tables {
+    for (const [tool, schema] of Object.entries(tables))
+        z.globalRegistry.add(schema, { description: `Options that gspot writes to the ${tool} configuration.` });
+    return tables;
+}
+
+const toolTables = {
     eslint: eslintTableSchema.optional(),
     ruff: ruffSchema.optional(),
     commitlint: commitlintSchema,
@@ -246,7 +258,6 @@ export const toolsSchema = z.strictObject({
             plugins: stylelintPluginsSchema,
         })
         .optional(),
-});
+};
 
-for (const [tool, schema] of Object.entries(toolsSchema.shape))
-    z.globalRegistry.add(schema, { description: `Options that gspot writes to the ${tool} configuration.` });
+export const toolsSchema = z.strictObject(describeToolTables(toolTables));

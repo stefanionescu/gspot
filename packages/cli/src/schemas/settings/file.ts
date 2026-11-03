@@ -37,6 +37,21 @@ import {
     TOOL_TIMEOUT_SECONDS_DEFAULT,
 } from '#cli/config/settings/schema.ts';
 
+/**
+Give each table of a settings shape its description in the global registry, where the editor schema and the
+reference read it.
+
+@param shape the settings schemas by name.
+@returns the same shape.
+*/
+function describeTables<Shape extends Record<string, z.ZodType>>(shape: Shape): Shape {
+    for (const [name, schema] of Object.entries(shape)) {
+        const description = TABLE_DESCRIPTIONS[name];
+        if (description !== undefined) z.globalRegistry.add(schema, { ...schema.meta(), description });
+    }
+    return shape;
+}
+
 export const ignoreSchema = z
     .strictObject({
         check: z.string().optional().meta({
@@ -116,7 +131,7 @@ const rootBody = {
     tools: publicToolsSchema.optional(),
 };
 
-const scopeBody = {
+const scopeBody = describeTables({
     ...rootBody,
     dependencies: configurationTableSchemas.dependencies.unwrap().omit({ min_release_age_days: true }).optional(),
     prose: configurationTableSchemas.prose.unwrap().omit({ banned_headings: true }).optional(),
@@ -141,12 +156,7 @@ const scopeBody = {
                 .describe(publicToolsSchema.shape.eslint.description as string),
         })
         .optional(),
-};
-
-for (const [name, schema] of Object.entries(scopeBody)) {
-    const description = TABLE_DESCRIPTIONS[name];
-    if (description !== undefined) z.globalRegistry.add(schema, { ...schema.meta(), description });
-}
+});
 
 export const scopeSchema = z.strictObject({
     path: relativePathSchema
@@ -209,31 +219,33 @@ export const rootSettingSchemas = {
 };
 
 export const settingsSchema = z
-    .strictObject({
-        ...rootSettingSchemas,
-        configurations: configurationNameSchema.array().default([]).meta({
-            description:
-                'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
+    .strictObject(
+        describeTables({
+            ...rootSettingSchemas,
+            configurations: configurationNameSchema.array().default([]).meta({
+                description:
+                    'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
+            }),
+            removed_configurations: removedConfigurationsSchema.prefault({}).meta({
+                reason_when: 'adding',
+                description:
+                    'Configurations you removed, each with the reason why, which detection does not add back; only `gspot add` and `gspot remove` write this table.',
+            }),
+            scope: scopeSchema.array().optional(),
+            ...rootBody,
+            import_rule: importRulesSchema,
+            ignore: ignoreSchema.array().optional(),
+            command_check: commandCheckSchema.array().optional(),
+            format: formatSchema.prefault({}),
+            limits: limitsSchema.prefault({}),
+            naming: namingSchema.prefault({}),
+            data_files: rootSchemas,
+            structure: rootStructure.unwrap().prefault({}),
+            hooks: hooksSchema.prefault({}),
+            ci: ciSchema.optional(),
+            rule_files: ruleFilesSchema.prefault({}),
         }),
-        removed_configurations: removedConfigurationsSchema.prefault({}).meta({
-            reason_when: 'adding',
-            description:
-                'Configurations you removed, each with the reason why, which detection does not add back; only `gspot add` and `gspot remove` write this table.',
-        }),
-        scope: scopeSchema.array().optional(),
-        ...rootBody,
-        import_rule: importRulesSchema,
-        ignore: ignoreSchema.array().optional(),
-        command_check: commandCheckSchema.array().optional(),
-        format: formatSchema.prefault({}),
-        limits: limitsSchema.prefault({}),
-        naming: namingSchema.prefault({}),
-        data_files: rootSchemas,
-        structure: rootStructure.unwrap().prefault({}),
-        hooks: hooksSchema.prefault({}),
-        ci: ciSchema.optional(),
-        rule_files: ruleFilesSchema.prefault({}),
-    })
+    )
     .superRefine((written, context) => {
         const records = [
             {
@@ -268,8 +280,3 @@ export const settingsSchema = z
         }
     })
     .meta({ examples: SETTINGS_EXAMPLES });
-
-for (const [name, schema] of Object.entries(settingsSchema.shape)) {
-    const description = TABLE_DESCRIPTIONS[name];
-    if (description !== undefined) z.globalRegistry.add(schema, { ...schema.meta(), description });
-}

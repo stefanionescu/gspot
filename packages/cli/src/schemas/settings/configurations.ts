@@ -19,7 +19,27 @@ import {
     nonemptyStringsSchema,
 } from '#cli/schemas/settings/fields.ts';
 
-export const configurationTableSchemas = {
+/**
+Give each configuration table its ID and description in the global registry, where the editor schema and the
+reference read them.
+
+@param tables the table schemas by name.
+@returns the same tables.
+*/
+function describeConfigurationTables<Tables extends Record<string, z.ZodOptional<z.ZodType>>>(tables: Tables): Tables {
+    for (const [name, schema] of Object.entries(tables)) {
+        const description = TABLE_DESCRIPTIONS[name];
+        if (description !== undefined)
+            z.globalRegistry.add(schema, {
+                ...schema.meta(),
+                ...(schema.unwrap().meta()?.id === undefined && { id: name }),
+                description,
+            });
+    }
+    return tables;
+}
+
+const configurationTables = {
     format: formatSchema.optional(),
     limits: limitsSchema.optional(),
     naming: namingSchema.optional(),
@@ -234,6 +254,8 @@ export const configurationTableSchemas = {
         .optional(),
 };
 
+export const configurationTableSchemas = describeConfigurationTables(configurationTables);
+
 const toolTableSchemas = Object.fromEntries<z.ZodType>(
     Object.entries(toolsSchema.shape).map(([tool, schema]) => [`tools.${tool}`, schema]),
 ) as ToolTableSchemas;
@@ -243,16 +265,6 @@ export const tableValuesSchema = z.strictObject({
     format: formatSchema.prefault({}),
     ...toolTableSchemas,
 });
-
-for (const [name, schema] of Object.entries(configurationTableSchemas)) {
-    const description = TABLE_DESCRIPTIONS[name];
-    if (description !== undefined)
-        z.globalRegistry.add(schema, {
-            ...schema.meta(),
-            ...(schema.unwrap().meta()?.id === undefined && { id: name }),
-            description,
-        });
-}
 
 export const tableSettingSchemas = Object.fromEntries(
     Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rule_files: ruleFilesSchema.shape }).flatMap(

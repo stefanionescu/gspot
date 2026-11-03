@@ -4,7 +4,26 @@ import { allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import { BIOME_COMPLEXITY_MAX } from '#cli/config/settings/schema.ts';
 import type { LanguageLimitField, LanguageLimitSchemas } from '#cli/types/settings.ts';
 
-export const limitFields = {
+/**
+Give each limit the languages whose checks read it, in the global registry, where the settings and the reference read
+them.
+
+@param fields the limit schemas by name.
+@returns the same fields.
+*/
+function addLimitLanguages<Fields extends Record<string, z.ZodType>>(fields: Fields): Fields {
+    for (const [field, schema] of Object.entries(fields)) {
+        const languages = [
+            ...new Set(
+                LIMIT_READERS.filter((reader) => reader.limits.includes(field)).flatMap((reader) => reader.languages),
+            ),
+        ];
+        if (languages.length > 0) z.globalRegistry.add(schema, { ...schema.meta(), languages });
+    }
+    return fields;
+}
+
+export const limitFields = addLimitLanguages({
     max_file_lines: allowReasonedValue(z.int().min(0).max(Number.MAX_SAFE_INTEGER), {
         configurations: ['sql', 'structure'],
         description: 'The most lines one file may have, not counting blank lines and comment-only lines.',
@@ -90,16 +109,7 @@ export const limitFields = {
         reason_when: 'raising',
         default: 2,
     }),
-};
-
-for (const [field, schema] of Object.entries(limitFields)) {
-    const languages = [
-        ...new Set(
-            LIMIT_READERS.filter((reader) => reader.limits.includes(field)).flatMap((reader) => reader.languages),
-        ),
-    ];
-    if (languages.length > 0) z.globalRegistry.add(schema, { ...schema.meta(), languages });
-}
+});
 
 const languageLimitFieldsSchema = z.strictObject(limitFields).partial();
 const languageLimits = Object.fromEntries(
