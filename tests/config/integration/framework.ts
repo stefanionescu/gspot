@@ -29,13 +29,13 @@ export const ASTRO_PAGE_PATH = 'src/pages/index.astro';
 const NESTJS_DIRECTIVE_FINDINGS = [
     {
         file: 'src/greeting.controller.ts',
-        line: 15,
+        line: 16,
         column: 5,
         message: "Unused eslint-disable directive (no problems were reported from 'gspot/no-trivial-functions').",
     },
     {
         file: 'src/greeting.controller.ts',
-        line: 25,
+        line: 26,
         column: 5,
         message: "Unused eslint-disable directive (no problems were reported from 'gspot/no-trivial-functions').",
     },
@@ -52,7 +52,7 @@ export const NESTJS_CASES = [
         expected: {
             file: 'src/greeting.controller.ts',
             rule: '@darraghor/nestjs-typed/param-decorator-name-matches-route-param',
-            line: 24,
+            line: 25,
         },
     },
     {

@@ -21,7 +21,7 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
         });
 
         commitAll(sandbox.path);
-        const command = ['check', '--only', 'nginx/syntax', '--json'];
+        const command = ['check', '--only', 'nginx/syntax', '--json', '--verbose'];
         const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.report.checks.flatMap((check) => check.findings)).toMatchObject([

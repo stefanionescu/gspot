@@ -21,9 +21,6 @@ test.each([...AUTOPLAY_CHECKS])(
     '$check reports audio and video autoplay and accepts user-controlled playback',
     async (row) => {
         const { root } = installedSandbox();
-        const skippedChecks = [
-            { check: row.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] },
-        ];
         const build = buildProgramCommand('fakes/site-build', '--copy', 'page.html=dist/index.html');
         const sourceFiles = {
             'gspot.toml': buildSandboxSettings(['html'], {
@@ -47,14 +44,12 @@ test.each([...AUTOPLAY_CHECKS])(
                 status: 'failed',
                 findings: row.findings.map((finding) => matchFields(finding)),
             },
-            ...skippedChecks,
         ]);
         await writeFile(join(root, row.source), CONTROLLED_PLAYBACK_PAGE);
         const corrected = parseCheckReport(await spawnGspot(root, row.arguments));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([
             { check: row.check, scope: row.scope, status: 'passed', findings: [] },
-            ...skippedChecks,
         ]);
     },
 );

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-test('a baseline holds the findings of real tools, and the formatter leaves its file alone', async () => {
+test('a baseline holds the findings that no fixer fixes, and a prune drops the counts that went away', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': '{ "name": "example", "private": true, "type": "module" }\n',
         'source.js': 'export const value = {enabled:true}\n',
@@ -18,10 +18,12 @@ test('a baseline holds the findings of real tools, and the formatter leaves its 
     expect(before.code, before.stdout + before.stderr).toBe(1);
     const written = await spawnGspot(sandbox.path, ['baseline']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    const after = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--json']));
-    expect(after.code, after.stdout + after.stderr).toBe(0);
-    expect(after.report.baselined['format/prettier']).toBeGreaterThan(0);
-    await writeFile(join(sandbox.path, 'source.js'), 'export const value = { enabled: true };\n');
+    const unfixed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--json']));
+    expect(unfixed.report.failed).toStrictEqual(['format/prettier']);
+    expect(unfixed.report.baselined).toStrictEqual({ 'javascript/knip': 1 });
+    const fixed = await spawnGspot(sandbox.path, ['check', '--fix']);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    await rm(join(sandbox.path, 'source.js'));
     const stale = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--json']));
     expect(stale.code, stale.stdout + stale.stderr).toBe(1);
     expect(stale.report.failed).toStrictEqual(['gspot/baseline']);

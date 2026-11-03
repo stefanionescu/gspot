@@ -57,6 +57,7 @@ const launcherFolder = dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH));
 resources.use(
     overrideEnvironment({
         ...MISE_LOCK_ENVIRONMENT,
+        GITHUB_ACTIONS: undefined,
         MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
         BUN_INSTALL_CACHE_DIR: join(TEST_RUN_FOLDER, 'bun-cache'),
         GSPOT_TEST_NPM_REGISTRY: registry.url,

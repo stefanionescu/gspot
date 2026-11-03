@@ -77,7 +77,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
     });
 
     await linkTypescript(join(sandbox.path, 'node_modules'));
-    const selection = ['--only', 'typescript/tsc', '--json'];
+    const selection = ['--only', 'typescript/tsc', '--json', '--verbose'];
     const { mode } = await stat(join(sandbox.path, 'tsconfig.json'));
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', ...selection]));

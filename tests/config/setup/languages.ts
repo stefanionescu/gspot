@@ -20,8 +20,9 @@ main "$@"
 export const BROKEN_IF_SCRIPT = 'if then\n';
 
 export const NESTJS_CONTROLLER = `// The routes that greet.
+import { Controller, Get, Param } from '@nestjs/common';
+
 import { GreetingService } from './greeting.service.js';
-import { Get, Param, Controller } from '@nestjs/common';
 
 /**
 Answers greeting requests.
@@ -108,8 +109,9 @@ export class GreetingService {
         'src/greeting.controller.ts': NESTJS_CONTROLLER_UNSUPPRESSED,
         'src/greeting.module.ts': `// The greeting feature.
 import { Module } from '@nestjs/common';
-import { GreetingService } from './greeting.service.js';
+
 import { GreetingController } from './greeting.controller.js';
+import { GreetingService } from './greeting.service.js';
 
 /**
 Wires the greeting feature together.
