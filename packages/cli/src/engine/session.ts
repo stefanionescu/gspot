@@ -3,7 +3,7 @@ import { listPackagePins } from '#cli/tools/pins.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { listEnabledChecks } from '#cli/engine/plan.ts';
-import { readSettingsFile } from '#cli/settings/file.ts';
+import { readSettingsText } from '#cli/settings/file.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
@@ -107,7 +107,7 @@ export async function openSession(
         cache = createRunCache(root),
         toolCache = createRunCache(toolsRoot),
         listing,
-        settings = readSettings(readSettingsFile(root).text, root),
+        settings = readSettings(readSettingsText(root).text, root),
         unreadablePaths = [],
         resources = [],
         cancelSignal,

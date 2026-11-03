@@ -6,7 +6,7 @@ import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { findSettingLine, readSettingsFile } from '#cli/settings/file.ts';
+import { findSettingLine, readSettingsText } from '#cli/settings/file.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
@@ -21,7 +21,7 @@ Reports setting paths that match no tracked file or folder.
 export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
-    const { text } = readSettingsFile(session.root);
+    const { text } = readSettingsText(session.root);
     return listSettingsTables(session.settings).flatMap(({ table, scope = '', path }) => {
         const sources: Array<{ pattern: string; selector: string; location: SettingLocation }> = [];
         const visit: PathVisitor = (pattern, location, role) => {

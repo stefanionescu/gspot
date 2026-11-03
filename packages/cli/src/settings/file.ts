@@ -23,17 +23,28 @@ export function isReasonedValue(value: unknown): value is ReasonedValue<unknown>
 }
 
 /**
-Read the bytes, mode, and table of gspot.toml without following a link out of the repository.
+Read the bytes, mode, and text of gspot.toml without following a link out of the repository.
 
 @param root the folder that contains gspot.toml.
 */
-export function readSettingsFile(root: string): SettingsEdit {
+export function readSettingsText(root: string): Pick<SettingsEdit, 'text' | 'previous'> {
     const files = openFiles(root);
     const previous = files.read(SETTINGS_FILE);
     if (previous === undefined) throw new GspotError('settings', NO_SETTINGS_MESSAGE);
     const text = decodeUtf8(previous.bytes);
     if (text === undefined) throw new GspotError('settings', SETTINGS_ENCODING_MESSAGE);
-    return { text, table: parseTomlFile(SETTINGS_FILE, text), previous };
+    return { text, previous };
+}
+
+/**
+Read the bytes, mode, text, and table of gspot.toml, for an edit that keeps its layout.
+
+@param root the folder that contains gspot.toml.
+*/
+export function readSettingsFile(root: string): SettingsEdit {
+    const { text, previous } = readSettingsText(root);
+    const table = parseTomlFile(SETTINGS_FILE, text);
+    return { text, table, previous };
 }
 
 /**

@@ -40,14 +40,16 @@ Parse gspot.toml and return its validated settings or field errors.
 */
 export function parseSettings(text: string, root: string): Settings | SettingsError[] {
     const written = parseTomlFile(SETTINGS_FILE, text);
-    const syntax = parseTomlSyntax(text, written);
     const result = settingsSchema.safeParse(written);
     let parsed: Settings | SettingsError[];
     if (result.success) {
         const settings = buildSettings(result.data, written);
         const errors = validateSettings(settings, root);
         parsed = errors.length === 0 ? settings : errors;
-    } else parsed = result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax));
+    } else {
+        const syntax = parseTomlSyntax(text, written);
+        parsed = result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax));
+    }
     return parsed;
 }
 
