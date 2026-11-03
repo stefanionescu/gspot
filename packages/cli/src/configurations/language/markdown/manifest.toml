@@ -46,5 +46,5 @@ example = "A `bash` fence with `if then` reports a syntax error. Correct the Bas
 help = "Fix the code, or label the block `text` when it holds prose."
 name = "fences"
 stage = "commit"
-summary = "Checks JSON, JSONC, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python code fences in Markdown and MDX files for syntax errors."
+summary = "Checks JSON, JSONC, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python code fences in Markdown and MDX files for syntax errors. It skips a fence with a line of only `...`, and reports a JavaScript, TypeScript, or Python fence only when it parses as neither a program, an expression, nor a type."
 why = "A code block that fails to parse shows readers a program that cannot run."

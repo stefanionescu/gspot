@@ -230,8 +230,6 @@ export const HTML_RULES = {
     handlerAttribute: 'handler-attribute',
 } as const;
 
-export const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
-
 export const ELLIPSIS_ARGUMENTS = '(...)';
 
 export const ANGLE_PLACEHOLDER = /<[A-Za-z][\w-]*>/gu;
@@ -258,8 +256,6 @@ export const FENCE_PARSERS: ReadonlyMap<string, FenceParser> = new Map([
 ]);
 
 export const JSON_FENCE_OPTIONS = { disallowComments: true, allowTrailingComma: false } as const;
-
-export const OMITTED_BASH_LINE = ':';
 
 export const EMPTY_ARGUMENTS = '()';
 

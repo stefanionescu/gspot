@@ -130,6 +130,31 @@ not code {
         markdown: '```bash\nprintf "%s\\n" "Hello"\n```\n',
         lines: [],
     },
+    {
+        name: 'fragments: elided code, an object member, a call signature, and a type',
+        markdown: `\`\`\`ts
+const useStore = create((set) => ({
+  // ...
+\`\`\`
+
+\`\`\`js
+increment: () => set((state) => ({ count: state.count + 1 })),
+\`\`\`
+
+\`\`\`ts
+useShallow<T, U = T>(selectorFn: (state: T) => U): (state: T) => U
+\`\`\`
+
+\`\`\`ts
+{ count: number; increment: () => void }
+\`\`\`
+
+\`\`\`ts
+const count = ;
+\`\`\`
+`,
+        lines: [19],
+    },
 ] as const;
 
 export const ROOT_PORT_SOURCE = 'export const port = 8080;\n';

@@ -7,9 +7,9 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CodeFence, ParseCache } from '#cli/types/parsers.ts';
 import { JSONC_OPTIONS, FENCE_GRAMMARS } from '#cli/config/parsers.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
-import type { CodeFence, ParseCache, GrammarName } from '#cli/types/parsers.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 
 import type {
@@ -19,17 +19,36 @@ import type {
     GrammarFenceParser,
 } from '#cli/types/configurations/language.ts';
 import {
-    ELLIPSIS_LINE,
     FENCE_PARSERS,
     EMPTY_ARGUMENTS,
     ANGLE_PLACEHOLDER,
-    OMITTED_BASH_LINE,
     PLACEHOLDER_VALUE,
     ELLIPSIS_ARGUMENTS,
     JSON_FENCE_OPTIONS,
     CAMEL_CASE_BOUNDARY,
     SYNTAX_ERROR_MESSAGE,
 } from '#cli/config/configurations/language.ts';
+
+const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
+
+const EXPRESSION_FORMS = [
+    ['(\n', '\n)'],
+    ['({\n', '\n})'],
+] as const;
+
+const TYPE_FORMS = [
+    ['type Fragment =\n', '\n;'],
+    ['type Fragment = {\n', '\n};'],
+] as const;
+
+// Documentation often shows an expression, an object member, a type, or a call signature instead of a whole program.
+const EXCERPT_FORMS: Readonly<Record<GrammarFenceParser, ReadonlyArray<readonly [string, string]>>> = {
+    bash: [],
+    javascript: EXPRESSION_FORMS,
+    typescript: [...EXPRESSION_FORMS, ...TYPE_FORMS],
+    tsx: [...EXPRESSION_FORMS, ...TYPE_FORMS],
+    python: [['(\n', '\n)']],
+};
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
     const errors: ParseError[] = [];
@@ -60,12 +79,17 @@ function findYamlSyntaxError(body: string): FenceSyntaxError | undefined {
 }
 
 async function findTreeSyntaxError(
-    grammar: GrammarName,
+    grammar: GrammarFenceParser,
     body: string,
     cache: ParseCache,
 ): Promise<FenceSyntaxError | undefined> {
     using tree = await parseSource(grammar, body, cache);
     if (!tree.rootNode.hasError) return undefined;
+    const forms = EXCERPT_FORMS[grammar];
+    for (const [prefix, suffix] of forms) {
+        using excerpt = await parseSource(grammar, `${prefix}${body}${suffix}`, cache);
+        if (!excerpt.rootNode.hasError) return undefined;
+    }
     const error = tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode;
     return { line: error.startPosition.row + 1, message: SYNTAX_ERROR_MESSAGE };
 }
@@ -82,12 +106,7 @@ async function findFenceSyntaxError(
     parser: FenceParser,
     cache: ParseCache,
 ): Promise<FenceSyntaxError | undefined> {
-    const omitted = parser === 'bash' ? OMITTED_BASH_LINE : '';
-    let body = fence.body
-        .split('\n')
-        .map((line) => (ELLIPSIS_LINE.test(line) ? omitted : line))
-        .join('\n')
-        .replaceAll(ELLIPSIS_ARGUMENTS, () => EMPTY_ARGUMENTS);
+    let body = fence.body.replaceAll(ELLIPSIS_ARGUMENTS, () => EMPTY_ARGUMENTS);
     if (parser === 'bash') body = body.replaceAll(ANGLE_PLACEHOLDER, () => PLACEHOLDER_VALUE);
     const error = (FENCE_GRAMMARS as readonly string[]).includes(parser)
         ? await findTreeSyntaxError(parser as GrammarFenceParser, body, cache)
@@ -99,7 +118,8 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
     const errors: FenceSyntaxError[] = [];
     for (const fence of listCodeFences(text)) {
         const parser = FENCE_PARSERS.get(fence.language.toLowerCase());
-        if (parser === undefined || fence.body.trim() === '') continue;
+        const isElided = fence.body.split('\n').some((line) => ELLIPSIS_LINE.test(line));
+        if (isElided || parser === undefined || fence.body.trim() === '') continue;
         const error = await findFenceSyntaxError(fence, parser, cache);
         if (error !== undefined) errors.push(error);
     }
