@@ -5,7 +5,7 @@ import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import { planChecks, formatCheckState } from '#cli/engine/plan.ts';
+import { planChecks, buildCheckState } from '#cli/engine/plan.ts';
 import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
 
@@ -39,12 +39,15 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
         fileKind: file.kind,
         tags: file.tags,
         configurations: scope.configurations.map(({ name }) => name).filter((name) => covering.has(name)),
-        checks: checks.map((check) => ({
-            check: check.check.id,
-            stage: check.check.stage,
-            state: formatCheckState(check),
-            ...(check.configuration !== undefined && { configuration: check.configuration.name }),
-        })),
+        checks: checks.map((check) => {
+            const state = buildCheckState(check);
+            return {
+                check: check.check.id,
+                stage: check.check.stage,
+                state: state.status === 'on' ? 'on' : `skipped (${state.cause})`,
+                ...(check.configuration !== undefined && { configuration: check.configuration.name }),
+            };
+        }),
         ignores: session.settings.ignore
             .filter((ignore) => ignore.paths === undefined || buildPathMatcher(ignore.paths)(path))
             .map((ignore) => ({

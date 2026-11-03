@@ -4,9 +4,9 @@ import type { Tool, Check, Setting, Configuration } from '#cli/types/manifests.t
 import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
 import type { InitPlan, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { RunCache, CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
-import type { StageFilter, RunSelection, CheckDescription } from '#cli/types/engine/plan.ts';
 import type { Settings, InheritedSetting, RemovedConfiguration } from '#cli/types/settings.ts';
 import type { CI_FILES, CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
+import type { CheckState, StageFilter, RunSelection, CheckDescription } from '#cli/types/engine/plan.ts';
 import type { FileKind, UntrackedFiles, PushedRevisions, RepositoryListing } from '#cli/types/repository.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
@@ -78,7 +78,7 @@ type SettingRow = {
 };
 
 export type ConfigurationsListJson = {
-    selected: Array<{ name: string; checks: Array<{ check: string; scope: string; status: string }> }>;
+    selected: Array<{ name: string; checks: Array<{ check: string; scope: string } & CheckState> }>;
     removed: RemovedConfiguration[];
     available: Array<{ name: string; description: string }>;
 };

@@ -7,7 +7,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
-import { OFF_BY_IGNORE, LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/reports.ts';
+import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/reports.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using sandbox = await createGitSandbox({});
@@ -25,8 +25,8 @@ test('list shows selected settings and available configurations', async () => {
     const named = new Set(['bash/shellcheck', 'bash/shfmt', 'structure/shared-prefixes']);
     expect(checks.filter(({ check }) => named.has(check))).toStrictEqual([
         { check: 'bash/shellcheck', scope: '', status: 'on' },
-        { check: 'bash/shfmt', scope: '', status: OFF_BY_IGNORE },
-        { check: 'structure/shared-prefixes', scope: '', status: 'off (level)' },
+        { check: 'bash/shfmt', scope: '', status: 'skipped', cause: 'ignore' },
+        { check: 'structure/shared-prefixes', scope: '', status: 'skipped', cause: 'level' },
     ]);
     expect([...result.selected, ...result.available].map(({ name }) => name).toSorted(compareText)).toStrictEqual(
         readConfigurations().keys().toArray().toSorted(compareText),
@@ -60,8 +60,8 @@ test('the check list reports the state in each scope', async () => {
     const checks = selected.flatMap((configuration) => configuration.checks);
     expect(checks.filter(({ check }) => check === 'bash/shfmt')).toStrictEqual([
         { check: 'bash/shfmt', scope: '', status: 'on' },
-        { check: 'bash/shfmt', scope: 'api', status: OFF_BY_IGNORE },
-        { check: 'bash/shfmt', scope: 'api/worker', status: OFF_BY_IGNORE },
+        { check: 'bash/shfmt', scope: 'api', status: 'skipped', cause: 'ignore' },
+        { check: 'bash/shfmt', scope: 'api/worker', status: 'skipped', cause: 'ignore' },
     ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -147,7 +147,7 @@ test('the text lists group equal scope states on one line', async () => {
     const checks = await runGspot(sandbox.path, ['list']);
     expect(checks.code, checks.stdout + checks.stderr).toBe(0);
     expect(checks.stdout).toContain('bash/shellcheck  on in . and 3 scopes\n');
-    expect(checks.stdout).toContain(`bash/shfmt  on in ., web; ${OFF_BY_IGNORE} in api, api/worker\n`);
+    expect(checks.stdout).toContain('bash/shfmt  on in ., web; skipped (ignore) in api, api/worker\n');
     const settings = await runGspot(sandbox.path, ['list', 'settings']);
     expect(settings.stdout).toMatch(/^limits\.max_file_lines .* in \. and 3 scopes$/mu);
 });

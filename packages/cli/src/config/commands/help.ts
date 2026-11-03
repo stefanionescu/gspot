@@ -79,7 +79,7 @@ export const COMMAND_HELP = {
             '--base <ref>':
                 'Compare with this branch, tag, or commit; an empty, all-zero, or absent full hash checks every file',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
-            '--verbose': 'Also print the passed, off, and skipped checks, each command, and each ignore',
+            '--verbose': 'Also print the passed and skipped checks, each command, and each ignore',
         },
         exitCodes: [
             ['0', 'Every check that ran passed.'],

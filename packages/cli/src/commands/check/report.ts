@@ -18,8 +18,6 @@ import type { FixReport, RunReport, CheckResult } from '#cli/types/engine/run.ts
 
 import {
     FIX_LABEL,
-    OFF_LABEL,
-    OFF_CAUSES,
     RERUN_LABEL,
     SENTENCE_END,
     NOTE_STATUSES,
@@ -123,7 +121,8 @@ function formatFindings(result: CheckResult, { verbose }: { verbose: boolean }):
 }
 
 function formatReportLine(result: CheckResult, tail: string): string {
-    const label = OFF_CAUSES.has(result.cause ?? '') ? OFF_LABEL : result.status;
+    const label =
+        result.status === 'skipped' && result.cause !== undefined ? `skipped (${result.cause})` : result.status;
     const status = label.padEnd(STATUS_LABEL_WIDTH);
     const shown = styleText(CHECK_STATUS_COLORS[result.status], status, { stream: process.stdout });
     const scope = result.scope === '' ? '' : `${formatScope(result.scope)}  `;
@@ -179,8 +178,7 @@ function formatIncompleteCounts({ checks }: RunReport): string[] {
 function formatSummary(report: RunReport): string {
     const failed = report.checks.filter((check) => check.status === 'failed');
     const passed = report.checks.filter((check) => check.status === 'passed').length;
-    const off = report.checks.filter((check) => OFF_CAUSES.has(check.cause ?? '')).length;
-    const skipped = Object.values(report.skippedCount).reduce((total, count) => total + count, 0) - off;
+    const skipped = Object.values(report.skippedCount).reduce((total, count) => total + count, 0);
     const findings = failed.reduce((count, check) => count + check.findings.length, 0);
     const text = [
         ...(failed.length === 0
@@ -188,7 +186,6 @@ function formatSummary(report: RunReport): string {
             : [`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`]),
         ...formatIncompleteCounts(report),
         `Passed: ${formatCount(passed, 'check')}.`,
-        ...(off === 0 ? [] : [`Off: ${formatCount(off, 'check')}.`]),
         `Skipped: ${formatCount(skipped, 'check')}.`,
     ].join(' ');
     return report.exitCode === 0 ? text : styleText('red', text, { stream: process.stdout });

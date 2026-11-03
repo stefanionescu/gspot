@@ -166,7 +166,7 @@ test('the report prints planned skips once with their reason only in verbose out
         skippedCount: { condition: 1 },
     };
     expect(formatRunReport(skipped, { verbose: false })).not.toContain('bash/shellcheck');
-    expect(formatRunReport(skipped, { verbose: true })).toContain('skipped  bash/shellcheck  disabled');
+    expect(formatRunReport(skipped, { verbose: true })).toContain('skipped (condition)  bash/shellcheck  disabled');
 });
 
 test('terminal progress rewrites one status line, and a log prints only what runs past the interval', () => {

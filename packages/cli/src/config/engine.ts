@@ -226,10 +226,6 @@ export const DOCKER_DAEMON_NOTE = 'Start Docker, then run the check again.';
 
 export const BYTES_PER_KILOBYTE = 1024;
 
-export const OFF_BY_LEVEL = 'off (level)';
-
-export const NO_MATCHING_FILES = 'no matching files';
-
 export const PROGRESS_INTERVAL_MILLISECONDS = 10_000;
 
 export const STAGED_FILES = 'the staged files';

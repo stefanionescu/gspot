@@ -7,7 +7,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { formatCount, formatScope } from '#cli/system/text.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
-import { planChecks, formatCheckState } from '#cli/engine/plan.ts';
+import { planChecks, buildCheckState } from '#cli/engine/plan.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
@@ -62,14 +62,14 @@ function listCheckStates(
             const key = `${path}\0${check.id}`;
             if (listed.has(key)) return [];
             listed.add(key);
-            const status = formatCheckState(planned.get(path)?.findLast((each) => each.check.id === check.id));
-            return [{ check: check.id, scope: path, status }];
+            const state = buildCheckState(planned.get(path)?.findLast((each) => each.check.id === check.id));
+            return [{ check: check.id, scope: path, ...state }];
         });
     });
 }
 
 function formatCheckStates(checks: ConfigurationsListJson['selected'][number]['checks']): string {
-    const states = [...Map.groupBy(checks, ({ status }) => status)];
+    const states = [...Map.groupBy(checks, (state) => (state.status === 'on' ? 'on' : `skipped (${state.cause})`))];
     const [only] = states as [[string, typeof checks]];
     if (states.length > 1)
         return states

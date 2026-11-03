@@ -21,6 +21,8 @@ export type RunSelection = {
     unstagedChanges?: number | undefined;
 };
 
+export type CheckState = { status: 'on' } | { status: 'skipped'; cause: SkipCause | 'no-files' };
+
 export type PlanOptions = {
     stage: StageFilter | 'any';
     keepLevelOff?: boolean | undefined;

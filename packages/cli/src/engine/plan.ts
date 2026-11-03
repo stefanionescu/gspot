@@ -1,6 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
+import { COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
@@ -8,9 +9,8 @@ import type { Session, ScopeCheck } from '#cli/types/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { OFF_BY_LEVEL, NO_MATCHING_FILES, COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
-import type { PlanOptions, PlannedScope, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles, buildPlanInventory } from '#cli/engine/files.ts';
+import type { CheckState, PlanOptions, PlannedScope, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
@@ -138,14 +138,14 @@ export function isActive(planned: PlannedCheck, selection?: RunSelection): boole
 }
 
 /**
-Word the state of a planned check for list and explain.
+Build the state of a planned check for list and explain: on, or skipped with the cause that check --json names.
 
 @param planned the plan of the check, or undefined when the level leaves it out of the plan.
 */
-export function formatCheckState(planned: PlannedCheck | undefined): string {
-    if (planned === undefined) return OFF_BY_LEVEL;
-    if (planned.skip !== undefined) return `off (${planned.skip.cause})`;
-    return isActive(planned) ? 'on' : NO_MATCHING_FILES;
+export function buildCheckState(planned: PlannedCheck | undefined): CheckState {
+    if (planned === undefined) return { status: 'skipped', cause: 'level' };
+    if (planned.skip !== undefined) return { status: 'skipped', cause: planned.skip.cause };
+    return isActive(planned) ? { status: 'on' } : { status: 'skipped', cause: 'no-files' };
 }
 
 /**

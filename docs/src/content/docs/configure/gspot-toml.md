@@ -136,7 +136,7 @@ What init reads here wins over the file: the formatting of an existing Prettier,
 `--level` wins over the level of the file.
 
 init selects each configuration of the file even when this repository has none of its files yet, so its rules reach
-your coding agent before the first file. Its checks report `no matching files` until the files exist. To drop one,
+your coding agent before the first file. Its checks report `skipped (no-files)` until the files exist. To drop one,
 run `gspot remove <name> --reason "<why>"`.
 
 init copies the file once. A later change to it does not reach this repository.

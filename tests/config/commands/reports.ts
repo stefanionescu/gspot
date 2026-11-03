@@ -37,8 +37,6 @@ reason = "Review this separately."
 `,
 } as const;
 
-export const OFF_BY_IGNORE = 'off (ignore)';
-
 export const ROOT_EDITORCONFIG = 'root = true\n';
 
 export const REMOVE_SUGGESTIONS = [

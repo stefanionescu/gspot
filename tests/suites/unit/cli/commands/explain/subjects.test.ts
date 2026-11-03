@@ -28,7 +28,7 @@ test('a path explanation names its scope and kind, and shows the checks that the
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain('run.sh  (scope ., kind source');
     expect(result.stdout).toMatch(/^ {2}bash\/shellcheck {2}\w+ {2}on$/mu);
-    expect(result.stdout).toMatch(/^ {2}\S+ {2}\w+ {2}off \(level\)$/mu);
+    expect(result.stdout).toMatch(/^ {2}\S+ {2}\w+ {2}skipped \(level\)$/mu);
 });
 
 test('explain asks before it offers to ignore a check', async () => {

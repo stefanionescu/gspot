@@ -75,13 +75,9 @@ export const RERUN_LABEL = 'rerun:';
 
 export const NOT_SET = 'not set';
 
-export const OFF_LABEL = 'off';
-
 export const CANCELED_RUN_MESSAGE = 'A signal stopped the run.';
 
 export const REASON_OPTION_TEXT = ' [--reason "<why>"]';
-
-export const OFF_CAUSES: ReadonlySet<string> = new Set(['level', 'ignore']);
 
 export const STANDARD_INSTALL_HELP = ' Run gspot install.';
 
