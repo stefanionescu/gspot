@@ -17,9 +17,9 @@ function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly
     const { missing } = runner;
     const messagePathLines = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
     const isLfs = lfsHooks.includes(name);
-    const replay = isLfs ? PUSH_INPUT_REPLAY : '';
+    const check = `${runner.command} ${HOOK_CHECKS[name].arguments}`;
     const body = [
-        ...(isLfs ? [LFS_MISSING_GUARD, PUSH_INPUT_SAVE, `${replay}git lfs ${name} "$@" || exit $?`] : []),
+        ...(isLfs ? [LFS_MISSING_GUARD, PUSH_INPUT_SAVE] : []),
         ...messagePathLines,
         `command -v ${program} >/dev/null 2>&1 || { printf ${quoteArgument(missing.replace('$PATH', '%s') + '\n')} "$PATH" >&2; exit 2; }`,
         ...(runner.name === 'npm'
@@ -27,7 +27,9 @@ function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly
                   String.raw`test -f node_modules/.bin/gspot || { printf '%s\n' 'Run npm install, then gspot install, in this worktree.' >&2; exit 2; }`,
               ]
             : []),
-        `${isLfs ? replay : 'exec '}${runner.command} ${HOOK_CHECKS[name].arguments}`,
+        ...(isLfs
+            ? [`${PUSH_INPUT_REPLAY}${check} || exit $?`, `${PUSH_INPUT_REPLAY}git lfs ${name} "$@"`]
+            : [`exec ${check}`]),
         '',
     ].join('\n');
     return `${HOOK_SHEBANG}\n${body}`;
@@ -35,6 +37,7 @@ function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly
 
 /**
 Build a script for each hook that runs a check. Include hooks for Git Large File Storage (LFS) when the repository uses it.
+The pre-push hook runs the checks before the LFS upload, so a push that the checks refuse uploads nothing.
 
 @param runner the command that starts gspot.
 @param names the hooks that run a configured check.

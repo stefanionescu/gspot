@@ -147,7 +147,7 @@ test('an npm hook with no local gspot binary names both worktree installation st
     expect(existsSync(log)).toBe(false);
 });
 
-test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
+test('with Git LFS, the pre-push hook gives its input to gspot and then to git lfs, and the other LFS hooks run git lfs', async () => {
     await using sandbox = await createLfsRepository();
     const hooks = buildGeneratedFiles(await openSession(sandbox.path)).files.filter((file) =>
         file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
@@ -188,13 +188,39 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
     });
     expect(checkedOut.code, checkedOut.stdout + checkedOut.stderr).toBe(0);
     expect(await readCallRecords(log)).toMatchObject([
-        { arguments: ['git', 'lfs', 'pre-push', 'origin', 'url'], stdin: input },
         {
             arguments: ['mise', 'exec', '--', 'gspot', 'check', '--hook', 'pre-push', '--', 'origin', 'url'],
             stdin: input,
         },
+        { arguments: ['git', 'lfs', 'pre-push', 'origin', 'url'], stdin: input },
         { arguments: ['git', 'lfs', 'post-checkout', 'a', 'b', '1'], stdin: '' },
     ]);
+});
+
+test('with Git LFS, a pre-push hook whose checks fail uploads nothing', async () => {
+    await using sandbox = await createLfsRepository();
+    const hook = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
+        (file) => file.path === `${GSPOT_PATHS.hooks}/pre-push`,
+    )!;
+    const path = join(sandbox.path, hook.path);
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, hook.content);
+    await chmod(path, 0o755);
+    const log = join(sandbox.path, 'calls.jsonl');
+    const recorder = ['--record', log, '--stdin'];
+    const bin = await writeProgramCommand(sandbox.path, 'bin/git-lfs', 'fakes/tool', ...recorder, '--', 'git-lfs');
+    await writeProgramCommand(sandbox.path, 'bin/git', 'fakes/tool', ...recorder, '--', 'git');
+    await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/tool', ...recorder, '--exit', '1', '--', 'mise');
+    await writeProgramCommand(sandbox.path, 'bin/cat', 'fakes/tool', '--copy-stdin');
+    const hookRunner = isWindows ? [Bun.which('sh')!] : [];
+    const pushed = await runCommand([...hookRunner, path, 'origin', 'url'], {
+        cwd: sandbox.path,
+        env: { PATH: bin },
+        stdin: 'refs/heads/main 123 refs/heads/main 456\n',
+    });
+    expect(pushed.code, pushed.stdout + pushed.stderr).toBe(1);
+    const calls = await readCallRecords(log);
+    expect(calls.map(({ arguments: called }) => called[0])).toStrictEqual(['mise']);
 });
 
 test.each(['pre-push', 'post-merge'])('%s exits before reading input when git-lfs is absent', async (name) => {
