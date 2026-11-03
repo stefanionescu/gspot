@@ -1,4 +1,5 @@
-import { quoteArgument } from '#cli/system/text.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { escapeRegExp, quoteArgument } from '#cli/system/text.ts';
 import { compareRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
 import type { RuleRead, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 
@@ -27,7 +28,7 @@ export async function readUserRules(planning: InitPlanning): Promise<RuleRead[]>
         const sample = repository.files.find(({ path }) => definition.sample.test(path))?.path;
         return config === undefined || sample === undefined || !tools.has(definition.tool)
             ? []
-            : [{ definition, path: config.path, sample }];
+            : [{ definition, path: config.path, text: findText(root, config.path) ?? '', sample }];
     });
     return await Promise.all(
         reads.map(async (read) => ({
@@ -44,7 +45,9 @@ export async function readUserRules(planning: InitPlanning): Promise<RuleRead[]>
 }
 
 /**
-Compare the rules of each replaced config with the rules that the installed tools of gspot resolve.
+Compare the rules of each replaced config with the rules that the installed tools of gspot resolve. The printed rules
+hold the shared configs that the file extends, so only a rule that the file itself names counts: a rule that a shared
+config turns off is not the user's choice, and needs no reason.
 
 @param root the copy with the generated configs and the installed tools.
 @param reads what readUserRules returned.
@@ -52,7 +55,14 @@ Compare the rules of each replaced config with the rules that the installed tool
 */
 export async function compareInstalledRules(root: string, reads: RuleRead[]): Promise<CarryoverRow[]> {
     return await Promise.all(
-        reads.map(async ({ definition, path, sample, user }): Promise<CarryoverRow> => {
+        reads.map(async ({ definition, path, text, sample, user: printed }): Promise<CarryoverRow> => {
+            const user =
+                printed &&
+                new Map(
+                    [...printed].filter(([rule]) =>
+                        new RegExp(String.raw`(?:^|[^\w@/-])${escapeRegExp(rule)}(?:[^\w/-]|$)`, 'mu').test(text),
+                    ),
+                );
             const { tool, check, hasSeverity, gspotArguments } = definition;
             const shipped = await readPrintedRules({
                 root,

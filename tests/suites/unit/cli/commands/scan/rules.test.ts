@@ -33,8 +33,9 @@ test('scan sorts the ESLint rules of the repository by what gspot runs', async (
         }).map(([rule, value]) => [rule, convertRule(value, true)]),
     );
     const [definition] = PRINTED_RULE_TOOLS;
+    const text = `export default [{ rules: ${JSON.stringify(Object.fromEntries(user))} }];\n`;
     const rows = await compareInstalledRules(sandbox.path, [
-        { definition, path: 'eslint.config.js', sample: 'a.js', user },
+        { definition, path: 'eslint.config.js', text, sample: 'a.js', user },
     ]);
     expect(rows).toStrictEqual([
         {
@@ -61,8 +62,9 @@ test('scan offers no plugin record for a rule of a plugin that gspot loads', asy
         ['unicorn/no-array-reduce', 'acme/no-legacy', 'curl/no-legacy'].map((rule) => [rule, convertRule([2], true)]),
     );
     const [definition] = PRINTED_RULE_TOOLS;
+    const text = `export default [{ rules: ${JSON.stringify(Object.fromEntries(user))} }];\n`;
     const rows = await compareInstalledRules(sandbox.path, [
-        { definition, path: 'eslint.config.js', sample: 'a.js', user },
+        { definition, path: 'eslint.config.js', text, sample: 'a.js', user },
     ]);
     expect(rows).toMatchObject([
         { plugins: ['acme/no-legacy []', 'curl/no-legacy []'], commandChecks: ['unicorn/no-array-reduce'] },
@@ -73,7 +75,31 @@ test('scan says so when a tool cannot print its rules', async () => {
     await using sandbox = await createGitSandbox({ 'a.js': 'export const a = 1;\n' });
     const [definition] = PRINTED_RULE_TOOLS;
     const rows = await compareInstalledRules(sandbox.path, [
-        { definition, path: 'eslint.config.js', sample: 'a.js', user: undefined },
+        { definition, path: 'eslint.config.js', text: '', sample: 'a.js', user: undefined },
     ]);
     expect(rows).toMatchObject([{ path: 'eslint.config.js', covered: 0, dropped: [expect.stringContaining('print')] }]);
+});
+
+test('scan compares only the rules that the config file names, not the rules of its shared configs', async () => {
+    await using sandbox = await createGitSandbox({ 'a.js': 'export const a = 1;\n' });
+    await writePrinter(sandbox.path, { 'no-const-assign': [2], 'no-constant-binary-expression': [2, {}], semi: [2] });
+    const user = new Map(
+        Object.entries({
+            'no-const-assign': [0],
+            'no-constant-binary-expression': [2],
+            semi: [0],
+        }).map(([rule, value]) => [rule, convertRule(value, true)]),
+    );
+    const [definition] = PRINTED_RULE_TOOLS;
+    const text = "import shared from 'shared-config';\nexport default [...shared, { rules: { semi: 'off' } }];\n";
+    const rows = await compareInstalledRules(sandbox.path, [
+        { definition, path: 'eslint.config.js', text, sample: 'a.js', user },
+    ]);
+    expect(rows).toMatchObject([
+        {
+            covered: 0,
+            differing: [],
+            reasons: ['gspot ignore javascript/eslint --rule semi --reason "<why>"'],
+        },
+    ]);
 });

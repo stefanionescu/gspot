@@ -143,6 +143,7 @@ export type CarryoverRow = {
 export type RuleRead = {
     definition: (typeof PRINTED_RULE_TOOLS)[number];
     path: string;
+    text: string;
     sample: string;
     user: RuleTable | undefined;
 };
