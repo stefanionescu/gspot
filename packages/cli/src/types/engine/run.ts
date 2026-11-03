@@ -123,6 +123,7 @@ export type CheckResult = {
     fileCount: number;
     files?: readonly string[];
     duration: number;
+    span?: { start: number; end: number };
     findings: readonly Finding[];
     help?: string;
     note?: string;

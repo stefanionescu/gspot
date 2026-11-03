@@ -1,5 +1,6 @@
 import { statSync } from 'node:fs';
 import { CheckStop } from '#cli/system/errors.ts';
+import { measureSpan } from '#cli/engine/results.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { join, relative, isAbsolute } from 'node:path';
 import type { SpawnResult } from '#cli/types/system.ts';
@@ -100,13 +101,13 @@ Builds the check result from what the runs collected.
 @param completion.base the initial check result.
 @param completion.state the findings and failure flag.
 @param completion.commandArguments what the process ran, placeholders expanded.
-@param completion.started the monotonic start time.
+@param completion.start the monotonic time of the first process slot, if a process started.
 */
 export function buildCheckResult(
     check: Check,
-    completion: { base: CheckResult; state: CommandRun; commandArguments: string[]; started: number },
+    completion: { base: CheckResult; state: CommandRun; commandArguments: string[]; start: number | undefined },
 ): CheckResult {
-    const { base, state, commandArguments, started } = completion;
+    const { base, state, commandArguments, start } = completion;
     const output = check.output;
     const descriptor = OUTPUT_FORMATS[output.format];
     const isEveryFindingKept = state.failed || (check.runs !== 'history' && !descriptor.namesFiles(output));
@@ -114,7 +115,7 @@ export function buildCheckResult(
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
     const status = state.failed || findings.length > 0 ? 'failed' : 'passed';
-    return { ...base, status, duration: Math.round(performance.now() - started), findings, command: commandArguments };
+    return { ...base, status, ...measureSpan(start), findings, command: commandArguments };
 }
 
 /**

@@ -225,7 +225,7 @@ test('a passing file format drops findings with neither a path nor a line', () =
             findings: [located, { ...located, file: '', message: 'Banner' }],
         },
         commandArguments: ['tool'],
-        started: performance.now(),
+        start: performance.now(),
     });
     expect(result.findings).toStrictEqual([located]);
     expect(result.status).toBe('failed');

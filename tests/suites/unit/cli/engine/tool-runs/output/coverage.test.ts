@@ -25,7 +25,7 @@ test.each(FILELESS_COVERAGE_CASES)(
             base: { check: id, scope: '', status: 'passed', fileCount: 0, duration: 0, findings: [] },
             state: { root: sandbox.path, cwd: sandbox.path, failed: true, findings: parsed.findings! },
             commandArguments: [],
-            started: performance.now(),
+            start: performance.now(),
         });
         expect(result.status).toBe('failed');
         expect(result.findings).toStrictEqual(parsed.findings!);

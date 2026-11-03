@@ -17,9 +17,9 @@ import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import { RAN_STATUSES, FILES_PLACEHOLDER } from '#cli/config/engine.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import { runToolProcess, buildSecondaryToolEnvironment } from '#cli/engine/tool-runs/tool.ts';
-import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
+import { measureSpan, buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import type { FolderRun, CommandRun, CommandBatch, CommandSetup, Substitutions } from '#cli/types/engine/tool-runs.ts';
 
 import {
@@ -50,21 +50,22 @@ async function runCommands(
     const { check } = planned;
     const { cwd, commandArguments } = launch;
     const state: CommandRun = { root: launch.root, cwd, findings: [], failed: false };
-    const started = performance.now();
+    const slot: { start?: number } = {};
     for (const commandLine of launch.commandLines) {
-        const { result, failure } = await session.limitProcess(() =>
-            runToolProcess(commandLine.commandArguments, {
+        const { result, failure } = await session.limitProcess(() => {
+            slot.start ??= performance.now();
+            return runToolProcess(commandLine.commandArguments, {
                 ...launch,
                 cancelSignal: session.cancelSignal,
                 timeoutSeconds: session.settings.tool_timeout_seconds,
                 name: tool.name,
-            }),
-        );
+            });
+        });
         if (failure !== undefined)
             return {
                 ...base,
                 ...failure,
-                duration: Math.round(performance.now() - started),
+                ...measureSpan(slot.start),
                 command: commandArguments,
                 findings: state.findings,
             };
@@ -73,14 +74,14 @@ async function runCommands(
             return {
                 ...base,
                 status: 'error',
-                duration: Math.round(performance.now() - started),
+                ...measureSpan(slot.start),
                 note: parsed.note,
                 command: commandArguments,
                 findings: state.findings,
             };
         addCommandLine(planned, tool, { commandLine, result, findings: parsed.findings }, state);
     }
-    return buildCheckResult(check, { base, state, commandArguments, started });
+    return buildCheckResult(check, { base, state, commandArguments, start: slot.start });
 }
 
 function findMissingConfig(

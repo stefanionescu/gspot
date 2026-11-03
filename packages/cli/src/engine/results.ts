@@ -48,7 +48,19 @@ export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 's
 }
 
 /**
-Merge repeated runs of one check. Keep their findings and the base file count.
+Measure a tool run from the moment the process limiter gave it a slot to now.
+
+@param start the monotonic time of the first slot, or undefined when no process started.
+*/
+export function measureSpan(start: number | undefined): Pick<CheckResult, 'duration' | 'span'> {
+    const end = performance.now();
+    const begin = start ?? end;
+    return { duration: Math.round(end - begin), span: { start: begin, end } };
+}
+
+/**
+Merge repeated runs of one check. Keep their findings and the base file count. Runs that overlap count once, so the
+duration is the wall time from the first start to the last end.
 
 @param merged the results collected so far.
 @param next the next run of the same check.
@@ -57,10 +69,19 @@ Merge repeated runs of one check. Keep their findings and the base file count.
 export function mergeCheckResults(merged: CheckResult, next: CheckResult): CheckResult {
     const isStopped = INCOMPLETE_STATUSES.has(next.status);
     const status = merged.status === 'failed' || next.status === 'failed' ? 'failed' : merged.status;
+    const spans = [merged.span, next.span].filter((span) => span !== undefined);
+    const span =
+        spans.length === 0
+            ? undefined
+            : {
+                  start: Math.min(...spans.map(({ start }) => start)),
+                  end: Math.max(...spans.map(({ end }) => end)),
+              };
     return {
         ...merged,
         findings: [...merged.findings, ...next.findings],
-        duration: merged.duration + next.duration,
+        duration: span === undefined ? merged.duration + next.duration : Math.round(span.end - span.start),
+        ...(span !== undefined && { span }),
         status: isStopped ? next.status : status,
         ...(isStopped && { note: next.note, command: next.command }),
     };

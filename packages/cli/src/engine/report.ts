@@ -117,7 +117,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
     return {
         ...(comparison !== undefined && { comparison }),
         ...buildEmptyRunReport(options.stage, started, notes),
-        checks: checks.map(({ reportNotes: _notes, ...check }) => check),
+        checks: checks.map(({ reportNotes: _notes, span: _span, ...check }) => check),
         ignores: session.settings.ignore,
         baselined,
         unstagedChanges: options.selection?.unstagedChanges ?? 0,
