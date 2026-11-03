@@ -8,13 +8,13 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { EACH_PLACEHOLDER } from '#cli/config/engine.ts';
 import { gfmTable } from 'micromark-extension-gfm-table';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { gfmTableFromMarkdown } from 'mdast-util-gfm-table';
 import type { SettingDefinition } from '#cli/types/settings.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 
 test('each accepted suppression example matches its marker and gives a reason', () => {
     const forms = readConfigurations()
@@ -173,6 +173,27 @@ test('shipped configuration folders have unique names', () => {
         .filter((path) => path.endsWith('/manifest.toml'))
         .map((path) => posix.basename(posix.dirname(path)));
     expect(new Set(names).size).toBe(names.length);
+});
+
+test('no two configurations ship a rule file of the same name', () => {
+    const names = readConfigurations()
+        .values()
+        .flatMap((configuration) => listRuleFiles(configuration).map(({ path }) => path))
+        .toArray();
+    expect(names.filter((name, index) => names.indexOf(name) !== index)).toStrictEqual([]);
+});
+
+test('each tool has one declaration, which every configuration that names the tool shares', () => {
+    const tools = readConfigurations()
+        .values()
+        .flatMap((configuration) => configuration.tools)
+        .toArray();
+    const repeated = Map.groupBy(new Set(tools), (tool) => tool.name)
+        .entries()
+        .filter(([, declarations]) => declarations.length > 1)
+        .map(([name]) => name)
+        .toArray();
+    expect(repeated).toStrictEqual([]);
 });
 
 test('every shipped Markdown table parses as a table instead of a paragraph', () => {

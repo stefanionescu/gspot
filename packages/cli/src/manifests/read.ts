@@ -9,7 +9,6 @@ import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import { RULES_FOLDER, MANIFEST_FILE, CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests.ts';
 
 import type {
-    Tool,
     Check,
     ShippedRule,
     Configuration,
@@ -21,7 +20,11 @@ import type {
 const shipped: { configurations?: Map<string, Configuration> } = {};
 
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
-    const toolsByName = listManifestTools(manifests);
+    const toolsByName = new Map(
+        manifests.flatMap((manifest) =>
+            manifest.tools.filter((tool) => typeof tool !== 'string').map((tool) => [tool.name, tool] as const),
+        ),
+    );
     return new Map(
         manifests.map(({ configuration, tools, checks, ...fields }) => [
             configuration.name,
@@ -72,23 +75,6 @@ function parseManifest(text: string, folder: string): ParsedManifest {
     return result.data;
 }
 
-function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
-    const tools = new Map<string, Tool>();
-    for (const manifest of manifests) {
-        const declarations = manifest.tools.values().filter((tool) => typeof tool !== 'string');
-        for (const tool of declarations) {
-            const previous = tools.get(tool.name);
-            if (previous !== undefined)
-                throw new GspotError(
-                    'configuration',
-                    `The configuration manifest for ${manifest.configuration.name} is not valid:\ntool ${tool.name} is already declared.`,
-                );
-            tools.set(tool.name, tool);
-        }
-    }
-    return tools;
-}
-
 /**
 Parse manifest texts into configurations, sorted by name, and refuse an invalid manifest.
 
@@ -115,12 +101,6 @@ export function readConfigurations(): ReadonlyMap<string, Configuration> {
                 text: readFileSync(buildAssetPath(path), 'utf8'),
             })),
     );
-    const ruleNames = configurations
-        .values()
-        .flatMap((configuration) => listRuleFiles(configuration).map(({ path }) => path))
-        .toArray();
-    const repeated = ruleNames.find((name, index) => ruleNames.indexOf(name) !== index);
-    if (repeated !== undefined) throw new Error(`Two configurations ship a rule file named ${repeated}.`);
     shipped.configurations = configurations;
     return configurations;
 }
