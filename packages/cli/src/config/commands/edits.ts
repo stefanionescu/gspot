@@ -1,5 +1,3 @@
-import { HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
-
 export const IGNORE_CHECK_MESSAGE = 'Run gspot ignore <check> --reason "<why>".';
 
 export const UNCHANGED_SETTINGS_MESSAGE = 'No change: gspot.toml already says this.';
@@ -9,7 +7,9 @@ export const REPAIRED_FILES_MESSAGE = 'gspot.toml already says this.';
 export const RULE_WITHOUT_CHECK_MESSAGE =
     'An ignore without a check cannot take --rule. Name the check that owns the rule.';
 
-export const TOOLS_INSTALLED_MESSAGE = 'No change: every tool is installed.';
+export const TOOLS_INSTALLED_MESSAGE = 'No change: every generated file is up to date, and every tool is installed.';
+
+export const FILES_CHANGED_MESSAGE = 'Wrote the generated files, and every tool is installed.';
 
 export const TOOLS_CHANGED_MESSAGE = 'Installed the tools.';
 
@@ -66,8 +66,6 @@ export const NOT_CHECKED_LABEL = 'not checked';
 export const REPLACES_LABEL = 'gspot replaces';
 
 export const LEAVES_LABEL = 'gspot leaves';
-
-export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, TOOLS_CHANGED_NOTE]);
 
 export const WROTE_PLAN_MESSAGE = 'Wrote the plan above.';
 

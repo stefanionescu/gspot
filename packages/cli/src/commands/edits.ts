@@ -21,8 +21,8 @@ import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
-import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
+import { listInstallNotes, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
 
 import {
@@ -262,7 +262,7 @@ export async function writeSettingsEdit(
     const generated = buildGeneratedFiles(session);
     writeSettings(writer, result.text, edit.previous);
     const report = await writeEditedFiles(session, generated, { writer, summary });
-    report.notes.push(...(options.notes ?? []));
+    report.notes.push(...(await listInstallNotes(session, generated, report)), ...(options.notes ?? []));
     const written = report.written.length + report.updated.length + report.removed.length;
     if (written === 0 && !result.changed)
         return buildUnchangedResult(options.unchangedSummary ?? UNCHANGED_SETTINGS_MESSAGE, report.notes);

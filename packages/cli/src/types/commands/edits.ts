@@ -52,11 +52,10 @@ export type IgnoreOptions = {
     reason: string;
 };
 
-export type InstallCommandJson = {
+export type InstallCommandJson = ApplyReport & {
     summary: string;
     installed: string[];
     steps: ReadonlyArray<readonly string[]>;
-    notes: string[];
     missing: string[];
 };
 

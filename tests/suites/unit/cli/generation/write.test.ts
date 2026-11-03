@@ -9,7 +9,6 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { PackageFieldScenario } from '#tests/types/setup.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -18,6 +17,7 @@ import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
@@ -85,9 +85,9 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
 });
 
-test('writing a mise project preserves its lockfile and reports a changed hook', async () => {
+test('writing a mise project preserves its lockfile and asks for an install after a changed hook', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
+        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
         '.gspot/mise.lock': 'version = 1\n',
     });
     const session = await openSession(sandbox.path);
@@ -102,14 +102,14 @@ test('writing a mise project preserves its lockfile and reports a changed hook',
     };
     const report = await writeGeneratedFiles(session, output, writer);
     expect(await readFile(join(sandbox.path, '.gspot/mise.lock'), 'utf8')).toBe('version = 1\n');
-    expect(report.notes).toContain('Git hooks changed. Run gspot install.');
+    expect(await listInstallNotes(session, output, report)).toContain('Git hooks changed. Run gspot install.');
     runGitStep(sandbox.path, ['init', '--quiet']);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
     output.files[1]!.content = '#!/bin/sh\nexit 1\n';
     const configured = await openSession(sandbox.path);
     const changed = await writeGeneratedFiles(configured, output, writer);
     expect(changed.written).toContain('.gspot/hooks/pre-commit');
-    expect(changed.notes).not.toContain('Git hooks changed. Run gspot install.');
+    expect(await listInstallNotes(configured, output, changed)).not.toContain('Git hooks changed. Run gspot install.');
 });
 
 test('at level basic, gspot removes the Vale configuration and the installed style packages', async () => {

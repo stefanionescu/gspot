@@ -45,16 +45,16 @@ export const COMMAND_HELP = {
         example: 'gspot init --level all',
     },
     install: {
-        summary: 'Install the tools and turn on the Git hooks in this clone',
+        summary: 'Write the generated files, install the tools, and turn on the Git hooks in this clone',
         group: 'Set up a repository:',
         description:
-            'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\nOnly the mise commands of gspot read .gspot/mise.toml, and only while it holds what gspot wrote.\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\nBefore the install, install inspects each tool as doctor does. When every tool passes, the lockfiles are current, the hooks run, and uv sync --check accepts the environment of each Python project with a uv lockfile, it installs nothing and prints No change. After an install, it inspects each tool again, and installs the ones that fail again in a forced form.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
+            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. install replaces the generated files that gspot owns, and does not change gspot.toml.\n\nThen install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\nOnly the mise commands of gspot read .gspot/mise.toml, and only while it holds what gspot wrote.\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\nBefore the install, install inspects each tool as doctor does. When no generated file changes, every tool passes, the lockfiles are current, the hooks run, and uv sync --check accepts the environment of each Python project with a uv lockfile, it changes nothing and prints No change. After an install, it inspects each tool again, and installs the ones that fail again in a forced form.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
         arguments: {},
         options: {},
         exitCodes: [
             ['0', 'The tools are installed.'],
             ['1', 'A tool is still missing or fails after a forced install. The output names it and the reason.'],
-            ['2', 'install could not finish. The error names the step that failed.'],
+            ['2', 'gspot.toml is not valid, or install could not finish. The error names the step that failed.'],
             ['130, 143', 'Installation stopped because of Ctrl-C or SIGTERM.'],
         ],
         example: 'gspot install',

@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
@@ -13,6 +14,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import type { InstallCommandJson } from '#cli/types/commands/edits.ts';
 import { FAILED_NPM_VERSION } from '#tests/config/commands/reports.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
@@ -84,7 +86,7 @@ test('install writes the tool projects again when an edit changed one', async ()
     expect(await readFile(project, 'utf8')).toBe(generated);
 });
 
-test('install exits 1 and names the tools that stay missing', async () => {
+test('install writes the generated files, exits 1, and names the tools that stay missing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
@@ -99,6 +101,13 @@ test('install exits 1 and names the tools that stay missing', async () => {
     const report = JSON.parse(result.stdout) as InstallCommandJson;
     expect(report.missing[0]).toStartWith('Install mise, or install these tools yourself: ');
     expect(report.missing[0]).toContain('shfmt');
+    const shellcheck = getManifestTarget('bash', 'shellcheckrc');
+    expect(report.written).toContain(shellcheck);
+    expect(existsSync(join(sandbox.path, shellcheck))).toBe(true);
+    const repeated = await runGspot(sandbox.path, ['install', '--json']);
+    const repeatedReport = JSON.parse(repeated.stdout) as InstallCommandJson;
+    expect(repeatedReport.written).toStrictEqual([]);
+    expect(repeatedReport.unchanged).toContain(shellcheck);
 });
 
 test('install stopped by SIGINT reports cancellation once and exits 130', async () => {

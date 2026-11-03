@@ -17,7 +17,6 @@ import {
     FROM_OPTION,
     LEVEL_OPTION,
     NEXT_PIN_MESSAGE,
-    INIT_INSTALL_NOTES,
     WROTE_PLAN_MESSAGE,
     NEXT_INSTALL_MESSAGE,
     FROM_CONFLICT_MESSAGE,
@@ -48,7 +47,7 @@ async function runInitCommand(root: string, options: InitOptions): Promise<Comma
         notes: [],
     };
     const applied = await writeInitFiles(root, initPlan);
-    const notes = applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note));
+    const { notes } = applied;
     const next =
         pinPath === undefined
             ? NEXT_INSTALL_MESSAGE

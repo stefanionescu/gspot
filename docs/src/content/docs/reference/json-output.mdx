@@ -45,7 +45,7 @@ and the action to take. An unexpected failure includes its message and stack in 
 
 ## Generated files
 
-`init`, `apply`, and the commands that change settings list the generated files by what happened to them. Each field
+`init`, `install`, `apply`, and the commands that change settings list the generated files by what happened to them. Each field
 holds repository-relative paths.
 
 | Field       | Meaning                                                 |
@@ -95,6 +95,8 @@ item of `configurations` has `configuration`, `origin`, `scopes`, `checks`, and 
 also has `from`, with the `file` that `--from` names and the `leftOut` settings.
 
 ## `gspot install`
+
+The object of `gspot install --json` also has the [generated-file fields](#generated-files).
 
 | Field       | Meaning                                                          |
 | ----------- | ---------------------------------------------------------------- |

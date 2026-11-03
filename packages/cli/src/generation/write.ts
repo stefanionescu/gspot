@@ -1,3 +1,4 @@
+import { dirname } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { findValueAt } from '#cli/system/tables.ts';
@@ -14,9 +15,11 @@ import type { Session, Generation } from '#cli/types/tools.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { Files, FileContents } from '#cli/types/system.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/configurations/general.ts';
-import { OWNER_WRITABLE_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
+import { TEMPORARY_FILE_NAME, OWNER_WRITABLE_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
 
 import {
     planBlock,
@@ -46,13 +49,6 @@ function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): voi
     }
 }
 
-function addInstallationNote(session: Session, generated: Generation, report: ApplyReport): void {
-    const lockfiles = listStaleLockfiles(session, generated.files);
-    if (lockfiles.length === 0) return;
-    const hasToolChanges = report.written.some((path) => TOOL_PROJECT_FILES.includes(path));
-    report.notes.push(hasToolChanges ? TOOLS_CHANGED_NOTE : STALE_LOCKFILE_NOTE);
-}
-
 function hasUnmanagedScanner(session: Session, writer: Files): boolean {
     for (const scope of session.scopes) {
         if (getTable(scope.settings, 'dependencies').bun_scanner !== undefined) continue;
@@ -67,14 +63,25 @@ function hasUnmanagedScanner(session: Session, writer: Files): boolean {
     return false;
 }
 
-function formatGeneratedChanges(action: string, paths: string[]): string[] {
-    const gspotCount = paths.filter((path) => isGspotPath(path)).length;
-    const outside = paths.filter((path) => !isGspotPath(path));
-    const label = action.padEnd(CHANGE_LABEL_WIDTH);
-    return [
-        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),
-        ...outside.map((path) => `${label}${path}`),
-    ];
+/**
+List the generated files that a write changed: one line for the files in .gspot/ and one per file outside it, for each
+kind of change. The files that stayed the same get no line.
+
+@param report the applied file changes.
+*/
+export function listGeneratedChangeLines(report: ApplyReport): string[] {
+    const lines: string[] = [];
+    for (const [action, paths] of [
+        ['wrote', report.written],
+        ['updated', report.updated],
+        ['removed', report.removed],
+    ] as const) {
+        const gspotCount = paths.filter((path) => isGspotPath(path)).length;
+        const label = action.padEnd(CHANGE_LABEL_WIDTH);
+        if (gspotCount > 0) lines.push(`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`);
+        lines.push(...paths.filter((path) => !isGspotPath(path)).map((path) => `${label}${path}`));
+    }
+    return lines;
 }
 
 /**
@@ -83,11 +90,7 @@ Format generated file changes and notes for command output.
 @param report the applied file changes and notes.
 */
 export function formatApplyReport(report: ApplyReport): string {
-    const lines = [
-        ...formatGeneratedChanges('wrote', report.written),
-        ...formatGeneratedChanges('updated', report.updated),
-        ...formatGeneratedChanges('removed', report.removed),
-    ];
+    const lines = listGeneratedChangeLines(report);
     if (lines.length === 0) {
         const count = report.unchanged.length;
         lines.push(
@@ -151,12 +154,52 @@ export async function writeGeneratedFiles(
     if (!session.settings.hooks.enabled && hooksPath === GSPOT_PATHS.hooks) {
         const { note } = await installHooks(session, []);
         report.notes.push(note);
-    } else if (
+    }
+    if (hasUnmanagedScanner(session, writer)) report.notes.push(MANAGED_KEYS_NOTE);
+    return report;
+}
+
+/**
+Write every generated file from the settings of a session. First delete the temporary files that an interrupted write
+left in the folders of those files.
+
+@param session the repository to write to.
+@param writer writes and removes files.
+*/
+export async function writeEveryGeneratedFile(
+    session: Session,
+    writer: Files,
+): Promise<{ generated: Generation; report: ApplyReport }> {
+    const generated = buildGeneratedFiles(session);
+    const folders = new Set(
+        [...generated.files, ...generated.blocks, ...generated.managedKeys].map(({ path }) => dirname(path)),
+    );
+    for (const folder of folders) deleteStaleTemporaryPaths(writer, folder === '.' ? '' : folder, TEMPORARY_FILE_NAME);
+    return { generated, report: await writeGeneratedFiles(session, generated, writer) };
+}
+
+/**
+List the notes that ask for gspot install after a write: the tool lockfile is absent or stale, or the Git
+hooks changed while Git runs other hooks.
+
+@param session the repository that the files were written to.
+@param generated the files that the write wrote.
+@param report what the write changed.
+*/
+export async function listInstallNotes(
+    session: Session,
+    generated: Generation,
+    report: ApplyReport,
+): Promise<string[]> {
+    const notes: string[] = [];
+    const { hooksPath } = await readHooks(session.repository);
+    if (
+        session.settings.hooks.enabled &&
         hooksPath !== GSPOT_PATHS.hooks &&
         [...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`))
     )
-        report.notes.push(HOOKS_CHANGED_NOTE);
-    if (hasUnmanagedScanner(session, writer)) report.notes.push(MANAGED_KEYS_NOTE);
-    addInstallationNote(session, generated, report);
-    return report;
+        notes.push(HOOKS_CHANGED_NOTE);
+    if (listStaleLockfiles(session, generated.files).length === 0) return notes;
+    const hasToolChanges = report.written.some((path) => TOOL_PROJECT_FILES.includes(path));
+    return [...notes, hasToolChanges ? TOOLS_CHANGED_NOTE : STALE_LOCKFILE_NOTE];
 }
