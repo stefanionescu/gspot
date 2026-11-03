@@ -28,6 +28,15 @@ import {
     INCOMPLETE_STATUSES,
 } from '#cli/config/engine.ts';
 
+function listSelectionArguments(selection: RunSelection): string[] {
+    const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;
+    const words = base === undefined ? [] : [BASE_FLAG, quoteArgument(base)];
+    if (selection.messageFile !== undefined)
+        words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(selection.messageFile));
+    if (selection.content === 'index') words.push(STAGED_FLAG);
+    return words;
+}
+
 /**
 Tell whether a check has a rule catalog: rule docs in its code, or a tool whose rules gspot reads. Only then can gspot
 explain one of its rules, or check a rule of an ignore against the rules that exist.
@@ -186,15 +195,6 @@ export function normalizeResultPaths(session: Session, result: CheckResult): Che
         note = note?.replaceAll(root, () => session.toolsRoot);
     }
     return { ...result, ...(command !== undefined && { command }), ...(note !== undefined && { note }) };
-}
-
-function listSelectionArguments(selection: RunSelection): string[] {
-    const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;
-    const words = base === undefined ? [] : [BASE_FLAG, quoteArgument(base)];
-    if (selection.messageFile !== undefined)
-        words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(selection.messageFile));
-    if (selection.content === 'index') words.push(STAGED_FLAG);
-    return words;
 }
 
 /**
