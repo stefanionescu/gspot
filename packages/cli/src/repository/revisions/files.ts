@@ -3,13 +3,12 @@ import { copyFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
-import { runGit, readGitText, runGitBytes } from '#cli/repository/git/run.ts';
 import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
-import { runGit, readGitText, runGitBytes, readGitLines, readGitPaths, runGitStream } from '#cli/repository/git/run.ts';
+import { runGit, readGitText, runGitBytes, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
 
 import {
     INDEX_LINE,
