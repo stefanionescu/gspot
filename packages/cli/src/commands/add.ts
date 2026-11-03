@@ -60,6 +60,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
         listing: context.listing,
         edit: input,
         summary,
+        previous: context.session,
     });
 }
 

@@ -115,6 +115,7 @@ export type SettingsEditContext = IgnoreEditContext & { session: Session; scope:
 
 export type SettingsEditOptions = {
     edit: SettingsEdit;
+    previous?: Session | undefined;
     summary: string;
     unchangedSummary?: string;
     notes?: string[];

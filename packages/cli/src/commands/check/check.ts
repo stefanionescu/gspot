@@ -3,6 +3,7 @@ import { addAbortSignal } from 'node:stream';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { formatNameList } from '#cli/system/text.ts';
+import { parseCheckNames } from '#cli/commands/edits.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
@@ -11,7 +12,6 @@ import { constants, accessSync, existsSync } from 'node:fs';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { formatAnnotations } from '#cli/commands/check/report.ts';
-import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { readIndexTree } from '#cli/repository/revisions/files.ts';
 import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
@@ -36,8 +36,6 @@ import {
     PUSH_INPUT_MESSAGE,
     COMMIT_FILE_MESSAGE,
     STAGE_SETUP_MESSAGE,
-    CHECK_LIST_SEPARATOR,
-    EMPTY_CHECKS_MESSAGE,
     CHECK_STOPPED_MESSAGE,
     NOTHING_STAGED_MESSAGE,
     GIT_SETUP_FILES_ARGUMENTS,
@@ -57,15 +55,6 @@ async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
         if (error instanceof TypeError) throw new GspotError('git', PUSH_INPUT_MESSAGE, { cause: error });
         throw error;
     }
-}
-
-function parseCheckNames(value: string, previous: string[] | undefined): string[] {
-    const checks = value
-        .split(CHECK_LIST_SEPARATOR)
-        .map((check) => check.trim())
-        .filter((check) => check !== '');
-    if (checks.length === 0) throw new InvalidArgumentError(EMPTY_CHECKS_MESSAGE);
-    return [...(previous ?? []), ...checks];
 }
 
 function assertPushFlags(flags: CheckFlags): void {

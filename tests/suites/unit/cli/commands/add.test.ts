@@ -40,6 +40,20 @@ test('add --scope writes the scope list and applies the generated files', async 
     expect(existsSync(generated)).toBe(true);
 });
 
+test('with a baseline, add names the checks of the configuration and the baseline command for them', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'gspot.baseline.json': '{}\n',
+        ...API_SCOPE_FILES,
+    });
+    const result = await runGspot(sandbox.path, ['add', 'bash', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const notes = (JSON.parse(result.stdout) as { notes: string[] }).notes.filter((note) => note.includes('--only'));
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toContain('bash/shellcheck');
+    expect(notes[0]).not.toContain('markdown/');
+});
+
 test('add security exits 2, names gspot set level, and writes nothing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true }),

@@ -67,6 +67,16 @@ cannot run, such as a network check offline, keeps its counts, and the command n
 `--prune` adds counts. A run of some files or some checks judges only what it read, so a
 full `gspot check` reports every stale count.
 
+When `gspot set level` or `gspot add` turns on checks in a repository with a baseline, the command names those checks
+and the command that accepts their findings alone, such as:
+
+```shell
+gspot baseline --only prose/vale,structure/jscpd
+```
+
+`--only` runs only the named checks and keeps the counts of the other checks. A plain `gspot baseline` also accepts
+the new findings of every other check.
+
 ## See what a change weakens
 
 `gspot/weakenings` runs at push and in CI. It compares `gspot.toml` and `gspot.baseline.json` with the base revision:

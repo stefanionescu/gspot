@@ -244,6 +244,6 @@ export type ScanInput = {
 
 export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };
 
-export type BaselineFlags = { prune?: boolean };
+export type BaselineFlags = { prune?: boolean; only?: string[] };
 
 export type BaselineJson = { summary: string; findings: number; files: number; leftOut: string[] };

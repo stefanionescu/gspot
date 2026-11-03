@@ -3,6 +3,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -12,15 +13,18 @@ import type { ApplyReport } from '#cli/types/generation.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { Files, CommandResult } from '#cli/types/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { quoteArgument, formatNameList } from '#cli/system/text.ts';
+import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
+import { BASELINE_STAGES, BASELINE_EXEMPT_CHECK } from '#cli/config/engine.ts';
+import { SETTINGS_FILE, BASELINE_FILE } from '#cli/config/repository/files.ts';
+import { compareText, quoteArgument, formatNameList } from '#cli/system/text.ts';
+import { EMPTY_CHECKS_MESSAGE, CHECK_LIST_SEPARATOR } from '#cli/config/commands/reports.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 import { listInstallNotes, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
@@ -85,6 +89,39 @@ function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): 
                 `--paths ${quoteArgument(selector)} matches no repository file. Name an existing file, folder, or matching glob.`,
             );
     }
+}
+
+function listCountedChecks(session: Session): Set<string> {
+    return new Set(
+        session.configuredChecks
+            .filter(({ check }) => BASELINE_STAGES.has(check.stage) && !BASELINE_EXEMPT_CHECK.test(check.id))
+            .map(({ scope, check }) => `${scope.path}\0${check.id}`),
+    );
+}
+
+/**
+Name the checks that an edit turned on, and the baseline command that accepts their findings alone. A plain gspot
+baseline also accepts the new findings of every other check.
+
+@param root the repository root.
+@param sessions the repository before and after the edit.
+@param sessions.previous the repository before the edit, when the command compares the checks.
+@param sessions.session the repository after the edit.
+*/
+function listBaselineNotes(
+    root: string,
+    { previous, session }: { previous: Session | undefined; session: Session },
+): string[] {
+    if (previous === undefined || findText(root, BASELINE_FILE) === undefined) return [];
+    const before = listCountedChecks(previous);
+    const turnedOn = [...listCountedChecks(session)]
+        .filter((key) => !before.has(key))
+        .map((key) => key.slice(key.indexOf('\0') + 1));
+    const checks = [...new Set(turnedOn)].toSorted(compareText);
+    if (checks.length === 0) return [];
+    return [
+        `This change turns on ${formatNameList(checks)}. To accept their findings and keep the other counts of ${BASELINE_FILE}, run gspot baseline --only ${checks.join(CHECK_LIST_SEPARATOR)}.`,
+    ];
 }
 
 /**
@@ -262,7 +299,11 @@ export async function writeSettingsEdit(
     const generated = buildGeneratedFiles(session);
     writeSettings(writer, result.text, edit.previous);
     const report = await writeEditedFiles(session, generated, { writer, summary });
-    report.notes.push(...(await listInstallNotes(session, generated, report)), ...(options.notes ?? []));
+    report.notes.push(
+        ...(await listInstallNotes(session, generated, report)),
+        ...(options.notes ?? []),
+        ...listBaselineNotes(root, { previous: options.previous, session }),
+    );
     const written = report.written.length + report.updated.length + report.removed.length;
     if (written === 0 && !result.changed)
         return buildUnchangedResult(options.unchangedSummary ?? UNCHANGED_SETTINGS_MESSAGE, report.notes);
@@ -272,6 +313,22 @@ export async function writeSettingsEdit(
         json: { ...report, summary: shown, changed: result.changed },
         exitCode: 0,
     };
+}
+
+/**
+Parse the value of a flag that names checks, such as --only: one check, or several separated by commas. A repeated flag
+adds its checks to the earlier ones.
+
+@param value the text of one flag.
+@param previous the checks of the earlier flags.
+*/
+export function parseCheckNames(value: string, previous: string[] | undefined): string[] {
+    const checks = value
+        .split(CHECK_LIST_SEPARATOR)
+        .map((check) => check.trim())
+        .filter((check) => check !== '');
+    if (checks.length === 0) throw new InvalidArgumentError(EMPTY_CHECKS_MESSAGE);
+    return [...(previous ?? []), ...checks];
 }
 
 export const pathsOption: CommandOption = {

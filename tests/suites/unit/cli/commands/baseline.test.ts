@@ -143,6 +143,29 @@ test('--prune lowers the counts of the checks that ran and keeps those of a chec
     });
 });
 
+test('--only counts the named check again and keeps the counts of the other checks', async () => {
+    await using sandbox = await createBaselineSandbox(
+        { 'guide.md': 'See `src/one.ts` and `src/two.ts`.\n' },
+        '[[command_check]]\nid = "missing/tool"\ncommand = ["gspot-missing-tool"]\npaths = ["**"]\nstage = "commit"\nsummary = "Runs a tool."\nhelp = "Install it."\noutput = { format = "none" }\n',
+    );
+    const counts = {
+        'guide.md': { 'docs/missing-paths': { 'missing-path': 1 }, 'missing/tool': { 'missing/tool': 3 } },
+    };
+    await writeFile(join(sandbox.path, 'gspot.baseline.json'), `${JSON.stringify(counts)}\n`);
+    const written = await runGspot(sandbox.path, ['baseline', '--only', 'docs/missing-paths', '--json']);
+    expect(written.code, written.stdout + written.stderr).toBe(0);
+    expect(JSON.parse(written.stdout)).toMatchObject({ findings: 5, files: 1 });
+    const baseline = JSON.parse(await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8')) as unknown;
+    expect(baseline).toStrictEqual({
+        'guide.md': { 'docs/missing-paths': { 'missing-path': 2 }, 'missing/tool': { 'missing/tool': 3 } },
+    });
+    const exempt = await runGspot(sandbox.path, ['baseline', '--only', 'secrets/gitleaks-staged']);
+    expect(exempt).toMatchObject({
+        code: 2,
+        stderr: 'secrets/gitleaks-staged stays out of every baseline. Fix its findings instead.\n',
+    });
+});
+
 test('writing the generated files keeps the baseline, and no generated-file check reports it', async () => {
     await using sandbox = await createBaselineSandbox({ 'guide.md': 'See `src/one.ts`.\n' });
     await runGspot(sandbox.path, ['baseline']);

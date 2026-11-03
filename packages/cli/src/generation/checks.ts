@@ -21,12 +21,14 @@ export const CHECK_GENERATION: CheckGeneration = {
 Run the commit and push checks on every file, with no fixes.
 
 @param session the repository and its tools.
+@param only the checks to run, when not every check.
 */
-export async function runEveryCheck(session: Session): Promise<RunResult> {
+export async function runEveryCheck(session: Session, only?: string[]): Promise<RunResult> {
     try {
         return await runChecks(session, {
             selectCheckCode,
             generation: CHECK_GENERATION,
+            only,
             stage: 'all',
             fix: false,
             cwd: session.root,

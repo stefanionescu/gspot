@@ -166,7 +166,14 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = buildSettingChange(edit, options);
     setSetting(scopeTable, change, setting, options);
-    return await writeSettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
+    return await writeSettingsEdit(root, {
+        edit: input,
+        summary,
+        notes,
+        cache: edit.cache,
+        listing: edit.listing,
+        previous: edit.session,
+    });
 }
 
 export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags> = {

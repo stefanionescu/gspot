@@ -239,3 +239,5 @@ export const WORKING_TREE = 'the working tree';
 export const EVERY_CHECK = 'every check';
 
 export const BASELINE_EXEMPT_CHECK = /^(?:gspot|secrets)\//u;
+
+export const BASELINE_STAGES: ReadonlySet<string> = new Set(['commit', 'push']);

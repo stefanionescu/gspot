@@ -1,11 +1,33 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+test('with a baseline, set level all names the checks it turns on and the baseline command for them', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'README.md': '# Example\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const unbaselined = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
+    expect((JSON.parse(unbaselined.stdout) as { notes: string[] }).notes.join('\n')).not.toContain('gspot baseline');
+    await runGspot(sandbox.path, ['unset', 'level']);
+    await writeFile(join(sandbox.path, 'gspot.baseline.json'), '{}\n');
+    const all = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
+    expect(all.code, all.stdout + all.stderr).toBe(0);
+    const note = (JSON.parse(all.stdout) as { notes: string[] }).notes.find((line) => line.includes('gspot baseline'));
+    expect(note).toMatch(
+        /^This change turns on .+\. To accept their findings and keep the other counts of gspot\.baseline\.json, run gspot baseline --only [\w/,-]+\.$/u,
+    );
+    const named = note?.slice(note.lastIndexOf(' ') + 1, -1).split(',') ?? [];
+    expect(named).toContain('prose/vale');
+    expect(named).not.toContain('markdown/markdownlint');
+});
 
 test('setting level all and unsetting it restores every generated file and its bytes', async () => {
     await using sandbox = await createGitSandbox({
