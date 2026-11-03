@@ -5,6 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -39,7 +40,12 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     await using sandbox = await createGitSandbox(CLASSIFICATION_FILES);
     runGitStep(sandbox.path, ['add', '.']);
     const declarations = [
-        { paths: ['src/a.ts', 'generated/declared.ts'], configuration: 'example', kind: 'generated' as const },
+        {
+            scopePath: '',
+            isMatch: buildPathMatcher(['src/a.ts', 'generated/declared.ts']),
+            configuration: 'example',
+            kind: 'generated' as const,
+        },
     ];
     const cache = createRunCache(sandbox.path);
     const configuredRepository = await readRepository(cache, await listRepositoryFiles(cache), {

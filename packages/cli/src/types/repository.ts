@@ -92,7 +92,12 @@ export type FileTags = { tags: string[]; isBinary: boolean };
 
 export type FileKind = (typeof FILE_KINDS)[number];
 
-export type GeneratedPaths = { paths: string[]; kind: 'generated'; configuration: string };
+export type GeneratedPaths = {
+    scopePath: string;
+    isMatch: (path: string) => boolean;
+    kind: 'generated';
+    configuration: string;
+};
 
 export type FileClassification = { kind: FileKind; origin: string };
 

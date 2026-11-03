@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { extractExtension } from '#cli/system/paths.ts';
@@ -63,7 +64,7 @@ import {
 function findConfiguredKind(path: string, rules: FileKindRules): FileClassification | undefined {
     const attribute = findAttributeKind(rules.attributes.get(path));
     if (attribute !== undefined) return attribute;
-    const generated = rules.generatedPaths.find((generatedPath) => buildPathMatcher(generatedPath.paths)(path));
+    const generated = rules.generatedPaths.find((rule) => isInScope(path, rule.scopePath) && rule.isMatch(path));
     return generated === undefined ? undefined : { kind: generated.kind, origin: generated.configuration };
 }
 
@@ -255,22 +256,27 @@ export function listTaggedExtensions(...tags: string[]): string[] {
 }
 
 /**
-Resolve generated paths of the configurations each scope selects.
+Resolve generated paths of the configurations each scope selects, with one matcher per configuration. A rule whose
+paths all sit in its scope matches only files of that scope.
 
 @param selected the configurations of each written scope.
 */
 export function listConfigurationGeneratedPaths(selected: Map<string, Configuration[]>): GeneratedPaths[] {
     return selected
         .entries()
-        .flatMap(([path, configurations]) =>
+        .flatMap(([scopePath, configurations]) =>
             configurations.flatMap(({ generated, name, configs }) => {
-                const paths = [...generated.map((file) => posix.join(path, file)), ...listPointerFiles(path, configs)];
+                const paths = [
+                    ...generated.map((file) => posix.join(scopePath, file)),
+                    ...listPointerFiles(scopePath, configs),
+                ];
                 return paths.length === 0
                     ? []
                     : {
                           kind: 'generated' as const,
                           configuration: name,
-                          paths,
+                          scopePath: paths.every((path) => isInScope(path, scopePath)) ? scopePath : '',
+                          isMatch: buildPathMatcher(paths),
                       };
             }),
         )
