@@ -196,7 +196,7 @@ Runs the tests with coverage and compares each target with the line limit or its
 @param session the repository and its tools.
 @param planned the scope and coverage limits.
 */
-export async function checkCoverage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkSwiftTests(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const settings = getTable(planned.scope.settings, COVERAGE_RULE);
     const report = await measureCoverage(session, planned);
     if (report.failures.length > 0) return report.failures;

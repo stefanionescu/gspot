@@ -27,7 +27,7 @@ Runs pytest, and leaves the shipped coverage settings out when the project write
 @param planned the coverage check of one scope.
 @param options the command override and the verbosity of the notes.
 */
-export async function checkPytestCoverage(
+export async function checkPytestTests(
     session: CheckSession,
     planned: PlannedCheck,
     options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},

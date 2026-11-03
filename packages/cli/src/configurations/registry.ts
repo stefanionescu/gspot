@@ -8,6 +8,7 @@ import { checkFences } from '#cli/configurations/language/markdown/checks.ts';
 import { checkExpoDoctor } from '#cli/configurations/framework/expo/checks.ts';
 import { checkNextjsTsc } from '#cli/configurations/framework/nextjs/checks.ts';
 import { checkPaths } from '#cli/configurations/general/naming/checks/paths.ts';
+import { checkPytestTests } from '#cli/configurations/testing/pytest/checks.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { checkSyntax } from '#cli/configurations/infrastructure/nginx/checks.ts';
 import { checkSafety } from '#cli/configurations/language/bash/checks/safety.ts';
@@ -15,15 +16,14 @@ import { checkSvelteCheck } from '#cli/configurations/framework/svelte/checks.ts
 import { checkTsconfig } from '#cli/configurations/language/typescript/checks.ts';
 import { checkJscpd } from '#cli/configurations/general/structure/checks/jscpd.ts';
 import { checkMessages } from '#cli/configurations/library/translations/checks.ts';
-import { checkPytestCoverage } from '#cli/configurations/testing/pytest/checks.ts';
 import { checkSiteBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { checkGrants } from '#cli/configurations/database/postgres/checks/grants.ts';
 import { checkBaseline } from '#cli/configurations/general/gspot/checks/baseline.ts';
 import { checkHtmlInlineScripts } from '#cli/configurations/language/html/checks.ts';
 import { checkSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
-import { checkCoverage } from '#cli/configurations/language/swift/checks/coverage.ts';
 import { checkReactVersions } from '#cli/configurations/framework/react-dom/checks.ts';
 import { checkAnsibleLint } from '#cli/configurations/infrastructure/ansible/checks.ts';
+import { checkSwiftTests } from '#cli/configurations/language/swift/checks/coverage.ts';
 import { checkPeriphery } from '#cli/configurations/language/swift/checks/periphery.ts';
 import { checkWeakenings } from '#cli/configurations/general/gspot/checks/weakenings.ts';
 import { checkShellcheck } from '#cli/configurations/language/bash/checks/shellcheck.ts';
@@ -239,7 +239,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'python/placeholder-docstrings': { check: checkPlaceholderDocstrings },
     'python/pydoclint': { run: checkPydoclint },
     'python/vulture': { check: checkVulture, ruleDocs: VULTURE_RULE_DOCS },
-    'pytest/tests': { run: checkPytestCoverage },
+    'pytest/tests': { run: checkPytestTests },
     'repository/conflict-markers': { check: checkConflictMarkers },
     'repository/encoding': { check: checkEncoding, ruleDocs: ENCODING_RULE_DOCS },
     'react-dom/react-versions': { check: checkReactVersions },
@@ -273,7 +273,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'supabase/verify-jwt': { check: checkVerifyJwt },
     'svelte/svelte-check': { check: checkSvelteCheck },
     'swift/build': { check: checkSwiftBuild },
-    'swift/tests': { check: checkCoverage, ruleDocs: SWIFT_TEST_RULE_DOCS },
+    'swift/tests': { check: checkSwiftTests, ruleDocs: SWIFT_TEST_RULE_DOCS },
     'swift/doc-comments': { check: checkSwiftDocComments },
     'swift/periphery': { check: checkPeriphery },
     'swift/security': { check: checkSwiftSecurity, ruleDocs: SWIFT_SECURITY_RULE_DOCS },
