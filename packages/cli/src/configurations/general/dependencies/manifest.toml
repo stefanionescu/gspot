@@ -34,6 +34,7 @@ tool = "syncpack"
 [[check]]
 example = "A locked package version named in an OSV advisory reports a finding. Upgrade to a fixed version, and update the lockfile."
 files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml"], kinds = ["source", "generated"] }
+large_files = true
 name = "osv-scanner"
 needs = ["network"]
 runs = "once"

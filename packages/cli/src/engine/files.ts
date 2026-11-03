@@ -123,7 +123,7 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
 function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
     if (check.binary_files === true) return files;
     return files.filter((file) => {
-        if (isOverSizeLimit(planned.session.scopes, file)) return false;
+        if (check.large_files !== true && isOverSizeLimit(planned.session.scopes, file)) return false;
         if (!file.tags.includes('text') || file.tags.includes('symlink')) return true;
         file.isUtf8 ??= isUtf8(readBytes(planned.session.cache, file.path));
         return file.isUtf8;

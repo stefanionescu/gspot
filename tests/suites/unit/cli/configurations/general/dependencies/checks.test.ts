@@ -249,10 +249,10 @@ test('package-manager-pin reports malformed mise syntax and still reads other mi
     ]);
 });
 
-test('osv-scanner reads each lockfile of the repository, apart from ignored folders and the files of gspot', async () => {
+test('osv-scanner reads each lockfile of the repository at any size, apart from ignored folders and the files of gspot', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'uv.lock': '',
+        'gspot.toml': buildSandboxSettings([], { tables: '[repository]\nmax_file_kilobytes = 0\n' }),
+        'uv.lock': 'version = 1\n',
         'app/requirements.txt': '',
         '.gspot/bun.lock': '',
         '.claude/worktrees/copy/uv.lock': '',
