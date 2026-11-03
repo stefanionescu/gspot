@@ -1,4 +1,5 @@
 import { runChecks } from '#cli/engine/run.ts';
+import { isInScope } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -9,11 +10,11 @@ import { parseBaseline } from '#cli/engine/baseline.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { RunSelection } from '#cli/types/engine/plan.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { FixReport, RunReport, RunOptions } from '#cli/types/engine/run.ts';
 import type { CheckOptions, RevisionSource } from '#cli/types/commands/reports.ts';
 import { readDefaultRef, readChangedPaths } from '#cli/repository/revisions/changes.ts';

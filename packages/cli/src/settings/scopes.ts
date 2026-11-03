@@ -1,17 +1,17 @@
-import { extractParentFolder } from '#cli/system/paths.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { addTable, findValueAt } from '#cli/system/tables.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { isInScope, extractParentFolder } from '#cli/system/paths.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
 import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
-import { isInScope, isScopeCovered, selectScopePath, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { isScopeCovered, selectScopePath, compareScopeDepth } from '#cli/repository/scopes.ts';
 
 import type {
     Scope,

@@ -2,12 +2,12 @@ import { isDeepStrictEqual } from 'node:util';
 import type { Scope } from '#cli/types/settings.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
-import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { isInScope, escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
 import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
-import { isInScope, joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 
 import type {
     EslintFiles,

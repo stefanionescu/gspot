@@ -188,3 +188,14 @@ Escape a literal repository path for use within a glob.
 export function escapeGlob(path: string): string {
     return path.replaceAll(GLOB_SPECIAL_CHARACTERS, (match) => `\\${match}`);
 }
+
+/**
+Test scope containment. The empty root path matches every file.
+
+@param path the file to test.
+@param scope the folder that may contain the file.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers test scope containment by this rule: the root scope, an empty path, holds every path.
+export function isInScope(path: string, scope: string): boolean {
+    return scope === '' || path === scope || path.startsWith(`${scope}/`);
+}

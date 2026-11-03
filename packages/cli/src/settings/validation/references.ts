@@ -1,14 +1,13 @@
 import type { Files } from '#cli/types/system.ts';
 import { LINK_REFUSAL } from '#cli/config/system.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
+import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings, SettingsError, AvailableSettings, WrittenScopeTable } from '#cli/types/settings.ts';

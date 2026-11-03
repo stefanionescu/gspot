@@ -1,4 +1,5 @@
 import { sep, join, posix } from 'node:path';
+import { isInScope } from '#cli/system/paths.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Level } from '#cli/types/settings.ts';
@@ -20,8 +21,8 @@ import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/structure.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/configurations.ts';
 import { GSPOT_FOLDER, PYPROJECT_TOML, PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { joinScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
-import { joinScope, isInScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 
 import {
     type DeptryProject,
@@ -337,10 +338,8 @@ files of this run.
 */
 export async function checkVulture(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scope = planned.scope.path;
-    const children = listNestedScopes(
-        session.scopes.map(({ path }) => path),
-        scope,
-    );
+    const scopePaths = session.scopes.map(({ path }) => path);
+    const children = listNestedScopes(scopePaths, scope);
     const sources = session.repository.files
         .filter((file) => file.kind === 'source' && file.path.endsWith(PYTHON_EXTENSION))
         .filter((file) => isInScope(file.path, scope) && isOutsideChildScopes(file.path, children))

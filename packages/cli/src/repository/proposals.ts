@@ -1,7 +1,8 @@
+import { isInScope } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { isInScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/manifests/select.ts';
 

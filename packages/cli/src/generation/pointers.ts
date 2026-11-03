@@ -17,9 +17,15 @@ import type { Config, ManagedKeys } from '#cli/types/repository.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import type { ConfigOwner } from '#cli/types/configurations/language.ts';
-import { isInScope, joinScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
-import { escapeGlob, findOutermostFolder, extractParentFolder, buildModuleSpecifier } from '#cli/system/paths.ts';
+import { joinScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 
+import {
+    isInScope,
+    escapeGlob,
+    findOutermostFolder,
+    extractParentFolder,
+    buildModuleSpecifier,
+} from '#cli/system/paths.ts';
 import {
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,

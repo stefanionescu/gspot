@@ -1,7 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
-import { buildModuleSpecifier } from '#cli/system/paths.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { isInScope, buildModuleSpecifier } from '#cli/system/paths.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 

@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import { isInScope } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { CATEGORY_PARENTS, CATEGORY_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';
 

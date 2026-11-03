@@ -1,8 +1,8 @@
+import { isInScope } from '#cli/system/paths.ts';
 import { join, posix, dirname } from 'node:path';
 import type { Session } from '#cli/types/tools.ts';
 import { setImmediate } from 'node:timers/promises';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

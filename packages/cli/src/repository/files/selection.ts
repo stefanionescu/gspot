@@ -1,9 +1,8 @@
-import { isInScope } from '#cli/repository/scopes.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listPathTags } from '#cli/repository/files/classify.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
-import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import { isInScope, escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository.ts';
 

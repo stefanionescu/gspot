@@ -12,6 +12,7 @@ import { listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/reposito
 
 import {
     isInside,
+    isInScope,
     escapeGlob,
     convertToPosixPath,
     findEnclosingFolder,
@@ -32,17 +33,6 @@ export function buildArgumentPath(root: string, cwd: string, subject: string): s
     const path = convertToPosixPath(relative(root, resolve(cwd, subject)));
     if (!isInside(path)) throw new GspotError('arguments', `Path ${subject} is outside this repository.`);
     return path;
-}
-
-/**
-Test scope containment. The empty root path matches every file.
-
-@param path the file to test.
-@param scope the folder that may contain the file.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers test scope containment by this rule: the root scope, an empty path, holds every path.
-export function isInScope(path: string, scope: string): boolean {
-    return scope === '' || path === scope || path.startsWith(`${scope}/`);
 }
 
 /**

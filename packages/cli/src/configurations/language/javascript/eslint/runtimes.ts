@@ -2,10 +2,10 @@ import { posix } from 'node:path';
 import type { Scope } from '#cli/types/settings.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
-import { escapeGlob, listEnclosingFolders } from '#cli/system/paths.ts';
+import { joinScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
 import type { EslintRuntime } from '#cli/types/configurations/language.ts';
-import { joinScope, isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { isInScope, escapeGlob, listEnclosingFolders } from '#cli/system/paths.ts';
 import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/framework.ts';
 import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 

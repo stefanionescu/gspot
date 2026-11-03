@@ -1,7 +1,7 @@
 import { styleText } from 'node:util';
+import { isInScope } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import type { Generation } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { Settings } from '#cli/types/settings.ts';

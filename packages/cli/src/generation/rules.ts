@@ -1,14 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { visit } from 'unist-util-visit';
 import type { Session } from '#cli/types/tools.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { getRootScope } from '#cli/settings/scopes.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Repository } from '#cli/types/repository.ts';
 import type { Scope, Level } from '#cli/types/settings.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { SourcePosition } from '#cli/types/parsers.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
 import { GROUPS, GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -16,6 +14,7 @@ import { FIRST_READ } from '#cli/config/settings/validation.ts';
 import { compareText, formatNameList } from '#cli/system/text.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { ShippedRule, Configuration } from '#cli/types/manifests.ts';
 import type { RuleFile, RuleSection, AgentsBlockContent } from '#cli/types/generation.ts';
 

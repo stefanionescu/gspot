@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import { isUtf8 } from 'node:buffer';
+import { isInScope } from '#cli/system/paths.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { ScopeCheck } from '#cli/types/tools.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
@@ -11,15 +12,8 @@ import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import { SYMLINK_MODE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
+import { joinScope, selectScopePath, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { ROOT_RUNS, FILES_PLACEHOLDER, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
-
-import {
-    isInScope,
-    joinScope,
-    selectScopePath,
-    listNestedScopes,
-    isOutsideChildScopes,
-} from '#cli/repository/scopes.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');

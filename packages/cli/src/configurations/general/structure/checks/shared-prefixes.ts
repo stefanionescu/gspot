@@ -2,16 +2,22 @@ import { posix } from 'node:path';
 import { splitWords } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { FolderChild } from '#cli/types/configurations/general.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
-import { extractBaseName, extractExtension, isInInstalledFolder, extractParentFolder } from '#cli/system/paths.ts';
 
+import {
+    isInScope,
+    extractBaseName,
+    extractExtension,
+    isInInstalledFolder,
+    extractParentFolder,
+} from '#cli/system/paths.ts';
 import {
     SPEC_SUFFIX,
     HOOK_FOLDERS,

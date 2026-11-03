@@ -1,6 +1,7 @@
 import type ts from 'typescript';
 import { join, posix } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
+import { isInScope } from '#cli/system/paths.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { findText } from '#cli/system/files/reads.ts';
@@ -10,9 +11,9 @@ import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { TSCONFIG_FILE, PBXPROJ_SUFFIX } from '#cli/config/parsers.ts';
+import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { isInScope, joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import type { TomlTable, DetectedScopes, ScopeConfigurations, ImportExtensionStyle } from '#cli/types/settings.ts';
 

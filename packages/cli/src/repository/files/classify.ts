@@ -1,11 +1,10 @@
 import { posix } from 'node:path';
-import { isInScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { isInScope, extractExtension } from '#cli/system/paths.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { MARKERS, SCRIPT_TAG, GSPOT_FOLDER, WHITESPACE_RUN, JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
 

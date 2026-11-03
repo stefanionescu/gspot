@@ -6,19 +6,19 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { PnpmTool, RushTool, LernaTool } from '@manypkg/tools';
-import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { join, posix, dirname, resolve, relative } from 'node:path';
 import { findText, findContainedPath } from '#cli/system/files/reads.ts';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/javascript.ts';
-import { convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { isInScope, convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
 const workspaceGlobsSchema = z.object({ packages: z.string().array().optional() });
 

@@ -1,12 +1,12 @@
 import { formatCount } from '#cli/system/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { extractExtension } from '#cli/system/paths.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isInScope, extractExtension } from '#cli/system/paths.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
+import { joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
 import { RUNTIME_TAG, EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
 
 import type {

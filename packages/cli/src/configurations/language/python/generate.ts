@@ -1,14 +1,15 @@
 import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
+import { isInScope } from '#cli/system/paths.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { tryParseFile } from '#cli/system/errors.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { RUFF_CHECK } from '#cli/config/repository/setup.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';

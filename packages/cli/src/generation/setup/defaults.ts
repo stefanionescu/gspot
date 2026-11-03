@@ -2,15 +2,15 @@ import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { buildSettings } from '#cli/settings/read.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { WrittenTable } from '#cli/types/generation.ts';
 import { DETECTED_SETTINGS } from '#cli/config/generation.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { Settings, TomlTable } from '#cli/types/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
-import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { isTable, findValueAt, getRequired } from '#cli/system/tables.ts';
 
 function isInheritedValueChanged(

@@ -1,6 +1,6 @@
+import { isInScope } from '#cli/system/paths.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { parseBaseline } from '#cli/engine/baseline.ts';
