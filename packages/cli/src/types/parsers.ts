@@ -76,15 +76,20 @@ export type ScriptSyntax = {
     temporaryPaths: TemporaryPath[];
 };
 
-type GrammarFile = { path: string; grammar: GrammarName };
-
 export type GrammarName = (typeof GRAMMAR_NAMES)[number];
 
 export type ParseCache = { cache: RunCache; resources?: Disposable[] };
 
-export type GrammarSourceFiles = ParseCache & { files: GrammarFile[] };
+export type GrammarSourceFiles<Grammar extends GrammarName = GrammarName> = ParseCache & {
+    files: Array<{ path: string; grammar: Grammar }>;
+};
 
-export type SourceTree = { path: string; text: string; rootNode: Node };
+export type SourceTree<Grammar extends GrammarName = GrammarName> = {
+    path: string;
+    grammar: Grammar;
+    text: string;
+    rootNode: Node;
+};
 
 export type ParserGrammars = {
     runtime: Promise<void> | undefined;

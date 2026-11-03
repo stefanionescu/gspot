@@ -117,14 +117,14 @@ Read the files, lend each parsed tree to a visitor, then release its handle.
 @param sources the files to parse, each with its grammar.
 @param visit reads one tree; syntax nodes must not leave this callback.
 */
-export async function visitParsedSources(
-    sources: GrammarSourceFiles,
-    visit: (source: SourceTree) => void,
+export async function visitParsedSources<Grammar extends GrammarName>(
+    sources: GrammarSourceFiles<Grammar>,
+    visit: (source: SourceTree<Grammar>) => void,
 ): Promise<void> {
     for (const file of sources.files) {
         const text = readText(sources.cache, file.path);
         using tree = await parseSource(file.grammar, text, sources);
-        visit({ path: file.path, text, rootNode: tree.rootNode });
+        visit({ path: file.path, grammar: file.grammar, text, rootNode: tree.rootNode });
     }
 }
 

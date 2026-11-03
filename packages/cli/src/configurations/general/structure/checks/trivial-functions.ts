@@ -7,7 +7,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
-import { readParsedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
+import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 
 import {
     ONE_STATEMENT,
@@ -154,25 +154,26 @@ Report named functions at the statement limit and files that only forward code.
 */
 export async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const isTest = buildPathMatcher(planned.scope.settings.test_files);
-    const sources = await readParsedSources(session, planned);
-    const parsed = sources.filter((source) => source.language !== 'python' || !isTest(source.path));
-    const functions = parsed.flatMap((source) => listTrivialFunctions(planned, source));
     const hasPackageExports = session.settings.structure.reexports === 'index-only';
-    const files = parsed
-        .filter((source) => isTrivialFile(source.tree.rootNode, source.language))
-        .filter((source) => !hasPackageExports || basename(source.path) !== PYTHON_PACKAGE_FILE)
-        .map((source) => {
-            const line =
-                source.language === 'bash'
-                    ? 1
-                    : (source.tree.rootNode.namedChildren.find((node) => !node.type.includes('comment'))?.startPosition
-                          .row ?? 0) + 1;
-            return {
-                file: source.path,
-                line,
-                rule: TRIVIAL_FUNCTION_RULES.trivialFile,
-                message: TRIVIAL_FILE_MESSAGE,
-            };
+    const functions: CheckFinding[] = [];
+    const trivialFiles: Array<{ path: string; line: number }> = [];
+    await visitQueriedSources(session, planned, (source) => {
+        if (source.language === 'python' && isTest(source.path)) return;
+        functions.push(...listTrivialFunctions(planned, source));
+        if (!isTrivialFile(source.rootNode, source.language)) return;
+        const statement = source.rootNode.namedChildren.find((node) => !node.type.includes('comment'));
+        trivialFiles.push({
+            path: source.path,
+            line: source.language === 'bash' ? 1 : (statement?.startPosition.row ?? 0) + 1,
         });
+    });
+    const files = trivialFiles
+        .filter(({ path }) => !hasPackageExports || basename(path) !== PYTHON_PACKAGE_FILE)
+        .map(({ path, line }) => ({
+            file: path,
+            line,
+            rule: TRIVIAL_FUNCTION_RULES.trivialFile,
+            message: TRIVIAL_FILE_MESSAGE,
+        }));
     return [...functions, ...files];
 }

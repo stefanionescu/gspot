@@ -1,64 +1,49 @@
-import { remember } from '#cli/system/cache.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { Query, type Node } from 'web-tree-sitter';
 import { SCRIPT_TAG } from '#cli/config/parsers.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { SOURCE_QUERIES } from '#cli/config/configurations/structure.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
-import { SOURCE_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/configurations/structure.ts';
-
-function detectLanguage(file: TrackedFile): ParsedLanguage | undefined {
-    for (const [extension, language] of Object.entries(LANGUAGE_BY_EXTENSION))
-        if (file.path.endsWith(extension)) return language;
-    return file.tags.includes(SCRIPT_TAG) ? 'bash' : undefined;
-}
-
-function captureSource(source: ParsedSource): void {
-    const query = new Query(source.tree.language, SOURCE_QUERIES[source.language]);
-    try {
-        for (const { name, node } of query.captures(source.tree.rootNode)) {
-            const nodes = source.captures.get(name) ?? [];
-            nodes.push(node);
-            source.captures.set(name, nodes);
-        }
-    } finally {
-        query.delete();
-    }
-}
-
-const PARSED_SOURCES = Symbol('parsed sources');
-
-async function parseSources(
-    session: Pick<Session, 'cache' | 'resources'>,
-    planned: Pick<PlannedCheck, 'files' | 'scope'>,
-): Promise<ParsedSource[]> {
-    const sources: ParsedSource[] = [];
-    for (const file of planned.files) {
-        if (file.kind !== 'source') continue;
-        const language = detectLanguage(file);
-        if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
-        const tree = await parseSource(language, readText(session.cache, file.path), session);
-        session.resources.push(tree);
-        const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
-        sources.push(source);
-        captureSource(source);
-    }
-    return sources;
-}
+import { visitParsedSources, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 
 /**
-Parse the scope sources once for each list of paths, and free their trees with the run.
+Parse the source files that a Python, Swift, or Bash configuration of the scope reads, capture the nodes that the
+structure query of their language names, and lend each source to a visitor.
 
 @param session the run cache and resources.
-@param planned the scope files and the configurations that select their languages.
+@param planned the files to parse and the configurations that select their languages.
+@param visit reads one source; its syntax nodes must not leave this callback.
 */
-export function readParsedSources(
+export async function visitQueriedSources(
     session: Pick<Session, 'cache' | 'resources'>,
     planned: Pick<PlannedCheck, 'files' | 'scope'>,
-): Promise<ParsedSource[]> {
-    return remember(session.cache, PARSED_SOURCES, JSON.stringify(planned.files.map((file) => file.path)), () =>
-        parseSources(session, planned),
-    );
+    visit: (source: ParsedSource) => void,
+): Promise<void> {
+    const { configurations } = planned.scope.settings;
+    const files = planned.files
+        .filter((file) => file.kind === 'source')
+        .map((file) => ({
+            path: file.path,
+            grammar: findGrammarByExtension(file.path) ?? (file.tags.includes(SCRIPT_TAG) ? 'bash' : undefined),
+        }))
+        .filter(
+            (file): file is { path: string; grammar: ParsedLanguage } =>
+                file.grammar !== undefined &&
+                Object.hasOwn(SOURCE_QUERIES, file.grammar) &&
+                configurations.includes(file.grammar),
+        );
+    await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
+        const query = new Query(source.rootNode.tree.language, SOURCE_QUERIES[source.grammar]);
+        try {
+            const captures = new Map<string, Node[]>();
+            for (const { name, node } of query.captures(source.rootNode)) {
+                const nodes = captures.get(name) ?? [];
+                nodes.push(node);
+                captures.set(name, nodes);
+            }
+            visit({ path: source.path, language: source.grammar, rootNode: source.rootNode, captures });
+        } finally {
+            query.delete();
+        }
+    });
 }

@@ -125,8 +125,6 @@ export const LONE_FILE_RULE = 'lone-file';
 
 export const FILE_LINES_RULE = 'file-lines';
 
-export const LANGUAGE_BY_EXTENSION = { '.py': 'python', '.swift': 'swift' } as const;
-
 export const SOURCE_QUERIES = {
     bash: `(function_definition) @function
 (variable_assignment) @assignment`,

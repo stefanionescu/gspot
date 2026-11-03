@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { CST } from 'yaml';
-import type { Tree, Node } from 'web-tree-sitter';
+import type { Node } from 'web-tree-sitter';
 import type { RunCache } from '#cli/types/system.ts';
 import type { ProseRoute } from '#cli/types/tools.ts';
 import type { formatSchema } from '#cli/schemas/settings/fields.ts';
@@ -133,7 +133,7 @@ export type ParsedLanguage = 'python' | 'swift' | 'bash';
 
 export type FolderChild = { name: string; kind: 'file' | 'folder' };
 
-export type ParsedSource = { path: string; language: ParsedLanguage; tree: Tree; captures: Map<string, Node[]> };
+export type ParsedSource = { path: string; language: ParsedLanguage; rootNode: Node; captures: Map<string, Node[]> };
 
 export type LocatedImport = { module: string; path: string; node: Node };
 

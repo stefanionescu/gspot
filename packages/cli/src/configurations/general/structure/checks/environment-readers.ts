@@ -7,7 +7,7 @@ import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ParsedSource } from '#cli/types/configurations/general.ts';
-import { readParsedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
+import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 import { UNNAMED_VARIABLE_LABEL, READ_OUTSIDE_READER_RULE } from '#cli/config/configurations/structure.ts';
 
 import {
@@ -21,22 +21,38 @@ function listEnvironmentReads(
     environmentFunctions: string[],
     readerVariables: Set<string>,
 ): EnvironmentRead[] {
-    const { language, tree } = source;
+    const { language, rootNode } = source;
     switch (language) {
         case 'python': {
-            return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
+            return listPythonEnvironmentReads(rootNode, environmentFunctions);
         }
         case 'bash': {
-            return listBashEnvironmentReads(tree.rootNode, readerVariables);
+            return listBashEnvironmentReads(rootNode, readerVariables);
         }
         case 'swift': {
-            return listSwiftEnvironmentReads(tree.rootNode);
+            return listSwiftEnvironmentReads(rootNode);
         }
         default: {
             const unknown: never = language;
             throw new Error(`No environment reader for ${String(unknown)}.`);
         }
     }
+}
+
+async function listReaderVariables(
+    session: Session,
+    planned: Pick<PlannedCheck, 'files' | 'scope'>,
+): Promise<Set<string>> {
+    const variables = new Set<string>();
+    await visitQueriedSources(session, planned, (source) => {
+        if (source.language !== 'bash') return;
+        const names = (source.captures.get('assignment') ?? [])
+            .filter((node) => findFunctionNode(node) === undefined)
+            .map((node) => node.childForFieldName('name')?.text)
+            .filter((name): name is string => name !== undefined && VARIABLE_NAME.test(name));
+        for (const name of names) variables.add(name);
+    });
+    return variables;
 }
 
 /**
@@ -51,32 +67,21 @@ export async function checkEnvironmentReaders(session: Session, planned: Planned
     const environmentFunctions = planned.scope.settings.configurations.includes('secrets')
         ? getTable(planned.scope.settings, 'secrets').environment_functions
         : [];
-    const parsed = await readParsedSources(session, planned);
-    const readerVariables = new Set(
-        parsed
-            .filter((source) => source.language === 'bash' && isReader(source.path))
-            .flatMap((source) =>
-                (source.captures.get('assignment') ?? []).flatMap((node) => {
-                    const name = node.childForFieldName('name')?.text;
-                    return name !== undefined && findFunctionNode(node) === undefined && VARIABLE_NAME.test(name)
-                        ? [name]
-                        : [];
-                }),
-            ),
-    );
-    return parsed.flatMap((source) => {
-        if (isReader(source.path)) return [];
+    const readers = planned.files.filter((file) => isReader(file.path));
+    const readerVariables = await listReaderVariables(session, { ...planned, files: readers });
+    const findings: CheckFinding[] = [];
+    const others = planned.files.filter((file) => !isReader(file.path));
+    await visitQueriedSources(session, { ...planned, files: others }, (source) => {
         const reads = listEnvironmentReads(source, environmentFunctions, readerVariables);
         const lines = new Map<number, EnvironmentRead>();
         for (const read of reads) if (!lines.has(read.line)) lines.set(read.line, read);
-        return [...lines].map(([line, read]) => {
-            const message = `${read.key ?? UNNAMED_VARIABLE_LABEL} is read here. Read environment variables only in the files that structure.environment_readers lists, and pass the value in.`;
-            return {
+        for (const [line, read] of lines)
+            findings.push({
                 file: source.path,
                 line,
                 rule: READ_OUTSIDE_READER_RULE,
-                message: message,
-            };
-        });
+                message: `${read.key ?? UNNAMED_VARIABLE_LABEL} is read here. Read environment variables only in the files that structure.environment_readers lists, and pass the value in.`,
+            });
     });
+    return findings;
 }

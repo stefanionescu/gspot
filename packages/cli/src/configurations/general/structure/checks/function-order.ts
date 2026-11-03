@@ -109,11 +109,9 @@ export async function checkFunctionOrder(session: Session, planned: PlannedCheck
         const grammar = grammars.find((found) => found !== undefined);
         return grammar === undefined ? [] : [{ path: file.path, grammar }];
     });
-    const grammarByPath = new Map(files.map(({ path, grammar }) => [path, grammar]));
     const findings: CheckFinding[] = [];
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
-        const grammar = grammarByPath.get(source.path);
-        if (grammar !== undefined) findings.push(...listFunctionOrderFindings(source.rootNode, source.path, grammar));
+        findings.push(...listFunctionOrderFindings(source.rootNode, source.path, source.grammar));
     });
     return findings;
 }
