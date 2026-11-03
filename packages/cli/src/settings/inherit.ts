@@ -99,11 +99,21 @@ function mergeTable(
     return result;
 }
 
-function listPossibleKeys(match: SettingMatch, key: string): string[] {
+/**
+List the written keys that set a value, from the most general to the key itself. A shipped default of the language
+outranks the general key that a user writes, so a stricter general value never loosens a stricter language default.
+
+@param availableSettings the settings and defaults of the selected configurations.
+@param match the setting, and the language and category of the key.
+@param key the dotted setting name.
+*/
+function listPossibleKeys(availableSettings: AvailableSettings, match: SettingMatch, key: string): string[] {
     const { language, category } = match;
     if (language === undefined) return [key];
     const field = key.slice(key.lastIndexOf('.') + 1);
-    const keys = [match.setting.name];
+    const table = match.setting.name.slice(0, match.setting.name.indexOf('.'));
+    const hasLanguageDefault = availableSettings.defaults.has(`${table}.${language}.${field}`);
+    const keys = hasLanguageDefault ? [] : [match.setting.name];
     if (category !== undefined) {
         const parent = CATEGORY_PARENTS[category] ?? category;
         keys.push(`naming.${language}.${field}`, `naming.${language}.${parent}.${field}`);
@@ -262,7 +272,7 @@ export function getSettingValue(
     const { setting } = match;
     const shipped = findSettingDefault(availableSettings, settings, match, scopePath);
     const tables = listApplicableTables(settings, scopePath);
-    const keys = listPossibleKeys(match, key);
+    const keys = listPossibleKeys(availableSettings, match, key);
     let inherited: InheritedValue = { value: undefined, source: 'unset', origin: 'unset', reason: undefined };
     if (shipped !== undefined)
         inherited = {
