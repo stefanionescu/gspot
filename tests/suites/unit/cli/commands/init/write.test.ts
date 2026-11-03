@@ -34,12 +34,12 @@ test.each([
     {
         name: 'a package.json without a pin needs the install of the package manager',
         manifest: '{"name":"example","private":true}\n',
-        next: 'Next: run npm install to install the gspot that package.json now pins, then gspot install, then gspot baseline.',
+        next: 'Next: run npm install to install the gspot that package.json now pins, then gspot install, then gspot check --fix, then gspot baseline.',
     },
     {
         name: 'a repository with a pin goes on to gspot install',
         manifest: `{"name":"example","private":true,"devDependencies":{"${cliPackage.name}":"${cliPackage.version}"}}\n`,
-        next: 'Next: gspot install, then gspot baseline.',
+        next: 'Next: gspot install, then gspot check --fix, then gspot baseline.',
     },
 ])('the last line of init: $name', async ({ manifest, next }) => {
     await using sandbox = await createGitSandbox({ 'package.json': manifest });

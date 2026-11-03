@@ -47,7 +47,7 @@ export function formatBaseline(counts: BaselineCount[]): string {
 
 /**
 Count the findings of a run that may enter the baseline. A committed secret needs rotation, and a finding about the
-setup of gspot needs a fix, so their checks stay out.
+setup of gspot needs a fix, so their checks stay out. gspot check --fix fixes a fixable finding, so it stays out too.
 
 @param checks the results of the run.
 @returns one count per file, check, and lint rule.
@@ -55,7 +55,7 @@ setup of gspot needs a fix, so their checks stay out.
 export function countFindings(checks: readonly CheckResult[]): BaselineCount[] {
     const findings = checks
         .flatMap((result) => result.findings)
-        .filter(({ check }) => !BASELINE_EXEMPT_CHECK.test(check));
+        .filter(({ check, fixable }) => !BASELINE_EXEMPT_CHECK.test(check) && !fixable);
     const groups = Map.groupBy(findings, ({ file, check, rule = check }) => JSON.stringify([file, check, rule]));
     return groups
         .values()

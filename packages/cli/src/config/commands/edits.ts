@@ -74,10 +74,10 @@ export const WROTE_PLAN_MESSAGE = 'Wrote the plan above.';
 export const SETTINGS_EXIST_MESSAGE =
     'This repository already has a gspot.toml. Run gspot doctor to inspect its setup; it prints the gspot add line for newly detected configurations.';
 
-export const NEXT_INSTALL_MESSAGE = 'Next: gspot install, then gspot baseline.';
+export const NEXT_INSTALL_MESSAGE = 'Next: gspot install, then gspot check --fix, then gspot baseline.';
 
 export const NEXT_PIN_MESSAGE =
-    'Next: run {runner} install to install the gspot that {file} now pins, then gspot install, then gspot baseline.';
+    'Next: run {runner} install to install the gspot that {file} now pins, then gspot install, then gspot check --fix, then gspot baseline.';
 
 export const CONFIGURATIONS_OPTION = '--configurations <names>';
 

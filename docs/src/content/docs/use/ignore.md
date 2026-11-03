@@ -51,7 +51,8 @@ file holds a count per file, check, and lint rule. Commit it. `gspot check` then
 only when it gains a finding. `gspot check --verbose` and `gspot check --json` show how many findings it subtracted.
 
 Findings of `secrets/*` checks stay out of the baseline, because a committed secret needs rotation. Findings of
-`gspot/*` checks stay out too, because they describe the setup of gspot itself. `gspot baseline` stops and writes
+`gspot/*` checks stay out too, because they describe the setup of gspot itself. A finding that `gspot check --fix` fixes
+stays out as well, so run `gspot check --fix` before `gspot baseline`. `gspot baseline` stops and writes
 nothing when a check cannot run.
 
 After you fix an old finding, the check `gspot/baseline` fails, because the file counts a finding that the checks did
