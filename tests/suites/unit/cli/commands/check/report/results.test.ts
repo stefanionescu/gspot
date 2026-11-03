@@ -111,7 +111,7 @@ test.each([
     );
     const lines = text.split('\n');
     const last = lines.findLastIndex((line) => line.startsWith('  a.sh:'));
-    expect(lines.slice(last + 1, last + 1 + help.length)).toStrictEqual(help);
+    expect(lines.slice(last + 1, last + 1 + help.length)).toStrictEqual([...help]);
     expect(text.match(/help:/gu)).toHaveLength(help.length);
 });
 
