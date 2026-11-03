@@ -1,6 +1,13 @@
+import { join } from 'node:path';
+import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import { test, expect } from 'bun:test';
+import { copyFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { readGitText, readGitLines } from '#cli/repository/git/run.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { parseGitBlobs, parseTreeFiles, mergeAttributes, parseAttributePatterns } from '#cli/repository/git/output.ts';
 
 import {
@@ -79,4 +86,45 @@ test('a Git blob stream accepts empty chunks after the final object', async () =
 
 test('Git attributes apply unset and unspecified changes in order', () => {
     expect(mergeAttributes(['text', '-diff', 'eol=lf', '!text'])).toStrictEqual({ diff: 'unset', eol: 'lf' });
+});
+
+test('in a hook, Git reads the hook index in its repository, a nested repository reads its own, and init makes a new one', async () => {
+    await using sandbox = await testdir({ '.gitignore': 'nested/\ncreated/\n', 'source.txt': 'committed\n' });
+    await writeFile(join(sandbox.path, 'nested.txt'), 'outside the nested repository\n');
+    const nested = join(sandbox.path, 'nested');
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['init', '-q', nested]);
+    await writeFile(join(nested, 'inner.txt'), 'inner\n');
+    commitAll(nested);
+    const index = join(sandbox.path, '.git', 'hook-index');
+    await copyFile(join(sandbox.path, '.git', 'index'), index);
+    await writeFile(join(sandbox.path, 'staged.txt'), 'staged\n');
+    runGitStep(sandbox.path, ['add', 'staged.txt'], { GIT_INDEX_FILE: index });
+    const previous = process.cwd();
+    process.chdir(sandbox.path);
+    try {
+        using _hook = overrideEnvironment({
+            GIT_DIR: join(sandbox.path, '.git'),
+            GIT_WORK_TREE: sandbox.path,
+            GIT_INDEX_FILE: index,
+        });
+        expect(await readGitLines(sandbox.path, ['ls-files'], {})).toStrictEqual([
+            '.gitignore',
+            'nested.txt',
+            'source.txt',
+            'staged.txt',
+        ]);
+        expect(await readGitLines(nested, ['ls-files'], {})).toStrictEqual(['inner.txt']);
+        const standard = join(sandbox.path, '.git', 'index');
+        expect(await readGitLines(sandbox.path, ['ls-files'], { env: { GIT_INDEX_FILE: standard } })).toStrictEqual([
+            '.gitignore',
+            'nested.txt',
+            'source.txt',
+        ]);
+        const created = join(sandbox.path, 'created');
+        await readGitText(sandbox.path, ['init', '--quiet', created], {});
+        expect(existsSync(join(created, '.git', 'HEAD'))).toBe(true);
+    } finally {
+        process.chdir(previous);
+    }
 });
