@@ -3,28 +3,37 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { DEFAULT_DIALECT } from '#cli/config/repository/files.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import { BATS_EXTENSION, SHELLCHECK_DIALECT_FLAG } from '#cli/config/configurations/bash.ts';
+
+const BATS_EXTENSION = '.bats';
+
+// bats runs each test in a subshell, defines tests below the helpers they call, and reads variables from loaded
+// helpers, so these warnings misread a bats file.
+const BATS_FLAG = '--exclude=SC2030,SC2031,SC2034,SC2218';
+
+const SHELLCHECK_DIALECT_FLAG = '--shell=';
 
 /**
-Runs ShellCheck, and passes a dialect only for scripts without a shebang.
+Runs ShellCheck. It passes a dialect only for scripts without a shebang, and leaves out the warnings that do not fit
+how bats runs a file.
 
 @param session the repository and its tools.
 @param planned the ShellCheck check and its files.
 */
 export async function checkShellcheck(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {
-        if (file.path.endsWith(BATS_EXTENSION) || file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;
-        return readText(session.cache, file.path).startsWith('#!') ? undefined : DEFAULT_DIALECT;
+        if (file.path.endsWith(BATS_EXTENSION)) return BATS_FLAG;
+        if (file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;
+        return readText(session.cache, file.path).startsWith('#!')
+            ? undefined
+            : `${SHELLCHECK_DIALECT_FLAG}${DEFAULT_DIALECT}`;
     });
+    const command = planned.check.command as string[];
     return runCommandBatches(
         session,
         planned,
-        [...groups].map(([dialect, files]) => ({
+        [...groups].map(([flag, files]) => ({
             files,
-            command:
-                dialect === undefined
-                    ? (planned.check.command as string[])
-                    : (planned.check.command as string[]).toSpliced(1, 0, `${SHELLCHECK_DIALECT_FLAG}${dialect}`),
+            command: flag === undefined ? command : command.toSpliced(1, 0, flag),
         })),
     );
 }

@@ -64,7 +64,7 @@ help = "Read the SC code in the finding; `gspot explain shellcheck/SC2086` links
 name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
 stage = "commit"
-summary = "Runs ShellCheck over shell scripts and sourced files, with its stable optional rules at level all."
+summary = "Runs ShellCheck over shell scripts and sourced files, with its stable optional rules at level all. In bats files it skips SC2030, SC2031, SC2034, and SC2218, which do not fit how bats runs a test."
 why = "ShellCheck catches the quoting, globbing, and exit-status mistakes that make a script fail on the one input nobody tested."
 
 [[check]]

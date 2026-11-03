@@ -1,19 +1,35 @@
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { SHELLCHECK_CHECKS, SHELLCHECK_OPTIONS, SHELLCHECK_ALL_LEVEL_ON } from '#cli/config/configurations/bash.ts';
+
+const SHELLCHECK_OPTIONS = [
+    ['source-path', 'SCRIPTDIR'],
+    ['external-sources', 'true'],
+] as const;
+
+const SHELLCHECK_ALL_LEVEL_ON = [
+    'add-default-case',
+    'avoid-negated-conditions',
+    'avoid-nullary-conditions',
+    'check-extra-masked-returns',
+    'check-set-e-suppressed',
+    'check-unassigned-uppercase',
+    'deprecate-which',
+    'quote-safe-variables',
+    'require-double-brackets',
+    'require-variable-braces',
+    'useless-use-of-cat',
+] as const;
 
 /**
-Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.
+Build shellcheckrc: the ShellCheck source-path settings, the optional checks of level all, and the excluded rules.
 
 @param planned the config file to build.
 */
 export function buildShellcheckFile(planned: PlannedConfig): string {
-    const isAll = planned.level === 'all';
-    const enable = [...SHELLCHECK_CHECKS, ...(isAll ? SHELLCHECK_ALL_LEVEL_ON : [])];
     const disable = listDisabledRules(planned);
     return [
         ...SHELLCHECK_OPTIONS.map(([key, value]) => `${key}=${value}`),
-        `enable=${enable.join(',')}`,
+        ...(planned.level === 'all' ? [`enable=${SHELLCHECK_ALL_LEVEL_ON.join(',')}`] : []),
         ...(disable.length > 0 ? [`disable=${disable.join(',')}`] : []),
     ].join('\n');
 }

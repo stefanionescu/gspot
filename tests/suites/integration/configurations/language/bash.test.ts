@@ -39,6 +39,38 @@ test('ShellCheck reports a finding in a filename that starts with a dash', async
     ]);
 });
 
+test.each([
+    { level: 'basic', findings: [] },
+    { level: 'all', findings: [{ file: 'deploy.sh', rule: 'SC2154' }] },
+] as const)('ShellCheck at level $level skips the warnings that a bats file cannot avoid', async (row) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { level: row.level }),
+        'deploy.sh': `#!/usr/bin/env bash\nprintf '%s\\n' "\${DEPLOY_TARGET}"\n`,
+        'suite.bats': `#!/usr/bin/env bats
+
+setup() {
+  RESULT=ready
+}
+
+@test "changes the value" {
+  NAME=changed
+}
+
+@test "reads the changed value" {
+  run printf '%s\\n' "\${NAME}"
+}
+
+load_helper
+load_helper() { :; }
+`,
+    });
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
+    expect(
+        result.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
+    ).toStrictEqual([...row.findings]);
+});
+
 test('ShellCheck reports dialect findings by shebang and leaves source files unchanged', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),

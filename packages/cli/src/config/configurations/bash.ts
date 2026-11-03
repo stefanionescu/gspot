@@ -1,28 +1,6 @@
 import type { BashForm } from '#cli/types/parsers.ts';
 import type { BashCommandForm } from '#cli/types/configurations/language.ts';
 
-export const SHELLCHECK_OPTIONS = [
-    ['source-path', 'SCRIPTDIR'],
-    ['external-sources', 'true'],
-] as const;
-
-export const SHELLCHECK_ALL_LEVEL_ON = [
-    'add-default-case',
-    'avoid-negated-conditions',
-    'avoid-nullary-conditions',
-    'deprecate-which',
-    'quote-safe-variables',
-    'require-double-brackets',
-    'require-variable-braces',
-    'useless-use-of-cat',
-] as const;
-
-export const SHELLCHECK_CHECKS = [
-    'check-extra-masked-returns',
-    'check-set-e-suppressed',
-    'check-unassigned-uppercase',
-] as const;
-
 export const SHELLCHECK_TOOL_COMMENT = /^#\s*shellcheck\b/u;
 
 export const LEADING_UNDERSCORES = /^_+/u;
@@ -199,10 +177,6 @@ export const LIBRARY_COMMAND_FINDINGS = new Map([
 export const MAIN_FUNCTION = 'main';
 
 export const BASH_SOURCE_COMMANDS = new Set(['source', '.']);
-
-export const BATS_EXTENSION = '.bats';
-
-export const SHELLCHECK_DIALECT_FLAG = '--shell=';
 
 export const READS_NO_POSITIONAL = 'reads no positional parameter';
 
