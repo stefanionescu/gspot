@@ -33,12 +33,10 @@ test('a failed text stream read stops the child and returns a failed result that
     const { running, child } = startFailedCapture('text', sandbox.path);
     try {
         const result = await running;
-        expect({
-            timedOut: result.timedOut,
-            canceled: result.canceled,
-            missing: result.missing,
-            lastLine: result.stderr.split('\n').at(-1),
-        }).toStrictEqual({ timedOut: false, canceled: false, missing: false, lastLine: STREAM_FAILURE });
+        expect({ end: result.end, lastLine: result.stderr.split('\n').at(-1) }).toStrictEqual({
+            end: 'failed',
+            lastLine: STREAM_FAILURE,
+        });
         expect(result.code).not.toBe(0);
         expect(isStopped(child)).toBe(true);
     } finally {
@@ -80,8 +78,7 @@ test.each([...STOPPED_CAPTURES])(
         } else {
             const result = await running;
             expect(Buffer.from(result.stdout).toString('utf8')).toBe('descendant-ready\n');
-            expect(result.timedOut).toBe(termination === 'timeout');
-            expect(result.canceled).toBe(termination === 'canceled');
+            expect(result.end).toBe(termination === 'timeout' ? 'timed-out' : 'canceled');
         }
         const pid = Number(await readFile(marker, 'utf8'));
         await waitForExit(pid);
@@ -120,8 +117,7 @@ test.each(['text', 'bytes'] as const)(
         });
         expect(result.code).toBe(7);
         expect(Buffer.from(result.stdout).toString('utf8')).toBe('ready\n');
-        expect(result.timedOut).toBe(false);
-        expect(result.canceled).toBe(false);
+        expect(result.end).toBe('exited');
         const pid = Number(await readFile(marker, 'utf8'));
         await waitForExit(pid);
     },
@@ -144,7 +140,7 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
         cwd: sandbox.path,
     });
     expect(result.code, result.stderr).toBe(0);
-    expect(result.errored).toBe(false);
+    expect(result.end).toBe('exited');
 });
 
 async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof runProcess>>> {
@@ -162,7 +158,7 @@ async function stopTool(root: string, script: string): Promise<Awaited<ReturnTyp
     const result = await running;
     await waitForExit(-launched.value.pid);
     expect(isReady).toBe(true);
-    expect(result.canceled).toBe(true);
+    expect(result.end).toBe('canceled');
     return result;
 }
 

@@ -11,7 +11,7 @@ import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
 import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 
 function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
-    if (!result.timedOut) return result;
+    if (result.end !== 'timed-out') return result;
     const message = `The test command timed out after ${String(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND)} ms.\n${limited.context}\n${result.stdout}${result.stderr}`;
     throw new Error(message);
 }
@@ -67,7 +67,7 @@ export function runBlockingCommand(command: readonly string[], options: Cancelab
         code: child.exitCode,
         stdout: child.stdout.toString(),
         stderr: child.stderr.toString(),
-        timedOut: child.exitedDueToTimeout === true,
+        end: child.exitedDueToTimeout === true ? 'timed-out' : 'exited',
     });
     return readCommandResult(result, limited);
 }
@@ -132,13 +132,10 @@ A process result for check tests, with these fields changed.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Process tests share the successful exit fields and override only the fields under test.
 export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
     return {
-        timedOut: false,
-        canceled: false,
-        errored: false,
         code: 0,
         stdout: '',
         stderr: '',
-        missing: false,
+        end: 'exited',
         duration: 1,
         ...overrides,
     };

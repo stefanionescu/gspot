@@ -16,16 +16,20 @@ import {
     CANCELED_START_MESSAGE,
 } from '#cli/config/system.ts';
 import type {
+    ProcessEnd,
     SpawnResult,
     SpawnOptions,
     StdoutReader,
     RunningProcess,
     SpawnCompletion,
+    ProcessTreeState,
     ProcessTreeControl,
     CancelableSpawnOptions,
 } from '#cli/types/system.ts';
 
-const UNSTARTED_COMPLETION = { failed: true, stdout: '', stderr: '', timedOut: false } as const;
+const UNSTARTED_COMPLETION = { failed: true, stdout: '', stderr: '' } as const;
+
+const UNSTOPPED = { timedOut: false, canceled: false } as const;
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };
@@ -57,7 +61,14 @@ function isExecutableFilePresent(executable: string, cwd: string): boolean {
     );
 }
 
-function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult {
+function selectProcessEnd(stop: ProcessTreeState, completion: { isMissing: boolean; isErrored: boolean }): ProcessEnd {
+    if (stop.canceled) return 'canceled';
+    if (stop.timedOut) return 'timed-out';
+    if (completion.isMissing) return 'missing';
+    return completion.isErrored ? 'failed' : 'exited';
+}
+
+function buildSpawnResult(result: SpawnCompletion, started: number, stop: ProcessTreeState): SpawnResult {
     const isMissing = result.code === 'ENOENT';
     const isUnfinishedResult = [
         result.exitCode === undefined,
@@ -73,11 +84,8 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
         signal: result.signal,
         stdout: result.stdout ?? '',
         stderr: messages.filter(Boolean).join('\n'),
-        missing: isMissing,
+        end: selectProcessEnd(stop, { isMissing, isErrored }),
         duration: Math.round(performance.now() - started),
-        timedOut: result.timedOut,
-        canceled: result.isCanceled,
-        errored: isErrored,
     };
 }
 
@@ -91,12 +99,12 @@ async function finishProcess(
     try {
         const result = await completion;
         if (result.failed) processFailure = new Error(result.shortMessage);
-        return { ...buildSpawnResult(result, started), ...supervision.state };
+        return buildSpawnResult(result, started, supervision.state);
     } catch (error) {
         processFailure = error;
         supervision.stop();
         const result = await child;
-        if (result.code === 'ENOENT') return { ...buildSpawnResult(result, started), ...supervision.state };
+        if (result.code === 'ENOENT') return buildSpawnResult(result, started, supervision.state);
         throw error;
     } finally {
         await supervision.release(processFailure);
@@ -131,9 +139,9 @@ function findMissingExecutable(
             ...UNSTARTED_COMPLETION,
             code: 'ENOENT',
             shortMessage: `Executable not found: ${executable}`,
-            isCanceled: false,
         },
         started,
+        UNSTOPPED,
     );
 }
 
@@ -145,8 +153,9 @@ function findUnstartedProcess(
     const missing = findMissingExecutable(command, options, started);
     if (missing !== undefined || options.cancelSignal?.aborted !== true) return missing;
     return buildSpawnResult(
-        { ...UNSTARTED_COMPLETION, code: undefined, shortMessage: CANCELED_START_MESSAGE, isCanceled: true },
+        { ...UNSTARTED_COMPLETION, code: undefined, shortMessage: CANCELED_START_MESSAGE },
         started,
+        { ...UNSTOPPED, canceled: true },
     );
 }
 
@@ -199,9 +208,9 @@ export async function runProcess(command: readonly string[], options: Cancelable
                 ...UNSTARTED_COMPLETION,
                 code: undefined,
                 shortMessage: `The program cannot start: ${String(error)}`,
-                isCanceled: false,
             },
             started,
+            UNSTOPPED,
         );
     }
     return finishProcess(spawned.child, spawned.supervision, started, spawned.child);

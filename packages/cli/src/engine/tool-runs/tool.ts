@@ -40,8 +40,8 @@ function findProcessFailure(
         exitCodes,
     }: { name: string; timeoutSeconds: number; exitCodes: readonly number[] | undefined },
 ): ProcessFailure | undefined {
-    if (result.canceled) return { status: 'error', note: `${name} was canceled.` };
-    if (result.timedOut)
+    if (result.end === 'canceled') return { status: 'error', note: `${name} was canceled.` };
+    if (result.end === 'timed-out')
         return {
             status: 'error',
             note: [
@@ -51,12 +51,9 @@ function findProcessFailure(
                 .filter((line) => line !== '' && !PROCESS_KILLED_LINE.test(line))
                 .join('\n'),
         };
-    if (result.missing) return { status: 'missing', note: `gspot could not start ${name}: ${result.stderr.trim()}` };
-    if (result.errored)
-        return {
-            status: 'error',
-            note: `${name} could not run: ${result.stderr.trim()}`,
-        };
+    if (result.end === 'missing')
+        return { status: 'missing', note: `gspot could not start ${name}: ${result.stderr.trim()}` };
+    if (result.end === 'failed') return { status: 'error', note: `${name} could not run: ${result.stderr.trim()}` };
     if (exitCodes !== undefined && result.code !== 0 && !exitCodes.includes(result.code))
         return {
             status: 'error',

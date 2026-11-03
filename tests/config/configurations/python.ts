@@ -141,7 +141,7 @@ skip-checking-raises = true
 export const FAILED_STYLE_BATCH = {
     code: 2,
     stderr: 'The native command could not read its configuration.',
-    errored: true,
+    end: 'failed',
     duration: 3,
 } as const;
 

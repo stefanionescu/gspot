@@ -53,7 +53,7 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
         paths: Buffer.from(bytes.stdout).toString('utf8').split('\0').filter(Boolean),
         configuration: boundaryConfig.stdout.trim(),
         explicit: explicitConfig.stdout.trim(),
-        cancelled: cancelled.canceled && cancelled.code !== 0,
+        cancelled: cancelled.end === 'canceled' && cancelled.code !== 0,
     });
 }
 

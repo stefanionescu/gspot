@@ -68,8 +68,9 @@ function findVersionFailure(
 }
 
 function findRunFailure(result: SpawnResult, tool: Tool, text: string): ParsedToolVersion | undefined {
-    if (result.timedOut) return { state: 'error', note: `Reading the version of ${tool.name} timed out.` };
-    if (result.missing) return { state: 'missing', note: text === '' ? `${tool.name} is not installed.` : text };
+    if (result.end === 'timed-out') return { state: 'error', note: `Reading the version of ${tool.name} timed out.` };
+    if (result.end === 'missing')
+        return { state: 'missing', note: text === '' ? `${tool.name} is not installed.` : text };
     if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
     if (result.code === 0) return undefined;
     const exited = `The version command of ${tool.name} exited ${String(result.code)}`;

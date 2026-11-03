@@ -125,7 +125,7 @@ async function readSwiftlintRule(
         cwd: root,
         timeoutSeconds,
     });
-    if ([result.timedOut, result.errored, result.missing, result.canceled].some(Boolean))
+    if (result.end !== 'exited')
         throw new GspotError('tool', `SwiftLint could not read rule ${identifier}. ${result.stderr.trim()}`);
     if (result.code !== 0) return undefined;
     const url = findRulePage('swiftlint', identifier, readConfigurations());
@@ -206,7 +206,7 @@ async function readRuffRule(
     const [path] = listRepositoryExecutablePaths(root, 'ruff', { folders: [], toolFolderKind: 'python' });
     if (path === undefined) throw new GspotError('tool', 'Ruff is not installed in .gspot/.venv. Run gspot install.');
     const result = await runTool([path, 'rule', identifier, '--output-format', 'json'], { cwd: root, timeoutSeconds });
-    if ([result.timedOut, result.errored, result.missing, result.canceled].some(Boolean))
+    if (result.end !== 'exited')
         throw new GspotError('tool', `Ruff could not read rule ${identifier}. ${result.stderr.trim()}`);
     if (result.code !== 0) return undefined;
     const rule = parseJsonFile('ruff rule output', result.stdout, ruffRuleSchema);

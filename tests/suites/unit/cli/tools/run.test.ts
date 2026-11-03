@@ -28,10 +28,10 @@ test('a tool run keeps literal arguments, stdin, and the caller environment, and
         ),
         { cwd: sandbox.path, env: { NO_COLOR: 'custom' }, stdin: 'input', timeoutSeconds: 2 },
     );
-    expect({ code: result.code, stderr: result.stderr, missing: result.missing }).toStrictEqual({
+    expect({ code: result.code, stderr: result.stderr, end: result.end }).toStrictEqual({
         code: 0,
         stderr: '',
-        missing: false,
+        end: 'exited',
     });
     expect(JSON.parse(result.stdout)).toStrictEqual({
         arguments: ['literal $(value)'],

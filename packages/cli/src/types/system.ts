@@ -43,16 +43,17 @@ export type ErrorCode =
     | 'install'
     | 'tool';
 
+// How a process ended. A cancel wins over a passed time limit. `failed` covers a process that did not start, failed
+// output, and a stop by a signal that gspot did not send.
+export type ProcessEnd = 'exited' | 'missing' | 'timed-out' | 'canceled' | 'failed';
+
 export type SpawnResult = {
     code: number;
     signal?: string | undefined;
     stdout: string;
     stderr: string;
-    missing: boolean;
+    end: ProcessEnd;
     duration: number;
-    timedOut: boolean;
-    canceled: boolean;
-    errored: boolean;
 };
 
 export type SpawnOptions = {
@@ -75,13 +76,15 @@ export type ProcessTermination = {
 
 export type SpawnCompletion = Pick<
     Result<{ encoding: 'utf8'; reject: false }>,
-    'code' | 'exitCode' | 'signal' | 'failed' | 'shortMessage' | 'stderr' | 'timedOut' | 'isCanceled'
+    'code' | 'exitCode' | 'signal' | 'failed' | 'shortMessage' | 'stderr'
 > & { stdout?: string | undefined; cause?: unknown };
 
 export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
 
+export type ProcessTreeState = { timedOut: boolean; canceled: boolean };
+
 export type ProcessTreeControl = {
-    state: { timedOut: boolean; canceled: boolean };
+    state: ProcessTreeState;
     stop: () => void;
     release: (processFailure: unknown) => Promise<void>;
 };

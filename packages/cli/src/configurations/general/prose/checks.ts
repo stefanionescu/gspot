@@ -31,7 +31,7 @@ import {
 } from '#cli/config/configurations/prose.ts';
 
 function assertValeRan(result: SpawnResult): void {
-    if (result.code === 0 && !result.missing) return;
+    if (result.code === 0 && result.end !== 'missing') return;
     const lines = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
     const reason = lines.find((line) => VALE_ERROR_LINE.test(line)) ?? lines[0] ?? NO_OUTPUT;
     throw new CheckStop('error', `Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);

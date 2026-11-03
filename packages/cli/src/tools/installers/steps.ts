@@ -52,7 +52,7 @@ export async function runInstallStep(
     const started = performance.now();
     const result = await runTool(command, { ...spawn, cancelSignal: install.session.cancelSignal, timeoutSeconds });
     install.session.cancelSignal?.throwIfAborted();
-    if (result.timedOut) {
+    if (result.end === 'timed-out') {
         const elapsed = ((performance.now() - started) / MILLISECONDS_PER_SECOND).toFixed(1);
         throw new GspotError(
             'install',

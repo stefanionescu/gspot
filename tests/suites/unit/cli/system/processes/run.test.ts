@@ -47,7 +47,7 @@ test('a program with no copy outside the repository is missing', async () => {
             cwd: sandbox.path,
             env: { PATH: join(sandbox.path, 'bin') },
         });
-        expect(result.missing).toBe(true);
+        expect(result.end).toBe('missing');
     } finally {
         process.chdir(previous);
     }
@@ -71,15 +71,14 @@ test('reads both large output streams to the end and keeps exit code 1', async (
     expect(result.code).toBe(status);
     expect(result.stdout).toBe('é'.repeat(1024 * 1024));
     expect(result.stderr).toBe(result.stdout);
-    expect(result.timedOut).toBe(false);
-    expect(result.missing).toBe(false);
+    expect(result.end).toBe('exited');
 });
 
 test('a missing program is a launch failure with its error output', async () => {
     await using sandbox = await testdir();
     const result = await runProcess([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });
     expect(result.code).toBe(127);
-    expect(result.missing).toBe(true);
+    expect(result.end).toBe('missing');
     expect(result.stderr).toBe(`Executable not found: ${join(sandbox.path, 'missing-executable')}`);
 });
 
@@ -91,7 +90,7 @@ test.skipIf(isWindows)('a program without permission to run is not a missing pro
     const result = await runProcess([executable], { cwd: sandbox.path });
     expect(result.code).not.toBe(0);
     expect(result.code).not.toBe(127);
-    expect(result.missing).toBe(false);
+    expect(result.end).toBe('failed');
     expect(result.stderr.split('\n', 1)[0]).toBe(`Command failed with EACCES: ${executable}`);
 });
 
@@ -102,7 +101,7 @@ test.skipIf(isWindows)('a program that the system cannot execute fails without s
     await chmod(executable, 0o755);
     const result = await runProcess([executable], { cwd: sandbox.path });
     expect(result.code).not.toBe(0);
-    expect(result).toMatchObject({ missing: false, errored: true });
+    expect(result.end).toBe('failed');
 });
 
 test('a timeout stops the process and reports it', async () => {
@@ -111,7 +110,7 @@ test('a timeout stops the process and reports it', async () => {
         cwd: sandbox.path,
         timeoutSeconds: 0.15,
     });
-    expect(result.timedOut).toBe(true);
+    expect(result.end).toBe('timed-out');
     expect(result.code).not.toBe(0);
 });
 
@@ -120,10 +119,8 @@ test.skipIf(isWindows)('a signal before the timeout is not a timeout', async () 
     const result = await runProcess(buildProgramCommand('fakes/tool', '--signal', 'SIGTERM'), {
         cwd: sandbox.path,
     });
-    expect(result.timedOut).toBe(false);
-    expect(result.errored).toBe(true);
+    expect(result.end).toBe('failed');
     expect(result.code).not.toBe(0);
-    expect(result.missing).toBe(false);
 });
 
 test('a process canceled before it starts reports the cancellation', async () => {
@@ -134,10 +131,8 @@ test('a process canceled before it starts reports the cancellation', async () =>
         cwd: sandbox.path,
         cancelSignal: controller.signal,
     });
-    expect(result.canceled).toBe(true);
+    expect(result.end).toBe('canceled');
     expect(result.code).not.toBe(0);
-    expect(result.timedOut).toBe(false);
-    expect(result.missing).toBe(false);
 });
 
 test('keeps stdin, argument boundaries, final newlines, and the environment', async () => {

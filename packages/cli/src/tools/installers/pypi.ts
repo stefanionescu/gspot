@@ -75,7 +75,7 @@ async function runUv(
         env: { [UV_PROJECT_ENVIRONMENT]: join(runFolder, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
         step: `running uv ${commandArguments.join(' ')} for ${GSPOT_PATHS.pythonProject}`,
     });
-    if (result.missing)
+    if (result.end === 'missing')
         throw new GspotError(
             'install',
             formatUnavailableNote(getTool(install.session.toolConfigurations, UV_TOOL), {

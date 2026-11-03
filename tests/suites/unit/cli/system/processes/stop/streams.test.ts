@@ -21,7 +21,7 @@ test('stream reading keeps raw bytes and the error output', async () => {
         },
     );
     expect(Buffer.concat(bytes)).toStrictEqual(Buffer.from([0, 255, 0, 10]));
-    expect(result).toMatchObject({ code: 0, stdout: '', stderr: 'diagnostic\n', missing: false });
+    expect(result).toMatchObject({ code: 0, stdout: '', stderr: 'diagnostic\n', end: 'exited' });
 });
 
 test('a stream reader that throws stops its child process', async () => {

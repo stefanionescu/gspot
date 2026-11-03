@@ -58,7 +58,7 @@ test('an ESLint finding whose source text holds a module error word stays a find
             messages: [{ ruleId: 'no-unused-vars', severity: 2, message: 'Unused message.', line: 1, column: 7 }],
         },
     ]);
-    const result = buildProcessResult({ stdout, stderr: '', code: 1, missing: false, duration: 1 });
+    const result = buildProcessResult({ stdout, stderr: '', code: 1, duration: 1 });
     expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }, {}).findings).toMatchObject(
         [{ file: path, rule: 'no-unused-vars', line: 1, column: 7 }],
     );
