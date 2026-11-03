@@ -1,6 +1,7 @@
+import { join } from 'node:path';
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { TrivialFilesOptions } from '#eslint-plugin/types/structure.ts';
+import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run<
     keyof (typeof plugin.rules)['no-trivial-files']['meta']['messages'],
@@ -150,4 +151,27 @@ buildRuleTester().run('no-trivial-files regressions', plugin.rules['no-trivial-f
         'const owner = { value: 0 };\nexport const snapshot = owner.value;\nowner.value = 1;',
     ],
     invalid: [],
+});
+
+const packageRoot = writePackageFolders({
+    store: {
+        name: 'store',
+        main: './src/index.ts',
+        exports: { '.': './src/index.ts', './middleware': { import: './src/middleware.ts' } },
+        bin: { store: './bin/store.js' },
+    },
+});
+
+buildRuleTester({ root: packageRoot }).run('no-trivial-files package entries', plugin.rules['no-trivial-files'], {
+    valid: ['src/index.ts', 'src/middleware.ts', 'bin/store.js'].map((path) => ({
+        code: "export * from './vanilla.ts';",
+        filename: join(packageRoot, 'store', path),
+    })),
+    invalid: [
+        {
+            code: "export * from './vanilla.ts';",
+            filename: join(packageRoot, 'store/src/shallow.ts'),
+            errors: [{ messageId: 'reexport' }],
+        },
+    ],
 });

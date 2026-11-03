@@ -39,17 +39,6 @@ function readManifestDependencies(path: string): Array<[string, string]> {
     }
 }
 
-function listManifestFolders(context: FileContext): string[] {
-    const root = (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root;
-    let folder = dirname(context.filename);
-    const folders = [folder];
-    while (folder !== root && dirname(folder) !== folder && !existsSync(join(folder, REPOSITORY_MARKER))) {
-        folder = dirname(folder);
-        folders.push(folder);
-    }
-    return folders;
-}
-
 function bumpVersion(numbers: number[], kind: string): number[] {
     let position = numbers.length - 1;
     if (kind === 'caret')
@@ -77,6 +66,22 @@ function getCeiling(comparator: string): VersionCeiling | null | undefined {
     if (groups === undefined || !isVersion) return undefined;
     const numbers = fields.flatMap((field) => (VERSION_WILDCARD.test(field) ? [] : [Number(field)]));
     return buildCeiling(numbers, VERSION_OPERATORS.get(groups['operator'] ?? ''));
+}
+
+/**
+List the folders from the folder of the file up to the repository root, nearest first, where package.json files apply.
+
+@param context the rule context of the file.
+*/
+export function listManifestFolders(context: FileContext): string[] {
+    const root = (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root;
+    let folder = dirname(context.filename);
+    const folders = [folder];
+    while (folder !== root && dirname(folder) !== folder && !existsSync(join(folder, REPOSITORY_MARKER))) {
+        folder = dirname(folder);
+        folders.push(folder);
+    }
+    return folders;
 }
 
 /**

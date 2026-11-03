@@ -1,9 +1,12 @@
 import picomatch from 'picomatch';
-import { basename } from 'node:path';
 import { createRule } from '../../rule.ts';
+import { existsSync, readFileSync } from 'node:fs';
 import { PLUGIN_PREFIX } from '../../config/plugin.ts';
+import { PACKAGE_MANIFEST } from '../../config/libraries.ts';
 import { findPathInFolder } from '../../language/modules.ts';
+import { join, dirname, resolve, basename } from 'node:path';
 import { isAlias, isTypeAlias } from '../../language/syntax.ts';
+import { listManifestFolders } from '../../libraries/packages.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { TrivialFilesOptions, TrivialFilesContext } from '../../types/structure.ts';
 
@@ -14,6 +17,32 @@ import {
     DECLARING_DEFAULT_EXPORTS,
     TRIVIAL_FILE_OPTIONS_SCHEMA,
 } from '../../config/structure.ts';
+
+const PUBLISHED_PATH_FIELDS = ['exports', 'main', 'bin'] as const;
+
+function listPublishedPaths(value: unknown): string[] {
+    if (typeof value === 'string') return [value];
+    if (value === null || typeof value !== 'object') return [];
+    return Object.values(value).flatMap((child) => listPublishedPaths(child));
+}
+
+function isPublishedFile(context: TrivialFilesContext): boolean {
+    const manifest = listManifestFolders(context)
+        .map((folder) => join(folder, PACKAGE_MANIFEST))
+        .find((path) => existsSync(path));
+    if (manifest === undefined) return false;
+    let fields: Record<string, unknown> | null;
+    try {
+        fields = JSON.parse(readFileSync(manifest, 'utf8')) as Record<string, unknown> | null;
+    } catch (error) {
+        if (error instanceof SyntaxError) return false;
+        throw error;
+    }
+    const file = resolve(context.physicalFilename);
+    return PUBLISHED_PATH_FIELDS.flatMap((field) => listPublishedPaths(fields?.[field])).some(
+        (published) => resolve(dirname(manifest), published) === file,
+    );
+}
 
 function listBoundValues(statement: TSESTree.Node): Array<TSESTree.Node | null> {
     switch (statement.type) {
@@ -118,7 +147,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial' | 'reexp
                 'A file containing only `import { value } from "./owner"; export { value };` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. `export { value } from "./owner";` reports `reexport` once, in any file. With `reexports: "index-only"`, a file named index may re-export, and reports `barrel` when it exports more names than it declares and more than `indexExports`.',
             level: 'all',
             description:
-                'Reports each `export … from`, and a file whose other top-level statements are only imports and aliases, such as `export const name = owner.name;`, `export type Alias = Owner;`, or `export type Alias<T> = Owner<T>;`. A type that gives a generic its arguments, such as `export type UserBox = Box<User>;`, defines a type and is not an alias. With `reexports: "index-only"`, files named index may re-export and forward, up to `indexExports` names when they export more names than they declare. A file that matches `forwardingFiles` may only forward, but still reports each re-export. Small functions are the job of `gspot/no-trivial-functions`.',
+                'Reports each `export … from`, and a file whose other top-level statements are only imports and aliases, such as `export const name = owner.name;`, `export type Alias = Owner;`, or `export type Alias<T> = Owner<T>;`. A type that gives a generic its arguments, such as `export type UserBox = Box<User>;`, defines a type and is not an alias. With `reexports: "index-only"`, files named index may re-export and forward, up to `indexExports` names when they export more names than they declare. A file that matches `forwardingFiles` may only forward, but still reports each re-export. A file that the nearest package.json names in `exports`, `main`, or `bin` is not reported, because other packages import it by that path.',
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Import re-exported values from the modules that define them, and use the original name of each alias. Then delete the forwarding file or the re-export. Split an index file that exports too many names.',
         },
@@ -132,6 +161,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial' | 'reexp
         },
     },
     create(context, [options]) {
+        if (isPublishedFile(context)) return {};
         const isIndex = options.reexports === 'index-only' && INDEX_BASENAMES.has(basename(context.physicalFilename));
         return {
             Program(node) {
