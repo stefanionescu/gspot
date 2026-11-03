@@ -108,7 +108,7 @@ test('the init plan names the line of each lint command and leaves the file alon
             source: 'script',
             command: 'eslint .',
             tool: 'eslint',
-            fix: 'Replace this command with gspot check.',
+            fix: 'Run gspot check once at the repository root instead.',
         },
     ]);
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toContain('"lint": "eslint ."');

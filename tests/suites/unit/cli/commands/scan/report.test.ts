@@ -22,11 +22,13 @@ test('scan prints the commands that would break and what init carries once, befo
     const { session } = planning;
     const report = buildScanReport({ planning, session, report: SCAN_RUN_REPORT, toolBytes: 0, ruleRows: [] });
     const text = formatScanText(report);
-    expect(text).toContain('Commands that would break\n  package.json:1  eslint .  Replace this command');
+    expect(text).toContain(
+        'Commands that would break\n  package.json:1  eslint .  Run gspot check once at the repository root',
+    );
     expect(text).toContain(
         'What gspot init would carry over and drop\n  .prettierrc.json  carried over: semi; dropped: quoteProps',
     );
-    expect(text.match(/Replace this command/gu)).toHaveLength(1);
+    expect(text.match(/Run gspot check once at the repository root/gu)).toHaveLength(1);
     expect(text.indexOf('Commands that would break')).toBeLessThan(text.indexOf('What gspot init would do'));
     expect(formatScanMarkdown(report)).toContain('## Commands that would break\n\n- package.json:1  eslint .');
 });
