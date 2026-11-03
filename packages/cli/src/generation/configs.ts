@@ -254,7 +254,7 @@ Build the text of one config file, and of the files that it imports.
 @param generated the config paths and shared ignore sections.
 @returns the generated file, with paths relative to where it sits, and its companion files.
 */
-export function buildConfigFile(
+function buildConfigFile(
     owned: OwnedSourceFile,
     targetPath: string,
     generated: Pick<ConfigBuildState, 'targets' | 'ignoreSections'>,

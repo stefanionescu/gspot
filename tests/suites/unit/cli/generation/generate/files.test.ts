@@ -18,8 +18,8 @@ import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NESTED_YAML, NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { NESTED_YAML, CONFIG_PROJECT, NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 
 test.each(['absent', 'authored', 'managed'])(
     '%s attributes keep LF in generated files, also in a scope folder with a space',
@@ -100,19 +100,18 @@ test.each([true, false])(
     },
 );
 
-test('every shipped configuration together generates each path once, ignoring case', async () => {
-    const names = readConfigurations()
-        .values()
-        .filter((configuration) => !configuration.always_selected)
-        .map(({ name }) => name)
-        .toArray();
+test('every shipped configuration together builds each source config and generates each path once, ignoring case', async () => {
+    const configurations = readConfigurations().values().toArray();
+    const names = configurations.filter((configuration) => !configuration.always_selected).map(({ name }) => name);
     await using sandbox = await createGitSandbox({
+        ...CONFIG_PROJECT,
         'gspot.toml': buildSandboxSettings(names, {
             level: 'all',
             rules: true,
-            tables: '[hooks]\nenabled = true\n\n[ci]\nenabled = true\n',
+            tables: '[hooks]\nenabled = true\n\n[ci]\nenabled = true\n\n[openapi]\ndocument = "openapi.yaml"\n',
             scopes: [{ path: 'app', configurations: names }],
         }),
+        'openapi.yaml': 'openapi: 3.1.0\ninfo:\n  title: Example\n  version: 1.0.0\npaths: {}\n',
         'app/package.json': '{"private":true}',
         'app/style.css': 'a { color: red; }\n',
     });
@@ -120,7 +119,11 @@ test('every shipped configuration together generates each path once, ignoring ca
     const paths = [...generated.files, ...generated.blocks, ...generated.managedKeys].map(({ path }) =>
         path.normalize('NFC').toLowerCase(),
     );
+    const sourced = configurations.flatMap(({ configs }) =>
+        configs.filter(({ source }) => source !== undefined).map(({ target }) => target.normalize('NFC').toLowerCase()),
+    );
     expect(paths).toContain('.stylelintrc.yml');
+    expect(sourced.filter((target) => !paths.includes(target))).toStrictEqual([]);
     expect(paths.filter((path, index) => paths.indexOf(path) !== index)).toStrictEqual([]);
 });
 
