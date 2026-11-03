@@ -7,6 +7,13 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { rm, link, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { findText, readText, readBytes } from '#cli/system/files/reads.ts';
 
+test('a tracked link whose target is missing reads as empty text, not as a missing file', async () => {
+    await using sandbox = await testdir();
+    await symlink('absent.md', join(sandbox.path, 'dangling.md'));
+    expect(readText(sandbox.path, 'dangling.md')).toBe('');
+    expect(readText(createRunCache(sandbox.path), 'dangling.md')).toBe('');
+});
+
 test('reads tell a missing optional file, required bytes, and invalid UTF-8 apart', async () => {
     await using sandbox = await testdir();
     expect(findText(sandbox.path, 'source.txt')).toBeUndefined();

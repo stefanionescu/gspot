@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { openSync, readSync, statSync, closeSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { openSync, readSync, statSync, lstatSync, closeSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 
 import {
     PATH_SEPARATORS,
@@ -77,19 +77,21 @@ export function findText(source: string | RunCache, path: string): string | unde
 }
 
 /**
-Read tracked UTF-8 text and refuse a missing file.
+Read tracked UTF-8 text and refuse a missing file. A tracked link whose target is missing is present, and reads as
+empty text, because Git tracks the link and not its target.
 
 @param source the folder of the relative path, or the run cache of that folder.
 @param path the tracked file path.
 */
 export function readText(source: string | RunCache, path: string): string {
     const text = findText(source, path);
-    if (text === undefined)
-        throw new GspotError(
-            'filesystem',
-            MISSING_TRACKED_FILE_MESSAGE.replace('{path}', () => path),
-        );
-    return text;
+    if (text !== undefined) return text;
+    const root = typeof source === 'string' ? source : source.root;
+    if (lstatSync(join(root, path), { throwIfNoEntry: false })?.isSymbolicLink() === true) return '';
+    throw new GspotError(
+        'filesystem',
+        MISSING_TRACKED_FILE_MESSAGE.replace('{path}', () => path),
+    );
 }
 
 /**
