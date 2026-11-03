@@ -93,10 +93,11 @@ async function warnMissingHooks(session: Session, revision: RevisionSource | und
 async function readComparedRef(root: string, options: CheckOptions, cancelSignal: AbortSignal): Promise<string> {
     if (options.base !== undefined) return options.base;
     const compared = await readDefaultRef(root, cancelSignal);
+    const stage = options.stage === undefined ? '' : ` --stage ${options.stage}`;
     if (compared === '')
         throw new GspotError(
             'git',
-            'No upstream, origin/HEAD, origin/main, or origin/master names a branch to compare with. Use --base <ref> to name a branch, tag, or commit.',
+            `No upstream, origin/HEAD, origin/main, or origin/master names a branch to compare with. Run gspot check --base <branch>${stage} in place of --changed.`,
         );
     return compared;
 }
