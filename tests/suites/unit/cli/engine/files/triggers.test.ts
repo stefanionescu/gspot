@@ -214,3 +214,23 @@ test('dependencies/osv-scanner reads every lockfile, and runs only when a trigge
     expect(isActive(deleted!)).toBe(true);
     expect(isActive(planChecks(session, { ...options, staged: ['gspot.toml'] })[0]!)).toBe(true);
 });
+
+test.each([
+    ['scope', ['docs/guide.md']],
+    ['once', ['docs/guide.md']],
+    ['files', []],
+])('a command check with runs = "%s" gets the deleted files it covers as triggers', async (runs, triggers) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: `[[command_check]]\nid = "links"\ncommand = ["true"]\npaths = ["docs/**"]\nruns = "${runs}"\nstage = "commit"\n`,
+        }),
+        'docs/guide.md': '# Guide\n',
+        'docs/index.md': '# Index\n',
+    });
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['rm', 'docs/guide.md']);
+    const session = await openSession(sandbox.path);
+    const [links] = planChecks(session, { stage: 'commit', only: ['links'], staged: ['docs/guide.md'] });
+    expect(links!.triggerPaths).toStrictEqual(triggers);
+    expect(isActive(links!)).toBe(triggers.length > 0);
+});

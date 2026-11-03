@@ -44,7 +44,6 @@ export const CATEGORY_KEY_SEGMENTS = 2;
 
 export const COMMAND_CHECK_DEFAULTS = {
     level: 'basic',
-    runs: 'files',
     files: {
         extensions: [],
         filenames: [],
@@ -55,7 +54,7 @@ export const COMMAND_CHECK_DEFAULTS = {
         eslint_plugins: false,
         kinds: ['source', 'generated'],
     },
-} satisfies Pick<Check, 'level' | 'runs'> & {
+} satisfies Pick<Check, 'level'> & {
     files: Omit<NonNullable<Check['files']>, 'paths'>;
 };
 
