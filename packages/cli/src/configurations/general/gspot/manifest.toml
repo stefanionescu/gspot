@@ -51,9 +51,9 @@ why = "An ignore or a path setting that matches nothing misleads the next reader
 
 [[check]]
 example = "An `eslint-disable-next-line` comment without a reason reports a finding. Fix the code and remove the comment, or append `-- reason: ...` that explains the exception."
+files = { paths = ["**/*"] }
 help = "Fix the finding and remove the suppression, or add a reason in the syntax of the tool. Never suppress a size or complexity limit: split the code by its steps, or ask the user to raise it in gspot.toml."
 name = "suppressions"
-runs = "once"
 stage = "commit"
 summary = "Reports suppressions with no reason, any that lift a size or complexity limit, and Semgrep or Vale suppressions."
 why = "A suppression with no reason hides a finding nobody reviewed."

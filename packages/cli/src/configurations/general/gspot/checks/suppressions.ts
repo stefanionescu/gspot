@@ -126,7 +126,7 @@ reason.
 */
 export async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const filesByScope = Map.groupBy(
-        planned.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
+        planned.files.filter((file) => file.tags.includes('text')),
         (file) => selectScopePath(file.path, session.scopes),
     );
     const found: CheckFinding[] = [];

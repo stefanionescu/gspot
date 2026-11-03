@@ -86,3 +86,16 @@ test.each([...LIMIT_SUPPRESSION_CASES])(
         ]);
     },
 );
+
+test('a run narrowed to one file reads only the suppressions of that file', async () => {
+    const source = '// eslint-disable-next-line no-console\nconsole.log(1);\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'first.ts': source,
+        'second.ts': source,
+    });
+    const found = await runSandboxCheck(sandbox.path, 'gspot/suppressions', { paths: ['second.ts'] });
+    expect(found.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'second.ts', line: 1, rule: 'eslint-no-reason' },
+    ]);
+});
