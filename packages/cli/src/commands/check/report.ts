@@ -138,12 +138,10 @@ function formatIncompleteCounts({ checks }: RunReport): string[] {
     const tools = new Set(
         missing.filter((check) => check.note !== PROJECT_ENVIRONMENT_MESSAGE).map(({ note }) => note),
     );
-    const requiresInstall = [...tools].some((note) => note?.endsWith(STANDARD_INSTALL_HELP) === true);
+    const hasInstallNote = [...tools].some((note) => note?.endsWith(STANDARD_INSTALL_HELP) === true);
     const errors = checks.filter((check) => check.status === 'error').length;
     return [
-        ...(tools.size === 0
-            ? []
-            : [`Missing tools: ${String(tools.size)}${requiresInstall ? INSTALL_REMINDER : ''}.`]),
+        ...(tools.size === 0 ? [] : [`Missing tools: ${String(tools.size)}${hasInstallNote ? INSTALL_REMINDER : ''}.`]),
         ...(environments.length === 0 ? [] : [`Missing environments: ${String(environments.length)}.`]),
         ...(errors === 0 ? [] : [`Errors: ${String(errors)}.`]),
     ];

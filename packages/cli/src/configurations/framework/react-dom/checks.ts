@@ -29,8 +29,8 @@ export function checkReactVersions(session: Session, planned: PlannedCheck): Che
     const versions = locked ?? specifiers;
     const react = versions.get(REACT_PACKAGE) ?? '';
     const reactDom = versions.get(REACT_DOM_PACKAGE) ?? '';
-    const areCompatible = locked === undefined ? canRangesMeet(react, reactDom) : react === reactDom;
-    if (areCompatible) return [];
+    const isCompatible = locked === undefined ? canRangesMeet(react, reactDom) : react === reactDom;
+    if (isCompatible) return [];
     return [
         {
             file: packageJsonPath,

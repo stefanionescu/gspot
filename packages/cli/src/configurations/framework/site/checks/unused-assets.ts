@@ -50,8 +50,8 @@ function listAliasSpecifiers(path: string, aliases: Record<string, string>): str
     return Object.entries(aliases).flatMap(([pattern, target]) => {
         const [start = '', end] = target.split('*', ALIAS_WILDCARD_SIDES);
         if (end === undefined) return target === path ? [pattern] : [];
-        const doesFit = path.length >= start.length + end.length && path.startsWith(start) && path.endsWith(end);
-        return doesFit ? [pattern.replace('*', () => path.slice(start.length, path.length - end.length))] : [];
+        const isMatch = path.length >= start.length + end.length && path.startsWith(start) && path.endsWith(end);
+        return isMatch ? [pattern.replace('*', () => path.slice(start.length, path.length - end.length))] : [];
     });
 }
 

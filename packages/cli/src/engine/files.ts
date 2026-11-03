@@ -253,13 +253,13 @@ export function selectCheckFiles(
     const { check, configuration } = scopeCheck;
     const scopePath = isRepositoryRun(check) ? '' : scope.path;
     const triggerPaths = listDeletedTriggers(planned, scopeCheck, scopePath);
-    const areChildScopesKept = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
+    const isKeepingChildScopes = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
     let files =
         triggerPaths.length === 0
             ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
     files = listToolFiles(planned, scopeCheck, { files, scopePath });
-    if (!areChildScopesKept) files = files.filter((file) => isOutsideChildScopes(file.path, children));
+    if (!isKeepingChildScopes) files = files.filter((file) => isOutsideChildScopes(file.path, children));
     const unreadablePaths = check.binary_files === true ? planned.session.repository.unreadablePaths : [];
     return addNarrowedLinks(planned, check, {
         ...stripIgnoredFiles(files, check, scope),

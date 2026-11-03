@@ -137,10 +137,10 @@ async function selectRevisionDependencies(
     const tracked = new Set(indexFiles.map(({ path }) => path));
     const untrackedArtifacts = artifacts.filter((path) => !tracked.has(path));
     const copied = [...folders, ...declarations.copies, ...untrackedArtifacts];
-    const requiresNote =
+    const hasDependencyDrift =
         declarations.mismatched ||
         (copied.length + environments.length > 0 && dependencyFiles.some(({ path }) => !unchangedPaths.has(path)));
-    const note = requiresNote ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
+    const note = hasDependencyDrift ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
     if (copied.length === 0) return { dependencies: [], ...note };
     for (const folder of folders) assertDependencyReady(copyRoot, folder, copyCause);
     const dependencies: string[] = [

@@ -192,11 +192,11 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         ruleFiles: selectRuleFiles(session).length,
     };
     const broken = report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
-    const requiresAction = !hooks.ready || report.environments.length > 0 || broken.length > 0;
+    const hasFindings = !hooks.ready || report.environments.length > 0 || broken.length > 0;
     return {
         text: formatDoctorReport(report, { hooks: hooksText, ci: ciText, broken }),
         json: report,
-        exitCode: requiresAction ? EXIT_FINDINGS : 0,
+        exitCode: hasFindings ? EXIT_FINDINGS : 0,
     };
 }
 

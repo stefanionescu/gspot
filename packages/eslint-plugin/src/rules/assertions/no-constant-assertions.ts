@@ -41,8 +41,8 @@ function getPredicateFinding(
 
 function areEqual(left: unknown, right: unknown, assertion: Assertion & { kind: 'comparison' }): boolean {
     const isIdentityComparison = assertion.comparison === 'strict' && IDENTITY_STYLES.has(assertion.style);
-    const areNullish = assertion.comparison === 'loose' && (left ?? null) === null && (right ?? null) === null;
-    return isIdentityComparison ? Object.is(left, right) : left === right || areNullish;
+    const isBothNullish = assertion.comparison === 'loose' && (left ?? null) === null && (right ?? null) === null;
+    return isIdentityComparison ? Object.is(left, right) : left === right || isBothNullish;
 }
 
 function getIdentityFinding(

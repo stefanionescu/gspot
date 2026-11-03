@@ -98,16 +98,16 @@ function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: 
 
 function assertReason({ options, setting, change, joined, previous, shippedDefault }: SettingReasonContext): void {
     if (setting.reason_values === true) return;
-    const doesWeaken = isWeakening(setting, joined, shippedDefault);
+    const isWeaker = isWeakening(setting, joined, shippedDefault);
     if (options.reason === undefined) {
-        if (doesWeaken && change.type === 'list' && previous?.reason !== undefined)
+        if (isWeaker && change.type === 'list' && previous?.reason !== undefined)
             throw new GspotError(
                 'arguments',
                 `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
             );
         return;
     }
-    if (!doesWeaken)
+    if (!isWeaker)
         throw new GspotError(
             'arguments',
             `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,

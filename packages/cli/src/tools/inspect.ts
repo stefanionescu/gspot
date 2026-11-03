@@ -151,8 +151,8 @@ async function inspectExecutable(inspected: InspectedTool): Promise<ToolInspecti
 
 function formatMissingProgram(tool: Tool, inspection: ToolInspection): string {
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
-    const requiresMise = tool.system !== true && findPackagePin(tool) === undefined;
-    return requiresMise && inspection.state === 'missing' && findProgram(MISE_TOOL) === undefined
+    const isMiseTool = tool.system !== true && findPackagePin(tool) === undefined;
+    return isMiseTool && inspection.state === 'missing' && findProgram(MISE_TOOL) === undefined
         ? 'mise is not on PATH.'
         : `${tool.name}${version} is not installed.`;
 }
