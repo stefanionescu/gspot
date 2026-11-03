@@ -247,7 +247,7 @@ async function runEveryActiveCheck(run: Run, first: PlannedCheck[], last: Planne
             elapsed: performance.now() - started,
             finished: progress.finished,
             total: progress.total,
-            comparison: options.comparison,
+            comparison: run.comparison,
         });
     }, PROGRESS_INTERVAL_MILLISECONDS);
     try {
@@ -280,7 +280,7 @@ report.
 
 @param session the repository and its tools.
 @param options the stage, the file selection, and the fix flags.
-@returns the report, the plan, and the fix report when --fix ran.
+@returns the report, the plan, the milliseconds before the first check, and the fix report when --fix ran.
 */
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
     using _copies = holdCopyFolder(session.root);
@@ -312,6 +312,7 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
         baselined: {},
         progress: { finished: 0, total: active.length, unfinished: new Set(active) },
     };
+    const setup = Date.now() - started.getTime();
     const results = await runEveryActiveCheck(run, first, last);
     const report = buildRunReport({
         session: checked,
@@ -324,7 +325,7 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
         fixes,
         baselined: run.baselined,
     });
-    return fixes ? { report, planned, fixes } : { report, planned };
+    return fixes ? { report, planned, setup, fixes } : { report, planned, setup };
 }
 
 /**

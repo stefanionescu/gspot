@@ -242,10 +242,11 @@ Format the check lines, the ignores, and the summary of a run.
 @param options how to show the report.
 @param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
 @param options.canceled whether a signal stopped the run, so it ends without its exit code.
+@param options.setup the milliseconds from the start of the run to the first check, which --verbose prints.
 */
 export function formatRunReport(
     report: RunReport,
-    { verbose, canceled = false }: { verbose: boolean; canceled?: boolean },
+    { verbose, canceled = false, setup }: { verbose: boolean; canceled?: boolean; setup?: number },
 ): string {
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
@@ -261,6 +262,9 @@ export function formatRunReport(
         ...formatBaselined(report),
         ...formatUnstagedChanges(report),
         formatSummary(report),
+        ...(verbose && setup !== undefined
+            ? [`Setup: ${(setup / MILLISECONDS_PER_SECOND).toFixed(1)}s before the first check.`]
+            : []),
         `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. ${ending}`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;

@@ -147,6 +147,12 @@ test.each([true, false])('report colors follow stdout when its terminal state is
     expect(stripVTControlCharacters(text)).toBe(formatRunReport(FAILED_CHECK_REPORT, { verbose: false }));
 });
 
+test('verbose output prints the time before the first check above the total time', () => {
+    const verbose = stripVTControlCharacters(formatRunReport(FAILED_CHECK_REPORT, { verbose: true, setup: 820 }));
+    expect(verbose).toContain('\nSetup: 0.8s before the first check.\nTime: ');
+    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false, setup: 820 })).not.toContain('Setup:');
+});
+
 test('the report prints planned skips once with their reason only in verbose output', () => {
     const { rerun: _rerun, ...check } = FAILED_CHECK_REPORT.checks[0];
     const skipped: RunReport = {

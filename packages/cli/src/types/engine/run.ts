@@ -87,7 +87,7 @@ export type RunReport = {
     exitCode: number;
 };
 
-export type RunResult = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };
+export type RunResult = { report: RunReport; planned: PlannedCheck[]; setup: number; fixes?: FixReport };
 
 export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error';
 

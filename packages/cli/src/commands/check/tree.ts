@@ -138,6 +138,7 @@ export async function runTreeCheck(
     revision?: RevisionSource,
 ): Promise<CommandResult<RunReport & { fixes?: FixReport | undefined }>> {
     const resources: Disposable[] = [];
+    const started = revision?.selection.content === 'index' ? revision.started : new Date();
     try {
         const session = await openSession(treeFolder, {
             toolsRoot: treeFolder,
@@ -155,7 +156,7 @@ export async function runTreeCheck(
                 : { selection: revision.selection, note: revision.dependencyNote };
         await warnMissingHooks(session, revision);
         const result = await runChecks(session, {
-            ...buildRunOptions(session, options, { selection, started: revision?.started }),
+            ...buildRunOptions(session, options, { selection, started }),
             baseline: parseBaseline(findText(treeFolder, BASELINE_FILE)),
         });
         if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
