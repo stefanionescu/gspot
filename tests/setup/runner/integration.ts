@@ -61,6 +61,7 @@ resources.use(
         BUN_INSTALL_CACHE_DIR: join(TEST_RUN_FOLDER, 'bun-cache'),
         GSPOT_TEST_NPM_REGISTRY: registry.url,
         NPM_CONFIG_USERCONFIG: registry.npmrc,
+        npm_config_cache: join(work.path, 'npm-cache'),
         PATH: [
             launcherFolder,
             ...toolFolders,
