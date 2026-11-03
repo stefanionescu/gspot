@@ -11,7 +11,7 @@ import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import { SYMLINK_MODE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
-import { ROOT_RUNS, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
+import { ROOT_RUNS, FILES_PLACEHOLDER, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
 
 import {
     isInScope,
@@ -130,10 +130,17 @@ function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFi
     });
 }
 
-function listToolFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
+function listToolFiles(
+    planned: PlannedScope,
+    scopeCheck: ScopeCheck,
+    { files, scopePath }: { files: TrackedFile[]; scopePath: string },
+): TrackedFile[] {
     const { check } = scopeCheck;
-    const narrowed = check.runs === 'files' ? listNarrowedFiles(planned, scopeCheck, files) : files;
-    const readable = listReadableFiles(planned, check, narrowed);
+    const hasFileList = check.command?.some((argument) => FILES_PLACEHOLDER.test(argument)) === true;
+    let selected = files;
+    if (check.runs === 'files') selected = listNarrowedFiles(planned, scopeCheck, files);
+    else if (hasFileList) selected = listProjectMatches(planned, scopeCheck, { scopeFiles: files, scopePath });
+    const readable = listReadableFiles(planned, check, selected);
     return check.command === undefined ? readable : readable.filter((file) => !file.tags.includes('symlink'));
 }
 
@@ -232,7 +239,8 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
 }
 
 /**
-Select the files and deleted trigger paths of a planned check.
+Select the files and deleted trigger paths of a planned check. A check that runs once or per scope plans every file of
+its scope, apart from a check whose command takes `{files}`: that tool reads only the files that the check covers.
 
 @param planned the scope to plan.
 @param scopeCheck the check and its manifest.
@@ -250,7 +258,7 @@ export function selectCheckFiles(
         triggerPaths.length === 0
             ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
-    files = listToolFiles(planned, scopeCheck, files);
+    files = listToolFiles(planned, scopeCheck, { files, scopePath });
     if (!areChildScopesKept) files = files.filter((file) => isOutsideChildScopes(file.path, children));
     const unreadablePaths = check.binary_files === true ? planned.session.repository.unreadablePaths : [];
     return addNarrowedLinks(planned, check, {

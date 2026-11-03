@@ -1,18 +1,23 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { getTool } from '#cli/tools/pins.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { unlink, writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 import {
     HOST_LOCKFILE,
@@ -242,6 +247,36 @@ test('package-manager-pin reports malformed mise syntax and still reads other mi
         { file: 'mise.toml', rule: 'syntax' },
         { file: 'package.json', rule: 'package-manager-pin' },
     ]);
+});
+
+test('osv-scanner reads each lockfile of the repository, apart from ignored folders and the files of gspot', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'uv.lock': '',
+        'app/requirements.txt': '',
+        '.gspot/bun.lock': '',
+        '.claude/worktrees/copy/uv.lock': '',
+        '.claude/worktrees/copy/.gspot/bun.lock': '',
+    });
+    await writeFile(join(sandbox.path, '.git/info/exclude'), '.claude/worktrees/\n');
+    await applyGeneratedFiles(sandbox.path);
+    using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'osv-scanner')]);
+    using _spawn = fakeCommands('osv-scanner', (command, options) => {
+        const results = command
+            .filter((argument) => argument.startsWith('--lockfile=:'))
+            .map((argument) => ({
+                source: { path: join(options.cwd, argument.slice('--lockfile=:'.length)), type: 'lockfile' },
+                packages: [
+                    {
+                        package: { name: 'django', version: '2.0.0', ecosystem: 'PyPI' },
+                        vulnerabilities: [{ id: 'GHSA-1', summary: 'Denial of service.' }],
+                    },
+                ],
+            }));
+        return Promise.resolve(buildProcessResult({ code: 1, stdout: JSON.stringify({ results }) }));
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'dependencies/osv-scanner');
+    expect(findings.map(({ file }) => file)).toStrictEqual(['app/requirements.txt', 'uv.lock']);
 });
 
 test('stale-lockfile reports a peer dependency and an unrecorded workspace importer', async () => {

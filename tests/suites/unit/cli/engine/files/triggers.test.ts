@@ -177,7 +177,7 @@ test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
     },
 );
 
-test('dependencies/osv-scanner runs only when a trigger file changes', async () => {
+test('dependencies/osv-scanner reads every lockfile, and runs only when a trigger file changes', async () => {
     await using sandbox = await createGitSandbox({
         'uv.lock': '',
         'app/uv.lock': '',
@@ -196,6 +196,7 @@ test('dependencies/osv-scanner runs only when a trigger file changes', async () 
     const session = await openSession(sandbox.path);
     const options = { stage: 'push' as const, only: ['dependencies/osv-scanner'] };
     const [scopeCheck] = planChecks(session, options);
+    expect(scopeCheck!.files.map(({ path }) => path)).toStrictEqual(['app/uv.lock', 'bun.lock', 'uv.lock']);
     for (const prefix of ['', 'app/']) {
         const [triggered] = planChecks(session, { ...options, staged: [`${prefix}uv.lock`] });
         expect(isActive(triggered!), prefix).toBe(true);
@@ -209,6 +210,7 @@ test('dependencies/osv-scanner runs only when a trigger file changes', async () 
     const reopened = await openSession(sandbox.path);
     const [deleted] = planChecks(reopened, { ...options, staged: ['app/uv.lock'] });
     expect(deleted!.triggerPaths).toStrictEqual(['app/uv.lock']);
+    expect(deleted!.files.map(({ path }) => path)).toStrictEqual(['bun.lock', 'uv.lock']);
     expect(isActive(deleted!)).toBe(true);
     expect(isActive(planChecks(session, { ...options, staged: ['gspot.toml'] })[0]!)).toBe(true);
 });
