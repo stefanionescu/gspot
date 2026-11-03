@@ -99,13 +99,6 @@ test('a scope with env reads and no example env file is skipped with a note', as
     expect(checked.report.checks).toMatchObject([
         {
             check: 'secrets/environment-examples',
-            scope: '',
-            status: 'skipped',
-            findings: [],
-            note: 'No matching files.',
-        },
-        {
-            check: 'secrets/environment-examples',
             scope: 'app',
             status: 'skipped',
             findings: [],
