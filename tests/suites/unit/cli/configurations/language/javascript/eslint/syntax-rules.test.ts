@@ -86,3 +86,22 @@ test.each(['js', 'ts'])('assignment selectors allow their parent contexts in %s'
         [1, 2, 3, 4, 5, 6, 7].map((line) => ({ file: `contexts.${extension}`, rule: 'gspot/restricted-syntax', line })),
     );
 });
+
+test('a boolean name starts with is, has, or can at level all', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'flags.js': [
+            'export const isReady = true;',
+            'export const hasRows = true;',
+            'export const canRetry = true;',
+            'export const areReady = true;',
+            'export const doesFit = true;',
+            'export const requiresLogin = true;',
+        ].join('\n'),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, ['flags.js'], ['unicorn/consistent-boolean-name']),
+    ).toStrictEqual([4, 5, 6].map((line) => ({ file: 'flags.js', rule: 'unicorn/consistent-boolean-name', line })));
+});

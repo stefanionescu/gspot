@@ -97,7 +97,21 @@ const UNICORN_RULES = {
     'unicorn/expiring-todo-comments': 'off',
     'unicorn/consistent-boolean-name': [
         'error',
-        { checkFunctions: 'never', ignore: ['^_', '^(?:enabled|active|retryable)$'] },
+        {
+            checkFunctions: 'never',
+            ignore: ['^_', '^(?:enabled|active|retryable)$'],
+            prefixes: {
+                are: false,
+                have: false,
+                should: false,
+                was: false,
+                were: false,
+                does: false,
+                did: false,
+                will: false,
+                requires: false,
+            },
+        },
     ],
 } as const;
 
