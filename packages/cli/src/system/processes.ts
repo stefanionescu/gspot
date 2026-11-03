@@ -25,6 +25,8 @@ import type {
     CancelableSpawnOptions,
 } from '#cli/types/system.ts';
 
+const UNSTARTED_COMPLETION = { failed: true, stdout: '', stderr: '', timedOut: false } as const;
+
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };
     const path = Object.keys(env).find((name) => foldVariableName(name) === 'PATH');
@@ -125,14 +127,11 @@ function findMissingExecutable(
         return undefined;
     return buildSpawnResult(
         {
+            ...UNSTARTED_COMPLETION,
             code: 'ENOENT',
-            failed: true,
             shortMessage: `Executable not found: ${executable}`,
-            stdout: '',
-            stderr: '',
-            timedOut: false,
             isCanceled: false,
-        } satisfies SpawnCompletion,
+        },
         started,
     );
 }
@@ -145,15 +144,7 @@ function findUnstartedProcess(
     const missing = findMissingExecutable(command, options, started);
     if (missing !== undefined || options.cancelSignal?.aborted !== true) return missing;
     return buildSpawnResult(
-        {
-            code: undefined,
-            failed: true,
-            shortMessage: CANCELED_START_MESSAGE,
-            stdout: '',
-            stderr: '',
-            timedOut: false,
-            isCanceled: true,
-        } satisfies SpawnCompletion,
+        { ...UNSTARTED_COMPLETION, code: undefined, shortMessage: CANCELED_START_MESSAGE, isCanceled: true },
         started,
     );
 }
@@ -204,14 +195,11 @@ export async function runProcess(command: readonly string[], options: Cancelable
     } catch (error) {
         return buildSpawnResult(
             {
+                ...UNSTARTED_COMPLETION,
                 code: undefined,
-                failed: true,
                 shortMessage: `The program cannot start: ${String(error)}`,
-                stdout: '',
-                stderr: '',
-                timedOut: false,
                 isCanceled: false,
-            } satisfies SpawnCompletion,
+            },
             started,
         );
     }

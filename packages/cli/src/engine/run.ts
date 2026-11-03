@@ -150,11 +150,14 @@ function buildReproduceOptions(options: RunOptions): ReproduceOptions {
 
 function formatReproduceCommand(checkId: string, scopeArgument: string | undefined, options: ReproduceOptions): string {
     const { paths, changed, messageFile, staged } = options;
-    const words = [CHECK_COMMAND];
-    if (paths.length > 0) words.push(...paths.map((path) => quoteArgument(path.startsWith('-') ? `./${path}` : path)));
-    else if (scopeArgument !== undefined && messageFile === undefined)
-        words.push(quoteArgument(scopeArgument.startsWith('-') ? `./${scopeArgument}` : scopeArgument));
-    words.push('--only', quoteArgument(checkId));
+    const isScopeTarget = scopeArgument !== undefined && messageFile === undefined && paths.length === 0;
+    const targets = isScopeTarget ? [scopeArgument] : paths;
+    const words = [
+        CHECK_COMMAND,
+        ...targets.map((path) => quoteArgument(path.startsWith('-') ? `./${path}` : path)),
+        '--only',
+        quoteArgument(checkId),
+    ];
     if (changed !== undefined) words.push(BASE_FLAG, quoteArgument(changed));
     if (messageFile !== undefined) words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(messageFile));
     if (staged) words.push(STAGED_FLAG);

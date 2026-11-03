@@ -1,9 +1,9 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
+import { runGit, runGitBytes } from '#cli/repository/git/run.ts';
 import { readGitListing } from '#cli/repository/files/tracked.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
-import { runGit, runGitBytes, runGitStream } from '#cli/repository/git/run.ts';
 import { SYMLINK_MODE, GITLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 
@@ -84,7 +84,7 @@ export async function visitGitBlobs(
 ): Promise<void> {
     const blobs = [...new Set(requested)];
     if (blobs.length === 0) return;
-    const result = await runGitStream(
+    const result = await runGit(
         root,
         GIT_BLOBS_ARGUMENTS,
         {

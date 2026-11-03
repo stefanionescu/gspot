@@ -136,43 +136,25 @@ export async function buildGitEnvironment(
 }
 
 /**
-Run one Git command and wait for it; the cancel signal in the options stops it.
-
-@param cwd where Git runs.
-@param commandArguments the arguments after git.
-@param options the standard input and the cancel signal.
-*/
-export async function runGit(
-    cwd: string,
-    commandArguments: readonly string[],
-    options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
-): Promise<SpawnResult> {
-    const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = await buildGitEnvironment(cwd, command, { ...options.env });
-    return 'failure' in selected
-        ? selected.failure
-        : runProcess(command, { ...options, env: selected.variables, cwd: cwd });
-}
-
-/**
-Stream Git output with repository isolation and optional cancellation.
+Run one Git command and wait for it; the cancel signal in the options stops it. With a reader, Git streams its output
+to the reader, and the result holds an empty stdout.
 
 @param cwd where Git runs.
 @param commandArguments the arguments after git.
 @param options the standard input and the cancel signal.
 @param readStdout consumes stdout while Git runs.
 */
-export async function runGitStream(
+export async function runGit(
     cwd: string,
     commandArguments: readonly string[],
     options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
-    readStdout: StdoutReader,
+    readStdout?: StdoutReader,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
     const selected = await buildGitEnvironment(cwd, command, { ...options.env });
-    return 'failure' in selected
-        ? selected.failure
-        : streamProcess(command, { ...options, env: selected.variables, cwd: cwd }, readStdout);
+    if ('failure' in selected) return selected.failure;
+    const spawn = { ...options, env: selected.variables, cwd };
+    return readStdout === undefined ? runProcess(command, spawn) : streamProcess(command, spawn, readStdout);
 }
 
 /**
@@ -188,7 +170,7 @@ export async function runGitBytes(
     options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array }> {
     const chunks: Buffer[] = [];
-    const result = await runGitStream(cwd, commandArguments, options, async (output) => {
+    const result = await runGit(cwd, commandArguments, options, async (output) => {
         for await (const chunk of output) chunks.push(chunk);
     });
     return { ...result, stdout: Buffer.concat(chunks) };
