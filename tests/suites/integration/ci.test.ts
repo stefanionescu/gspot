@@ -161,6 +161,21 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         ]);
     });
 
+    test('a hand edit of a generated file outside .gspot fails the job after gspot install', async () => {
+        await using sandbox = await testdir();
+        await prepareCiProject(sandbox.path, provider);
+        await using executables = await createGitSandbox({});
+        const attributes = join(sandbox.path, '.gitattributes');
+        const generatedAttributes = await readFile(attributes, 'utf8');
+        await writeFile(attributes, generatedAttributes.replace('linguist-generated', 'text'));
+        const { base, generated } = await commitCiChanges(sandbox.path, provider);
+        await fakeCiMise(executables.path);
+        const drifted = await runCiJob(sandbox.path, generated, executables.path, base);
+        expect(drifted.code, drifted.stdout + drifted.stderr).toBe(1);
+        expect(drifted.stdout).toContain('gspot install changed files.');
+        expect(drifted.stdout).toContain('.gitattributes');
+    });
+
     test('a malformed base revision exits 2 without running it, and a failed install fails the job', async () => {
         await using sandbox = await testdir();
         await prepareCiProject(sandbox.path, provider);

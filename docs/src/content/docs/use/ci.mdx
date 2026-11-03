@@ -45,8 +45,8 @@ The job checks the files changed after the pull or merge request base, or after 
 branch checks every file. Manual checks run only when you name them with `--only`; the generated workflow does not
 run them automatically.
 
-The job fails when `gspot install` changes a file in `.gspot/`. This includes missing and stale lockfiles.
-Run `gspot install` on your machine and commit the changed files.
+The job fails when `gspot install` changes a file, such as a generated file that someone edited by hand, or a missing
+or stale lockfile. Run `gspot install` on your machine and commit the changed files.
 
 ## Systems
 

@@ -126,12 +126,13 @@ test.each([...SETUP_CASES])(
     async (provider, setupExit) => {
         const pipeline = LINUX_PIPELINE;
         await using sandbox = await createGitSandbox({ '.gspot/version': '1.2.3' });
+        await using programs = await createGitSandbox({});
         runGitStep(sandbox.path, ['add', '.gspot/version']);
-        const commands = join(sandbox.path, 'commands.log');
-        const bin = await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/tool');
-        await writeProgramCommand(sandbox.path, 'bin/gspot', 'fakes/tool', '--record', commands, '--');
+        const commands = join(programs.path, 'commands.log');
+        const bin = await writeProgramCommand(programs.path, 'bin/mise', 'fakes/tool');
+        await writeProgramCommand(programs.path, 'bin/gspot', 'fakes/tool', '--record', commands, '--');
         await writeProgramCommand(
-            sandbox.path,
+            programs.path,
             'bin/project setup',
             'fakes/tool',
             '--record',
@@ -158,7 +159,7 @@ test.each([...SETUP_CASES])(
             cwd: sandbox.path,
             env: {
                 PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`,
-                GITHUB_PATH: join(sandbox.path, 'github-path'),
+                GITHUB_PATH: join(programs.path, 'github-path'),
             },
         });
         expect(result.code, result.stdout + result.stderr).toBe(setupExit);

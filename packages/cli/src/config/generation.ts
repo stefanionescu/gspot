@@ -69,17 +69,11 @@ export const CI_STEP_NAMES = {
 
 export const CI_PACKAGE_RUNNER = 'npx --no --';
 
-const CI_DIFF_MESSAGE = 'gspot install changed .gspot/. Run gspot install, then commit .gspot/.';
+const CI_DIFF_MESSAGE = 'gspot install changed files. Run gspot install, then commit the files that it changed.';
 
 export const CI_DIFF_LINES = {
-    github: [
-        'git add --intent-to-add -- .gspot',
-        `git diff --exit-code -- .gspot || { echo "::error::${CI_DIFF_MESSAGE}"; exit 1; }`,
-    ],
-    gitlab: [
-        'git add --intent-to-add -- .gspot',
-        `git diff --exit-code -- .gspot || { echo "${CI_DIFF_MESSAGE}"; exit 1; }`,
-    ],
+    github: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "::error::${CI_DIFF_MESSAGE}"; exit 1; }`],
+    gitlab: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "${CI_DIFF_MESSAGE}"; exit 1; }`],
 } as const;
 
 export const CI_INSTALL_COMMAND = 'gspot install';
