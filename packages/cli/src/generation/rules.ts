@@ -193,8 +193,15 @@ Build the managed block for the rules.
 @param block.managedKeys the keys that gspot manages inside authored config files.
 @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
 @param block.startCommand the command that starts gspot.
+@param block.hooksEnabled whether the Git hooks run the commit checks, so the agent commits and fixes what they report.
 */
-export function buildAgentsBlock({ files, managedKeys, startCommand, hasOwnTitle }: AgentsBlockContent): string {
+export function buildAgentsBlock({
+    files,
+    managedKeys,
+    startCommand,
+    hasOwnTitle,
+    hooksEnabled,
+}: AgentsBlockContent): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
     const lines = [
         RULES_HEADING,
@@ -204,7 +211,7 @@ export function buildAgentsBlock({ files, managedKeys, startCommand, hasOwnTitle
         '',
         `The rules write \`gspot\` for \`${startCommand}\`.`,
         '',
-        'Before you commit, run `gspot check --staged --stage commit`. Before you push, run `gspot check --changed --stage push`.',
+        `${hooksEnabled ? 'Commit, and fix what the hook reports.' : 'Before you commit, run `gspot check --staged --stage commit`.'} Before you push, run \`gspot check --changed --stage push\`.`,
         '',
         `To change \`gspot.toml\`, run ${formatSettingsCommands()}.`,
         'When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.',

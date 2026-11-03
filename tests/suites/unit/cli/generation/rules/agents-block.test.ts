@@ -85,10 +85,25 @@ test('the AGENTS.md Commands section names its launcher once', () => {
         managedKeys: [],
         hasOwnTitle: false,
         startCommand: command,
+        hooksEnabled: true,
     });
     const commands = block.slice(block.indexOf(COMMANDS_HEADING), block.indexOf('\n## Generated files'));
     expect(commands).toContain(`The rules write \`gspot\` for \`${command}\`.`);
     expect(commands.match(/pnpm exec gspot/gu)).toHaveLength(1);
+});
+
+test.each([
+    { hooksEnabled: true, commit: 'Commit, and fix what the hook reports.' },
+    { hooksEnabled: false, commit: 'Before you commit, run `gspot check --staged --stage commit`.' },
+])('with hooks enabled $hooksEnabled, the AGENTS.md block says how to check a commit', ({ hooksEnabled, commit }) => {
+    const block = buildAgentsBlock({
+        files: [],
+        managedKeys: [],
+        hasOwnTitle: false,
+        startCommand: 'gspot',
+        hooksEnabled,
+    });
+    expect(block).toContain(`\n${commit} Before you push, run \`gspot check --changed --stage push\`.\n`);
 });
 
 test('the AGENTS.md index keeps a rule opening that wraps onto a second line', () => {
@@ -106,6 +121,7 @@ test('the AGENTS.md index keeps a rule opening that wraps onto a second line', (
         managedKeys: [],
         hasOwnTitle: false,
         startCommand: 'gspot',
+        hooksEnabled: true,
     });
     expect(block).toContain('/SAFETY.md`: when a shell script deletes files, or parses JSON or YAML.\n');
 });

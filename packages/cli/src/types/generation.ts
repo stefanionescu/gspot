@@ -86,6 +86,7 @@ export type AgentsBlockContent = {
     managedKeys: Array<{ path: string; keys: string[] }>;
     startCommand: string;
     hasOwnTitle: boolean;
+    hooksEnabled: boolean;
 };
 
 export type RuleSection = {

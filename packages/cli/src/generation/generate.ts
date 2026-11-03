@@ -81,6 +81,7 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
             }))
             .filter(({ keys }) => keys.length > 0),
         startCommand: session.startRunner.command,
+        hooksEnabled: settings.hooks.enabled,
         files: rules,
     });
     generated.blocks.push({ path: AGENTS_FILE, body: block });
