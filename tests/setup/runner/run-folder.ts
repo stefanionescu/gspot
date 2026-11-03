@@ -2,8 +2,9 @@ import { join } from 'node:path';
 import { GRAMMARS_FOLDER } from '#cli/config/parsers.ts';
 import { CACHE_FOLDER_NAME } from '#cli/config/system.ts';
 import { rm, mkdir, mkdtemp, symlink } from 'node:fs/promises';
+import { GIT_VARIABLE_PREFIX } from '#cli/config/repository/git.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { readCacheFolder, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { readCacheFolder, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
     CACHE_FOLDER,
@@ -33,8 +34,8 @@ export async function linkGrammars(cache: string): Promise<void> {
 }
 
 /**
-Create the cache, temporary, and config folders of a test file, and point the isolated environment at them. The
-resources remove the folders and restore the environment.
+Create the cache, temporary, and config folders of a test file, and point the isolated environment at them. Git
+variables that a hook passes in are dropped. The resources remove the folders and restore the environment.
 */
 export async function prepareRunFolders(resources: AsyncDisposableStack): Promise<void> {
     const cache = await mkdtemp(join(TEST_RUN_FOLDER, `${CACHE_FOLDER}-`));
@@ -43,8 +44,11 @@ export async function prepareRunFolders(resources: AsyncDisposableStack): Promis
     for (const folder of [cache, temporary, config])
         resources.defer(() => rm(folder, { recursive: true, force: true }));
     await linkGrammars(cache);
+    const inherited = Object.keys(buildSpawnEnvironment()).filter((name) => name.startsWith(GIT_VARIABLE_PREFIX));
+    const cleared = Object.fromEntries(inherited.map((name) => [name, undefined]));
     resources.use(
         overrideEnvironment({
+            ...cleared,
             ...GIT_ISOLATION_ENVIRONMENT,
             XDG_CACHE_HOME: cache,
             XDG_CONFIG_HOME: config,
