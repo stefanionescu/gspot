@@ -3,11 +3,13 @@ import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { getTool, findToolName } from '#cli/tools/pins.ts';
+import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
 import type { Session, ScopeCheck } from '#cli/types/tools.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
+import { SETTING_RULES } from '#cli/config/settings/validation.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
@@ -134,6 +136,8 @@ function formatRuleOptions(
     configuration: Configuration,
 ): string | undefined {
     if (tool === undefined) return undefined;
+    const owner = { ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] }[identifier];
+    if (owner !== undefined) return `gspot set ${owner} <value>`;
     const key = `tools.${tool}.rules`;
     const settings = SETTINGS_BY_CONFIGURATION.get(configuration.name);
     if (settings?.some((setting) => setting.name === key) !== true) return undefined;

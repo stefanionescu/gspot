@@ -83,6 +83,23 @@ test('explain reads installed rule metadata without executing generated configur
     }
 });
 
+test('explain offers the setting that writes the options of a rule, and the rules table for the others', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'source.js': 'export const value = 1;\n',
+    });
+    await writeRulePackages(sandbox.path);
+    for (const [rule, changeOptions] of [
+        ['gspot/no-trivial-files', 'gspot set structure.reexports <value>'],
+        ['max-params', 'gspot set limits.max_function_parameters <value>'],
+        ['no-param-reassign', `gspot set tools.eslint.rules '{ "no-param-reassign" = [<options>] }'`],
+    ] as const) {
+        const result = await runGspot(sandbox.path, ['explain', 'javascript/eslint', rule, '--json']);
+        expect(result.code, result.stderr).toBe(0);
+        expect(JSON.parse(result.stdout)).toMatchObject({ rule, changeOptions });
+    }
+});
+
 test('explain gives Ruff summaries and reserves its full explanation for verbose output', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': RULE_PAGE_SETTINGS,
