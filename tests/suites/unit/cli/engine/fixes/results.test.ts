@@ -218,6 +218,18 @@ test('a file with merge-conflict markers stays out of every fixer, and the fix r
     ]);
 });
 
+test('a seven-letter title underline outside a conflict leaves the file to the fixers', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildFixerSettings(['*.txt']),
+        'support.txt': 'Support\n=======\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'support.txt=Support\n'));
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
+    expect(await readFile(join(sandbox.path, 'support.txt'), 'utf8')).toBe('Support\n');
+    expect(fixed.changed).toStrictEqual(['support.txt']);
+});
+
 test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildFixerSettings(['*.ts']),

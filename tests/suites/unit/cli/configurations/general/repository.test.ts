@@ -46,14 +46,18 @@ test('conflict-markers reports each marker line of a text file at level basic, a
         'gspot.toml': buildSandboxSettings([], { level: 'basic' }),
         'notes.txt': 'intro\n<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> branch\n',
         'heading.md': '=== Three signs\n<<<<<<<< eight signs\n',
+        'support.rst': 'Support\n=======\n\nAsk on the forum.\n',
+        'license.md': 'License\n=======\n\n>>>>>>> branch\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'repository/conflict-markers');
     expect(findings.map(({ file, line }) => [file, line])).toStrictEqual([
+        ['license.md', 4],
         ['notes.txt', 2],
         ['notes.txt', 4],
         ['notes.txt', 6],
     ]);
     await writeFile(join(sandbox.path, 'notes.txt'), 'intro\nours\n');
+    await writeFile(join(sandbox.path, 'license.md'), 'License\n=======\n');
     expect(await runSandboxCheck(sandbox.path, 'repository/conflict-markers')).toStrictEqual([]);
 });
 

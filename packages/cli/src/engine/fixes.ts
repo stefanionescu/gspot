@@ -1,5 +1,4 @@
 import { getTool } from '#cli/tools/pins.ts';
-import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type { Tool } from '#cli/types/manifests.ts';
@@ -15,9 +14,10 @@ import { runToolProcess } from '#cli/engine/tool-runs/tool.ts';
 import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
 import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
 import type { SpawnResult, FileContents } from '#cli/types/system.ts';
+import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
+import { compareText, listConflictMarkerLines } from '#cli/system/text.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
-import { FIX_ROUNDS, CONFLICT_MARKER_LINE, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
 import type { FixReport, FixResult, FixRounds, PathBytes, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
@@ -210,7 +210,7 @@ List the files that hold merge-conflict markers, which no fixer changes.
 */
 export function listConflictedPaths(root: string, paths: string[]): string[] {
     const contents = readContents(root, paths);
-    return paths.filter((path) => CONFLICT_MARKER_LINE.test(contents.get(path)?.toString('utf8') ?? ''));
+    return paths.filter((path) => listConflictMarkerLines(contents.get(path)?.toString('utf8') ?? '').length > 0);
 }
 
 /**

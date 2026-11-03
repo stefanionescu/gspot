@@ -14,6 +14,12 @@ import {
     REGEXP_SYNTAX_CHARACTERS,
 } from '#cli/config/system.ts';
 
+const CONFLICT_START = /^<{7}(?: |$)/u;
+
+const CONFLICT_SEPARATOR = /^={7}(?: |$)/u;
+
+const CONFLICT_END = /^>{7}(?: |$)/u;
+
 /**
 Count the fewest inserted, deleted, or replaced characters that turn one text into the other.
 
@@ -204,4 +210,26 @@ export function splitWords(name: string): string[] {
         .flatMap((word) => (NUMERIC_WORDS.has(word.toLowerCase()) ? [word] : word.split(DIGIT_BOUNDARY)))
         .map((word) => word.toLowerCase())
         .filter((word) => word !== '');
+}
+
+/**
+List the merge-conflict marker lines of a text. A `=======` line counts only between a `<<<<<<<` line and a later
+`>>>>>>>` line, because Markdown and reStructuredText underline a seven-letter title with it.
+
+@param text the file text.
+@returns the indexes of the marker lines, counted from 0, in order.
+*/
+export function listConflictMarkerLines(text: string): number[] {
+    const markers: number[] = [];
+    let separators: number[] | undefined;
+    for (const [index, line] of text.split('\n').entries()) {
+        if (CONFLICT_START.test(line)) {
+            markers.push(index);
+            separators = [];
+        } else if (CONFLICT_END.test(line)) {
+            markers.push(...(separators ?? []), index);
+            separators = undefined;
+        } else if (CONFLICT_SEPARATOR.test(line)) separators?.push(index);
+    }
+    return markers.toSorted((left, right) => left - right);
 }

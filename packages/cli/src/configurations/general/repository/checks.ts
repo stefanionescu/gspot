@@ -4,14 +4,15 @@ import type { Session } from '#cli/types/tools.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isOverSizeLimit } from '#cli/engine/files.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { listConflictMarkerLines } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { lstatSync, realpathSync, readlinkSync } from 'node:fs';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
-import { BYTES_PER_KILOBYTE, CONFLICT_MARKER_LINE } from '#cli/config/engine.ts';
 import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
 
@@ -164,20 +165,11 @@ export function checkConflictMarkers(session: Session, planned: PlannedCheck): C
     return planned.files
         .filter((file) => file.tags.includes('text') && !file.tags.includes('symlink'))
         .flatMap((file) =>
-            readBytes(session.cache, file.path)
-                .toString('utf8')
-                .split('\n')
-                .flatMap((line, index) =>
-                    CONFLICT_MARKER_LINE.test(line)
-                        ? [
-                              {
-                                  file: file.path,
-                                  line: index + 1,
-                                  rule: REPOSITORY_RULES.conflictMarker,
-                                  message: 'This line is a merge-conflict marker. Resolve the conflict.',
-                              },
-                          ]
-                        : [],
-                ),
+            listConflictMarkerLines(readBytes(session.cache, file.path).toString('utf8')).map((index) => ({
+                file: file.path,
+                line: index + 1,
+                rule: REPOSITORY_RULES.conflictMarker,
+                message: 'This line is a merge-conflict marker. Resolve the conflict.',
+            })),
         );
 }
