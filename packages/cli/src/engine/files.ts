@@ -9,17 +9,35 @@ import type { TrackedFile } from '#cli/types/repository.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
-import type { PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import { SYMLINK_MODE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
+import type { PlannedCheck, PlannedScope, PlanInventory } from '#cli/types/engine/plan.ts';
 import { joinScope, selectScopePath, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { ROOT_RUNS, FILES_PLACEHOLDER, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
-    const prefix = joinScope(scopePath, '');
-    return planned.session.repository.files.filter(
+    const { inventory, session, children } = planned;
+    let files = inventory.scopeFiles.get(scopePath);
+    if (files === undefined) {
+        const prefix = joinScope(scopePath, '');
+        files = session.repository.files.filter((file) => file.path.startsWith(prefix));
+        inventory.scopeFiles.set(scopePath, files);
+    }
+    if (runs !== 'scope') return files;
+    let own = inventory.ownFiles.get(scopePath);
+    if (own === undefined) {
+        own = files.filter((file) => isOutsideChildScopes(file.path, children));
+        inventory.ownFiles.set(scopePath, own);
+    }
+    return own;
+}
+
+function listTestedFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
+    const { narrowedFiles } = planned.inventory;
+    if (narrowedFiles === undefined) return listScopeFiles(planned, scopePath, runs);
+    return narrowedFiles.filter(
         (file) =>
-            file.path.startsWith(prefix) && (runs !== 'scope' || isOutsideChildScopes(file.path, planned.children)),
+            isInScope(file.path, scopePath) && (runs !== 'scope' || isOutsideChildScopes(file.path, planned.children)),
     );
 }
 
@@ -43,22 +61,24 @@ function listProjectMatches(
 
 function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
     const { check } = scopeCheck;
-    const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
-    const matches = listProjectMatches(planned, scopeCheck, { scopeFiles, scopePath });
+    const testedFiles = listTestedFiles(planned, scopePath, check.runs);
+    const matches = listProjectMatches(planned, scopeCheck, { scopeFiles: testedFiles, scopePath });
     const { files } = stripIgnoredFiles(matches, check, planned.scope);
     if (listNarrowedFiles(planned, scopeCheck, files).length === 0) return [];
+    const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
     return check.runs === 'scope' || check.binary_files === true
         ? scopeFiles
         : scopeFiles.filter((file) => file.kind !== 'binary');
 }
 
 function listRunFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
-    const { session, scope } = planned;
+    const { scope } = planned;
     const { check, configuration } = scopeCheck;
     if (check.runs !== 'files') return listProjectCheckFiles(planned, scopeCheck, scopePath);
-    if (configuration !== undefined) return listCheckFiles({ scope, files: session.repository.files }, check.id);
+    const testedFiles = listTestedFiles(planned, scopePath, check.runs);
+    if (configuration !== undefined) return listCheckFiles({ scope, files: testedFiles }, check.id);
     const isMatch = buildPathMatcher(check.files?.paths ?? []);
-    return session.repository.files.filter((file) => isMatch(file.path));
+    return testedFiles.filter((file) => isMatch(file.path));
 }
 
 function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
@@ -79,10 +99,8 @@ function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
 }
 
 function listNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
-    const { narrowedPaths } = planned;
-    if (!narrowedPaths) return files;
-    const isTouched = narrowedPaths.has(SETTINGS_FILE) || narrowedPaths.values().some((path) => isGspotPath(path));
-    if (isTouched) return files;
+    const { narrowedPaths, inventory } = planned;
+    if (narrowedPaths === undefined || inventory.narrowedFiles === undefined) return files;
     const inNarrowed = files.filter((file) => narrowedPaths.has(file.path));
     if (inNarrowed.length === 0) return [];
     return scopeCheck.check.runs === 'files' ? inNarrowed : files;
@@ -91,11 +109,10 @@ function listNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files:
 function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): string[] {
     const { check, configuration } = scopeCheck;
     if (check.runs === 'files' || planned.narrowedPaths === undefined) return [];
-    const { session, children, scope } = planned;
-    const readable = new Set(session.repository.files.map((file) => file.path));
+    const { inventory, children, scope } = planned;
     const paths = [...planned.narrowedPaths].filter(
         (path) =>
-            !readable.has(path) &&
+            !inventory.trackedPaths.has(path) &&
             (configuration === undefined || !isGspotPath(path)) &&
             isInScope(path, scopePath) &&
             (check.runs !== 'scope' || isOutsideChildScopes(path, children)),
@@ -148,6 +165,30 @@ function addNarrowedLinks(
         .filter(({ path, mode }) => mode === SYMLINK_MODE && narrowedPaths.has(path))
         .map(({ path }) => path);
     return { ...selection, triggerPaths: [...selection.triggerPaths, ...narrowedLinks], narrowedLinks };
+}
+
+/**
+Index the tracked files once per plan: their paths, the tracked files among the narrowed paths, and the files under
+each scope folder. A change to gspot.toml or to a gspot file leaves the narrowed files out, so every check plans its
+whole scope, because such a change can change what every check reads.
+
+@param files the tracked files of the session.
+@param narrowedPaths the paths that the run narrows to, if any.
+*/
+export function buildPlanInventory(
+    files: TrackedFile[],
+    narrowedPaths: ReadonlySet<string> | undefined,
+): PlanInventory {
+    const isNarrowed =
+        narrowedPaths !== undefined &&
+        !narrowedPaths.has(SETTINGS_FILE) &&
+        narrowedPaths.values().every((path) => !isGspotPath(path));
+    return {
+        trackedPaths: new Set(files.map(({ path }) => path)),
+        narrowedFiles: isNarrowed ? files.filter((file) => narrowedPaths.has(file.path)) : undefined,
+        scopeFiles: new Map(),
+        ownFiles: new Map(),
+    };
 }
 
 /**

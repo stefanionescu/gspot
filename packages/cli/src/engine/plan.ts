@@ -8,9 +8,9 @@ import type { Session, ScopeCheck } from '#cli/types/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles } from '#cli/engine/files.ts';
 import { OFF_BY_LEVEL, NO_MATCHING_FILES, COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
 import type { PlanOptions, PlannedScope, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
+import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles, buildPlanInventory } from '#cli/engine/files.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
@@ -97,6 +97,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const { settings, scopes } = session;
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const narrowedPaths = buildNarrowedPaths(options);
+    const inventory = buildPlanInventory(session.repository.files, narrowedPaths);
     const scopePaths = scopes.map(({ path }) => path);
     const enumerated = Map.groupBy(
         listKeptScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)),
@@ -110,6 +111,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             host,
             narrowedPaths,
             children: listNestedScopes(scopePaths, scope.path),
+            inventory,
         };
         const checks = (enumerated.get(scope.path) ?? []).map((configured) => planCheck(context, configured));
         return options.keepLevelOff === true ? checks : checks.filter(({ skip }) => skip?.cause !== 'level');

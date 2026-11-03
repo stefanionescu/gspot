@@ -37,6 +37,14 @@ export type PlannedScope = {
     host: Host;
     narrowedPaths: Set<string> | undefined;
     children: string[];
+    inventory: PlanInventory;
+};
+
+export type PlanInventory = {
+    trackedPaths: ReadonlySet<string>;
+    narrowedFiles: TrackedFile[] | undefined;
+    scopeFiles: Map<string, TrackedFile[]>;
+    ownFiles: Map<string, TrackedFile[]>;
 };
 
 export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
