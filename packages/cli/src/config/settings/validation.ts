@@ -6,7 +6,7 @@ export const RECORD_PATHS_KEY = 'paths';
 
 export const REASONED_VALUE_KEY = 'value';
 
-export const FIRST_READ: readonly string[] = ['WORKING.md', 'WRITING.md', 'TALKING.md', 'COMMENTS.md', 'GIT.md'];
+export const FIRST_READ: readonly string[] = ['WORKING.md', 'WRITING.md', 'TALKING.md'];
 
 export const CATEGORY_PARENTS: Readonly<Record<string, string>> = {
     classes: 'types',

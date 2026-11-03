@@ -118,7 +118,7 @@ test.each([`${GSPOT_PATHS.rules}/${FIRST_READ[0] as string}`, GSPOT_PATHS.rules]
             matchFields<GspotError>({
                 name: 'GspotError',
                 code: 'settings',
-                message: `gspot.toml:2: rule_files.exclude.0: [rule_files] exclude names ${ruleFile}, which holds a file every agent opens first (WORKING.md, WRITING.md, TALKING.md, COMMENTS.md, GIT.md). Remove the entry.`,
+                message: `gspot.toml:2: rule_files.exclude.0: [rule_files] exclude names ${ruleFile}, which holds a file every agent opens first (WORKING.md, WRITING.md, TALKING.md). Remove the entry.`,
             }),
         );
     },
