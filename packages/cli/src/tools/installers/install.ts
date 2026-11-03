@@ -1,8 +1,5 @@
 import type { Tool } from '#cli/types/manifests.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { findProgram } from '#cli/system/programs.ts';
-import { UV_LOCKFILE } from '#cli/config/manifests.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -24,6 +21,7 @@ import {
     repairToolProjects,
     listStaleLockfiles,
     installNpmToolProject,
+    isEveryEnvironmentReady,
     installPythonToolProjects,
 } from '#cli/tools/installers/projects.ts';
 
@@ -83,8 +81,8 @@ async function repairTools(install: ToolInstall, tools: Tool[], miseBinPaths: st
 
 /**
 Tell whether install has nothing to change: the tool project files and their lockfiles match the settings, the hooks
-run, and every tool that install puts in place passes the inspection of doctor. A Python project with a uv lockfile
-never counts as done, because install syncs its environment on every run.
+run, every tool that install puts in place passes the inspection of doctor, and the environment of each Python project
+with a uv lockfile matches that lockfile.
 
 @param install the session, the tool project files, and the tools of the checks.
 */
@@ -93,13 +91,8 @@ async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
     const isWritten = generated.files.every(
         ({ path, content }) => writer.read(path)?.bytes.toString('utf8') === content,
     );
-    const tracked = new Set(session.repository.files.map((file) => file.path));
-    const hasLockedProject = session.scopes.some(
-        ({ path }) => tracked.has(joinScope(path, UV_LOCKFILE)) && tracked.has(joinScope(path, PYPROJECT_TOML)),
-    );
     const hooks = await readHookStatus(session, session.repository);
-    if (!isWritten || hasLockedProject || !hooks.ready || listStaleLockfiles(session, generated.files).length > 0)
-        return false;
+    if (!isWritten || !hooks.ready || listStaleLockfiles(session, generated.files).length > 0) return false;
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const search = { ...session, runsVersionCommand: true };
     const availabilities = await Promise.all(
@@ -112,7 +105,9 @@ async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
             )
             .map(async (tool) => buildToolAvailability(tool, await lookUpTool(search, tool, session.root))),
     );
-    return availabilities.every((availability) => !('status' in availability));
+    if (availabilities.some((availability) => 'status' in availability)) return false;
+    const { folders } = await readToolBinPaths(session);
+    return isEveryEnvironmentReady(install, folders);
 }
 
 /**

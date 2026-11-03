@@ -225,6 +225,20 @@ export async function installPythonTools(
 }
 
 /**
+List the scope folders of the Python projects that install syncs: each tracks a pyproject.toml and a uv lockfile.
+
+@param session the tracked files and the scopes.
+*/
+export function listLockedPythonProjects(session: Pick<ToolInstall['session'], 'repository' | 'scopes'>): string[] {
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    return session.scopes
+        .map((scope) => scope.path)
+        .filter(
+            (folder) => tracked.has(joinScope(folder, UV_LOCKFILE)) && tracked.has(joinScope(folder, PYPROJECT_TOML)),
+        );
+}
+
+/**
 Install the environment of each Python project with a uv lockfile, so that its checks read the real packages.
 
 @param install what install needs for this step.
@@ -232,14 +246,8 @@ Install the environment of each Python project with a uv lockfile, so that its c
 @returns one line for each project.
 */
 export async function installPythonProjects(install: ToolInstall, executable: string): Promise<string[]> {
-    const { root, repository, scopes } = install.session;
-    const tracked = new Set(repository.files.map((file) => file.path));
-    const folders = scopes
-        .map((scope) => scope.path)
-        .filter(
-            (folder) => tracked.has(joinScope(folder, UV_LOCKFILE)) && tracked.has(joinScope(folder, PYPROJECT_TOML)),
-        );
-    const lines = folders.map((folder) => {
+    const { root } = install.session;
+    const lines = listLockedPythonProjects(install.session).map((folder) => {
         const place = folder === '' ? 'the repository root' : folder;
         return { folder, place };
     });

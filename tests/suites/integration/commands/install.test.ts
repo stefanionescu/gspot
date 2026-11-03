@@ -7,9 +7,10 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { INIT_FILES } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('after init and install, apply has nothing to write', async () => {
@@ -74,4 +75,23 @@ test('a repeated npm install keeps the lockfile and the modules with the registr
         ).toStrictEqual(requests);
         expect(await readFile(marker, 'utf8')).toBe('installed modules');
     }
+});
+
+test('a repeated install reports No change while a uv-locked project matches its lockfile', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'pyproject.toml':
+            '[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.10"\ndependencies = []\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    const locked = await runCommand(['uv', 'lock'], { cwd: sandbox.path });
+    expect(locked.code, locked.stdout + locked.stderr).toBe(0);
+    commitAll(sandbox.path);
+    await applyThenInstall(sandbox.path);
+    const repeated = await spawnGspot(sandbox.path, ['install', '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    expect(JSON.parse(repeated.stdout)).toMatchObject({
+        summary: 'No change: every tool is installed.',
+        installed: [],
+    });
 });

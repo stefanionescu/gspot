@@ -6,14 +6,14 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { listStaleLockfiles, installNpmToolProject } from '#cli/tools/installers/projects.ts';
+import { listStaleLockfiles, installNpmToolProject, isEveryEnvironmentReady } from '#cli/tools/installers/projects.ts';
 
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',
@@ -66,4 +66,24 @@ test('a changed npm tool lockfile installs into an empty node_modules, and a cur
     await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/kept/package.json`]: '{}\n' });
     await installNpmToolProject(install);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'kept'))).toBe(true);
+});
+
+test.each([
+    { name: 'an environment that uv sync --check accepts', venv: true, code: 0, synced: true },
+    { name: 'an environment that differs from its lockfile', venv: true, code: 1, synced: false },
+    { name: 'no environment', venv: false, code: 0, synced: false },
+])('a uv-locked project counts as synced only with $name', async ({ venv, code, synced }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\n',
+        'uv.lock': 'version = 1\n',
+        ...(venv && { '.venv/pyvenv.cfg': 'home = /usr/bin\n' }),
+    });
+    using _lookup = fakeExecutableLookup((name) => (name === 'uv' ? '/tools/uv' : undefined));
+    using uv = fakeCommands('uv', () => Promise.resolve(buildProcessResult({ code })));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    expect(await isEveryEnvironmentReady(install, [])).toBe(synced);
+    expect(uv.mock.calls.map(([command]) => command)).toStrictEqual(
+        venv ? [['/tools/uv', 'sync', '--locked', '--check']] : [],
+    );
 });

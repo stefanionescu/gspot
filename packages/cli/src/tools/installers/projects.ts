@@ -1,17 +1,21 @@
 import which from 'which';
+import { join } from 'node:path';
 import type { Files } from '#cli/types/system.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
+import { runInstallStep } from '#cli/tools/installers/steps.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import type { ReplacementRequest } from '#cli/types/repository.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import { UV_TOOL, UV_REINSTALL_FLAG } from '#cli/config/tools/installers.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { UV_TOOL, UV_REINSTALL_FLAG, UV_PROJECT_INSTALL_ARGUMENTS } from '#cli/config/tools/installers.ts';
 
 import {
     listMisePins,
@@ -25,6 +29,7 @@ import {
     planPythonLockfile,
     installPythonProjects,
     isPythonLockfileFresh,
+    listLockedPythonProjects,
 } from '#cli/tools/installers/pypi.ts';
 import type {
     Session,
@@ -35,6 +40,8 @@ import type {
     ToolProjectsInstall,
     ToolPackageManagerName,
 } from '#cli/types/tools.ts';
+
+const UV_CHECK_FLAG = '--check';
 
 function findStaleMiseLockfile(files: Files, configurations: Session['toolConfigurations']): StaleLockfile | undefined {
     const path = GSPOT_PATHS.miseLockfile;
@@ -101,6 +108,31 @@ async function installNpmProject(npm: NpmToolInstall, lockfiles: ReplacementRequ
     if (plan !== undefined && plan.previous?.bytes.equals(plan.next.bytes) !== true)
         npm.writer.deleteTree(GSPOT_PATHS.nodeModules);
     return installNpmTools(npm);
+}
+
+/**
+Tell whether the environment of each Python project with a uv lockfile exists and matches that lockfile. uv sync --check
+compares them and changes nothing.
+
+@param install what install needs for this step.
+@param miseBinPaths the program folders that mise installed, where uv may sit.
+*/
+export async function isEveryEnvironmentReady(install: ToolInstall, miseBinPaths: string[]): Promise<boolean> {
+    const { root } = install.session;
+    const folders = listLockedPythonProjects(install.session);
+    if (folders.length === 0) return true;
+    const uvPath = await findUvPath(install, miseBinPaths);
+    if (uvPath === undefined) return false;
+    const files = openFiles(root);
+    const results = await Promise.all(
+        folders.map(async (folder) => {
+            if (files.findStats(joinScope(folder, PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() !== true) return false;
+            const command = [uvPath, ...UV_PROJECT_INSTALL_ARGUMENTS, UV_CHECK_FLAG];
+            const result = await runInstallStep(install, command, { cwd: join(root, folder) });
+            return result.code === 0;
+        }),
+    );
+    return results.every(Boolean);
 }
 
 /**
