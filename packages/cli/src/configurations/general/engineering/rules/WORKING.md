@@ -1,4 +1,4 @@
-# Working in a Repository
+# Working in a repository
 
 Read this rule before you change anything in the repository.
 

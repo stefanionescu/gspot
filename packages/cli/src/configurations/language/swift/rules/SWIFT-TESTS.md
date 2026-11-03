@@ -1,4 +1,4 @@
-# Swift Tests
+# Swift tests
 
 Read this rule when you write or change a Swift test.
 

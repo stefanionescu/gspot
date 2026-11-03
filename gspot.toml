@@ -498,5 +498,5 @@ reason = "A component path in this file passes through a folder named home, and 
 [[ignore]]
 check = "prose/vale"
 rule = "gspot.title-case"
-paths = ["docs/**"]
-reason = "Page titles use sentence case, and the title case style of gspot 0.3.8 asks for title case."
+paths = ["docs/**", "packages/cli/src/configurations/*/*/rules/*.md"]
+reason = "Titles use sentence case, and the title case style of gspot 0.3.8 asks for title case."

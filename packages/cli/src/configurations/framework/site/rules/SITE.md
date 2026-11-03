@@ -1,4 +1,4 @@
-# Static Sites
+# Static sites
 
 Read this rule when you change a site that a build turns into static HTML.
 

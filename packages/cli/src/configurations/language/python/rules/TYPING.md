@@ -1,4 +1,4 @@
-# Python Typing
+# Python typing
 
 Read this rule when you write Python type annotations.
 

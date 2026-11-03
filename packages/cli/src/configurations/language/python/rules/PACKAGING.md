@@ -1,4 +1,4 @@
-# Python Packaging
+# Python packaging
 
 Read this rule when you change Python dependencies, lockfiles, or package layout.
 

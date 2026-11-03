@@ -1,4 +1,4 @@
-# Bash Operations
+# Bash operations
 
 Read this rule when you write a deployment, publishing, or remote shell script.
 
