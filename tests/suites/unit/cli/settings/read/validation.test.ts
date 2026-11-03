@@ -81,9 +81,24 @@ test('the release age can be written at the root and cannot be written in a scop
     ]);
 });
 
+test.each([
+    {
+        text: '[ci]\nenable = true\n',
+        message:
+            'gspot.toml:2: ci.enable: There is no setting called ci.enable. Did you mean enabled? The settings that exist under that table are enabled, provider, setup_command, operating_systems, linux_runner. Run gspot list settings to see every one.',
+    },
+    {
+        text: '[tools.markdownlnt]\nrules = {}\n',
+        message:
+            'gspot.toml:1: tools.markdownlnt: There is no tools.markdownlnt table. Did you mean markdownlint? The tools tables are eslint, ruff, commitlint, markdownlint, stylelint. Run gspot list settings to see every one.',
+    },
+])('an unknown key under $text names the keys or tables that exist', ({ text, message }) => {
+    expect(validateSettingsText(text)).toStrictEqual([message]);
+});
+
 test('settings of an unselected language are refused while settings of automatic general configurations stay valid', () => {
     expect(validateSettingsText('configurations = ["bash"]\n[sql]\ndialect = "sqlite"\n')).toStrictEqual([
-        'gspot.toml:3: sql.dialect: There is no setting called sql.dialect. No setting exists under that table. Run gspot list settings to see every one.',
+        'gspot.toml:3: sql.dialect: sql.dialect belongs to sql, which no scope selects. Run gspot add sql.',
     ]);
     expect(validateSettingsText('[commits]\ntypes = ["feat", "fix"]\n')).toStrictEqual([]);
 });

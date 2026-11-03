@@ -38,7 +38,8 @@ function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: 
 function listSchemaKeys(segments: KeyPath): string[] {
     let schema: z.ZodType | undefined = settingsSchema;
     for (const segment of segments) schema = findChildSchema(schema, segment);
-    const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    let table = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    while (table instanceof z.ZodPipe) table = unwrapSettingSchema(table.in as z.ZodType);
     const [record, , ...scopeFields] = segments;
     const fields = record === 'scope' ? scopeFields : segments;
     const prefix = fields.filter((segment) => typeof segment === 'string').join('.');
@@ -55,7 +56,8 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
         return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? RECORD_PATHS_MESSAGE : ''}`;
     const settingPath = record === 'scope' ? scopeFields : segments;
     const name = [...settingPath.filter((segment) => typeof segment === 'string'), key].join('.');
-    return formatUnknownSetting(name, listSchemaKeys(segments));
+    const schemaKeys = listSchemaKeys(segments);
+    return formatUnknownSetting(name, { available: schemaKeys, offered: new Set(schemaKeys) });
 }
 
 function listRemovedSelections(settings: Settings): SettingsError[] {

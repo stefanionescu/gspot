@@ -171,6 +171,11 @@ export const SET_REFUSALS = [
         'There is no scope called web. Name a project folder or a written scope.',
     ],
     [
+        'a setting of a configuration that no scope selects',
+        ['set', 'licenses.allowed', 'MIT'],
+        'licenses.allowed belongs to licenses, which no scope selects. Run gspot add licenses.',
+    ],
+    [
         'an invalid level',
         ['set', 'level', 'everything'],
         'The value everything is not valid for level. Use basic or all.',
@@ -206,7 +211,7 @@ enabled = false
 export const UNKNOWN_SETTING_KEYS = [
     {
         key: 'tools.eslint.unknown_key',
-        message: 'There is no setting called tools.eslint.unknown_key. No setting exists under that table.',
+        message: 'There is no tools.eslint table. The tools tables are commitlint.',
     },
     {
         key: 'data_files.unknown_key',

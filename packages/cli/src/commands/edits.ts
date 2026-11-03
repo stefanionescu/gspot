@@ -217,7 +217,11 @@ export function selectSettingToEdit(
                 'arguments',
                 `A configuration has the setting ${key} in the scope ${selectedScope}; add --scope ${quoteArgument(selectedScope)}.`,
             );
-        throw new GspotError('arguments', formatUnknownSetting(key, availableSettings.settings.keys().toArray()));
+        const offered = new Set(session.scopes.flatMap((each) => each.availableSettings.settings.keys().toArray()));
+        throw new GspotError(
+            'arguments',
+            formatUnknownSetting(key, { available: availableSettings.settings.keys().toArray(), offered }),
+        );
     }
     return { availableSettings, match, scope: selected };
 }

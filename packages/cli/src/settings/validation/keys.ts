@@ -4,8 +4,9 @@ import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { UNDER_TABLE, AT_TOP_LEVEL } from '#cli/config/settings/validation.ts';
-import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
+import { quoteArgument, formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text.ts';
 import type { Settings, SettingsError, SettingsTable, WrittenSetting, AvailableSettings } from '#cli/types/settings.ts';
 
 import {
@@ -60,13 +61,17 @@ function validateWrittenKey(
     availableSettings: AvailableSettings,
     settings: Settings,
     table: SettingsTable,
-    scopePath: string,
+    location: { scopePath: string; offered: ReadonlySet<string> },
     key: string,
 ): SettingsError[] {
+    const { scopePath, offered } = location;
     const match = findSetting(availableSettings, key);
     if (!match)
         return [
-            { path: key.split('.'), message: formatUnknownSetting(key, availableSettings.settings.keys().toArray()) },
+            {
+                path: key.split('.'),
+                message: formatUnknownSetting(key, { available: availableSettings.settings.keys().toArray(), offered }),
+            },
         ];
     const written = findWrittenSetting(table, key);
     if (!written) return [];
@@ -105,9 +110,26 @@ function formatUnknownLimitSetting(key: string, settings: string[]): string {
         : `There is no setting called ${key}. Did you mean ${formatCodeList(near)}?`;
 }
 
+function formatUnknownTable(key: string, availableKeys: string[]): string | undefined {
+    if (!key.startsWith('tools.')) return undefined;
+    const [parent, table] = key.split('.') as [string, string];
+    const tables = new Set(
+        availableKeys
+            .filter((name) => name.startsWith(`${parent}.`))
+            .map((name) => name.split('.', TABLE_KEY_SEGMENTS)[1] as string),
+    );
+    if (tables.size === 0 || tables.has(table)) return undefined;
+    const near = selectSimilarNames(table, [...tables]);
+    const correction = near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
+    return `There is no ${parent}.${table} table.${correction} The ${parent} tables are ${formatCodeList([...tables])}. Run gspot list settings to see every one.`;
+}
+
 function formatUnknownField(key: string, availableKeys: string[]): string {
-    const depth = key.startsWith('tools.') ? TABLE_KEY_SEGMENTS : 1;
-    const prefix = key.includes('.') ? key.split('.').slice(0, depth).join('.') : '';
+    const segments = key.split('.');
+    const depth = Math.min(key.startsWith('tools.') ? TABLE_KEY_SEGMENTS : 1, segments.length - 1);
+    const unknownTable = formatUnknownTable(key, availableKeys);
+    if (unknownTable !== undefined) return unknownTable;
+    const prefix = segments.slice(0, depth).join('.');
     const keys =
         prefix === ''
             ? [...new Set(availableKeys.map((name) => name.split('.', 1)[0] as string))].filter(
@@ -129,16 +151,34 @@ function formatUnknownField(key: string, availableKeys: string[]): string {
 }
 
 /**
-Name an unknown setting, and list the closest keys in the same table.
+Name an unknown setting, and list the closest keys in the same table. A setting of a table that no scope offers names
+the configurations that offer it and the command that adds one.
 
 @param key the written dotted name.
-@param availableKeys the settings available at this location.
-@returns the error, with a command that lists the settings.
+@param keys the settings available at this location, and the settings that any scope offers.
+@param keys.available the settings available at this location.
+@param keys.offered the settings that any scope offers. When one of them shares the table of the key, a scope selects
+a configuration of that table.
+@returns the error, with a command that lists the settings or adds the configuration.
 */
-export function formatUnknownSetting(key: string, availableKeys: string[]): string {
+export function formatUnknownSetting(
+    key: string,
+    { available: availableKeys, offered }: { available: string[]; offered: ReadonlySet<string> },
+): string {
     const descendants = availableKeys.filter((name) => name.startsWith(`${key}.`));
     if (descendants.length > 0)
         return `${key} is a table. Name one of its settings, such as ${descendants[0] as string}. The settings are ${formatCodeList(descendants)}.`;
+    const table = `${key.split('.', 1)[0] as string}.`;
+    const owners = offered.values().some((name) => name.startsWith(table))
+        ? []
+        : SETTINGS_BY_CONFIGURATION.entries()
+              .filter(([, settings]) => settings.some((setting) => setting.name === key))
+              .map(([name]) => name)
+              .toArray();
+    if (owners.length === 1)
+        return `${key} belongs to ${String(owners[0])}, which no scope selects. Run gspot add ${String(owners[0])}.`;
+    if (owners.length > 1)
+        return `${key} belongs to ${formatNameList(owners)}, and no scope selects any of them. Run gspot add with the one that this repository uses.`;
     return key.startsWith('limits.')
         ? formatUnknownLimitSetting(key, availableKeys)
         : formatUnknownField(key, availableKeys);
@@ -166,6 +206,7 @@ export function validateKeys(
         defaults: new Map(later.flatMap((scopeSettings) => scopeSettings.defaults.entries().toArray())),
         errors: availableSettings.errors,
     };
+    const offered = new Set(everywhere.settings.keys());
     for (const { table, scope, path } of listSettingsTables(settings)) {
         const active = scope === '' ? everywhere : getRequired(scopeAvailable, scope, 'scope settings');
         const selectedAvailable: AvailableSettings = {
@@ -174,7 +215,7 @@ export function validateKeys(
             errors: active.errors,
         };
         const found = listWrittenKeys(table, selectedAvailable).flatMap((key) =>
-            validateWrittenKey(selectedAvailable, settings, table, scope, key),
+            validateWrittenKey(selectedAvailable, settings, table, { scopePath: scope, offered }, key),
         );
         errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));
     }
