@@ -175,6 +175,17 @@ test('shipped configuration folders have unique names', () => {
     expect(new Set(names).size).toBe(names.length);
 });
 
+test('each check that maps lint rules to limits names the tool that reads them', () => {
+    const unnamed = readConfigurations()
+        .values()
+        .flatMap((configuration) => configuration.checks)
+        .filter((check) => check.limits !== undefined && !Array.isArray(check.limits))
+        .filter((check) => (check.tool ?? check.command?.[0]) === undefined)
+        .map((check) => check.id)
+        .toArray();
+    expect(unnamed).toStrictEqual([]);
+});
+
 test('no two configurations ship a rule file of the same name', () => {
     const names = readConfigurations()
         .values()

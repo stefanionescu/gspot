@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import semver from 'semver';
-import { isTable } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { isTable, getRequired } from '#cli/system/tables.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import { allowReasonedValue, relativePathSchema, nonemptyStringsSchema } from '#cli/schemas/settings/fields.ts';
 
@@ -17,9 +17,8 @@ import {
 
 const commitlintValuesSchema = z.record(
     z.string().superRefine((name, context) => {
-        const configuration = readConfigurations().get('commits');
-        if (configuration === undefined) throw new Error('The commits manifest is missing.');
-        const names = [...Object.keys(configuration.commitlint.rules), 'type-enum', 'scope-enum'];
+        const { commitlint } = getRequired(readConfigurations(), 'commits', 'configuration');
+        const names = [...Object.keys(commitlint.rules), 'type-enum', 'scope-enum'];
         if (names.includes(name)) return;
         context.addIssue({
             code: 'custom',

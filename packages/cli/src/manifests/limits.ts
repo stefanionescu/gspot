@@ -27,7 +27,7 @@ export const LIMIT_SETTING_RULES: Readonly<Record<string, Readonly<Record<string
     checks.flatMap((check) => {
         if (check.limits === undefined || Array.isArray(check.limits)) return [];
         const tool = check.tool ?? check.command?.[0];
-        if (tool === undefined) throw new Error(`The limit rules of ${check.id} have no tool.`);
+        if (tool === undefined) return [];
         return [
             [tool, Object.fromEntries(Object.entries(check.limits).map(([rule, limit]) => [rule, `limits.${limit}`]))],
         ];
