@@ -1,4 +1,5 @@
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import type { SelectorPaths } from '#cli/types/configurations/language.ts';
 
 export const GSPOT_PRESET_LEVELS = { basic: 'recommended', all: 'all' } as const;
 
@@ -237,7 +238,7 @@ export const ESLINT_INDENT = ' '.repeat(JSON_INDENT);
 
 export const CODE_LANGUAGES = ['javascript', 'typescript'] as const;
 
-export const BASE_SELECTORS = [
+export const BASE_SELECTORS: readonly SelectorPaths[] = [
     {
         selector: ':matches(Program, BlockStatement, StaticBlock) > BlockStatement',
         message: 'A block that stands alone hides a step. Name the step as a function, or remove the braces.',
@@ -257,10 +258,17 @@ export const BASE_SELECTORS = [
     },
     {
         selector:
+            'Program:has(> :matches(ExportNamedDeclaration:not([exportKind="type"]), ExportDefaultDeclaration, ExportAllDeclaration:not([exportKind="type"]))) > :matches(ForStatement, ForOfStatement, ForInStatement, WhileStatement, DoWhileStatement, IfStatement, TryStatement)',
+        message:
+            'A module that exports values runs no statements when it loads. Move this statement into a function that the entry point calls.',
+        ignores: ['**/*.config.*'],
+    },
+    {
+        selector:
             'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])',
         message: 'Start an error message with a capital letter.',
     },
-] as const;
+];
 
 export const PATH_SEPARATOR_PATTERN = String.raw`[/\\]`;
 

@@ -87,6 +87,23 @@ test.each(['js', 'ts'])('assignment selectors allow their parent contexts in %s'
     );
 });
 
+test('at level all, a module that exports values runs no top-level loop or branch, and a script or config file may', async () => {
+    const loop = 'const registry = new Map();\nfor (const name of ["a", "b"]) registry.set(name, name.length);\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'registry.js': `${loop}if (registry.size > 0) registry.clear();\nexport { registry };\n`,
+        'build.js': loop,
+        'tool.config.js': `${loop}export default registry;\n`,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const files = ['registry.js', 'build.js', 'tool.config.js'];
+    expect(await listLintFindings(eslint, sandbox.path, files, ['gspot/restricted-syntax'])).toStrictEqual([
+        { file: 'registry.js', rule: 'gspot/restricted-syntax', line: 2 },
+        { file: 'registry.js', rule: 'gspot/restricted-syntax', line: 3 },
+    ]);
+});
+
 test('a boolean name starts with is, has, or can at level all', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
