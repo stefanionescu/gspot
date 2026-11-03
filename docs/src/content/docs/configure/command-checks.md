@@ -1,5 +1,5 @@
 ---
-title: Command Checks
+title: Command checks
 description: Run your own command as a gspot check, with its findings in the same report.
 ---
 

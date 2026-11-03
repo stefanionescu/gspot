@@ -1,5 +1,5 @@
 ---
-title: Import Rules
+title: Import rules
 description: Describe the layers of your code once in gspot.toml, and check every import in JavaScript, TypeScript, Python, and Swift against them.
 ---
 

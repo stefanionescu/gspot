@@ -1,5 +1,5 @@
 ---
-title: Exclude Files
+title: Exclude files
 description: Keep generator output, vendored files, and other files out of the checks.
 ---
 

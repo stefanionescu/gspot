@@ -1,5 +1,5 @@
 ---
-title: Security and Secrets
+title: Security and secrets
 description: The security checks gspot runs, and how to run Semgrep.
 configurations: [security, docker, github-actions, secrets]
 ---

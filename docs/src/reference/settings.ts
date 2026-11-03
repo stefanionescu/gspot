@@ -201,7 +201,7 @@ export function buildSettingsPage(): ReferencePage {
             node.name === 'scope' ? formatScopeSection(node) : formatSettingTable(node, TABLE_HEADING_LEVEL),
         );
     const page = buildReferencePage(
-        'gspot.toml Settings',
+        'gspot.toml settings',
         SETTINGS_DESCRIPTION,
         SETTINGS_OPENING +
             `The [JSON Schema](${CLI_REFERENCE.docs.schema}) describes every key.\n` +

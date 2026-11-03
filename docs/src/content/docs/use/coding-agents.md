@@ -1,5 +1,5 @@
 ---
-title: Coding Agents
+title: Coding agents
 description: What gspot writes for coding agents, and how to change it.
 ---
 

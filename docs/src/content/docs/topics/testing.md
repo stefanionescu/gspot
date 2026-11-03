@@ -1,5 +1,5 @@
 ---
-title: Tests and Coverage
+title: Tests and coverage
 description: Run your tests before every push and fail when coverage drops under its minimum.
 configurations: [jest, vitest, pytest]
 ---

@@ -1,5 +1,5 @@
 ---
-title: Migrate Existing Tools
+title: Migrate existing tools
 description: See what gspot carries over from your configs, what needs a reason, and which commands to change.
 ---
 
