@@ -87,6 +87,26 @@ export const UNUSED_NAME_CASES = [
         messages: [],
     },
     {
+        name: 'a folders allowance matches a folder above the files it holds',
+        files: { 'src/legacyName/inner/source.js': 'export const one = 1;\n' },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                override: [
+                    {
+                        paths: ['src/*'],
+                        categories: ['folders'],
+                        allowed_names: ['legacyName', 'missingName'],
+                        reason: 'The external tool fixes this folder name.',
+                    },
+                ],
+            },
+        },
+        messages: [
+            '[[naming.override]] record 1 allowed_names includes "missingName", which no identifier under its paths uses.',
+        ],
+    },
+    {
         name: 'allowances name code or files',
         files: { 'phantomName.js': '// commentName\nexport const keptName = true;\n' },
         settings: {

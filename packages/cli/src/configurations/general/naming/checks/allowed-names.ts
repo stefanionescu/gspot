@@ -67,13 +67,24 @@ function listOverrideNames(
 }
 
 /**
-Reports allowed names in root naming overrides that match no code or path name.
+Reports allowed names in root naming overrides that match no code or path name. Only the files that an override with
+allowed names covers, by their path or a folder above them, get parsed.
 
 @param session the repository and its tools.
 @param planned the settings and tracked files.
 */
 export async function checkAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const files = await readSourceNames(session, { ...planned, files: session.repository.files });
+    const matchers = session.settings.naming.override
+        .filter((override) => (override.allowed_names ?? []).length > 0)
+        .map((override) => buildPathMatcher(override.paths));
+    const covered = session.repository.files.filter((file) => {
+        const segments = file.path.split('/');
+        return segments.some((_, index) => {
+            const path = segments.slice(0, index + 1).join('/');
+            return matchers.some((isMatched) => isMatched(path));
+        });
+    });
+    const files = await readSourceNames(session, { ...planned, files: covered });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');
     return session.settings.naming.override.flatMap((override, index) => {
         const sourceNames = listOverrideNames(override, files, folders);
