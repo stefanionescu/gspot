@@ -1,62 +1,50 @@
-import { root, runtimeMatches } from "./functions.mjs";
+import { setLevelRules, mergePresetRules, addPlugins, setRuntime, setRootFolder, setBoundaryLookup, buildRuntimeMatcher, setRuleOptions } from "./functions.mjs";
+import eslintJs from "@eslint/js";
+import gspothqEslintPlugin from "@gspothq/eslint-plugin";
+import eslintPluginUnicorn from "eslint-plugin-unicorn";
+import eslintPluginImportX from "eslint-plugin-import-x";
+import eslintPluginJsdoc from "eslint-plugin-jsdoc";
+import eslintPluginN from "eslint-plugin-n";
+import eslintPluginRegexp from "eslint-plugin-regexp";
+import eslintPluginSecurity from "eslint-plugin-security";
+import eslintPluginPerfectionist from "eslint-plugin-perfectionist";
+import eslintPluginBoundaries from "eslint-plugin-boundaries";
 import globals from "globals";
-import { join } from "node:path";
-import eslint from "@eslint/js";
-import sonarjs from "eslint-plugin-sonarjs";
-import unicorn from "eslint-plugin-unicorn";
-import packageJson from "eslint-plugin-package-json";
-import prettierConfig from "eslint-config-prettier";
-import gspot from "@gspothq/eslint-plugin";
-import importX from "eslint-plugin-import-x";
-import jsdoc from "eslint-plugin-jsdoc";
-import nodePlugin from "eslint-plugin-n";
-import regexp from "eslint-plugin-regexp";
-import security from "eslint-plugin-security";
-import perfectionist from "eslint-plugin-perfectionist";
-import boundaries from "eslint-plugin-boundaries";
+import eslintPluginPackageJson from "eslint-plugin-package-json";
+import eslintConfigPrettier from "eslint-config-prettier";
+import { defineConfig } from "eslint/config";
 import typescriptBlocks from "../../typescript/eslint.mjs";
 import astroBlocks from "../../../framework/astro/eslint.mjs";
 import zodBlocks from "../../../library/zod/eslint.mjs";
+const importBoundaryFolders = [
+    "*/*",
+    "docs",
+    "packages/cli",
+    "packages/eslint-plugin",
+    "tests"
+];
 const runtimeDeclarations = [
     {
         "scope": "",
         "runtime": "node",
         "includes": [
-            "**/*"
+            "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
         ],
-        "excludes": [
-            "docs/**",
-            "packages/cli/**",
-            "packages/eslint-plugin/**",
-            "tests/**"
-        ]
+        "excludes": []
     },
     {
         "scope": "",
         "runtime": "commonjs",
         "includes": [
-            "**/*.{cjs,cts}"
-        ],
-        "excludes": [
-            "docs/**",
-            "packages/cli/**",
-            "packages/eslint-plugin/**",
-            "tests/**"
-        ]
-    },
-    {
-        "scope": "docs",
-        "runtime": "node",
-        "includes": [
-            "docs/**/*"
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"
         ],
         "excludes": []
     },
     {
         "scope": "docs",
-        "runtime": "commonjs",
+        "runtime": "node",
         "includes": [
-            "docs/**/*.{cjs,cts}"
+            "^(?:docs(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
         ],
         "excludes": []
     },
@@ -64,15 +52,7 @@ const runtimeDeclarations = [
         "scope": "tests",
         "runtime": "node",
         "includes": [
-            "tests/**/*"
-        ],
-        "excludes": []
-    },
-    {
-        "scope": "tests",
-        "runtime": "commonjs",
-        "includes": [
-            "tests/**/*.{cjs,cts}"
+            "^(?:tests(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
         ],
         "excludes": []
     },
@@ -80,15 +60,7 @@ const runtimeDeclarations = [
         "scope": "packages/cli",
         "runtime": "node",
         "includes": [
-            "packages/cli/**/*"
-        ],
-        "excludes": []
-    },
-    {
-        "scope": "packages/cli",
-        "runtime": "commonjs",
-        "includes": [
-            "packages/cli/**/*.{cjs,cts}"
+            "^(?:packages\\/cli(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
         ],
         "excludes": []
     },
@@ -96,2123 +68,1822 @@ const runtimeDeclarations = [
         "scope": "packages/eslint-plugin",
         "runtime": "node",
         "includes": [
-            "packages/eslint-plugin/**/*"
-        ],
-        "excludes": []
-    },
-    {
-        "scope": "packages/eslint-plugin",
-        "runtime": "commonjs",
-        "includes": [
-            "packages/eslint-plugin/**/*.{cjs,cts}"
+            "^(?:packages\\/eslint-plugin(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
         ],
         "excludes": []
     }
 ];
-export default [
-    // Files that ESLint skips.
+export default setRuleOptions(defineConfig([
     {
-        "ignores": [
-            "**/build/**",
-            "**/node_modules/**",
-            "**/.env",
-            "**/.env.*",
-            "**/*.log",
-            "packages/*/dist/**",
-            "docs/dist/**",
-            "docs/.astro/**",
-            "docs/.wrangler/**",
-            ".gspot/**",
-            "eslint.config.mjs",
-            ".markdownlint.jsonc",
-            ".editorconfig",
-            "prettier.config.mjs",
-            ".prettierignore",
-            "docs/.markdownlint.jsonc",
-            "docs/.stylelintrc.json",
-            "packages/cli/.markdownlint.jsonc",
-            "packages/eslint-plugin/.markdownlint.jsonc",
-            "tests/.markdownlint.jsonc",
-            "packages/cli/README.md",
-            "docs/worker-configuration.d.ts",
-            "docs/cloudflare-env.d.ts",
-            "**/bower_components/**",
-            "**/.dev.vars",
-            "**/.dev.vars.*",
-            "**/bun.lock",
-            "**/.env*"
+    "ignores": [
+        "**/build/**",
+        ".gspot/**",
+        ".gspot-copies/**",
+        "**/gspot.baseline.json",
+        ".editorconfig",
+        ".github/workflows/gspot.yml",
+        ".markdownlint.jsonc",
+        ".prettierignore",
+        ".stylelintrc.yml",
+        "eslint.config.mjs",
+        "prettier.config.mjs",
+        "packages/cli/README.md",
+        "docs/worker-configuration.d.ts",
+        "docs/cloudflare-env.d.ts",
+        "**/node_modules/**",
+        "**/bower_components/**",
+        "**/coverage/**",
+        "**/.env",
+        "**/.env.*",
+        "**/.dev.vars",
+        "**/.dev.vars.*",
+        "**/.wrangler/**",
+        "**/bun.lock"
+    ]
+},
+    setLevelRules({"extends": [eslintJs["configs"]["recommended"]],
+    "files": ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"extends": [eslintPluginUnicorn["configs"]["recommended"]],
+    "files": ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro"]}, gspothqEslintPlugin, "all"),
+    setRootFolder(setRuntime(addPlugins(setLevelRules(mergePresetRules({"linterOptions": {
+        "reportUnusedDisableDirectives": "error"
+    },
+    "languageOptions": {
+        "ecmaVersion": "latest"
+    },
+    "settings": {
+        "import-x/ignore": [
+            "[/\\\\]build[/\\\\]",
+            "[/\\\\]\\.gspot[/\\\\]",
+            "[/\\\\]\\.gspot-copies[/\\\\]",
+            "[/\\\\]node_modules[/\\\\]",
+            "[/\\\\]bower_components[/\\\\]",
+            "[/\\\\]coverage[/\\\\]",
+            "[/\\\\]\\.wrangler[/\\\\]"
         ]
     },
-    // javascript: eslint["configs"]["recommended"].rules
-    {
-        ...eslint["configs"]["recommended"],
-        rules: {
-            ...eslint["configs"]["recommended"].rules
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-            "**/*.astro"
-        ]
-    },
-    // javascript: sonarjs["configs"]["recommended"].rules
-    {
-        ...sonarjs["configs"]["recommended"],
-        rules: {
-            ...sonarjs["configs"]["recommended"].rules
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-            "**/*.astro"
-        ]
-    },
-    // javascript: unicorn["configs"]["recommended"].rules
-    {
-        ...unicorn["configs"]["recommended"],
-        rules: {
-            ...unicorn["configs"]["recommended"].rules
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-            "**/*.astro"
-        ]
-    },
-    // javascript: gspot.configs.all.rules
-    {
-        plugins: {
-            "gspot": gspot,
-            "import-x": importX,
-            "jsdoc": jsdoc,
-            "n": nodePlugin,
-            "regexp": regexp,
-            "security": security,
-            "perfectionist": perfectionist,
-            "boundaries": boundaries
-        },
-        linterOptions: {
-            reportUnusedDisableDirectives: 'error'
-        },
-        languageOptions: {
-            ecmaVersion: 'latest',
-            sourceType: 'module',
-            globals: globals.es2024
-        },
-        settings: {
-            gspot: {
-                root
-            },
-            'import-x/ignore': [
-                "[\\\\/]build[\\\\/]",
-                "[\\\\/]node_modules[\\\\/]",
-                "[\\\\/]docs[\\\\/]dist[\\\\/]",
-                "[\\\\/]docs[\\\\/]\\.astro[\\\\/]",
-                "[\\\\/]docs[\\\\/]\\.wrangler[\\\\/]",
-                "[\\\\/]\\.gspot[\\\\/]",
-                "[\\\\/]bower_components[\\\\/]"
-            ],
-            'boundaries/root-path': root
-        },
-        rules: {
-            ...gspot.configs.all.rules,
-            "no-empty-character-class": "off",
-            "no-useless-constructor": "error",
-            "no-useless-return": "error",
-            "no-useless-call": "error",
-            "no-useless-rename": "error",
-            "no-duplicate-imports": "off",
-            "eqeqeq": [
-                "error",
-                "always"
-            ],
-            "prefer-const": "error",
-            "no-empty": [
-                "error",
-                {
-                    "allowEmptyCatch": false
-                }
-            ],
-            "no-param-reassign": "error",
-            "perfectionist/sort-imports": [
-                "error",
-                {
-                    "type": "line-length",
-                    "order": "asc",
-                    "ignoreCase": false,
-                    "groups": [
-                        "singleline-import",
-                        "multiline-import"
-                    ],
-                    "fallbackSort": {
-                        "type": "alphabetical",
-                        "order": "asc"
-                    },
-                    "newlinesBetween": 1,
-                    "newlinesInside": 0,
-                    "sortSideEffects": false,
-                    "useExperimentalDependencyDetection": false
-                }
-            ],
-            "perfectionist/sort-named-imports": [
-                "error",
-                {
-                    "type": "line-length",
-                    "ignoreCase": false
-                }
-            ],
-            "perfectionist/sort-exports": [
-                "error",
-                {
-                    "type": "line-length",
-                    "groups": [
-                        "singleline-export",
-                        "multiline-export"
-                    ],
-                    "newlinesBetween": 1,
-                    "ignoreCase": false
-                }
-            ],
-            "perfectionist/sort-named-exports": [
-                "error",
-                {
-                    "type": "line-length",
-                    "ignoreCase": false
-                }
-            ],
-            "sonarjs/assertions-in-tests": "off",
-            "sonarjs/async-test-assertions": "off",
-            "sonarjs/slow-regex": "off",
-            "sonarjs/no-unused-vars": "off",
-            "sonarjs/unused-import": "off",
-            "sonarjs/no-empty-character-class": "off",
-            "sonarjs/no-control-regex": "off",
-            "sonarjs/no-useless-catch": "off",
-            "sonarjs/no-parameter-reassignment": "off",
-            "sonarjs/for-loop-increment-sign": "off",
-            "sonarjs/no-hardcoded-passwords": "off",
-            "sonarjs/no-hardcoded-secrets": "off",
-            "sonarjs/no-empty-test-file": "off",
-            "sonarjs/no-collapsible-if": "error",
-            "sonarjs/no-nested-switch": "error",
-            "sonarjs/prefer-object-literal": "error",
-            "sonarjs/no-commented-code": "error",
-            "sonarjs/prefer-immediate-return": "error",
-            "unicorn/no-lonely-if": "off",
-            "unicorn/prevent-abbreviations": "off",
-            "unicorn/filename-case": "off",
-            "unicorn/no-null": "off",
-            "unicorn/no-useless-undefined": "off",
-            "unicorn/import-style": "off",
-            "unicorn/prefer-export-from": "off",
-            "unicorn/prefer-ternary": [
-                "error",
-                "only-single-line"
-            ],
-            "unicorn/expiring-todo-comments": [
-                "error",
-                {
-                    "allowWarningComments": false
-                }
-            ],
-            "security/detect-disable-mustache-escape": "error",
-            "security/detect-eval-with-expression": "off",
-            "security/detect-new-buffer": "off",
-            "security/detect-non-literal-regexp": "off",
-            "security/detect-non-literal-require": "error",
-            "security/detect-pseudoRandomBytes": "error",
-            "security/detect-unsafe-regex": "off",
-            "security/detect-object-injection": "off",
-            "security/detect-non-literal-fs-filename": "off",
-            "security/detect-child-process": "error",
-            "security/detect-possible-timing-attacks": "error",
-            "jsdoc/require-param-name": "error",
-            "jsdoc/check-param-names": "error",
-            "jsdoc/check-tag-names": "error",
-            "jsdoc/no-types": "off",
-            "jsdoc/require-jsdoc": [
-                "error",
-                {
-                    "enableFixer": false,
-                    "publicOnly": true,
-                    "require": {
-                        "FunctionDeclaration": true,
-                        "ArrowFunctionExpression": true,
-                        "FunctionExpression": true,
-                        "MethodDefinition": true
-                    }
-                }
-            ],
-            "jsdoc/require-description": "error",
-            "jsdoc/require-param": [
-                "error",
-                {
-                    "enableFixer": false
-                }
-            ],
-            "jsdoc/match-name": [
-                "error",
-                {
-                    "match": [
-                        {
-                            "tags": [
-                                "param"
-                            ],
-                            "disallowName": "/^root\\d+$/",
-                            "message": "Name the parameter for its role, such as options."
-                        }
-                    ]
-                }
-            ],
-            "jsdoc/informative-docs": "error",
-            "jsdoc/require-param-description": "error",
-            "jsdoc/tag-lines": [
-                "error",
-                "any",
-                {
-                    "startLines": 1
-                }
-            ],
-            "regexp/no-super-linear-backtracking": "error",
-            "regexp/no-empty-alternative": "error",
-            "regexp/no-empty-capturing-group": "error",
-            "regexp/no-empty-character-class": "error",
-            "regexp/no-empty-group": "error",
-            "regexp/no-empty-lookarounds-assertion": "error",
-            "regexp/no-useless-assertions": "error",
-            "regexp/no-useless-backreference": "error",
-            "regexp/no-useless-character-class": "error",
-            "regexp/no-useless-dollar-replacements": "error",
-            "regexp/no-useless-lazy": "error",
-            "regexp/no-useless-quantifier": "error",
-            "regexp/no-useless-range": "error",
-            "regexp/no-lazy-ends": "error",
-            "regexp/no-optional-assertion": "error",
-            "regexp/no-invalid-regexp": "error",
-            "regexp/no-misleading-capturing-group": "error",
-            "regexp/no-contradiction-with-assertion": "error",
-            "regexp/strict": "error",
-            "import-x/export": "error",
-            "import-x/no-cycle": [
-                "error",
-                {
-                    "ignoreExternal": false
-                }
-            ],
-            "import-x/no-self-import": "error",
-            "import-x/no-useless-path-segments": "error",
-            "import-x/no-empty-named-blocks": "error",
-            "import-x/no-duplicates": "error",
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                }
-            ],
-            "max-lines": [
-                "error",
-                {
-                    "max": 300,
-                    "skipBlankLines": true,
-                    "skipComments": true
-                }
-            ],
-            "max-lines-per-function": [
-                "error",
-                {
-                    "max": 60,
-                    "skipBlankLines": true,
-                    "skipComments": true,
-                    "IIFEs": true
-                }
-            ],
-            "max-params": [
-                "error",
-                {
-                    "max": 7,
-                    "countVoidThis": false
-                }
-            ],
-            "max-depth": [
-                "error",
-                3
-            ],
-            "max-statements": [
-                "error",
-                30
-            ],
-            "max-nested-callbacks": [
-                "error",
-                3
-            ],
-            "complexity": [
-                "error",
-                8
-            ],
-            "sonarjs/cognitive-complexity": [
-                "error",
-                8
-            ],
-            "sonarjs/no-identical-functions": [
-                "error",
-                8
-            ],
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {
-                        "#cli/*": "packages/cli/src/*",
-                        "#tests/*": "tests/*",
-                        "#cli-package": "packages/cli/package.json",
-                        "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                        "#eslint-plugin-package": "packages/eslint-plugin/package.json",
-                        "#root-package": "package.json",
-                        "#docs/*": "docs/src/*",
-                        "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
-                        "eslint": "node_modules/.test-tools/node_modules/eslint",
-                        "html-validate": "node_modules/.test-tools/node_modules/html-validate",
-                        "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
-                        "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
-                        "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
-                        "typescript": "node_modules/.test-tools/node_modules/typescript"
-                    }
-                }
-            ],
-            "import-x/first": "error",
-            "import-x/newline-after-import": [
-                "error",
-                {
-                    "count": 1,
-                    "considerComments": true
-                }
-            ]
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-            "**/*.astro"
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "no-unused-vars": [
-                "error",
-                {
-                    "args": "all",
-                    "argsIgnorePattern": "^_",
-                    "varsIgnorePattern": "^_",
-                    "destructuredArrayIgnorePattern": "^_"
-                }
-            ],
-            "jsdoc/require-param-type": "error",
-            "jsdoc/require-returns-type": "error",
-            "jsdoc/check-types": "error",
-            "jsdoc/no-undefined-types": "error",
-            "jsdoc/valid-types": "error"
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx}"
-        ]
-    },
-    // javascript
-    {
-        settings: {
-            "n": {
-                "tryExtensions": [
-                    ".js",
-                    ".ts",
-                    ".jsx",
-                    ".tsx",
-                    ".mjs",
-                    ".mts",
-                    ".cjs",
-                    ".cts",
-                    ".json",
-                    ".node"
+    "rules": {
+        "array-callback-return": "error",
+        "block-scoped-var": "error",
+        "no-const-assign": "error",
+        "no-delete-var": "error",
+        "no-loop-func": "error",
+        "require-yield": "error",
+        "no-labels": "error",
+        "no-new": "error",
+        "no-nested-ternary": "error",
+        "default-case-last": "error",
+        "no-void": "error",
+        "no-constructor-return": "error",
+        "no-new-func": "error",
+        "no-promise-executor-return": "error",
+        "no-return-assign": "error",
+        "no-self-compare": "error",
+        "no-template-curly-in-string": "error",
+        "no-unmodified-loop-condition": "error",
+        "no-unreachable-loop": "error",
+        "no-var": "error",
+        "no-empty-character-class": "off",
+        "no-useless-constructor": "error",
+        "no-useless-return": "error",
+        "no-useless-call": "error",
+        "no-useless-rename": "error",
+        "no-duplicate-imports": "off",
+        "eqeqeq": "error",
+        "prefer-const": "error",
+        "no-param-reassign": "error",
+        "no-warning-comments": [
+            "error",
+            {
+                "terms": [
+                    "todo",
+                    "fixme",
+                    "xxx",
+                    "hack"
                 ],
-                "typescriptExtensionMap": []
+                "location": "anywhere"
             }
-        },
-        "ignores": [],
-        rules: {
-            "n/file-extension-in-import": [
-                "error",
-                "always"
-            ]
-        },
-        files: [
-            [
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ]
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {
-                        "#cli/*": "packages/cli/src/*",
-                        "#tests/*": "tests/*",
-                        "#cli-package": "packages/cli/package.json",
-                        "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                        "#eslint-plugin-package": "packages/eslint-plugin/package.json",
-                        "#root-package": "package.json",
-                        "#docs/*": "docs/src/*",
-                        "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
-                        "eslint": "node_modules/.test-tools/node_modules/eslint",
-                        "html-validate": "node_modules/.test-tools/node_modules/html-validate",
-                        "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
-                        "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
-                        "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
-                        "typescript": "node_modules/.test-tools/node_modules/typescript"
-                    }
-                }
-            ]
-        },
-        files: [
-            "docs/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {
-                        "#cli/*": "packages/cli/src/*",
-                        "#tests/*": "tests/*",
-                        "#cli-package": "packages/cli/package.json",
-                        "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                        "#eslint-plugin-package": "packages/eslint-plugin/package.json",
-                        "#root-package": "package.json",
-                        "#docs/*": "docs/src/*",
-                        "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
-                        "eslint": "node_modules/.test-tools/node_modules/eslint",
-                        "html-validate": "node_modules/.test-tools/node_modules/html-validate",
-                        "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
-                        "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
-                        "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
-                        "typescript": "node_modules/.test-tools/node_modules/typescript"
-                    }
-                }
-            ]
-        },
-        files: [
-            "packages/cli/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {}
-                }
-            ]
-        },
-        files: [
-            "packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {}
-                }
-            ]
-        },
-        files: [
-            "tests/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-        ]
-    },
-    // javascript
-    {
-        settings: {
-            "n": {
-                "tryExtensions": [
-                    ".js",
-                    ".ts",
-                    ".jsx",
-                    ".tsx",
-                    ".mjs",
-                    ".mts",
-                    ".cjs",
-                    ".cts",
-                    ".json",
-                    ".node"
-                ],
-                "typescriptExtensionMap": []
-            }
-        },
-        "ignores": [
-            "docs/**",
-            "packages/cli/**",
-            "packages/eslint-plugin/**",
-            "tests/**"
         ],
-        rules: {
-            "n/file-extension-in-import": [
-                "error",
-                "always"
-            ],
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {}
-                }
-            ]
-        },
-        files: [
-            "**/*.mjs",
-            "**/*.cjs"
-        ]
-    },
-    // javascript
-    {
-        settings: {
-            "n": {
-                "tryExtensions": [
-                    ".js",
-                    ".ts",
-                    ".jsx",
-                    ".tsx",
-                    ".mjs",
-                    ".mts",
-                    ".cjs",
-                    ".cts",
-                    ".json",
-                    ".node"
+        "perfectionist/sort-imports": [
+            "error",
+            {
+                "type": "line-length",
+                "ignoreCase": false,
+                "groups": [
+                    "singleline-import",
+                    "multiline-import"
                 ],
-                "typescriptExtensionMap": []
+                "fallbackSort": {
+                    "type": "alphabetical",
+                    "order": "asc"
+                },
+                "useExperimentalDependencyDetection": false
             }
-        },
-        "ignores": [],
-        rules: {
-            "n/file-extension-in-import": [
-                "error",
-                "always"
-            ],
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {}
-                }
-            ]
-        },
-        files: [
-            "docs/**/*.mjs",
-            "docs/**/*.cjs"
-        ]
-    },
-    // javascript
-    {
-        settings: {
-            "n": {
-                "tryExtensions": [
-                    ".js",
-                    ".ts",
-                    ".jsx",
-                    ".tsx",
-                    ".mjs",
-                    ".mts",
-                    ".cjs",
-                    ".cts",
-                    ".json",
-                    ".node"
+        ],
+        "perfectionist/sort-named-imports": [
+            "error",
+            {
+                "type": "line-length",
+                "ignoreCase": false
+            }
+        ],
+        "perfectionist/sort-exports": [
+            "error",
+            {
+                "type": "line-length",
+                "groups": [
+                    "singleline-export",
+                    "multiline-export"
                 ],
-                "typescriptExtensionMap": []
+                "newlinesBetween": 1,
+                "ignoreCase": false
             }
-        },
-        "ignores": [],
-        rules: {
-            "n/file-extension-in-import": [
-                "error",
-                "always"
-            ],
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {}
-                }
-            ]
-        },
-        files: [
-            "packages/cli/**/*.mjs",
-            "packages/cli/**/*.cjs"
-        ]
-    },
-    // javascript
-    {
-        settings: {
-            "n": {
-                "tryExtensions": [
-                    ".js",
-                    ".ts",
-                    ".jsx",
-                    ".tsx",
-                    ".mjs",
-                    ".mts",
-                    ".cjs",
-                    ".cts",
-                    ".json",
-                    ".node"
-                ],
-                "typescriptExtensionMap": []
+        ],
+        "perfectionist/sort-named-exports": [
+            "error",
+            {
+                "type": "line-length",
+                "ignoreCase": false
             }
-        },
-        "ignores": [],
-        rules: {
-            "n/file-extension-in-import": [
-                "error",
-                "always"
-            ],
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {}
-                }
-            ]
-        },
-        files: [
-            "packages/eslint-plugin/**/*.mjs",
-            "packages/eslint-plugin/**/*.cjs"
-        ]
-    },
-    // javascript
-    {
-        settings: {
-            "n": {
-                "tryExtensions": [
-                    ".js",
-                    ".ts",
-                    ".jsx",
-                    ".tsx",
-                    ".mjs",
-                    ".mts",
-                    ".cjs",
-                    ".cts",
-                    ".json",
-                    ".node"
-                ],
-                "typescriptExtensionMap": []
+        ],
+        "unicorn/no-lonely-if": "error",
+        "unicorn/name-replacements": "off",
+        "unicorn/filename-case": "off",
+        "unicorn/no-null": "off",
+        "unicorn/no-useless-undefined": "off",
+        "unicorn/import-style": "off",
+        "unicorn/prefer-export-from": "off",
+        "unicorn/no-unnecessary-array-flat-map": "off",
+        "unicorn/no-abusive-eslint-disable": "off",
+        "unicorn/prefer-ternary": [
+            "error",
+            "only-single-line"
+        ],
+        "unicorn/expiring-todo-comments": "off",
+        "unicorn/consistent-boolean-name": [
+            "error",
+            {
+                "ignore": [
+                    "^(?:enabled|active|retryable)$"
+                ]
             }
-        },
-        "ignores": [],
-        rules: {
-            "n/file-extension-in-import": [
-                "error",
-                "always"
-            ],
-            "gspot/import-boundaries": [
-                gspot.configs.all.rules["gspot/import-boundaries"] ?? 'off',
-                {
-                    "folders": [
-                        "*/*",
-                        "docs",
-                        "packages/cli",
-                        "packages/eslint-plugin",
-                        "tests"
-                    ],
-                    "aliases": {}
+        ],
+        "security/detect-disable-mustache-escape": "error",
+        "security/detect-eval-with-expression": "off",
+        "security/detect-new-buffer": "off",
+        "security/detect-non-literal-regexp": "off",
+        "security/detect-non-literal-require": "off",
+        "security/detect-pseudoRandomBytes": "off",
+        "import-x/no-dynamic-require": "error",
+        "security/detect-unsafe-regex": "off",
+        "security/detect-object-injection": "off",
+        "security/detect-non-literal-fs-filename": "off",
+        "security/detect-child-process": "error",
+        "security/detect-possible-timing-attacks": "error",
+        "jsdoc/require-param-name": "error",
+        "jsdoc/check-param-names": "error",
+        "jsdoc/check-tag-names": "error",
+        "jsdoc/no-types": "off",
+        "jsdoc/require-jsdoc": [
+            "error",
+            {
+                "enableFixer": false,
+                "publicOnly": true,
+                "require": {
+                    "FunctionDeclaration": true,
+                    "ArrowFunctionExpression": true,
+                    "FunctionExpression": true,
+                    "MethodDefinition": true
                 }
-            ]
-        },
-        files: [
-            "tests/**/*.mjs",
-            "tests/**/*.cjs"
-        ]
-    },
-    // javascript
-    {
-        settings: {
-            ...{
-                "boundaries/files": [
+            }
+        ],
+        "jsdoc/require-description": "error",
+        "jsdoc/require-param": [
+            "error",
+            {
+                "enableFixer": false
+            }
+        ],
+        "jsdoc/match-name": [
+            "error",
+            {
+                "match": [
                     {
-                        "category": "tests",
-                        "pattern": [
-                            "**/test/**",
-                            "**/tests/**",
-                            "**/__tests__/**",
-                            "**/*.test.*",
-                            "**/*.spec.*",
-                            "**/test_*.py",
-                            "**/*_test.py",
-                            "**/conftest.py",
-                            "**/Tests/**",
-                            "**/*Tests.swift",
-                            "docs/**/test/**",
-                            "docs/**/tests/**",
-                            "docs/**/__tests__/**",
-                            "docs/**/*.test.*",
-                            "docs/**/*.spec.*",
-                            "docs/**/test_*.py",
-                            "docs/**/*_test.py",
-                            "docs/**/conftest.py",
-                            "docs/**/Tests/**",
-                            "docs/**/*Tests.swift",
-                            "packages/cli/**/test/**",
-                            "packages/cli/**/tests/**",
-                            "packages/cli/**/__tests__/**",
-                            "packages/cli/**/*.test.*",
-                            "packages/cli/**/*.spec.*",
-                            "packages/cli/**/test_*.py",
-                            "packages/cli/**/*_test.py",
-                            "packages/cli/**/conftest.py",
-                            "packages/cli/**/Tests/**",
-                            "packages/cli/**/*Tests.swift",
-                            "packages/eslint-plugin/**/test/**",
-                            "packages/eslint-plugin/**/tests/**",
-                            "packages/eslint-plugin/**/__tests__/**",
-                            "packages/eslint-plugin/**/*.test.*",
-                            "packages/eslint-plugin/**/*.spec.*",
-                            "packages/eslint-plugin/**/test_*.py",
-                            "packages/eslint-plugin/**/*_test.py",
-                            "packages/eslint-plugin/**/conftest.py",
-                            "packages/eslint-plugin/**/Tests/**",
-                            "packages/eslint-plugin/**/*Tests.swift",
-                            "tests/**/test/**",
-                            "tests/**/tests/**",
-                            "tests/**/__tests__/**",
-                            "tests/**/*.test.*",
-                            "tests/**/*.spec.*",
-                            "tests/**/test_*.py",
-                            "tests/**/*_test.py",
-                            "tests/**/conftest.py",
-                            "tests/**/Tests/**",
-                            "tests/**/*Tests.swift"
+                        "tags": [
+                            "param"
                         ],
-                        "stopMatching": true
-                    },
-                    {
-                        "category": "import-rule:cli-types",
-                        "pattern": [
-                            "packages/cli/src/types/*.d.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:system",
-                        "pattern": [
-                            "packages/cli/src/system/**",
-                            "packages/cli/src/config/system.ts",
-                            "packages/cli/src/types/system.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:parsers",
-                        "pattern": [
-                            "packages/cli/src/parsers/**",
-                            "packages/cli/src/config/parsers.ts",
-                            "packages/cli/src/types/parsers.ts",
-                            "packages/cli/src/schemas/parsers.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:manifests",
-                        "pattern": [
-                            "packages/cli/src/manifests/**",
-                            "packages/cli/src/config/manifests.ts",
-                            "packages/cli/src/types/manifests.ts",
-                            "packages/cli/src/schemas/manifests/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:repository",
-                        "pattern": [
-                            "packages/cli/src/repository/**",
-                            "packages/cli/src/config/repository/**",
-                            "packages/cli/src/types/repository.ts",
-                            "packages/cli/src/schemas/repository.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:settings",
-                        "pattern": [
-                            "packages/cli/src/settings/**",
-                            "packages/cli/src/config/settings/**",
-                            "packages/cli/src/types/settings.ts",
-                            "packages/cli/src/schemas/settings/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:tools",
-                        "pattern": [
-                            "packages/cli/src/tools/**",
-                            "packages/cli/src/config/tools/**",
-                            "packages/cli/src/types/tools.ts",
-                            "packages/cli/src/schemas/tools.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:engine",
-                        "pattern": [
-                            "packages/cli/src/engine/**",
-                            "packages/cli/src/config/engine.ts",
-                            "packages/cli/src/types/engine/**",
-                            "packages/cli/src/schemas/engine.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:configurations",
-                        "pattern": [
-                            "packages/cli/src/configurations/**",
-                            "packages/cli/src/config/configurations/**",
-                            "packages/cli/src/types/configurations/**",
-                            "packages/cli/src/schemas/configurations.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:shipped-config",
-                        "pattern": [
-                            "packages/cli/src/configurations/*/*/files/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:generation",
-                        "pattern": [
-                            "packages/cli/src/generation/**",
-                            "packages/cli/src/config/generation.ts",
-                            "packages/cli/src/types/generation.ts",
-                            "packages/cli/src/schemas/generation.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:commands",
-                        "pattern": [
-                            "packages/cli/src/commands/**",
-                            "packages/cli/src/config/commands/**",
-                            "packages/cli/src/types/commands/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:main",
-                        "pattern": [
-                            "packages/cli/src/main.ts",
-                            "packages/cli/src/bin.ts",
-                            "packages/cli/src/reference.ts",
-                            "packages/cli/src/config/main.ts",
-                            "packages/cli/src/types/main.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:plugin-config",
-                        "pattern": [
-                            "packages/eslint-plugin/src/config/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:plugin-types",
-                        "pattern": [
-                            "packages/eslint-plugin/src/types/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:plugin",
-                        "pattern": [
-                            "packages/eslint-plugin/src/*.ts",
-                            "packages/eslint-plugin/src/language/**",
-                            "packages/eslint-plugin/src/libraries/**",
-                            "packages/eslint-plugin/src/rules/**",
-                            "packages/eslint-plugin/plugin.d.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:docs-config",
-                        "pattern": [
-                            "docs/src/config/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:docs-types",
-                        "pattern": [
-                            "docs/src/types/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:docs",
-                        "pattern": [
-                            "docs/src/*.*",
-                            "docs/src/!(config|types)/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:tests-data",
-                        "pattern": [
-                            "tests/config/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:tests-types",
-                        "pattern": [
-                            "tests/types/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:tests-setup",
-                        "pattern": [
-                            "tests/setup/**",
-                            "tests/schemas/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:tests",
-                        "pattern": [
-                            "tests/suites/**"
-                        ]
-                    },
-                    {
-                        "category": "other",
-                        "pattern": [
-                            "**/*"
-                        ]
-                    }
-                ],
-                "boundaries/ignore": [],
-                "boundaries/elements": [
-                    {
-                        "type": "other",
-                        "pattern": "**",
-                        "partialMatch": false
-                    }
-                ],
-                "boundaries/dependency-nodes": [
-                    "require",
-                    "dynamic-import"
-                ],
-                "boundaries/additional-dependency-nodes": [
-                    {
-                        "selector": "ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal",
-                        "kind": "value",
-                        "name": "import"
-                    },
-                    {
-                        "selector": "ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal",
-                        "kind": "type",
-                        "name": "import"
-                    },
-                    {
-                        "selector": ":matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal",
-                        "kind": "value",
-                        "name": "export"
-                    },
-                    {
-                        "selector": ":matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal",
-                        "kind": "type",
-                        "name": "export"
+                        "disallowName": "/^root\\d+$/",
+                        "message": "Name the parameter for its role, such as options."
                     }
                 ]
-            },
-            'import/resolver': {
-                typescript: {
-                    project: [
-                        join(root, "docs/tsconfig.json"), join(root, "packages/cli/tsconfig.json"), join(root, "packages/eslint-plugin/tsconfig.json"), join(root, "tsconfig.json")
-                    ]
+            }
+        ],
+        "jsdoc/informative-docs": "error",
+        "jsdoc/require-param-description": "error",
+        "jsdoc/tag-lines": [
+            "error",
+            "any",
+            {
+                "startLines": 1
+            }
+        ],
+        "regexp/no-super-linear-backtracking": "error",
+        "regexp/no-empty-alternative": "error",
+        "regexp/no-empty-capturing-group": "error",
+        "regexp/no-empty-character-class": "error",
+        "regexp/no-empty-group": "error",
+        "regexp/no-empty-lookarounds-assertion": "error",
+        "regexp/no-useless-assertions": "error",
+        "regexp/no-useless-backreference": "error",
+        "regexp/no-useless-character-class": "error",
+        "regexp/no-useless-dollar-replacements": "error",
+        "regexp/no-useless-lazy": "error",
+        "regexp/no-useless-quantifier": "error",
+        "regexp/no-useless-range": "error",
+        "regexp/no-lazy-ends": [
+            "error",
+            {
+                "ignorePartial": false
+            }
+        ],
+        "regexp/no-optional-assertion": "error",
+        "regexp/no-invalid-regexp": "error",
+        "regexp/no-misleading-capturing-group": "error",
+        "regexp/no-contradiction-with-assertion": "error",
+        "regexp/strict": "error",
+        "regexp/no-super-linear-move": "error",
+        "regexp/no-dupe-characters-character-class": "error",
+        "regexp/prefer-character-class": [
+            "error",
+            {
+                "minAlternatives": 2
+            }
+        ],
+        "regexp/prefer-d": "error",
+        "regexp/prefer-w": "error",
+        "regexp/prefer-question-quantifier": "error",
+        "regexp/prefer-star-quantifier": "error",
+        "regexp/prefer-plus-quantifier": "error",
+        "regexp/no-useless-two-nums-quantifier": "error",
+        "regexp/no-zero-quantifier": "error",
+        "regexp/match-any": "error",
+        "regexp/prefer-result-array-groups": "error",
+        "regexp/prefer-named-replacement": "error",
+        "regexp/prefer-named-backreference": "error",
+        "regexp/no-unused-capturing-group": "error",
+        "import-x/export": "error",
+        "import-x/no-self-import": "error",
+        "import-x/no-useless-path-segments": "error",
+        "import-x/no-empty-named-blocks": "error",
+        "import-x/no-duplicates": "error",
+        "import-x/no-mutable-exports": "error",
+        "import-x/no-relative-packages": "error",
+        "import-x/no-default-export": "error",
+        "max-lines": [
+            "error",
+            {
+                "max": 300,
+                "skipBlankLines": true,
+                "skipComments": true
+            }
+        ],
+        "max-lines-per-function": [
+            "error",
+            {
+                "max": 60,
+                "skipBlankLines": true,
+                "skipComments": true,
+                "IIFEs": true
+            }
+        ],
+        "max-params": [
+            "error",
+            7
+        ],
+        "max-depth": [
+            "error",
+            3
+        ],
+        "max-statements": [
+            "error",
+            30
+        ],
+        "max-nested-callbacks": [
+            "error",
+            3
+        ],
+        "complexity": [
+            "error",
+            8
+        ],
+        "gspot/no-identical-functions": [
+            "error",
+            {
+                "minLines": 8
+            }
+        ],
+        "gspot/import-boundaries": [
+            "error",
+            {
+                "folders": importBoundaryFolders,
+                "aliases": {
+                    "#cli/*": "packages/cli/src/*",
+                    "#tests/*": "tests/*",
+                    "#cli-package": "packages/cli/package.json",
+                    "#eslint-plugin/*": "packages/eslint-plugin/src/*",
+                    "#eslint-plugin-package": "packages/eslint-plugin/package.json",
+                    "#root-package": "package.json",
+                    "#docs/*": "docs/src/*",
+                    "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
+                    "eslint": "node_modules/.test-tools/node_modules/eslint",
+                    "html-validate": "node_modules/.test-tools/node_modules/html-validate",
+                    "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
+                    "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
+                    "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
+                    "typescript": "node_modules/.test-tools/node_modules/typescript"
                 }
             }
-        },
-        rules: {
-            "boundaries/dependencies": [
-                "error",
-                {
-                    "default": "disallow",
-                    "policies": [
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:cli-types"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"cli-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+        ],
+        "import-x/first": "error",
+        "import-x/newline-after-import": [
+            "error",
+            {
+                "count": 1,
+                "considerComments": true
+            }
+        ]
+    },
+    "files": ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro"]}, gspothqEslintPlugin["configs"]["all"]), gspothqEslintPlugin, "all"), { "gspot": gspothqEslintPlugin, "import-x": eslintPluginImportX, "jsdoc": eslintPluginJsdoc, "n": eslintPluginN, "regexp": eslintPluginRegexp, "security": eslintPluginSecurity, "perfectionist": eslintPluginPerfectionist, "boundaries": eslintPluginBoundaries }), globals, "es2024", "module"), [
+        [
+            "settings",
+            "gspot",
+            "root"
+        ],
+        [
+            "settings",
+            "boundaries/root-path"
+        ]
+    ]),
+    setLevelRules({"rules": {
+        "no-implied-eval": "error",
+        "no-throw-literal": "error",
+        "no-unused-expressions": "error",
+        "no-unused-vars": [
+            "error",
+            {
+                "args": "all",
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_",
+                "destructuredArrayIgnorePattern": "^_"
+            }
+        ],
+        "jsdoc/require-param-type": "error",
+        "jsdoc/require-returns-type": "error",
+        "jsdoc/check-types": "error",
+        "jsdoc/no-undefined-types": "error",
+        "jsdoc/valid-types": "error"
+    },
+    "files": ["**/*.{js,mjs,cjs,jsx}"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"settings": {
+        "n": {
+            "tryExtensions": [
+                ".js",
+                ".ts",
+                ".jsx",
+                ".tsx",
+                ".mjs",
+                ".mts",
+                ".cjs",
+                ".cts",
+                ".json",
+                ".node"
+            ],
+            "typescriptExtensionMap": []
+        }
+    },
+    "rules": {
+        "n/file-extension-in-import": [
+            "error",
+            "always"
+        ]
+    },
+    "files": [["**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/import-boundaries": [
+            "error",
+            {
+                "folders": importBoundaryFolders,
+                "aliases": {
+                    "#cli/*": "packages/cli/src/*",
+                    "#tests/*": "tests/*",
+                    "#cli-package": "packages/cli/package.json",
+                    "#eslint-plugin/*": "packages/eslint-plugin/src/*",
+                    "#eslint-plugin-package": "packages/eslint-plugin/package.json",
+                    "#root-package": "package.json",
+                    "#docs/*": "docs/src/*",
+                    "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
+                    "eslint": "node_modules/.test-tools/node_modules/eslint",
+                    "html-validate": "node_modules/.test-tools/node_modules/html-validate",
+                    "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
+                    "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
+                    "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
+                    "typescript": "node_modules/.test-tools/node_modules/typescript"
+                }
+            }
+        ]
+    },
+    "files": ["docs/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/import-boundaries": [
+            "error",
+            {
+                "folders": importBoundaryFolders,
+                "aliases": {}
+            }
+        ]
+    },
+    "files": ["packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"settings": {
+        "n": {
+            "tryExtensions": [
+                ".js",
+                ".ts",
+                ".jsx",
+                ".tsx",
+                ".mjs",
+                ".mts",
+                ".cjs",
+                ".cts",
+                ".json",
+                ".node"
+            ],
+            "typescriptExtensionMap": []
+        }
+    },
+    "rules": {
+        "n/file-extension-in-import": [
+            "error",
+            "always"
+        ],
+        "gspot/import-boundaries": [
+            "error",
+            {
+                "folders": importBoundaryFolders,
+                "aliases": {}
+            }
+        ]
+    },
+    "ignores": [
+        "docs/**",
+        "packages/cli/**",
+        "packages/eslint-plugin/**",
+        "tests/**"
+    ],
+    "files": ["**/*.mjs", "**/*.cjs"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"settings": {
+        "n": {
+            "tryExtensions": [
+                ".js",
+                ".ts",
+                ".jsx",
+                ".tsx",
+                ".mjs",
+                ".mts",
+                ".cjs",
+                ".cts",
+                ".json",
+                ".node"
+            ],
+            "typescriptExtensionMap": []
+        }
+    },
+    "rules": {
+        "n/file-extension-in-import": [
+            "error",
+            "always"
+        ],
+        "gspot/import-boundaries": [
+            "error",
+            {
+                "folders": importBoundaryFolders,
+                "aliases": {}
+            }
+        ]
+    },
+    "files": ["docs/**/*.mjs", "docs/**/*.cjs", "packages/cli/**/*.mjs", "packages/cli/**/*.cjs", "packages/eslint-plugin/**/*.mjs", "packages/eslint-plugin/**/*.cjs", "tests/**/*.mjs", "tests/**/*.cjs"]}, gspothqEslintPlugin, "all"),
+    setBoundaryLookup(setLevelRules({"settings": {
+        "boundaries/files": [
+            {
+                "category": "tests",
+                "pattern": [
+                    "**/test/**",
+                    "**/tests/**",
+                    "**/__tests__/**",
+                    "**/*.test.*",
+                    "**/*.spec.*",
+                    "**/Tests/**",
+                    "docs/**/test/**",
+                    "docs/**/tests/**",
+                    "docs/**/__tests__/**",
+                    "docs/**/*.test.*",
+                    "docs/**/*.spec.*",
+                    "docs/**/Tests/**",
+                    "packages/cli/**/test/**",
+                    "packages/cli/**/tests/**",
+                    "packages/cli/**/__tests__/**",
+                    "packages/cli/**/*.test.*",
+                    "packages/cli/**/*.spec.*",
+                    "packages/cli/**/Tests/**",
+                    "packages/eslint-plugin/**/test/**",
+                    "packages/eslint-plugin/**/tests/**",
+                    "packages/eslint-plugin/**/__tests__/**",
+                    "packages/eslint-plugin/**/*.test.*",
+                    "packages/eslint-plugin/**/*.spec.*",
+                    "packages/eslint-plugin/**/Tests/**",
+                    "tests/**/test/**",
+                    "tests/**/tests/**",
+                    "tests/**/__tests__/**",
+                    "tests/**/*.test.*",
+                    "tests/**/*.spec.*",
+                    "tests/**/Tests/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:cli-types",
+                "pattern": [
+                    "packages/cli/src/types/*.d.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:system",
+                "pattern": [
+                    "packages/cli/src/system/**",
+                    "packages/cli/src/config/system.ts",
+                    "packages/cli/src/types/system.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:parsers",
+                "pattern": [
+                    "packages/cli/src/parsers/**",
+                    "packages/cli/src/config/parsers.ts",
+                    "packages/cli/src/types/parsers.ts",
+                    "packages/cli/src/schemas/parsers.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:manifests",
+                "pattern": [
+                    "packages/cli/src/manifests/**",
+                    "packages/cli/src/config/manifests.ts",
+                    "packages/cli/src/types/manifests.ts",
+                    "packages/cli/src/schemas/manifests/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:repository",
+                "pattern": [
+                    "packages/cli/src/repository/**",
+                    "packages/cli/src/config/repository/**",
+                    "packages/cli/src/types/repository.ts",
+                    "packages/cli/src/schemas/repository.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:settings",
+                "pattern": [
+                    "packages/cli/src/settings/**",
+                    "packages/cli/src/config/settings/**",
+                    "packages/cli/src/types/settings.ts",
+                    "packages/cli/src/schemas/settings/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:tools",
+                "pattern": [
+                    "packages/cli/src/tools/**",
+                    "packages/cli/src/config/tools/**",
+                    "packages/cli/src/types/tools.ts",
+                    "packages/cli/src/schemas/tools.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:engine",
+                "pattern": [
+                    "packages/cli/src/engine/**",
+                    "packages/cli/src/config/engine.ts",
+                    "packages/cli/src/types/engine/**",
+                    "packages/cli/src/schemas/engine.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:shipped-config",
+                "pattern": [
+                    "packages/cli/src/configurations/*/*/files/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:configurations",
+                "pattern": [
+                    "packages/cli/src/configurations/**",
+                    "packages/cli/src/config/configurations/**",
+                    "packages/cli/src/types/configurations/**",
+                    "packages/cli/src/schemas/configurations.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:generation",
+                "pattern": [
+                    "packages/cli/src/generation/**",
+                    "packages/cli/src/config/generation.ts",
+                    "packages/cli/src/types/generation.ts",
+                    "packages/cli/src/schemas/generation.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:commands",
+                "pattern": [
+                    "packages/cli/src/commands/**",
+                    "packages/cli/src/config/commands/**",
+                    "packages/cli/src/types/commands/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:main",
+                "pattern": [
+                    "packages/cli/src/main.ts",
+                    "packages/cli/src/bin.ts",
+                    "packages/cli/src/reference.ts",
+                    "packages/cli/src/config/main.ts",
+                    "packages/cli/src/types/main.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:plugin-config",
+                "pattern": [
+                    "packages/eslint-plugin/src/config/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:plugin-types",
+                "pattern": [
+                    "packages/eslint-plugin/src/types/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:plugin",
+                "pattern": [
+                    "packages/eslint-plugin/src/*.ts",
+                    "packages/eslint-plugin/src/language/**",
+                    "packages/eslint-plugin/src/libraries/**",
+                    "packages/eslint-plugin/src/rules/**",
+                    "packages/eslint-plugin/plugin.d.ts"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:docs-config",
+                "pattern": [
+                    "docs/src/config/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:docs-types",
+                "pattern": [
+                    "docs/src/types/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:docs",
+                "pattern": [
+                    "docs/src/*.*",
+                    "docs/src/!(config|types)/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:tests-data",
+                "pattern": [
+                    "tests/config/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:tests-types",
+                "pattern": [
+                    "tests/types/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:tests-setup",
+                "pattern": [
+                    "tests/setup/**",
+                    "tests/schemas/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "import-rule:tests",
+                "pattern": [
+                    "tests/suites/**"
+                ],
+                "stopMatching": true
+            },
+            {
+                "category": "other",
+                "pattern": [
+                    "**/*"
+                ]
+            }
+        ],
+        "boundaries/ignore": [],
+        "boundaries/elements": [
+            {
+                "type": "other",
+                "pattern": "**",
+                "partialMatch": false
+            }
+        ],
+        "boundaries/dependency-nodes": [
+            "require",
+            "dynamic-import"
+        ],
+        "boundaries/additional-dependency-nodes": [
+            {
+                "selector": "ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal",
+                "kind": "value",
+                "name": "import"
+            },
+            {
+                "selector": "ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal",
+                "kind": "type",
+                "name": "import"
+            },
+            {
+                "selector": ":matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal",
+                "kind": "value",
+                "name": "export"
+            },
+            {
+                "selector": ":matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal",
+                "kind": "type",
+                "name": "export"
+            }
+        ]
+    },
+    "rules": {
+        "boundaries/dependencies": [
+            "error",
+            {
+                "default": "disallow",
+                "policies": [
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:cli-types"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:cli-types"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:system"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"system\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"cli-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:cli-types"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:system"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:system",
-                                                "import-rule:cli-types"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:system"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:parsers"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"parsers\" may import its own files and \"cli-types\", \"system\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:parsers"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:parsers",
-                                                "import-rule:cli-types",
-                                                "import-rule:system"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:manifests"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"manifests\" may import its own files and \"cli-types\", \"system\", \"parsers\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"system\" may import its own files and \"cli-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:system"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:manifests"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:manifests",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:system",
+                                            "import-rule:cli-types"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:parsers"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:repository"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"repository\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:repository"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:repository",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:settings"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"settings\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"parsers\" may import its own files and \"cli-types\", \"system\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:parsers"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:settings"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:settings",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:parsers",
+                                            "import-rule:cli-types",
+                                            "import-rule:system"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:manifests"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:tools"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tools\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tools"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tools",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:engine"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"engine\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"manifests\" may import its own files and \"cli-types\", \"system\", \"parsers\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:manifests"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:engine"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:engine",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:manifests",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:repository"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:configurations"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"configurations\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:configurations"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:configurations",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:shipped-config"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"shipped-config\" may import its own files and \"configurations\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"repository\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:repository"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:shipped-config"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:shipped-config",
-                                                "import-rule:configurations"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:repository",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:settings"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:generation"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"generation\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:generation"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:generation",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:commands"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"commands\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"settings\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:settings"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:commands"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:commands",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config",
-                                                "import-rule:generation"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:settings",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tools"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:main"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"main\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:main"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:main",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config",
-                                                "import-rule:generation",
-                                                "import-rule:commands"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:plugin-config"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"plugin-config\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"tools\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tools"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:plugin-config"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:plugin-config"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:tools",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:engine"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:plugin-types"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"plugin-types\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:plugin-types"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:plugin-types"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:plugin"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"plugin\" may import its own files and \"plugin-config\", \"plugin-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"engine\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:engine"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:plugin"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:plugin",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:engine",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:shipped-config"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:docs-config"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"docs-config\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:docs-config"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:docs-config",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:cli-types",
-                                                "import-rule:docs-types"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:docs-types"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"docs-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"shipped-config\" may import its own files and \"configurations\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:shipped-config"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:docs-types"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:docs-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:cli-types",
-                                                "import-rule:docs-config"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:shipped-config",
+                                            "import-rule:configurations"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:configurations"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:docs"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"docs\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:docs"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:docs",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:plugin",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests-data"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tests-data\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"configurations\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:configurations"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:tests-data"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tests-data",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:cli-types",
-                                                "import-rule:tests-setup"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:configurations",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:shipped-config"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:generation"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:tests-types"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tests-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"plugin-types\", \"tests-data\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests-types"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tests-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:cli-types",
-                                                "import-rule:plugin-types",
-                                                "import-rule:tests-data"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests-setup"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"generation\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:generation"
+                            }
                         },
-                        {
-                            "from": {
+                        "allow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:tests-setup"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tests-setup",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:plugin",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:docs",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types"
-                                            ]
-                                        }
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:generation",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:shipped-config",
+                                            "import-rule:configurations"
+                                        ]
                                     }
                                 }
                             }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:commands"
+                            }
                         },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": "import-rule:tests"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tests\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"shipped-config\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tests",
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:plugin",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:docs",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
-                                                "import-rule:tests-setup"
-                                            ]
-                                        }
-                                    }
+                                    "path": "**/*"
                                 }
                             }
                         },
-                        {
-                            "from": {
+                        "message": "Import rule \"commands\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:commands"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:commands",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:shipped-config",
+                                            "import-rule:configurations",
+                                            "import-rule:generation"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:main"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"main\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:main"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:main",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:shipped-config",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:plugin-config"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"plugin-config\" may import only its own files, not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:plugin-config"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:plugin-config"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:plugin-types"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"plugin-types\" may import only its own files, not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:plugin-types"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:plugin-types"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:plugin"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"plugin\" may import its own files and \"plugin-config\", \"plugin-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:plugin"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:plugin",
+                                            "import-rule:plugin-config",
+                                            "import-rule:plugin-types"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:docs-config"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"docs-config\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:docs-config"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:docs-config",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:cli-types",
+                                            "import-rule:docs-types"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:docs-types"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"docs-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-config\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:docs-types"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:docs-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:cli-types",
+                                            "import-rule:docs-config"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:docs"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"docs\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:docs"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:docs",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:shipped-config",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:plugin-config",
+                                            "import-rule:plugin-types",
+                                            "import-rule:plugin",
+                                            "import-rule:docs-config",
+                                            "import-rule:docs-types"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests-data"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"tests-data\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests-data"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:tests-data",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:cli-types",
+                                            "import-rule:tests-setup"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests-types"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"tests-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"plugin-types\", \"tests-data\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests-types"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:tests-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:cli-types",
+                                            "import-rule:plugin-types",
+                                            "import-rule:tests-data"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests-setup"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"tests-setup\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests-setup"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:tests-setup",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:shipped-config",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:plugin-config",
+                                            "import-rule:plugin-types",
+                                            "import-rule:plugin",
+                                            "import-rule:docs-config",
+                                            "import-rule:docs-types",
+                                            "import-rule:docs",
+                                            "import-rule:tests-data",
+                                            "import-rule:tests-types"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"tests\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "import-rule:tests"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "import-rule:tests",
+                                            "import-rule:cli-types",
+                                            "import-rule:system",
+                                            "import-rule:parsers",
+                                            "import-rule:manifests",
+                                            "import-rule:repository",
+                                            "import-rule:settings",
+                                            "import-rule:tools",
+                                            "import-rule:engine",
+                                            "import-rule:shipped-config",
+                                            "import-rule:configurations",
+                                            "import-rule:generation",
+                                            "import-rule:commands",
+                                            "import-rule:main",
+                                            "import-rule:plugin-config",
+                                            "import-rule:plugin-types",
+                                            "import-rule:plugin",
+                                            "import-rule:docs-config",
+                                            "import-rule:docs-types",
+                                            "import-rule:docs",
+                                            "import-rule:tests-data",
+                                            "import-rule:tests-types",
+                                            "import-rule:tests-setup"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "isUnknown": true
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "allow": {
+                            "to": {
                                 "file": {
                                     "isUnknown": true
                                 }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "path": [
+                                    "**/test/**",
+                                    "**/tests/**",
+                                    "**/__tests__/**",
+                                    "**/*.test.*",
+                                    "**/*.spec.*",
+                                    "**/Tests/**",
+                                    "docs/**/test/**",
+                                    "docs/**/tests/**",
+                                    "docs/**/__tests__/**",
+                                    "docs/**/*.test.*",
+                                    "docs/**/*.spec.*",
+                                    "docs/**/Tests/**",
+                                    "packages/cli/**/test/**",
+                                    "packages/cli/**/tests/**",
+                                    "packages/cli/**/__tests__/**",
+                                    "packages/cli/**/*.test.*",
+                                    "packages/cli/**/*.spec.*",
+                                    "packages/cli/**/Tests/**",
+                                    "packages/eslint-plugin/**/test/**",
+                                    "packages/eslint-plugin/**/tests/**",
+                                    "packages/eslint-plugin/**/__tests__/**",
+                                    "packages/eslint-plugin/**/*.test.*",
+                                    "packages/eslint-plugin/**/*.spec.*",
+                                    "packages/eslint-plugin/**/Tests/**",
+                                    "tests/**/test/**",
+                                    "tests/**/tests/**",
+                                    "tests/**/__tests__/**",
+                                    "tests/**/*.test.*",
+                                    "tests/**/*.spec.*",
+                                    "tests/**/Tests/**"
+                                ]
                             }
                         },
-                        {
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "isUnknown": true
-                                    }
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
                                 }
                             }
-                        },
-                        {
-                            "from": {
+                        }
+                    },
+                    {
+                        "allow": {
+                            "to": {
                                 "file": {
                                     "path": [
                                         "**/test/**",
@@ -2220,124 +1891,79 @@ export default [
                                         "**/__tests__/**",
                                         "**/*.test.*",
                                         "**/*.spec.*",
-                                        "**/test_*.py",
-                                        "**/*_test.py",
-                                        "**/conftest.py",
                                         "**/Tests/**",
-                                        "**/*Tests.swift",
                                         "docs/**/test/**",
                                         "docs/**/tests/**",
                                         "docs/**/__tests__/**",
                                         "docs/**/*.test.*",
                                         "docs/**/*.spec.*",
-                                        "docs/**/test_*.py",
-                                        "docs/**/*_test.py",
-                                        "docs/**/conftest.py",
                                         "docs/**/Tests/**",
-                                        "docs/**/*Tests.swift",
                                         "packages/cli/**/test/**",
                                         "packages/cli/**/tests/**",
                                         "packages/cli/**/__tests__/**",
                                         "packages/cli/**/*.test.*",
                                         "packages/cli/**/*.spec.*",
-                                        "packages/cli/**/test_*.py",
-                                        "packages/cli/**/*_test.py",
-                                        "packages/cli/**/conftest.py",
                                         "packages/cli/**/Tests/**",
-                                        "packages/cli/**/*Tests.swift",
                                         "packages/eslint-plugin/**/test/**",
                                         "packages/eslint-plugin/**/tests/**",
                                         "packages/eslint-plugin/**/__tests__/**",
                                         "packages/eslint-plugin/**/*.test.*",
                                         "packages/eslint-plugin/**/*.spec.*",
-                                        "packages/eslint-plugin/**/test_*.py",
-                                        "packages/eslint-plugin/**/*_test.py",
-                                        "packages/eslint-plugin/**/conftest.py",
                                         "packages/eslint-plugin/**/Tests/**",
-                                        "packages/eslint-plugin/**/*Tests.swift",
                                         "tests/**/test/**",
                                         "tests/**/tests/**",
                                         "tests/**/__tests__/**",
                                         "tests/**/*.test.*",
                                         "tests/**/*.spec.*",
-                                        "tests/**/test_*.py",
-                                        "tests/**/*_test.py",
-                                        "tests/**/conftest.py",
-                                        "tests/**/Tests/**",
-                                        "tests/**/*Tests.swift"
+                                        "tests/**/Tests/**"
                                     ]
                                 }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": {
+                                    "noneOf": [
+                                        "import-rule:cli-types",
+                                        "import-rule:system",
+                                        "import-rule:parsers",
+                                        "import-rule:manifests",
+                                        "import-rule:repository",
+                                        "import-rule:settings",
+                                        "import-rule:tools",
+                                        "import-rule:engine",
+                                        "import-rule:shipped-config",
+                                        "import-rule:configurations",
+                                        "import-rule:generation",
+                                        "import-rule:commands",
+                                        "import-rule:main",
+                                        "import-rule:plugin-config",
+                                        "import-rule:plugin-types",
+                                        "import-rule:plugin",
+                                        "import-rule:docs-config",
+                                        "import-rule:docs-types",
+                                        "import-rule:docs",
+                                        "import-rule:tests-data",
+                                        "import-rule:tests-types",
+                                        "import-rule:tests-setup",
+                                        "import-rule:tests"
+                                    ]
                                 }
                             }
                         },
-                        {
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "path": [
-                                            "**/test/**",
-                                            "**/tests/**",
-                                            "**/__tests__/**",
-                                            "**/*.test.*",
-                                            "**/*.spec.*",
-                                            "**/test_*.py",
-                                            "**/*_test.py",
-                                            "**/conftest.py",
-                                            "**/Tests/**",
-                                            "**/*Tests.swift",
-                                            "docs/**/test/**",
-                                            "docs/**/tests/**",
-                                            "docs/**/__tests__/**",
-                                            "docs/**/*.test.*",
-                                            "docs/**/*.spec.*",
-                                            "docs/**/test_*.py",
-                                            "docs/**/*_test.py",
-                                            "docs/**/conftest.py",
-                                            "docs/**/Tests/**",
-                                            "docs/**/*Tests.swift",
-                                            "packages/cli/**/test/**",
-                                            "packages/cli/**/tests/**",
-                                            "packages/cli/**/__tests__/**",
-                                            "packages/cli/**/*.test.*",
-                                            "packages/cli/**/*.spec.*",
-                                            "packages/cli/**/test_*.py",
-                                            "packages/cli/**/*_test.py",
-                                            "packages/cli/**/conftest.py",
-                                            "packages/cli/**/Tests/**",
-                                            "packages/cli/**/*Tests.swift",
-                                            "packages/eslint-plugin/**/test/**",
-                                            "packages/eslint-plugin/**/tests/**",
-                                            "packages/eslint-plugin/**/__tests__/**",
-                                            "packages/eslint-plugin/**/*.test.*",
-                                            "packages/eslint-plugin/**/*.spec.*",
-                                            "packages/eslint-plugin/**/test_*.py",
-                                            "packages/eslint-plugin/**/*_test.py",
-                                            "packages/eslint-plugin/**/conftest.py",
-                                            "packages/eslint-plugin/**/Tests/**",
-                                            "packages/eslint-plugin/**/*Tests.swift",
-                                            "tests/**/test/**",
-                                            "tests/**/tests/**",
-                                            "tests/**/__tests__/**",
-                                            "tests/**/*.test.*",
-                                            "tests/**/*.spec.*",
-                                            "tests/**/test_*.py",
-                                            "tests/**/*_test.py",
-                                            "tests/**/conftest.py",
-                                            "tests/**/Tests/**",
-                                            "tests/**/*Tests.swift"
-                                        ]
-                                    }
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
                                 }
                             }
-                        },
-                        {
-                            "from": {
+                        }
+                    },
+                    {
+                        "allow": {
+                            "to": {
                                 "file": {
                                     "categories": {
                                         "noneOf": [
@@ -2349,8 +1975,8 @@ export default [
                                             "import-rule:settings",
                                             "import-rule:tools",
                                             "import-rule:engine",
-                                            "import-rule:configurations",
                                             "import-rule:shipped-config",
+                                            "import-rule:configurations",
                                             "import-rule:generation",
                                             "import-rule:commands",
                                             "import-rule:main",
@@ -2367,2748 +1993,849 @@ export default [
                                         ]
                                     }
                                 }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": {
+                                    "noneOf": [
+                                        "tests"
+                                    ]
                                 }
                             }
                         },
-                        {
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "noneOf": [
-                                                "import-rule:cli-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:manifests",
-                                                "import-rule:repository",
-                                                "import-rule:settings",
-                                                "import-rule:tools",
-                                                "import-rule:engine",
-                                                "import-rule:configurations",
-                                                "import-rule:shipped-config",
-                                                "import-rule:generation",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:plugin",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:docs",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
-                                                "import-rule:tests-setup",
-                                                "import-rule:tests"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
+                        "disallow": {
+                            "to": {
                                 "file": {
-                                    "categories": {
-                                        "noneOf": [
-                                            "tests"
-                                        ]
-                                    }
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "categories": "tests"
-                                    }
+                                    "categories": "tests"
                                 }
                             }
                         }
-                    ],
-                    "checkInternals": true
-                }
-            ]
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
+                    }
+                ],
+                "checkInternals": true
+            }
         ]
     },
+    "files": ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro"]}, gspothqEslintPlugin, "all"), [
+        "docs/tsconfig.json",
+        "packages/cli/tsconfig.json",
+        "packages/eslint-plugin/tsconfig.json",
+        "tsconfig.json"
+    ]),
     ...typescriptBlocks,
     ...astroBlocks,
     ...zodBlocks,
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "module",
-            globals: globals["nodeBuiltin"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(0, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(0, runtimeDeclarations)
-            ]
-        ]
+    setRuntime(setLevelRules({"rules": {},
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(0, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(0, runtimeDeclarations)]]}, gspothqEslintPlugin, "all"), globals, "nodeBuiltin", "module"),
+    setRuntime(setLevelRules({"rules": {
+        "unicorn/prefer-module": "off"
     },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "commonjs",
-            globals: globals["node"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error",
-            "unicorn/prefer-module": "off"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(1, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(1, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "module",
-            globals: globals["nodeBuiltin"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(2, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(2, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "commonjs",
-            globals: globals["node"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error",
-            "unicorn/prefer-module": "off"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(3, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(3, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "module",
-            globals: globals["nodeBuiltin"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(4, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(4, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "commonjs",
-            globals: globals["node"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error",
-            "unicorn/prefer-module": "off"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(5, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(5, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "module",
-            globals: globals["nodeBuiltin"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(6, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(6, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "commonjs",
-            globals: globals["node"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error",
-            "unicorn/prefer-module": "off"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(7, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(7, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "module",
-            globals: globals["nodeBuiltin"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(8, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(8, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        languageOptions: {
-            sourceType: "commonjs",
-            globals: globals["node"]
-        },
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "allowExperimental": true
-                }
-            ],
-            "n/no-unsupported-features/es-builtins": "error",
-            "n/no-deprecated-api": "error",
-            "unicorn/no-process-exit": "off",
-            "n/no-unsupported-features/es-syntax": "off",
-            "n/no-sync": "off",
-            "n/no-callback-literal": "error",
-            "n/no-new-require": "error",
-            "n/no-path-concat": "error",
-            "n/no-missing-import": "off",
-            "n/no-missing-require": "off",
-            "n/no-unpublished-import": [
-                "error",
-                {
-                    "ignoreTypeImport": true
-                }
-            ],
-            "n/no-unpublished-require": "error",
-            "n/no-extraneous-import": "error",
-            "n/no-extraneous-require": "error",
-            "n/prefer-global/url-search-params": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/url": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/process": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/console": [
-                "error",
-                "always"
-            ],
-            "n/prefer-global/buffer": [
-                "error",
-                "always"
-            ],
-            "n/no-process-exit": "error",
-            "n/prefer-promises/dns": "error",
-            "n/prefer-promises/fs": "error",
-            "unicorn/prefer-module": "off"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(9, runtimeDeclarations)
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(9, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "docs/**",
-            "packages/cli/**",
-            "packages/eslint-plugin/**",
-            "tests/**"
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(1, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(1, runtimeDeclarations)]]}, gspothqEslintPlugin, "all"), globals, "node", "commonjs"),
+    setRuntime(setLevelRules({"rules": {},
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(2, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(2, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(3, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(3, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(4, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(4, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(5, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(5, runtimeDeclarations)]]}, gspothqEslintPlugin, "all"), globals, "nodeBuiltin", "module"),
+    setLevelRules({"rules": {
+        "n/no-unsupported-features/node-builtins": [
+            "error",
+            {
+                "allowExperimental": true
+            }
         ],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "tests/setup/runner/unit.ts"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "tests/setup/runner/unit.ts"
-            ]
+        "n/no-unsupported-features/es-builtins": "error",
+        "n/no-deprecated-api": "error",
+        "unicorn/no-process-exit": "off",
+        "n/no-unsupported-features/es-syntax": "off",
+        "n/no-sync": "off",
+        "n/no-callback-literal": "error",
+        "n/no-new-require": "error",
+        "n/no-path-concat": "error",
+        "n/no-missing-import": "off",
+        "n/no-missing-require": "off",
+        "n/no-unpublished-import": [
+            "error",
+            {
+                "ignoreTypeImport": true,
+                "ignorePrivate": false
+            }
+        ],
+        "n/no-unpublished-require": "error",
+        "n/hashbang": "error",
+        "n/no-extraneous-import": "error",
+        "n/no-extraneous-require": "error",
+        "n/prefer-global/url-search-params": "error",
+        "n/prefer-global/url": "error",
+        "n/prefer-global/process": "error",
+        "n/prefer-global/console": "error",
+        "n/prefer-global/buffer": "error",
+        "n/no-process-exit": "error",
+        "n/prefer-promises/dns": "error",
+        "n/prefer-promises/fs": "error"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(0, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(1, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(2, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(3, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(4, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(5, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(0, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(1, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(2, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(3, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(4, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(5, runtimeDeclarations)]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/restricted-syntax": [
+            "error",
+            {
+                "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
+                "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
+            },
+            {
+                "selector": "TSEnumDeclaration",
+                "message": "Use a literal union or an as-const object instead of an enum."
+            },
+            {
+                "selector": ":matches(TSAsExpression[expression.type=\"TSAsExpression\"], TSTypeAssertion[expression.type=\"TSTypeAssertion\"])",
+                "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
+            },
+            {
+                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword",
+                "message": "Do not assert to any. Give the value a real type, or check it at run time."
+            },
+            {
+                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword",
+                "message": "Do not assert to never to silence the type system."
+            },
+            {
+                "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])",
+                "message": "Start an error message with a capital letter."
+            },
+            {
+                "selector": "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/])",
+                "message": "Use a label only on a loop or switch statement. Remove this label."
+            },
+            {
+                "selector": "ForStatement[init=null][update=null][test!=null]",
+                "message": "This loop has no initializer or update. Use a while loop for its condition."
+            },
+            {
+                "selector": "UnaryExpression[operator='delete']:not([argument.type='MemberExpression']):not([argument.type='ChainExpression']):not([argument.type='Identifier'])",
+                "message": "The delete operator removes properties. Pass a property access instead of this expression."
+            },
+            {
+                "selector": "AssignmentExpression:not(ExpressionStatement > AssignmentExpression):not(AssignmentExpression > AssignmentExpression):not(BinaryExpression[operator=/^(?:==|!=|===|!==|<|<=|>|>=)$/] > AssignmentExpression):not(SequenceExpression > AssignmentExpression):not(VariableDeclarator > AssignmentExpression):not(ArrowFunctionExpression > AssignmentExpression.body):not(LogicalExpression > AssignmentExpression.right):not(WhileStatement > AssignmentExpression.test):not(DoWhileStatement > AssignmentExpression.test):not(ForStatement > AssignmentExpression.init):not(ForStatement > AssignmentExpression.update)",
+                "message": "Move this assignment into a separate statement before using its value."
+            },
+            {
+                "selector": "CallExpression[callee.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+                "message": "Call a function or method instead of a literal value."
+            },
+            {
+                "selector": "TaggedTemplateExpression[tag.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+                "message": "Use a function as the template tag instead of a literal value."
+            },
+            {
+                "selector": "ImportDeclaration[source.value=/node_modules/]",
+                "message": "Use the package's public name instead of a node_modules path."
+            },
+            {
+                "selector": "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]",
+                "message": "Use the package's public name instead of a node_modules path."
+            },
+            {
+                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+                "message": "This continue ends the loop body, so it does nothing. Remove it."
+            },
+            {
+                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement > IfStatement:last-child > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+                "message": "This continue ends the loop body, so it does nothing. Remove it."
+            },
+            {
+                "selector": "Literal[regex.flags=/s/][regex.pattern=/\\[(?:\\\\s\\\\S|\\\\S\\\\s)\\]/]",
+                "message": "The s flag makes . match every character. Write . instead of this character class."
+            },
+            {
+                "selector": "LogicalExpression[operator=/^(\\|\\||\\?\\?)$/][right.type=\"ObjectExpression\"][right.properties.length=0]",
+                "message": "An empty-object fallback hides a missing value. Handle the missing case."
+            },
+            {
+                "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
+                "message": "Log a stable message and pass the values as fields."
+            },
+            {
+                "selector": "CallExpression[callee.property.name='waitForLoadState'] > Literal:first-child[value='networkidle']",
+                "message": "Network inactivity does not prove that the page is ready. Wait for the visible state, response, or URL."
+            },
+            {
+                "selector": "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child",
+                "message": "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
+            },
+            {
+                "selector": "AssignmentExpression[left.property.name=/^(?:innerHTML|outerHTML)$/]:not([right.type=\"Literal\"])",
+                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+            },
+            {
+                "selector": "CallExpression:matches([callee.property.name=\"insertAdjacentHTML\"][arguments.1.type!=\"Literal\"], [callee.object.name=\"document\"][callee.property.name=\"write\"][arguments.0.type!=\"Literal\"])",
+                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+            },
+            {
+                "selector": "CallExpression[callee.name=\"fetch\"]:matches([arguments.0.object.object.name=\"req\"], [arguments.0.callee.object.property.name=\"searchParams\"][arguments.0.callee.property.name=\"get\"])",
+                "message": "fetch() takes its URL from the request, which allows server-side request forgery. Allow only known hosts."
+            },
+            {
+                "selector": "CallExpression[callee.property.name=/^(?:log|trace|debug|info|warn|error|fatal)$/][arguments.length=1]:matches([arguments.0.object.object.name=\"process\"][arguments.0.object.property.name=\"env\"][arguments.0.property.name=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/], [arguments.0.callee.object.object.name=\"Deno\"][arguments.0.callee.object.property.name=\"env\"][arguments.0.callee.property.name=\"get\"][arguments.0.arguments.0.value=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/])",
+                "message": "The log writes a secret from the environment. Remove the value, or mask it."
+            },
+            {
+                "selector": "CallExpression[callee.name=/^(?:execSync|exec)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]",
+                "message": "Interpolation in execSync() or exec() allows command injection. Use execFileSync() or execFile() with an argument array."
+            },
+            {
+                "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
+                "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in.",
+                "ignores": [
+                    "packages/cli/src/system/environment.ts",
+                    "tests/setup/system/environment.ts",
+                    "tests/setup/runner/unit.ts"
+                ]
+            },
+            {
+                "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
+                "message": "Give an alias import its file extension."
+            }
         ]
     },
-    // javascript
-    {
-        "ignores": [
-            "docs/**",
-            "packages/cli/**",
-            "packages/eslint-plugin/**",
-            "tests/**",
-            "packages/cli/src/system/environment.ts",
-            "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit.ts"
+    "ignores": [
+        "docs/**",
+        "packages/cli/**",
+        "packages/eslint-plugin/**",
+        "tests/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*"], ["**/*.astro", "**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/restricted-syntax": [
+            "error",
+            {
+                "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
+                "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
+            },
+            {
+                "selector": "TSEnumDeclaration",
+                "message": "Use a literal union or an as-const object instead of an enum."
+            },
+            {
+                "selector": ":matches(TSAsExpression[expression.type=\"TSAsExpression\"], TSTypeAssertion[expression.type=\"TSTypeAssertion\"])",
+                "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
+            },
+            {
+                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword",
+                "message": "Do not assert to any. Give the value a real type, or check it at run time."
+            },
+            {
+                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword",
+                "message": "Do not assert to never to silence the type system."
+            },
+            {
+                "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])",
+                "message": "Start an error message with a capital letter."
+            },
+            {
+                "selector": "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/])",
+                "message": "Use a label only on a loop or switch statement. Remove this label."
+            },
+            {
+                "selector": "ForStatement[init=null][update=null][test!=null]",
+                "message": "This loop has no initializer or update. Use a while loop for its condition."
+            },
+            {
+                "selector": "UnaryExpression[operator='delete']:not([argument.type='MemberExpression']):not([argument.type='ChainExpression']):not([argument.type='Identifier'])",
+                "message": "The delete operator removes properties. Pass a property access instead of this expression."
+            },
+            {
+                "selector": "AssignmentExpression:not(ExpressionStatement > AssignmentExpression):not(AssignmentExpression > AssignmentExpression):not(BinaryExpression[operator=/^(?:==|!=|===|!==|<|<=|>|>=)$/] > AssignmentExpression):not(SequenceExpression > AssignmentExpression):not(VariableDeclarator > AssignmentExpression):not(ArrowFunctionExpression > AssignmentExpression.body):not(LogicalExpression > AssignmentExpression.right):not(WhileStatement > AssignmentExpression.test):not(DoWhileStatement > AssignmentExpression.test):not(ForStatement > AssignmentExpression.init):not(ForStatement > AssignmentExpression.update)",
+                "message": "Move this assignment into a separate statement before using its value."
+            },
+            {
+                "selector": "CallExpression[callee.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+                "message": "Call a function or method instead of a literal value."
+            },
+            {
+                "selector": "TaggedTemplateExpression[tag.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+                "message": "Use a function as the template tag instead of a literal value."
+            },
+            {
+                "selector": "ImportDeclaration[source.value=/node_modules/]",
+                "message": "Use the package's public name instead of a node_modules path."
+            },
+            {
+                "selector": "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]",
+                "message": "Use the package's public name instead of a node_modules path."
+            },
+            {
+                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+                "message": "This continue ends the loop body, so it does nothing. Remove it."
+            },
+            {
+                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement > IfStatement:last-child > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+                "message": "This continue ends the loop body, so it does nothing. Remove it."
+            },
+            {
+                "selector": "Literal[regex.flags=/s/][regex.pattern=/\\[(?:\\\\s\\\\S|\\\\S\\\\s)\\]/]",
+                "message": "The s flag makes . match every character. Write . instead of this character class."
+            },
+            {
+                "selector": "LogicalExpression[operator=/^(\\|\\||\\?\\?)$/][right.type=\"ObjectExpression\"][right.properties.length=0]",
+                "message": "An empty-object fallback hides a missing value. Handle the missing case."
+            },
+            {
+                "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
+                "message": "Log a stable message and pass the values as fields."
+            },
+            {
+                "selector": "CallExpression[callee.property.name='waitForLoadState'] > Literal:first-child[value='networkidle']",
+                "message": "Network inactivity does not prove that the page is ready. Wait for the visible state, response, or URL."
+            },
+            {
+                "selector": "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child",
+                "message": "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
+            },
+            {
+                "selector": "AssignmentExpression[left.property.name=/^(?:innerHTML|outerHTML)$/]:not([right.type=\"Literal\"])",
+                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+            },
+            {
+                "selector": "CallExpression:matches([callee.property.name=\"insertAdjacentHTML\"][arguments.1.type!=\"Literal\"], [callee.object.name=\"document\"][callee.property.name=\"write\"][arguments.0.type!=\"Literal\"])",
+                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+            },
+            {
+                "selector": "CallExpression[callee.name=\"fetch\"]:matches([arguments.0.object.object.name=\"req\"], [arguments.0.callee.object.property.name=\"searchParams\"][arguments.0.callee.property.name=\"get\"])",
+                "message": "fetch() takes its URL from the request, which allows server-side request forgery. Allow only known hosts."
+            },
+            {
+                "selector": "CallExpression[callee.property.name=/^(?:log|trace|debug|info|warn|error|fatal)$/][arguments.length=1]:matches([arguments.0.object.object.name=\"process\"][arguments.0.object.property.name=\"env\"][arguments.0.property.name=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/], [arguments.0.callee.object.object.name=\"Deno\"][arguments.0.callee.object.property.name=\"env\"][arguments.0.callee.property.name=\"get\"][arguments.0.arguments.0.value=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/])",
+                "message": "The log writes a secret from the environment. Remove the value, or mask it."
+            },
+            {
+                "selector": "CallExpression[callee.name=/^(?:execSync|exec)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]",
+                "message": "Interpolation in execSync() or exec() allows command injection. Use execFileSync() or execFile() with an argument array."
+            },
+            {
+                "selector": ":matches(Property[key.value=\"Access-Control-Allow-Origin\"][value.value=\"*\"], CallExpression[callee.property.name=/^(?:set|append)$/][arguments.0.value=\"Access-Control-Allow-Origin\"][arguments.1.value=\"*\"])",
+                "message": "A wildcard CORS origin lets every site read the response. List the allowed origins."
+            },
+            {
+                "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
+                "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in.",
+                "ignores": [
+                    "packages/cli/src/system/environment.ts",
+                    "tests/setup/system/environment.ts",
+                    "tests/setup/runner/unit.ts"
+                ]
+            },
+            {
+                "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
+                "message": "Give an alias import its file extension."
+            }
+        ]
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*"], ["**/*.astro", "docs/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/restricted-syntax": [
+            "error",
+            {
+                "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
+                "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
+            },
+            {
+                "selector": "TSEnumDeclaration",
+                "message": "Use a literal union or an as-const object instead of an enum."
+            },
+            {
+                "selector": ":matches(TSAsExpression[expression.type=\"TSAsExpression\"], TSTypeAssertion[expression.type=\"TSTypeAssertion\"])",
+                "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
+            },
+            {
+                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword",
+                "message": "Do not assert to any. Give the value a real type, or check it at run time."
+            },
+            {
+                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword",
+                "message": "Do not assert to never to silence the type system."
+            },
+            {
+                "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])",
+                "message": "Start an error message with a capital letter."
+            },
+            {
+                "selector": "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/])",
+                "message": "Use a label only on a loop or switch statement. Remove this label."
+            },
+            {
+                "selector": "ForStatement[init=null][update=null][test!=null]",
+                "message": "This loop has no initializer or update. Use a while loop for its condition."
+            },
+            {
+                "selector": "UnaryExpression[operator='delete']:not([argument.type='MemberExpression']):not([argument.type='ChainExpression']):not([argument.type='Identifier'])",
+                "message": "The delete operator removes properties. Pass a property access instead of this expression."
+            },
+            {
+                "selector": "AssignmentExpression:not(ExpressionStatement > AssignmentExpression):not(AssignmentExpression > AssignmentExpression):not(BinaryExpression[operator=/^(?:==|!=|===|!==|<|<=|>|>=)$/] > AssignmentExpression):not(SequenceExpression > AssignmentExpression):not(VariableDeclarator > AssignmentExpression):not(ArrowFunctionExpression > AssignmentExpression.body):not(LogicalExpression > AssignmentExpression.right):not(WhileStatement > AssignmentExpression.test):not(DoWhileStatement > AssignmentExpression.test):not(ForStatement > AssignmentExpression.init):not(ForStatement > AssignmentExpression.update)",
+                "message": "Move this assignment into a separate statement before using its value."
+            },
+            {
+                "selector": "CallExpression[callee.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+                "message": "Call a function or method instead of a literal value."
+            },
+            {
+                "selector": "TaggedTemplateExpression[tag.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+                "message": "Use a function as the template tag instead of a literal value."
+            },
+            {
+                "selector": "ImportDeclaration[source.value=/node_modules/]",
+                "message": "Use the package's public name instead of a node_modules path."
+            },
+            {
+                "selector": "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]",
+                "message": "Use the package's public name instead of a node_modules path."
+            },
+            {
+                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+                "message": "This continue ends the loop body, so it does nothing. Remove it."
+            },
+            {
+                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement > IfStatement:last-child > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+                "message": "This continue ends the loop body, so it does nothing. Remove it."
+            },
+            {
+                "selector": "Literal[regex.flags=/s/][regex.pattern=/\\[(?:\\\\s\\\\S|\\\\S\\\\s)\\]/]",
+                "message": "The s flag makes . match every character. Write . instead of this character class."
+            },
+            {
+                "selector": "LogicalExpression[operator=/^(\\|\\||\\?\\?)$/][right.type=\"ObjectExpression\"][right.properties.length=0]",
+                "message": "An empty-object fallback hides a missing value. Handle the missing case."
+            },
+            {
+                "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
+                "message": "Log a stable message and pass the values as fields."
+            },
+            {
+                "selector": "CallExpression[callee.property.name='waitForLoadState'] > Literal:first-child[value='networkidle']",
+                "message": "Network inactivity does not prove that the page is ready. Wait for the visible state, response, or URL."
+            },
+            {
+                "selector": "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child",
+                "message": "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
+            },
+            {
+                "selector": "AssignmentExpression[left.property.name=/^(?:innerHTML|outerHTML)$/]:not([right.type=\"Literal\"])",
+                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+            },
+            {
+                "selector": "CallExpression:matches([callee.property.name=\"insertAdjacentHTML\"][arguments.1.type!=\"Literal\"], [callee.object.name=\"document\"][callee.property.name=\"write\"][arguments.0.type!=\"Literal\"])",
+                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+            },
+            {
+                "selector": "CallExpression[callee.name=\"fetch\"]:matches([arguments.0.object.object.name=\"req\"], [arguments.0.callee.object.property.name=\"searchParams\"][arguments.0.callee.property.name=\"get\"])",
+                "message": "fetch() takes its URL from the request, which allows server-side request forgery. Allow only known hosts."
+            },
+            {
+                "selector": "CallExpression[callee.property.name=/^(?:log|trace|debug|info|warn|error|fatal)$/][arguments.length=1]:matches([arguments.0.object.object.name=\"process\"][arguments.0.object.property.name=\"env\"][arguments.0.property.name=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/], [arguments.0.callee.object.object.name=\"Deno\"][arguments.0.callee.object.property.name=\"env\"][arguments.0.callee.property.name=\"get\"][arguments.0.arguments.0.value=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/])",
+                "message": "The log writes a secret from the environment. Remove the value, or mask it."
+            },
+            {
+                "selector": "CallExpression[callee.name=/^(?:execSync|exec)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]",
+                "message": "Interpolation in execSync() or exec() allows command injection. Use execFileSync() or execFile() with an argument array."
+            },
+            {
+                "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
+                "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in.",
+                "ignores": [
+                    "packages/cli/src/system/environment.ts",
+                    "tests/setup/system/environment.ts",
+                    "tests/setup/runner/unit.ts"
+                ]
+            },
+            {
+                "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
+                "message": "Give an alias import its file extension."
+            }
+        ]
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*"], ["**/*.astro", "packages/cli/**/*", "**/*"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*"], ["**/*.astro", "tests/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "no-console": "error"
+    },
+    "ignores": [
+        "docs/**",
+        "packages/cli/**",
+        "packages/eslint-plugin/**",
+        "tests/**",
+        "**/test/**",
+        "**/tests/**",
+        "**/__tests__/**",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/Tests/**",
+        "scripts/**",
+        "**/*.config.{js,mjs,cjs,ts}",
+        "{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*"], ["**/*.astro", "**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "no-console": "error"
+    },
+    "ignores": [
+        "docs/**/test/**",
+        "docs/**/tests/**",
+        "docs/**/__tests__/**",
+        "docs/**/*.test.*",
+        "docs/**/*.spec.*",
+        "docs/**/Tests/**",
+        "docs/scripts/**",
+        "docs/**/*.config.{js,mjs,cjs,ts}",
+        "docs/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*"], ["**/*.astro", "docs/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "no-console": "error"
+    },
+    "ignores": [
+        "packages/cli/**/test/**",
+        "packages/cli/**/tests/**",
+        "packages/cli/**/__tests__/**",
+        "packages/cli/**/*.test.*",
+        "packages/cli/**/*.spec.*",
+        "packages/cli/**/Tests/**",
+        "packages/cli/scripts/**",
+        "packages/cli/**/*.config.{js,mjs,cjs,ts}",
+        "packages/cli/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*"], ["**/*.astro", "packages/cli/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "no-console": "error"
+    },
+    "ignores": [
+        "packages/eslint-plugin/**/test/**",
+        "packages/eslint-plugin/**/tests/**",
+        "packages/eslint-plugin/**/__tests__/**",
+        "packages/eslint-plugin/**/*.test.*",
+        "packages/eslint-plugin/**/*.spec.*",
+        "packages/eslint-plugin/**/Tests/**",
+        "packages/eslint-plugin/scripts/**",
+        "packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}",
+        "packages/eslint-plugin/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "no-console": "error"
+    },
+    "ignores": [
+        "tests/**/test/**",
+        "tests/**/tests/**",
+        "tests/**/__tests__/**",
+        "tests/**/*.test.*",
+        "tests/**/*.spec.*",
+        "tests/**/Tests/**",
+        "tests/scripts/**",
+        "tests/**/*.config.{js,mjs,cjs,ts}",
+        "tests/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*"], ["**/*.astro", "tests/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "n/no-process-exit": "off",
+        "unicorn/no-process-exit": "off"
+    },
+    "files": [["scripts/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["scripts/**", "**/*", "**/*.astro"], ["**/*.config.{js,mjs,cjs,ts}", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/*.config.{js,mjs,cjs,ts}", "**/*", "**/*.astro"], ["{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "**/*", "**/*.astro"], ["docs/scripts/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/scripts/**", "docs/**/*", "**/*.astro"], ["docs/**/*.config.{js,mjs,cjs,ts}", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/*.config.{js,mjs,cjs,ts}", "docs/**/*", "**/*.astro"], ["docs/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "docs/**/*", "**/*.astro"], ["packages/cli/scripts/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/scripts/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/*.config.{js,mjs,cjs,ts}", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/*.config.{js,mjs,cjs,ts}", "packages/cli/**/*", "**/*.astro"], ["packages/cli/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/cli/**/*", "**/*.astro"], ["packages/eslint-plugin/scripts/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/scripts/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["tests/scripts/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/scripts/**", "tests/**/*", "**/*.astro"], ["tests/**/*.config.{js,mjs,cjs,ts}", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/*.config.{js,mjs,cjs,ts}", "tests/**/*", "**/*.astro"], ["tests/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "tests/**/*", "**/*.astro"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "jsdoc/require-jsdoc": "off",
+        "jsdoc/require-param": "off",
+        "jsdoc/require-description": "off",
+        "jsdoc/require-param-description": "off",
+        "n/no-unpublished-import": "off",
+        "n/no-unpublished-require": "off"
+    },
+    "files": [["**/test/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/test/**", "**/*", "**/*.astro"], ["**/tests/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/tests/**", "**/*", "**/*.astro"], ["**/__tests__/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/__tests__/**", "**/*", "**/*.astro"], ["**/*.test.*", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/*.test.*", "**/*", "**/*.astro"], ["**/*.spec.*", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/*.spec.*", "**/*", "**/*.astro"], ["**/Tests/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/Tests/**", "**/*", "**/*.astro"], ["docs/**/test/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/test/**", "docs/**/*", "**/*.astro"], ["docs/**/tests/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/tests/**", "docs/**/*", "**/*.astro"], ["docs/**/__tests__/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/__tests__/**", "docs/**/*", "**/*.astro"], ["docs/**/*.test.*", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/*.test.*", "docs/**/*", "**/*.astro"], ["docs/**/*.spec.*", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/*.spec.*", "docs/**/*", "**/*.astro"], ["docs/**/Tests/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/Tests/**", "docs/**/*", "**/*.astro"], ["packages/cli/**/test/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/test/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/tests/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/tests/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/__tests__/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/__tests__/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/*.test.*", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/*.test.*", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/*.spec.*", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/*.spec.*", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/Tests/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/Tests/**", "packages/cli/**/*", "**/*.astro"], ["packages/eslint-plugin/**/test/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/test/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/tests/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/tests/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/__tests__/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/__tests__/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/*.test.*", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/*.test.*", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/*.spec.*", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/*.spec.*", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/Tests/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/Tests/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["tests/**/test/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/test/**", "tests/**/*", "**/*.astro"], ["tests/**/tests/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/tests/**", "tests/**/*", "**/*.astro"], ["tests/**/__tests__/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/__tests__/**", "tests/**/*", "**/*.astro"], ["tests/**/*.test.*", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/*.test.*", "tests/**/*", "**/*.astro"], ["tests/**/*.spec.*", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/*.spec.*", "tests/**/*", "**/*.astro"], ["tests/**/Tests/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/Tests/**", "tests/**/*", "**/*.astro"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"extends": [eslintPluginPackageJson["configs"]["recommended"]],
+    "files": ["**/package.json"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"extends": [eslintConfigPrettier],
+    "files": ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "package-json/restrict-dependency-ranges": [
+            "error",
+            {
+                "forDependencyTypes": [
+                    "devDependencies"
+                ],
+                "rangeType": "pin"
+            }
         ],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
-                    "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
+        "package-json/scripts-name-casing": "error"
+    },
+    "files": ["**/package.json"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "package-json/restrict-dependency-ranges": [
+            "error",
+            {
+                "rangeType": "pin"
+            }
+        ]
+    },
+    "files": ["docs/package.json", "package.json", "tests/package.json"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "package-json/require-packageManager": "error"
+    },
+    "files": ["package.json"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "max-lines": [
+            "error",
+            {
+                "max": 300,
+                "skipBlankLines": true,
+                "skipComments": true
+            }
+        ],
+        "max-lines-per-function": [
+            "error",
+            {
+                "max": 60,
+                "skipBlankLines": true,
+                "skipComments": true,
+                "IIFEs": true
+            }
+        ],
+        "max-params": [
+            "error",
+            7
+        ],
+        "max-depth": [
+            "error",
+            3
+        ],
+        "max-statements": [
+            "error",
+            30
+        ],
+        "max-nested-callbacks": [
+            "error",
+            3
+        ],
+        "complexity": [
+            "error",
+            8
+        ]
+    },
+    "files": ["**/*.{js,mjs,cjs,jsx}"]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "n/no-process-env": [
+            "error",
+            {
+                "allowedVariables": [
+                    "NODE_ENV"
+                ]
+            }
+        ],
+        "no-restricted-properties": [
+            "error",
+            {
+                "object": "Bun",
+                "property": "env"
+            },
+            {
+                "object": "Deno",
+                "property": "env"
+            }
+        ]
+    },
+    "ignores": [
+        "packages/cli/src/system/environment.ts",
+        "packages/cli/src/system/environment.ts/**",
+        "tests/setup/system/environment.ts",
+        "tests/setup/system/environment.ts/**",
+        "tests/setup/runner/unit.ts",
+        "tests/setup/runner/unit.ts/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}"], ["**/*.astro", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/no-trivial-files": [
+            "error",
+            {
+                "reexports": "none",
+                "indexExports": 20
+            }
+        ],
+        "gspot/no-trivial-functions": [
+            "error",
+            {
+                "trivialFunctionStatements": 2
+            }
+        ]
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"], ["**/*.astro", "**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.astro", "**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/no-trivial-files": [
+            "error",
+            {
+                "reexports": "none",
+                "indexExports": 20,
+                "forwardingFiles": [
+                    "**/*.astro",
+                    "**/*.astro/*.ts",
+                    "**/*.astro/*.js"
+                ]
+            }
+        ],
+        "gspot/no-trivial-functions": [
+            "error",
+            {
+                "trivialFunctionStatements": 2,
+                "exportNames": [
+                    {
+                        "files": [
+                            "**/pages/**/*.{js,ts}"
+                        ],
+                        "names": [
+                            "GET",
+                            "HEAD",
+                            "POST",
+                            "PUT",
+                            "DELETE",
+                            "PATCH",
+                            "OPTIONS",
+                            "ALL",
+                            "getStaticPaths"
+                        ]
+                    },
+                    {
+                        "files": [
+                            "**/pages/**/*.astro"
+                        ],
+                        "names": [
+                            "getStaticPaths"
+                        ]
+                    },
+                    {
+                        "files": [
+                            "**/middleware.{js,ts}",
+                            "**/middleware/index.{js,ts}"
+                        ],
+                        "names": [
+                            "onRequest"
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"], ["**/*.astro", "docs/**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.astro", "docs/**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off"
+    },
+    "ignores": [
+        "docs/**",
+        "packages/cli/**",
+        "packages/eslint-plugin/**",
+        "tests/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.config.*"], ["**/*.astro", "**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "@typescript-eslint/consistent-type-definitions": "off"
+    },
+    "ignores": [
+        "docs/**",
+        "packages/cli/**",
+        "packages/eslint-plugin/**",
+        "tests/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.d.ts"], ["**/*.astro", "**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off"
+    },
+    "ignores": [
+        "docs/**",
+        "packages/cli/**",
+        "packages/eslint-plugin/**",
+        "tests/**"
+    ],
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.d.ts"], ["**/*.astro", "**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/no-client-environment": [
+            "error",
+            {
+                "client": true,
+                "publicPrefixes": [
+                    "PUBLIC_"
+                ],
+                "allowedNames": [
+                    "NODE_ENV",
+                    "SITE",
+                    "ASSETS_PREFIX"
+                ]
+            }
+        ]
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "docs/**/*.astro/*.{js,ts}"], ["**/*.astro", "docs/**/*", "docs/**/*.astro/*.{js,ts}"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.config.*"], ["**/*.astro", "docs/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "@typescript-eslint/consistent-type-definitions": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.d.ts"], ["**/*.astro", "docs/**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.d.ts"], ["**/*.astro", "docs/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.astro"], ["**/*.astro", "docs/**/*", "**/*.astro"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*.config.*"], ["**/*.astro", "packages/cli/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "@typescript-eslint/consistent-type-definitions": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*.d.ts"], ["**/*.astro", "packages/cli/**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*.d.ts"], ["**/*.astro", "packages/cli/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*.config.*"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "@typescript-eslint/consistent-type-definitions": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*.d.ts"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*.d.ts"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*.config.*"], ["**/*.astro", "tests/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "@typescript-eslint/consistent-type-definitions": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*.d.ts"], ["**/*.astro", "tests/**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*.d.ts"], ["**/*.astro", "tests/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/plugin.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/plugin.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/plugin.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/plugin.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts/**"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "unicorn/prefer-ternary": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*"], ["**/*.astro", "**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "unicorn/prefer-await": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*"], ["**/*.astro", "**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "no-template-curly-in-string": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/**"], ["**/*.astro", "**/*", "tests/**"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "unicorn/no-incorrect-template-string-interpolation": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/**"], ["**/*.astro", "**/*", "tests/**"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "unicorn/no-top-level-side-effects": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.config.*"], ["**/*.astro", "**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "gspot/no-magic-numbers": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/collections.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/collections.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/libraries.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/libraries.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/logic.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/logic.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/collections.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/collections.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/libraries.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/libraries.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/logic.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/logic.ts/**"]]}, gspothqEslintPlugin, "all"),
+]), [
+    {
+        "paths": [
             [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
                 "**/*",
                 "**/*"
             ]
-        ]
-    },
-    // javascript
-    {
+        ],
         "ignores": [],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "tests/setup/runner/unit.ts"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "tests/setup/runner/unit.ts"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "packages/cli/src/system/environment.ts",
-            "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit.ts"
-        ],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
-                    "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/cli/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/cli/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/cli/**/*",
-                "tests/setup/runner/unit.ts"
-            ],
-            [
-                "**/*.astro",
-                "packages/cli/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "packages/cli/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "packages/cli/**/*",
-                "tests/setup/runner/unit.ts"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "packages/cli/src/system/environment.ts",
-            "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit.ts"
-        ],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
-                    "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/cli/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "packages/cli/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/eslint-plugin/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/eslint-plugin/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/eslint-plugin/**/*",
-                "tests/setup/runner/unit.ts"
-            ],
-            [
-                "**/*.astro",
-                "packages/eslint-plugin/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "packages/eslint-plugin/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "packages/eslint-plugin/**/*",
-                "tests/setup/runner/unit.ts"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "packages/cli/src/system/environment.ts",
-            "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit.ts"
-        ],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
-                    "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/eslint-plugin/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "packages/eslint-plugin/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "tests/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "tests/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "tests/**/*",
-                "tests/setup/runner/unit.ts"
-            ],
-            [
-                "**/*.astro",
-                "tests/**/*",
-                "packages/cli/src/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "tests/**/*",
-                "tests/setup/system/environment.ts"
-            ],
-            [
-                "**/*.astro",
-                "tests/**/*",
-                "tests/setup/runner/unit.ts"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "packages/cli/src/system/environment.ts",
-            "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit.ts"
-        ],
-        rules: {
-            "no-restricted-syntax": [
-                "error",
-                {
-                    "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                    "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-                },
-                {
-                    "selector": "TSEnumDeclaration",
-                    "message": "Use a literal union or an as-const object instead of an enum."
-                },
-                {
-                    "selector": "TSAsExpression[expression.type=\"TSAsExpression\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion[expression.type=\"TSTypeAssertion\"]",
-                    "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSAnyKeyword",
-                    "message": "Do not assert to any. Give the value a real type, or check it at run time."
-                },
-                {
-                    "selector": "TSAsExpression > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "TSTypeAssertion > TSNeverKeyword",
-                    "message": "Do not assert to never to silence the type system."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                    "message": "An empty-object fallback hides a missing value. Handle the missing case."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]",
-                    "message": "Start an error message with a capital letter."
-                },
-                {
-                    "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                    "message": "Log a stable message and pass the values as fields."
-                },
-                {
-                    "selector": "ExportAllDeclaration",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "ExportNamedDeclaration[source!=null]",
-                    "message": "Export values at their declaration instead of re-exporting them."
-                },
-                {
-                    "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
-                    "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in."
-                },
-                {
-                    "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                    "message": "Give an alias import its file extension."
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "tests/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "tests/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "docs/**",
-            "packages/cli/**",
-            "packages/eslint-plugin/**",
-            "tests/**",
-            "**/test/**",
-            "**/tests/**",
-            "**/__tests__/**",
-            "**/*.test.*",
-            "**/*.spec.*",
-            "**/test_*.py",
-            "**/*_test.py",
-            "**/conftest.py",
-            "**/Tests/**",
-            "**/*Tests.swift",
-            "scripts/**",
-            "**/*.config.{js,mjs,cjs,ts}",
-            ".mise/tasks/**"
-        ],
-        rules: {
-            "no-console": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "docs/**/test/**",
-            "docs/**/tests/**",
-            "docs/**/__tests__/**",
-            "docs/**/*.test.*",
-            "docs/**/*.spec.*",
-            "docs/**/test_*.py",
-            "docs/**/*_test.py",
-            "docs/**/conftest.py",
-            "docs/**/Tests/**",
-            "docs/**/*Tests.swift",
-            "docs/scripts/**",
-            "docs/**/*.config.{js,mjs,cjs,ts}",
-            "docs/.mise/tasks/**"
-        ],
-        rules: {
-            "no-console": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "packages/cli/**/test/**",
-            "packages/cli/**/tests/**",
-            "packages/cli/**/__tests__/**",
-            "packages/cli/**/*.test.*",
-            "packages/cli/**/*.spec.*",
-            "packages/cli/**/test_*.py",
-            "packages/cli/**/*_test.py",
-            "packages/cli/**/conftest.py",
-            "packages/cli/**/Tests/**",
-            "packages/cli/**/*Tests.swift",
-            "packages/cli/scripts/**",
-            "packages/cli/**/*.config.{js,mjs,cjs,ts}",
-            "packages/cli/.mise/tasks/**"
-        ],
-        rules: {
-            "no-console": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/cli/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "packages/cli/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "packages/eslint-plugin/**/test/**",
-            "packages/eslint-plugin/**/tests/**",
-            "packages/eslint-plugin/**/__tests__/**",
-            "packages/eslint-plugin/**/*.test.*",
-            "packages/eslint-plugin/**/*.spec.*",
-            "packages/eslint-plugin/**/test_*.py",
-            "packages/eslint-plugin/**/*_test.py",
-            "packages/eslint-plugin/**/conftest.py",
-            "packages/eslint-plugin/**/Tests/**",
-            "packages/eslint-plugin/**/*Tests.swift",
-            "packages/eslint-plugin/scripts/**",
-            "packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}",
-            "packages/eslint-plugin/.mise/tasks/**"
-        ],
-        rules: {
-            "no-console": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "packages/eslint-plugin/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "packages/eslint-plugin/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "tests/**/test/**",
-            "tests/**/tests/**",
-            "tests/**/__tests__/**",
-            "tests/**/*.test.*",
-            "tests/**/*.spec.*",
-            "tests/**/test_*.py",
-            "tests/**/*_test.py",
-            "tests/**/conftest.py",
-            "tests/**/Tests/**",
-            "tests/**/*Tests.swift",
-            "tests/scripts/**",
-            "tests/**/*.config.{js,mjs,cjs,ts}",
-            "tests/.mise/tasks/**"
-        ],
-        rules: {
-            "no-console": "error"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "tests/**/*",
-                "**/*"
-            ],
-            [
-                "**/*.astro",
-                "tests/**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "n/no-process-exit": "off",
-            "unicorn/no-process-exit": "off"
-        },
-        files: [
-            [
-                "scripts/**",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "scripts/**",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/*.config.{js,mjs,cjs,ts}",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/*.config.{js,mjs,cjs,ts}",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                ".mise/tasks/**",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                ".mise/tasks/**",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/scripts/**",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/scripts/**",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/*.config.{js,mjs,cjs,ts}",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/*.config.{js,mjs,cjs,ts}",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/.mise/tasks/**",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/.mise/tasks/**",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/scripts/**",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/scripts/**",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/*.config.{js,mjs,cjs,ts}",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/*.config.{js,mjs,cjs,ts}",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/.mise/tasks/**",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/.mise/tasks/**",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/scripts/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/scripts/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/.mise/tasks/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/.mise/tasks/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/scripts/**",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/scripts/**",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/*.config.{js,mjs,cjs,ts}",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/*.config.{js,mjs,cjs,ts}",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/.mise/tasks/**",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/.mise/tasks/**",
-                "tests/**/*",
-                "**/*.astro"
-            ]
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "jsdoc/require-jsdoc": "off",
-            "jsdoc/require-param": "off",
-            "jsdoc/require-description": "off",
-            "jsdoc/require-param-description": "off",
-            "n/no-unpublished-import": "off",
-            "n/no-unpublished-require": "off"
-        },
-        files: [
-            [
-                "**/test/**",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/test/**",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/tests/**",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/tests/**",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/__tests__/**",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/__tests__/**",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/*.test.*",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/*.test.*",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/*.spec.*",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/*.spec.*",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/test_*.py",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/test_*.py",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/*_test.py",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/*_test.py",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/conftest.py",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/conftest.py",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/Tests/**",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/Tests/**",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/*Tests.swift",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "**/*Tests.swift",
-                "**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/test/**",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/test/**",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/tests/**",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/tests/**",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/__tests__/**",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/__tests__/**",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/*.test.*",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/*.test.*",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/*.spec.*",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/*.spec.*",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/test_*.py",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/test_*.py",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/*_test.py",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/*_test.py",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/conftest.py",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/conftest.py",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/Tests/**",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/Tests/**",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "docs/**/*Tests.swift",
-                "docs/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "docs/**/*Tests.swift",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/test/**",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/test/**",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/tests/**",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/tests/**",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/__tests__/**",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/__tests__/**",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/*.test.*",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/*.test.*",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/*.spec.*",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/*.spec.*",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/test_*.py",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/test_*.py",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/*_test.py",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/*_test.py",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/conftest.py",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/conftest.py",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/Tests/**",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/Tests/**",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/cli/**/*Tests.swift",
-                "packages/cli/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/cli/**/*Tests.swift",
-                "packages/cli/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/test/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/test/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/tests/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/tests/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/__tests__/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/__tests__/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/*.test.*",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/*.test.*",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/*.spec.*",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/*.spec.*",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/test_*.py",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/test_*.py",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/*_test.py",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/*_test.py",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/conftest.py",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/conftest.py",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/Tests/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/Tests/**",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "packages/eslint-plugin/**/*Tests.swift",
-                "packages/eslint-plugin/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "packages/eslint-plugin/**/*Tests.swift",
-                "packages/eslint-plugin/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/test/**",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/test/**",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/tests/**",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/tests/**",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/__tests__/**",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/__tests__/**",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/*.test.*",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/*.test.*",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/*.spec.*",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/*.spec.*",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/test_*.py",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/test_*.py",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/*_test.py",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/*_test.py",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/conftest.py",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/conftest.py",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/Tests/**",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/Tests/**",
-                "tests/**/*",
-                "**/*.astro"
-            ],
-            [
-                "tests/**/*Tests.swift",
-                "tests/**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"
-            ],
-            [
-                "tests/**/*Tests.swift",
-                "tests/**/*",
-                "**/*.astro"
-            ]
-        ]
-    },
-    // javascript: packageJson["configs"]["recommended"].rules
-    {
-        ...packageJson["configs"]["recommended"],
-        rules: {
-            ...packageJson["configs"]["recommended"].rules
-        },
-        files: [
-            "**/package.json"
-        ]
-    },
-    // javascript: prettierConfig.rules
-    {
-        ...prettierConfig,
-        rules: {
-            ...prettierConfig.rules
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-            "**/*.astro"
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "package-json/restrict-dependency-ranges": [
-                "error",
-                {
-                    "rangeType": "pin"
-                }
-            ]
-        },
-        files: [
-            "**/package.json"
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "package-json/require-packageManager": "error"
-        },
-        files: [
-            "package.json"
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "max-lines": [
-                "error",
-                {
-                    "max": 300,
-                    "skipBlankLines": true,
-                    "skipComments": true
-                }
-            ],
-            "max-lines-per-function": [
-                "error",
-                {
-                    "max": 60,
-                    "skipBlankLines": true,
-                    "skipComments": true,
-                    "IIFEs": true
-                }
-            ],
-            "max-params": [
-                "error",
-                {
-                    "max": 7,
-                    "countVoidThis": false
-                }
-            ],
-            "max-depth": [
-                "error",
-                3
-            ],
-            "max-statements": [
-                "error",
-                30
-            ],
-            "max-nested-callbacks": [
-                "error",
-                3
-            ],
-            "complexity": [
-                "error",
-                8
-            ],
-            "sonarjs/cognitive-complexity": [
-                "error",
-                8
-            ]
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx}"
-        ]
-    },
-    // javascript
-    {
-        "ignores": [
-            "packages/cli/src/system/environment.ts",
-            "packages/cli/src/system/environment.ts/**",
-            "tests/setup/system/environment.ts",
-            "tests/setup/system/environment.ts/**",
-            "tests/setup/runner/unit.ts",
-            "tests/setup/runner/unit.ts/**"
-        ],
-        rules: {
-            "n/no-process-env": [
-                "error",
-                {
-                    "allowedVariables": [
-                        "NODE_ENV"
-                    ]
-                }
-            ],
+        "rules": {
             "no-restricted-properties": [
-                "error",
-                {
-                    "object": "Bun",
-                    "property": "env"
-                },
-                {
-                    "object": "Deno",
-                    "property": "env"
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}"
-            ]
-        ]
-    },
-    // javascript: your own rule options
-    {
-        "ignores": [
-            "packages/cli/src/system/environment.ts",
-            "packages/cli/src/system/environment.ts/**",
-            "tests/setup/system/environment.ts",
-            "tests/setup/system/environment.ts/**",
-            "tests/setup/runner/unit.ts",
-            "tests/setup/runner/unit.ts/**"
-        ],
-        rules: {
-            "no-restricted-properties": [
-                "error",
                 {
                     "object": "Bun",
                     "property": "env"
@@ -5121,121 +2848,34 @@ export default [
                     "property": "localeCompare",
                     "message": "Use compareText for stable ordering."
                 }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}",
-                "**/*",
-                "**/*"
             ],
-            [
-                "**/*.astro",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}",
-                "**/*",
-                "**/*"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [],
-        rules: {
-            "gspot/no-trivial-files": [
-                gspot.configs.all.rules["gspot/no-trivial-files"] ?? 'off',
+            "n/no-unpublished-import": [
                 {
-                    "allowIndex": false
+                    "ignoreTypeImport": true
                 }
             ],
-            "gspot/no-trivial-functions": [
-                gspot.configs.all.rules["gspot/no-trivial-functions"] ?? 'off',
+            "unicorn/consistent-boolean-name": [
                 {
-                    "trivialFunctionStatements": 2
+                    "checkFunctions": "never",
+                    "ignore": [
+                        "^_",
+                        "^(?:enabled|active|retryable)$"
+                    ]
+                }
+            ],
+            "jsdoc/require-jsdoc": [
+                {
+                    "enableFixer": false,
+                    "publicOnly": true,
+                    "require": {
+                        "FunctionDeclaration": true,
+                        "MethodDefinition": true
+                    },
+                    "contexts": [
+                        ":matches(VariableDeclarator, AssignmentExpression, ExportDefaultDeclaration, PropertyDefinition) > :matches(ArrowFunctionExpression, FunctionExpression)"
+                    ]
                 }
             ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx}"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "**/*.{js,mjs,cjs,jsx}"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [],
-        rules: {
-            "gspot/no-trivial-files": "off"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "**/*.astro/*.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "docs/**/*",
-                "**/*.astro/*.js"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "**/*.astro"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "**/*.astro/*.ts"
-            ],
-            [
-                "**/*.astro",
-                "docs/**/*",
-                "**/*.astro/*.js"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [],
-        rules: {
-            "package-json/restrict-dependency-ranges": "off"
-        },
-        files: [
-            [
-                "**/package.json",
-                "**/*",
-                "packages/eslint-plugin/package.json"
-            ],
-            [
-                "**/package.json",
-                "**/*",
-                "packages/eslint-plugin/package.json/**"
-            ]
-        ]
-    },
-];
+        }
+    }
+]);

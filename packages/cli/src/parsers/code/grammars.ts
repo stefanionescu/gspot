@@ -76,8 +76,7 @@ export function findGrammarByExtension(path: string): GrammarName | undefined {
     const extension = posix.extname(path);
     if (extension === '') return undefined;
     return Object.entries(GRAMMAR_EXTENSIONS).find(([, extensions]) => extensions.includes(extension))?.[0] as
-        | GrammarName
-        | undefined;
+        GrammarName | undefined;
 }
 
 /**

@@ -91,7 +91,7 @@ function matchProjectToken(text: string, offset: number): RegExpExecArray | unde
 
 function parseProjectDocument(text: string): unknown {
     const tokens: string[] = [];
-    for (let offset = 0; offset < text.length; ) {
+    for (let offset = 0; offset < text.length;) {
         const match = matchProjectToken(text, offset);
         if (match === undefined) throw new Error(`The Xcode project has invalid syntax at offset ${String(offset)}.`);
         offset += match[0].length;

@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
 import starlightLlmsTxt from 'starlight-llms-txt';
-import { pruneUnusedStyles } from '#docs/unused-styles.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { defineConfig, passthroughImageService } from 'astro/config';
 import { LLMS_PAGES, AGENT_STEPS, AGENT_EVALUATION } from '#docs/reference/setup.ts';
@@ -21,14 +20,14 @@ import {
 } from '#docs/config/site.ts';
 
 function readReadmeSentence(): string {
-    const readme = readFileSync(new URL('../packages/cli/README.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
+    const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
     const [, paragraph] = readme.split('\n\n', README_OPENING_BLOCKS);
     if (paragraph === undefined || paragraph === '')
-        throw new Error('README.md in packages/cli must open with a paragraph after its title.');
+        throw new Error('README.md must open with a paragraph after its title.');
     const [first] = new Intl.Segmenter('en', { granularity: 'sentence' }).segment(
         paragraph.replaceAll('\n', ' ').trim(),
     );
-    if (first === undefined) throw new Error('README.md in packages/cli must contain an opening sentence.');
+    if (first === undefined) throw new Error('README.md must contain an opening sentence.');
     return first.segment.trim();
 }
 
@@ -103,9 +102,5 @@ export default defineConfig({
             social: [{ icon: 'github', label: 'GitHub', href: REPOSITORY_URL }],
             sidebar: SIDEBAR,
         }),
-        {
-            name: 'styles',
-            hooks: { 'astro:build:done': ({ dir }) => pruneUnusedStyles(dir) },
-        },
     ],
 });

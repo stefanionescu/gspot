@@ -9,11 +9,3 @@ node_modules/
 /docs/dist/
 /docs/.astro/
 /docs/.wrangler/
-
-# >>> gspot managed >>>
-.gspot/node_modules/
-.gspot/.venv/
-.gspot/vale/
-.gspot/state/
-.gspot/.yarnrc-install.yml
-# <<< gspot managed <<<

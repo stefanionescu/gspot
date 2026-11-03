@@ -1,149 +1,147 @@
-extends: capitalization
-message: "The document title uses title case: '%s'."
-level: error
-scope: heading.h1
+message: "Write the document title in title case: '%s'."
+scope:
+  - heading.h1
+  - text.frontmatter.title
 match: $title
+extends: capitalization
+level: error
 exceptions:
-  - eslint
+  - "@emnapi\\/runtime"
   - "@eslint\\/js"
   - "@gspothq\\/eslint\\-plugin"
-  - eslint\-plugin\-sonarjs
-  - eslint\-plugin\-unicorn
-  - eslint\-plugin\-security
-  - eslint\-plugin\-barrel\-files
-  - eslint\-plugin\-perfectionist
-  - eslint\-plugin\-n
-  - eslint\-plugin\-jsdoc
-  - eslint\-plugin\-regexp
-  - eslint\-plugin\-import\-x
-  - picomatch
-  - eslint\-import\-resolver\-typescript
-  - eslint\-plugin\-boundaries
-  - eslint\-plugin\-package\-json
-  - eslint\-config\-prettier
-  - globals
-  - knip
-  - tsc
-  - JavaScript
-  - ESLint
-  - typescript\-eslint
-  - TypeScript
-  - markdownlint\-cli2
-  - Markdown
-  - actionlint
-  - shellcheck
-  - zizmor
-  - GitHub
-  - shfmt
-  - zsh
-  - Bash
-  - ShellCheck
-  - commitlint
-  - taplo
-  - yamllint
-  - v8r
-  - ajv
-  - xmllint
-  - JSON
-  - TOML
-  - YAML
-  - osv\-scanner
-  - syncpack
-  - lychee
-  - jscpd
-  - Bun
-  - Node
-  - npm
-  - pnpm
-  - mise
-  - CI
-  - macOS
-  - Linux
-  - Windows
-  - prettier
-  - editorconfig\-checker
-  - Prettier
-  - node
-  - gspot
-  - license\-checker\-rseidelsohn
-  - pip\-licenses
-  - vale
-  - Vale
-  - DOM
-  - DTO
-  - RPC
-  - gitleaks
-  - dotenv\-linter
-  - semgrep
-  - Semgrep
-  - CSRF
-  - typos
-  - stylelint
-  - stylelint\-config\-standard
-  - postcss\-html
-  - CSS
-  - eslint\-plugin\-astro
-  - eslint\-plugin\-jsx\-a11y
-  - astro\-check
-  - prettier\-plugin\-astro
-  - wrangler
-  - Cloudflare
-  - html\-validate
-  - HTML
-  - purgecss
-  - eslint\-plugin\-zod
-  - Zod
-  - vertica
-  - IIF
-  - next\-intl
-  - udid
-  - NGINX
-  - Stylelint
-  - pytest
-  - markdownlint
-  - React
-  - Native
-  - Simple
-  - certifi
-  - writeable
-  - styl
-  - USAGE
-  - xdescribe
-  - ede
   - API
-  - CLI
-  - HTTP
-  - ID
-  - SQL
-  - UI
-  - URL
   - ASCII
   - ASD
   - BSD
+  - Bash
+  - Bun
+  - CI
+  - CLI
   - CPU
   - CRLF
+  - CSRF
+  - CSS
   - CSV
+  - Cloudflare
+  - DOM
+  - DTO
+  - ESLint
   - ESM
   - EUR
   - GBP
   - GNU
+  - GitHub
+  - HTML
+  - HTTP
   - HTTPS
+  - ID
+  - IIF
   - INI
+  - JSON
   - JSX
+  - JavaScript
+  - Linux
   - MIME
   - MIT
+  - Markdown
+  - NGINX
+  - Native
+  - Node
   - POSIX
+  - Prettier
   - README
+  - RPC
+  - React
   - SCSS
   - SDK
   - SHA
+  - SQL
   - SSH
   - SVG
+  - Semgrep
+  - ShellCheck
+  - Simple
+  - Stylelint
   - TLS
   - TODO
+  - TOML
   - TSX
+  - TypeScript
+  - UI
+  - URL
+  - USAGE
   - USD
   - UTC
   - UTF
+  - Vale
   - WASM
+  - Windows
   - XML
+  - YAML
+  - Zod
+  - actionlint
+  - ajv
+  - astro\-check
+  - biome
+  - certifi
+  - commitlint
+  - dotenv\-linter
+  - ede
+  - editorconfig\-checker
+  - eslint
+  - eslint\-config\-prettier
+  - eslint\-import\-resolver\-typescript
+  - eslint\-plugin\-astro
+  - eslint\-plugin\-boundaries
+  - eslint\-plugin\-import\-x
+  - eslint\-plugin\-jsdoc
+  - eslint\-plugin\-jsx\-a11y\-x
+  - eslint\-plugin\-n
+  - eslint\-plugin\-package\-json
+  - eslint\-plugin\-perfectionist
+  - eslint\-plugin\-regexp
+  - eslint\-plugin\-security
+  - eslint\-plugin\-unicorn
+  - eslint\-plugin\-zod
+  - gitleaks
+  - globals
+  - gspot
+  - html\-validate
+  - jscpd
+  - knip
+  - lychee
+  - macOS
+  - markdownlint
+  - markdownlint\-cli2
+  - mise
+  - next\-intl
+  - node
+  - npm
+  - osv\-scanner
+  - pnpm
+  - postcss\-html
+  - prettier
+  - prettier\-plugin\-astro
+  - purgecss
+  - pytest
+  - semgrep
+  - shellcheck
+  - shfmt
+  - styl
+  - stylelint
+  - stylelint\-config\-standard
+  - syncpack
+  - taplo
+  - tsc
+  - typescript\-eslint
+  - typos
+  - udid
+  - v8r
+  - vale
+  - vertica
+  - wrangler
+  - writeable
+  - xdescribe
+  - xmllint
+  - zizmor
+  - zsh

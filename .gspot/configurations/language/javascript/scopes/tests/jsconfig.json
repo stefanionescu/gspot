@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "strict": true,
+        "allowImportingTsExtensions": true,
+        "maxNodeModuleJsDepth": 0,
+        "jsx": "preserve",
+        "noImplicitAny": true,
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "resolveJsonModule": true
+    },
+    "include": [
+        "../../../../../../tests/**/*.js",
+        "../../../../../../tests/**/*.mjs",
+        "../../../../../../tests/**/*.cjs",
+        "../../../../../../tests/**/*.jsx"
+    ],
+    "exclude": [
+        "../../../../../../tests/**/gspot.baseline.json",
+        "../../../../../../tests/**/node_modules/**",
+        "../../../../../../tests/**/bower_components/**",
+        "../../../../../../tests/**/coverage/**",
+        "../../../../../../tests/**/.env",
+        "../../../../../../tests/**/.env.*",
+        "../../../../../../tests/**/.dev.vars",
+        "../../../../../../tests/**/.dev.vars.*",
+        "../../../../../../tests/**/.wrangler/**",
+        "../../../../../../tests/**/bun.lock",
+        "../../../../../../tests/**/eslint.config.mjs",
+        "../../../../../../tests/**/eslint.config.js",
+        "../../../../../../tests/**/eslint.config.cjs"
+    ]
+}

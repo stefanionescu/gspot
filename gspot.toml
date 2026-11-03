@@ -1,6 +1,3 @@
-#:schema ./.gspot/gspot.schema.json
-# gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
-
 level = "all"
 configurations = ["typescript", "markdown", "github-actions", "bash"]
 
@@ -81,6 +78,16 @@ reason = "The manifest names the source after its markdownlint-cli2 target, and 
 paths = ["packages/cli/src/types/configurations/language.ts"]
 allowed_names = ["getDocumentFragment"]
 reason = "vue-eslint-parser names this parser service getDocumentFragment."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/configurations/language.ts"]
+allowed_names = ["parseForESLint"]
+reason = "ESLint calls a custom parser through its parseForESLint method."
+
+[[naming.override]]
+paths = ["packages/eslint-plugin/src/rules/aws/aws-s3-bucket-versioning.ts"]
+allowed_names = ["awsS3BucketVersioning"]
+reason = "S3 is an allowed numeric word, and gspot 0.3.8 drops its digit before it tests the case."
 
 [[naming.override]]
 paths = ["docs/src/types/pages.ts"]
@@ -168,20 +175,23 @@ USAGE = "mise uses USAGE in task argument directives."
 xdescribe = "Jasmine, Jest, and Mocha name their disabled suite xdescribe."
 ede = "OpenSSL names the Triple DES ciphers des-ede and des-ede3."
 
-[tools.eslint]
+[javascript]
 import_extension = "ts"
+entry_files = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/test-tools.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts"]
 
 [tools.eslint.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
-
-[tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/test-tools.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts"]
+"n/no-unpublished-import" = [{ ignoreTypeImport = true }]
+"unicorn/consistent-boolean-name" = [{ checkFunctions = "never", ignore = ["^_", "^(?:enabled|active|retryable)$"] }]
+"jsdoc/require-jsdoc" = [
+    { enableFixer = false, publicOnly = true, require = { FunctionDeclaration = true, MethodDefinition = true }, contexts = [":matches(VariableDeclarator, AssignmentExpression, ExportDefaultDeclaration, PropertyDefinition) > :matches(ArrowFunctionExpression, FunctionExpression)"] },
+]
 
 [[scope]]
 path = "docs"
 configurations = ["css", "astro", "cloudflare", "site"]
 site.build_command = ["bun", "--bun", "astro", "build"]
-tools.knip.ignore_dependencies = { value = ["satteri"], reason = "Astro prerender externalizes the native satteri loader in astro.config.ts." }
+javascript.allowed_unused_dependencies = { value = ["satteri"], reason = "Astro prerender externalizes the native satteri loader in astro.config.ts." }
 
 [[scope]]
 path = "packages/cli"
@@ -190,6 +200,7 @@ configurations = ["zod"]
 [[scope]]
 path = "tests"
 configurations = ["zod"]
+javascript.allowed_unused_dependencies = { value = ["prettier", "stylelint", "html-validate"], reason = "The tests import the tool versions that gspot pins, which mise run setup installs in node_modules/.test-tools." }
 
 [[import_rule]]
 name = "cli-types"
@@ -225,13 +236,13 @@ name = "engine"
 paths = ["packages/cli/src/engine/**", "packages/cli/src/config/engine.ts", "packages/cli/src/types/engine/**", "packages/cli/src/schemas/engine.ts"]
 
 [[import_rule]]
-name = "configurations"
-paths = ["packages/cli/src/configurations/**", "packages/cli/src/config/configurations/**", "packages/cli/src/types/configurations/**", "packages/cli/src/schemas/configurations.ts"]
-
-[[import_rule]]
 name = "shipped-config"
 paths = ["packages/cli/src/configurations/*/*/files/**"]
 can_import = ["configurations"]
+
+[[import_rule]]
+name = "configurations"
+paths = ["packages/cli/src/configurations/**", "packages/cli/src/config/configurations/**", "packages/cli/src/types/configurations/**", "packages/cli/src/schemas/configurations.ts"]
 
 [[import_rule]]
 name = "generation"
@@ -323,12 +334,6 @@ paths = ["packages/cli/src/configurations/infrastructure/docker/rules/DOCKER.md"
 reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
-check = "javascript/eslint"
-rule = "package-json/restrict-dependency-ranges"
-paths = ["packages/eslint-plugin/package.json"]
-reason = "A published library uses ranges for dependencies and peers."
-
-[[ignore]]
 check = "prose/vale"
 paths = ["packages/cli/src/configurations/general/prose/files/styles/LICENSES.md"]
 reason = "This file reproduces upstream license notices and terms whose wording must remain unchanged."
@@ -336,14 +341,20 @@ reason = "This file reproduces upstream license notices and terms whose wording 
 [[ignore]]
 check = "prose/vale"
 rule = "gspot.session-identifiers"
-paths = ["tests/config/integration/prose.ts"]
-reason = "This sample URL holds a session identifier so that the Vale test sees the rule report it."
+paths = ["tests/config/integration/prose.ts", "tests/suites/unit/cli/configurations/general/commits/checks.test.ts"]
+reason = "These samples hold session links so that the tests see gspot report them."
 
 [[ignore]]
 check = "prose/vale"
-rule = "write-good.E-Prime"
-paths = ["README.md", "packages/cli/README.md", "docs/src/content/docs/start/overview.mdx"]
-reason = "These files open with the owner's product description, which keeps its wording."
+rule = "gspot.home-paths"
+paths = ["tests/config/integration/prose.ts", "tests/suites/unit/cli/configurations/general/commits/checks.test.ts", "tests/suites/unit/cli/configurations/general/gspot/suppressions/reasons.test.ts"]
+reason = "These samples hold home folders so that the tests see gspot report them."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "import-x/no-default-export"
+paths = ["packages/eslint-plugin/src/plugin.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
+reason = "ESLint and markdownlint-cli2 load the default export of these modules."
 
 [[ignore]]
 check = "site/html-validate"
@@ -428,3 +439,58 @@ reason = "The react and react-dom configurations name these tests, after their n
 check = "structure/shared-prefixes"
 paths = ["packages/eslint-plugin/src/rules/**", "tests/suites/unit/eslint-plugin/rules/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "unicorn/prefer-ternary"
+reason = "It fights gspot/no-trivial-functions: the ternary shrinks a helper to one statement, and that rule then asks to inline the helper."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "unicorn/prefer-await"
+reason = "With no-floating-promises, no-misused-promises, and no-void, a synchronous callback that starts async work has no form that this rule accepts."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "no-template-curly-in-string"
+paths = ["tests/**"]
+reason = "Test samples quote template literal code as text."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "unicorn/no-incorrect-template-string-interpolation"
+paths = ["tests/**"]
+reason = "Test samples quote template syntax of other languages as text."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "unicorn/no-top-level-side-effects"
+paths = ["**/*.config.*"]
+reason = "A tool reads the default export of its config file, which the file builds when it loads."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "gspot/no-magic-numbers"
+paths = [
+    "packages/eslint-plugin/src/config/assertions/evidence.ts",
+    "packages/eslint-plugin/src/config/collections.ts",
+    "packages/eslint-plugin/src/config/libraries.ts",
+    "packages/eslint-plugin/src/config/logic.ts",
+]
+reason = "Module-level Map and Set tables name their numbers, and gspot/no-magic-numbers in plugin 0.2.3 reads them as unnamed."
+
+[[ignore]]
+check = "site/purgecss"
+reason = "The purgecss bundle of gspot 0.3.8 leaves out a package that it imports, so the check stops before it reads the site."
+
+[[ignore]]
+check = "site/unused-assets"
+rule = "unused-asset"
+paths = ["docs/src/assets/mark.webp"]
+reason = "SiteTitle.astro imports this image through the #docs package alias, which gspot 0.3.8 does not resolve."
+
+[[ignore]]
+check = "prose/vale"
+rule = "gspot.home-paths"
+paths = ["docs/astro.config.ts"]
+reason = "A component path in this file passes through a folder named home, and gspot 0.3.8 matches it as a home folder."

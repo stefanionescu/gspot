@@ -5,13 +5,22 @@
     "singleQuote": true,
     "trailingComma": "all",
     "semi": true,
-    "endOfLine": "lf",
+    "bracketSpacing": true,
     "arrowParens": "always",
-    "embeddedLanguageFormatting": "off",
+    "proseWrap": "preserve",
     "plugins": [
         "./.gspot/node_modules/prettier-plugin-astro/dist/index.js"
     ],
     "overrides": [
+        {
+            "files": [
+                "*.md",
+                "*.mdx"
+            ],
+            "options": {
+                "embeddedLanguageFormatting": "off"
+            }
+        },
         {
             "files": "*.astro",
             "options": {

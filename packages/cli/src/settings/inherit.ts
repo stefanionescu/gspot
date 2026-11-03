@@ -136,8 +136,7 @@ export function mergeValue(setting: Setting, inherited: unknown, found: unknown)
     if (schema !== undefined) schema = unwrapSettingSchema(schema);
     if (schema instanceof z.ZodUnion)
         schema = schema.options.find((option) => option instanceof z.ZodArray || option === commandSchema) as
-            | z.ZodType
-            | undefined;
+            z.ZodType | undefined;
     if (
         schema !== commandSchema &&
         schema instanceof z.ZodArray &&

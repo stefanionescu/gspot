@@ -66,11 +66,10 @@ function buildNarrowedPaths(options: PlanOptions): Set<string> | undefined {
 
 function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
     const replacers = new Map(
-        planned.flatMap(
-            (check): Array<[string, string]> =>
-                check.check.instead_of === undefined || check.skip !== undefined || !isActive(check)
-                    ? []
-                    : [[check.check.instead_of, check.check.id]],
+        planned.flatMap((check): Array<[string, string]> =>
+            check.check.instead_of === undefined || check.skip !== undefined || !isActive(check)
+                ? []
+                : [[check.check.instead_of, check.check.id]],
         ),
     );
     return planned.map((check) => {

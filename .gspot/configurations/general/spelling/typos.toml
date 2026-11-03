@@ -3,49 +3,39 @@ locale = "en"
 extend-ignore-re = ["\\b[0-9a-f]{7,40}\\b", "\\b[A-Za-z0-9+/]{40,}={0,2}\\b"]
 
 [default.extend-words]
-vertica = "vertica"
 IIF = "IIF"
-next-intl = "next-intl"
-udid = "udid"
 NGINX = "NGINX"
-Stylelint = "Stylelint"
-pytest = "pytest"
-markdownlint = "markdownlint"
-React = "React"
 Native = "Native"
+React = "React"
 Simple = "Simple"
-certifi = "certifi"
-writeable = "writeable"
-styl = "styl"
+Stylelint = "Stylelint"
 USAGE = "USAGE"
-xdescribe = "xdescribe"
+certifi = "certifi"
 ede = "ede"
+markdownlint = "markdownlint"
+next-intl = "next-intl"
+pytest = "pytest"
+styl = "styl"
+udid = "udid"
+vertica = "vertica"
+writeable = "writeable"
+xdescribe = "xdescribe"
 
 [files]
 extend-exclude = [
   # Build output
   "**/build/**",
-  # Files that Git ignores
-  "**/node_modules/**",
-  "**/.env",
-  "**/.env.*",
-  "**/*.log",
-  "packages/*/dist/**",
-  "docs/dist/**",
-  "docs/.astro/**",
-  "docs/.wrangler/**",
   # Files that gspot generates
   ".gspot/**",
-  "eslint.config.mjs",
-  ".markdownlint.jsonc",
+  ".gspot-copies/**",
+  "**/gspot.baseline.json",
   ".editorconfig",
-  "prettier.config.mjs",
+  ".github/workflows/gspot.yml",
+  ".markdownlint.jsonc",
   ".prettierignore",
-  "docs/.markdownlint.jsonc",
-  "docs/.stylelintrc.json",
-  "packages/cli/.markdownlint.jsonc",
-  "packages/eslint-plugin/.markdownlint.jsonc",
-  "tests/.markdownlint.jsonc",
+  ".stylelintrc.yml",
+  "eslint.config.mjs",
+  "prettier.config.mjs",
   # Generator outputs
   "packages/cli/README.md",
   "docs/worker-configuration.d.ts",
@@ -55,10 +45,15 @@ extend-exclude = [
   "**/*.svg",
   "**/*.min.js",
   "**/*.min.css",
-  # Paths that configurations leave out, such as installed dependencies and local secrets
+  # Paths that configurations leave out
+  "**/node_modules/**",
   "**/bower_components/**",
+  "**/coverage/**",
+  "**/.env",
+  "**/.env.*",
   "**/.dev.vars",
   "**/.dev.vars.*",
+  "**/.wrangler/**",
   # Lockfiles
   "**/*.lock",
   "**/bun.lockb",
@@ -67,8 +62,6 @@ extend-exclude = [
   "**/npm-shrinkwrap.json",
   "**/go.sum",
   "**/Package.resolved",
-  # Local environment files
-  "**/.env*",
   # This literal supplies a deliberate misspelling to the spelling checks and their corrections.
   "tests/config/setup/configurations.ts",
 ]

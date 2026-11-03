@@ -113,13 +113,11 @@ export async function readRepository(
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes
             .filter((each) => files.findStats(each.path)?.isDirectory() === true)
-            .map(
-                (each): ScopeFolder => ({
-                    path: each.path,
-                    configurations: each.configurations,
-                    origin: SETTINGS_FILE,
-                }),
-            ),
+            .map((each): ScopeFolder => ({
+                path: each.path,
+                configurations: each.configurations,
+                origin: SETTINGS_FILE,
+            })),
     ];
     return {
         root,

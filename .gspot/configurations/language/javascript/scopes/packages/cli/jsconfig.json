@@ -1,0 +1,38 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "strict": true,
+        "allowImportingTsExtensions": true,
+        "maxNodeModuleJsDepth": 0,
+        "jsx": "preserve",
+        "noImplicitAny": true
+    },
+    "include": [
+        "../../../../../../../packages/cli/**/*.js",
+        "../../../../../../../packages/cli/**/*.mjs",
+        "../../../../../../../packages/cli/**/*.cjs",
+        "../../../../../../../packages/cli/**/*.jsx"
+    ],
+    "extends": "../../../../../../../packages/cli/tsconfig.json",
+    "exclude": [
+        "../../../../../../../packages/cli/**/gspot.baseline.json",
+        "../../../../../../../packages/cli/README.md",
+        "../../../../../../../packages/cli/**/node_modules/**",
+        "../../../../../../../packages/cli/**/bower_components/**",
+        "../../../../../../../packages/cli/**/coverage/**",
+        "../../../../../../../packages/cli/**/.env",
+        "../../../../../../../packages/cli/**/.env.*",
+        "../../../../../../../packages/cli/**/.dev.vars",
+        "../../../../../../../packages/cli/**/.dev.vars.*",
+        "../../../../../../../packages/cli/**/.wrangler/**",
+        "../../../../../../../packages/cli/**/bun.lock",
+        "../../../../../../../packages/cli/**/eslint.config.mjs",
+        "../../../../../../../packages/cli/**/eslint.config.js",
+        "../../../../../../../packages/cli/**/eslint.config.cjs"
+    ],
+    "files": [
+        "../../../../../../../packages/cli/src/types/global.d.ts",
+        "../../../../../../../packages/cli/src/types/npmcli.d.ts",
+        "../../../../../../../packages/cli/src/types/spdx.d.ts"
+    ]
+}

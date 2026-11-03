@@ -10,3 +10,5 @@ message: >-
     account access.
 tokens:
     - '[&?](sessionId|seSessionId)=[0-9a-zA-Z-]{8,}'
+    - 'claude\.ai/code/session_[0-9a-zA-Z]+'
+    - 'chatgpt\.com/(?:c|share)/[0-9a-zA-Z-]+'

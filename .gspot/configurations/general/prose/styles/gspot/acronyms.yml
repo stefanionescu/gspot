@@ -5,146 +5,50 @@ ignorecase: false
 first: \b([A-Z]{3,6})\b
 second: (?:\b[A-Za-z]+(?:-[A-Za-z]+)* ){2,5}\(([A-Z]{3,6})\)
 exceptions:
-  - eslint
-  - "@eslint\\/js"
-  - "@gspothq\\/eslint\\-plugin"
-  - eslint\-plugin\-sonarjs
-  - eslint\-plugin\-unicorn
-  - eslint\-plugin\-security
-  - eslint\-plugin\-barrel\-files
-  - eslint\-plugin\-perfectionist
-  - eslint\-plugin\-n
-  - eslint\-plugin\-jsdoc
-  - eslint\-plugin\-regexp
-  - eslint\-plugin\-import\-x
-  - picomatch
-  - eslint\-import\-resolver\-typescript
-  - eslint\-plugin\-boundaries
-  - eslint\-plugin\-package\-json
-  - eslint\-config\-prettier
-  - globals
-  - knip
-  - tsc
-  - JavaScript
-  - ESLint
-  - typescript\-eslint
-  - TypeScript
-  - markdownlint\-cli2
-  - Markdown
-  - actionlint
-  - shellcheck
-  - zizmor
-  - GitHub
-  - shfmt
-  - zsh
-  - Bash
-  - ShellCheck
-  - commitlint
-  - taplo
-  - yamllint
-  - v8r
-  - ajv
-  - xmllint
-  - JSON
-  - TOML
-  - YAML
-  - osv\-scanner
-  - syncpack
-  - lychee
-  - jscpd
-  - Bun
-  - Node
-  - npm
-  - pnpm
-  - mise
-  - CI
-  - macOS
-  - Linux
-  - Windows
-  - prettier
-  - editorconfig\-checker
-  - Prettier
-  - node
-  - gspot
-  - license\-checker\-rseidelsohn
-  - pip\-licenses
-  - vale
-  - Vale
-  - DOM
-  - DTO
-  - RPC
-  - gitleaks
-  - dotenv\-linter
-  - semgrep
-  - Semgrep
-  - CSRF
-  - typos
-  - stylelint
-  - stylelint\-config\-standard
-  - postcss\-html
-  - CSS
-  - eslint\-plugin\-astro
-  - eslint\-plugin\-jsx\-a11y
-  - astro\-check
-  - prettier\-plugin\-astro
-  - wrangler
-  - Cloudflare
-  - html\-validate
-  - HTML
-  - purgecss
-  - eslint\-plugin\-zod
-  - Zod
-  - vertica
-  - IIF
-  - next\-intl
-  - udid
-  - NGINX
-  - Stylelint
-  - pytest
-  - markdownlint
-  - React
-  - Native
-  - Simple
-  - certifi
-  - writeable
-  - styl
-  - USAGE
-  - xdescribe
-  - ede
   - API
-  - CLI
-  - HTTP
-  - ID
-  - SQL
-  - UI
-  - URL
   - ASCII
   - ASD
   - BSD
+  - CLI
   - CPU
   - CRLF
+  - CSRF
+  - CSS
   - CSV
+  - DOM
+  - DTO
   - ESM
   - EUR
   - GBP
   - GNU
+  - HTML
+  - HTTP
   - HTTPS
+  - IIF
   - INI
+  - JSON
   - JSX
   - MIME
   - MIT
+  - NGINX
   - POSIX
   - README
+  - RPC
   - SCSS
   - SDK
   - SHA
+  - SQL
   - SSH
   - SVG
   - TLS
   - TODO
+  - TOML
   - TSX
+  - URL
+  - USAGE
   - USD
   - UTC
   - UTF
   - WASM
   - XML
+  - YAML

@@ -32,8 +32,7 @@ export type PushInput = { stdin: string; remote?: string };
 export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; conflicted: string[] };
 
 export type FixResult = { check: string; changed: string[] } & (
-    | { status: 'changed' | 'unchanged' | 'skipped' }
-    | { status: 'failed' | 'canceled'; note: string }
+    { status: 'changed' | 'unchanged' | 'skipped' } | { status: 'failed' | 'canceled'; note: string }
 );
 
 export type CheckProgress = Pick<CheckResult, 'check' | 'scope' | 'duration'> & {
