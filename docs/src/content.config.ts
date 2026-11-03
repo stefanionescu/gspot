@@ -6,7 +6,7 @@ import { docsLoader } from '@astrojs/starlight/loaders';
 import type { Loader, LoaderContext } from 'astro/loaders';
 import { buildCommandPage } from '#docs/reference/commands.ts';
 import { buildSettingsPage } from '#docs/reference/settings.ts';
-import { buildPluginPage } from '#docs/reference/eslint-plugin.ts';
+import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
 import { buildConfigurationPages } from '#docs/reference/configurations.ts';
 import { buildCheckIndex, formatCheckTable } from '#docs/reference/checks.ts';
 import type { ReferencePage, ConfigurationGuide } from '#docs/types/pages.ts';
@@ -49,7 +49,7 @@ function buildDocsSource(): Loader {
                 [`${REFERENCE_FOLDERS.commands}/index`, buildCommandPage()],
                 ...buildConfigurationPages(await buildGuideIndex(context)),
                 [`${REFERENCE_FOLDERS.settings}/index`, buildSettingsPage()],
-                [`${REFERENCE_FOLDERS.eslintPlugin}/index`, buildPluginPage()],
+                ...buildPluginPages(),
                 [`${REFERENCE_FOLDERS.checks}/index`, buildCheckIndex()],
             ]);
             for (const [path, page] of pages) {

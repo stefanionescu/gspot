@@ -1,5 +1,7 @@
 ---
 import Head from '@astrojs/starlight/components/Head.astro';
+import RuleRedirect from '#docs/components/starlight/RuleRedirect.astro';
+import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
 import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
 import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
 
@@ -30,3 +32,4 @@ const image =
 <meta property="og:image:alt" content={image.alt} />
 <link rel="preload" href={geist} as="font" type="font/woff2" crossorigin />
 <link rel="preload" href={geistMono} as="font" type="font/woff2" crossorigin />
+{Astro.url.pathname === `${REFERENCE_PATH}${REFERENCE_FOLDERS.eslintPlugin}/` && <RuleRedirect />}

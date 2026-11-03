@@ -1,5 +1,7 @@
+import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import plugin from '#eslint-plugin/plugin.ts';
+import { compareText } from '#cli/system/text.ts';
 import type { ReferencePage } from '#docs/types/pages.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
@@ -7,17 +9,47 @@ import { formatText, formatTable, formatSection, buildReferencePage } from '#doc
 
 import {
     HELP_HEADING,
+    REFERENCE_PATH,
     PURPOSE_HEADING,
     NO_CONFIG_MESSAGE,
+    REFERENCE_FOLDERS,
     CONJUNCTION_FORMAT,
     SCHEMA_TYPE_LABELS,
     NO_OPTIONS_MESSAGE,
     ESLINT_FIX_MESSAGE,
-    MINOR_HEADING_LEVEL,
+    TABLE_HEADING_LEVEL,
     TYPE_INFORMATION_MESSAGE,
     SUBSECTION_HEADING_LEVEL,
     DEFAULT_OPTION_DESCRIPTION,
 } from '#docs/config/reference.ts';
+
+const PLUGIN_PATH = `${REFERENCE_PATH}${REFERENCE_FOLDERS.eslintPlugin}/`;
+const RULE_MODULES = import.meta.glob<Readonly<Record<string, unknown>>>(
+    '../../../packages/eslint-plugin/src/rules/*/*.ts',
+    { eager: true },
+);
+const TOPIC_LABELS = new Map([
+    ['accessibility', 'Accessibility'],
+    ['assertions', 'Assertions'],
+    ['aws', 'AWS CDK'],
+    ['collections', 'Collections'],
+    ['control-flow', 'Control flow'],
+    ['functions', 'Functions'],
+    ['libraries', 'Libraries'],
+    ['logic', 'Logic'],
+    ['networks', 'Networks'],
+    ['promises', 'Promises'],
+    ['react', 'React'],
+    ['regex', 'Regular expressions'],
+    ['security', 'Security'],
+    ['servers', 'Servers'],
+    ['structure', 'Code structure'],
+    ['testing', 'Tests'],
+    ['types', 'Types'],
+    ['variables', 'Variables'],
+    ['vue', 'Vue'],
+    ['web', 'Web'],
+]);
 
 function formatPluginPresets(): string {
     return Object.entries(plugin.configs)
@@ -90,26 +122,66 @@ function formatRuleSection(name: string, rule: (typeof plugin.rules)[keyof typeo
         (rule.meta.fixable === undefined ? '' : ESLINT_FIX_MESSAGE) +
         (docs.requiresTypeChecking === true ? TYPE_INFORMATION_MESSAGE : '');
     const sections = [
-        formatSection('Why', formatText(docs.why), MINOR_HEADING_LEVEL),
-        formatSection(HELP_HEADING, formatText(docs.fix), MINOR_HEADING_LEVEL),
-        formatSection('Example', formatText(docs.example), MINOR_HEADING_LEVEL),
-        formatSection('Options', formatRuleOptions(rule.meta), MINOR_HEADING_LEVEL),
+        formatSection('Why', formatText(docs.why), SUBSECTION_HEADING_LEVEL),
+        formatSection(HELP_HEADING, formatText(docs.fix), SUBSECTION_HEADING_LEVEL),
+        formatSection('Example', formatText(docs.example), SUBSECTION_HEADING_LEVEL),
+        formatSection('Options', formatRuleOptions(rule.meta), SUBSECTION_HEADING_LEVEL),
     ];
     return formatSection(
         `\`${name}\``,
         `${formatText(docs.description)}\n\n${facts}\n${sections.join('')}`,
+        TABLE_HEADING_LEVEL,
+    );
+}
+
+function listTopicRules(): Map<string, string[]> {
+    const modules = Object.entries(RULE_MODULES).toSorted(([left], [right]) => compareText(left, right));
+    const topics = new Map<string, string[]>();
+    for (const name of Object.keys(plugin.rules).toSorted(compareText)) {
+        const rule = plugin.rules[name as keyof typeof plugin.rules];
+        const [path] = modules.find(([, exports]) => Object.values(exports).includes(rule)) ?? [];
+        if (path === undefined) throw new Error(`No topic folder holds the plugin rule ${name}.`);
+        const topic = posix.basename(posix.dirname(path));
+        topics.set(topic, [...(topics.get(topic) ?? []), name]);
+    }
+    return new Map([...topics].toSorted(([left], [right]) => compareText(left, right)));
+}
+
+function formatTopicIndex(topic: string, label: string, names: readonly string[]): string {
+    const path = `${PLUGIN_PATH}${topic}/`;
+    const links = names.map((name) => `<li id="${name}"><a href="${path}#${name}"><code>${name}</code></a></li>`);
+    return formatSection(
+        label,
+        `The [${label} page](${path}) explains these rules:\n\n<ul class="rule-index">\n${links.join('\n')}\n</ul>`,
         SUBSECTION_HEADING_LEVEL,
     );
 }
 
+function buildTopicPage(label: string, names: readonly string[]): ReferencePage {
+    const page = buildReferencePage(
+        `${label} rules`,
+        `The ${label} rules of ${pluginPackage.name}, with the reason and the fix for each.`,
+        `These rules belong to [\`${pluginPackage.name}\`](${PLUGIN_PATH}), whose page says how to install the plugin and which configs turn its rules on.\n` +
+            names.map((name) => formatRuleSection(name, plugin.rules[name as keyof typeof plugin.rules])).join(''),
+    );
+    page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };
+    return page;
+}
+
 /**
-Build the plugin page: how to install and use the plugin, then a section per rule. Each section names the configs
-that turn the rule on, why, what to do, an example, and its options. The rule name gives its heading and anchor.
+Build the plugin pages: an index that says how to install and use the plugin and lists the rules of each topic, and
+one page per topic folder with a section per rule. Each section names the configs that turn the rule on, why, what to
+do, an example, and its options. The rule name gives its heading and anchor, on the topic page and in the index, so a
+link to the index with a rule anchor still finds the rule.
+
+@returns each page, keyed by its path under the reference
 */
-export function buildPluginPage(): ReferencePage {
-    const rules = Object.keys(plugin.rules)
-        .toSorted((left, right) => (left < right ? -1 : Number(left > right)))
-        .map((name) => [name, plugin.rules[name as keyof typeof plugin.rules]] as const);
+export function buildPluginPages(): Map<string, ReferencePage> {
+    const topics = [...listTopicRules()].map(([topic, names]) => {
+        const label = TOPIC_LABELS.get(topic);
+        if (label === undefined) throw new Error(`The plugin topic ${topic} has no label.`);
+        return { topic, label, names };
+    });
     const readme = readFileSync(new URL('../../../packages/eslint-plugin/README.md', import.meta.url), 'utf8');
     const requirements = `Requires Node.js \`${pluginPackage.engines.node}\` and ESLint \`${pluginPackage.peerDependencies.eslint}\`. The optional magic-numbers rule needs \`@typescript-eslint/eslint-plugin\` \`${pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin']}\`.`;
     const introduction = readme
@@ -117,9 +189,20 @@ export function buildPluginPage(): ReferencePage {
         .trim()
         .replace('## Install\n', () => `## Install\n\n${requirements}\n`)
         .replace('## Use\n', () => `## Use\n\n${formatPluginPresets()}\n`);
-    return buildReferencePage(
+    const index = buildReferencePage(
         pluginPackage.name,
         pluginPackage.description,
-        introduction + formatSection('Rules', rules.map(([name, rule]) => formatRuleSection(name, rule)).join('')),
+        introduction +
+            formatSection(
+                'Rules',
+                topics.map(({ topic, label, names }) => formatTopicIndex(topic, label, names)).join(''),
+            ),
     );
+    return new Map([
+        [`${REFERENCE_FOLDERS.eslintPlugin}/index`, index],
+        ...topics.map(
+            ({ topic, label, names }) =>
+                [`${REFERENCE_FOLDERS.eslintPlugin}/${topic}`, buildTopicPage(label, names)] as const,
+        ),
+    ]);
 }

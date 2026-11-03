@@ -1,0 +1,6 @@
+<script>
+    // A rule link from the published plugin names the index and the rule anchor; open the rule on its topic page.
+    const id = decodeURIComponent(location.hash.slice(1));
+    const link = id === '' ? null : document.querySelector<HTMLAnchorElement>(`.rule-index li[id="${CSS.escape(id)}"] a`);
+    if (link !== null) location.replace(link.href);
+</script>
