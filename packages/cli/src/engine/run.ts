@@ -46,6 +46,7 @@ import {
     DOCKER_DAEMON_NOTE,
     CANCELED_CHECK_NOTE,
     DOCKER_MISSING_MESSAGE,
+    PROGRESS_INTERVAL_MILLISECONDS,
 } from '#cli/config/engine.ts';
 
 const DOCKER_AVAILABILITY = Symbol('docker availability');
@@ -217,7 +218,9 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
         checks.map(async (planned) => {
             const result = finishResult(run, await runPlannedCheck(run, planned));
             if (result.status === 'passed' || result.status === 'failed') run.baselineRun.finished.push(planned);
+            run.progress.unfinished.delete(planned);
             run.options.onProgress?.({
+                kind: 'finished',
                 check: result.check,
                 scope: result.scope,
                 duration: result.duration,
@@ -232,6 +235,26 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
         if (result.status === 'rejected') throw result.reason;
         return result.value;
     });
+}
+
+async function runEveryActiveCheck(run: Run, first: PlannedCheck[], last: PlannedCheck[]): Promise<CheckResult[]> {
+    const { progress, options } = run;
+    const started = performance.now();
+    const ticker = setInterval(() => {
+        options.onProgress?.({
+            kind: 'running',
+            running: [...progress.unfinished].map(({ check, scope }) => ({ check: check.id, scope: scope.path })),
+            elapsed: performance.now() - started,
+            finished: progress.finished,
+            total: progress.total,
+            comparison: options.comparison,
+        });
+    }, PROGRESS_INTERVAL_MILLISECONDS);
+    try {
+        return [...(await runActiveChecks(run, first)), ...(await runActiveChecks(run, last))];
+    } finally {
+        clearInterval(ticker);
+    }
 }
 
 async function planAfterFixes(session: CheckSession, options: RunOptions): Promise<PlanAfterFixes> {
@@ -287,9 +310,9 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
             paths: options.paths,
         },
         baselined: {},
-        progress: { finished: 0, total: active.length },
+        progress: { finished: 0, total: active.length, unfinished: new Set(active) },
     };
-    const results = [...(await runActiveChecks(run, first)), ...(await runActiveChecks(run, last))];
+    const results = await runEveryActiveCheck(run, first, last);
     const report = buildRunReport({
         session: checked,
         options,

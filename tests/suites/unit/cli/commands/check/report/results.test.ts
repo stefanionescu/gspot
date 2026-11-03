@@ -157,7 +157,7 @@ test('the report prints planned skips once with their reason only in verbose out
     expect(formatRunReport(skipped, { verbose: true })).toContain('skipped  bash/shellcheck  disabled');
 });
 
-test('terminal progress rewrites one status line, and a log gets one line per finished check', () => {
+test('terminal progress rewrites one status line, and a log prints only what runs past the interval', () => {
     const terminal: string[] = [];
     const log: string[] = [];
     using _environment = overrideEnvironment({ NO_COLOR: undefined, TERM: 'xterm-256color' });
@@ -173,21 +173,33 @@ test('terminal progress rewrites one status line, and a log gets one line per fi
             lines.push(String(chunk));
             return true;
         });
-        for (let index = 0; index < 5; index++)
-            printProgress({
-                check: 'python/ruff',
-                scope: index === 0 ? 'api' : '',
-                duration: 1200,
-                finished: index + 1,
-                total: 5,
-                comparison: undefined,
-            });
+        const place = { total: 3, comparison: undefined };
+        printProgress({ ...place, kind: 'finished', check: 'bash/shfmt', scope: '', duration: 1200, finished: 1 });
+        printProgress({
+            ...place,
+            kind: 'running',
+            running: [
+                { check: 'python/ruff', scope: 'api' },
+                { check: 'javascript/eslint', scope: '' },
+            ],
+            elapsed: 10_000,
+            finished: 1,
+        });
+        printProgress({
+            ...place,
+            kind: 'finished',
+            check: 'python/ruff',
+            scope: 'api',
+            duration: 12_300,
+            finished: 2,
+        });
     }
-    expect(terminal).toHaveLength(5);
+    expect(terminal).toHaveLength(3);
     for (const line of terminal) expect(line).toStartWith('\r\u{1B}[2K');
-    expect(log).toHaveLength(5);
-    expect(log[0]).toBe('done  api  python/ruff  1.2s\n');
-    expect(log[1]).toBe('done  python/ruff  1.2s\n');
+    expect(log).toStrictEqual([
+        'running  api  python/ruff and javascript/eslint  10.0s\n',
+        'done  api  python/ruff  12.3s\n',
+    ]);
 });
 
 test.each([{ TERM: 'dumb' }, { NO_COLOR: '1' }])(
@@ -204,14 +216,15 @@ test.each([{ TERM: 'dumb' }, { NO_COLOR: '1' }])(
             return true;
         });
         printProgress({
+            kind: 'finished',
             check: 'python/ruff',
             scope: '',
-            duration: 1200,
+            duration: 12_300,
             finished: 1,
             total: 1,
             comparison: undefined,
         });
-        expect(lines).toStrictEqual(['done  python/ruff  1.2s\n']);
+        expect(lines).toStrictEqual(['done  python/ruff  12.3s\n']);
     },
 );
 

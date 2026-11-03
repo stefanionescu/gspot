@@ -46,5 +46,5 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
     await applyGeneratedFiles(sandbox.path);
     const installed = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(installed.stderr).toMatch(/^done {2}repository\/encoding {2}\d+\.\ds\n$/u);
+    expect(installed.stderr).toBe('');
 });

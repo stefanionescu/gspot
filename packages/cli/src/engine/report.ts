@@ -1,6 +1,6 @@
-import { formatScope } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { formatScope, formatNameList } from '#cli/system/text.ts';
 import { writeProgress, rewriteProgress } from '#cli/system/terminal.ts';
 import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
@@ -23,7 +23,18 @@ import {
     NO_FILES_MESSAGE,
     SHORT_HASH_LENGTH,
     INCOMPLETE_STATUSES,
+    PROGRESS_INTERVAL_MILLISECONDS,
 } from '#cli/config/engine.ts';
+
+const RUNNING_CHECKS_SHOWN = 3;
+
+function formatRunningChecks(running: Array<Pick<CheckResult, 'check' | 'scope'>>): string {
+    const names = running
+        .slice(0, RUNNING_CHECKS_SHOWN)
+        .map(({ check, scope }) => (scope === '' ? check : `${formatScope(scope)}  ${check}`));
+    const hidden = running.length - names.length;
+    return formatNameList(hidden > 0 ? [...names, `${String(hidden)} more`] : names);
+}
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
     const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
@@ -129,14 +140,22 @@ export function formatCheckedContent(comparison: CheckProgress['comparison']): s
 }
 
 /**
-Rewrite the progress line when stderr takes one, and print one line per finished check otherwise.
+Rewrite the progress line when stderr takes one. Otherwise print a line only for the checks that run past the progress
+interval: the checks still running at each interval, and a check that finishes after it.
 
-@param progress the last finished check and its place in the run.
+@param progress the last finished check, or the checks still running, and the place in the run.
 */
 export function printProgress(progress: CheckProgress): void {
     const subject = formatCheckedContent(progress.comparison);
     if (rewriteProgress(`Checking ${subject}: ${String(progress.finished)} of ${String(progress.total)} checks done`))
         return;
+    if (progress.kind === 'running') {
+        const seconds = (progress.elapsed / MILLISECONDS_PER_SECOND).toFixed(1);
+        if (progress.running.length > 0)
+            writeProgress(`running  ${formatRunningChecks(progress.running)}  ${seconds}s\n`);
+        return;
+    }
+    if (progress.duration < PROGRESS_INTERVAL_MILLISECONDS) return;
     const scope = progress.scope === '' ? '' : `${formatScope(progress.scope)}  `;
     const seconds = (progress.duration / MILLISECONDS_PER_SECOND).toFixed(1);
     writeProgress(`done  ${scope}${progress.check}  ${seconds}s\n`);

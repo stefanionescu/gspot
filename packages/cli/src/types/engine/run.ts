@@ -29,11 +29,14 @@ export type FixResult = { check: string; changed: string[] } & (
     { status: 'changed' | 'unchanged' | 'skipped' } | { status: 'failed' | 'canceled'; note: string }
 );
 
-export type CheckProgress = Pick<CheckResult, 'check' | 'scope' | 'duration'> & {
+export type CheckProgress = {
     finished: number;
     total: number;
     comparison: RunReport['comparison'];
-};
+} & (
+    | ({ kind: 'finished' } & Pick<CheckResult, 'check' | 'scope' | 'duration'>)
+    | { kind: 'running'; running: Array<Pick<CheckResult, 'check' | 'scope'>>; elapsed: number }
+);
 
 export type PlanAfterFixes = { session: CheckSession; planned: PlannedCheck[]; fixes: FixReport | undefined };
 
@@ -44,7 +47,7 @@ export type Run = {
     codes: Map<PlannedCheck, CheckCode | undefined>;
     baselineRun: BaselineRun;
     baselined: Record<string, number>;
-    progress: Pick<CheckProgress, 'finished' | 'total'>;
+    progress: { finished: number; total: number; unfinished: Set<PlannedCheck> };
 };
 
 export type BaselineRun = {

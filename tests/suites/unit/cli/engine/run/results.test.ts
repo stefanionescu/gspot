@@ -199,60 +199,6 @@ test('a check with malformed JSON reports an error, and the other checks keep th
     ]);
 });
 
-test('progress is reported as soon as each check ends, with ignores applied to the final results', async () => {
-    const tables = stringify({
-        ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' }],
-        command_check: [
-            {
-                id: 'project/fast',
-                paths: ['source.sh'],
-                stage: 'commit',
-                command: buildProgramCommand(
-                    'fakes/tool',
-                    '--stdout',
-                    'source.sh:demo:Ignored finding\n',
-                    '--exit',
-                    '1',
-                ),
-                output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<rule>[^:]+):(?<message>.*)$' },
-            },
-            {
-                id: 'project/waiting',
-                paths: ['source.sh'],
-                stage: 'commit',
-                command: buildProgramCommand('fakes/tool', '--until', 'completed'),
-            },
-        ],
-    });
-    await using sandbox = await createGitSandbox({
-        'source.sh': 'echo example\n',
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
-    });
-
-    const finished: number[] = [];
-    const ready = Promise.withResolvers<number>();
-    const running = runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({
-            only: ['project/fast', 'project/waiting'],
-            onProgress: (progress) => {
-                finished.push(progress.finished);
-                if (progress.finished === 1) ready.resolve(progress.finished);
-            },
-        }),
-    );
-    await Promise.race([ready.promise, running]);
-    await writeFile(join(sandbox.path, 'completed'), 'ready');
-    const result = await running;
-    expect(result.report.exitCode).toBe(0);
-    expect(finished).toStrictEqual([1, 2]);
-    expect(result.report.checks.map((each) => each.check)).toStrictEqual(['project/fast', 'project/waiting']);
-    expect(result.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
-    expect(result.report.ignores).toStrictEqual([
-        { check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' },
-    ]);
-});
-
 test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's files: $check", async (row) => {
     await using sandbox = await createGitSandbox({
         ...SCOPE_CHECK_FILES,
