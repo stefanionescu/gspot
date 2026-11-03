@@ -128,5 +128,5 @@ test('a pre-push run checks the push stage and leaves the commit stage to the co
     const stdin = `refs/heads/main ${head} refs/heads/main ${base}\n`;
     const result = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, { stdin });
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stdout + result.stderr).toContain('project/bash-syntax runs at the commit stage, not at push.');
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
 });
