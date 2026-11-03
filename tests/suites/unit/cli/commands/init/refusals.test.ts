@@ -27,9 +27,9 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
 });
 
 test.each([
-    ['--configurations', 'bash', '--no-configurations'],
-    ['--no-configurations', '--configurations', 'bash'],
-])('init %s %s %s refuses the two selections and writes nothing', async (...flags) => {
+    { flags: ['--configurations', 'bash', '--no-configurations'] },
+    { flags: ['--no-configurations', '--configurations', 'bash'] },
+])('init $flags refuses the two selections and writes nothing', async ({ flags }) => {
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
