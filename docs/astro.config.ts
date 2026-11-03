@@ -77,6 +77,7 @@ export default defineConfig({
             components: {
                 Head: './src/components/starlight/Head.astro',
                 Header: './src/components/starlight/Header.astro',
+                Footer: './src/components/starlight/Footer.astro',
                 Hero: './src/components/home/hero/Hero.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 ThemeProvider: './src/components/starlight/theme/Provider.astro',
