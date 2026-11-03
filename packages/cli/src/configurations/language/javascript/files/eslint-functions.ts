@@ -38,6 +38,15 @@ function pickRuleOptions(
     ];
 }
 
+function dropProjectService(
+    languageOptions: NonNullable<JavascriptBlock['languageOptions']>,
+): NonNullable<JavascriptBlock['languageOptions']> {
+    const parserOptions = languageOptions['parserOptions'] as Record<string, unknown> | undefined;
+    if (parserOptions === undefined) return languageOptions;
+    const { project: _project, projectService: _projectService, ...parsing } = parserOptions;
+    return { ...languageOptions, parserOptions: parsing };
+}
+
 function setRuleLevel(value: unknown, level: unknown): unknown {
     const configured: unknown[] = Array.isArray(value) ? value : [value];
     const [severity, ...options] = configured;
@@ -413,4 +422,22 @@ export function setJestGlobals(
     plugin: { environments: { globals: { globals: EslintGlobals } } },
 ): JavascriptBlock {
     return { ...block, languageOptions: { ...block.languageOptions, globals: plugin.environments.globals.globals } };
+}
+
+/**
+Keep the parts of a block that import-x/no-cycle reads: its files, parser, processor, plugins, and import-x settings.
+Leave out its rules and its other settings, which import-x hashes on every resolve, and the TypeScript project
+service, whose type information the rule does not read.
+
+@param block a block of the ESLint config.
+*/
+export function keepCycleFields(block: JavascriptBlock): JavascriptBlock {
+    const { rules: _rules, settings, languageOptions, ...kept } = block;
+    const importSettings =
+        settings === undefined ? [] : Object.entries(settings).filter(([key]) => key.startsWith('import-x/'));
+    return {
+        ...kept,
+        ...(languageOptions !== undefined && { languageOptions: dropProjectService(languageOptions) }),
+        ...(importSettings.length > 0 && { settings: Object.fromEntries(importSettings) }),
+    };
 }

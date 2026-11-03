@@ -206,11 +206,13 @@ const REGEXP_RULES = {
 } as const;
 
 export const IMPORT_CYCLES_CONFIG = `import config from './eslint.mjs';
+import { keepCycleFields } from './functions.mjs';
 
 export default [
-    ...config.map(({ rules: _rules, ...block }) => block),
+    ...config.map((block) => keepCycleFields(block)),
     {
         linterOptions: { reportUnusedDisableDirectives: 'off' },
+        settings: { 'import-x/cache': { lifetime: Infinity } },
         rules: { 'import-x/no-cycle': ['error', { ignoreExternal: true }] },
     },
 ];
