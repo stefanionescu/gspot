@@ -193,7 +193,7 @@ export default defineConfig({
                 starlightLlmsTxt({
                     projectName: 'gspot',
                     description: cliPackage.description,
-                    details: `${README_OPENING}\n\nThis documentation covers ${cliPackage.name} ${cliPackage.version}.\n\n${AGENT_FACTS}\n\n${AGENT_EVALUATION}\n\n${AGENT_STEPS}`,
+                    details: `This documentation covers ${cliPackage.name} ${cliPackage.version}.\n\n${AGENT_FACTS}\n\n${AGENT_EVALUATION}\n\n${AGENT_STEPS}`,
                     ...LLMS_PAGES,
                 }),
             ],

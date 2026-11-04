@@ -236,9 +236,10 @@ export const SPELLING_LOCALES = ['en', 'en-us', 'en-gb', 'en-au', 'en-ca'] as co
 
 export const REEXPORT_MODES = ['none', 'index-only'] as const;
 
-export const LEVEL_SUMMARY = 'Level basic holds rules that rarely misfire on working code.';
+export const LEVEL_SUMMARY = 'Level basic turns on only the rules that rarely flag correct code.';
 
-export const ALL_LEVEL_SUMMARY = 'Level all adds rules with known false positives or taste.';
+export const ALL_LEVEL_SUMMARY =
+    'Level all adds stricter rules that sometimes flag correct code or enforce a style preference.';
 
 export const ESLINT_SEVERITIES = ['off', 'warn', 'error'] as const;
 
