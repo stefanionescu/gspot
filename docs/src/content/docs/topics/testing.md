@@ -4,75 +4,52 @@ description: Run your tests before every push and fail when coverage drops under
 configurations: [jest, vitest, pytest]
 ---
 
-gspot runs your test suite as a check at the push stage, and the check fails when coverage falls below the limits you
-set. Keep the test runner and its dependencies in your own project.
+gspot runs your test suite as a check at the push stage, and the check fails when coverage falls below its minimum.
+Keep the test runner and its coverage package in your own project. For a test runner without a configuration, write a
+[command check](/configure/command-checks/).
 
-At level `basic`, the coverage checks set no minimum. At level `all`, Jest and Vitest require 80% for lines, branches,
-functions, and statements. pytest and Swift check line coverage only, with an 80% minimum. A limit you set holds at
-both levels. For a test runner without a configuration, write a [command check](/configure/command-checks/).
+| Runner | gspot selects it when the project has                             | Check          | Coverage minimums                      |
+| ------ | ----------------------------------------------------------------- | -------------- | -------------------------------------- |
+| Jest   | a `jest` dependency or a `jest.config.*` file                     | `jest/tests`   | lines, branches, functions, statements |
+| Vitest | a `vitest` dependency, `vitest.config.*`, or `vitest.workspace.*` | `vitest/tests` | lines, branches, functions, statements |
+| pytest | a `pytest` dependency, `conftest.py`, or `pytest.ini`             | `pytest/tests` | lines                                  |
+| Swift  | the `swift` configuration                                         | `swift/tests`  | lines, also per target                 |
+
+Otherwise, run `gspot add <runner>`, such as `gspot add vitest`. Run one suite with `gspot check --only <check>`.
+
+## Coverage minimums
+
+At level `basic`, the minimums are 0. At level `all`, each one is 80. Set your own:
+
+```shell
+gspot set coverage.min_line_percent 90
+```
+
+The settings are `coverage.min_line_percent`, `coverage.min_branch_percent`, `coverage.min_function_percent`, and
+`coverage.min_statement_percent`. A minimum that you set holds at both levels, and lowering one needs a reason. Add
+`--scope <path>` to set it for one scope. [Swift](/languages/swift/#coverage) sets a minimum for one target.
 
 ## Jest
 
-gspot selects `jest` when your project depends on `jest` or has a `jest.config.*` file; otherwise, run `gspot add jest`.
-Then run the coverage check:
+The check runs Jest in your working tree. Failed tests, missed coverage minimums, and a suite that cannot load report
+findings, and `gspot check` exits with `1`. A missing report or a command that cannot run makes it exit with `2`.
 
-```shell
-gspot check --only jest/tests
-```
-
-The check runs Jest in your working tree. Failed tests, missed coverage limits, and a suite that cannot load report
-findings and exit with `1`. A missing report or a command that cannot run exits with `2`.
-
-To require full function coverage:
-
-```shell
-gspot set coverage.min_function_percent 100
-```
-
-Add `--scope app` to set it for the scope `app` only. The [settings reference](/reference/gspot-toml/) lists every
-coverage setting.
-
-The Jest configuration reports `.only` tests, skipped tests, and broken test calls, at both levels. It reads test
-functions from `@jest/globals`.
+The Jest configuration also reports `.only` tests, skipped tests, and broken test calls, at both levels. It reads the
+test functions from `@jest/globals`.
 
 ## Vitest
 
-gspot selects `vitest` from its dependency or a `vitest.config.*` or `vitest.workspace.*` file. Otherwise, run
-`gspot add vitest`. Install Vitest and its
-coverage provider in your project. Then run:
+Install Vitest and its coverage provider in your project. Vitest reads its own `vitest.config.ts`.
 
-```shell
-gspot check --only vitest/tests
-```
+## pytest
 
-Set the minimums under `coverage`: `lines`, `branches`, `functions`, and `statements`. Vitest reads its own
-`vitest.config.ts`.
-
-## Python with pytest
-
-gspot selects `pytest` when your project depends on `pytest` or has `conftest.py` or `pytest.ini`; otherwise, run `gspot
-add pytest`. Install pytest and pytest-cov in the `.venv` of your project. Then run:
-
-```shell
-gspot check --only pytest/tests
-```
-
-`coverage.min_line_percent` sets the line coverage limit. The check runs pytest with `--strict-markers` and `--strict-config`.
-The generated coverage defaults omit paths matched by `test_files`, so tests do not raise the measured coverage.
-When the project provides its own coverage configuration, that configuration decides which files to omit.
-
-## Swift
-
-The [Swift](/languages/swift/#tests) page covers Swift tests and their coverage minimums.
+Install pytest and pytest-cov in the `.venv` of your project. The check runs pytest with `--strict-markers` and
+`--strict-config`, and skips a scope that holds no test file. The generated coverage settings leave out the files of
+`test_files`, so tests do not raise the measured coverage. When the project has its own coverage settings, those decide
+which files to leave out.
 
 ## Test files
 
-`test_files` names the files that test lint rules treat as tests, such as the Ruff rules for pytest. It does not take
-files out of other checks. Its default covers the usual test folders and file names; the [settings
-reference](/reference/gspot-toml/#test_files) lists them.
-
-Your first written list replaces the default patterns. A scope adds its patterns to its written parent list:
-
-```shell
-gspot set test_files "e2e/**"
-```
+`test_files` names the files that the test lint rules treat as tests, such as the Ruff rules for pytest. It does not
+take files out of other checks. Your first list replaces the default patterns, so `gspot explain test_files` prints
+them for you to copy. A scope adds its patterns to the list of its parent.

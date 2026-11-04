@@ -54,7 +54,8 @@ not matter.
 package names and versions to the Open Source Vulnerabilities (OSV) service. Update the package, then check again. An
 accepted advisory needs an [ignore with a reason](/use/ignore/).
 
-The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools.
+The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools. A gspot release fixes
+an advisory in those tools with new pins.
 
 A new advisory can name a version that no commit changed. gspot adds no scheduled job to your CI. To scan on a schedule,
 add a workflow of your own beside `.github/workflows/gspot.yml`. Copy its steps through `Install gspot tools`, set
@@ -79,9 +80,14 @@ For a stale lockfile, run the install of your package manager, such as `bun inst
 
 ## Registry hosts
 
-Lockfile downloads use `registry.npmjs.org` and `registry.yarnpkg.com` by default. Add another reviewed host with `gspot
-set dependencies.allowed_registries <HOST> --reason "<WHY>"`. Downloads must still use HTTPS. A host allowed in a scope
-counts for that folder and the folders inside it.
+Lockfile downloads may use `registry.npmjs.org` and `registry.yarnpkg.com`. To allow another host, list every host,
+because `gspot set` replaces the list:
+
+```shell
+gspot set dependencies.allowed_registries registry.npmjs.org registry.yarnpkg.com npm.example.com --reason "<why>"
+```
+
+Downloads must still use HTTPS. A host allowed in a scope counts for that folder and the folders inside it.
 
 ## Release age of the gspot tools
 
