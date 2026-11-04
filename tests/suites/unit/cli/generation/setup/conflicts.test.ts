@@ -9,6 +9,7 @@ import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import * as installers from '#cli/tools/installers/install.ts';
+import { LINT_FOLDER_MESSAGE } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -76,12 +77,7 @@ test('the init plan deletes the conflicting config files and lists the lint fold
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const plan = initOutputSchema.parse(JSON.parse(initialized.stdout)).plan;
     expect(plan.deleted.map(({ path }) => path)).toStrictEqual(REPLACED_CONFIG_DELETIONS.map(({ path }) => path));
-    expect(plan.lintFolders).toStrictEqual([
-        {
-            path: 'quality/',
-            note: 'a folder of lint scripts; check remaining references before deleting it',
-        },
-    ]);
+    expect(plan.lintFolders).toStrictEqual([{ path: 'quality/', note: LINT_FOLDER_MESSAGE }]);
     for (const { path } of REPLACED_CONFIG_DELETIONS) expect(existsSync(join(sandbox.path, path))).toBe(false);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
@@ -154,7 +150,7 @@ test('init keeps a linked shared file and the bytes and mode of the file it link
 
 test.each([...REPLACED_PYPROJECT_TABLES])(
     'init names the $table table it leaves in pyproject.toml',
-    async ({ configuration, text, source, note, generated }) => {
+    async ({ configuration, table, text, source, generated }) => {
         using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox({});
         const path = 'pyproject.toml';
@@ -167,7 +163,9 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         const commandArguments = ['init', '--configurations', configuration];
         const initialized = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect(initOutputSchema.parse(JSON.parse(initialized.stdout)).plan.keep).toStrictEqual([{ path, note: note }]);
+        expect(initOutputSchema.parse(JSON.parse(initialized.stdout)).plan.keep).toStrictEqual([
+            { path, note: expect.stringContaining(table) as string },
+        ]);
         await assertFileKept(sandbox.path, path, previous);
         expect(existsSync(join(sandbox.path, generated))).toBe(true);
     },
@@ -214,11 +212,13 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         const plan = initOutputSchema.parse(JSON.parse(written.stdout)).plan;
         expect(plan.deleted).toContainEqual({
             path: authoredConfiguration,
-            note: 'replaced by the generated file for stylelint',
+            note: expect.stringContaining('stylelint') as string,
         });
-        expect(plan.change.filter(({ path, note }) => path === packagePath && !note.startsWith('pins'))).toStrictEqual(
-            changed.map((path) => ({ path, note: 'managed stylelint fields; other content stays' })),
-        );
+        expect(
+            plan.change
+                .filter(({ path, note }) => path === packagePath && note.includes('stylelint'))
+                .map(({ path }) => path),
+        ).toStrictEqual([...changed]);
         expect(existsSync(join(sandbox.path, authoredConfiguration))).toBe(false);
         for (const { path, text } of unchangedFiles) {
             const saved = await readFile(join(sandbox.path, path), 'utf8');

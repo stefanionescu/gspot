@@ -12,14 +12,19 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { PackageFieldScenario } from '#tests/types/setup.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
-import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation.ts';
 import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
+
+import {
+    MANAGED_KEYS_NOTE,
+    HOOKS_CHANGED_NOTE,
+    TOOLS_CHANGED_NOTE,
+    STALE_LOCKFILE_NOTE,
+} from '#cli/config/generation.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);
@@ -103,14 +108,14 @@ test('writing a mise project preserves its lockfile and asks for an install afte
     };
     const report = await writeGeneratedFiles(session, output, writer);
     expect(await readFile(join(sandbox.path, '.gspot/mise.lock'), 'utf8')).toBe('version = 1\n');
-    expect(await listInstallNotes(session, output, report)).toContain('Git hooks changed. Run gspot install.');
+    expect(await listInstallNotes(session, output, report)).toContain(HOOKS_CHANGED_NOTE);
     runGitStep(sandbox.path, ['init', '--quiet']);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
     output.files[1]!.content = '#!/bin/sh\nexit 1\n';
     const configured = await openSession(sandbox.path);
     const changed = await writeGeneratedFiles(configured, output, writer);
     expect(changed.written).toContain('.gspot/hooks/pre-commit');
-    expect(await listInstallNotes(configured, output, changed)).not.toContain('Git hooks changed. Run gspot install.');
+    expect(await listInstallNotes(configured, output, changed)).not.toContain(HOOKS_CHANGED_NOTE);
 });
 
 test('the install notes name changed tools after the first write, and a missing lockfile after a repeated one', async () => {

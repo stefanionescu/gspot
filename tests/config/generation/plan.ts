@@ -7,7 +7,6 @@ export const REPLACED_PYPROJECT_TABLES = [
     {
         configuration: 'python',
         table: 'tool.basedpyright',
-        note: 'tool.basedpyright settings stay here, and the generated file for basedpyright takes over. Delete the section; the generated file replaces it.',
         text: '[tool.basedpyright]\ntypeCheckingMode = "basic"\n',
         source: { file: 'main.py', text: 'VALUE = 1\n' },
         generated: 'pyrightconfig.json',
@@ -15,7 +14,6 @@ export const REPLACED_PYPROJECT_TABLES = [
     {
         configuration: 'sql',
         table: 'tool.sqlfluff',
-        note: 'tool.sqlfluff settings stay here, and the generated file for sqlfluff takes over. Delete the section; the generated file replaces it.',
         text: '[tool.sqlfluff.core]\ndialect = "postgres"\n',
         source: { file: 'query.sql', text: 'SELECT 1;\n' },
         generated: `${GSPOT_PATHS.configurations}/language/sql/sqlfluff.cfg`,
@@ -103,24 +101,12 @@ export const SYNCPACK_FILE = {
 
 export const GIT_PLAN_CASES = [{ name: 'a Git repository', changes: [] }] as const;
 
-export const EDITORCONFIG_WRITE = [
-    {
-        path: '.editorconfig',
-        note: 'replaces your file; read the old one with git show HEAD:.editorconfig',
-    },
-] as const;
-
 export const QUALITY_PACKAGE_FILES = {
     'package.json': '{"name":"shop","private":true,"type":"module","dependencies":{"react":"19.0.0"}}\n',
     'src/app.tsx': 'export const App = () => null;\n',
     'quality/package.json': '{"name":"shop-quality","private":true,"dependencies":{"ts-morph":"26.0.0"}}\n',
     'quality/check.ts': 'export const value = 1;\n',
     '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
-} as const;
-
-export const ATTRIBUTES_PLAN_ROW = {
-    path: '.gitattributes',
-    note: 'marks the generated files and keeps LF line endings',
 } as const;
 
 const UNCOMMITTED_FORMAT_FILES = [

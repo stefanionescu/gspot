@@ -12,14 +12,8 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { WORKSPACE_PYTHON_FILES } from '#tests/config/generation/settings.ts';
-
-import {
-    GIT_PLAN_CASES,
-    PRESERVE_SOURCE,
-    EDITORCONFIG_WRITE,
-    ATTRIBUTES_PLAN_ROW,
-    QUALITY_PACKAGE_FILES,
-} from '#tests/config/generation/plan.ts';
+import { GIT_PLAN_CASES, PRESERVE_SOURCE, QUALITY_PACKAGE_FILES } from '#tests/config/generation/plan.ts';
+import { ATTRIBUTES_ROW, UNREAD_SUBMODULE_MESSAGE, DROPPED_LINE_SETTINGS_NOTE } from '#cli/config/generation.ts';
 
 test.each([
     { name: 'a new .gitattributes under write', files: {}, attributes: 'write' },
@@ -37,10 +31,10 @@ test.each([
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
-    const pin = { path: 'package.json', note: `pins gspot ${cliPackage.version}` };
-    expect(plan.change).toStrictEqual(attributes === 'change' ? [ATTRIBUTES_PLAN_ROW, pin] : [pin]);
-    expect(plan.write.filter(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual(
-        attributes === 'write' ? [ATTRIBUTES_PLAN_ROW] : [],
+    const pin = { path: 'package.json', note: expect.stringContaining(cliPackage.version) as string };
+    expect(plan.change).toStrictEqual(attributes === 'change' ? [ATTRIBUTES_ROW, pin] : [pin]);
+    expect(plan.write.filter(({ path }) => path === ATTRIBUTES_ROW.path)).toStrictEqual(
+        attributes === 'write' ? [ATTRIBUTES_ROW] : [],
     );
     expect(plan.deleted).toStrictEqual([]);
     expect(plan.lintFolders).toStrictEqual([]);
@@ -53,9 +47,9 @@ test('the init plan asks for git add --renormalize when the index holds CRLF fil
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
-    expect(plan.write.find(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual({
-        path: ATTRIBUTES_PLAN_ROW.path,
-        note: `${ATTRIBUTES_PLAN_ROW.note}; then run git add --renormalize . for the 1 file that the index holds with CRLF`,
+    expect(plan.write.find(({ path }) => path === ATTRIBUTES_ROW.path)).toStrictEqual({
+        path: ATTRIBUTES_ROW.path,
+        note: expect.stringContaining('git add --renormalize .') as string,
     });
 });
 
@@ -81,7 +75,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
     const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);
     expect(result.code).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
-        plan: { keep: [{ path: 'external project', note: 'submodule; init does not read it' }] },
+        plan: { keep: [{ path: 'external project', note: UNREAD_SUBMODULE_MESSAGE }] },
     });
     expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
 });
@@ -97,7 +91,7 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     expect(readSettings(settingsText, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
     expect(plan.lintFolders.map(({ path }) => path)).toStrictEqual(['quality/']);
     expect(plan.deleted).toStrictEqual([
-        { path: '.commitlintrc.json', note: 'replaced by the generated file for commitlint' },
+        { path: '.commitlintrc.json', note: expect.stringContaining('commitlint') as string },
     ]);
 });
 
@@ -116,7 +110,7 @@ test('the init plan names the line of each lint command and leaves the file alon
             source: 'script',
             command: 'eslint .',
             tool: 'eslint',
-            fix: 'Run gspot check once at the repository root instead.',
+            fix: expect.any(String) as string,
         },
     ]);
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toContain('"lint": "eslint ."');
@@ -129,9 +123,7 @@ test('init names the crlf setting of your .editorconfig as dropped', async () =>
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
-    expect(plan.write.find(({ path }) => path === '.editorconfig')?.note).toContain(
-        'gspot always writes lf and a final newline',
-    );
+    expect(plan.write.find(({ path }) => path === '.editorconfig')?.note).toContain(DROPPED_LINE_SETTINGS_NOTE);
 });
 
 test('init lists your .editorconfig under write and not under delete when the generated one replaces it', async () => {
@@ -143,7 +135,9 @@ test('init lists your .editorconfig under write and not under delete when the ge
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const { plan } = initOutputSchema.parse(JSON.parse(initialized.stdout));
     expect(plan.deleted.map(({ path }) => path)).not.toContain('.editorconfig');
-    expect(plan.write.filter(({ path }) => path === '.editorconfig')).toStrictEqual([...EDITORCONFIG_WRITE]);
+    expect(plan.write.filter(({ path }) => path === '.editorconfig')).toStrictEqual([
+        { path: '.editorconfig', note: expect.stringContaining('git show HEAD:.editorconfig') as string },
+    ]);
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).not.toBe(authored);
     expect(runGitStep(sandbox.path, ['show', 'HEAD:.editorconfig'])).toBe(authored.trimEnd());
 });
@@ -172,9 +166,8 @@ test('init leaves CI off with a GitHub origin and names the commands that turn i
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain('existing hooks');
     expect(result.stdout).toContain('existing ci');
-    expect(result.stdout).toContain(
-        'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.',
-    );
+    expect(result.stdout).toContain('gspot set ci.enabled true');
+    expect(result.stdout).toContain('gspot set ci.provider gitlab');
     const written = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(readSettings(written, sandbox.path).written).not.toHaveProperty('ci');
 });

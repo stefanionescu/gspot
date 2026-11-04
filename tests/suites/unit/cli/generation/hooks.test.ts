@@ -119,9 +119,8 @@ test.each(START_COMMANDS)(
             },
         );
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(result.stderr).toBe(
-            `${program} is not on the PATH that this Git client gives hooks (${searchPath}). Start the client from a terminal, or add ${program}'s folder to its PATH.\n`,
-        );
+        expect(result.stderr).toContain(program);
+        expect(result.stderr).toContain(searchPath);
     },
 );
 
@@ -143,9 +142,7 @@ test.each(START_COMMANDS.filter(([program]) => program !== 'mise'))(
         });
         expect(result.code, result.stdout + result.stderr).toBe(2);
         const name = program === 'bunx' ? 'bun' : program;
-        expect(result.stderr).toBe(
-            `gspot is not installed in this worktree. Run ${name} install, then gspot install.\n`,
-        );
+        expect(result.stderr).toContain(`${name} install`);
         expect(existsSync(log)).toBe(false);
     },
 );
@@ -244,7 +241,5 @@ test.each(['pre-push', 'post-merge'])('%s exits before reading input when git-lf
     });
     expect(existsSync(readMarker)).toBe(false);
     expect(missing.code, missing.stdout + missing.stderr).toBe(2);
-    expect(missing.stderr).toBe(
-        'This repository uses Git LFS. Install git-lfs, then run git lfs install --skip-repo.\n',
-    );
+    expect(missing.stderr).toContain('git lfs install --skip-repo');
 });

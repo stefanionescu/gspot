@@ -11,6 +11,7 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { initOutputSchema } from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
+import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
 import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carryover.ts';
@@ -126,7 +127,7 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan, settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
         expect([...plan.deleted, ...plan.write].find((file) => file.path === path)?.note).toContain(
-            'gspot could not load this Prettier config, so set format.indent_width and format.print_width by hand',
+            PRETTIER_SCRIPT_NOTE,
         );
         expect(parse(settingsText) as TomlTable).toHaveProperty('format', {
             indent_width: 2,
