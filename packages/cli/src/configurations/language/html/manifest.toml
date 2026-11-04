@@ -27,7 +27,7 @@ example = "An `<img src=\"logo.png\">` without alternative text reports a findin
 help = "Change the markup the way the rule page says."
 name = "html-validate"
 stage = "commit"
-summary = "Validates HTML files for nesting, required attributes, text alternatives, and one style for void elements."
+summary = "Validates HTML files for nesting, required attributes, and text alternatives."
 why = "Each browser repairs broken markup differently, and a screen reader announces only what remains."
 
 [[check]]
