@@ -28,7 +28,6 @@ export const SIDEBAR = [
             { slug: 'start/install' },
             { slug: 'start/migrate' },
             { slug: 'start/upgrade' },
-            { slug: 'start/compare' },
         ],
     },
     {
