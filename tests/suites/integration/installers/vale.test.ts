@@ -22,20 +22,13 @@ import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
 
 import {
-    AUTHORED_STYLE,
     GOOGLE_RULE_PATH,
-    AUTHORED_STYLE_PATH,
+    STRAY_STYLE_PATH,
     AUTHORED_VALE_FILES,
     VALE_INSTALL_FAILURES,
 } from '#tests/config/integration/commands.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
-
-async function assertAuthoredFiles(root: string): Promise<void> {
-    const authored = await readFile(join(root, 'authored.txt'), 'utf8');
-    const style = await readFile(join(root, AUTHORED_STYLE_PATH), 'utf8');
-    expect({ authored, style }).toStrictEqual({ authored: 'keep\n', style: AUTHORED_STYLE });
-}
 
 test('gspot install restores deleted Vale dictionaries, and prose/vale passes again', async () => {
     const { root } = installedSandbox();
@@ -59,7 +52,10 @@ test('a Vale reinstall for new package releases deletes a package gspot no longe
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(existsSync(join(sandbox.root, `${GSPOT_PATHS.valePackages}/Retired`))).toBe(false);
     expect(existsSync(join(sandbox.root, GOOGLE_RULE_PATH))).toBe(true);
-    await assertAuthoredFiles(sandbox.root);
+    expect({
+        authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
+        stray: existsSync(join(sandbox.root, STRAY_STYLE_PATH)),
+    }).toStrictEqual({ authored: 'keep\n', stray: false });
 });
 
 test('a Vale reinstall for new package releases replaces an edited package and keeps the authored files', async () => {
@@ -72,7 +68,10 @@ test('a Vale reinstall for new package releases replaces an edited package and k
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readFile(join(sandbox.root, GOOGLE_RULE_PATH))).toStrictEqual(previous);
-    await assertAuthoredFiles(sandbox.root);
+    expect({
+        authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
+        stray: existsSync(join(sandbox.root, STRAY_STYLE_PATH)),
+    }).toStrictEqual({ authored: 'keep\n', stray: false });
 });
 
 test.each([...VALE_INSTALL_FAILURES])(

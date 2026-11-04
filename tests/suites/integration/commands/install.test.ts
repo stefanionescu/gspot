@@ -64,10 +64,7 @@ test('a repeated npm install keeps the lockfile and the modules with the registr
         if (!isOnline) registry[Symbol.dispose]();
         const next = await spawnGspot(root, ['install', '--json']);
         expect(next.code, next.stdout + next.stderr).toBe(0);
-        expect(JSON.parse(next.stdout)).toMatchObject({
-            summary: 'No change: every tool is installed.',
-            installed: [],
-        });
+        expect(JSON.parse(next.stdout)).toMatchObject({ installed: [], written: [], deleted: [], updated: [] });
         expect(await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8')).toBe(lockfile);
         expect(
             registry.requests.filter((request) => request !== 'GET /npm'),
@@ -90,8 +87,5 @@ test('a repeated install reports No change while a uv-locked project matches its
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     const repeated = await spawnGspot(sandbox.path, ['install', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(JSON.parse(repeated.stdout)).toMatchObject({
-        summary: 'No change: every tool is installed.',
-        installed: [],
-    });
+    expect(JSON.parse(repeated.stdout)).toMatchObject({ installed: [], written: [], deleted: [], updated: [] });
 });

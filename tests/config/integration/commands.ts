@@ -76,10 +76,10 @@ export const ZIP_FILE_OPTIONS = {
     executable: { os: 3, attrs: 0o10_0755 * 0x1_00_00 },
 } as const;
 
-export const AUTHORED_STYLE_PATH = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Google/legacy.yml`;
+export const STRAY_STYLE_PATH = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Google/legacy.yml`;
 
 export const AUTHORED_VALE_FILES = {
-    files: { 'authored.txt': 'keep\n', [AUTHORED_STYLE_PATH]: 'authored legacy bytes\n' },
+    files: { 'authored.txt': 'keep\n', [STRAY_STYLE_PATH]: 'stray style bytes\n' },
 } as const;
 
 export const GOOGLE_RULE_PATH = `${GSPOT_PATHS.valePackages}/Google/Passive.yml`;
@@ -104,8 +104,6 @@ export const VALE_INSTALL_FAILURES = [
         settings: '',
     },
 ] as const;
-
-export const AUTHORED_STYLE = 'authored legacy bytes\n';
 
 export const PACKAGE_MANAGER_CASES = [
     ['npm', 'package.json'],

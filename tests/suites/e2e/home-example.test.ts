@@ -51,7 +51,9 @@ async function prepareExample(installation: GspotProject): Promise<string> {
             install: false,
         },
     );
-    commitAll(root, 'chore: set up gspot');
+    // init turns on the hooks, which start the gspot that npm installs; this test runs gspot from its installation.
+    runGitStep(root, ['add', '-A']);
+    runGitStep(root, ['commit', '--no-verify', '-qm', 'chore: set up gspot']);
     const installed = await installation.online.run(root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     runGitStep(root, ['add', '--', '.gspot']);
