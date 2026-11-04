@@ -1,38 +1,38 @@
 ---
-title: Upgrade gspot
+title: Upgrade
 description: Install a new gspot version and update the generated files.
 ---
 
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { setup } from '#docs/reference/setup.ts';
 
-Commit first, so you can go back. Pick a [release](https://github.com/stefanionescu/gspot/releases), such as `1.2.0`,
-and put it in place of `<version>` below.
+Commit first, so that you can go back. The [releases page](https://github.com/stefanionescu/gspot/releases) lists the
+versions; put the one you want in place of `<version>`:
 
 <Tabs syncKey="package-manager">
     {setup.map(({ label, start, add }) => (
         <TabItem label={label}>
             <Code
                 lang="shell"
-                code={[`${add}@<version>`, `${start} install`, `${start} check`].join('\n')}
+                code={[`${add}@<version>`, `${start} install`, `${start} check --fix`, `${start} check`].join('\n')}
             />
         </TabItem>
     ))}
 </Tabs>
 
 `gspot install` updates the generated files and the tools. If it refuses a key of `gspot.toml`, the message names the
-close keys. Edit `gspot.toml`, then run `gspot install` again.
+close keys. Edit `gspot.toml`, then run `gspot install` again. A new release can pin new formatter versions, so run
+`gspot check --fix` before `gspot check`.
 
 When `gspot install` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in
 `.gspot/` and outside it, and either `package.json` with its lockfile or `mise.toml`, together. Commit `gspot.toml` too
-if you changed it to fix findings. Every other clone then runs `gspot install`. See [Set up a
-clone](/start/install/#set-up-a-clone).
+if you changed it to fix findings. Every other clone then runs `gspot install`. See
+[Set up a clone](/start/install/#set-up-a-clone).
 
 If `gspot install` says that it did not overwrite some files, gspot did not write them. Move each one aside, then run
 `gspot install` again.
 
 To return to an older gspot, check out the commit before the upgrade.
 
-Upgrades can leave older global tool versions and download caches outside the repository. After verifying the new
-version, follow [Free disk space](/reference/generated-files/#free-disk-space) to preview
-`mise prune` and run `uv cache prune` when you want to reclaim that space.
+An upgrade can leave older tool versions and download caches outside the repository. After you verify the new version,
+see [Free disk space](/reference/generated-files/#free-disk-space).
