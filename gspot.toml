@@ -122,6 +122,11 @@ version = "5.3.0"
 reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist/sans.txt."
 
 [[licenses.allowed_package]]
+name = "@fortawesome/fontawesome-free"
+version = "6.7.2"
+reason = "OFL-1.1. The docs build loads this icon font only while Chromium renders the Mermaid diagrams; none of its code ships in the site."
+
+[[licenses.allowed_package]]
 name = "lightningcss"
 version = "1.33.0"
 reason = "Vite depends on it to build the docs site; the license binds changes to its own files, and none are made."

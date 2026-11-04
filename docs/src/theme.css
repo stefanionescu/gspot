@@ -414,6 +414,28 @@ mobile-starlight-toc .display-current {
     font-size: 0.8125rem;
 }
 
+.mermaid-diagram {
+    margin-block: 1.5rem;
+    overflow-x: auto;
+}
+
+.mermaid-diagram svg {
+    display: block;
+    margin-inline: auto;
+}
+
+.mermaid-diagram-light {
+    display: none;
+}
+
+:root[data-theme='light'] .mermaid-diagram-light {
+    display: block;
+}
+
+:root[data-theme='light'] .mermaid-diagram-dark {
+    display: none;
+}
+
 starlight-tabs .tab > [role='tab'] {
     min-height: var(--target-size);
     padding: 0 12px;
