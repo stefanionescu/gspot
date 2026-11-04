@@ -20,21 +20,21 @@ function isInheritedValueChanged(
     tables: WrittenTable[],
     settings: Settings,
 ): boolean {
-    const consumers = tables.filter(({ scope }) => isInScope(scope, writtenTable.scope));
+    const consumers = tables.filter(({ scopePath }) => isInScope(scopePath, writtenTable.scopePath));
     const omitted = structuredClone(writtenTable.table);
     Reflect.deleteProperty(findValueAt(omitted, segments.slice(0, -1)) as TomlTable, name);
     const changed = { ...settings };
-    if (writtenTable.scope === '') changed.written = omitted;
+    if (writtenTable.scopePath === '') changed.written = omitted;
     else {
-        const previous = getRequired(settings.scopes, writtenTable.scope, 'scope settings');
+        const previous = getRequired(settings.scopes, writtenTable.scopePath, 'scope settings');
         changed.scopes = new Map(settings.scopes);
-        changed.scopes.set(writtenTable.scope, { ...previous, written: omitted });
+        changed.scopes.set(writtenTable.scopePath, { ...previous, written: omitted });
     }
     return consumers.some(
         (consumer) =>
             !isDeepStrictEqual(
-                getSettingValue(consumer.availableSettings, settings, key, consumer.scope)?.value,
-                getSettingValue(consumer.availableSettings, changed, key, consumer.scope)?.value,
+                getSettingValue(consumer.availableSettings, settings, key, consumer.scopePath)?.value,
+                getSettingValue(consumer.availableSettings, changed, key, consumer.scopePath)?.value,
             ),
     );
 }
@@ -117,16 +117,16 @@ export function stripDefaults(settings: TomlTable): TomlTable {
         ),
     };
     const root = {
-        scope: '',
+        scopePath: '',
         table: settings,
         availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, ''), level),
     };
     const scopeTables = scopes.map<WrittenTable>(({ path, table }) => ({
-        scope: path,
+        scopePath: path,
         table,
         availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, path), level),
     }));
-    const tables = [root, ...scopeTables].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
+    const tables = [root, ...scopeTables].toSorted((left, right) => compareScopeDepth(left.scopePath, right.scopePath));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.availableSettings.defaults.delete(key);
     const scopeValues = scopeTables.map((writtenTable) =>
         stripTableDefaults(writtenTable.table, writtenTable, tables, allSettings),

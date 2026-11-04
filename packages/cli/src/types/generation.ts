@@ -242,7 +242,7 @@ export type FormatSearch = { root: string; scopePath: string; scripts: PrettierS
 
 export type RuffOptions = z.infer<typeof ruffOptionsSchema>;
 
-export type WrittenTable = { scope: string; table: TomlTable; availableSettings: AvailableSettings };
+export type WrittenTable = { scopePath: string; table: TomlTable; availableSettings: AvailableSettings };
 
 export type EditorconfigSection = { files: string; fields: Record<string, string> };
 
