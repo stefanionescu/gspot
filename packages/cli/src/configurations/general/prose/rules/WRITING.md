@@ -7,6 +7,10 @@ TALKING.md covers what you say to the user.
 Write in plain language. From `ISO 24495-1`, apply its principles for short sentences, common words, and finding
 information: state the action or result early, and explain a technical term when the reader needs it.
 
+Clear beats clever. Say what happens in common words, and name the thing you mean. Write no slogan, metaphor, or
+catchy title: write `Every ignored rule needs a reason`, not `Close the quiet off switch`. Write `the user's
+repository`, not `this repository` or `a repository`, whenever more than one repository fits the sentence.
+
 ## Evidence
 
 Check commands, fields, defaults, limits, and supported versions against the implementation that defines them. A
