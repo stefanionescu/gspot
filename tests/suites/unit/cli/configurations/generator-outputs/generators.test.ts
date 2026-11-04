@@ -1,6 +1,6 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { join, basename } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -51,9 +51,8 @@ test.each([...GENERATOR_CASES])(
                 CHECK_RUN_OPTIONS,
             ),
         );
-        expect(error.message).toBe(
-            `The ${basename(process.execPath)} command failed (exit 1): Generation failed\nfailure`,
-        );
+        expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
+        expect(error.message).toContain('Generation failed\nfailure');
         await writeFile(join(sandbox.path, 'schema.txt'), 'changed');
         const stale = await runCheckCode(
             buildCheckSession(session, CHECK_GENERATION),

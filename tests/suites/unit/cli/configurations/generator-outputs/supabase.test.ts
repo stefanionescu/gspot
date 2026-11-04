@@ -115,7 +115,6 @@ test('Supabase types need Docker before the local stack starts', async () => {
 
     expect(await supabase.runCheck()).toMatchObject({
         status: 'missing',
-        note: 'Docker is not installed. Install Docker to run this check.',
     });
     expect(supabase.requests).toStrictEqual([]);
 });

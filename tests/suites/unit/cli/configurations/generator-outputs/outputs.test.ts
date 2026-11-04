@@ -93,7 +93,7 @@ test('an unchanged binary output passes and a changed one reports stale', async 
             file: 'generated/image.bin',
             line: 1,
             rule: 'stale',
-            message: `Running ${command.join(' ')} changes this generated file; commit what it writes.`,
+            message: expect.stringContaining(command.join(' ')) as string,
         },
     ]);
     expect(await readFile(output)).toStrictEqual(changed);

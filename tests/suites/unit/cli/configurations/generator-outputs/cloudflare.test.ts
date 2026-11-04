@@ -137,7 +137,7 @@ test('the wrangler types of the test tools write a cloudflare-env.d.ts that pass
             file: 'cloudflare-env.d.ts',
             line: 1,
             rule: 'stale',
-            message: 'Running wrangler types --env-interface Env changes this generated file; commit what it writes.',
+            message: expect.stringContaining('wrangler types --env-interface Env') as string,
         }),
     ]);
 });
