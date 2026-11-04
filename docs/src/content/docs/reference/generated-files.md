@@ -63,7 +63,7 @@ These folders stay out of Git. `.gspot/.gitignore` lists the first three.
 | `.gspot-copies/`       | Temporary copies for `gspot scan` and for staged checks.            | gspot deletes each copy after its run. Delete a leftover folder after all checks stop. |
 
 Keep the other files in `.gspot/`, such as the tool pins and lockfiles. To remove gspot itself, see
-[Uninstall](/start/install/#uninstall-gspot).
+[Uninstall](/start/install/#uninstall).
 
 ## Caches outside the repository
 

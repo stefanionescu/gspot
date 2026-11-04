@@ -171,7 +171,7 @@ export const TOP_LEVEL_HEADING = 'Top-level keys';
 
 export const SENTENCE_END = /[.\n]$/u;
 
-export const COMMANDS_OPENING = `Run gspot from any folder of the repository; it uses the \`gspot.toml\` at the top of the Git repository. Start each command the way your repository runs gspot, such as \`bunx --no-install gspot\` or \`mise exec -- gspot\`. See [Installation](/start/install/#choose-how-to-install). Commands that change settings write generated files too.\n\n`;
+export const COMMANDS_OPENING = `Run gspot from any folder of the repository; it uses the \`gspot.toml\` at the top of the Git repository. Start each command the way your repository runs gspot, such as \`bunx --no-install gspot\` or \`mise exec -- gspot\`. See [Install](/start/install/#add-gspot). Commands that change settings write generated files too.\n\n`;
 
 export const SUBSECTION_HEADING_LEVEL = 3;
 
