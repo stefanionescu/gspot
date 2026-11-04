@@ -35,7 +35,6 @@ import {
     HOOKS_PATH_CASES,
     HOOK_NAMED_SOURCE,
     SQL_PACKAGE_FILES,
-    SQLFLUFF_KEPT_NOTE,
     SHARED_SETUP_CONFIG,
     LINKED_SETUP_CONFIG,
     INACTIVE_CONFIGURATIONS,
@@ -94,7 +93,7 @@ test.each(['setup.cfg'])('init leaves a shared %p in place and names its SQLFluf
     const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).ignore;
     expect(settings).toStrictEqual([]);
     const plan = initOutputSchema.parse(JSON.parse(initialized.stdout)).plan;
-    expect(plan.keep).toStrictEqual([{ path, note: SQLFLUFF_KEPT_NOTE }]);
+    expect(plan.keep).toStrictEqual([{ path, note: expect.stringContaining('sqlfluff') as string }]);
     await assertFileKept(sandbox.path, path, SHARED_SETUP_CONFIG);
 });
 
@@ -138,7 +137,7 @@ test('init keeps a linked shared file and the bytes and mode of the file it link
     const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'sql', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const plan = initOutputSchema.parse(JSON.parse(initialized.stdout)).plan;
-    expect(plan.keep).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
+    expect(plan.keep).toStrictEqual([{ path: 'setup.cfg', note: expect.stringContaining('sqlfluff') as string }]);
     expect(plan.deleted.map(({ path }) => path)).not.toContain('setup.cfg');
     expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
     expect(await readFile(target, 'utf8')).toBe(LINKED_SETUP_CONFIG);

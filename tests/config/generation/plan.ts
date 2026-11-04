@@ -151,9 +151,6 @@ export const NEXTJS_LOCALE_CASES = [
 
 export const GENERATED_WRITE_MESSAGE = 'Generated write denied';
 
-export const SQLFLUFF_KEPT_NOTE =
-    'sqlfluff settings stay here, and the generated file for sqlfluff takes over. Delete the section; the generated file replaces it.';
-
 export const INVALID_CSS = `a {
     invalid-property: 1;
 }
