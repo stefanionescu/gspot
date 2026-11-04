@@ -9,6 +9,7 @@ import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import type { InstallCommandJson } from '#cli/types/commands/edits.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
@@ -16,8 +17,8 @@ import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
-import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_MANAGER_CASES, PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/commands.ts';
+import { spawnGspot, runGspotStep, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     REGISTRY_HOST,
@@ -106,14 +107,19 @@ test.concurrent.each([...PACKAGE_MANAGER_CASES])(
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
         const { root, rootPackage, yarnConfiguration, toolPackageManager } = sandbox;
-        await applyThenInstall(root);
-        const { projectFile, lockfilePath, lockfile, mode } = await readToolProjectFiles(root, toolPackageManager);
-        const installed = await spawnGspot(root, ['install']);
+        await runGspotStep({ root, run: spawnGspot }, ['apply']);
+        const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const version = await runCommand([toolPackageManager, '--version'], { cwd: root });
-        expect(installed.stdout.split('\n').filter((line) => line.startsWith('installed 1 npm tool'))).toStrictEqual([
+        expect((JSON.parse(installed.stdout) as InstallCommandJson).installed).toContain(
             `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
-        ]);
+        );
+        const { projectFile, lockfilePath, lockfile, mode } = await readToolProjectFiles(root, toolPackageManager);
+        const repeated = await spawnGspot(root, ['install', '--json']);
+        expect(
+            { code: repeated.code, installed: (JSON.parse(repeated.stdout) as InstallCommandJson).installed },
+            repeated.stdout + repeated.stderr,
+        ).toStrictEqual({ code: 0, installed: [] });
         const workspace = join(root, 'pnpm-workspace.yaml');
         const yarnrc = join(root, '.yarnrc.yml');
         const attributes = await stat(lockfilePath);
