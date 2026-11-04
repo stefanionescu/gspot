@@ -28,11 +28,18 @@ tool project needs it.
 export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
-    if (tools.some((tool) => findPackagePin(tool)?.kind === 'python') && tools.every((tool) => tool.name !== UV_TOOL)) {
-        const uv = getTool(readConfigurations().values(), UV_TOOL);
-        pins.push(findMisePin(uv) as MiseToolPin);
-    }
+    if (tools.some((tool) => findPackagePin(tool)?.kind === 'python') && tools.every((tool) => tool.name !== UV_TOOL))
+        pins.push(getUvPin());
     return pins;
+}
+
+/**
+Read the mise pin of uv, which installs the Python tool project.
+*/
+export function getUvPin(): MiseToolPin {
+    const pin = findMisePin(getTool(readConfigurations().values(), UV_TOOL));
+    if (pin === undefined) throw new Error('The uv manifest has no mise pin.');
+    return pin;
 }
 
 /**

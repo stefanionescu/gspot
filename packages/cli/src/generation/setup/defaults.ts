@@ -121,19 +121,16 @@ export function stripDefaults(settings: TomlTable): TomlTable {
         table: settings,
         availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, ''), level),
     };
-    const tables = [
-        root,
-        ...scopes.map<WrittenTable>(({ path, table }) => ({
-            scope: path,
-            table,
-            availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, path), level),
-        })),
-    ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
+    const scopeTables = scopes.map<WrittenTable>(({ path, table }) => ({
+        scope: path,
+        table,
+        availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, path), level),
+    }));
+    const tables = [root, ...scopeTables].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.availableSettings.defaults.delete(key);
-    const scopeValues = scopes.map(({ path }) => {
-        const writtenTable = tables.find((each) => each.scope === path) as WrittenTable;
-        return stripTableDefaults(writtenTable.table, writtenTable, tables, allSettings);
-    });
+    const scopeValues = scopeTables.map((writtenTable) =>
+        stripTableDefaults(writtenTable.table, writtenTable, tables, allSettings),
+    );
     const rootValues = stripTableDefaults(settings, root, tables, allSettings);
     return scopes.length > 0 ? { ...rootValues, scope: scopeValues } : rootValues;
 }

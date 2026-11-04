@@ -12,7 +12,7 @@ import type { Check, Configuration } from '#cli/types/manifests.ts';
 import { SYMLINK_MODE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope, PlanInventory } from '#cli/types/engine/plan.ts';
-import { joinScope, selectScopePath, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
+import { joinScope, selectScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { ROOT_RUNS, FILES_PLACEHOLDER, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
@@ -134,7 +134,13 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
 function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
     if (check.binary_files === true) return files;
     return files.filter((file) => {
-        if (check.large_files !== true && isOverSizeLimit(planned.session.scopes, file)) return false;
+        if (
+            check.large_files !== true &&
+            file.size >
+                getTable(selectScope(file.path, planned.session.scopes).settings, 'repository').max_file_kilobytes *
+                    BYTES_PER_KILOBYTE
+        )
+            return false;
         if (!file.tags.includes('text') || file.tags.includes('symlink')) return true;
         file.isUtf8 ??= isUtf8(readBytes(planned.session.cache, file.path));
         return file.isUtf8;
@@ -201,18 +207,6 @@ export function extractConfigName(file: string): string {
     const name = posix.basename(file);
     const dot = name.indexOf('.');
     return dot === -1 ? name : name.slice(0, dot);
-}
-
-/**
-Check whether a file passes the size limit of its scope.
-
-@param scopes every scope of the session.
-@param file the path and size of the file.
-*/
-export function isOverSizeLimit(scopes: Scope[], file: Pick<TrackedFile, 'path' | 'size'>): boolean {
-    const owner = selectScopePath(file.path, scopes);
-    const scope = scopes.find((each) => each.path === owner) as Scope;
-    return file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE;
 }
 
 /**

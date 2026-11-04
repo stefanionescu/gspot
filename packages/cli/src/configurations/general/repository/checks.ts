@@ -2,7 +2,6 @@ import { isUtf8 } from 'node:buffer';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { isOverSizeLimit } from '#cli/engine/files.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -143,7 +142,9 @@ export function checkEncoding(session: Session, planned: PlannedCheck): CheckFin
                 (file) =>
                     file.tags.includes('text') &&
                     !file.tags.includes('symlink') &&
-                    !isOverSizeLimit(session.scopes, file) &&
+                    file.size <=
+                        getTable(selectScope(file.path, session.scopes).settings, 'repository').max_file_kilobytes *
+                            BYTES_PER_KILOBYTE &&
                     !isUtf8(readBytes(session.cache, file.path)),
             )
             .map((file) => ({

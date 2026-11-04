@@ -1,19 +1,17 @@
+import { getUvPin } from '#cli/tools/pins.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CI_PINS } from '#cli/config/settings/schema.ts';
 import { formatHeader } from '#cli/generation/header.ts';
-import { UV_TOOL } from '#cli/config/tools/installers.ts';
-import { getTool, findMisePin } from '#cli/tools/pins.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { PackageManagerPin } from '#cli/types/repository.ts';
+import { type Session, type GeneratedFile } from '#cli/types/tools.ts';
 import { buildFrozenInstallArguments } from '#cli/repository/javascript/setup.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation.ts';
-import { type Session, type MiseToolPin, type GeneratedFile } from '#cli/types/tools.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 import { findPackageManagerPin, buildPackageManagerCommand } from '#cli/repository/javascript/package-manager.ts';
@@ -132,7 +130,7 @@ function readProjectPackageManager(
 function buildFrozenInstall(session: Session, scopePath: string, lockfile: FrozenLockfile): readonly string[] {
     const command = FROZEN_INSTALLS[lockfile];
     const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
-    const uv = findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin;
+    const uv = getUvPin();
     const runner = name === undefined ? uv : readProjectPackageManager(session, scopePath, name);
     return buildPackageManagerCommand(runner, buildFrozenInstallArguments(lockfile, runner.version));
 }

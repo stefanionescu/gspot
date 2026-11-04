@@ -1,14 +1,13 @@
 import which from 'which';
 import { join, dirname } from 'node:path';
 import { patch } from '@decimalturn/toml-patch';
-import { isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Tool } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { isTable, getRequired } from '#cli/system/tables.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
@@ -46,12 +45,12 @@ function selectMiseTools(install: ToolInstall) {
         (tool) =>
             checkTools.has(tool.name) && findMissingBuild(tool, host) === undefined && findMisePin(tool) !== undefined,
     );
+    const toolNamesByPin = new Map(hookTools.map((tool) => [findMisePin(tool)?.name, tool.name]));
     const pins = listMisePins(configurations).filter(
         (pin) =>
-            hookTools.some((tool) => findMisePin(tool)?.name === pin.name) ||
-            (pin.name === UV_TOOL && listPackagePins(configurations).python.length > 0),
+            toolNamesByPin.has(pin.name) || (pin.name === UV_TOOL && listPackagePins(configurations).python.length > 0),
     );
-    return { pins, hookTools };
+    return { pins, hookTools, toolNamesByPin };
 }
 
 async function runMiseInstall(install: ToolInstall, command: string[]): Promise<void> {
@@ -197,13 +196,10 @@ Install the mise tools, and read their executable folders.
 */
 export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
     const { session, misePath, steps } = install;
-    const { pins, hookTools } = selectMiseTools(install);
+    const { pins, hookTools, toolNamesByPin } = selectMiseTools(install);
     if (misePath === undefined) {
         const missing = pins.flatMap((pin) => {
-            const name =
-                pin.name === UV_TOOL
-                    ? UV_TOOL
-                    : (hookTools.find((tool) => findMisePin(tool)?.name === pin.name) as Tool).name;
+            const name = pin.name === UV_TOOL ? UV_TOOL : getRequired(toolNamesByPin, pin.name, 'mise tool');
             return which.sync(name, { nothrow: true }) === null ? [`${name} ${pin.version}`] : [];
         });
         const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
