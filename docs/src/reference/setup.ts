@@ -1,5 +1,7 @@
 import { SIDEBAR } from '#docs/config/site.ts';
 import { CLI_REFERENCE } from '#cli/reference.ts';
+import { compareText } from '#cli/system/text.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 
 import {
     CURL_COMMAND,
@@ -21,20 +23,73 @@ export const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
 
 export const SCAN_COMMAND = `npx ${CLI_REFERENCE.package.name} scan`;
 
+const EVALUATION_HEADING = 'Evaluate gspot on this repository';
+
 export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} and follow its steps.`;
 
-export const AGENT_EVALUATION = `## Evaluate gspot on this repository
+export const EVALUATION_PROMPT = `Evaluate gspot on this repository. Run \`${LLMS_COMMAND}\`, follow "${EVALUATION_HEADING}", and change nothing until I answer.`;
 
-Run \`${SCAN_COMMAND} --json\` at the root of the repository. It works on a copy, so the repository does not change.
-Sort each finding into real problem, false positive, or style. Quote the numbers: the findings of each kind, the files
-to format, the tools, the megabytes, and the seconds per hook.`;
+const LANGUAGE_CONFIGURATIONS = CLI_REFERENCE.configurations.filter(({ group }) => group === 'language');
+
+function listPrograms(configuration: (typeof CLI_REFERENCE.configurations)[number]): string[] {
+    return configuration.tools.filter(({ kind }) => kind === 'program').map(({ name }) => name);
+}
+
+const REPLACED_TOOLS = [
+    ...new Set(
+        CLI_REFERENCE.configurations.flatMap(({ tools }) =>
+            tools.filter(({ replace }) => replace !== undefined && replace.length > 0).map(({ name }) => name),
+        ),
+    ),
+].toSorted(compareText);
+
+export const AGENT_FACTS = `## What gspot does
+
+gspot picks the linters, formatters, and type checkers for the languages and frameworks of a repository, and pins
+each one to one version. It writes their config files from one settings file, \`gspot.toml\`, and runs them in Git
+hooks and in CI. It also writes \`AGENTS.md\` and rule files that tell coding agents how to write code that passes.
+
+- License: ${CLI_REFERENCE.package.license}.
+- Languages with a configuration: ${CONJUNCTION_FORMAT.format(LANGUAGE_CONFIGURATIONS.map(({ title }) => title))}.
+  Files in other languages, such as Go, Rust, or Java, get only the checks that run in every repository, such as the
+  secret scan and the spelling check.
+- Frameworks, libraries, platforms, databases, test runners, and infrastructure files with a configuration:
+  ${CONJUNCTION_FORMAT.format(
+      CLI_REFERENCE.configurations
+          .filter(({ group }) => group !== 'language' && group !== 'general')
+          .map(({ title }) => title),
+  )}.
+- The tools of each language:
+${LANGUAGE_CONFIGURATIONS.filter((configuration) => listPrograms(configuration).length > 0)
+    .map((configuration) => `  - ${configuration.title}: ${listPrograms(configuration).join(', ')}`)
+    .join('\n')}
+- gspot replaces the config files of these tools: ${REPLACED_TOOLS.join(', ')}. It neither detects nor replaces other
+  linters and formatters, such as oxlint and oxfmt, so they keep running beside gspot.
+- \`gspot install\` downloads the pinned tools from npm, PyPI, and GitHub releases. mise installs the programs that npm
+  and PyPI do not ship, for the whole machine. \`gspot scan\` prints the number of tools and their size in \`.gspot/\`.
+- gspot writes \`gspot.toml\`, the folder \`.gspot/\` with the tool configs, rule files, Git hooks, and tool pins, a few
+  pointer files such as \`eslint.config.mjs\`, and a block in \`AGENTS.md\` and \`.gitattributes\`. It writes a CI
+  workflow only when the user turns CI on.
+- [Uninstall](${CLI_REFERENCE.package.homepage}/start/install/#uninstall) lists the steps to remove gspot.`;
+
+export const AGENT_EVALUATION = `## ${EVALUATION_HEADING}
+
+Tell the user first that the scan downloads linters with npm, uv, and mise, and that mise installs them for the whole
+machine. The first scan downloads every tool, so it takes longer than a later scan. Install the dependencies of the
+project first, so that the type-aware checks find its types.
+
+Run \`${SCAN_COMMAND} --json > "\${TMPDIR:-/tmp}/gspot-scan.json"\` at the root of the repository. The scan works on a
+copy and changes no file in the repository. Read \`.totals\`, \`.categories\`, \`.filesToFormat\`, \`.notRun\`, and
+\`.cost\` with \`jq\`. Read \`.checks\` only for the findings that you sort. Sort the examples of each category by rule
+into real problem, false positive, or style. Report the numbers: the findings of each kind, the files to format, the
+tools, the megabytes, and the seconds of each tool. Then recommend a level.`;
 
 export const AGENT_STEPS = `## Steps for coding agents
 
 Set up gspot in the repository of the user. Run each command at the root of the repository. gspot needs Git and
 Node.js ${runtimeMinimums.node} or newer. A package manager that holds new
 releases, such as pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: ${CONJUNCTION_FORMAT.format(
-    RELEASE_AGE_EXCLUSIONS.map(({ label, key }) => `${key} for ${label}`),
+    RELEASE_AGE_EXCLUSIONS.map(({ label, key, file }) => `${key} in ${file} for ${label}`),
 )}.
 
 1. Add gspot, pinned to one version, with the package manager of the repository, or with mise when the repository
@@ -50,26 +105,33 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
    repository or one that agents write. The level decides which config files the plan replaces.
 4. Run \`gspot init --level <level>\`. It prints the plan and writes the settings, generated files, and hooks
    without asking a question. Then it installs the pinned tools and turns on the Git hooks. If it names a program
-   that it cannot install, tell the user. \`gspot doctor\` lists what is missing. CI stays off; \`gspot doctor\`
-   suggests how to enable it.
+   that it cannot install, tell the user. \`gspot doctor\` lists what is missing. CI stays off. On GitHub or
+   GitLab, \`gspot doctor\` suggests how to enable it.
    After init, \`gspot add <configuration>\` and \`gspot remove <configuration> --reason "<why>"\` change the selection.
-5. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
-   before you fix findings in other files.
+5. Run \`gspot check --fix\`, then \`gspot check\`. Show the user the line that starts with \`Failed:\` or
+   \`Passed:\`. Fix the findings in the files that you changed. Ask the user before you fix findings in other files.
 6. Ask the user whether to accept the other findings with \`gspot baseline\`, and run it only after the user agrees.
-7. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
+   A baseline leaves out the findings of the \`gspot/*\` and \`secrets/*\` checks, such as a suppression comment
+   without a reason that \`gspot/suppressions\` reports. Fix those, or ask the user before you ignore one.
+7. Commit \`gspot.toml\`, \`gspot.baseline.json\`, and the generated files, with the hooks on. This first commit
+   changes the tool configs, so the commit checks read the files they cover, not only the staged ones. When the user
+   declines the baseline, the commit fails until those findings are fixed or ignored. Fix what the hook reports, and
+   commit again.
+8. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
 
 ## Rules for daily work
 
-- Read \`AGENTS.md\` and the rules it lists under \`.gspot/configurations/\` before you write code.
+- Read \`AGENTS.md\` and the rules it lists under \`${GSPOT_PATHS.rules}/\` before you write code.
 - When \`gspot check\` or \`gspot doctor\` names a new configuration, ask the user, then run the \`gspot add\` line
   it prints and \`gspot install\`.
-- Before you commit, run \`gspot check --staged --stage commit\`. Before you push, run
-  \`gspot check --changed --stage push\`.
+- Commit, and fix what the hook reports. Before you push, run \`gspot check --changed --stage push\`. Without an
+  upstream branch or \`origin/HEAD\`, name the branch to compare with: \`gspot check --base <branch> --stage push\`.
 - Stages: \`commit\` checks run on the staged files before each commit, \`push\` checks before each push, \`message\`
   checks on the commit message, and \`manual\` checks only with \`gspot check --only <check>\`. \`gspot check\` alone
   runs the commit and push checks.
-- Exit codes: \`0\` every check that ran passed, \`1\` findings remain, \`2\` a check could not run. After \`2\`, run
-  \`gspot install\`, then \`gspot doctor\`.
+- Exit codes: \`0\` every check that ran passed, \`1\` findings remain, \`2\` a check or the command could not run.
+  After \`2\`, read the message: it names the cause, such as files to stage, a missing upstream, or a missing tool.
+  For a missing tool, run \`gspot install\`, then \`gspot doctor\`.
 - \`gspot explain <check, setting, or file>\` explains it and names the commands that change it.
   For a lint rule, use \`gspot explain <check> <rule>\`.
   \`gspot check --fix\` runs the formatters and other fixers. The check \`<configuration>/<name>\` has a section

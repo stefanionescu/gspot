@@ -9,7 +9,7 @@ import { createMermaidRenderer } from 'mermaid-isomorphic';
 import { defineHastPlugin, type HastPluginEntry } from 'satteri';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { defineConfig, passthroughImageService } from 'astro/config';
-import { LLMS_PAGES, AGENT_STEPS, AGENT_EVALUATION } from '#docs/reference/setup.ts';
+import { LLMS_PAGES, AGENT_FACTS, AGENT_STEPS, AGENT_EVALUATION } from '#docs/reference/setup.ts';
 import { SIDEBAR, EDIT_URL, SITE_TITLE, REPOSITORY_URL, README_OPENING_BLOCKS } from '#docs/config/site.ts';
 
 const FAVICON = '/favicon.svg';
@@ -182,7 +182,7 @@ export default defineConfig({
                 starlightLlmsTxt({
                     projectName: 'gspot',
                     description: cliPackage.description,
-                    details: `${README_OPENING}\n\nThis documentation covers ${cliPackage.name} ${cliPackage.version}.\n\n${AGENT_EVALUATION}\n\n${AGENT_STEPS}`,
+                    details: `${README_OPENING}\n\nThis documentation covers ${cliPackage.name} ${cliPackage.version}.\n\n${AGENT_FACTS}\n\n${AGENT_EVALUATION}\n\n${AGENT_STEPS}`,
                     ...LLMS_PAGES,
                 }),
             ],
