@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
-import type { PATH_ROLES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
+import type { PATH_ROLES, SETTING_TYPES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 
 export type ShippedRule = {
     source: string;
@@ -62,7 +62,7 @@ export type ReasonRequirement = keyof typeof REASON_DESCRIPTIONS;
 
 export type Setting = {
     name: string;
-    type: 'number' | 'string' | 'path' | 'boolean' | 'list' | 'table';
+    type: (typeof SETTING_TYPES)[number];
     path_role?: (typeof PATH_ROLES)[number];
     default?: unknown;
     default_all?: unknown;

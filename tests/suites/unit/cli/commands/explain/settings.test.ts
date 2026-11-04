@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
@@ -6,6 +7,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commandFieldsSchema, settingExplanationSchema } from '#cli/schemas/commands.ts';
 import { NAMING_LIMITS, REASON_VALUES, SCOPE_SETTING_EXPLANATION } from '#tests/config/commands/reports.ts';
 
 test.each(NAMING_LIMITS)(
@@ -57,7 +59,12 @@ test('explain reads an inherited limits.max_function_lines value and its reason,
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'app/source.ts': 'export const active = true;\n' });
     const explained = await runGspot(sandbox.path, ['explain', 'limits.max_function_lines', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout)).toMatchObject({
+    const explanationSchema = settingExplanationSchema.extend({
+        ...commandFieldsSchema.shape,
+        kind: z.literal('setting'),
+        subject: z.string(),
+    });
+    expect(explanationSchema.parse(JSON.parse(explained.stdout))).toMatchObject({
         kind: 'setting',
         setting: 'limits.max_function_lines',
         type: 'number',

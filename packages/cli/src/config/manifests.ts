@@ -142,6 +142,8 @@ export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
 
 export const TOOL_KINDS = ['program', 'package'] as const;
 
+export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
+
 export const TOOL_BUILDS = OPERATING_SYSTEMS.map((system) => system.name);
 
 export const SHIPPED_FILES_FOLDER = 'files';

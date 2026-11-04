@@ -19,6 +19,7 @@ import type {
     suggestionRowSchema,
     baselineReportSchema,
     configurationsListSchema,
+    settingExplanationSchema,
 } from '#cli/schemas/commands.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
@@ -136,23 +137,7 @@ export type LintRuleExplanation = {
     changeOptions: string | undefined;
 };
 
-type SettingExplanation = {
-    setting: string;
-    type: Setting['type'];
-    description: string;
-    default: unknown;
-    defaultAll: unknown;
-    languageDefaults: Setting['language_defaults'];
-    reasonWhen: Setting['reason_when'];
-    scopes: Array<{
-        scope: string;
-        default: unknown;
-        value?: unknown;
-        source?: InheritedSetting['origin'] | undefined;
-        readBy?: string[];
-        reason?: string | undefined;
-    }>;
-};
+type SettingExplanation = z.infer<typeof settingExplanationSchema>;
 
 export type ExplainedSetting = { setting: Setting; text: string; scopes: SettingExplanation['scopes'] };
 

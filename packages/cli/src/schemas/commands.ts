@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { TOOL_KINDS } from '#cli/config/manifests.ts';
 import { checkStateSchema } from '#cli/schemas/engine.ts';
 import { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
 import { generatedFilesSchema } from '#cli/schemas/generation.ts';
+import { TOOL_KINDS, SETTING_TYPES } from '#cli/config/manifests.ts';
 import { hookStatusSchema, toolInspectionSchema } from '#cli/schemas/tools.ts';
 
 import {
@@ -101,3 +101,23 @@ export const settingsEditReportSchema = z.union([
     changedEditReportSchema,
     z.strictObject({ changed: z.literal(false), summary: z.string(), notes: z.string().array() }),
 ]);
+
+export const settingExplanationSchema = z.strictObject({
+    setting: z.string(),
+    type: z.enum(SETTING_TYPES),
+    description: z.string(),
+    default: z.unknown().optional(),
+    defaultAll: z.unknown().optional(),
+    languageDefaults: z.record(z.string(), z.unknown()).optional(),
+    reasonWhen: reasonRequirementSchema.optional(),
+    scopes: z
+        .strictObject({
+            scope: z.string(),
+            default: z.unknown().optional(),
+            value: z.unknown().optional(),
+            source: settingOriginSchema.optional(),
+            readBy: z.string().array().optional(),
+            reason: z.string().optional(),
+        })
+        .array(),
+});
