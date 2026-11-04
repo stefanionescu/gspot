@@ -78,7 +78,7 @@ export type CommandArgument = string | { file: true };
 
 export type Substitutions = {
     files: string[];
-    scope: string;
+    scopePath: string;
     root: string;
     messageFile?: string;
 };

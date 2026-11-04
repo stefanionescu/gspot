@@ -70,8 +70,8 @@ test('a list setting inside one command argument is refused', async () => {
 });
 
 test.each([...WORKSPACE_SCOPE_CASES])(
-    'workspace expansion keeps arguments only for a workspace package scope: $scope',
-    async ({ scope, expected }) => {
+    'workspace expansion keeps arguments only for a workspace package scope: $scopePath',
+    async ({ scopePath, expected }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift']),
             'Example.swift': 'let example = 1\n',
@@ -86,7 +86,7 @@ test.each([...WORKSPACE_SCOPE_CASES])(
         expect(
             expandCommand(session, plans[0]!, ['before', '{workspace:--workspace}', 'after'], {
                 files: [],
-                scope,
+                scopePath,
                 root: sandbox.path,
             }),
         ).toStrictEqual(['before', ...expected, 'after']);
@@ -182,13 +182,13 @@ test('scalar placeholders select generated pointer files, scope, and boolean set
     let planned = planChecks(session, { stage: 'all', only: ['swift/swiftlint'] }).find(
         ({ scope }) => scope.path === 'app',
     )!;
-    const substitutions = { scope: 'app', files: [], root: sandbox.path };
+    const substitutions = { scopePath: 'app', files: [], root: sandbox.path };
     expect(replacePlaceholders(session, planned, '{pointer:prettier.config.mjs}', substitutions)).toBe(
         'prettier.config.mjs',
     );
     planned.scope.settings.valuesByKey['enabled'] = true;
     expect(replacePlaceholders(session, planned, '{setting:enabled}', substitutions)).toBe('true');
-    expect(replacePlaceholders(session, planned, '{scope}', { ...substitutions, scope: '' })).toBe('.');
+    expect(replacePlaceholders(session, planned, '{scope}', { ...substitutions, scopePath: '' })).toBe('.');
     await createFileTree(sandbox.path, {
         'app/prettier.config.mjs': `// ${GENERATED_HEADER_TEXT}\nexport default {};\n`,
     });
@@ -209,7 +209,7 @@ test('a setting value that holds a placeholder stays literal', async () => {
     const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     const planned = planChecks(session, { stage: 'all', only: ['bash/shellcheck'] })[0]!;
     planned.scope.settings.valuesByKey['example'] = '{root}/{scope}/{config_file:shellcheckrc}';
-    const substitutions = { scope: 'app', files: [], root: sandbox.path };
+    const substitutions = { scopePath: 'app', files: [], root: sandbox.path };
     expect(replacePlaceholders(session, planned, '{root}:{setting:example}', substitutions)).toBe(
         `${sandbox.path}:{root}/{scope}/{config_file:shellcheckrc}`,
     );
@@ -226,7 +226,7 @@ test('editorconfig-checker leaves out the extensions of the selected formatters'
         buildCheckSession(session, CHECK_GENERATION),
         planned as NonNullable<typeof planned>,
         '{formatted_extensions}',
-        { files: [], scope: '', root: sandbox.path },
+        { files: [], scopePath: '', root: sandbox.path },
     );
     expect(excluded.split(/[.(|)$]+/u)).toContain('py');
     expect(excluded.split(/[.(|)$]+/u)).not.toContain('swift');

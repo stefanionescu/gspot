@@ -95,10 +95,10 @@ export const REGEX_OUTPUT_CASES = [
 export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
 
 export const WORKSPACE_SCOPE_CASES = [
-    { scope: '', expected: [] },
-    { scope: 'package', expected: ['--workspace', 'package'] },
-    { scope: 'docs', expected: [] },
-    { scope: 'source', expected: [] },
+    { scopePath: '', expected: [] },
+    { scopePath: 'package', expected: ['--workspace', 'package'] },
+    { scopePath: 'docs', expected: [] },
+    { scopePath: 'source', expected: [] },
 ] as const;
 
 export const ASTRO_CHECK_SUMMARY = [

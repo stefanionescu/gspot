@@ -194,7 +194,7 @@ export function buildCommandSubstitutions(
         files: planned.files
             .map((file) => convertToPosixPath(relative(cwd, join(root, file.path))))
             .map((path) => (path.startsWith('-') ? `./${path}` : path)),
-        scope: planned.scope.path,
+        scopePath: planned.scope.path,
         root,
     };
     if (messageFile !== undefined) substitutions.messageFile = messageFile;

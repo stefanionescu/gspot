@@ -70,8 +70,9 @@ function expandArgument(
     if (argument === FILE_PLACEHOLDER) return [{ file: true }];
     const workspace = WORKSPACE_PLACEHOLDER.exec(argument)?.[1];
     if (workspace !== undefined)
-        return substitutions.scope !== '' && listWorkspaceFolders(substitutions.root).includes(substitutions.scope)
-            ? [workspace, substitutions.scope]
+        return substitutions.scopePath !== '' &&
+            listWorkspaceFolders(substitutions.root).includes(substitutions.scopePath)
+            ? [workspace, substitutions.scopePath]
             : [];
     return [replacePlaceholders(session, planned, argument, substitutions)];
 }
@@ -96,9 +97,9 @@ function buildPlaceholderReaders(
             join(substitutions.root, getConfigPath(session, planned, name))
                 .split('/')
                 .join(sep),
-        pointer: (name) => selectPointerPath(session, substitutions.scope, name).split('/').join(sep),
+        pointer: (name) => selectPointerPath(session, substitutions.scopePath, name).split('/').join(sep),
         formatted_extensions: () => buildFormattedExtensions(planned),
-        scope: () => formatScope(substitutions.scope),
+        scope: () => formatScope(substitutions.scopePath),
         root: () => substitutions.root,
         message_file: () => substitutions.messageFile ?? '',
     };
