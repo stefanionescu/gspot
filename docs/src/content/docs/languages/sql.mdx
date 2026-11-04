@@ -7,32 +7,32 @@ configurations: [sql]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 gspot lints SQL files with SQLFluff, in the dialect of your database. `gspot check --fix` rewrites what SQLFluff can
-fix, such as the case of keywords and the layout of a statement. These checks run for the `sql` configuration:
+fix, such as the case of keywords and the layout of a statement. The `sql` configuration runs these checks:
 
 <ChecksTable guide="languages/sql" />
 
 ## What gspot detects
 
-gspot selects `sql` in a scope that holds a file ending in `.sql`, `.pgsql`, or `.psql`. The
-[`postgres` configuration](/reference/configurations/postgres/) requires `sql` too. It checks Postgres migrations, and
+gspot turns on `sql` in a scope that has a file ending in `.sql`, `.pgsql`, or `.psql`. The
+[`postgres` configuration](/reference/configurations/postgres/) also turns on `sql`. It checks Postgres migrations, and
 sets the SQLFluff dialect to `postgres`.
 
-`gspot install` installs SQLFluff into `.gspot/.venv`, apart from the Python environment of your project.
+`gspot install` installs SQLFluff into `.gspot/.venv`, separate from the Python environment of your project.
 
 ## Dialect
 
-`sql.dialect` names the dialect that SQLFluff parses, such as `postgres`, `mysql`, or `sqlite`. Its default is `ansi`.
-Set it to the dialect of your database:
+`sql.dialect` names the SQL dialect that SQLFluff parses: the form of SQL of one database, such as `postgres`,
+`mysql`, or `sqlite`. Its default is `ansi`. Set it to the dialect of your database:
 
 ```shell
 gspot set sql.dialect postgres
 ```
 
-SQLFluff reads each file as plain SQL. It renders no Jinja or other template.
+SQLFluff reads each file as plain SQL. It does not expand Jinja or other templates.
 
 ## Style
 
-gspot sets the case of each kind of word:
+gspot sets the letter case of each kind of word:
 
 | Words       | Case       |
 | ----------- | ---------- |
@@ -42,12 +42,12 @@ gspot sets the case of each kind of word:
 | Literals    | Upper case |
 | Types       | Upper case |
 
-For example, `select id from user_accounts;` reports `CP01` for each lowercase keyword. `gspot check --fix` writes it as
-`SELECT id FROM user_accounts;`.
+For example, `select id from user_accounts;` gets a `CP01` finding for each lowercase keyword. `gspot check --fix`
+rewrites it as `SELECT id FROM user_accounts;`.
 
-SQLFluff takes its line length from `format.print_width`, and its indent from the `format` settings of SQL files.
-`gspot init` writes a `[[format.override]]` record that indents SQL files by four spaces when the rest of the
-repository uses another indent. Change the record to change the SQL indent.
+SQLFluff takes its line length from `format.print_width`, and its indent from the `format` settings of SQL files. When
+the rest of the repository uses another indent, `gspot init` writes a `[[format.override]]` record that indents SQL
+files by four spaces. To change the SQL indent, change that record.
 
 ## Levels
 
@@ -57,9 +57,9 @@ At level `basic`, gspot turns off six SQLFluff rules about joins, casts, subquer
 ## Exemptions and ignores
 
 SQLFluff runs with `--ignore-local-config`, so it reads only the config file that gspot writes. `gspot init` deletes a
-`.sqlfluff` or `.sqlfluffignore` file, and Git keeps the committed version. A SQLFluff table in `pyproject.toml`,
-`setup.cfg`, or `tox.ini` stays, and `gspot/conflicting-configs` reports it until you delete it; see
-[Migrate existing tools](/start/migrate/#read-the-plan).
+`.sqlfluff` or `.sqlfluffignore` file, and Git keeps its committed version. `gspot init` leaves a SQLFluff table in
+`pyproject.toml`, `setup.cfg`, or `tox.ini` in place. `gspot/conflicting-configs` reports that table until you delete
+it, as [Read the plan](/start/migrate/#read-the-plan) describes.
 
 To turn one rule off, ignore it with a reason:
 
@@ -72,4 +72,4 @@ To allow one statement, add a `noqa` comment with a reason, such as
 
 ## Rules for coding agents
 
-The `sql` configuration installs `SQL.md` for coding agents.
+The `sql` configuration writes the rule file `SQL.md` for coding agents.

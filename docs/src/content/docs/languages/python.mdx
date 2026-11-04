@@ -6,34 +6,35 @@ configurations: [python]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot checks Python with Ruff for lint and format, basedpyright, pydoclint, and deptry, plus built-in
-checks. These checks run for the `python` configuration:
+gspot checks Python code with Ruff, which lints and formats it, with basedpyright for types, with pydoclint for
+docstrings, and with deptry for dependencies. It also runs checks of its own. The `python` configuration runs these
+checks:
 
 <ChecksTable guide="languages/python" />
 
-Import rules and pytest work for Python too; see [Import rules](/configure/import-rules/#python) and
-[Tests and coverage](/topics/testing/).
+Import rules and pytest also work for Python. [Import rules](/configure/import-rules/#python) and
+[Tests and coverage](/topics/testing/) describe them.
 
 ## Before you start
 
-Install gspot with mise, as the [Quickstart](/start/quickstart/) shows for a repository without `package.json`. Use uv for
-your project. basedpyright and pytest read the `.venv` of the project, so sync it before you run `gspot init`, and in a
-clone before you run `gspot install`:
+In a repository without a `package.json`, install gspot with mise, as the [Quickstart](/start/quickstart/) shows.
+Manage your project with uv. basedpyright and pytest read the `.venv` of the project, so create it before you run
+`gspot init`. In a new clone, create it before you run `gspot install`:
 
 ```shell
 uv sync
 ```
 
-`gspot init` writes the basedpyright settings for the `.venv` only when `uv.lock` exists. If you sync after init, run
-`gspot install` to write them again.
+`gspot init` writes the basedpyright settings for the `.venv` only when `uv.lock` exists. If you run `uv sync` after
+init, run `gspot install` to write those settings.
 
-gspot runs its Python tools with its own pinned Python. Your `.python-version` file and `UV_PYTHON` variable affect only
-your project.
+gspot runs its Python tools with a Python version that it pins. Your `.python-version` file and your `UV_PYTHON`
+variable change only the Python of your project.
 
 ## Quotes
 
-Ruff formats Python strings with double quotes. Your `format.quotes` value covers every language, so set it to keep
-single quotes in Python:
+Ruff formats Python strings with double quotes. To keep single quotes in Python, set `format.quotes`. This setting
+applies to every language:
 
 ```shell
 gspot set format.quotes single
@@ -41,25 +42,27 @@ gspot set format.quotes single
 
 ## Modules from outside the project
 
-Name the modules that a host application provides in `python.externals`; see
-[modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
+List the modules that a host application provides in `python.externals`, as
+[Modules that the host provides](/configure/import-rules/#modules-that-the-host-provides) shows.
 
-`python.import_folders` adds folders inside the scope where basedpyright and the import rules check resolve imports.
-For a host outside the repository, add a `.pth` file to the `site-packages` folder of `.venv` that lists the host
-folder. Python and basedpyright read the folder paths of a `.pth` file, as they do for an editable install:
+`python.import_folders` adds folders inside the scope where basedpyright and the import rules check look for imported
+modules. When the host application is outside the repository, add a `.pth` file that names the host folder to the
+`site-packages` folder of `.venv`. Python and basedpyright read the folder paths in a `.pth` file, as they do for an
+editable install:
 
 ```shell title="example"
 echo "<host-folder>" > .venv/lib/<python-folder>/site-packages/host.pth
 ```
 
-Here `<host-folder>` is the absolute path of the host application, and `<python-folder>` names the Python of the
+`<host-folder>` is the absolute path of the host application, and `<python-folder>` is the Python folder of the
 environment, such as `python3.12`.
 
 ## Unused code and long functions
 
 At level `all`, `python/vulture` finds functions, classes, and attributes that no file of the scope uses, and code that
-never runs. It cannot tell the public API of a library from dead code, so level `basic` leaves it out. A framework can
-call a definition by name; ignore the file that holds it, with a reason:
+never runs. It cannot tell the public API of a library from unused code, so level `basic` does not run it. A framework
+can call a definition by its name, which vulture does not see. In that case, ignore the file that holds the definition,
+with a reason:
 
 ```shell
 gspot ignore python/vulture --paths nodes.py --reason "ComfyUI calls the execute method of each node."

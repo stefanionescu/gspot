@@ -6,18 +6,19 @@ configurations: [javascript, typescript]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot checks JavaScript and TypeScript with ESLint, the TypeScript compiler, and Knip, which finds code that nothing
-uses. These checks cover JavaScript, TypeScript, and the framework configurations described below:
+gspot checks JavaScript and TypeScript code with ESLint, with the TypeScript compiler, and with Knip, which finds code
+that nothing uses. The `javascript` and `typescript` configurations run these checks:
 
 <ChecksTable guide="languages/javascript-typescript" />
 
 Framework configurations, such as `react`, `nextjs`, and `react-native`, add their own lint rules. A React project that
-depends on `react-dom` also gets the `react-dom` configuration and its DOM accessibility lint rules. The
+depends on `react-dom` also gets the `react-dom` configuration and its lint rules for accessible HTML. The
 [configuration reference](/reference/configurations/) lists every framework.
 
 ## JavaScript runtimes
 
-Each file gets one ESLint runtime:
+ESLint gives each file one runtime: the set of global names, such as `window` or `process`, that the file can use
+without an import.
 
 | Files                                      | Runtime                                                   |
 | ------------------------------------------ | --------------------------------------------------------- |
@@ -27,8 +28,8 @@ Each file gets one ESLint runtime:
 | React Native sources                       | Native globals                                            |
 | Next.js sources                            | Node.js built-ins, because server components can use them |
 
-To give some files another runtime, add a `[[tools.eslint.override]]` record. Write paths relative to the repository
-root. When records overlap, the later one counts.
+To give some files another runtime, add a `[[tools.eslint.override]]` record. Write the paths from the root folder of
+the repository. When two records match a file, the later record wins.
 
 ```toml title="gspot.toml"
 [[tools.eslint.override]]
@@ -44,7 +45,7 @@ paths = ["src/serviceworker.js"]
 runtime = "serviceworker"
 ```
 
-Use an explicit `node` runtime for server code inside a browser or React Native project. Runtime names follow the
+For server code inside a browser or React Native project, set the runtime `node`. The runtime names come from the
 pinned [globals package](https://github.com/sindresorhus/globals). Use `serviceworker` for service workers, which have
 other APIs than Web Workers. An unknown runtime name stops ESLint when it loads the config, and the error lists the
 names that the globals package knows.
@@ -54,22 +55,22 @@ get no other Node.js globals, such as `Buffer` and `__dirname`.
 
 ## TypeScript compiler
 
-gspot runs the TypeScript checks when the project has TypeScript source files or a `tsconfig.json` of its own. A
-TypeScript tool dependency or declaration files alone do not count.
+gspot runs the TypeScript checks when the project has TypeScript source files or its own `tsconfig.json`. A dependency
+on a TypeScript tool, or declaration files alone, do not count.
 
 - With your own `tsconfig.json`, gspot keeps your compiler options and adds the strict options that the level needs.
-- Without one, gspot writes a project for the source files of each scope. It leaves out generator output, vendored
-  files, and child scopes.
-- gspot uses the TypeScript compiler of your project, for the type checks and for the type-aware lint rules. Without
-  one, it uses the compiler that `gspot install` pins.
+- Without one, gspot writes a TypeScript project for the source files of each scope. That project leaves out generated
+  files, vendored files, and nested scopes.
+- gspot uses the TypeScript compiler of your project for the type checks and for the lint rules that read types. When
+  your project has no compiler, gspot uses the one that `gspot install` pins.
 
 JavaScript files get the same check through your `jsconfig.json`, or through your `tsconfig.json` when no
 `jsconfig.json` exists.
 
 ## Import extensions
 
-`javascript.import_extension` decides how a relative import of a code file ends: `js`, `ts`, or `extensionless`.
-`gspot init` picks it from the project:
+`javascript.import_extension` sets how a relative import of a code file ends: `js`, `ts`, or `extensionless`, which
+means no extension. `gspot init` picks the value from the project:
 
 | Project                                                                                  | Style           |
 | ---------------------------------------------------------------------------------------- | --------------- |
@@ -77,21 +78,21 @@ JavaScript files get the same check through your `jsconfig.json`, or through you
 | The tsconfig uses `Bundler` resolution, or the project depends on a bundler such as Vite | `extensionless` |
 | Any other project                                                                        | `js`            |
 
-A framework configuration that chooses a style wins over the project. An import of a stylesheet or a JSON file
-keeps its extension. `.mjs` files, `.cjs` files, and Node.js shebang scripts always import the full file name, because
-Node.js needs it, and they take aliases only from the `imports` of `package.json`.
+When a framework configuration sets a style, its style wins. An import of a style sheet or a JSON file keeps its
+extension. `.mjs` files, `.cjs` files, and Node.js scripts with a shebang always import the full file name, because
+Node.js needs it. They take import aliases only from the `imports` field of `package.json`.
 
-For modules that a host application provides at run time, see
-[modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
+For modules that a host application provides at run time, follow
+[Modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
 
 ## Next.js
 
-The Next.js configuration runs `nextjs/tsc` instead of `typescript/tsc`, at level `basic` and stage `push`. The
-check has Next.js write its types, then type-checks the app with the strict compiler options. The project must provide
-Next.js 15.5 or later. The Next.js security rules run in `javascript/eslint`.
+The `nextjs` configuration runs `nextjs/tsc` in place of `typescript/tsc`, at level `basic` and at the `push` stage.
+The check first has Next.js write its types, then checks the types of the app with the strict compiler options. The
+project must depend on Next.js 15.5 or later. The Next.js security rules run in `javascript/eslint`.
 
 ## React Native
 
-`gspot init` selects `react-native` and `expo` from their dependencies. The Expo configuration requires React Native and
-adds Expo lint rules and `expo/expo-doctor`. A bare React Native project needs no Expo tool. Native sources keep the
-React hooks and component lint rules.
+`gspot init` turns on `react-native` and `expo` when the project depends on them. The `expo` configuration needs
+`react-native`, and adds the Expo lint rules and the check `expo/expo-doctor`. A React Native project without Expo
+needs no Expo tool. React Native sources still get the lint rules for React hooks and components.

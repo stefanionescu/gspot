@@ -6,19 +6,20 @@ configurations: [bash]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot checks shell scripts with ShellCheck for mistakes and shfmt for layout, and checks Zsh scripts with `zsh -n`. Its
-own checks report unsafe commands, scripts without strict mode, and functions that nothing calls. These checks run for
-the `bash` configuration:
+gspot checks shell scripts for mistakes with ShellCheck, and for layout with shfmt. It checks the syntax of Zsh scripts
+with `zsh -n`. Its own checks report unsafe commands, scripts without strict mode, and functions that nothing calls.
+The `bash` configuration runs these checks:
 
 <ChecksTable guide="languages/bash" />
 
 ## What gspot detects
 
-gspot selects `bash` in a scope that holds a file ending in `.sh`, `.bash`, `.zsh`, or `.bats`. A file without one of
-these extensions counts when its shebang names a shell: `bash`, `sh`, `zsh`, `dash`, `ksh`, or `bats`. An executable
-script that starts with `#!/usr/bin/env bash` selects it, whatever its name.
+gspot turns on `bash` in a scope that has a file ending in `.sh`, `.bash`, `.zsh`, or `.bats`. A file without one of
+these extensions also counts when its shebang, the `#!` line at the top, names a shell: `bash`, `sh`, `zsh`, `dash`,
+`ksh`, or `bats`. For example, an executable script that starts with `#!/usr/bin/env bash` turns on `bash`, whatever
+its name.
 
-Each tool reads the scripts of its own dialect:
+Each tool reads the scripts of its own shell:
 
 | Scripts                      | Tools                                 |
 | ---------------------------- | ------------------------------------- |
@@ -26,22 +27,23 @@ Each tool reads the scripts of its own dialect:
 | Zsh                          | `zsh -n`, through `bash/zsh-syntax`   |
 | Every shell script           | The built-in checks, such as `safety` |
 
-ShellCheck reads a script without a shebang as Bash. `bash/zsh-syntax` runs the `zsh` of your system, and
-`gspot install` does not install it, so install Zsh yourself when the repository holds Zsh scripts.
+ShellCheck reads a script without a shebang as Bash. `bash/zsh-syntax` runs the `zsh` that your system has.
+`gspot install` does not install Zsh, so install it yourself when your repository has Zsh scripts.
 
 ## Levels
 
-At level `basic`, ShellCheck runs its default checks. `bash/safety` reports broad process kills and recursive deletes,
-and the forms that `BASH.md` forbids, such as `eval` and `curl` without `--fail`.
+At level `basic`, ShellCheck runs its default checks. `bash/safety` reports commands that kill processes by name, such
+as `killall`, and recursive deletes. It also reports the forms that the rule file `BASH.md` forbids, such as `eval` and
+`curl` without `--fail`.
 
 At level `all`, gspot turns on these optional ShellCheck checks: `add-default-case`, `avoid-negated-conditions`,
 `avoid-nullary-conditions`, `check-extra-masked-returns`, `check-set-e-suppressed`, `check-unassigned-uppercase`,
 `deprecate-which`, `quote-safe-variables`, `require-double-brackets`, `require-variable-braces`, and
 `useless-use-of-cat`. `bash/safety` then also reports the `function` keyword, `&>`, `echo`, a failure discarded with
-`true`, `set -x`, `seq` loops, and `IFS` set at the top level of a script. Level `all` adds the checks for script
+`true`, `set -x`, `seq` loops, and `IFS` set at the top level of a script. Level `all` also adds the checks for script
 layout, doc comments, unused functions, function size, and inline Python or Node code.
 
-For example, a script that pipes a download into a shell reports two findings at both levels:
+For example, a script that pipes a download into a shell gets two findings at both levels:
 
 ```bash title="example"
 curl https://example.com/install.sh | bash
@@ -55,12 +57,12 @@ failed   bash/safety  2 findings
 
 ## Settings
 
-shfmt reads its layout from the `.editorconfig` that gspot writes from the `format` settings. The indent of `.sh` and
-`.bash` files follows the indent that most lines of your scripts use, and a `[[format.override]]` record wins over it.
-The same file turns on the shfmt options `switch_case_indent` and `simplify`.
+shfmt reads its layout options from `.editorconfig`, which gspot writes from the `format` settings. For `.sh` and
+`.bash` files, gspot sets the indent that most lines of your scripts already use. A `[[format.override]]` record takes
+priority over that indent. The same `.editorconfig` turns on the shfmt options `switch_case_indent` and `simplify`.
 
 `bash/function-size` reads four limits: `limits.bash.max_function_lines`, `max_function_branches`,
-`max_block_nesting`, and `max_function_assignments`. A shell function may have 40 code lines by default. To raise a
+`max_block_nesting`, and `max_function_assignments`. By default, a shell function may have 40 lines of code. To raise a
 limit, give a reason:
 
 ```shell
@@ -73,21 +75,21 @@ To turn off one ShellCheck code, ignore it by its code with a reason:
 gspot ignore bash/shellcheck --rule SC2086 --reason "The build flags split into words on purpose."
 ```
 
-To allow one line, write a ShellCheck comment with a reason, such as
+To allow one line only, add a ShellCheck comment with a reason, such as
 `# shellcheck disable=SC2086 # reason: the word splitting is wanted here`.
 
 ## Exemptions gspot writes
 
-- In `.bats` files, ShellCheck skips SC2030, SC2031, SC2034, and SC2218. bats runs each test in a subshell, defines
-  tests below the helpers they call, and reads variables from loaded helpers.
-- ShellCheck resolves the path of a `source` command from the folder of the script, and reads the sourced file.
+- In `.bats` files, ShellCheck skips SC2030, SC2031, SC2034, and SC2218. These codes do not fit bats: it runs each test
+  in a subshell, defines tests below the helpers they call, and reads variables from loaded helpers.
+- ShellCheck finds the file of a `source` command from the folder of the script, and reads that file.
 - The naming checks accept the variables that the shell defines, such as `IFS`, `OPTARG`, `BASH_SOURCE`, and
   `PIPESTATUS`.
-- A leading underscore marks a private function or variable. The naming checks ignore it, and `bash/doc-comments`
-  asks no `Arguments` section of a private function.
+- A name that starts with an underscore marks a private function or variable. The naming checks ignore the underscore,
+  and `bash/doc-comments` does not ask a private function for an `Arguments` section.
 - `bash/safety` accepts `rm -r` on a path from `mktemp` inside a trap.
 
 ## Rules for coding agents
 
-The `bash` configuration installs `BASH.md`, `OPERATIONS.md`, and `SAFETY.md` for coding agents. The
-[`bash` configuration](/reference/configurations/bash/) lists every rule of each check.
+The `bash` configuration writes the rule files `BASH.md`, `OPERATIONS.md`, and `SAFETY.md` for coding agents. The
+[`bash` configuration reference](/reference/configurations/bash/) lists every rule of each check.
