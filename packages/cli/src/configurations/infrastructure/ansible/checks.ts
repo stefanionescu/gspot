@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -10,6 +9,7 @@ import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
 import { isInScope, isInInstalledFolder } from '#cli/system/paths.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { listNestedScopes, findProjectFolder, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 import { ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 
@@ -48,7 +48,7 @@ Runs ansible-lint on each playbook project.
 @param session the repository and its tools.
 @param planned the scope files to lint.
 */
-export async function checkAnsibleLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkAnsibleLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const folders = listSourcePaths(planned.files, [ANSIBLE_CONFIG_FILE])
         .map((path) => findProjectFolder(path, ANSIBLE_CONFIG_FILE))
         .filter((folder) => folder !== undefined);
@@ -57,3 +57,8 @@ export async function checkAnsibleLint(session: CheckSession, planned: PlannedCh
     for (const folder of projects) findings.push(...(await lintProject(session, planned, folder, projects)));
     return findings;
 }
+
+export const ANSIBLE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'ansible/ansible-lint': { check: checkAnsibleLint },
+    'ansible/ansible-lint-production': { check: checkAnsibleLint },
+};

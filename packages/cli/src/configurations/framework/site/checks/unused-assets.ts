@@ -4,6 +4,7 @@ import { escapeRegExp } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
@@ -12,6 +13,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/language.ts';
+import { UNUSED_ASSET_RULE_DOCS } from '#cli/config/configurations/rule-docs/framework.ts';
 import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
 import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
 
@@ -87,7 +89,7 @@ Report assets absent from the text files and index. Exclude files that browsers 
 @param session the repository and its tools.
 @param planned the scope files and the tracked files.
 */
-export async function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const local = new Set(planned.files.map((file) => file.path));
     const paths = new Set([
         ...local,
@@ -134,3 +136,7 @@ export async function checkSiteUnusedAssets(session: Session, planned: PlannedCh
             message: UNUSED_ASSET_MESSAGE,
         }));
 }
+
+export const SITE_UNUSED_ASSETS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'site/unused-assets': { check: checkSiteUnusedAssets, ruleDocs: UNUSED_ASSET_RULE_DOCS },
+};

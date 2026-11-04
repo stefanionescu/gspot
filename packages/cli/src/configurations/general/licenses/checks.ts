@@ -7,7 +7,6 @@ import { listCheckedFiles } from '#cli/engine/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -15,6 +14,8 @@ import { isGspotPath } from '#cli/repository/files/classify.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import { LICENSE_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
 import type { LockedPackage, AllowedPackage } from '#cli/types/configurations/general.ts';
 
 import {
@@ -73,7 +74,7 @@ that match no locked package.
 @param session the repository and its tools.
 @param planned the scope whose lockfiles to scan.
 */
-export async function checkAllowed(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkAllowed(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const packages = await readLockedPackages(session, planned);
     if (packages.length === 0) throw new CheckStop('missing', EMPTY_SCAN_MESSAGE);
     const { allowed_package: records } = getTable(planned.scope.settings, 'licenses');
@@ -96,3 +97,7 @@ export async function checkAllowed(session: CheckSession, planned: PlannedCheck)
         }));
     return [...disallowed, ...unused];
 }
+
+export const LICENSES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'licenses/allowed': { check: checkAllowed, ruleDocs: LICENSE_RULE_DOCS },
+};

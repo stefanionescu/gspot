@@ -1,8 +1,9 @@
 import { posix } from 'node:path';
 import { readText } from '#cli/system/files/reads.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import { YAML_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
 import type { YamlFinding, YamlAnchorToken } from '#cli/types/configurations/general.ts';
 
 import {
@@ -150,7 +151,7 @@ Report YAML syntax, ambiguous values, unused anchors, and the file conventions f
 @param session the repository's cached source files.
 @param planned the YAML files selected for this scope.
 */
-export function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
+function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path: file }) => {
         const text = readText(session.cache, file);
         const lines = new LineCounter();
@@ -170,3 +171,7 @@ export function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFi
         });
     });
 }
+
+export const DATA_FILES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'data-files/yaml': { check: checkYaml, ruleDocs: YAML_RULE_DOCS },
+};

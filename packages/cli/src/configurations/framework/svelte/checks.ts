@@ -5,13 +5,13 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/configurations.ts';
 
 import {
@@ -57,7 +57,7 @@ Runs svelte-check on the scope for compiler warnings, accessibility warnings, an
 @param planned the scope to check.
 @returns one finding for each error and warning.
 */
-export async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using runtime = createTemporaryFolder();
     const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.path, TSCONFIG_FILE);
     mkdirSync(dirname(target), { recursive: true });
@@ -69,3 +69,7 @@ export async function checkSvelteCheck(session: CheckSession, planned: PlannedCh
     const findings = parseSvelteCheckFindings(planned, result.stdout);
     return assertToolFindings(result, findings, 'svelte-check');
 }
+
+export const SVELTE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'svelte/svelte-check': { check: checkSvelteCheck },
+};

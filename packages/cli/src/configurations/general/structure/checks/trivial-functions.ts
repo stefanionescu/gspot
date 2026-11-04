@@ -5,10 +5,12 @@ import type { Session } from '#cli/types/tools.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
+import { TRIVIAL_FUNCTION_RULE_DOCS } from '#cli/config/configurations/rule-docs/structure.ts';
 import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 
 import {
@@ -218,7 +220,7 @@ only forward code. A function counts the places in the scope that name it, so a 
 @param session the repository and its tools.
 @param planned the scope files and statement limits.
 */
-export async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const isTest = buildPathMatcher(planned.scope.settings.test_files);
     const hasPackageExports = session.settings.structure.reexports === 'index-only';
     const trivialFunctions: TrivialFunction[] = [];
@@ -248,3 +250,7 @@ export async function checkTrivialFunctions(session: Session, planned: PlannedCh
         .map(({ finding }) => finding);
     return [...functions, ...files];
 }
+
+export const STRUCTURE_TRIVIAL_FUNCTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/trivial-functions': { check: checkTrivialFunctions, ruleDocs: TRIVIAL_FUNCTION_RULE_DOCS },
+};

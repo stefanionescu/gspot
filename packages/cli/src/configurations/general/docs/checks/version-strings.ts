@@ -1,0 +1,60 @@
+import { posix } from 'node:path';
+import { escapeRegExp } from '#cli/system/text.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { pyprojectSchema } from '#cli/schemas/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { DOCS_RULES, CHANGELOG_FILE, VERSION_STRING_MESSAGE } from '#cli/config/configurations/general.ts';
+
+function listScopeVersions(session: Session, scopePath: string): string[] {
+    return session.repository.files
+        .filter(({ kind, path }) => kind === 'source' && selectScopePath(path, session.scopes) === scopePath)
+        .flatMap(({ path }) => {
+            const name = posix.basename(path);
+            if (name === PACKAGE_JSON) return [tryParseFile(() => readPackageJson(session.cache, path))?.['version']];
+            return name === PYPROJECT_TOML
+                ? [
+                      tryParseFile(() => parseTomlFile(path, readText(session.cache, path), pyprojectSchema))?.project
+                          ?.version,
+                  ]
+                : [];
+        })
+        .filter((version): version is string => typeof version === 'string');
+}
+
+/**
+Reports the version of a package manifest of the scope in Markdown and test files, except changelogs.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+*/
+function checkVersionStrings(session: Session, planned: PlannedCheck): CheckFinding[] {
+    const versions = listScopeVersions(session, planned.scope.path);
+    if (versions.length === 0) return [];
+    const copied = new RegExp(
+        String.raw`(?<![\w.])(?:${versions.map((version) => escapeRegExp(version)).join('|')})(?![\w.])`,
+        'u',
+    );
+    const isTest = buildPathMatcher(planned.scope.settings.test_files);
+    return planned.files
+        .filter(({ kind }) => kind === 'source')
+        .filter(({ path, tags }) => (tags.includes('markdown') || isTest(path)) && !CHANGELOG_FILE.test(path))
+        .flatMap(({ path }) =>
+            readText(session.cache, path)
+                .split('\n')
+                .flatMap((text, index) => (copied.test(text) ? [index + 1] : []))
+                .map((line) => ({ file: path, line, rule: DOCS_RULES.versionString, message: VERSION_STRING_MESSAGE })),
+        );
+}
+
+export const DOCS_VERSION_STRINGS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'docs/version-strings': { check: checkVersionStrings },
+};

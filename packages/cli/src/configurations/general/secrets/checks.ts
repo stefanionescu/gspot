@@ -13,8 +13,8 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { readPushedRange, readPushedCommits } from '#cli/repository/revisions/push.ts';
-import type { CheckResult, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
+import { type CheckCode, type CheckResult, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
 
 import {
     ENV_KEY_LINE,
@@ -77,7 +77,7 @@ every file that Git does not ignore, so a secret that an earlier commit added st
 @param planned the configured check and selected scope files.
 @param options the command override and the verbosity of the notes.
 */
-export async function checkGitleaksStaged(
+async function checkGitleaksStaged(
     session: CheckSession,
     planned: PlannedCheck,
     options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
@@ -102,7 +102,7 @@ Scans each pushed commit with Gitleaks, so a secret removed before the last comm
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const commits = session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
     if (commits.length === 0) return buildBaseResult(planned, session);
     const range = session.selection?.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
@@ -122,7 +122,7 @@ the scope has no example environment file.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkEnvironmentExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkEnvironmentExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { environment_examples: names, environment_functions: environmentFunctions } = getTable(
         planned.scope.settings,
         'secrets',
@@ -160,7 +160,7 @@ Reports each read of a secret environment variable with a literal fallback.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkEnvironmentDefaults(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkEnvironmentDefaults(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { environment_functions: environmentFunctions } = getTable(planned.scope.settings, 'secrets');
     const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
     const findings: CheckFinding[] = [];
@@ -181,3 +181,10 @@ export async function checkEnvironmentDefaults(session: Session, planned: Planne
     }
     return findings;
 }
+
+export const SECRETS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'secrets/environment-examples': { check: checkEnvironmentExamples },
+    'secrets/environment-defaults': { check: checkEnvironmentDefaults },
+    'secrets/gitleaks-staged': { run: checkGitleaksStaged },
+    'secrets/gitleaks-pushed': { run: checkGitleaksPushed },
+};

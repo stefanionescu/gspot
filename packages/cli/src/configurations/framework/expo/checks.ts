@@ -4,11 +4,11 @@ import { stripVTControlCharacters } from 'node:util';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findInstalledDependency } from '#cli/tools/packages.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 
 import {
     EXPO_PACKAGE,
@@ -46,7 +46,7 @@ Runs Expo Doctor in a scope that depends on expo.
 @param planned the scope to check.
 @returns one finding per failed Doctor check.
 */
-export async function checkExpoDoctor(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkExpoDoctor(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const path = joinScope(planned.scope.path, PACKAGE_JSON);
     if (findInstalledDependency(session.root, path, EXPO_PACKAGE) === undefined)
         throw new CheckStop('missing', UNINSTALLED_EXPO_MESSAGE);
@@ -61,3 +61,7 @@ export async function checkExpoDoctor(session: CheckSession, planned: PlannedChe
     }));
     return assertToolFindings(result, findings, 'expo-doctor');
 }
+
+export const EXPO_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'expo/expo-doctor': { check: checkExpoDoctor },
+};

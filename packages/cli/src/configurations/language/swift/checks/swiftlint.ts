@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { runSwiftBuild, runCopiedTool } from '#cli/configurations/language/swift/checks/build.ts';
 
@@ -21,7 +21,7 @@ Runs the SwiftLint analyzer rules over the compiler log of the build.
 @param session the repository and its tools.
 @param planned the scope to analyze.
 */
-export async function checkSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);
     const build = await runSwiftBuild(session, planned, plan, { clean: true });
     if (build.code !== 0)
@@ -35,3 +35,7 @@ export async function checkSwiftlintAnalyze(session: CheckSession, planned: Plan
         tool: 'swiftlint',
     });
 }
+
+export const SWIFT_SWIFTLINT_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'swift/swiftlint-analyze': { check: checkSwiftlintAnalyze },
+};

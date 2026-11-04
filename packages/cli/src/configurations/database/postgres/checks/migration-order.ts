@@ -1,8 +1,9 @@
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { compareMigrationVersions } from '#cli/parsers/code/sql.ts';
 import type { Migration } from '#cli/types/configurations/infrastructure.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import { MIGRATION_ORDER_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 import { readMigrations, readCommittedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 
@@ -36,7 +37,7 @@ Reports a version that two files share, a file with no version, and a new file t
 @param session the repository and its tools.
 @param planned the scope whose migrations to compare with the last commit.
 */
-export async function checkMigrationOrder(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkMigrationOrder(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { migrations, findings: syntax } = await readMigrations(session, planned);
     if (syntax.length > 0) return syntax;
     const findings = listVersionFindings(migrations);
@@ -65,3 +66,7 @@ export async function checkMigrationOrder(session: CheckSession, planned: Planne
         })),
     ];
 }
+
+export const POSTGRES_MIGRATION_ORDER_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'postgres/migration-order': { check: checkMigrationOrder, ruleDocs: MIGRATION_ORDER_RULE_DOCS },
+};

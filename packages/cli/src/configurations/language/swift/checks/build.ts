@@ -5,10 +5,10 @@ import type { Session } from '#cli/types/tools.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/configurations/language.ts';
 import { prepareBuild, planSwiftBuild, acquireBuildLock } from '#cli/configurations/language/swift/checks/cache.ts';
 
@@ -85,6 +85,30 @@ function expandResponseFiles(line: string, folder: string, files: Files): string
 }
 
 /**
+Builds the scope and reports the compiler errors.
+
+@param session the repository and its tools.
+@param planned the configured check and selected scope files.
+*/
+async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const plan = planSwiftBuild(session, planned);
+    const { output, code, source } = await runSwiftBuild(session, planned, plan, { clean: false });
+    const restored = output.replaceAll(
+        source.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`),
+        () =>
+            session.root.replaceAll(
+                MACOS_PRIVATE_PATH,
+                (_match, before: string, folder: string) => `${before}/${folder}/`,
+            ),
+    );
+    const found = parseOutputFindings(session, restored, {
+        levels: BUILD_LEVELS,
+        defaultRule: COMPILER_RULE,
+    });
+    return assertToolFindings({ code, stdout: restored, stderr: '' }, found, SWIFT_BUILD_NAME);
+}
+
+/**
 Build the scope once for each build folder, and keep the compiler output for the other Swift checks.
 
 @param session the repository and its tools.
@@ -129,30 +153,6 @@ export async function runSwiftBuild(
 }
 
 /**
-Builds the scope and reports the compiler errors.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
-export async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const plan = planSwiftBuild(session, planned);
-    const { output, code, source } = await runSwiftBuild(session, planned, plan, { clean: false });
-    const restored = output.replaceAll(
-        source.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`),
-        () =>
-            session.root.replaceAll(
-                MACOS_PRIVATE_PATH,
-                (_match, before: string, folder: string) => `${before}/${folder}/`,
-            ),
-    );
-    const found = parseOutputFindings(session, restored, {
-        levels: BUILD_LEVELS,
-        defaultRule: COMPILER_RULE,
-    });
-    return assertToolFindings({ code, stdout: restored, stderr: '' }, found, SWIFT_BUILD_NAME);
-}
-
-/**
 Run a Swift tool in the source copy of the build, and read its compiler lines as findings.
 
 @param session the repository and its tools.
@@ -191,3 +191,7 @@ export async function runCopiedTool(
     });
     return assertToolFindings(result, found, run.tool);
 }
+
+export const SWIFT_BUILD_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'swift/build': { check: checkSwiftBuild },
+};

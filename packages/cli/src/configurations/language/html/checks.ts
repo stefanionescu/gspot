@@ -2,10 +2,12 @@ import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
 import type { Session } from '#cli/types/tools.ts';
 import type { SourceTree } from '#cli/types/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
+import { HTML_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
 
 import {
     HTML_RULES,
@@ -118,7 +120,7 @@ Reports inline scripts, handler attributes, and script links in each HTML file.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: CheckFinding[] = [];
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
@@ -126,3 +128,7 @@ export async function checkHtmlInlineScripts(session: Session, planned: PlannedC
     });
     return findings;
 }
+
+export const HTML_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'html/inline-scripts': { check: checkHtmlInlineScripts, ruleDocs: HTML_RULE_DOCS },
+};

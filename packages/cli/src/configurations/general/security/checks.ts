@@ -4,8 +4,8 @@ import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { SEMGREP_TOOL, SEMGREP_RULE_EXTENSION } from '#cli/config/configurations/general.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 
 function listSemgrepRuleFiles(session: CheckSession, planned: PlannedCheck): string[] {
     const { configurations, path: scopePath, settings } = planned.scope;
@@ -24,10 +24,14 @@ Runs Semgrep with the rule files of the scope.
 @param session the repository and installed tools.
 @param planned the check for one scope.
 */
-export async function checkSemgrep(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkSemgrep(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];
     const rules = listSemgrepRuleFiles(session, planned);
     return runCommandCheck(session, planned, {
         command: [...command, ...rules.flatMap((path) => [CONFIG_FLAG, join(session.root, path)])],
     });
 }
+
+export const SECURITY_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'security/semgrep': { run: checkSemgrep },
+};

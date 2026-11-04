@@ -3,6 +3,7 @@ import { camelCase } from 'scule';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -14,6 +15,11 @@ import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/pars
 import { parseBuildTargets, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/configurations.ts';
 
+import {
+    ASSET_RULE_DOCS,
+    XCSTRINGS_RULE_DOCS,
+    BUILD_SETTING_RULE_DOCS,
+} from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import {
     PLIST_KEY,
     IMAGE_SET,
@@ -47,7 +53,7 @@ Reports Swift sources that no Xcode target holds.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): CheckFinding[] {
     const projects = listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).map((path) =>
         parseProjectSources(readText(session.cache, path), path),
     );
@@ -77,7 +83,7 @@ Checks that each asset catalog Contents.json parses and each image set holds its
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
@@ -115,7 +121,7 @@ Reports asset sets that no source or Xcode build setting names.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const sourceTexts = listSourcePaths(planned.files, ASSET_REFERENCE_ENDINGS).map((path) =>
         readText(session.cache, path),
     );
@@ -148,7 +154,7 @@ Checks that each string catalog parses and that every string has every locale th
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkXcstrings(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkXcstrings(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const text = readText(session.cache, path);
         const at = { file: path, line: 1 };
@@ -183,7 +189,7 @@ Reports each entitlement that xcode.allowed_entitlements does not list.
 @param session the repository and its tools.
 @param planned the scope files and allowed entitlements.
 */
-export function checkEntitlements(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkEntitlements(session: Session, planned: PlannedCheck): CheckFinding[] {
     const allowed = new Set(getTable(planned.scope.settings, 'xcode').allowed_entitlements);
     return listSourcePaths(planned.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
         const text = readText(session.cache, path);
@@ -209,7 +215,7 @@ Reports each plist that turns App Transport Security off for every host.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkAppTransportSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkAppTransportSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): CheckFinding[] => {
         const text = readText(session.cache, path);
         const found = INSECURE_TRANSPORT_SETTING.exec(text);
@@ -232,7 +238,7 @@ Reports each target without strict concurrency, and each run-script phase that d
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkBuildSettings(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkBuildSettings(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).flatMap((path) => {
         const parsed = parseCheckedFile(path, () => parseBuildTargets(readText(session.cache, path), path));
         if ('error' in parsed) return [parsed.error];
@@ -261,3 +267,13 @@ export function checkBuildSettings(session: Session, planned: PlannedCheck): Che
         );
     });
 }
+
+export const XCODE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'xcode/app-transport-security': { check: checkAppTransportSecurity },
+    'xcode/assets': { check: checkAssets, ruleDocs: ASSET_RULE_DOCS },
+    'xcode/build-settings': { check: checkBuildSettings, ruleDocs: BUILD_SETTING_RULE_DOCS },
+    'xcode/entitlements': { check: checkEntitlements },
+    'xcode/files-without-target': { check: checkFilesWithoutTarget },
+    'xcode/unused-assets': { check: checkXcodeUnusedAssets },
+    'xcode/xcstrings': { check: checkXcstrings, ruleDocs: XCSTRINGS_RULE_DOCS },
+};

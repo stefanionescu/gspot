@@ -1,0 +1,84 @@
+import { join, posix } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { buildUvRunCommand } from '#cli/tools/uv.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { deptrySchema } from '#cli/schemas/configurations.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { GSPOT_FOLDER, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { type DeptryProject } from '#cli/types/configurations/language.ts';
+import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
+import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/structure.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+
+import {
+    DEPTRY_COMMAND,
+    NO_PYPROJECT_NOTE,
+    DEPTRY_EXCLUDE_FLAG,
+    PYTHON_SOURCE_FOLDER,
+    PYTHON_NAME_SEPARATORS,
+    DEPTRY_FIRST_PARTY_FLAG,
+} from '#cli/config/configurations/python.ts';
+
+function listFirstPartyPackages(session: Session, planned: PlannedCheck, project: DeptryProject): string[] {
+    const sources = joinScope(planned.scope.path, PYTHON_SOURCE_FOLDER);
+    const packages = session.repository.files
+        .map(({ path }) => path)
+        .filter((path) => posix.basename(path) === PYTHON_PACKAGE_FILE)
+        .map((path) => posix.dirname(path))
+        .filter((folder) => posix.dirname(folder) === sources)
+        .map((folder) => posix.basename(folder));
+    const projectName = project.project.name?.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '_');
+    return [
+        ...new Set([
+            ...(projectName === undefined ? [] : [projectName]),
+            ...packages,
+            ...project.tool.deptry.known_first_party,
+            ...getTable(planned.scope.settings, 'python').externals,
+        ]),
+    ].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
+}
+
+/**
+Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
+
+@param session the repository and installed tools.
+@param planned the configured check and selected scope files.
+*/
+async function checkDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
+    const text = findText(session.cache, pyproject);
+    if (text === undefined) throw new CheckStop('skipped', NO_PYPROJECT_NOTE);
+    const project = parseTomlFile(pyproject, text, deptrySchema);
+    const excluded = [
+        String.raw`(^|.*[/\\])${escapeRegExp(GSPOT_FOLDER)}([/\\]|$)`,
+        ...listNestedScopes(
+            session.scopes.map((scope) => scope.path),
+            planned.scope.path,
+        ).map((path) => {
+            const child = posix
+                .relative(planned.scope.path, path)
+                .split('/')
+                .map((segment) => escapeRegExp(segment))
+                .join(PATH_SEPARATOR_PATTERN);
+            return String.raw`^${child}([/\\]|$)`;
+        }),
+        ...project.tool.deptry.extend_exclude,
+    ];
+    return await runCommandCheck(session, planned, {
+        command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.path), [
+            ...DEPTRY_COMMAND,
+            ...excluded.flatMap((pattern) => [DEPTRY_EXCLUDE_FLAG, pattern]),
+            ...listFirstPartyPackages(session, planned, project),
+        ]),
+    });
+}
+
+export const PYTHON_DEPTRY_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'python/deptry': { run: checkDeptry },
+};

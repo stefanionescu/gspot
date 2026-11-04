@@ -10,7 +10,6 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
@@ -20,11 +19,13 @@ import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
+import { DENO_CHECK_RULE_DOCS, STORAGE_POLICY_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 
 import {
     SYNTAX_RULE,
@@ -192,7 +193,7 @@ Reports each storage bucket that no migration policy on storage.objects names.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkStoragePolicies(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkStoragePolicies(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed === undefined) return [];
     if ('error' in parsed) return [parsed.error];
@@ -219,7 +220,7 @@ Runs deno lint on each edge function.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkDenoLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkDenoLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed !== undefined && 'error' in parsed) return [parsed.error];
@@ -259,7 +260,7 @@ Reports the first type error of each edge function, from deno check on its entry
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed !== undefined && 'error' in parsed) return [parsed.error];
@@ -281,7 +282,7 @@ Reports privileged Supabase keys outside edge functions and test files.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkServiceRoleKey(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkServiceRoleKey(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
     const tests = planned.scope.settings.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
@@ -315,7 +316,7 @@ Reports each `verify_jwt = false` line of the project file with no comment that 
 @param session the repository and its tools.
 @param planned the scope of the project file.
 */
-export function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFinding[] {
     const file = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
     return (findText(session.cache, file) ?? '')
         .split('\n')
@@ -325,3 +326,11 @@ export function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFi
                 : [],
         );
 }
+
+export const SUPABASE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'supabase/deno-check': { check: checkDenoCheck, ruleDocs: DENO_CHECK_RULE_DOCS },
+    'supabase/deno-lint': { check: checkDenoLint },
+    'supabase/service-role-key': { check: checkServiceRoleKey },
+    'supabase/storage-policies': { check: checkStoragePolicies, ruleDocs: STORAGE_POLICY_RULE_DOCS },
+    'supabase/verify-jwt': { check: checkVerifyJwt },
+};

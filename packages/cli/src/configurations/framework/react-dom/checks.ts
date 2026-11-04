@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { intersects, validRange } from 'semver';
 import type { Session } from '#cli/types/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -20,7 +21,7 @@ Reports a project whose react and react-dom resolve to different versions.
 @param session the repository and its tools.
 @param planned the scope to check.
 */
-export function checkReactVersions(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkReactVersions(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const specifiers = listSpecifiers(readPackageJson(session.cache, packageJsonPath));
@@ -40,3 +41,7 @@ export function checkReactVersions(session: Session, planned: PlannedCheck): Che
         },
     ];
 }
+
+export const REACT_DOM_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'react-dom/react-versions': { check: checkReactVersions },
+};

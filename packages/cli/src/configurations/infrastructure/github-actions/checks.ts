@@ -8,8 +8,9 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import { WORKFLOW_SHAPE_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 
 import {
     isMap,
@@ -153,7 +154,7 @@ Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with
 @param session the repository and its tools.
 @param planned the actionlint check and its files.
 */
-export async function checkActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     const actionFiles = new Map(
         [
@@ -190,7 +191,7 @@ Reports each workflow that breaks the shape rules of GITHUB-ACTIONS.md: job limi
 @param session the repository file cache.
 @param planned the selected workflow files.
 */
-export function checkWorkflowShape(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkWorkflowShape(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path }) => {
         const text = readText(session.cache, path);
         const lines = new LineCounter();
@@ -218,3 +219,8 @@ export function checkWorkflowShape(session: Session, planned: PlannedCheck): Che
         );
     });
 }
+
+export const GITHUB_ACTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'github-actions/actionlint': { run: checkActionlint },
+    'github-actions/workflow-shape': { check: checkWorkflowShape, ruleDocs: WORKFLOW_SHAPE_RULE_DOCS },
+};

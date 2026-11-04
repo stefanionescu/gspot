@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
@@ -10,7 +11,7 @@ Reports each line that embeds another runtime.
 @param session the repository and its tools.
 @param planned the scope scripts to read.
 */
-export async function checkBashInlineScripts(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkBashInlineScripts(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>
         file.code.flatMap((line, position) => {
@@ -27,3 +28,7 @@ export async function checkBashInlineScripts(session: Session, planned: PlannedC
         }),
     );
 }
+
+export const BASH_INLINE_SCRIPTS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'bash/inline-scripts': { check: checkBashInlineScripts },
+};

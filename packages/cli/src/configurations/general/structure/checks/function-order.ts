@@ -1,6 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/tools.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
@@ -114,7 +115,7 @@ unless the module exports it.
 @param session the repository and its tools.
 @param planned the scope sources and the configurations that select their grammars.
 */
-export async function checkFunctionOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkFunctionOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.flatMap((file) => {
         const grammars = planned.scope.settings.configurations.map((language) => selectGrammar(file.path, language));
         const grammar = grammars.find((found) => found !== undefined);
@@ -126,3 +127,7 @@ export async function checkFunctionOrder(session: Session, planned: PlannedCheck
     });
     return findings;
 }
+
+export const STRUCTURE_FUNCTION_ORDER_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/function-order': { check: checkFunctionOrder },
+};

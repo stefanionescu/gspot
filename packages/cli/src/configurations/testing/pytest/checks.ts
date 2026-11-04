@@ -8,7 +8,7 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
-import type { CheckResult, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
+import { type CheckCode, type CheckResult, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
 
 function hasProjectCoverage(session: Session, scope: string): boolean {
     if (findText(session.cache, joinScope(scope, '.coveragerc')) !== undefined) return true;
@@ -27,7 +27,7 @@ Runs pytest, and leaves the shipped coverage settings out when the project write
 @param planned the coverage check of one scope.
 @param options the command override and the verbosity of the notes.
 */
-export async function checkPytestTests(
+async function checkPytestTests(
     session: CheckSession,
     planned: PlannedCheck,
     options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
@@ -39,3 +39,7 @@ export async function checkPytestTests(
     );
     return runCommandCheck(session, planned, { ...options, command });
 }
+
+export const PYTEST_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'pytest/tests': { run: checkPytestTests },
+};

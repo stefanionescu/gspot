@@ -3,6 +3,7 @@ import { splitWords } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { FolderChild } from '#cli/types/configurations/general.ts';
@@ -66,7 +67,7 @@ gspot.toml and gspot.baseline.json, so they share no prefix.
 @param session the repository and its tools.
 @param planned the scope files and limit.
 */
-export function checkSharedPrefixes(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkSharedPrefixes(session: Session, planned: PlannedCheck): CheckFinding[] {
     const limit = getTable(planned.scope.settings, 'limits').min_shared_prefix_files;
     const prefixes = new Set(
         planned.scope.configurations.flatMap((configuration) => configuration.shared_prefixes.prefixes),
@@ -121,3 +122,7 @@ export function checkSharedPrefixes(session: Session, planned: PlannedCheck): Ch
         });
     });
 }
+
+export const STRUCTURE_SHARED_PREFIXES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/shared-prefixes': { check: checkSharedPrefixes },
+};

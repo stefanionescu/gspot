@@ -12,10 +12,16 @@ import type { Settings, IgnoreRecord } from '#cli/types/settings.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { WEAKENING_RULE_DOCS } from '#cli/config/configurations/rule-docs/gspot.ts';
 import { getSettingValue, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
-import type { CheckSession, BaselineCount, BuiltInCheckResult } from '#cli/types/engine/run.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 
+import {
+    type CheckCode,
+    type CheckSession,
+    type BaselineCount,
+    type BuiltInCheckResult,
+} from '#cli/types/engine/run.ts';
 import {
     WEAKENING_FIXES,
     WEAKENING_RULES,
@@ -145,7 +151,7 @@ with no reason fails the check, and one with a reason prints as a note.
 
 @param session the settings of the tree that the run checks, and the base revision of the run.
 */
-export async function checkWeakenings(session: CheckSession): Promise<BuiltInCheckResult> {
+async function checkWeakenings(session: CheckSession): Promise<BuiltInCheckResult> {
     const { root, settings, cancelSignal, repository, selection } = session;
     const paths = [SETTINGS_FILE, BASELINE_FILE];
     const texts = await readCommittedTexts(root, paths, selection?.base ?? 'HEAD', cancelSignal);
@@ -170,3 +176,7 @@ export async function checkWeakenings(session: CheckSession): Promise<BuiltInChe
         notes: weakenings.flatMap(({ change, reason }) => (reason === undefined ? [] : [`${change}: ${reason}`])),
     };
 }
+
+export const GSPOT_WEAKENINGS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'gspot/weakenings': { check: checkWeakenings, ruleDocs: WEAKENING_RULE_DOCS },
+};

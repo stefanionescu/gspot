@@ -1,10 +1,11 @@
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { SqlStatement } from '#cli/types/parsers.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { EDITED_MIGRATION_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 
 import {
     FROZEN_RULE,
@@ -35,7 +36,7 @@ the frozen migrations, except on `CREATE INDEX CONCURRENTLY`.
 @param session the repository and its tools.
 @param planned the scope whose migrations to compare with the last commit.
 */
-export async function checkEditedMigrations(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkEditedMigrations(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const frozen = selectFrozenMigrations(
         migrations.map((migration) => migration.path),
@@ -72,3 +73,7 @@ export async function checkEditedMigrations(session: CheckSession, planned: Plan
     });
     return [...edited, ...guards];
 }
+
+export const POSTGRES_EDITED_MIGRATIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'postgres/edited-migrations': { check: checkEditedMigrations, ruleDocs: EDITED_MIGRATION_RULE_DOCS },
+};

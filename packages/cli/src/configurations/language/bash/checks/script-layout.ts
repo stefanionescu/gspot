@@ -1,11 +1,13 @@
 import type { Session } from '#cli/types/tools.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { listCodeLines } from '#cli/parsers/code/bash.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { NumberedLine } from '#cli/types/parsers.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { SCRIPT_LAYOUT_RULE_DOCS } from '#cli/config/configurations/rule-docs/bash.ts';
 import type { ScriptFile, LayoutFinding } from '#cli/types/configurations/language.ts';
 
 import {
@@ -112,7 +114,7 @@ Checks the layout of files classified as Bash scripts.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkScriptLayout(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkScriptLayout(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const isEnvironmentReader = buildPathMatcher(planned.scope.settings.tables.structure?.environment_readers ?? []);
     const scripts = await readScripts(session, {
         ...planned,
@@ -124,3 +126,7 @@ export async function checkScriptLayout(session: Session, planned: PlannedCheck)
         ),
     );
 }
+
+export const BASH_SCRIPT_LAYOUT_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'bash/script-layout': { check: checkScriptLayout, ruleDocs: SCRIPT_LAYOUT_RULE_DOCS },
+};

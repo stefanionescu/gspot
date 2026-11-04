@@ -3,10 +3,12 @@ import type { Node } from 'web-tree-sitter';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
+import { INSTRUCTION_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import { WHITESPACE_RUN, DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers.ts';
 
 import {
@@ -69,27 +71,13 @@ function listStaticHits({ name, text }: DockerInstruction): Array<keyof typeof I
 }
 
 /**
-List the instructions of a Dockerfile, each with its continued lines joined.
-
-@param text the Dockerfile.
-*/
-export function listDockerInstructions(text: string): DockerInstruction[] {
-    const instructions: DockerInstruction[] = Array.from(text.matchAll(DOCKER_INSTRUCTION), (match) => ({
-        name: (match.groups?.['name'] ?? '').toUpperCase(),
-        text: (match.groups?.['text'] ?? '').replaceAll(LINE_CONTINUATION, ' ').trim(),
-        line: getPosition(text, match.index).line,
-    }));
-    return instructions;
-}
-
-/**
 Reports each Dockerfile instruction that can rewrite a lockfile, pipes a download into a shell, floats an nginx tag, or
 wraps the entry point in a shell.
 
 @param session the repository and its tools.
 @param planned the Dockerfiles to read.
 */
-export async function checkInstructions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkInstructions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const instructions = planned.files.flatMap(({ path }) =>
         listDockerInstructions(readText(session.cache, path)).map((instruction) => ({ ...instruction, path })),
     );
@@ -107,3 +95,21 @@ export async function checkInstructions(session: Session, planned: PlannedCheck)
     );
     return findings.flat();
 }
+
+/**
+List the instructions of a Dockerfile, each with its continued lines joined.
+
+@param text the Dockerfile.
+*/
+export function listDockerInstructions(text: string): DockerInstruction[] {
+    const instructions: DockerInstruction[] = Array.from(text.matchAll(DOCKER_INSTRUCTION), (match) => ({
+        name: (match.groups?.['name'] ?? '').toUpperCase(),
+        text: (match.groups?.['text'] ?? '').replaceAll(LINE_CONTINUATION, ' ').trim(),
+        line: getPosition(text, match.index).line,
+    }));
+    return instructions;
+}
+
+export const DOCKER_INSTRUCTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'docker/instructions': { check: checkInstructions, ruleDocs: INSTRUCTION_RULE_DOCS },
+};

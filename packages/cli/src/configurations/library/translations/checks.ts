@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { getPosition, compareText } from '#cli/system/text.ts';
@@ -10,6 +11,7 @@ import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseTree, findNodeAtLocation } from 'jsonc-parser/lib/esm/main.js';
 import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
+import { TRANSLATION_RULE_DOCS } from '#cli/config/configurations/rule-docs/framework.ts';
 
 import {
     TYPE,
@@ -210,7 +212,7 @@ namespace of a locale-folder layout, compares with its own base-locale file.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] {
     const options = getTable(planned.scope.settings, 'translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
@@ -253,3 +255,7 @@ export function checkMessages(session: Session, planned: PlannedCheck): CheckFin
         }),
     ];
 }
+
+export const TRANSLATIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'translations/messages': { check: checkMessages, ruleDocs: TRANSLATION_RULE_DOCS },
+};

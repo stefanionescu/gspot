@@ -1,10 +1,12 @@
 import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { NumberedLine } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
+import { HEADER_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/infrastructure.ts';
 
 import {
@@ -102,7 +104,7 @@ Reports syntax errors in each _redirects file.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
         validateRedirects(readText(session.cache, path)).map((invalidLine) => ({
             file: path,
@@ -119,7 +121,7 @@ Reports syntax errors in each _headers file, and each security header that the b
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
         const { blocks, errors } = parseHeadersFile(readText(session.cache, path));
         return [
@@ -138,3 +140,8 @@ export function checkHeaders(session: Session, planned: PlannedCheck): CheckFind
         ];
     });
 }
+
+export const CLOUDFLARE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'cloudflare/headers': { check: checkHeaders, ruleDocs: HEADER_RULE_DOCS },
+    'cloudflare/redirects': { check: checkRedirects },
+};

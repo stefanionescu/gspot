@@ -10,8 +10,9 @@ import { runGit, readGitSetting } from '#cli/repository/git/run.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import type { CommitMessage } from '#cli/types/configurations/general.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
+import { REFERENCE_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 
 import {
     MESSAGE_FILE,
@@ -30,7 +31,7 @@ Checks every pushed commit message, including empty commits that change no files
 @param session the repository, its tools, and the pushed commits of the run.
 @param planned the configured commitlint check.
 */
-export async function checkCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
     const commits = session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
     const read = await session.limitProcess(() =>
@@ -72,6 +73,26 @@ export async function checkCommitlintPushed(session: CheckSession, planned: Plan
 }
 
 /**
+Report each line of a new commit message that links to an AI session.
+
+@param session the repository, its tools, and the commit message file of the run.
+*/
+async function checkReferences(session: CheckSession): Promise<CheckFinding[]> {
+    const messageFile = session.selection?.messageFile;
+    if (messageFile === undefined) return [];
+    const { text: message, prefix } = await readCommitMessage(session, messageFile);
+    return message.split('\n').flatMap((line, index) =>
+        line.startsWith(prefix)
+            ? []
+            : MESSAGE_REFERENCES.filter(({ pattern }) => pattern.test(line)).map(({ rule, message: text }) => ({
+                  file: '',
+                  rule,
+                  message: `Line ${String(index + 1)} ${text}`,
+              })),
+    );
+}
+
+/**
 Read a commit message without the comment lines and the diff that Git adds to the message file. The checks of one run
 share one read of `core.commentChar`.
 
@@ -91,22 +112,7 @@ export async function readCommitMessage(session: CheckSession, messageFile: stri
     return { text: text.slice(0, scissors?.index ?? text.length), prefix };
 }
 
-/**
-Report each line of a new commit message that links to an AI session.
-
-@param session the repository, its tools, and the commit message file of the run.
-*/
-export async function checkReferences(session: CheckSession): Promise<CheckFinding[]> {
-    const messageFile = session.selection?.messageFile;
-    if (messageFile === undefined) return [];
-    const { text: message, prefix } = await readCommitMessage(session, messageFile);
-    return message.split('\n').flatMap((line, index) =>
-        line.startsWith(prefix)
-            ? []
-            : MESSAGE_REFERENCES.filter(({ pattern }) => pattern.test(line)).map(({ rule, message: text }) => ({
-                  file: '',
-                  rule,
-                  message: `Line ${String(index + 1)} ${text}`,
-              })),
-    );
-}
+export const COMMITS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'commits/commitlint-pushed': { run: checkCommitlintPushed },
+    'commits/references': { check: checkReferences, ruleDocs: REFERENCE_RULE_DOCS },
+};

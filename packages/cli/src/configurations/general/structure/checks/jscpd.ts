@@ -3,7 +3,6 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
@@ -15,6 +14,7 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
 
 import {
@@ -32,7 +32,7 @@ Runs jscpd over the scope and reports the clones.
 @param session the repository and its tools.
 @param planned the scope whose source files to compare.
 */
-export async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using workFolder = createTemporaryFolder();
     const owned = new Set(
         listSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>
@@ -84,3 +84,7 @@ export async function checkJscpd(session: CheckSession, planned: PlannedCheck): 
         ];
     });
 }
+
+export const STRUCTURE_JSCPD_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/jscpd': { check: checkJscpd },
+};

@@ -9,7 +9,6 @@ import type { SpawnResult } from '#cli/types/system.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import { parseComments } from '#cli/parsers/code/comments.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -18,6 +17,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listMarkdownTexts } from '#cli/parsers/formats/markdown.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import type { ProseRouteBatch } from '#cli/types/configurations/general.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { readCommitMessage } from '#cli/configurations/general/commits/checks.ts';
 import { VALE_TOOL, PROSE_GRAMMARS, VALE_MESSAGE_RULES, VALE_PACKAGES_MESSAGE } from '#cli/config/tools/vale.ts';
 
@@ -124,7 +124,7 @@ once, and the process limit of the session bounds how many run.
 @param session the repository and its tools.
 @param planned the scope to check.
 */
-export async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (!hasValePackages(session.toolsRoot)) throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
     const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfig), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfig));
@@ -145,7 +145,7 @@ Runs the word rules on a new commit message, with the comment lines that Git add
 @param session the repository, its tools, and the commit message file of the run.
 @param planned the configured Vale check.
 */
-export async function checkCommitMessage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkCommitMessage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const messageFile = session.selection?.messageFile;
     if (messageFile === undefined) return [];
     const { text, prefix } = await readCommitMessage(session, messageFile);
@@ -180,8 +180,14 @@ Reports ambiguous dates in Markdown text and in code comments.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export async function checkDates(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkDates(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.filter((file) => file.kind === 'source');
     const findings = await Promise.all(files.map((file) => listFileDates(session, file)));
     return findings.flat();
 }
+
+export const PROSE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'prose/commit-message': { check: checkCommitMessage },
+    'prose/dates': { check: checkDates },
+    'prose/vale': { check: checkVale },
+};

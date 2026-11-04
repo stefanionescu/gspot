@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
@@ -12,7 +13,7 @@ gspot.toml and gspot.baseline.json, so they clash with no folder.
 @param _session the repository and its tools.
 @param planned the scope files.
 */
-export function checkFileFolderClashes(_session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkFileFolderClashes(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned).filter(({ path }) => !GSPOT_FIXED_NAMES.has(path));
     const tree = buildFolderTree(planned.files);
     return files.flatMap((file) => {
@@ -29,3 +30,7 @@ export function checkFileFolderClashes(_session: Session, planned: PlannedCheck)
         ];
     });
 }
+
+export const FILE_FOLDER_CLASHES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/file-folder-clashes': { check: checkFileFolderClashes },
+};

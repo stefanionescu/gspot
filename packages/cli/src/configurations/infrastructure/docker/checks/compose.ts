@@ -10,7 +10,7 @@ import { composeSchema } from '#cli/schemas/configurations.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 import type { ComposeFiles, ComposeDocuments, ComposeDeclaration } from '#cli/types/configurations/infrastructure.ts';
 
 import {
@@ -65,6 +65,34 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
 }
 
 /**
+Validates each Compose project with its overrides.
+
+@param session the repository and its tools.
+@param planned the Compose check and its files.
+*/
+async function checkCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+    const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
+    return runCommandBatches(
+        session,
+        planned,
+        groups.map(({ last, before }) => {
+            const command = (planned.check.command as string[]).flatMap((argument) =>
+                argument === FILE_PLACEHOLDER
+                    ? [
+                          ...before.flatMap(({ path }) => [
+                              posix.relative(planned.scope.path, path),
+                              COMPOSE_FILE_FLAG,
+                          ]),
+                          argument,
+                      ]
+                    : [argument],
+            );
+            return { files: [last], command };
+        }),
+    );
+}
+
+/**
 Read the Compose services of the check and the build contexts of each Dockerfile.
 
 @param session the repository and its tools.
@@ -95,30 +123,6 @@ export function readComposeDocuments(session: Session, planned: PlannedCheck): C
     return documents;
 }
 
-/**
-Validates each Compose project with its overrides.
-
-@param session the repository and its tools.
-@param planned the Compose check and its files.
-*/
-export async function checkCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
-    return runCommandBatches(
-        session,
-        planned,
-        groups.map(({ last, before }) => {
-            const command = (planned.check.command as string[]).flatMap((argument) =>
-                argument === FILE_PLACEHOLDER
-                    ? [
-                          ...before.flatMap(({ path }) => [
-                              posix.relative(planned.scope.path, path),
-                              COMPOSE_FILE_FLAG,
-                          ]),
-                          argument,
-                      ]
-                    : [argument],
-            );
-            return { files: [last], command };
-        }),
-    );
-}
+export const DOCKER_COMPOSE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'docker/compose': { run: checkCompose },
+};

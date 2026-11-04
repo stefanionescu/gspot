@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
@@ -14,7 +15,7 @@ Reports each leaf folder that holds only one code file.
 @param _session the repository and its tools.
 @param planned the scope files.
 */
-export function checkLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
     const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(
@@ -50,3 +51,7 @@ export function checkLoneFiles(_session: Session, planned: PlannedCheck): CheckF
             ];
         });
 }
+
+export const STRUCTURE_LONE_FILES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/lone-files': { check: checkLoneFiles },
+};

@@ -1,8 +1,10 @@
 import type { Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { SWIFT_SECURITY_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
 
 import {
     LOG_METHODS,
@@ -78,7 +80,7 @@ Reports always-accessible Keychain items, weak hashes, and each secret in UserDe
 @param session the repository and its tools.
 @param planned the scope Swift files.
 */
-export async function checkSwiftSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSwiftSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
@@ -98,3 +100,7 @@ export async function checkSwiftSecurity(session: Session, planned: PlannedCheck
     });
     return findings;
 }
+
+export const SWIFT_SECURITY_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'swift/security': { check: checkSwiftSecurity, ruleDocs: SWIFT_SECURITY_RULE_DOCS },
+};

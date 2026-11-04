@@ -11,9 +11,9 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/engine.ts';
-import type { CheckSession, BuiltInCheckResult } from '#cli/types/engine/run.ts';
 import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
 import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
+import { type CheckCode, type CheckSession, type BuiltInCheckResult } from '#cli/types/engine/run.ts';
 
 import {
     MOUNT_FLAG,
@@ -183,7 +183,7 @@ Tests every tracked nginx.conf with the server's own parser.
 @param planned the configured check and selected scope files.
 @returns one finding for each file nginx refuses.
 */
-export async function checkSyntax(session: CheckSession, planned: PlannedCheck): Promise<BuiltInCheckResult> {
+async function checkSyntax(session: CheckSession, planned: PlannedCheck): Promise<BuiltInCheckResult> {
     const image = getTable(planned.scope.settings, 'nginx').image;
     const paths = listSourcePaths(planned.files, [NGINX_CONFIG_FILE]);
     if (paths.length === 0) return { findings: [], files: [] };
@@ -210,3 +210,7 @@ export async function checkSyntax(session: CheckSession, planned: PlannedCheck):
     }
     return { findings, files: [...checked] };
 }
+
+export const NGINX_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'nginx/syntax': { check: checkSyntax },
+};

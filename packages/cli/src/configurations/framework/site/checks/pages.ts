@@ -8,7 +8,6 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { join, extname, relative, isAbsolute } from 'node:path';
@@ -19,6 +18,8 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import { SITEMAP_RULE_DOCS } from '#cli/config/configurations/rule-docs/framework.ts';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
 
 import {
@@ -89,7 +90,7 @@ Reports broken links between built pages, stylesheets, and fragments.
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const pages = new Set(listBuiltFiles(build.folder));
     const { urls, base } = readSitemapUrls(build.folder, pages, planned);
@@ -131,7 +132,7 @@ Runs html-validate on every built page with the config file for built output.
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const pages = listBuiltFiles(build.folder)
         .filter((path) => path.endsWith(HTML_EXTENSION))
@@ -169,7 +170,7 @@ Reports selectors in built stylesheets that no built page or script uses.
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
@@ -207,7 +208,7 @@ Reports sitemap URLs with no built page, and built pages the sitemap leaves out 
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkSitemap(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSitemap(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const files = new Set(listBuiltFiles(build.folder));
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
@@ -244,3 +245,10 @@ export async function checkSitemap(session: CheckSession, planned: PlannedCheck)
         }));
     return [...findings, ...missing, ...unlisted];
 }
+
+export const SITE_PAGES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'site/html-validate': { check: checkHtmlValidate },
+    'site/lychee': { check: checkLychee },
+    'site/purgecss': { check: checkPurgecss },
+    'site/sitemap': { check: checkSitemap, ruleDocs: SITEMAP_RULE_DOCS },
+};

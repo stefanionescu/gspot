@@ -1,6 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/tools.ts';
 import type { SourceTree } from '#cli/types/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -85,7 +86,7 @@ Reports each public or open function and initializer whose doc comment leaves a 
 @param session the repository and its tools.
 @param planned the scope Swift files.
 */
-export async function checkSwiftDocComments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSwiftDocComments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
@@ -93,3 +94,7 @@ export async function checkSwiftDocComments(session: Session, planned: PlannedCh
     });
     return findings;
 }
+
+export const SWIFT_DOC_COMMENTS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'swift/doc-comments': { check: checkSwiftDocComments },
+};

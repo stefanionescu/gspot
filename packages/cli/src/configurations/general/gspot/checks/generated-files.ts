@@ -1,8 +1,9 @@
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
+import { GENERATED_FILE_RULE_DOCS } from '#cli/config/configurations/rule-docs/gspot.ts';
 import { TOOL_LOCKFILES, GENERATED_FILE_FINDINGS } from '#cli/config/configurations/structure.ts';
+import { type CheckCode, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
 
 /**
 Reports each generated file on disk that does not match what the settings generate.
@@ -11,7 +12,7 @@ Reports each generated file on disk that does not match what the settings genera
 @param _planned the configured check and selected scope files.
 @param options whether to include the differences.
 */
-export function checkGeneratedFiles(
+function checkGeneratedFiles(
     session: CheckSession,
     _planned: PlannedCheck,
     options: Pick<CheckRunOptions, 'verbose'> = {},
@@ -28,3 +29,7 @@ export function checkGeneratedFiles(
         };
     });
 }
+
+export const GSPOT_GENERATED_FILES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'gspot/generated-files': { check: checkGeneratedFiles, ruleDocs: GENERATED_FILE_RULE_DOCS },
+};

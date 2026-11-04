@@ -10,7 +10,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 import { runTsc, listCompilerFiles, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
 
 function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
@@ -36,7 +36,7 @@ Runs tsc on a project, or on every project that a solution tsconfig names.
 @param session the repository and its tools.
 @param planned the compiler check for one scope.
 */
-export async function checkTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,
         planned.scope.path,
@@ -77,3 +77,8 @@ export async function checkTsc(session: CheckSession, planned: PlannedCheck): Pr
     );
     return references === undefined ? result : removeChildScopeFindings(session, planned, result);
 }
+
+export const TSC_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'typescript/tsc': { run: checkTsc },
+    'vue/vue-tsc': { run: checkTsc },
+};

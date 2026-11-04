@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { BARE_BLOCK_RULE, BARE_BLOCK_MESSAGE } from '#cli/config/configurations/structure.ts';
@@ -11,7 +12,7 @@ of JavaScript and TypeScript.
 @param session the repository and its tools.
 @param planned the scope sources.
 */
-export async function checkBareBlocks(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkBareBlocks(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     await visitQueriedSources(session, planned, (source) => {
         const blocks = source.captures.get('block') ?? [];
@@ -29,3 +30,7 @@ export async function checkBareBlocks(session: Session, planned: PlannedCheck): 
     });
     return findings;
 }
+
+export const STRUCTURE_BARE_BLOCKS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/bare-blocks': { check: checkBareBlocks },
+};

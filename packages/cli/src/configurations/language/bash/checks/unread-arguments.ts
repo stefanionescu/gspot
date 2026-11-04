@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { formatCount, formatNameList } from '#cli/system/text.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -17,7 +18,7 @@ Reports each function called with more arguments than it reads.
 @param session the repository and its tools.
 @param planned the scope scripts to read.
 */
-export async function checkUnreadArguments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkUnreadArguments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>
         file.functions.flatMap((scriptFunction) => {
@@ -42,3 +43,7 @@ export async function checkUnreadArguments(session: Session, planned: PlannedChe
         }),
     );
 }
+
+export const BASH_UNREAD_ARGUMENTS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'bash/unread-arguments': { check: checkUnreadArguments },
+};

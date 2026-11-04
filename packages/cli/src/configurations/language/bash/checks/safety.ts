@@ -1,7 +1,9 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ScriptFile } from '#cli/types/configurations/language.ts';
+import { SAFETY_RULE_DOCS } from '#cli/config/configurations/rule-docs/bash.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 
 import {
@@ -64,7 +66,7 @@ Reports each unsafe process kill or removal and each form that BASH.md forbids. 
 @param session the repository and its tools.
 @param planned the scope scripts and level.
 */
-export async function checkSafety(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSafety(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     const isAll = session.settings.level === 'all';
     return scripts.flatMap((file) => [
@@ -82,3 +84,7 @@ export async function checkSafety(session: Session, planned: PlannedCheck): Prom
             : []),
     ]);
 }
+
+export const BASH_SAFETY_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'bash/safety': { check: checkSafety, ruleDocs: SAFETY_RULE_DOCS },
+};

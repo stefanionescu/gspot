@@ -1,10 +1,12 @@
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { listCodeLines } from '#cli/parsers/code/bash.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { COUNT_LIMITS } from '#cli/config/configurations/bash.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { FUNCTION_SIZE_RULE_DOCS } from '#cli/config/configurations/rule-docs/bash.ts';
 
 /**
 Checks each shell function against the size limits: code lines, branches, nesting, and assignments.
@@ -13,7 +15,7 @@ Checks each shell function against the size limits: code lines, branches, nestin
 @param planned the scope scripts and limits.
 @returns one finding per exceeded limit.
 */
-export async function checkBashFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkBashFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>
         file.functions.flatMap((scriptFunction) => {
@@ -40,3 +42,7 @@ export async function checkBashFunctionSize(session: Session, planned: PlannedCh
         }),
     );
 }
+
+export const BASH_FUNCTION_SIZE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'bash/function-size': { check: checkBashFunctionSize, ruleDocs: FUNCTION_SIZE_RULE_DOCS },
+};

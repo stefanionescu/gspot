@@ -4,6 +4,7 @@ import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { miseToolsSchema } from '#cli/schemas/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -14,6 +15,7 @@ import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
+import { LOCKFILE_RULE_DOCS, PACKAGE_MANAGER_PIN_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
 import { PACKAGE_JSON, IMPORTER_LOCKFILES, PNPM_ROOT_IMPORTER, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 
 import {
@@ -178,7 +180,7 @@ scope.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
     const files = planned.files.filter(({ path }) => !isGspotPath(path));
     return [
@@ -198,7 +200,7 @@ a missing field beside a lockfile of a package manager that Node.js does not bri
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const writtenPin = splitPackageManager(readPackageJson(session.cache, packageJsonPath)?.packageManager);
@@ -223,7 +225,7 @@ Reports a package.json whose dependencies differ from what its lockfile records,
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkStaleLockfile(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkStaleLockfile(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const found = findNearestLockfile(session.cache, folder, IMPORTER_LOCKFILES);
@@ -253,3 +255,9 @@ export function checkStaleLockfile(session: Session, planned: PlannedCheck): Che
         message: `${message} Run ${command} and commit the lockfile.`,
     }));
 }
+
+export const DEPENDENCIES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'dependencies/lockfiles': { check: checkLockfiles, ruleDocs: LOCKFILE_RULE_DOCS },
+    'dependencies/package-manager-pin': { check: checkPackageManagerPin, ruleDocs: PACKAGE_MANAGER_PIN_DOCS },
+    'dependencies/stale-lockfile': { check: checkStaleLockfile },
+};

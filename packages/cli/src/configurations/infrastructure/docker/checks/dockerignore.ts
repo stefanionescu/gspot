@@ -4,11 +4,13 @@ import { formatNameList } from '#cli/system/text.ts';
 import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { selectScope } from '#cli/repository/scopes.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerIgnoredSource } from '#cli/types/configurations/infrastructure.ts';
+import { DOCKERIGNORE_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { listDockerInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 
@@ -83,7 +85,7 @@ Reports each Dockerfile with no ignore file, or with one that misses a required 
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkDockerignore(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkDockerignore(session: Session, planned: PlannedCheck): CheckFinding[] {
     const { contexts, findings } = readComposeDocuments(session, planned);
     return [
         ...findings,
@@ -137,3 +139,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
             }),
     ];
 }
+
+export const DOCKER_DOCKERIGNORE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'docker/dockerignore': { check: checkDockerignore, ruleDocs: DOCKERIGNORE_RULE_DOCS },
+};

@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
@@ -18,7 +19,7 @@ Reports setting paths that match no tracked file or folder.
 @param session the repository and its tools.
 @param _planned the configured check and selected scope files.
 */
-export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFinding[] {
+function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
     const { text } = readSettingsText(session.root);
@@ -56,3 +57,7 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
             });
     });
 }
+
+export const GSPOT_UNMATCHED_PATHS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'gspot/unmatched-paths': { check: checkUnmatchedPaths },
+};

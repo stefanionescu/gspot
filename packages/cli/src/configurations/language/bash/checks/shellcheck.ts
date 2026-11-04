@@ -2,7 +2,7 @@ import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { DEFAULT_DIALECT } from '#cli/config/repository/files.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 
 const BATS_EXTENSION = '.bats';
 
@@ -19,7 +19,7 @@ how bats runs a file.
 @param session the repository and its tools.
 @param planned the ShellCheck check and its files.
 */
-export async function checkShellcheck(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkShellcheck(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {
         if (file.path.endsWith(BATS_EXTENSION)) return BATS_FLAG;
         if (file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;
@@ -37,3 +37,7 @@ export async function checkShellcheck(session: CheckSession, planned: PlannedChe
         })),
     );
 }
+
+export const BASH_SHELLCHECK_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'bash/shellcheck': { run: checkShellcheck },
+};

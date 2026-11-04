@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { CheckStop } from '#cli/system/errors.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { trivyImageOutputSchema } from '#cli/schemas/configurations.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import type { ImageFinding } from '#cli/types/configurations/infrastructure.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 
@@ -47,7 +47,7 @@ Scans each literal service image once and reports its findings in every Compose 
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export async function checkTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scanned = new Map<string, ImageFinding[]>();
     const documents = readComposeDocuments(session, planned);
     const findings = [...documents.findings];
@@ -77,3 +77,7 @@ export async function checkTrivyImage(session: CheckSession, planned: PlannedChe
     }
     return findings;
 }
+
+export const DOCKER_TRIVY_IMAGE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'docker/trivy-image': { check: checkTrivyImage },
+};

@@ -1,5 +1,6 @@
 import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -12,7 +13,7 @@ Reports each configuration that the files of a scope suggest and that gspot.toml
 @param session the repository and its settings.
 @param _planned the configured check and selected scope files.
 */
-export function checkDetectedConfigurations(session: Session, _planned: PlannedCheck): CheckFinding[] {
+function checkDetectedConfigurations(session: Session, _planned: PlannedCheck): CheckFinding[] {
     return listDetectedAdditions(session).flatMap(({ scope, evidence }) => {
         const scopeArgument = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
         return evidence.map(({ configuration, evidence: found }) => ({
@@ -23,3 +24,7 @@ export function checkDetectedConfigurations(session: Session, _planned: PlannedC
         }));
     });
 }
+
+export const DETECTED_CONFIGURATIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'gspot/detected-configurations': { check: checkDetectedConfigurations },
+};

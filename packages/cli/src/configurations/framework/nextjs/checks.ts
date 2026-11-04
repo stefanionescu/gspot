@@ -8,7 +8,7 @@ import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 
 import {
     CAUSE_MARKS,
@@ -32,7 +32,7 @@ Generates Next.js route types and runs the TypeScript check in the same copy.
 @param session the repository and its tools.
 @param planned the Next.js compiler check.
 */
-export async function checkNextjsTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkNextjsTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     using scratchFolder = await createCheckCopy(session, planned);
     const root = scratchFolder.path;
@@ -58,3 +58,7 @@ export async function checkNextjsTsc(session: CheckSession, planned: PlannedChec
     result.duration = Math.round(performance.now() - started);
     return restoreCommandPaths(result, root, session.root);
 }
+
+export const NEXTJS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'nextjs/tsc': { run: checkNextjsTsc },
+};

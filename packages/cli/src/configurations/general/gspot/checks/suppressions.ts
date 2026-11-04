@@ -2,6 +2,7 @@ import { getPosition } from '#cli/system/text.ts';
 import { findToolName } from '#cli/tools/pins.ts';
 import type { Session } from '#cli/types/tools.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { SourceComment } from '#cli/types/parsers.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
@@ -124,7 +125,7 @@ reason.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const filesByScope = Map.groupBy(
         planned.files.filter((file) => file.tags.includes('text')),
         (file) => selectScopePath(file.path, session.scopes),
@@ -159,3 +160,7 @@ export async function checkSuppressions(session: Session, planned: PlannedCheck)
         .toArray();
     return [...found, ...settingsReasons];
 }
+
+export const GSPOT_SUPPRESSIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'gspot/suppressions': { check: checkSuppressions },
+};

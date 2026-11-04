@@ -1,5 +1,6 @@
 import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -73,7 +74,7 @@ allowed names covers, by their path or a folder above them, get parsed.
 @param session the repository and its tools.
 @param planned the settings and tracked files.
 */
-export async function checkAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const matchers = session.settings.naming.exception
         .filter((exception) => (exception.allowed_names ?? []).length > 0)
         .map((exception) => buildPathMatcher(exception.paths));
@@ -97,3 +98,7 @@ export async function checkAllowedNames(session: Session, planned: PlannedCheck)
             }));
     });
 }
+
+export const NAMING_ALLOWED_NAMES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'naming/allowed-names': { check: checkAllowedNames },
+};

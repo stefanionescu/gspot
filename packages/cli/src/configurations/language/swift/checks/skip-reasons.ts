@@ -1,5 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -59,7 +60,7 @@ Reports each skipped test without a reason, and each unavailable declaration wit
 @param session the repository and its tools.
 @param planned the scope Swift test files.
 */
-export async function checkSkipReasons(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSkipReasons(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
@@ -75,3 +76,7 @@ export async function checkSkipReasons(session: Session, planned: PlannedCheck):
     });
     return findings;
 }
+
+export const SWIFT_SKIP_REASONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'swift/skip-reasons': { check: checkSkipReasons },
+};

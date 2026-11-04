@@ -6,6 +6,7 @@ import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { ImportRule } from '#cli/types/settings.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
@@ -15,6 +16,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/configurations/python.ts';
 import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
+import { IMPORT_RULE_DOCS } from '#cli/config/configurations/rule-docs/structure.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 
@@ -267,9 +269,13 @@ ESLint applies the rules to JavaScript and TypeScript imports.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const lookup = buildRuleLookup(session.settings.import_rule);
     const python = await validatePythonImports(session, planned, lookup);
     const swift = await validateSwiftImports(session, planned, lookup);
     return [...listUncoveredFiles(planned, lookup), ...python, ...swift];
 }
+
+export const STRUCTURE_IMPORT_RULES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/import-rules': { check: checkImportRules, ruleDocs: IMPORT_RULE_DOCS },
+};

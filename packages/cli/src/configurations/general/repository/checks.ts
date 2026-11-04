@@ -3,6 +3,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { listConflictMarkerLines } from '#cli/system/text.ts';
@@ -13,6 +14,7 @@ import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
+import { ENCODING_RULE_DOCS, LOCAL_FILE_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
 
 function listLinkFindings(root: string, path: string): CheckFinding[] {
@@ -60,7 +62,7 @@ Reports each tracked file over `repository.max_file_kilobytes`, except generated
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap((file) => {
         const scope = selectScope(file.path, session.scopes);
         const limitKilobytes = getTable(scope.settings, 'repository').max_file_kilobytes;
@@ -89,7 +91,7 @@ commit or a push reports only its staged or pushed links.
 @param session the repository and its tools.
 @param planned the configured check and the links of its run.
 */
-export function checkLocalFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkLocalFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const scopes = session.repository.scopeFolders;
     const matchers = new Map(
         session.scopes.map(({ path: scopePath, configurations, settings }): [string, (path: string) => boolean] => {
@@ -128,7 +130,7 @@ Report tracked text files that need UTF-8 encoding.
 @param session the repository file cache.
 @param planned the configured check and selected scope files.
 */
-export function checkEncoding(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkEncoding(session: Session, planned: PlannedCheck): CheckFinding[] {
     const unreadable = session.repository.unreadablePaths.map((path) => ({
         file: path,
         line: 1,
@@ -162,7 +164,7 @@ Report each marker line that a merge conflict leaves in a tracked text file.
 @param session the repository file cache.
 @param planned the configured check and selected scope files.
 */
-export function checkConflictMarkers(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkConflictMarkers(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files
         .filter((file) => file.tags.includes('text') && !file.tags.includes('symlink'))
         .flatMap((file) =>
@@ -174,3 +176,10 @@ export function checkConflictMarkers(session: Session, planned: PlannedCheck): C
             })),
         );
 }
+
+export const REPOSITORY_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'repository/conflict-markers': { check: checkConflictMarkers },
+    'repository/encoding': { check: checkEncoding, ruleDocs: ENCODING_RULE_DOCS },
+    'repository/large-files': { check: checkLargeFiles },
+    'repository/local-files': { check: checkLocalFiles, ruleDocs: LOCAL_FILE_RULE_DOCS },
+};

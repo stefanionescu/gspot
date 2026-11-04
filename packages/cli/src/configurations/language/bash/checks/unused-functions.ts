@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
@@ -11,7 +12,7 @@ a main script sources its helpers together, and bats loads them. Exclude main an
 @param session the repository and its tools.
 @param planned the scope scripts to read.
 */
-export async function checkUnusedFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkUnusedFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     const called = new Set(scripts.flatMap((file) => file.calls.map((call) => call.name)));
     const bats = new Set(planned.files.filter((file) => file.tags.includes('bats')).map((file) => file.path));
@@ -31,3 +32,7 @@ export async function checkUnusedFunctions(session: Session, planned: PlannedChe
             }));
     });
 }
+
+export const BASH_UNUSED_FUNCTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'bash/unused-functions': { check: checkUnusedFunctions },
+};

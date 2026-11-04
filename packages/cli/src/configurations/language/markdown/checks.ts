@@ -2,6 +2,7 @@ import { parseAllDocuments } from 'yaml';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -132,7 +133,7 @@ Reports invalid code fences at their error lines.
 @param session the repository and its tools.
 @param planned the scope Markdown files.
 */
-export async function checkFences(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkFences(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     for (const file of planned.files) {
         const text = readText(session.cache, file.path);
@@ -148,3 +149,7 @@ export async function checkFences(session: Session, planned: PlannedCheck): Prom
     }
     return findings;
 }
+
+export const MARKDOWN_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'markdown/fences': { check: checkFences },
+};

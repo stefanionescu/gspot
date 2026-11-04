@@ -5,7 +5,6 @@ import { join, relative, normalize } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
@@ -14,6 +13,7 @@ import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { SiteBuild } from '#cli/types/configurations/language.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/framework.ts';
 
 const SITE_BUILDS = Symbol('site builds');
@@ -46,6 +46,25 @@ function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<Si
         session.resources.push(folder);
         return runSiteBuild(session, planned, folder.path);
     });
+}
+
+/**
+Reports a build command that fails or writes no build folder.
+
+@param session the repository and its tools.
+@param planned the scope to build.
+*/
+async function checkSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const build = await readSiteBuild(session, planned);
+    if (build.built) return [];
+    return [
+        {
+            file: '',
+            line: 1,
+            rule: BUILD_RULE,
+            message: `${quoteCommand(build.command)} did not build the site.\n${build.failure}`,
+        },
+    ];
 }
 
 /**
@@ -93,21 +112,6 @@ export async function readSuccessfulBuild(session: CheckSession, planned: Planne
     return build;
 }
 
-/**
-Reports a build command that fails or writes no build folder.
-
-@param session the repository and its tools.
-@param planned the scope to build.
-*/
-export async function checkSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const build = await readSiteBuild(session, planned);
-    if (build.built) return [];
-    return [
-        {
-            file: '',
-            line: 1,
-            rule: BUILD_RULE,
-            message: `${quoteCommand(build.command)} did not build the site.\n${build.failure}`,
-        },
-    ];
-}
+export const SITE_BUILD_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'site/build': { check: checkSiteBuild },
+};

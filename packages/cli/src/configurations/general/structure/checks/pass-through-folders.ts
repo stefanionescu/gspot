@@ -1,5 +1,6 @@
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
@@ -13,7 +14,7 @@ Reports each folder inside the scope that holds only one folder, above the code 
 @param session the repository and its tools.
 @param planned the scope files.
 */
-export function checkPassThroughFolders(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkPassThroughFolders(session: Session, planned: PlannedCheck): CheckFinding[] {
     const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(
         (configuration) => configuration.files.extensions,
     );
@@ -38,3 +39,7 @@ export function checkPassThroughFolders(session: Session, planned: PlannedCheck)
             ];
         });
 }
+
+export const PASS_THROUGH_FOLDERS_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/pass-through-folders': { check: checkPassThroughFolders },
+};

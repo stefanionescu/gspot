@@ -9,15 +9,16 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TableSettings } from '#cli/types/settings.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { join, resolve, relative, basename, isAbsolute } from 'node:path';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { SWIFT_TEST_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
 import type { CoverageRun, CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
 
@@ -196,7 +197,7 @@ Runs the tests with coverage and compares each target with the line limit or its
 @param session the repository and its tools.
 @param planned the scope and coverage limits.
 */
-export async function checkSwiftTests(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkSwiftTests(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const settings = getTable(planned.scope.settings, COVERAGE_RULE);
     const report = await measureCoverage(session, planned);
     if (report.failures.length > 0) return report.failures;
@@ -207,3 +208,7 @@ export async function checkSwiftTests(session: CheckSession, planned: PlannedChe
         message: text,
     }));
 }
+
+export const SWIFT_COVERAGE_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'swift/tests': { check: checkSwiftTests, ruleDocs: SWIFT_TEST_RULE_DOCS },
+};

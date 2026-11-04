@@ -4,6 +4,7 @@ import { readText } from '#cli/system/files/reads.ts';
 import { GRAMMAR_NAMES } from '#cli/config/parsers.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
@@ -15,7 +16,7 @@ Reports source files over the code-line limit of their language.
 @param session the repository and its tools.
 @param planned the scope files and limits.
 */
-export async function checkLongFiles(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkLongFiles(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const sources = listCheckedFiles(session.scopes, planned).flatMap((file) => {
         const tagged: GrammarName | 'sql' | undefined = file.tags.includes('sql')
             ? 'sql'
@@ -44,3 +45,7 @@ export async function checkLongFiles(session: Session, planned: PlannedCheck): P
     );
     return findings.flat();
 }
+
+export const STRUCTURE_LONG_FILES_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'structure/long-files': { check: checkLongFiles },
+};

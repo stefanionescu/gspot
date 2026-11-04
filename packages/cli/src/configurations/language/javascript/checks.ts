@@ -13,11 +13,11 @@ import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { RAN_STATUSES, JSCONFIG_FILE } from '#cli/config/engine.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { createCopy, createCheckCopy } from '#cli/engine/copies/files.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import { listCheckedFiles, extractConfigName } from '#cli/engine/files.ts';
 import { PRIVATE_FILE, DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { listCompilerFiles, addTsbuildinfoFlag } from '#cli/configurations/tsc/compiler.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 
 import {
@@ -61,7 +61,7 @@ Type-checks JavaScript with the type declarations the project uses.
 @param session the repository and its tools.
 @param planned the JavaScript compiler check.
 */
-export async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
         return { ...buildBaseResult(planned, session), fileCount: 0 };
@@ -106,7 +106,7 @@ Run Biome on supported files and name copied Node shebang scripts as JavaScript.
 @param session the repository and installed tools.
 @param planned the scope and selected files.
 */
-export async function checkJavascriptBiome(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+async function checkJavascriptBiome(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const files = listCheckedFiles(session.scopes, planned);
     const biomeExtensions = new Set(planned.check.files?.extensions);
     const groups = Map.groupBy(files, (file) => biomeExtensions.has(extname(file.path).toLowerCase()));
@@ -132,3 +132,8 @@ export async function checkJavascriptBiome(session: CheckSession, planned: Plann
         findings: checked.findings.map((finding) => ({ ...finding, file: names.get(finding.file) ?? finding.file })),
     });
 }
+
+export const JAVASCRIPT_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'javascript/tsc': { run: checkJavascriptTsc },
+    'javascript/biome': { run: checkJavascriptBiome },
+};

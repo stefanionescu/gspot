@@ -2,11 +2,13 @@ import { isTable } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
 import type { Migration } from '#cli/types/configurations/infrastructure.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
+import { ROW_SECURITY_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { findNodeFields, listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 
@@ -68,7 +70,7 @@ no comment.
 @param session the repository and its tools.
 @param planned the scope whose migrations to read.
 */
-export async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildDatabaseSchema(migrations);
     const settings = getTable(planned.scope.settings, 'postgres');
@@ -103,3 +105,7 @@ export async function checkRowLevelSecurity(session: Session, planned: PlannedCh
             ),
     ];
 }
+
+export const ROW_LEVEL_SECURITY_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'postgres/row-level-security': { check: checkRowLevelSecurity, ruleDocs: ROW_SECURITY_RULE_DOCS },
+};

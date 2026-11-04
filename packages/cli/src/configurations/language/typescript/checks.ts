@@ -3,12 +3,14 @@ import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import { TSCONFIG_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
 
@@ -77,7 +79,7 @@ because the other checks treat it as absent.
 @param session the repository and its tools.
 @param planned the scope to check.
 */
-export function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] {
     const unreadable = listUnreadableTsconfigs(session, planned);
     if (unreadable.length > 0) return unreadable;
     const project = readTsconfigProject(
@@ -125,3 +127,7 @@ export function checkTsconfig(session: Session, planned: PlannedCheck): CheckFin
         })),
     );
 }
+
+export const TYPESCRIPT_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'typescript/tsconfig': { check: checkTsconfig, ruleDocs: TSCONFIG_RULE_DOCS },
+};
