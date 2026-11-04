@@ -1,14 +1,14 @@
 import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
-import { execFile } from 'node:child_process';
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import starlight from '@astrojs/starlight';
-import starlightLlmsTxt from 'starlight-llms-txt';
 import { chromium } from 'playwright';
+import { fileURLToPath } from 'node:url';
+import starlight from '@astrojs/starlight';
+import { execFile } from 'node:child_process';
+import starlightLlmsTxt from 'starlight-llms-txt';
 import { createMermaidRenderer } from 'mermaid-isomorphic';
-import { defineHastPlugin, type HastPluginEntry } from 'satteri';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { defineConfig, passthroughImageService } from 'astro/config';
+import { type HastNode, defineHastPlugin, type HastPluginEntry } from 'satteri';
 import { LLMS_PAGES, AGENT_FACTS, AGENT_STEPS, AGENT_EVALUATION } from '#docs/reference/setup.ts';
 import { SIDEBAR, EDIT_URL, SITE_TITLE, REPOSITORY_URL, README_OPENING_BLOCKS } from '#docs/config/site.ts';
 
@@ -71,8 +71,21 @@ const MERMAID_CLASS = 'language-mermaid';
 const MERMAID_SOURCE_CLASS = 'mermaid-source';
 const MERMAID_SOURCE = /<pre class="mermaid-source" data-diagram="([A-Za-z0-9+/=]*)"[^>]*>[^<]*<\/pre>/gu;
 
+type HastElement = Extract<HastNode, { type: 'element' }>;
+type HastText = Extract<HastNode, { type: 'text' }>;
+
+function readMermaidText(node: Readonly<HastElement>): HastText | undefined {
+    const [code] = node.children;
+    if (code?.type !== 'element') return undefined;
+    const classes = code.properties['className'];
+    if (!Array.isArray(classes) || !classes.includes(MERMAID_CLASS)) return undefined;
+    const [text] = code.children;
+    if (text?.type !== 'text') throw new Error('A mermaid code block holds markup instead of plain text.');
+    return text;
+}
+
 /**
-Mark each `mermaid` code block for the build, which renders it once Chromium can run. The marker keeps the diagram
+Mark each `mermaid` code block for the build, which draws it once Chromium can run. The marker keeps the diagram
 source as text, so the dev server shows the source, and `data-diagram` keeps it exact.
 */
 const MERMAID_SOURCE_PLUGIN = defineHastPlugin({
@@ -80,11 +93,8 @@ const MERMAID_SOURCE_PLUGIN = defineHastPlugin({
     element: {
         filter: ['pre'],
         visit(node) {
-            const [code] = node.children;
-            const classes = code?.type === 'element' ? code.properties['className'] : undefined;
-            if (code?.type !== 'element' || !Array.isArray(classes) || !classes.includes(MERMAID_CLASS)) return;
-            const [text] = code.children;
-            if (text?.type !== 'text') throw new Error('A mermaid code block holds markup instead of plain text.');
+            const text = readMermaidText(node);
+            if (text === undefined) return;
             return {
                 type: 'element',
                 tagName: 'pre',
@@ -98,49 +108,50 @@ const MERMAID_SOURCE_PLUGIN = defineHastPlugin({
     },
 });
 
-async function renderMermaidTheme(diagrams: string[], theme: keyof typeof MERMAID_THEMES): Promise<string[]> {
-    const renderDiagrams = createMermaidRenderer({ browserType: chromium });
-    const results = await renderDiagrams(diagrams, {
+async function drawMermaidTheme(diagrams: string[], theme: keyof typeof MERMAID_THEMES): Promise<string[]> {
+    const drawDiagrams = createMermaidRenderer({ browserType: chromium });
+    const results = await drawDiagrams(diagrams, {
         css: MERMAID_FONT_STYLES,
         prefix: `mermaid-${theme}`,
         mermaidConfig: { theme: 'base', fontFamily: MERMAID_FONT, themeVariables: MERMAID_THEMES[theme] },
     });
-    return results.map((result) => {
-        if (result.status === 'rejected')
-            throw new Error(`Mermaid could not render a diagram: ${String(result.reason)}`);
-        return result.value.svg;
-    });
+    const failure = results.find((result) => result.status === 'rejected');
+    if (failure !== undefined) throw new Error(`Mermaid could not draw a diagram: ${String(failure.reason)}`);
+    return results.flatMap((result) => (result.status === 'fulfilled' ? [result.value.svg] : []));
 }
 
 /**
 Replace each Mermaid marker in the built pages with a light and a dark SVG. The stylesheet shows the one that matches
-the `data-theme` of the page. Chromium renders them, so the build installs it first, as Playwright pins it.
+the `data-theme` of the page. Chromium draws them, so the build installs it first, as Playwright pins it.
 
 @param folder the build output
 */
-async function renderMermaidPages(folder: URL): Promise<void> {
+async function replaceMermaidMarkers(folder: URL): Promise<void> {
     const pages = readdirSync(folder, { recursive: true, encoding: 'utf8' })
         .filter((path) => path.endsWith('.html'))
         .map((path) => ({ file: new URL(path, folder), html: readFileSync(new URL(path, folder), 'utf8') }))
         .filter(({ html }) => html.includes(MERMAID_SOURCE_CLASS));
     const diagrams = pages.flatMap(({ html }) =>
-        [...html.matchAll(MERMAID_SOURCE)].map(([, encoded = '']) => Buffer.from(encoded, 'base64').toString('utf8')),
+        html
+            .matchAll(MERMAID_SOURCE)
+            .map(([, encoded = '']) => Buffer.from(encoded, 'base64').toString('utf8'))
+            .toArray(),
     );
     if (diagrams.length === 0) return;
     await promisify(execFile)(process.execPath, [PLAYWRIGHT_CLI, 'install', '--only-shell', 'chromium']);
-    const [light = [], dark = []] = await Promise.all([
-        renderMermaidTheme(diagrams, 'light'),
-        renderMermaidTheme(diagrams, 'dark'),
-    ]);
-    let index = 0;
-    for (const { file, html } of pages) {
-        const rendered = html.replaceAll(MERMAID_SOURCE, () => {
-            const variants = `<div class="mermaid-diagram-light">${light[index] ?? ''}</div><div class="mermaid-diagram-dark">${dark[index] ?? ''}</div>`;
-            index += 1;
-            return `<div class="mermaid-diagram">${variants}</div>`;
-        });
-        writeFileSync(file, rendered);
-    }
+    const [light, dark] = await Promise.all([drawMermaidTheme(diagrams, 'light'), drawMermaidTheme(diagrams, 'dark')]);
+    const figures = light
+        .map(
+            (svg, position) =>
+                `<div class="mermaid-diagram"><div class="mermaid-diagram-light">${svg}</div>` +
+                `<div class="mermaid-diagram-dark">${dark[position] ?? ''}</div></div>`,
+        )
+        .values();
+    for (const { file, html } of pages)
+        writeFileSync(
+            file,
+            html.replaceAll(MERMAID_SOURCE, () => figures.next().value ?? ''),
+        );
 }
 
 export default defineConfig({
@@ -176,7 +187,7 @@ export default defineConfig({
                         MERMAID_SOURCE_PLUGIN,
                     );
                 },
-                'astro:build:done': ({ dir }) => renderMermaidPages(dir),
+                'astro:build:done': ({ dir }) => replaceMermaidMarkers(dir),
             },
         },
         starlight({
