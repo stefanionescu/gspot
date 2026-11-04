@@ -3,23 +3,31 @@ title: Run checks
 description: Read a finding, explain it, fix it, and read the report.
 ---
 
-A failed check prints one line with `failed`, its check ID, and the number of findings. In a nested scope, the scope
-path comes before the check ID. Under the line, each finding prints its file, line and column, lint rule, and message.
-
-`help:` says what to do. `fix:` gives the command that repairs the findings that fix themselves, and it changes only the
-files it names. `rerun:` gives the command that runs that check alone. Without `--verbose`, the report prints the first
-200 findings of each check.
+`gspot check` runs the checks and prints the findings. This excerpt of a report shows two failed checks:
 
 ```text
-failed   javascript/eslint  2 findings
-  src/checkout.ts:4:8  @typescript-eslint/require-await  Async function 'pay' has no 'await' expression.
-  src/checkout.ts:8:13  prefer-const  'total' is never reassigned. Use 'const' instead.
-  help: Run the `fix:` command that the report prints for the rules that fix themselves, then read each remaining line; `gspot explain javascript/eslint <rule>` links the rule documentation.
-  fix: gspot check --fix --only javascript/eslint src/checkout.ts
-  rerun: gspot check --only javascript/eslint --staged
+failed   docs/lychee  1 finding
+  README.md:3:19  ERROR  file://docs/missing.md (at 3:19) | File not found. Check if file exists and path is correct
+  help: Point the link at the file or heading that exists, or delete it. gspot explain docs/lychee
+  rerun: gspot check --only docs/lychee
+
+failed   format/prettier  3 findings
+  src/math.ts  Not formatted the way Prettier formats it.
+  src/total.ts  Not formatted the way Prettier formats it.
+  tsconfig.json  Not formatted the way Prettier formats it.
+  help: Run the fix: command that the report prints to format the file. gspot explain format/prettier
+  fix: gspot check --fix --only format/prettier
+  rerun: gspot check --only format/prettier
 ```
 
-Fix the file, then run the check again.
+Each failed check prints its status, its check ID, and the number of findings. In a scope, the scope path comes before
+the ID. Each finding prints its file, line and column, lint rule, and message. After the findings, a `help:` line says
+what to do and names the `gspot explain` command for the check.
+
+- `fix:` runs the fixers of that check. When it names files, it changes only those files.
+- `rerun:` runs that check alone.
+
+The report shows the first 200 findings of each check. Add `--verbose` to see every finding.
 
 ## Explain a finding
 
@@ -43,29 +51,20 @@ Fix the file, then run the check again.
 | `gspot check --only javascript/eslint,typescript/tsc` | Some checks.                                                      |
 | `gspot check --skip jest/tests`                       | Every check except some.                                          |
 
-An explicit `--base <ref>` must name a branch, tag, or commit. gspot checks every file and prints the reason for
-an empty base, an all-zero base, or a full hash that the clone lacks. Without an upstream or `origin/HEAD`, `--changed` asks for `--base`.
+`--base <ref>` must name a branch, tag, or commit. gspot checks every file and prints the reason for an empty base, an
+all-zero base, or a full hash that the clone lacks. Without an upstream or `origin/HEAD`, `--changed` asks for `--base`.
 
 Repeat `--only` or separate the checks with commas: `--only a,b` and `--only a --only b` select the same checks. A path
 after `--only` names files to check, not another check. `--skip` takes its checks the same way.
 
-`--only` can run a check outside your configured level. gspot notes that choice and still requires the check's tools
-and settings.
+`--only` can run a check outside your level. gspot notes that choice and still requires the tools and settings of the
+check.
 
 A check that reads the whole project, such as `typescript/tsc`, reads every file. With path arguments, the report keeps
 its findings in those paths only. A staged or pushed run keeps every finding.
 
 Before you commit, run `gspot check --staged --stage commit`. Before you push, run `gspot check --changed --stage push`.
 The `--stage` flag selects only that stage; without it, `gspot check` runs the commit and push checks.
-
-## Newly detected configurations
-
-Every check run, including hooks and CI, detects configurations that your settings neither select nor remove. It
-prints one warning before the summary, naming each configuration and the evidence from files or dependencies. Ask the user before selecting a new configuration, then run the `gspot add` line it prints and `gspot install`.
-Run `gspot remove <name> --reason "<why>"` to decline one only after the user agrees. The warning does not change the exit code.
-
-See [When files of a language appear or go](/configure/gspot-toml/#when-files-of-a-language-appear-or-go) to review
-configuration changes with `gspot doctor`.
 
 ## Fix findings automatically
 
@@ -83,16 +82,21 @@ names the file and exits with code 2.
 
 ## Statuses and exit codes
 
-| Status    | Meaning                                                                                                    | Exit code |
-| --------- | ---------------------------------------------------------------------------------------------------------- | --------- |
-| `failed`  | The check reported findings.                                                                               | 1         |
-| `missing` | The tool needs installation: run `gspot install`.                                                          | 2         |
-| `error`   | The check stopped with an error; findings collected before it stopped remain in the report.                | 2         |
-| `passed`  | No findings.                                                                                               | 0         |
-| `skipped` | The check did not run. The row names the cause, such as `skipped (level)`; `--json` reports it in `cause`. | 0         |
+| Status     | Meaning                                                                                                    | Exit code |
+| ---------- | ---------------------------------------------------------------------------------------------------------- | --------- |
+| `failed`   | The check reported findings.                                                                               | 1         |
+| `missing`  | The tool needs installation: run `gspot install`.                                                          | 2         |
+| `error`    | The check stopped with an error; findings collected before it stopped remain in the report.                | 2         |
+| `canceled` | Ctrl-C or SIGTERM stopped the check.                                                                       | 130, 143  |
+| `passed`   | No findings.                                                                                               | 0         |
+| `skipped`  | The check did not run. The row names the cause, such as `skipped (level)`; `--json` reports it in `cause`. | 0         |
 
-The report shows `failed`, `missing`, and `error` rows. Add `--verbose` for the `passed` and `skipped` rows, each
-command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object.
+The report shows the `failed`, `missing`, `error`, and `canceled` rows. Add `--verbose` for the `passed` and `skipped`
+rows, each command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object;
+see [JSON output](/reference/json-output/#gspot-check).
 
-When a lint rule does not fit your code, [ignore the finding](/use/ignore/). To change a limit, see
-[limits](/reference/gspot-toml/#limits).
+When files of a language that no configuration covers appear, `gspot/detected-configurations` fails and prints a
+`gspot add <name>` line. See
+[When files of a language appear or go](/configure/gspot-toml/#when-files-of-a-language-appear-or-go).
+
+When a lint rule does not fit your code, [ignore the finding](/use/ignore/).
