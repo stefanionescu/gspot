@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noVueUpdatedWrites } from '#eslint-plugin/rules/vue/no-vue-updated-writes.ts';
 
-buildRuleTester().run('no-vue-updated-writes', plugin.rules['no-vue-updated-writes'], {
+buildRuleTester().run('no-vue-updated-writes', noVueUpdatedWrites, {
     valid: [
         ...[
             'onUpdated(() => { count.value = 1; });',

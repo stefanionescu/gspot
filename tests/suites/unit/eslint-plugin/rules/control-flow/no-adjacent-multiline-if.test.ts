@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noAdjacentMultilineIf } from '#eslint-plugin/rules/control-flow/no-adjacent-multiline-if.ts';
 
-buildRuleTester().run('no-adjacent-multiline-if', plugin.rules['no-adjacent-multiline-if'], {
+buildRuleTester().run('no-adjacent-multiline-if', noAdjacentMultilineIf, {
     valid: [
         'if (first) run(); if (second) run();',
         'if (first) {\n run();\n}\nif (second) run();',

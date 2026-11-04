@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCypressThenAssertions } from '#eslint-plugin/rules/assertions/no-cypress-then-assertions.ts';
 
-buildRuleTester().run('no-cypress-then-assertions', plugin.rules['no-cypress-then-assertions'], {
+buildRuleTester().run('no-cypress-then-assertions', noCypressThenAssertions, {
     valid: [
         'cy.get("li").then(($items) => { expect($items).to.have.length(3); });',
         ...[

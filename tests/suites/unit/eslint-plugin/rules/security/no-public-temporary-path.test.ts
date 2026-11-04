@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPublicTemporaryPath } from '#eslint-plugin/rules/security/no-public-temporary-path.ts';
 
-buildRuleTester().run('no-public-temporary-path', plugin.rules['no-public-temporary-path'], {
+buildRuleTester().run('no-public-temporary-path', noPublicTemporaryPath, {
     valid: [
         'const path = "/tmp";',
         'const path = `/tmp/file`;',

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireCsrfMiddleware } from '#eslint-plugin/rules/servers/require-csrf-middleware.ts';
 
-buildRuleTester().run('require-csrf-middleware', plugin.rules['require-csrf-middleware'], {
+buildRuleTester().run('require-csrf-middleware', requireCsrfMiddleware, {
     valid: [
         "import csrf from 'csurf';\nimport express from 'express';\nconst app = express();\napp.use(csrf());\napp.post('/transfer', handler);",
         "import express from 'express';\nconst app = express();\napp.post('/transfer', handler);",

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noEqualLoopCondition } from '#eslint-plugin/rules/control-flow/no-equal-loop-condition.ts';
 
-buildRuleTester().run('no-equal-loop-condition', plugin.rules['no-equal-loop-condition'], {
+buildRuleTester().run('no-equal-loop-condition', noEqualLoopCondition, {
     valid: [
         'for (let index = 0; index != 10; index++) {}',
         'for (let index = 10; index !== 0; index -= 1) {}',

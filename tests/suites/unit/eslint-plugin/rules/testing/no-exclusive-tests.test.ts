@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noExclusiveTests } from '#eslint-plugin/rules/testing/no-exclusive-tests.ts';
 
-buildRuleTester().run('no-exclusive-tests', plugin.rules['no-exclusive-tests'], {
+buildRuleTester().run('no-exclusive-tests', noExclusiveTests, {
     valid: [
         'describe("cart", () => { it("adds", run); });',
         'other.only("adds", run);',

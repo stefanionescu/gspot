@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noElementOverwrite } from '#eslint-plugin/rules/collections/no-element-overwrite.ts';
 
-buildRuleTester().run('no-element-overwrite', plugin.rules['no-element-overwrite'], {
+buildRuleTester().run('no-element-overwrite', noElementOverwrite, {
     valid: [
         'list.push(1);',
         'map.set(load(), 1);\nmap.set(load(), 2);',

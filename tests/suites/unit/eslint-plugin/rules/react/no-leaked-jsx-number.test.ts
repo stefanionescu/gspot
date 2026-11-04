@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import plugin from '#eslint-plugin/plugin.ts';
+import { noLeakedJsxNumber } from '#eslint-plugin/rules/react/no-leaked-jsx-number.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ app: {} });
@@ -15,7 +15,7 @@ const tester = buildRuleTester({
     languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
 });
 
-tester.run('no-leaked-jsx-number', plugin.rules['no-leaked-jsx-number'], {
+tester.run('no-leaked-jsx-number', noLeakedJsxNumber, {
     valid: [{ code: 'declare const count: number;\nexport const view = <div>{count > 0 && <b />}</div>;', filename }],
     invalid: [
         {

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noNestedVitestMock } from '#eslint-plugin/rules/testing/no-nested-vitest-mock.ts';
 
 const root = writePackageFolders({ vitest: { devDependencies: { vitest: '4.0.0' } }, plain: {} });
 const filename = join(root, 'vitest/a.test.ts');
 
-buildRuleTester({ root }).run('no-nested-vitest-mock', plugin.rules['no-nested-vitest-mock'], {
+buildRuleTester({ root }).run('no-nested-vitest-mock', noNestedVitestMock, {
     valid: [
         { code: 'vi.mock("./store");', filename },
         { code: 'it("reads", () => { vi.doMock("./store"); });', filename },

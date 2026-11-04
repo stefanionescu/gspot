@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noAsyncSuiteCallbacks } from '#eslint-plugin/rules/testing/no-async-suite-callbacks.ts';
 
 const root = writePackageFolders({ mocha: { devDependencies: { mocha: '11.0.0' } }, plain: {} });
 const filename = join(root, 'mocha/a.test.ts');
 
-buildRuleTester({ root }).run('no-async-suite-callbacks', plugin.rules['no-async-suite-callbacks'], {
+buildRuleTester({ root }).run('no-async-suite-callbacks', noAsyncSuiteCallbacks, {
     valid: [
         { code: 'describe("cart", async () => { it("adds", run); });', filename: join(root, 'plain/a.test.ts') },
         { code: 'describe("cart", () => { beforeAll(async () => { await login(); }); it("adds", run); });', filename },

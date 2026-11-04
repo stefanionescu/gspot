@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsRdsUnencryptedDatabases } from '#eslint-plugin/rules/aws/aws-rds-unencrypted-databases.ts';
 
-buildRuleTester().run('aws-rds-unencrypted-databases', plugin.rules['aws-rds-unencrypted-databases'], {
+buildRuleTester().run('aws-rds-unencrypted-databases', awsRdsUnencryptedDatabases, {
     valid: [
         "import * as rds from 'aws-cdk-lib/aws-rds';\nnew rds.DatabaseInstance(this, 'Db', { engine, storageEncrypted: true });",
         "import * as rds from 'aws-cdk-lib/aws-rds';\nnew rds.DatabaseInstance(this, 'Db', ...options);",

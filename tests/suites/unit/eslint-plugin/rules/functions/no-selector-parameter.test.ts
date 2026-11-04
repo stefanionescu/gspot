@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSelectorParameter } from '#eslint-plugin/rules/functions/no-selector-parameter.ts';
 
-const rule = plugin.rules['no-selector-parameter'];
+const rule = noSelectorParameter;
 
 buildRuleTester().run('no-selector-parameter', rule, {
     valid: ['function save(draft) { if (draft) store(); else publish(); }'],

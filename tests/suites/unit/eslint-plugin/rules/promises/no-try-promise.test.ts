@@ -1,12 +1,12 @@
-import plugin from '#eslint-plugin/plugin.ts';
+import { noTryPromise } from '#eslint-plugin/rules/promises/no-try-promise.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('no-try-promise', plugin.rules['no-try-promise'], {
+buildRuleTester().run('no-try-promise', noTryPromise, {
     valid: ['try { list.sort(); } catch {}'],
     invalid: [],
 });
 
-buildTypedRuleTester().run('no-try-promise', plugin.rules['no-try-promise'], {
+buildTypedRuleTester().run('no-try-promise', noTryPromise, {
     valid: [
         'declare function save(): Promise<void>; async function run() { try { await save(); } catch (error) { report(error); } }',
         'declare function save(): Promise<void>; declare function log(): void; try { save(); log(); } catch (error) { report(error); }',

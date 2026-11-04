@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import plugin from '#eslint-plugin/plugin.ts';
 import { compareText } from '#cli/system/text.ts';
+import { getRequired } from '#cli/system/tables.ts';
 import type { ReferencePage } from '#docs/types/pages.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
@@ -138,7 +139,7 @@ function listTopicRules(): Map<string, string[]> {
     const modules = Object.entries(RULE_MODULES).toSorted(([left], [right]) => compareText(left, right));
     const topics = new Map<string, string[]>();
     for (const name of Object.keys(plugin.rules).toSorted(compareText)) {
-        const rule = plugin.rules[name as keyof typeof plugin.rules];
+        const rule = plugin.rules[name];
         const [path] = modules.find(([, exports]) => Object.values(exports).includes(rule)) ?? [];
         if (path === undefined) throw new Error(`No topic folder holds the plugin rule ${name}.`);
         const topic = posix.basename(posix.dirname(path));
@@ -158,11 +159,12 @@ function formatTopicIndex(topic: string, label: string, names: readonly string[]
 }
 
 function buildTopicPage(label: string, names: readonly string[]): ReferencePage {
+    const rules = new Map(Object.entries(plugin.rules));
     const page = buildReferencePage(
         `${label} rules`,
         `The ${label} rules of ${pluginPackage.name}, with the reason and the fix for each.`,
         `These rules belong to [\`${pluginPackage.name}\`](${PLUGIN_PATH}), whose page says how to install the plugin and which configs turn its rules on.\n` +
-            names.map((name) => formatRuleSection(name, plugin.rules[name as keyof typeof plugin.rules])).join(''),
+            names.map((name) => formatRuleSection(name, getRequired(rules, name, 'plugin rule'))).join(''),
     );
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };
     return page;

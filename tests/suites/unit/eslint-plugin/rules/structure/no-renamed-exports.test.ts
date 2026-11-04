@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noRenamedExports } from '#eslint-plugin/rules/structure/no-renamed-exports.ts';
 
-buildRuleTester().run('no-renamed-exports', plugin.rules['no-renamed-exports'], {
+buildRuleTester().run('no-renamed-exports', noRenamedExports, {
     valid: [
         'export const API_URL = process.env.API_URL;',
         'export const API_URL = import.meta.env.API_URL;',
@@ -41,7 +41,7 @@ buildRuleTester().run('no-renamed-exports', plugin.rules['no-renamed-exports'], 
     ],
 });
 
-buildRuleTester().run('no-renamed-exports regressions', plugin.rules['no-renamed-exports'], {
+buildRuleTester().run('no-renamed-exports regressions', noRenamedExports, {
     valid: [
         {
             code: 'const main = () => 1;\nmain();\nexport { main as default };',

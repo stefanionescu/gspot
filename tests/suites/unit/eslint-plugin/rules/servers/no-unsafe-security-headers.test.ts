@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnsafeSecurityHeaders } from '#eslint-plugin/rules/servers/no-unsafe-security-headers.ts';
 
-buildRuleTester().run('no-unsafe-security-headers', plugin.rules['no-unsafe-security-headers'], {
+buildRuleTester().run('no-unsafe-security-headers', noUnsafeSecurityHeaders, {
     valid: [
         'import express from "express"; import helmet from "helmet"; const app = express(); app.use(helmet());',
         'import express from "express"; import helmet from "helmet"; const app = express(); app.use(helmet({ contentSecurityPolicy: true, noSniff: true, referrerPolicy: true, hsts: true }));',

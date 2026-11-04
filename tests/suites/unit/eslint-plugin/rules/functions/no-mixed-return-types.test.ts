@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noMixedReturnTypes } from '#eslint-plugin/rules/functions/no-mixed-return-types.ts';
 
-const rule = plugin.rules['no-mixed-return-types'];
+const rule = noMixedReturnTypes;
 
 buildRuleTester().run('no-mixed-return-types', rule, {
     valid: ['function read(raw) { if (raw) return "1"; return 1; }'],

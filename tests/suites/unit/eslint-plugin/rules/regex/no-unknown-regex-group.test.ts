@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnknownRegexGroup } from '#eslint-plugin/rules/regex/no-unknown-regex-group.ts';
 
-buildRuleTester().run('no-unknown-regex-group', plugin.rules['no-unknown-regex-group'], {
+buildRuleTester().run('no-unknown-regex-group', noUnknownRegexGroup, {
     valid: [
         'const date = pattern.exec(text); date.groups.day;',
 

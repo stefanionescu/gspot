@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
+import { noAnyOriginMessages } from '#eslint-plugin/rules/web/no-any-origin-messages.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildTypedRuleTester().run('no-any-origin-messages', plugin.rules['no-any-origin-messages'], {
+buildTypedRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
     valid: [
         "declare function handler(event: MessageEvent): void;\nwindow.addEventListener('message', handler);",
 
@@ -53,7 +53,7 @@ buildTypedRuleTester().run('no-any-origin-messages', plugin.rules['no-any-origin
     ],
 });
 
-buildRuleTester().run('no-any-origin-messages', plugin.rules['no-any-origin-messages'], {
+buildRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
     valid: ["window.postMessage({ ready: true }, '*');"],
     invalid: [],
 });

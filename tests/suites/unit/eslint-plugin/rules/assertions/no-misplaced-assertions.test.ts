@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noMisplacedAssertions } from '#eslint-plugin/rules/assertions/no-misplaced-assertions.ts';
 
 const root = writePackageFolders({ jest: { devDependencies: { jest: '30.0.0' } } });
 
-buildRuleTester({ root }).run('no-misplaced-assertions', plugin.rules['no-misplaced-assertions'], {
+buildRuleTester({ root }).run('no-misplaced-assertions', noMisplacedAssertions, {
     valid: [
         'describe("cart", () => { expect(cart.items).toHaveLength(0); });',
         'import { expect } from "chai";\ndescribe("cart", () => { it("is empty", () => { expect(cart.items).to.be.empty; }); });',

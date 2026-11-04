@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInvertedAssertions } from '#eslint-plugin/rules/assertions/no-inverted-assertions.ts';
 
-buildRuleTester().run('no-inverted-assertions', plugin.rules['no-inverted-assertions'], {
+buildRuleTester().run('no-inverted-assertions', noInvertedAssertions, {
     valid: [
         'it("adds", () => { assert.equal(total, 3); });',
         'assert.equal(3, total);',

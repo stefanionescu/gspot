@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noInlineInterpolation } from '#eslint-plugin/rules/testing/no-inline-interpolation.ts';
 
 const root = writePackageFolders({ jest: { devDependencies: { jest: '30.0.0' } }, plain: {} });
 const filename = join(root, 'jest/a.test.ts');
 
-buildRuleTester({ root }).run('no-inline-interpolation', plugin.rules['no-inline-interpolation'], {
+buildRuleTester({ root }).run('no-inline-interpolation', noInlineInterpolation, {
     valid: [
         { code: 'expect(user).toMatchInlineSnapshot(`{ "id": ${id} }`);', filename: join(root, 'plain/a.test.ts') },
         { code: 'expect(user).toMatchInlineSnapshot(`{ "id": 1 }`);', filename },

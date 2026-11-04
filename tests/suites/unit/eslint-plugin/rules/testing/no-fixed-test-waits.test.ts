@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noFixedTestWaits } from '#eslint-plugin/rules/testing/no-fixed-test-waits.ts';
 
-buildRuleTester().run('no-fixed-test-waits', plugin.rules['no-fixed-test-waits'], {
+buildRuleTester().run('no-fixed-test-waits', noFixedTestWaits, {
     valid: [
         { filename: 'page.ts', code: 'page.waitForTimeout(1000); cy.wait(1000);' },
         { filename: 'page.test.ts', code: 'cy.wait("@request");' },

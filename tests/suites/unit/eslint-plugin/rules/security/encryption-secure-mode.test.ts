@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { encryptionSecureMode } from '#eslint-plugin/rules/security/encryption-secure-mode.ts';
 
-buildRuleTester().run('encryption-secure-mode', plugin.rules['encryption-secure-mode'], {
+buildRuleTester().run('encryption-secure-mode', encryptionSecureMode, {
     valid: [
         "import crypto from 'crypto';\ncrypto.createCipheriv('aes-256-gcm', key, iv);",
         "import crypto from 'crypto';\ncrypto.createCipheriv(algorithm, key, iv);",

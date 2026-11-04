@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsOpenAdminPorts } from '#eslint-plugin/rules/aws/aws-open-admin-ports.ts';
 
-buildRuleTester().run('aws-open-admin-ports', plugin.rules['aws-open-admin-ports'], {
+buildRuleTester().run('aws-open-admin-ports', awsOpenAdminPorts, {
     valid: [
         "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nconst group = new ec2.SecurityGroup(this, 'Group', { vpc });\ngroup.addIngressRule(ec2.Peer.ipv4('203.0.113.0/24'), ec2.Port.tcp(22));\ngroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(443));",
         "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nconst group = new ec2.SecurityGroup(this, 'Group', { vpc });\ngroup.connections.allowFromAnyIpv4(ec2.Port.tcp(443));",

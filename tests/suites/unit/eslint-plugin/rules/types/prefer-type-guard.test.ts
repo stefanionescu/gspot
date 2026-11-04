@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferTypeGuard } from '#eslint-plugin/rules/types/prefer-type-guard.ts';
 
-buildRuleTester().run('prefer-type-guard', plugin.rules['prefer-type-guard'], {
+buildRuleTester().run('prefer-type-guard', preferTypeGuard, {
     valid: [
         'function isFish(pet: Pet) { return (pet as Fish).swim === undefined; }',
         'function isFish(pet: Pet) { return (pet as Fish).swim !== null; }',

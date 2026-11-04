@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
+import { noEarlyTestReturn } from '#eslint-plugin/rules/testing/no-early-test-return.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({
@@ -8,7 +8,7 @@ const root = writePackageFolders({
     plain: {},
 });
 
-buildRuleTester({ root }).run('no-early-test-return', plugin.rules['no-early-test-return'], {
+buildRuleTester({ root }).run('no-early-test-return', noEarlyTestReturn, {
     valid: [
         { code: 'it("pays", () => { if (!ready) return; pay(); });', filename: join(root, 'jest/a.test.ts') },
         { code: 'it("pays", () => { if (!ready) return; pay(); });', filename: join(root, 'plain/a.test.ts') },

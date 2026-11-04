@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferImmediateReturn } from '#eslint-plugin/rules/variables/prefer-immediate-return.ts';
 
-buildRuleTester().run('prefer-immediate-return', plugin.rules['prefer-immediate-return'], {
+buildRuleTester().run('prefer-immediate-return', preferImmediateReturn, {
     valid: [
         'function read() { const result = fetch(); log(result); return result; }',
         'function read() { const result: Response = fetch(); return result; }',

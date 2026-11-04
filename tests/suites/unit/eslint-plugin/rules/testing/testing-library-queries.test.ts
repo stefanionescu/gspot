@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { testingLibraryQueries } from '#eslint-plugin/rules/testing/testing-library-queries.ts';
 
-buildRuleTester().run('testing-library-queries', plugin.rules['testing-library-queries'], {
+buildRuleTester().run('testing-library-queries', testingLibraryQueries, {
     valid: [
         'import { screen } from "@testing-library/react";\nexpect(screen.getByText("Saved")).toBeInTheDocument();',
         'import { screen } from "@testing-library/react";\nexpect(screen.queryByText("Saved")).not.toBeInTheDocument();',

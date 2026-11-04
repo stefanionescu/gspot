@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { redundantTypeAliases } from '#eslint-plugin/rules/types/redundant-type-aliases.ts';
 
-buildRuleTester().run('redundant-type-aliases', plugin.rules['redundant-type-aliases'], {
+buildRuleTester().run('redundant-type-aliases', redundantTypeAliases, {
     valid: [
         'type State = "ready" | "pending";',
         'type Result = Promise<User>;',

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSwappedArguments } from '#eslint-plugin/rules/functions/no-swapped-arguments.ts';
 
-const rule = plugin.rules['no-swapped-arguments'];
+const rule = noSwappedArguments;
 
 buildRuleTester().run('no-swapped-arguments', rule, {
     valid: [

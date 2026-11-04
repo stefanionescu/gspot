@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noRedundantAssignment } from '#eslint-plugin/rules/variables/no-redundant-assignment.ts';
 
-buildRuleTester().run('no-redundant-assignment', plugin.rules['no-redundant-assignment'], {
+buildRuleTester().run('no-redundant-assignment', noRedundantAssignment, {
     valid: [
         'function pick(ready) { let mode = "fast"; mode = "slow"; return mode; }',
         'function pick(ready) { let mode = "fast"; if (ready) { mode = "slow"; } mode = "fast"; return mode; }',

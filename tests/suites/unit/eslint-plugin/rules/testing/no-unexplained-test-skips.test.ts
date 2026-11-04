@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnexplainedTestSkips } from '#eslint-plugin/rules/testing/no-unexplained-test-skips.ts';
 
 const root = writePackageFolders({
     jasmine: { devDependencies: { jasmine: '5.0.0' } },
@@ -12,7 +12,7 @@ const root = writePackageFolders({
     node: {},
 });
 
-buildRuleTester({ root }).run('no-unexplained-test-skips', plugin.rules['no-unexplained-test-skips'], {
+buildRuleTester({ root }).run('no-unexplained-test-skips', noUnexplainedTestSkips, {
     valid: [
         { code: 'it.skip("adds", run);', filename: join(root, 'other.test.ts') },
         { code: '// Waits for the tax table.\nit.skip("adds", run);', filename: join(root, 'jest/a.test.ts') },

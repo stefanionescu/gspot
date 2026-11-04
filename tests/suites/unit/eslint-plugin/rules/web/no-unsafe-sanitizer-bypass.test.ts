@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnsafeSanitizerBypass } from '#eslint-plugin/rules/web/no-unsafe-sanitizer-bypass.ts';
 
-buildRuleTester().run('no-unsafe-sanitizer-bypass', plugin.rules['no-unsafe-sanitizer-bypass'], {
+buildRuleTester().run('no-unsafe-sanitizer-bypass', noUnsafeSanitizerBypass, {
     valid: [
         'sanitizer.bypassSecurityTrustHtml("<strong>Trusted</strong>");',
         'sanitizer.bypassSecurityTrustStyle(`color: blue`);',

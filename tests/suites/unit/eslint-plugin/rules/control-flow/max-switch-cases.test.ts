@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { maxSwitchCases } from '#eslint-plugin/rules/control-flow/max-switch-cases.ts';
 
-buildRuleTester().run('max-switch-cases', plugin.rules['max-switch-cases'], {
+buildRuleTester().run('max-switch-cases', maxSwitchCases, {
     valid: [
         'switch (value) {}',
         { code: 'switch (value) { case 1: case 2: run(); default: finish(); }', options: [1] },

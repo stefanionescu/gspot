@@ -1,5 +1,5 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noConstantAssertions } from '#eslint-plugin/rules/assertions/no-constant-assertions.ts';
 
 const constantCases = [
     ['vitest', 'expect(-1).toBe(-1);'],
@@ -29,7 +29,7 @@ const freshCases = [
     errors: [{ messageId: 'fresh' as const }],
 }));
 
-buildRuleTester().run('no-constant-assertions', plugin.rules['no-constant-assertions'], {
+buildRuleTester().run('no-constant-assertions', noConstantAssertions, {
     valid: [
         'import "cypress";\nthis.page.should("equal", 1);',
 

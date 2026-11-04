@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
+import { noForcedUiActions } from '#eslint-plugin/rules/testing/no-forced-ui-actions.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ cypress: { devDependencies: { cypress: '15.0.0' } }, plain: {} });
 
-buildRuleTester({ root }).run('no-forced-ui-actions', plugin.rules['no-forced-ui-actions'], {
+buildRuleTester({ root }).run('no-forced-ui-actions', noForcedUiActions, {
     valid: [
         { code: 'cy.get("button").click({ force: true });', filename: join(root, 'plain/a.cy.ts') },
         { code: 'cy.get("button").click();', filename: join(root, 'cypress/a.cy.ts') },

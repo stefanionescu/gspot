@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsPublicBucketGrants } from '#eslint-plugin/rules/aws/aws-public-bucket-grants.ts';
 
-buildRuleTester().run('aws-public-bucket-grants', plugin.rules['aws-public-bucket-grants'], {
+buildRuleTester().run('aws-public-bucket-grants', awsPublicBucketGrants, {
     valid: [
         "import * as s3 from 'aws-cdk-lib/aws-s3';\nnew s3.Bucket(this, 'Data', { accessControl: s3.BucketAccessControl.PRIVATE });",
         'new Map();',

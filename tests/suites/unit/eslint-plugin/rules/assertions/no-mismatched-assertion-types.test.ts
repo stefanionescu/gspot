@@ -1,12 +1,12 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noMismatchedAssertionTypes } from '#eslint-plugin/rules/assertions/no-mismatched-assertion-types.ts';
 
-buildRuleTester().run('no-mismatched-assertion-types', plugin.rules['no-mismatched-assertion-types'], {
+buildRuleTester().run('no-mismatched-assertion-types', noMismatchedAssertionTypes, {
     valid: ['read(undefined);'],
     invalid: [],
 });
 
-buildTypedRuleTester().run('no-mismatched-assertion-types', plugin.rules['no-mismatched-assertion-types'], {
+buildTypedRuleTester().run('no-mismatched-assertion-types', noMismatchedAssertionTypes, {
     valid: [
         'import { expect } from "vitest";\ndeclare const count: number;\nexpect(count).toBe(3);',
         'import { expect } from "vitest";\ndeclare const count: number | string;\nexpect(count).toBe("3");',

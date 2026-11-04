@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsIamPrivilegeEscalation } from '#eslint-plugin/rules/aws/aws-iam-privilege-escalation.ts';
 
-buildRuleTester().run('aws-iam-privilege-escalation', plugin.rules['aws-iam-privilege-escalation'], {
+buildRuleTester().run('aws-iam-privilege-escalation', awsIamPrivilegeEscalation, {
     valid: [
         "import * as iam from 'aws-cdk-lib/aws-iam';\nnew iam.PolicyStatement({ actions: ['iam:PassRole'], resources: [role.roleArn] });",
     ],

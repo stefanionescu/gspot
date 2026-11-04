@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInsecureCookies } from '#eslint-plugin/rules/servers/no-insecure-cookies.ts';
 
-buildRuleTester().run('no-insecure-cookies', plugin.rules['no-insecure-cookies'], {
+buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
     valid: [
         'import session from "cookie-session"; session({ secure: true, httpOnly: true });',
         'import session from "cookie-session"; session({});',

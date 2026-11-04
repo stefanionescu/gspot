@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
+import { weakSsl } from '#eslint-plugin/rules/networks/weak-ssl.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('weak-ssl', plugin.rules['weak-ssl'], {
+buildRuleTester().run('weak-ssl', weakSsl, {
     valid: [
         "import tls from 'tls';\ntls.connect({ host: 'example.com', minVersion: 'TLSv1.2' });",
         "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nnew apigateway.CfnDomainName(this, 'Domain', { securityPolicy: 'TLS_1_2' });",

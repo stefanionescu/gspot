@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { testHooksFirst } from '#eslint-plugin/rules/testing/test-hooks-first.ts';
 
-buildRuleTester().run('test-hooks-first', plugin.rules['test-hooks-first'], {
+buildRuleTester().run('test-hooks-first', testHooksFirst, {
     valid: [
         'describe("cart", () => { beforeEach(reset); afterEach(clean); it("adds", run); });',
         'describe("cart", () => { beforeEach(reset); it("adds", run); afterEach(clean); afterAll(close); });',

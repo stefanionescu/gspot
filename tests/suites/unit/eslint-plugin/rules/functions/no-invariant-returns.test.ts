@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInvariantReturns } from '#eslint-plugin/rules/functions/no-invariant-returns.ts';
 
-buildRuleTester().run('no-invariant-returns', plugin.rules['no-invariant-returns'], {
+buildRuleTester().run('no-invariant-returns', noInvariantReturns, {
     valid: [
         'function save(item) { if (item) { store(item); return 1; } return 1; }',
         'function read(item) { if (item) return 1; }',

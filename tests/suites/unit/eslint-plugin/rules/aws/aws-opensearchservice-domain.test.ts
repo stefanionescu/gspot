@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsOpensearchserviceDomain } from '#eslint-plugin/rules/aws/aws-opensearchservice-domain.ts';
 
-buildRuleTester().run('aws-opensearchservice-domain', plugin.rules['aws-opensearchservice-domain'], {
+buildRuleTester().run('aws-opensearchservice-domain', awsOpensearchserviceDomain, {
     valid: [
         "import * as opensearch from 'aws-cdk-lib/aws-opensearchservice';\nnew opensearch.Domain(this, 'Search', { encryptionAtRest: { enabled: true } });",
     ],

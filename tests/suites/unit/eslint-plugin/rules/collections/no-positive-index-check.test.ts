@@ -1,12 +1,12 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPositiveIndexCheck } from '#eslint-plugin/rules/collections/no-positive-index-check.ts';
 
-buildRuleTester().run('no-positive-index-check', plugin.rules['no-positive-index-check'], {
+buildRuleTester().run('no-positive-index-check', noPositiveIndexCheck, {
     valid: ['read(undefined);'],
     invalid: [],
 });
 
-buildTypedRuleTester().run('no-positive-index-check', plugin.rules['no-positive-index-check'], {
+buildTypedRuleTester().run('no-positive-index-check', noPositiveIndexCheck, {
     valid: [
         'declare const roles: string[], role: string; if (roles.indexOf(role) >= 0) run();',
         'declare const title: string; if (title.indexOf("x") > 0) run();',

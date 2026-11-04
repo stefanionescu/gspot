@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
+import { preferTestTable } from '#eslint-plugin/rules/testing/prefer-test-table.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({
@@ -8,7 +8,7 @@ const root = writePackageFolders({
     plain: {},
 });
 const filename = join(root, 'jest/a.test.ts');
-buildRuleTester({ root }).run('prefer-test-table', plugin.rules['prefer-test-table'], {
+buildRuleTester({ root }).run('prefer-test-table', preferTestTable, {
     valid: [
         {
             code: 'test("adds", () => { const total = double(1); expect(total).toBeGreaterThan(0); });\ntest("adds more", () => { const total = double(2); expect(total).toBeGreaterThan(0); });\ntest("adds again", () => { const total = double(3); expect(total).toBeGreaterThan(0); });',

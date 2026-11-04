@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireErrorChecks } from '#eslint-plugin/rules/assertions/require-error-checks.ts';
 
-buildRuleTester().run('require-error-checks', plugin.rules['require-error-checks'], {
+buildRuleTester().run('require-error-checks', requireErrorChecks, {
     valid: [
         'it("fails", () => { expect(run).to.throw(RangeError); });',
         'it("fails", () => { expect(run).to.throw("negative"); });',

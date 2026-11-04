@@ -1,12 +1,12 @@
-import plugin from '#eslint-plugin/plugin.ts';
+import { noAsyncConstructor } from '#eslint-plugin/rules/promises/no-async-constructor.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('no-async-constructor', plugin.rules['no-async-constructor'], {
+buildRuleTester().run('no-async-constructor', noAsyncConstructor, {
     valid: ['class Store { constructor() { load(); } }'],
     invalid: [],
 });
 
-buildTypedRuleTester().run('no-async-constructor', plugin.rules['no-async-constructor'], {
+buildTypedRuleTester().run('no-async-constructor', noAsyncConstructor, {
     valid: [
         'class Store { ready: Promise<void>; constructor() { this.ready = Promise.resolve(); } }',
         'declare function load(): Promise<void>; class Store { constructor() { const start = () => { load(); }; } }',

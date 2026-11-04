@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsUnblockedPublicBuckets } from '#eslint-plugin/rules/aws/aws-unblocked-public-buckets.ts';
 
-buildRuleTester().run('aws-unblocked-public-buckets', plugin.rules['aws-unblocked-public-buckets'], {
+buildRuleTester().run('aws-unblocked-public-buckets', awsUnblockedPublicBuckets, {
     valid: [
         "import * as s3 from 'aws-cdk-lib/aws-s3';\nnew s3.Bucket(this, 'Data', { blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL });",
     ],

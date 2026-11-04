@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { unverifiedCertificate } from '#eslint-plugin/rules/networks/unverified-certificate.ts';
 
-buildRuleTester().run('unverified-certificate', plugin.rules['unverified-certificate'], {
+buildRuleTester().run('unverified-certificate', unverifiedCertificate, {
     valid: [
         "import https from 'https';\nhttps.request({ host: 'example.com', ca: authority });",
         'client.request({ rejectUnauthorized: false });',

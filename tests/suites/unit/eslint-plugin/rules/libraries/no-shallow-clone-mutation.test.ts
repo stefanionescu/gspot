@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noShallowCloneMutation } from '#eslint-plugin/rules/libraries/no-shallow-clone-mutation.ts';
 
-buildRuleTester().run('no-shallow-clone-mutation', plugin.rules['no-shallow-clone-mutation'], {
+buildRuleTester().run('no-shallow-clone-mutation', noShallowCloneMutation, {
     valid: [
         'import _ from "lodash"; function save(settings) { const copy = _.clone(settings); copy.theme = "dark"; }',
         'import _ from "lodash"; function save(settings) { const copy = _.cloneDeep(settings); copy.theme.color = "red"; }',

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCodeAfterDone } from '#eslint-plugin/rules/testing/no-code-after-done.ts';
 
-buildRuleTester().run('no-code-after-done', plugin.rules['no-code-after-done'], {
+buildRuleTester().run('no-code-after-done', noCodeAfterDone, {
     valid: [
         'it("saves", (done) => { save(); check(); done(); });',
         'it("saves", (done) => { if (failed) { done(error); return; } done(); });',

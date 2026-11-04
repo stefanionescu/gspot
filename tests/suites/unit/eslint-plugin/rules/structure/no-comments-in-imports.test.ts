@@ -2,6 +2,7 @@ import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCommentsInImports } from '#eslint-plugin/rules/structure/no-comments-in-imports.ts';
 
 test.each(['class Sample {}', 'export class Sample {}', 'export default class Sample {}'])(
     'the default JavaScript parser preserves declaration comments and fixes import headers before %s',
@@ -23,7 +24,7 @@ test.each(['class Sample {}', 'export class Sample {}', 'export default class Sa
     },
 );
 
-buildRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-imports'], {
+buildRuleTester().run('no-comments-in-imports', noCommentsInImports, {
     valid: [
         "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
         "import { a } from './a';\n/* global process */\nimport { b } from '../b';",
@@ -97,7 +98,7 @@ buildRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-imp
 
 buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
     'no-comments-in-imports CommonJS',
-    plugin.rules['no-comments-in-imports'],
+    noCommentsInImports,
     {
         valid: [
             {
@@ -117,7 +118,7 @@ buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
     },
 );
 
-buildRuleTester().run('no-comments-in-imports regressions', plugin.rules['no-comments-in-imports'], {
+buildRuleTester().run('no-comments-in-imports regressions', noCommentsInImports, {
     valid: [],
     invalid: [
         {

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noBitwiseInCondition } from '#eslint-plugin/rules/logic/no-bitwise-in-condition.ts';
 
-buildRuleTester().run('no-bitwise-in-condition', plugin.rules['no-bitwise-in-condition'], {
+buildRuleTester().run('no-bitwise-in-condition', noBitwiseInCondition, {
     valid: [
         'const both = isReady & hasData;',
         'if (isReady | hasData) run(); const shifted = flags << 1;',
@@ -11,7 +11,7 @@ buildRuleTester().run('no-bitwise-in-condition', plugin.rules['no-bitwise-in-con
     invalid: [{ code: 'if (isReady & hasData) run();', errors: [{ messageId: 'bitwise', data: { operator: '&' } }] }],
 });
 
-buildTypedRuleTester().run('no-bitwise-in-condition with types', plugin.rules['no-bitwise-in-condition'], {
+buildTypedRuleTester().run('no-bitwise-in-condition with types', noBitwiseInCondition, {
     valid: ['declare const flags: number, mask: number; if (flags & mask) run();'],
     invalid: [
         {

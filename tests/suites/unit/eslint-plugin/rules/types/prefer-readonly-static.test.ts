@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferReadonlyStatic } from '#eslint-plugin/rules/types/prefer-readonly-static.ts';
 
-buildRuleTester().run('prefer-readonly-static', plugin.rules['prefer-readonly-static'], {
+buildRuleTester().run('prefer-readonly-static', preferReadonlyStatic, {
     valid: [
         { filename: 'clock.js', code: 'class Clock { static interval = 1000; }' },
         { filename: 'clock.mts', code: 'class Clock { static interval = 1000; }' },

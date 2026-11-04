@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noStatefulRegex } from '#eslint-plugin/rules/regex/no-stateful-regex.ts';
 
-buildRuleTester().run('no-stateful-regex', plugin.rules['no-stateful-regex'], {
+buildRuleTester().run('no-stateful-regex', noStatefulRegex, {
     valid: [
         'const word = /a/gu; word.test(first); word.lastIndex = 0; word.test(second);',
         'const word = /a/gu; word.test(first); word.test("");',

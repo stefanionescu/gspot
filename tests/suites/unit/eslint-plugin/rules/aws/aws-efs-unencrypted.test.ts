@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsEfsUnencrypted } from '#eslint-plugin/rules/aws/aws-efs-unencrypted.ts';
 
-buildRuleTester().run('aws-efs-unencrypted', plugin.rules['aws-efs-unencrypted'], {
+buildRuleTester().run('aws-efs-unencrypted', awsEfsUnencrypted, {
     valid: [
         "import * as efs from 'aws-cdk-lib/aws-efs';\nnew efs.FileSystem(this, 'Files', { vpc });",
         "import * as efs from 'aws-cdk-lib/aws-efs';\nnew efs.FileSystem(this, 'Files');",

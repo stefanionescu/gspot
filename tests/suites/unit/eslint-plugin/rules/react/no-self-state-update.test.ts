@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSelfStateUpdate } from '#eslint-plugin/rules/react/no-self-state-update.ts';
 
-buildRuleTester().run('no-self-state-update', plugin.rules['no-self-state-update'], {
+buildRuleTester().run('no-self-state-update', noSelfStateUpdate, {
     valid: [
         'import { useState } from "react";\nconst [count, setCount] = useState(0);\nsetCount(count + 1);',
         'import { useState } from "react";\nconst [count, setCount] = useState(0);\nconst [other, setOther] = useState(0);\nsetCount(other);',

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPublicFilePermissions } from '#eslint-plugin/rules/security/no-public-file-permissions.ts';
 
-buildRuleTester().run('no-public-file-permissions', plugin.rules['no-public-file-permissions'], {
+buildRuleTester().run('no-public-file-permissions', noPublicFilePermissions, {
     valid: [
         "import fs from 'fs';\nfs.chmodSync('/tmp/report', config.mode);",
         "import fs from 'fs';\nfs.chmodSync('/tmp/report', base | 0o700);",

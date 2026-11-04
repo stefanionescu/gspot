@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noDefaultUtilityImports } from '#eslint-plugin/rules/libraries/no-default-utility-imports.ts';
 
 const root = writePackageFolders({
     modern: { dependencies: { lodash: '^4.17.21', rxjs: '~7.8.0', validator: '*', rambda: 'latest' } },
@@ -10,7 +10,7 @@ const root = writePackageFolders({
 });
 const filename = join(root, 'modern/cart.ts');
 
-buildRuleTester({ root }).run('no-default-utility-imports', plugin.rules['no-default-utility-imports'], {
+buildRuleTester({ root }).run('no-default-utility-imports', noDefaultUtilityImports, {
     valid: [
         { code: 'import _ from "lodash";', filename: join(root, 'old/cart.ts') },
         { code: 'import rx from "rxjs";', filename: join(root, 'old/cart.ts') },

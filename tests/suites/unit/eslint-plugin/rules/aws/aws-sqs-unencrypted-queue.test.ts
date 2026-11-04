@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsSqsUnencryptedQueue } from '#eslint-plugin/rules/aws/aws-sqs-unencrypted-queue.ts';
 
-buildRuleTester().run('aws-sqs-unencrypted-queue', plugin.rules['aws-sqs-unencrypted-queue'], {
+buildRuleTester().run('aws-sqs-unencrypted-queue', awsSqsUnencryptedQueue, {
     valid: [
         "import * as sqs from 'aws-cdk-lib/aws-sqs';\nnew sqs.Queue(this, 'Jobs', { encryption: sqs.QueueEncryption.KMS_MANAGED });",
     ],

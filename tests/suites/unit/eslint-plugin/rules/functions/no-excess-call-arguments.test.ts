@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noExcessCallArguments } from '#eslint-plugin/rules/functions/no-excess-call-arguments.ts';
 
-buildRuleTester().run('no-excess-call-arguments', plugin.rules['no-excess-call-arguments'], {
+buildRuleTester().run('no-excess-call-arguments', noExcessCallArguments, {
     valid: [
         'function read(value) { return value; } read(); read(1);',
         'function read(...values) { return values; } read(1, 2);',

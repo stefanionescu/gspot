@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { xmlParserXxe } from '#eslint-plugin/rules/security/xml-parser-xxe.ts';
 
-buildRuleTester().run('xml-parser-xxe', plugin.rules['xml-parser-xxe'], {
+buildRuleTester().run('xml-parser-xxe', xmlParserXxe, {
     valid: [
         "import libxmljs from 'libxmljs';\nlibxmljs.parseXmlString(xml);\nlibxmljs.parseXmlString(xml, { noblanks: true });",
     ],

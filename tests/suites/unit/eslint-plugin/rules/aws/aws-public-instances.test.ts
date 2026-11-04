@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsPublicInstances } from '#eslint-plugin/rules/aws/aws-public-instances.ts';
 
-buildRuleTester().run('aws-public-instances', plugin.rules['aws-public-instances'], {
+buildRuleTester().run('aws-public-instances', awsPublicInstances, {
     valid: [
         "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nnew ec2.Instance(this, 'Host', { vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS } });",
         "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nnew ec2.CfnInstance(this, 'Host', {});",

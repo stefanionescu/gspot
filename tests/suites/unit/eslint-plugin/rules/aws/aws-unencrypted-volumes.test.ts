@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsUnencryptedVolumes } from '#eslint-plugin/rules/aws/aws-unencrypted-volumes.ts';
 
-buildRuleTester().run('aws-unencrypted-volumes', plugin.rules['aws-unencrypted-volumes'], {
+buildRuleTester().run('aws-unencrypted-volumes', awsUnencryptedVolumes, {
     valid: [
         "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nnew ec2.Volume(this, 'Data', { encrypted: true });",
         "import * as ec2 from 'aws-cdk-lib/aws-ec2';\nnew ec2.Volume(this, 'Data', buildOptions());",

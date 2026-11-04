@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noEmptyTestFile } from '#eslint-plugin/rules/testing/no-empty-test-file.ts';
 
-buildRuleTester().run('no-empty-test-file', plugin.rules['no-empty-test-file'], {
+buildRuleTester().run('no-empty-test-file', noEmptyTestFile, {
     valid: [
         { code: 'export const value = 1;', filename: 'cart.ts' },
         { code: 'test("adds", run);', filename: 'cart.test.ts' },

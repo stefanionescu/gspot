@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPoweredByHeader } from '#eslint-plugin/rules/servers/no-powered-by-header.ts';
 
-buildRuleTester().run('no-powered-by-header', plugin.rules['no-powered-by-header'], {
+buildRuleTester().run('no-powered-by-header', noPoweredByHeader, {
     valid: [
         'import express from "express"; const factory = other(); const app = factory();',
         'let express = require("express"); express = other; const app = express();',

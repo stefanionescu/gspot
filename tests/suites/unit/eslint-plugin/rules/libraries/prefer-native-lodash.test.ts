@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferNativeLodash } from '#eslint-plugin/rules/libraries/prefer-native-lodash.ts';
 
-const rule = plugin.rules['prefer-native-lodash'];
+const rule = preferNativeLodash;
 
 buildRuleTester().run('prefer-native-lodash', rule, {
     valid: [

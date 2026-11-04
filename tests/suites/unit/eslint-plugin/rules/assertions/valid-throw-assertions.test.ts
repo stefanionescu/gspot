@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { validThrowAssertions } from '#eslint-plugin/rules/assertions/valid-throw-assertions.ts';
 
-const rule = plugin.rules['valid-throw-assertions'];
+const rule = validThrowAssertions;
 
 buildTypedRuleTester().run('valid-throw-assertions', rule, {
     valid: [

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSetterInComponent } from '#eslint-plugin/rules/react/no-setter-in-component.ts';
 
-buildRuleTester().run('no-setter-in-component', plugin.rules['no-setter-in-component'], {
+buildRuleTester().run('no-setter-in-component', noSetterInComponent, {
     valid: [
         'import { useState } from "react";\nfunction Cart() { const [count, setCount] = useState(0); return <button onClick={() => setCount(1)} />; }',
         'import { useState } from "react";\nfunction Cart() { const [count, setCount] = useState(0); if (count > 1) setCount(1); }',

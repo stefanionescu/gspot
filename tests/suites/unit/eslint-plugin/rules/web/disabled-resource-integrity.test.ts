@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { disabledResourceIntegrity } from '#eslint-plugin/rules/web/disabled-resource-integrity.ts';
 
-buildTypedRuleTester().run('disabled-resource-integrity', plugin.rules['disabled-resource-integrity'], {
+buildTypedRuleTester().run('disabled-resource-integrity', disabledResourceIntegrity, {
     valid: [
         "const script = document.createElement('script');\nscript.src = 'https://cdn.example.com/v5.3.0/lib.js';\nscript.integrity = 'sha384-abc';\nscript.crossOrigin = 'anonymous';",
         "const script = document.createElement('script');\nscript.src = 'https://cdn.example.com/latest/lib.js';",
@@ -24,7 +24,7 @@ buildTypedRuleTester().run('disabled-resource-integrity', plugin.rules['disabled
     ],
 });
 
-buildRuleTester().run('disabled-resource-integrity', plugin.rules['disabled-resource-integrity'], {
+buildRuleTester().run('disabled-resource-integrity', disabledResourceIntegrity, {
     valid: [
         "const script = document.createElement('script');\nscript.src = 'https://cdn.example.com/lib@1.2.3/lib.js';",
     ],

@@ -1,10 +1,10 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { RestrictedSyntaxOptions } from '#eslint-plugin/types/structure.ts';
+import { restrictedSyntax } from '#eslint-plugin/rules/structure/restricted-syntax.ts';
 
-buildRuleTester().run<keyof (typeof plugin.rules)['restricted-syntax']['meta']['messages'], RestrictedSyntaxOptions>(
+buildRuleTester().run<keyof (typeof restrictedSyntax)['meta']['messages'], RestrictedSyntaxOptions>(
     'restricted-syntax',
-    plugin.rules['restricted-syntax'],
+    restrictedSyntax,
     {
         valid: [
             'enum Color { Red }',

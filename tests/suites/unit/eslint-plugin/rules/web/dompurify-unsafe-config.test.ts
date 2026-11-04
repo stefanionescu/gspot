@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { dompurifyUnsafeConfig } from '#eslint-plugin/rules/web/dompurify-unsafe-config.ts';
 
-buildRuleTester().run('dompurify-unsafe-config', plugin.rules['dompurify-unsafe-config'], {
+buildRuleTester().run('dompurify-unsafe-config', dompurifyUnsafeConfig, {
     valid: [
         "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ...options });",
         "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ALLOWED_TAGS: tags });",

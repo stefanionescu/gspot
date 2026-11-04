@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { reviewBlockchainMnemonic } from '#eslint-plugin/rules/security/review-blockchain-mnemonic.ts';
 
-buildRuleTester().run('review-blockchain-mnemonic', plugin.rules['review-blockchain-mnemonic'], {
+buildRuleTester().run('review-blockchain-mnemonic', reviewBlockchainMnemonic, {
     valid: [
         "import { Wallet } from 'ethers';\nWallet.fromPhrase(process.env.WALLET_PHRASE);",
         "Wallet.fromPhrase('abandon abandon abandon');",

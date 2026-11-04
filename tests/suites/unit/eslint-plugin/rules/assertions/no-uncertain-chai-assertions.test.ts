@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUncertainChaiAssertions } from '#eslint-plugin/rules/assertions/no-uncertain-chai-assertions.ts';
 
-buildRuleTester().run('no-uncertain-chai-assertions', plugin.rules['no-uncertain-chai-assertions'], {
+buildRuleTester().run('no-uncertain-chai-assertions', noUncertainChaiAssertions, {
     valid: [
         'expect(run).to.not.throw(TypeError);',
         'import { expect } from "chai";\nexpect(run).to.not.throw();',

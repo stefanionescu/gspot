@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireNoopener } from '#eslint-plugin/rules/web/require-noopener.ts';
 
-buildRuleTester().run('require-noopener', plugin.rules['require-noopener'], {
+buildRuleTester().run('require-noopener', requireNoopener, {
     valid: ["window.open('https://example.com', '_blank', 'noopener,noreferrer');", "window.open('/help');"],
     invalid: [
         {

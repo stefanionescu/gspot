@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferPromiseShorthand } from '#eslint-plugin/rules/promises/prefer-promise-shorthand.ts';
 
-buildRuleTester().run('prefer-promise-shorthand', plugin.rules['prefer-promise-shorthand'], {
+buildRuleTester().run('prefer-promise-shorthand', preferPromiseShorthand, {
     valid: [
         'new Promise((resolve) => { setTimeout(resolve, 1); });',
         'new Promise((resolve) => resolve());',

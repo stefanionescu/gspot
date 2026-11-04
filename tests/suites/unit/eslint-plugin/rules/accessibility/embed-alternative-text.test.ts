@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { embedAlternativeText } from '#eslint-plugin/rules/accessibility/embed-alternative-text.ts';
 
-buildRuleTester().run('embed-alternative-text', plugin.rules['embed-alternative-text'], {
+buildRuleTester().run('embed-alternative-text', embedAlternativeText, {
     valid: ['const chart = <object data="chart.svg">Sales by month</object>;'],
     invalid: [
         { code: 'const a = <object data="x">{/* chart */}</object>;', errors: [{ messageId: 'missingContent' }] },

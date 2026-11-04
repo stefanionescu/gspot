@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noEmptyReturnValue } from '#eslint-plugin/rules/functions/no-empty-return-value.ts';
 
-buildRuleTester().run('no-empty-return-value', plugin.rules['no-empty-return-value'], {
+buildRuleTester().run('no-empty-return-value', noEmptyReturnValue, {
     valid: [
         'function write() { save(); } write();',
         'function write() { save(); } function invoke() { return write(); }',

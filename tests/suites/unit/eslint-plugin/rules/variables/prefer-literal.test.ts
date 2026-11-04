@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferLiteral } from '#eslint-plugin/rules/variables/prefer-literal.ts';
 
-buildRuleTester().run('prefer-object-literal', plugin.rules['prefer-object-literal'], {
+buildRuleTester().run('prefer-object-literal', preferLiteral, {
     valid: [
         'const user = { name };',
         'const user = {}; initialize(user); user.name = name;',

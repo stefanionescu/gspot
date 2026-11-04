@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noDetachedCall } from '#eslint-plugin/rules/functions/no-detached-call.ts';
 
-buildRuleTester().run('no-detached-call', plugin.rules['no-detached-call'], {
+buildRuleTester().run('no-detached-call', noDetachedCall, {
     valid: ['read(value);', 'read\n();', 'new Factory\n(value);', 'read<Type>(value);', 'tag`text`;'],
     invalid: [
         ...['read\n(value);', '((read))\n(value);', 'read<Type>\n(value);'].map((code) => ({

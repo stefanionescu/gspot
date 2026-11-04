@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noVoidArrayCallback } from '#eslint-plugin/rules/collections/no-void-array-callback.ts';
 
-const rule = plugin.rules['no-void-array-callback'];
+const rule = noVoidArrayCallback;
 const declarations = 'declare function log(value: unknown): void; declare const values: number[];';
 
 buildRuleTester().run('no-void-array-callback', rule, {

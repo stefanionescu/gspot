@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noClearTextProtocols } from '#eslint-plugin/rules/networks/no-clear-text-protocols.ts';
 
-buildRuleTester().run('no-clear-text-protocols', plugin.rules['no-clear-text-protocols'], {
+buildRuleTester().run('no-clear-text-protocols', noClearTextProtocols, {
     valid: [
         // eslint-disable-next-line unicorn/prefer-https -- reason: these clear-text URLs check the hosts that the rule under test exempts.
         "const api = 'https://api.acme.io';\nconst local = 'http://localhost:8080';\nconst sample = 'http://www.example.com';\nconst svg = 'http://www.w3.org/2000/svg';",

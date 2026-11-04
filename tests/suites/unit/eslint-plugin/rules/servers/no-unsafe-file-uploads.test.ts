@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnsafeFileUploads } from '#eslint-plugin/rules/servers/no-unsafe-file-uploads.ts';
 
-buildRuleTester().run('no-unsafe-file-uploads', plugin.rules['no-unsafe-file-uploads'], {
+buildRuleTester().run('no-unsafe-file-uploads', noUnsafeFileUploads, {
     valid: [
         "import formidable from 'formidable';\nformidable({ uploadDir: '/var/uploads' });",
         "import multer from 'multer';\nmulter({ storage: multer.diskStorage({ destination: '/var/uploads' }) });",

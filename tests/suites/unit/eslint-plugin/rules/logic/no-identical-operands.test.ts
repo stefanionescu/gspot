@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noIdenticalOperands } from '#eslint-plugin/rules/logic/no-identical-operands.ts';
 
-buildRuleTester().run('no-identical-operands', plugin.rules['no-identical-operands'], {
+buildRuleTester().run('no-identical-operands', noIdenticalOperands, {
     valid: [
         'value + value; value * value; value ** value;',
         'value === value; value !== value; value == value; value != value;',

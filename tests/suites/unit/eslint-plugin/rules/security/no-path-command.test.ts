@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPathCommand } from '#eslint-plugin/rules/security/no-path-command.ts';
 
-buildRuleTester().run('no-path-command', plugin.rules['no-path-command'], {
+buildRuleTester().run('no-path-command', noPathCommand, {
     valid: [
         'import { spawn } from "node:child_process"; spawn("/usr/bin/git");',
         String.raw`import { spawn } from "child_process"; spawn("C:\\Tools\\git.exe");`,

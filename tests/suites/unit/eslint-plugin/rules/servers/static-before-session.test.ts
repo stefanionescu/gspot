@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { staticBeforeSession } from '#eslint-plugin/rules/servers/static-before-session.ts';
 
-buildRuleTester().run('static-before-session', plugin.rules['static-before-session'], {
+buildRuleTester().run('static-before-session', staticBeforeSession, {
     valid: [
         "import express from 'express';\nimport session from 'express-session';\nconst app = express();\napp.use(express.static('public'));\napp.use(session({ secret }));",
     ],

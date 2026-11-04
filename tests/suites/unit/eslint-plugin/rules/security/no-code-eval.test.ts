@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCodeEval } from '#eslint-plugin/rules/security/no-code-eval.ts';
 
-buildRuleTester().run('no-code-eval', plugin.rules['no-code-eval'], {
+buildRuleTester().run('no-code-eval', noCodeEval, {
     valid: ["eval('2 + 2');\nnew Function('return 1');", "const url = 'javascript:void(0)';\nrun(`label: ${name}`);"],
     invalid: [
         {

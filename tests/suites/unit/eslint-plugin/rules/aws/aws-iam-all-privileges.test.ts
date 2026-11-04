@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsIamAllPrivileges } from '#eslint-plugin/rules/aws/aws-iam-all-privileges.ts';
 
-buildRuleTester().run('aws-iam-all-privileges', plugin.rules['aws-iam-all-privileges'], {
+buildRuleTester().run('aws-iam-all-privileges', awsIamAllPrivileges, {
     valid: [
         "import * as iam from 'aws-cdk-lib/aws-iam';\nnew iam.PolicyStatement({ actions: ['s3:GetObject'], resources: ['*'] });",
     ],

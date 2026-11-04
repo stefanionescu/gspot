@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noWeakKeys } from '#eslint-plugin/rules/security/no-weak-keys.ts';
 
-buildRuleTester().run('no-weak-keys', plugin.rules['no-weak-keys'], {
+buildRuleTester().run('no-weak-keys', noWeakKeys, {
     valid: [
         "import crypto from 'crypto';\ncrypto.generateKeyPairSync('rsa', { modulusLength: 4096 });",
         "crypto.generateKeyPairSync('ec', { namedCurve: 'secp384r1' });",

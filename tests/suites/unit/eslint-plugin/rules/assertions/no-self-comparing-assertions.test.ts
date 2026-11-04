@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSelfComparingAssertions } from '#eslint-plugin/rules/assertions/no-self-comparing-assertions.ts';
 
-buildRuleTester().run('no-self-comparing-assertions', plugin.rules['no-self-comparing-assertions'], {
+buildRuleTester().run('no-self-comparing-assertions', noSelfComparingAssertions, {
     valid: [
         'expect(total).to.equal(total);',
         'import { expect } from "chai";\nexpect(total).to.equal(3);',

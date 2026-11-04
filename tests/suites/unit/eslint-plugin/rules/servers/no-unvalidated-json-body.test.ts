@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnvalidatedJsonBody } from '#eslint-plugin/rules/servers/no-unvalidated-json-body.ts';
 
-buildRuleTester().run('no-unvalidated-json-body', plugin.rules['no-unvalidated-json-body'], {
+buildRuleTester().run('no-unvalidated-json-body', noUnvalidatedJsonBody, {
     valid: [
         'const body = Order.parse(await req.json());',
         'const body = await req.json();\nconst order = Order.safeParse(body);',

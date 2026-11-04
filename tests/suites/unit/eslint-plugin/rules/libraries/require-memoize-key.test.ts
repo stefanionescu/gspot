@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireMemoizeKey } from '#eslint-plugin/rules/libraries/require-memoize-key.ts';
 
-buildRuleTester().run('require-memoize-key', plugin.rules['require-memoize-key'], {
+buildRuleTester().run('require-memoize-key', requireMemoizeKey, {
     valid: [
         'import { memoize } from "lodash";\nexport const price = memoize((id) => load(id));',
         'import { memoize } from "lodash";\nexport const price = memoize((id, rate) => id * rate, (id, rate) => `${id}:${rate}`);',

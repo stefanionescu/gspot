@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noEmptyCollection } from '#eslint-plugin/rules/collections/no-empty-collection.ts';
 
-buildRuleTester().run('no-empty-collection', plugin.rules['no-empty-collection'], {
+buildRuleTester().run('no-empty-collection', noEmptyCollection, {
     valid: [
         'function list() { const names = []; names.push("a"); return names.map(String); }',
         'function list() { const names = ["a"]; return names.map(String); }',

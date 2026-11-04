@@ -2,8 +2,9 @@ import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireServerOnly } from '#eslint-plugin/rules/web/require-server-only.ts';
 
-buildRuleTester().run('require-server-only', plugin.rules['require-server-only'], {
+buildRuleTester().run('require-server-only', requireServerOnly, {
     valid: [
         "import 'server-only';\nexport const secret = 1;",
         "'use server';\nexport async function act() {}",

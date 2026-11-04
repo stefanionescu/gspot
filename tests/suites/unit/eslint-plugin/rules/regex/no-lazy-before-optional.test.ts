@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noLazyBeforeOptional } from '#eslint-plugin/rules/regex/no-lazy-before-optional.ts';
 
-buildRuleTester().run('no-lazy-before-optional', plugin.rules['no-lazy-before-optional'], {
+buildRuleTester().run('no-lazy-before-optional', noLazyBeforeOptional, {
     valid: ['/a*?b/u;', '/a*b*/u;', '/a+?/u;'],
     invalid: [
         { code: '/a*?b*/u;', errors: [{ messageId: 'lazy', data: { minimum: 0 } }] },

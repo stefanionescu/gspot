@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
+import { noSmallSwitch } from '#eslint-plugin/rules/control-flow/no-small-switch.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('no-small-switch', plugin.rules['no-small-switch'], {
+buildRuleTester().run('no-small-switch', noSmallSwitch, {
     valid: [
         'switch (mode) { case 1: run(); break; case 2: stop(); }',
         'switch (mode) { case 1: run(); break; case 2: stop(); break; default: wait(); }',
@@ -18,7 +18,7 @@ buildRuleTester().run('no-small-switch', plugin.rules['no-small-switch'], {
     ],
 });
 
-buildTypedRuleTester().run('no-small-switch with types', plugin.rules['no-small-switch'], {
+buildTypedRuleTester().run('no-small-switch with types', noSmallSwitch, {
     valid: [
         'declare function assertNever(value: never): never; declare const mode: "dark"; switch (mode) { case "dark": paint(); break; default: assertNever(mode); }',
     ],

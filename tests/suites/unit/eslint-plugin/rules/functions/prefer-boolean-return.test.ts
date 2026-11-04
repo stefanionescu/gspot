@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferBooleanReturn } from '#eslint-plugin/rules/functions/prefer-boolean-return.ts';
 
-buildRuleTester().run('prefer-boolean-return', plugin.rules['prefer-boolean-return'], {
+buildRuleTester().run('prefer-boolean-return', preferBooleanReturn, {
     valid: [
         'function read() { if (ready) { save(); return true; } else return false; }',
         'function read() { if (ready) return value; else return false; }',

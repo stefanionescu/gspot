@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { unverifiedHostname } from '#eslint-plugin/rules/networks/unverified-hostname.ts';
 
-buildRuleTester().run('unverified-hostname', plugin.rules['unverified-hostname'], {
+buildRuleTester().run('unverified-hostname', unverifiedHostname, {
     valid: [
         "import tls from 'tls';\ntls.connect(443, 'example.com', { checkServerIdentity: (host, cert) => tls.checkServerIdentity(host, cert) });",
         "import https from 'https';\nhttps.request({ checkServerIdentity: () => { return new Error('mismatch'); } });",

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noIdenticalFunctions } from '#eslint-plugin/rules/functions/no-identical-functions.ts';
 
-buildRuleTester().run('no-identical-functions', plugin.rules['no-identical-functions'], {
+buildRuleTester().run('no-identical-functions', noIdenticalFunctions, {
     valid: [
         'function first() {\n    a();\n    b();\n}\nfunction second() {\n    a();\n    b();\n}',
         'function first() {\n    a();\n    b();\n    c();\n}\nfunction second() {\n    a();\n    b();\n    d();\n}',

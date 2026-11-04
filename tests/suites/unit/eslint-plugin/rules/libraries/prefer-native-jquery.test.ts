@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferNativeJquery } from '#eslint-plugin/rules/libraries/prefer-native-jquery.ts';
 
-buildRuleTester().run('prefer-native-jquery', plugin.rules['prefer-native-jquery'], {
+buildRuleTester().run('prefer-native-jquery', preferNativeJquery, {
     valid: [
         'Array.isArray(rows);',
         'const $ = select;\n$.isArray(rows);',

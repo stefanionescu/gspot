@@ -1,12 +1,12 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noStringRegexPattern } from '#eslint-plugin/rules/regex/no-string-regex-pattern.ts';
 
-buildRuleTester().run('no-string-regex-pattern without types', plugin.rules['no-string-regex-pattern'], {
+buildRuleTester().run('no-string-regex-pattern without types', noStringRegexPattern, {
     valid: ['"title".match("v1.2");'],
     invalid: [],
 });
 
-buildTypedRuleTester().run('no-string-regex-pattern', plugin.rules['no-string-regex-pattern'], {
+buildTypedRuleTester().run('no-string-regex-pattern', noStringRegexPattern, {
     valid: [
         String.raw`declare const title: string; title.match(/v1\.2/u);`,
         'declare const title: string; title.replace("v1", "v2");',

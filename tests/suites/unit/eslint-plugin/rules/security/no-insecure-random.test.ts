@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInsecureRandom } from '#eslint-plugin/rules/security/no-insecure-random.ts';
 
-buildRuleTester().run('no-insecure-random', plugin.rules['no-insecure-random'], {
+buildRuleTester().run('no-insecure-random', noInsecureRandom, {
     valid: [
         'crypto.randomUUID();',
         'function draw(Math) { return Math.random(); }',

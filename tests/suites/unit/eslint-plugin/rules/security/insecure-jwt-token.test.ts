@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { insecureJwtToken } from '#eslint-plugin/rules/security/insecure-jwt-token.ts';
 
-buildRuleTester().run('insecure-jwt-token', plugin.rules['insecure-jwt-token'], {
+buildRuleTester().run('insecure-jwt-token', insecureJwtToken, {
     valid: [
         "import jwt from 'jsonwebtoken';\njwt.sign(claims, key, { algorithm: 'RS256' });\njwt.verify(token, key, { algorithms: ['RS256'] });",
         "import jwt from 'jsonwebtoken';\njwt.verify(token, key);",

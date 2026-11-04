@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noImpossibleCollectionSize } from '#eslint-plugin/rules/collections/no-impossible-collection-size.ts';
 
-buildRuleTester().run('no-impossible-collection-size', plugin.rules['no-impossible-collection-size'], {
+buildRuleTester().run('no-impossible-collection-size', noImpossibleCollectionSize, {
     valid: [
         'items.length === 0;',
         'items.count < 0;',
@@ -15,7 +15,7 @@ buildRuleTester().run('no-impossible-collection-size', plugin.rules['no-impossib
     ],
 });
 
-buildTypedRuleTester().run('no-impossible-collection-size', plugin.rules['no-impossible-collection-size'], {
+buildTypedRuleTester().run('no-impossible-collection-size', noImpossibleCollectionSize, {
     valid: ['declare const box: { size: number }; const isEmpty = box.size < 0;'],
     invalid: [
         {

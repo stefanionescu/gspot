@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noFloatingPointEquality } from '#eslint-plugin/rules/logic/no-floating-point-equality.ts';
 
-buildRuleTester().run('no-floating-point-equality', plugin.rules['no-floating-point-equality'], {
+buildRuleTester().run('no-floating-point-equality', noFloatingPointEquality, {
     valid: [
         'expect(total).not.toEqual(0.3);',
         'assert.strictEqual(total, 0.3);',

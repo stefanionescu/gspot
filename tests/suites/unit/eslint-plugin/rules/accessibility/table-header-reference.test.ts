@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { tableHeaderReference } from '#eslint-plugin/rules/accessibility/table-header-reference.ts';
 
-buildRuleTester().run('table-header-reference', plugin.rules['table-header-reference'], {
+buildRuleTester().run('table-header-reference', tableHeaderReference, {
     valid: [
         '<table><tr><th id="a">A</th><th id="b">B</th></tr><tr><td colSpan="2" headers="a b">1</td></tr></table>;',
         '<table>{rows}</table>;',

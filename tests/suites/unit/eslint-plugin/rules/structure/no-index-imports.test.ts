@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noIndexImports } from '#eslint-plugin/rules/structure/no-index-imports.ts';
 
-buildRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
+buildRuleTester().run('no-index-imports', noIndexImports, {
     valid: [
         "vi.requireActual('@/turn/index.js');",
         "import { a } from '@scope/package/index';",
@@ -27,7 +27,7 @@ buildRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
     ],
 });
 
-buildRuleTester().run('no-index-imports regressions', plugin.rules['no-index-imports'], {
+buildRuleTester().run('no-index-imports regressions', noIndexImports, {
     valid: [
         {
             code: "import text from './value.ts?raw&file=/index.ts';",
@@ -63,17 +63,13 @@ buildRuleTester().run('no-index-imports regressions', plugin.rules['no-index-imp
     ],
 });
 
-buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
-    'no-index-imports require calls',
-    plugin.rules['no-index-imports'],
-    {
-        valid: [],
-        invalid: [
-            {
-                code: "const a = require('./lib/index.js');",
-                filename: '/repo/src/feature/sample.cjs',
-                errors: [{ messageId: 'index' }],
-            },
-        ],
-    },
-);
+buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run('no-index-imports require calls', noIndexImports, {
+    valid: [],
+    invalid: [
+        {
+            code: "const a = require('./lib/index.js');",
+            filename: '/repo/src/feature/sample.cjs',
+            errors: [{ messageId: 'index' }],
+        },
+    ],
+});

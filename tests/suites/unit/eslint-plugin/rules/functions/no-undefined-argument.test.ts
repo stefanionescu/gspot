@@ -1,12 +1,12 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUndefinedArgument } from '#eslint-plugin/rules/functions/no-undefined-argument.ts';
 
-buildRuleTester().run('no-undefined-argument', plugin.rules['no-undefined-argument'], {
+buildRuleTester().run('no-undefined-argument', noUndefinedArgument, {
     valid: ['read(undefined);'],
     invalid: [],
 });
 
-buildTypedRuleTester().run('no-undefined-argument', plugin.rules['no-undefined-argument'], {
+buildTypedRuleTester().run('no-undefined-argument', noUndefinedArgument, {
     valid: [
         'function format(value: number, style: string | undefined) {} format(1, undefined);',
         'function format(value: number, style?: string) {} format(1);',

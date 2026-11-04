@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
+import { noEmptyTestTitles } from '#eslint-plugin/rules/testing/no-empty-test-titles.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ mocha: { devDependencies: { mocha: '11.0.0' } }, plain: {} });
 
-buildRuleTester({ root }).run('no-empty-test-titles', plugin.rules['no-empty-test-titles'], {
+buildRuleTester({ root }).run('no-empty-test-titles', noEmptyTestTitles, {
     valid: [
         { code: 'it("", run);', filename: join(root, 'plain/a.test.ts'), name: 'no test framework' },
         { code: 'it("adds", () => {});', filename: join(root, 'mocha/a.test.ts') },

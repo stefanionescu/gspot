@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { requireTestAssertions } from '#eslint-plugin/rules/assertions/require-test-assertions.ts';
 
-const rule = plugin.rules['require-test-assertions'];
+const rule = requireTestAssertions;
 const root = writePackageFolders({
     cypress: { devDependencies: { cypress: '15.0.0' } },
     jest: { devDependencies: { jest: '30.0.0' } },

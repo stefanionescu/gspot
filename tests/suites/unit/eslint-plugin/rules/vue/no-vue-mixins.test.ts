@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
+import { noVueMixins } from '#eslint-plugin/rules/vue/no-vue-mixins.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ three: { dependencies: { vue: '>=3' } }, two: { dependencies: { vue: '2.6.14' } } });
 const filename = join(root, 'three/cart.ts');
 
-buildRuleTester({ root }).run('no-vue-mixins', plugin.rules['no-vue-mixins'], {
+buildRuleTester({ root }).run('no-vue-mixins', noVueMixins, {
     valid: [
         { code: 'export default { mixins: [tracking] };', filename: join(root, 'two/cart.ts') },
         { code: 'export default { mixins: tracking };', filename },

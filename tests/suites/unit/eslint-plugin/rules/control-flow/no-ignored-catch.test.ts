@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noIgnoredCatch } from '#eslint-plugin/rules/control-flow/no-ignored-catch.ts';
 
-buildRuleTester().run('no-ignored-catch', plugin.rules['no-ignored-catch'], {
+buildRuleTester().run('no-ignored-catch', noIgnoredCatch, {
     valid: [
         'try { run(); } catch (error) {}',
         'try { retry: run(); } catch (error) {}',

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { preferMatcherAssertions } from '#eslint-plugin/rules/assertions/prefer-matcher-assertions.ts';
 
 const root = writePackageFolders({
     cypress: { devDependencies: { cypress: '15.0.0' } },
@@ -69,7 +69,7 @@ const locatorCases = [
     errors: [{ messageId: 'matcher' as const, data: { assertion } }],
 }));
 
-buildRuleTester({ root }).run('prefer-matcher-assertions', plugin.rules['prefer-matcher-assertions'], {
+buildRuleTester({ root }).run('prefer-matcher-assertions', preferMatcherAssertions, {
     valid: [
         'import { expect } from "vitest";\nexpect(value).toBe(1);',
         'import { expect } from "vitest";\nexpect(left > right).toBe(true);',

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noIncompleteAssertions } from '#eslint-plugin/rules/assertions/no-incomplete-assertions.ts';
 
-buildRuleTester().run('no-incomplete-assertions', plugin.rules['no-incomplete-assertions'], {
+buildRuleTester().run('no-incomplete-assertions', noIncompleteAssertions, {
     valid: [
         'expect(total).to.equal(3);',
         'value.should.be.ok;',

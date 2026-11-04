@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noTableAsLayout } from '#eslint-plugin/rules/accessibility/no-table-as-layout.ts';
 
-buildRuleTester().run('no-table-as-layout', plugin.rules['no-table-as-layout'], {
+buildRuleTester().run('no-table-as-layout', noTableAsLayout, {
     valid: ['const table = <table role="grid"><tr><th>Name</th></tr></table>;'],
     invalid: [
         {

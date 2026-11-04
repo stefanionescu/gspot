@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsS3BucketVersioning } from '#eslint-plugin/rules/aws/aws-s3-bucket-versioning.ts';
 
-buildRuleTester().run('aws-s3-bucket-versioning', plugin.rules['aws-s3-bucket-versioning'], {
+buildRuleTester().run('aws-s3-bucket-versioning', awsS3BucketVersioning, {
     valid: [
         "import * as s3 from 'aws-cdk-lib/aws-s3';\nnew s3.Bucket(this, 'Records', { versioned: true });",
         'new Map();',

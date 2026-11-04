@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noNestedFunctions } from '#eslint-plugin/rules/functions/no-nested-functions.ts';
 
-buildRuleTester().run('no-nested-functions', plugin.rules['no-nested-functions'], {
+buildRuleTester().run('no-nested-functions', noNestedFunctions, {
     valid: [
         'function a() { function b() { function c() { function d() { function e() {} } } } }',
         'describe("a", () => { it("b", () => { function c() { function d() { function e() { function f() { function g() {} } } } } }); });',

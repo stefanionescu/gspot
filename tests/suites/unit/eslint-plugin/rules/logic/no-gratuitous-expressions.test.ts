@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noGratuitousExpressions } from '#eslint-plugin/rules/logic/no-gratuitous-expressions.ts';
 
-buildRuleTester().run('no-gratuitous-expressions', plugin.rules['no-gratuitous-expressions'], {
+buildRuleTester().run('no-gratuitous-expressions', noGratuitousExpressions, {
     valid: [
         'function start(ready) { if (ready) { ready = check(); if (ready) run(); } }',
         'function start(ready) { if (!ready) { run(); } else if (ready) { run(); } }',

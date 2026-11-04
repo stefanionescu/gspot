@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsUnencryptedNotebooks } from '#eslint-plugin/rules/aws/aws-unencrypted-notebooks.ts';
 
-buildRuleTester().run('aws-unencrypted-notebooks', plugin.rules['aws-unencrypted-notebooks'], {
+buildRuleTester().run('aws-unencrypted-notebooks', awsUnencryptedNotebooks, {
     valid: [
         "import * as sagemaker from 'aws-cdk-lib/aws-sagemaker';\nnew sagemaker.CfnNotebookInstance(this, 'Notebook', { kmsKeyId: key.keyId });",
     ],

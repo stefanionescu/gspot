@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnusedCollection } from '#eslint-plugin/rules/collections/no-unused-collection.ts';
 
-buildRuleTester().run('no-unused-collection', plugin.rules['no-unused-collection'], {
+buildRuleTester().run('no-unused-collection', noUnusedCollection, {
     valid: [
         'function list() { const names = []; names.push("a"); return names; }',
         'function list(run) { const names = []; run(() => names.push("a")); }',

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noDuplicateInComposite } from '#eslint-plugin/rules/types/no-duplicate-in-composite.ts';
 
-buildRuleTester().run('no-duplicate-in-composite', plugin.rules['no-duplicate-in-composite'], {
+buildRuleTester().run('no-duplicate-in-composite', noDuplicateInComposite, {
     valid: ['type Id = string | number;'],
     invalid: [
         {

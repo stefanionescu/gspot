@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noComponentDebounce } from '#eslint-plugin/rules/react/no-component-debounce.ts';
 
-buildRuleTester().run('no-component-debounce', plugin.rules['no-component-debounce'], {
+buildRuleTester().run('no-component-debounce', noComponentDebounce, {
     valid: [
         'import { debounce } from "lodash";\nconst onChange = debounce(search, 300);',
         'import { debounce } from "lodash";\nfunction search() { return debounce(load, 300); }',

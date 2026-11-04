@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noProductionDebug } from '#eslint-plugin/rules/servers/no-production-debug.ts';
 
-buildRuleTester().run('no-production-debug', plugin.rules['no-production-debug'], {
+buildRuleTester().run('no-production-debug', noProductionDebug, {
     valid: [
         "import errorhandler from 'errorhandler';\nif (process.env.NODE_ENV === 'development') app.use(errorhandler());",
         'app.use(logger());',

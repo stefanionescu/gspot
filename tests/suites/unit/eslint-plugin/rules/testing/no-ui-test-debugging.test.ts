@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUiTestDebugging } from '#eslint-plugin/rules/testing/no-ui-test-debugging.ts';
 
-buildRuleTester().run('no-ui-test-debugging', plugin.rules['no-ui-test-debugging'], {
+buildRuleTester().run('no-ui-test-debugging', noUiTestDebugging, {
     valid: [
         { code: 'cy.pause();', filename: 'page.ts' },
         { code: 'cy.get("button").click();', filename: 'page.cy.ts' },

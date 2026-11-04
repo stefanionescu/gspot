@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noRedundantBoolean } from '#eslint-plugin/rules/logic/no-redundant-boolean.ts';
 
-buildRuleTester().run('no-redundant-boolean', plugin.rules['no-redundant-boolean'], {
+buildRuleTester().run('no-redundant-boolean', noRedundantBoolean, {
     valid: [
         'value === true;',
         'value == "true";',

@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noDuplicatedBranches } from '#eslint-plugin/rules/control-flow/no-duplicated-branches.ts';
 
-buildRuleTester().run('no-duplicated-branches', plugin.rules['no-duplicated-branches'], {
+buildRuleTester().run('no-duplicated-branches', noDuplicatedBranches, {
     valid: [
         'if (first) { run(); } else if (second) { run(); } else { stop(); }',
         'switch (mode) { case 1: { run(); } break; case 2: run(); break; }',

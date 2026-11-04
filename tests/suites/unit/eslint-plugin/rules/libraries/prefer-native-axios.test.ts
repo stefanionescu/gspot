@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferNativeAxios } from '#eslint-plugin/rules/libraries/prefer-native-axios.ts';
 
-buildRuleTester().run('prefer-native-axios', plugin.rules['prefer-native-axios'], {
+buildRuleTester().run('prefer-native-axios', preferNativeAxios, {
     valid: [
         'import axios from "axios";\nawait Promise.all([axios.get(first), axios.get(second)]);',
         'import axios from "axios";\nawait axios.get(url, { signal: controller.signal });',

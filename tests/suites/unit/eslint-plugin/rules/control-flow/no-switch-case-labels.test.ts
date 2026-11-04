@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSwitchCaseLabels } from '#eslint-plugin/rules/control-flow/no-switch-case-labels.ts';
 
-buildRuleTester().run('no-switch-case-labels', plugin.rules['no-switch-case-labels'], {
+buildRuleTester().run('no-switch-case-labels', noSwitchCaseLabels, {
     valid: [
         'retry: while (ready) run();',
         'switch (value) { case 1: function repeat() { retry: while (ready) run(); } }',

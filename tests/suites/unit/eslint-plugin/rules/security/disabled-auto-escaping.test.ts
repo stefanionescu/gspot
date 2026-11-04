@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { disabledAutoEscaping } from '#eslint-plugin/rules/security/disabled-auto-escaping.ts';
 
-buildRuleTester().run('disabled-auto-escaping', plugin.rules['disabled-auto-escaping'], {
+buildRuleTester().run('disabled-auto-escaping', disabledAutoEscaping, {
     valid: [
         "import Handlebars from 'handlebars';\nHandlebars.compile(source);",
         "import Mustache from 'mustache';\nMustache.escape = (text) => escapeHtml(text);",

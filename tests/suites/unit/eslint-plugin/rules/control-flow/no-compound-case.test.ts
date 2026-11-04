@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCompoundCase } from '#eslint-plugin/rules/control-flow/no-compound-case.ts';
 
-buildRuleTester().run('no-compound-case', plugin.rules['no-compound-case'], {
+buildRuleTester().run('no-compound-case', noCompoundCase, {
     valid: [
         'switch (value) { case 1: case 2: break; default: break; }',
         'switch (true) { case first || second: break; }',

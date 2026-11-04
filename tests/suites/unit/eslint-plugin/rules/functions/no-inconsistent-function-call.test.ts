@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInconsistentFunctionCall } from '#eslint-plugin/rules/functions/no-inconsistent-function-call.ts';
 
-buildRuleTester().run('no-inconsistent-function-call', plugin.rules['no-inconsistent-function-call'], {
+buildRuleTester().run('no-inconsistent-function-call', noInconsistentFunctionCall, {
     valid: [
         'function Point() {} new Point(); new Point();',
         'new Date(); Date();',

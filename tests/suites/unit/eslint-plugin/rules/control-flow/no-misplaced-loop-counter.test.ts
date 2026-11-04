@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noMisplacedLoopCounter } from '#eslint-plugin/rules/control-flow/no-misplaced-loop-counter.ts';
 
-buildRuleTester().run('no-misplaced-loop-counter', plugin.rules['no-misplaced-loop-counter'], {
+buildRuleTester().run('no-misplaced-loop-counter', noMisplacedLoopCounter, {
     valid: [
         'for (let index = 0; index < items.length; index++) {}',
         'for (let row = 0, column = 0; row < 9; column++, row++) {}',

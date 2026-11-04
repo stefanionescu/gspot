@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { maxRequestSize } from '#eslint-plugin/rules/servers/max-request-size.ts';
 
-buildRuleTester().run('max-request-size', plugin.rules['max-request-size'], {
+buildRuleTester().run('max-request-size', maxRequestSize, {
     valid: [
         'settings.size = 1;',
         'let size;\nsize = 1;',

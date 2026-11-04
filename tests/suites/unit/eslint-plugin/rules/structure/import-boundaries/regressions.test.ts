@@ -1,10 +1,10 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { ImportBoundariesOptions } from '#eslint-plugin/types/structure.ts';
+import { importBoundaries } from '#eslint-plugin/rules/structure/import-boundaries.ts';
 
 buildRuleTester().run<'alias' | 'escape', [Partial<ImportBoundariesOptions[0]>]>(
     'import-boundaries regressions',
-    plugin.rules['import-boundaries'],
+    importBoundaries,
     {
         valid: [
             {
@@ -122,7 +122,7 @@ buildRuleTester().run<'alias' | 'escape', [Partial<ImportBoundariesOptions[0]>]>
 buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run<
     'alias' | 'escape',
     [Partial<ImportBoundariesOptions[0]>]
->('import-boundaries require calls', plugin.rules['import-boundaries'], {
+>('import-boundaries require calls', importBoundaries, {
     valid: [],
     invalid: [
         {

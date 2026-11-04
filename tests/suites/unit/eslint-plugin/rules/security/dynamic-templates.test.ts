@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { dynamicTemplates } from '#eslint-plugin/rules/security/dynamic-templates.ts';
 
-buildRuleTester().run('dynamic-templates', plugin.rules['dynamic-templates'], {
+buildRuleTester().run('dynamic-templates', dynamicTemplates, {
     valid: [
         "import pug from 'pug';\npug.render('p Hello #{name}', { name });",
         "import ejs from 'ejs';\nconst render = ejs.compile('<p><%= name %></p>');\nrender({ name });",

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import plugin from '#eslint-plugin/plugin.ts';
+import { noEmptyTestTable } from '#eslint-plugin/rules/testing/no-empty-test-table.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ jest: { devDependencies: { jest: '30.0.0' } }, plain: {} });
 const filename = join(root, 'jest/a.test.ts');
 
-buildRuleTester({ root }).run('no-empty-test-table', plugin.rules['no-empty-test-table'], {
+buildRuleTester({ root }).run('no-empty-test-table', noEmptyTestTable, {
     valid: [
         { code: 'test.each([])("adds %d", () => {});', filename: join(root, 'plain/a.test.ts') },
         { code: 'test.each([1])("adds %d", () => {});', filename },

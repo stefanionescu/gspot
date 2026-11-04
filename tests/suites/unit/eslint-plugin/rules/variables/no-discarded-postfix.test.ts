@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noDiscardedPostfix } from '#eslint-plugin/rules/variables/no-discarded-postfix.ts';
 
-buildRuleTester().run('no-discarded-postfix', plugin.rules['no-discarded-postfix'], {
+buildRuleTester().run('no-discarded-postfix', noDiscardedPostfix, {
     valid: [
         'function read(value) { return ++value; }',
         'function read(value) { return value.count++; }',

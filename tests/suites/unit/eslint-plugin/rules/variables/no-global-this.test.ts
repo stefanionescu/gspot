@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noGlobalThis } from '#eslint-plugin/rules/variables/no-global-this.ts';
 
-buildRuleTester().run('no-global-this', plugin.rules['no-global-this'], {
+buildRuleTester().run('no-global-this', noGlobalThis, {
     valid: [
         'this;',
         'globalThis.name;',
@@ -11,14 +11,10 @@ buildRuleTester().run('no-global-this', plugin.rules['no-global-this'], {
     invalid: [{ code: 'this.name;', errors: [{ messageId: 'this' }] }],
 });
 
-buildRuleTester({ languageOptions: { sourceType: 'script' } }).run(
-    'no-global-this-script',
-    plugin.rules['no-global-this'],
-    {
-        valid: [],
-        invalid: [
-            { code: 'this.name;', errors: [{ messageId: 'this' }] },
-            { code: '"use strict"; this.name;', errors: [{ messageId: 'this' }] },
-        ],
-    },
-);
+buildRuleTester({ languageOptions: { sourceType: 'script' } }).run('no-global-this-script', noGlobalThis, {
+    valid: [],
+    invalid: [
+        { code: 'this.name;', errors: [{ messageId: 'this' }] },
+        { code: '"use strict"; this.name;', errors: [{ messageId: 'this' }] },
+    ],
+});

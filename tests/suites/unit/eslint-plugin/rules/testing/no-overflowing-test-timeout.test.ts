@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noOverflowingTestTimeout } from '#eslint-plugin/rules/testing/no-overflowing-test-timeout.ts';
 
-buildRuleTester().run('no-overflowing-test-timeout', plugin.rules['no-overflowing-test-timeout'], {
+buildRuleTester().run('no-overflowing-test-timeout', noOverflowingTestTimeout, {
     valid: [
         'describe("cart", function () { this.timeout(3000000000); });',
         'import { expect } from "chai";\ndescribe("cart", function () { this.timeout(0); });',

@@ -1,12 +1,12 @@
-import plugin from '#eslint-plugin/plugin.ts';
+import { noIgnoredReturn } from '#eslint-plugin/rules/functions/no-ignored-return.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-buildRuleTester().run('no-ignored-return', plugin.rules['no-ignored-return'], {
+buildRuleTester().run('no-ignored-return', noIgnoredReturn, {
     valid: ['read(undefined);'],
     invalid: [],
 });
 
-buildTypedRuleTester().run('no-ignored-return', plugin.rules['no-ignored-return'], {
+buildTypedRuleTester().run('no-ignored-return', noIgnoredReturn, {
     valid: [
         'declare const names: string[]; names.push("a");',
         'declare const title: string; title.replace("a", () => { count(); return ""; });',

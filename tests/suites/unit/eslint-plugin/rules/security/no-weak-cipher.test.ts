@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noWeakCipher } from '#eslint-plugin/rules/security/no-weak-cipher.ts';
 
-buildRuleTester().run('no-weak-cipher', plugin.rules['no-weak-cipher'], {
+buildRuleTester().run('no-weak-cipher', noWeakCipher, {
     valid: [
         "import crypto from 'crypto';\ncrypto.createCipheriv('aes-256-gcm', key, iv);",
         "cipher.createCipheriv('des', key, iv);",

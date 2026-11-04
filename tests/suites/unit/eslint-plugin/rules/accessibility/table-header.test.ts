@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { tableHeader } from '#eslint-plugin/rules/accessibility/table-header.ts';
 
-buildRuleTester().run('table-header', plugin.rules['table-header'], {
+buildRuleTester().run('table-header', tableHeader, {
     valid: [
         'const table = <table><tr><th>Name</th></tr><tr><td>Ada</td></tr></table>;',
         'const table = <table>{rows}</table>;',

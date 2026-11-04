@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUpdatedLoopCounter } from '#eslint-plugin/rules/control-flow/no-updated-loop-counter.ts';
 
-buildRuleTester().run('no-updated-loop-counter', plugin.rules['no-updated-loop-counter'], {
+buildRuleTester().run('no-updated-loop-counter', noUpdatedLoopCounter, {
     valid: [
         'for (let index = 0; index < 10; index++) { index += 2; }',
         'for (let index = 0; index < 10; index++) { index++; }',

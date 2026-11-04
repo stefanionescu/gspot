@@ -1,7 +1,7 @@
-import plugin from '#eslint-plugin/plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { hardcodedSecretSignatures } from '#eslint-plugin/rules/security/hardcoded-secret-signatures.ts';
 
-buildRuleTester().run('hardcoded-secret-signatures', plugin.rules['hardcoded-secret-signatures'], {
+buildRuleTester().run('hardcoded-secret-signatures', hardcodedSecretSignatures, {
     valid: [
         "import jwt from 'jsonwebtoken';\njwt.sign(claims, process.env.JWT_SECRET);",
         "import crypto from 'crypto';\ncrypto.createHmac('sha256', 'changeme-in-production');",
