@@ -27,8 +27,8 @@ export const CHECK_NEEDS_LABELS = {
 } as const;
 
 export const LEVEL_ADVICE = {
-    basic: 'Choose it for an existing codebase or a first run, where a false positive costs the most.',
-    all: 'Choose it for a new repository or one that coding agents write, where the code can follow the taste rules from the start.',
+    basic: 'Choose it for an existing codebase or a first try, where a wrong finding on correct code costs the most.',
+    all: 'Choose it for a new repository or one that coding agents write, where the code can follow the strict style rules from the start.',
 } as const;
 
 export const REFERENCE_PATH = new URL(DOCS_PATHS.reference).pathname;
