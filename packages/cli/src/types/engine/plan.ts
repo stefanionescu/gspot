@@ -1,11 +1,13 @@
+import type { z } from 'zod';
 import type { RunCache } from '#cli/types/system.ts';
-import type { STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
+import type { checkStateSchema } from '#cli/schemas/engine.ts';
+import type { SKIP_CAUSES, STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { Host, Session, ScopeCheck, SessionBase } from '#cli/types/tools.ts';
 import type { Scope, Defined, Settings, TableValues } from '#cli/types/settings.ts';
 import type { TrackedFile, UntrackedFiles, RepositoryListing } from '#cli/types/repository.ts';
 
-export type SkipCause = 'level' | 'system' | 'replaced' | 'setting' | 'condition' | 'ignore';
+export type SkipCause = (typeof SKIP_CAUSES)[number];
 
 export type Skip = { cause: SkipCause; note: string };
 
@@ -21,7 +23,7 @@ export type RunSelection = {
     unstagedChanges?: number | undefined;
 };
 
-export type CheckState = { status: 'on' } | { status: 'skipped'; cause: SkipCause | 'no-files' };
+export type CheckState = z.infer<typeof checkStateSchema>;
 
 export type PlanOptions = {
     stage: StageFilter | 'any';

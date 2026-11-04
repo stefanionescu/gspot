@@ -8,7 +8,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -16,6 +15,7 @@ import { TOOLS_CHANGED_NOTE } from '#tests/config/commands/edits.ts';
 import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commandFieldsSchema, changedEditReportSchema } from '#cli/schemas/commands.ts';
 
 test('remove deletes settings that only the removed configuration exposes and names the deleted keys', async () => {
     await using sandbox = await createGitSandbox({
@@ -66,10 +66,14 @@ test('remove notes the package.json keys that stay after css goes, and bash adds
     const reason = 'The front end moved to another repository.';
     const css = await runGspot(sandbox.path, ['remove', 'css', '--reason', reason, '--json']);
     expect(css.code, css.stdout + css.stderr).toBe(0);
-    expect((JSON.parse(css.stdout) as ApplyReport).notes).toContain(MANAGED_KEYS_NOTE);
+    expect(changedEditReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(css.stdout)).notes).toContain(
+        MANAGED_KEYS_NOTE,
+    );
     const bash = await runGspot(sandbox.path, ['remove', 'bash', '--reason', reason, '--json']);
     expect(bash.code, bash.stdout + bash.stderr).toBe(0);
-    expect((JSON.parse(bash.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
+    expect(
+        changedEditReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(bash.stdout)).notes,
+    ).not.toContain(MANAGED_KEYS_NOTE);
 });
 
 test('remove after add says nothing about tools once the tool lockfiles match again', async () => {
@@ -82,7 +86,9 @@ test('remove after add says nothing about tools once the tool lockfiles match ag
     await createFileTree(sandbox.path, buildToolLockfiles(session.toolConfigurations));
     const added = await runGspot(sandbox.path, ['add', 'bash', '--json']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    expect((JSON.parse(added.stdout) as ApplyReport).notes).toStrictEqual([TOOLS_CHANGED_NOTE]);
+    expect(
+        changedEditReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(added.stdout)).notes,
+    ).toStrictEqual([TOOLS_CHANGED_NOTE]);
     const removed = await runGspot(sandbox.path, [
         'remove',
         'bash',
@@ -91,5 +97,7 @@ test('remove after add says nothing about tools once the tool lockfiles match ag
         '--json',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect((JSON.parse(removed.stdout) as ApplyReport).notes).toStrictEqual([]);
+    expect(
+        changedEditReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(removed.stdout)).notes,
+    ).toStrictEqual([]);
 });

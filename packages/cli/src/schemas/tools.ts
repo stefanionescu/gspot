@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TOOL_STATES } from '#cli/config/tools/programs.ts';
 import { npmLockfileSchema, bunLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers.ts';
 
 const miseVersionSchema = z.looseObject({ version: z.string() });
@@ -72,4 +73,22 @@ const installedRuleSchema = z.object({ description: z.string().optional() });
 
 export const installedRulesSchema = z.object({
     properties: z.record(z.string(), installedRuleSchema),
+});
+
+export const toolInspectionSchema = z.strictObject({
+    name: z.string(),
+    state: z.enum(TOOL_STATES),
+    want: z.string().optional(),
+    found: z.string().optional(),
+    path: z.string().optional(),
+    help: z.string().optional(),
+    note: z.string().optional(),
+    minimumVersion: z.string().optional(),
+});
+
+export const hookStatusSchema = z.strictObject({
+    ready: z.boolean(),
+    text: z.string(),
+    tool: z.string().optional(),
+    lines: z.string().array().optional(),
 });

@@ -6,7 +6,6 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import type { InstallCommandJson } from '#cli/types/commands/edits.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -16,6 +15,7 @@ import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_MANAGER_CASES, PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/commands.ts';
@@ -26,6 +26,8 @@ import {
     NPM_REGISTRY_TOKEN,
     AUTHENTICATION_REQUIRED_MESSAGE,
 } from '#tests/config/setup/sandboxes.ts';
+
+const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s: a write of the generated files keeps a stale lockfile and install repairs it',
@@ -142,7 +144,7 @@ test.concurrent.each([...PACKAGE_MANAGER_CASES])(
         expect(await readFile(readmePath, 'utf8')).toBe('authored later');
         const readyTools = ['prettier', 'editorconfig-checker'];
         const diagnosed = await spawnGspot(root, ['doctor', '--json']);
-        const report = JSON.parse(diagnosed.stdout) as DoctorReport;
+        const report = doctorOutputSchema.parse(JSON.parse(diagnosed.stdout));
         expect(readyTools.map((name) => report.tools.find((tool) => tool.name === name)?.state)).toStrictEqual(
             readyTools.map(() => 'ok'),
         );
@@ -181,7 +183,8 @@ test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'packag
         }
         const diagnosed = await spawnGspot(clone, ['doctor', '--json']);
         expect(
-            (JSON.parse(diagnosed.stdout) as DoctorReport).tools.find((tool) => tool.name === 'prettier')?.state,
+            doctorOutputSchema.parse(JSON.parse(diagnosed.stdout)).tools.find((tool) => tool.name === 'prettier')
+                ?.state,
         ).toBe('ok');
     },
 );

@@ -10,7 +10,6 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
-import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -19,7 +18,10 @@ import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getTool, findPackagePin, listDistinctTools } from '#cli/tools/pins.ts';
+import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { fakeCommands, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+
+const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 function selectExecutableFolder(tool: Tool): string {
     const installation = findPackagePin(tool);
@@ -74,7 +76,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
         resources.use(fakeToolExecutables(tools));
         const result = await runGspot(sandbox.path, ['doctor', '--json']);
         expect(result.code, result.stdout + result.stderr).not.toBe(2);
-        const report = JSON.parse(result.stdout) as DoctorReport;
+        const report = doctorOutputSchema.parse(JSON.parse(result.stdout));
         expect(report.tools.find((tool) => tool.name === pin.name)).toMatchObject({ state, found: version });
         expect(result.code).toBe(state === 'outdated' ? 1 : 0);
     },
@@ -91,7 +93,7 @@ test.each([
     resources.use(fakeToolExecutables(listDistinctTools(session.toolConfigurations)));
     using _taplo = fakeCommands('taplo', () => Promise.resolve(buildProcessResult(result)));
     const report = await runGspot(sandbox.path, ['doctor', '--json']);
-    const tools = (JSON.parse(report.stdout) as DoctorReport).tools;
+    const tools = doctorOutputSchema.parse(JSON.parse(report.stdout)).tools;
     expect(tools.find(({ name }) => name === 'taplo')).toMatchObject({ state });
     const printed = await runGspot(sandbox.path, ['doctor']);
     expect(printed.stdout).toContain(row);
@@ -106,7 +108,7 @@ test('doctor lists a tool once when two scopes find the same install', async () 
 
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code, result.stdout + result.stderr).not.toBe(2);
-    const report = JSON.parse(result.stdout) as DoctorReport;
+    const report = doctorOutputSchema.parse(JSON.parse(result.stdout));
     expect(report.tools.filter(({ name }) => name === 'eslint-plugin-zod')).toStrictEqual([
         {
             name: 'eslint-plugin-zod',
@@ -147,7 +149,9 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         path: join(programs.path, 'pytest'),
         help: 'Install pytest-cov in the Python environment used by pytest.',
     };
-    expect((JSON.parse(missing.stdout) as DoctorReport).tools.find(({ name }) => name === 'pytest-cov')).toStrictEqual({
+    expect(
+        doctorOutputSchema.parse(JSON.parse(missing.stdout)).tools.find(({ name }) => name === 'pytest-cov'),
+    ).toStrictEqual({
         ...pytestCov,
         state: 'missing',
         note: 'The version command of the host tool does not list pytest-cov.',
@@ -155,7 +159,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     isPresent = true;
     const available = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(
-        (JSON.parse(available.stdout) as DoctorReport).tools.find(({ name }) => name === 'pytest-cov'),
+        doctorOutputSchema.parse(JSON.parse(available.stdout)).tools.find(({ name }) => name === 'pytest-cov'),
     ).toStrictEqual({ ...pytestCov, state: 'system', found: '7.1.0' });
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
@@ -165,7 +169,9 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         }),
     );
     const zero = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(zero.stdout) as DoctorReport).tools.map((tool) => tool.name)).not.toContain('pytest-cov');
+    expect(doctorOutputSchema.parse(JSON.parse(zero.stdout)).tools.map((tool) => tool.name)).not.toContain(
+        'pytest-cov',
+    );
 });
 
 test('doctor and gspot check report a missing xmllint with its install command', async () => {
@@ -193,7 +199,9 @@ test('doctor and gspot check report a missing xmllint with its install command',
     };
     const doctor = await runGspot(root, ['doctor', '--json'], environment);
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
-    expect((JSON.parse(doctor.stdout) as DoctorReport).tools.find(({ name }) => name === 'xmllint')).toStrictEqual({
+    expect(
+        doctorOutputSchema.parse(JSON.parse(doctor.stdout)).tools.find(({ name }) => name === 'xmllint'),
+    ).toStrictEqual({
         name: 'xmllint',
         kind: 'program',
         state: 'missing',
@@ -223,7 +231,7 @@ test('doctor --json reports every field when the required tools are missing', as
     using _lookup = fakeExecutableLookup(null);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(1);
-    const report = JSON.parse(result.stdout) as DoctorReport;
+    const report = doctorOutputSchema.parse(JSON.parse(result.stdout));
     expect(report.tools.filter(({ state }) => state !== 'missing')).toStrictEqual([]);
     const prettier = String(getTool(readConfigurations().values(), 'prettier').version);
     const taplo = String(getTool(readConfigurations().values(), 'taplo').version);
@@ -260,7 +268,7 @@ test('doctor reports a missing project environment of a Python scope and exits 1
     });
     const diagnosed = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(diagnosed.code, diagnosed.stdout + diagnosed.stderr).toBe(1);
-    expect((JSON.parse(diagnosed.stdout) as DoctorReport).environments).toStrictEqual(['.venv']);
+    expect(doctorOutputSchema.parse(JSON.parse(diagnosed.stdout)).environments).toStrictEqual(['.venv']);
 });
 
 test.each([
@@ -277,7 +285,7 @@ test.each([
     });
     using _lookup = fakeExecutableLookup(null);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    const report = JSON.parse(result.stdout) as DoctorReport;
+    const report = doctorOutputSchema.parse(JSON.parse(result.stdout));
     const names = report.tools.map(({ name }) => name).filter((name) => ['swift', 'xcodebuild'].includes(name));
     expect(names).toStrictEqual([...tools]);
 });

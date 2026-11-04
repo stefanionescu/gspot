@@ -12,12 +12,12 @@ import { createFileTree, type TestdirResult } from 'testdirs';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import type { InstallCommandJson } from '#cli/types/commands/edits.ts';
 import { FAILED_NPM_VERSION } from '#tests/config/commands/reports.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { installReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 
 async function createMarkdownSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({
@@ -100,14 +100,14 @@ test('install writes the generated files, exits 1, and names the tools that stay
     using _commands = fakeCommands(undefined, () => Promise.resolve(buildProcessResult({ stdout: '1.4.2\n' })));
     const result = await runGspot(sandbox.path, ['install', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout) as InstallCommandJson;
+    const report = installReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(result.stdout));
     expect(report.missing[0]).toStartWith('Install mise, or install these tools yourself: ');
     expect(report.missing[0]).toContain('shfmt');
     const shellcheck = getManifestTarget('bash', 'shellcheckrc');
     expect(report.written).toContain(shellcheck);
     expect(existsSync(join(sandbox.path, shellcheck))).toBe(true);
     const repeated = await runGspot(sandbox.path, ['install', '--json']);
-    const repeatedReport = JSON.parse(repeated.stdout) as InstallCommandJson;
+    const repeatedReport = installReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(repeated.stdout));
     expect(repeatedReport.written).toStrictEqual([]);
     expect(repeatedReport.unchanged).toContain(shellcheck);
 });

@@ -74,3 +74,11 @@ export const printedRulesSchema = z.looseObject({ rules: z.record(z.string(), z.
 export const ruffProjectSchema = z.looseObject({
     tool: z.looseObject({ ruff: ruffOptionsSchema.optional() }).optional(),
 });
+
+export const generatedFilesSchema = z.strictObject({
+    written: z.string().array(),
+    unchanged: z.string().array(),
+    deleted: z.string().array(),
+    updated: z.string().array(),
+    notes: z.string().array(),
+});

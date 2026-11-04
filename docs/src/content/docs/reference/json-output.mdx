@@ -185,7 +185,7 @@ Each item of `checks` has `check`, `scope`, and `status`: `on`, or `skipped` wit
 | ---------- | --------------------------- |
 | `settings` | Each setting of each scope. |
 
-Each item has `setting`, `value`, `source`, `reasonWhen`, and `scope`. `source` says where the value comes from, with
+Each item has `setting`, `source`, and `scope`, and `value` when a default or `gspot.toml` gives one. `source` says where the value comes from, with
 `kind` and `name`: `default` and `gspot`, `configuration` and its name, `root` and `gspot.toml`, `scope` and the path of
 the scope that sets it, or `unset`. `reasonWhen` holds the change that needs a reason, when one does.
 

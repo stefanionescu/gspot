@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 
 test('doctor and gspot check both report the missing program of a command check', async () => {
     const program = 'node_modules/.bin/link-checker';
@@ -16,7 +16,12 @@ test('doctor and gspot check both report the missing program of a command check'
     });
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
-    expect((JSON.parse(doctor.stdout) as DoctorReport).tools.find(({ name }) => name === program)).toMatchObject({
+    expect(
+        doctorReportSchema
+            .extend(commandFieldsSchema.shape)
+            .parse(JSON.parse(doctor.stdout))
+            .tools.find(({ name }) => name === program),
+    ).toMatchObject({
         name: program,
         kind: 'program',
         state: 'missing',

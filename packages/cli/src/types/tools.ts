@@ -7,12 +7,6 @@ import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import type { Files, RunCache, CancelableSpawnOptions } from '#cli/types/system.ts';
 
 import type {
-    bunPackageSchema,
-    lintRuleDocsSchema,
-    miseLockfileSchema,
-    uvProjectSettingsSchema,
-} from '#cli/schemas/tools.ts';
-import type {
     Repository,
     ManagedKeys,
     StartRunner,
@@ -20,6 +14,14 @@ import type {
     PackageManagerPin,
     PackageManagerCommand,
 } from '#cli/types/repository.ts';
+import type {
+    bunPackageSchema,
+    hookStatusSchema,
+    lintRuleDocsSchema,
+    miseLockfileSchema,
+    toolInspectionSchema,
+    uvProjectSettingsSchema,
+} from '#cli/schemas/tools.ts';
 
 export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: string };
 
@@ -91,8 +93,6 @@ export type SessionBase = {
     scopes: Scope[];
 };
 
-type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'system' | 'error';
-
 export type InspectedTool = {
     timeoutSeconds: number;
     root: string;
@@ -105,16 +105,7 @@ export type InspectedTool = {
     runsVersionCommand: boolean | undefined;
 };
 
-export type ToolInspection = {
-    name: string;
-    state: ToolState;
-    want?: string | undefined;
-    found?: string | undefined;
-    path?: string | undefined;
-    help?: string | undefined;
-    note?: string | undefined;
-    minimumVersion?: string | undefined;
-};
+export type ToolInspection = z.infer<typeof toolInspectionSchema>;
 
 export type ToolSearch = {
     settings: Pick<Settings, 'tool_timeout_seconds'>;
@@ -150,7 +141,7 @@ export type ArchiveDownload = {
     limit: number;
 };
 
-export type HookStatus = { ready: boolean; text: string; tool?: string; lines?: string[] };
+export type HookStatus = z.infer<typeof hookStatusSchema>;
 
 export type HookPlan = { command?: readonly string[]; note: string };
 

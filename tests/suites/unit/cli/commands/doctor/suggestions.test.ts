@@ -6,13 +6,15 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES } from '#tests/config/commands/reports.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
+
+const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 async function listDetectedNames(root: string): Promise<Array<string | undefined>> {
     const findings = await runSandboxCheck(root, 'gspot/detected-configurations');
@@ -41,7 +43,7 @@ test.each([
     });
 
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.suggested).toStrictEqual([...suggested]);
+    expect(doctorOutputSchema.parse(JSON.parse(result.stdout)).suggestions.suggested).toStrictEqual([...suggested]);
 });
 
 test('doctor suggests gspot set level all for a commitlint field in package.json at level basic', async () => {
@@ -51,7 +53,7 @@ test('doctor suggests gspot set level all for a commitlint field in package.json
     });
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.unowned).toStrictEqual([
+    expect(doctorOutputSchema.parse(JSON.parse(result.stdout)).suggestions.unowned).toStrictEqual([
         {
             path: 'package.json',
             note: 'no applicable commitlint check at level basic',
@@ -73,7 +75,7 @@ test('doctor recognizes managed Stylelint fields in every selected scope', async
 
     await applyGeneratedFiles(sandbox.path);
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
-    const { suggestions } = JSON.parse(doctor.stdout) as DoctorReport;
+    const { suggestions } = doctorOutputSchema.parse(JSON.parse(doctor.stdout));
     expect(suggestions.unowned).toStrictEqual([]);
     for (const [path, target] of [
         ['package.json', './.stylelintrc.yml'],
@@ -117,7 +119,7 @@ test('doctor detects installed test frameworks and suggests no other runner', as
         'src/server.ts': 'export const port = 3000;\n',
     });
     const afterResult = await runGspot(sandbox.path, ['doctor', '--json']);
-    const after = JSON.parse(afterResult.stdout) as DoctorReport;
+    const after = doctorOutputSchema.parse(JSON.parse(afterResult.stdout));
     expect(after.suggestions.suggested).toStrictEqual([]);
     expect(await listDetectedNames(sandbox.path)).toStrictEqual(['jest']);
     await writeFile(
@@ -142,21 +144,23 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
         'sibling/service.py': 'print("sibling")\n',
     });
     const present = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(present.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([]);
+    expect(doctorOutputSchema.parse(JSON.parse(present.stdout)).suggestions.undetected).toStrictEqual([]);
     await rm(join(sandbox.path, 'entry.sh'));
     await rm(join(sandbox.path, 'api app/service.py'));
     const before = await readTree(sandbox.path);
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([...REMOVE_SUGGESTIONS]);
+    expect(doctorOutputSchema.parse(JSON.parse(missing.stdout)).suggestions.undetected).toStrictEqual([
+        ...REMOVE_SUGGESTIONS,
+    ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     await writeFile(join(sandbox.path, 'entry.sh'), 'echo ready\n');
     await writeFile(join(sandbox.path, 'api app/service.py'), 'print("ready")\n');
     const restored = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(restored.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([]);
-    const suggestion = (JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected.find(
-        ({ configuration }) => configuration === 'bash',
-    )!;
+    expect(doctorOutputSchema.parse(JSON.parse(restored.stdout)).suggestions.undetected).toStrictEqual([]);
+    const suggestion = doctorOutputSchema
+        .parse(JSON.parse(missing.stdout))
+        .suggestions.undetected.find(({ configuration }) => configuration === 'bash')!;
     const command = suggestion.command.split(' ').slice(1);
     command[command.length - 1] = 'The project no longer uses this language.';
     const removed = await runGspot(sandbox.path, command);

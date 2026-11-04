@@ -70,6 +70,8 @@ export const SHIPPED_DEFAULT_ORIGIN = 'gspot default';
 
 export const SHIPPED_DEFAULT_OWNER = 'gspot';
 
+export const SETTING_ORIGIN_KINDS = ['default', 'configuration', 'root', 'scope', 'unset'] as const;
+
 export const NAMING_TABLE_CATEGORIES = [
     'files',
     'folders',

@@ -9,6 +9,7 @@ import type { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import type { LEVELS, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import type { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import type { Check, Setting, Configuration, ReasonRequirement } from '#cli/types/manifests.ts';
+import type { settingOriginSchema, removedConfigurationSchema } from '#cli/schemas/settings/fields.ts';
 import type { LEFT_OUT_NOTES, IMPORT_EXTENSION_STYLES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 
 export type Level = (typeof LEVELS)[number];
@@ -65,7 +66,7 @@ export type EditedSettings = { text: string; settings: Settings; changed: boolea
 
 export type SettingKey = { path: string[]; name: string };
 
-export type RemovedConfiguration = { name: string; scope: string; reason: string };
+export type RemovedConfiguration = z.infer<typeof removedConfigurationSchema>;
 
 export type SelectedConfigurations = Pick<ParsedSettings, 'configurations' | 'removed_configurations'> & {
     scopes: Map<string, Pick<ParsedSettings, 'configurations' | 'removed_configurations'>>;
@@ -96,7 +97,7 @@ export type InheritedSetting = {
     origin: SettingOrigin;
 };
 
-export type SettingOrigin = { kind: 'default' | 'configuration' | 'root' | 'scope' | 'unset'; name: string };
+export type SettingOrigin = z.infer<typeof settingOriginSchema>;
 
 export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin'> & {
     reason: string | undefined;

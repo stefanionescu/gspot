@@ -8,6 +8,8 @@ export const MISE_INSTALL_URL = 'https://mise.jdx.dev/getting-started.html';
 
 export const AVAILABLE_TOOL_STATES: ReadonlySet<string> = new Set(['ok', 'system', 'newer']);
 
+export const TOOL_STATES = ['ok', 'outdated', 'newer', 'missing', 'system', 'error'] as const;
+
 export const INSTALL_HELP = 'Run gspot install.';
 
 export const MISE_LAUNCHER_FOLDER = 'shims';

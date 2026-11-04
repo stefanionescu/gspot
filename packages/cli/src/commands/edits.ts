@@ -38,6 +38,7 @@ import {
 import type {
     CommandOption,
     IgnoreEditContext,
+    SettingsEditReport,
     SettingsEditOptions,
     ConfigurationChange,
     SettingsEditContext,
@@ -272,7 +273,7 @@ Build the result of an edit that leaves gspot.toml and the generated files uncha
 export function buildUnchangedResult(
     summary: string,
     notes: string[] = [],
-): CommandResult<{ changed: false; summary: string }> {
+): CommandResult<{ changed: false; summary: string; notes: string[] }> {
     const noteLines = notes.map((note) => `note     ${note}\n`);
     return { text: `${summary}\n${noteLines.join('')}`, json: { changed: false, summary, notes }, exitCode: 0 };
 }
@@ -286,7 +287,7 @@ Edit settings, check them, and write them and their generated files. Installs no
 export async function writeSettingsEdit(
     root: string,
     options: SettingsEditOptions,
-): Promise<CommandResult<(ApplyReport & { changed: boolean; summary: string }) | { changed: false; summary: string }>> {
+): Promise<CommandResult<SettingsEditReport>> {
     const { edit, summary } = options;
     const writer = openFiles(root);
     const result = buildEditedSettings(root, edit);

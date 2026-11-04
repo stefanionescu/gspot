@@ -7,9 +7,9 @@ import type { OwnedConfig } from '#cli/types/configurations/language.ts';
 import type { PRINTED_RULE_TOOLS } from '#cli/config/repository/setup.ts';
 import type { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import type { SourcedConfig, IgnoreSection } from '#cli/types/configurations/general.ts';
-import type { ruffOptionsSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
 import type { Session, Generation, GeneratedFile, ExecutableSearch } from '#cli/types/tools.ts';
 import type { Level, Scope, Settings, TomlTable, AvailableSettings } from '#cli/types/settings.ts';
+import type { ruffOptionsSchema, generatedFilesSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
 
 import type {
     Repository,
@@ -51,13 +51,7 @@ export type ConfigBuildState = {
 
 export type UsedNames = { tools: Set<string>; checks: Set<string> };
 
-export type ApplyReport = {
-    written: string[];
-    unchanged: string[];
-    deleted: string[];
-    updated: string[];
-    notes: string[];
-};
+export type ApplyReport = z.infer<typeof generatedFilesSchema>;
 
 export type ActionPin = { name: string; sha: string; version: string };
 

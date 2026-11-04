@@ -1,9 +1,11 @@
+import type { z } from 'zod';
 import type { Session } from '#cli/types/tools.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { RepositoryListing } from '#cli/types/repository.ts';
 import type { RunCache, CommandResult } from '#cli/types/system.ts';
 import type { InitPlan, ApplyReport } from '#cli/types/generation.ts';
+import type { installReportSchema, settingsEditReportSchema } from '#cli/schemas/commands.ts';
 import type { Level, Settings, TomlTable, SettingsEdit, InheritedSetting } from '#cli/types/settings.ts';
 
 export type CommandLocation = { readonly root: string; readonly cwd: string };
@@ -52,12 +54,7 @@ export type IgnoreOptions = {
     reason: string;
 };
 
-export type InstallCommandJson = ApplyReport & {
-    summary: string;
-    installed: string[];
-    steps: ReadonlyArray<readonly string[]>;
-    missing: string[];
-};
+export type InstallCommandJson = z.infer<typeof installReportSchema>;
 
 export type SetOptions = {
     root: string;
@@ -125,3 +122,5 @@ export type SettingsEditOptions = {
 };
 
 export type CommandCompletion = (result: CommandResult<object>) => void;
+
+export type SettingsEditReport = z.infer<typeof settingsEditReportSchema>;

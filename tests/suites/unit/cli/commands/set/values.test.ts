@@ -14,9 +14,9 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
-import type { SettingsListJson } from '#cli/types/commands/reports.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { settingsListSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 
 import {
     WEAKENED_SETTINGS,
@@ -185,8 +185,10 @@ test.each([...WEAKENED_SETTINGS])(
         const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
         expect(listed.code, listed.stdout + listed.stderr).toBe(0);
         expect(
-            (JSON.parse(listed.stdout) as SettingsListJson).settings
-                .filter((row) => row.setting === key)
+            settingsListSchema
+                .extend(commandFieldsSchema.shape)
+                .parse(JSON.parse(listed.stdout))
+                .settings.filter((row) => row.setting === key)
                 .map(({ value }) => value),
         ).toStrictEqual([[second], [second], [second]]);
     },

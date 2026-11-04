@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SKIP_CAUSES } from '#cli/config/engine.ts';
 
 const knipSymbolSchema = z.object({
     name: z.string().min(1),
@@ -87,3 +88,8 @@ export const reportedTypoSchema = z.object({
 const ruleCountsSchema = z.record(z.string(), z.int().positive());
 
 export const baselineSchema = z.record(z.string(), z.record(z.string(), ruleCountsSchema));
+
+export const checkStateSchema = z.discriminatedUnion('status', [
+    z.strictObject({ status: z.literal('on') }),
+    z.strictObject({ status: z.literal('skipped'), cause: z.enum([...SKIP_CAUSES, 'no-files']) }),
+]);

@@ -8,17 +8,19 @@ import { parse, stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import type { DoctorReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { MISE_TRUST, HOOKS_SETTINGS, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { UNQUOTED_SCRIPT, HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX } from '#tests/config/integration/commands.ts';
+
+const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await createGitSandbox({
@@ -27,13 +29,15 @@ test('doctor reports hooks this clone has not installed and accepts them after i
 
     const missing = await spawnGspot(sandbox.path, ['doctor', '--json']);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect((JSON.parse(missing.stdout) as DoctorReport).hooks).toStrictEqual({ ready: false });
+    expect(doctorOutputSchema.parse(JSON.parse(missing.stdout)).hooks).toStrictEqual({
+        ready: false,
+    });
     await applyGeneratedFiles(sandbox.path);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const diagnosed = await spawnGspot(sandbox.path, ['doctor', '--json']);
     expect(diagnosed.code, diagnosed.stdout + diagnosed.stderr).toBe(0);
-    const report = JSON.parse(diagnosed.stdout) as DoctorReport;
+    const report = doctorOutputSchema.parse(JSON.parse(diagnosed.stdout));
     expect(report.hooks).toStrictEqual({ ready: true, tool: 'gspot' });
     expect(report.tools.filter(({ state }) => state !== 'ok' && state !== 'system')).toStrictEqual([]);
 });

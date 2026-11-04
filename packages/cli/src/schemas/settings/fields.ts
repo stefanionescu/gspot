@@ -16,6 +16,7 @@ import {
     NAMING_LANGUAGES,
     PRINT_WIDTH_DEFAULT,
     FORMAT_INDENT_STYLES,
+    SETTING_ORIGIN_KINDS,
     RELATIVE_PATH_PATTERN,
     REMOVAL_REASON_DESCRIPTION,
     FORMAT_OVERRIDE_MIN_FIELDS,
@@ -234,3 +235,11 @@ export const formatSchema = formatFieldsSchema.extend({
             description: 'Formatting options for repository-relative paths, in order.',
         }),
 });
+
+export const settingOriginSchema = z.strictObject({ kind: z.enum(SETTING_ORIGIN_KINDS), name: z.string() });
+
+export const removedConfigurationSchema = z.strictObject({ name: z.string(), scope: z.string(), reason: z.string() });
+
+export const reasonRequirementSchema = z.enum(
+    Object.keys(REASON_DESCRIPTIONS) as Array<keyof typeof REASON_DESCRIPTIONS>,
+);

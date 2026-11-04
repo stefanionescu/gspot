@@ -719,7 +719,8 @@ export default setRuleOptions(defineConfig([
                 "pattern": [
                     "packages/cli/src/commands/**",
                     "packages/cli/src/config/commands/**",
-                    "packages/cli/src/types/commands/**"
+                    "packages/cli/src/types/commands/**",
+                    "packages/cli/src/schemas/commands.ts"
                 ],
                 "stopMatching": true
             },
