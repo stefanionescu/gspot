@@ -32,7 +32,8 @@ export const noInlineInterpolation = createRule<[], 'interpolation'>({
                 'Reports a template literal with `${}` expressions as the snapshot of `toMatchInlineSnapshot` or `toThrowErrorMatchingInlineSnapshot` on `expect`, in files that use Jest or Vitest.',
             why: 'The runner rewrites an inline snapshot when it updates snapshots, and it drops the expressions. The next update then compares against fixed text that no longer follows the values.',
             fix: 'Write the snapshot as plain text, or assert the changing values with a separate matcher.',
-            example: `\`expect(user).toMatchInlineSnapshot(\`{ "id": \${id} }\`)\` reports \`interpolation\`. Assert the id with \`toHaveProperty\`, and snapshot the rest.`,
+            example:
+                `\`\`expect(user).toMatchInlineSnapshot(\`{ "id": \${id} }\`)\`\` reports \`interpolation\`. Assert the id with \`toHaveProperty\`, and snapshot the rest.`,
         },
         schema: [],
         messages: { interpolation: 'Remove this interpolation from the inline snapshot.' },

@@ -32,7 +32,8 @@ export const requireMemoizeKey = createRule<[], 'keyFunction'>({
                 'Reports a `memoize` call of lodash, lodash-es, or underscore without a key function, when the memoized function takes two or more parameters or a rest parameter.',
             why: 'Without a key function, memoize caches by the first argument alone, so calls that differ only in a later argument return the first cached result.',
             fix: 'Pass a second argument that builds the cache key from every argument that changes the result.',
-            example: `\`memoize((price, rate) => price * rate)\` reports \`keyFunction\`. Write \`memoize((price, rate) => price * rate, (price, rate) => \`\${price}:\${rate}\`)\`.`,
+            example:
+                `\`memoize((price, rate) => price * rate)\` reports \`keyFunction\`. Write \`\`memoize((price, rate) => price * rate, (price, rate) => \`\${price}:\${rate}\`)\`\`.`,
         },
         schema: [],
         messages: { keyFunction: 'Provide an explicit function to compute the cache key.' },
