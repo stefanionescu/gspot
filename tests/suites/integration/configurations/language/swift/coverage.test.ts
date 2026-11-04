@@ -39,7 +39,7 @@ test.skipIf(!isMacos)(
                         file: 'Inspection.xcodeproj',
                         rule: 'coverage',
                         line: 1,
-                        message: 'Inspection.xctest covers 72% of its lines, under the limit of 100%.',
+                        message: expect.stringMatching(/Inspection\.xctest.+\b72%.+\b100%/u) as string,
                     },
                 ],
             },

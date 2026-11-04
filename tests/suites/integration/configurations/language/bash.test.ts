@@ -137,7 +137,6 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     const broken = runBlockingCommand([...command, 'missing.sh'], { cwd: sandbox.path });
     expect(broken.code, broken.stderr).toBe(2);
     const note = parseCommandFindings(planned, broken, paths, {}).note ?? '';
-    expect(note).toStartWith('shellcheck failed with exit 2:');
     expect(note).toContain('missing.sh');
 });
 

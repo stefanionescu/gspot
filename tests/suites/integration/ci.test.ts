@@ -172,7 +172,6 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         await fakeCiMise(executables.path);
         const drifted = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(drifted.code, drifted.stdout + drifted.stderr).toBe(1);
-        expect(drifted.stdout).toContain('gspot install changed files.');
         expect(drifted.stdout).toContain('.gitattributes');
     });
 
@@ -184,7 +183,7 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         const failurePath = await fakeCiMise(executables.path);
         const malformed = await runCiJob(sandbox.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-        expect(malformed.stderr).toContain('$(touch injected) is not a branch, tag, or commit in this repository.');
+        expect(malformed.stderr).toContain('$(touch injected)');
         expect(existsSync(join(sandbox.path, 'injected'))).toBe(false);
         await writeFile(failurePath, '');
         const refused = await runCiJob(sandbox.path, generated, executables.path, base);

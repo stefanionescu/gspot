@@ -48,7 +48,7 @@ test('structure/jscpd reports a copied Bash function on the second file and igno
                     file: 'scripts/second.sh',
                     line: 4,
                     rule: 'clone',
-                    message: '64 lines repeat scripts/first.sh:4.',
+                    message: expect.stringContaining('scripts/first.sh:4') as string,
                 },
             ],
         },

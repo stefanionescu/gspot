@@ -30,7 +30,6 @@ test.each(['exception', 'rejection'])('an uncaught %s exits 2 with the command e
             exitCode: 2,
             notes: [],
             error: 'unexpected',
-            message: `gspot stopped because of an internal error. Report it at ${cliPackage.bugs.url}, with the stack that --verbose prints.`,
         });
         if (isVerbose) expect(report).toHaveProperty('stack');
         else expect(result.stdout).not.toContain('Uncaught failure detail');

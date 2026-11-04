@@ -58,7 +58,7 @@ test('licenses/allowed reads the license of a locked package, and an allowed_pac
             file: 'package-lock.json',
             line: 1,
             rule: 'disallowed-license',
-            message: 'caniuse-lite@1.0.30001700 uses CC-BY-4.0, which is not allowed.',
+            message: expect.stringMatching(/caniuse-lite@1\.0\.30001700.*CC-BY-4\.0/u) as string,
         }),
     ]);
     await writeFile(

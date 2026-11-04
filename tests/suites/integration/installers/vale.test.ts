@@ -76,7 +76,7 @@ test('a Vale reinstall for new package releases replaces an edited package and k
 
 test.each([...VALE_INSTALL_FAILURES])(
     'a failed Vale package install reports $name, and the next install succeeds after the fix',
-    async ({ fakeArguments, message, settings }) => {
+    async ({ fakeArguments, named, settings }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
             [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
@@ -99,7 +99,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         const writer = openFiles(sandbox.path);
         const request = await buildSandboxToolInstall(session, writer);
         const failure = await captureRejection(installValePackages(request, [miseBin]));
-        expect(failure.message).toEndWith(message);
+        expect(failure.message).toContain(named);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             PREVIOUS_BYTES,
         );

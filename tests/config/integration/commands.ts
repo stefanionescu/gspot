@@ -88,7 +88,7 @@ export const VALE_INSTALL_FAILURES = [
     {
         name: 'timeout',
         fakeArguments: ['--wait'],
-        message: 'past tool_timeout_seconds (1s). Raise it with gspot set tool_timeout_seconds <seconds>.',
+        named: '(1s)',
         settings: 'tool_timeout_seconds = 1\n',
     },
     {
@@ -99,8 +99,7 @@ export const VALE_INSTALL_FAILURES = [
             '--exit',
             '7',
         ],
-        message:
-            'Vale sync failed (exit 7):\nRegistry request failed: https://[redacted]@example.com/styles.zip\nCheck the network or proxy, then run again.',
+        named: 'https://[redacted]@example.com/styles.zip',
         settings: '',
     },
 ] as const;

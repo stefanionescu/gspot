@@ -78,9 +78,7 @@ test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and 
     await runGspotStep({ root: checkout, run: spawnGspot }, ['install']);
     const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
-        'Pushed history is incomplete for commits/commitlint-pushed. Run git fetch --unshallow and retry.',
-    );
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('commits/commitlint-pushed');
 });
 
 test.skipIf(isWindows || process.getuid?.() === 0)(

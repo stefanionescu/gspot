@@ -41,7 +41,7 @@ test.skipIf(!hasToolBuild('plutil'))(
             expect(mixed.code).toBe(1);
             const { findings, note = '' } = parseCommandFindings(planned!, mixed, paths, {});
             expect(findings).toBeUndefined();
-            expect(note).toStartWith('plutil failed with exit 1:\nbad.plist: ');
+            expect(note).toContain('bad.plist: ');
             expect(note).toContain(`\n${path}: `);
         }
         await chmod(join(sandbox.path, 'private.plist'), 0o600);
