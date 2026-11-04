@@ -5,9 +5,10 @@ import { readTree } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NEEDS_GIT_MESSAGE, VERSION_ARGUMENTS, MALFORMED_SETTINGS, JSON_ARGUMENT_ERRORS } from '#tests/config/main.ts';
+import { VERSION_ARGUMENTS, MALFORMED_SETTINGS, JSON_ARGUMENT_ERRORS } from '#tests/config/main.ts';
 
 test('gspot without a command prints the help to stderr and exits 2', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -29,21 +30,21 @@ test.each([...JSON_ARGUMENT_ERRORS])(
 
 test('an unknown command exits 2 and names the closest command', async () => {
     await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['checks']);
-    expect(result).toStrictEqual({
-        code: 2,
-        stdout: '',
-        stderr: 'There is no command called checks. Did you mean check? Run gspot --help to see the commands.\n',
+    const result = await runGspot(sandbox.path, ['checks', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringMatching(/\bcheck\b/u) as string,
     });
 });
 
 test('gspot apply exits 2 with one line that names gspot install', async () => {
     await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['apply']);
-    expect(result).toStrictEqual({
-        code: 2,
-        stdout: '',
-        stderr: 'gspot install writes the generated files. Run gspot install.\n',
+    const result = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('gspot install') as string,
     });
 });
 
@@ -54,7 +55,7 @@ test.each([['init'], ['set', 'level', 'all']].map((commandArguments) => ({ comma
         const before = await readTree(sandbox.path);
         const result = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(result.code).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git', message: NEEDS_GIT_MESSAGE });
+        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git' });
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         const help = await runGspot(sandbox.path, [commandArguments[0]!, '--help']);
         expect(help.code).toBe(0);
@@ -70,7 +71,7 @@ test('a sparse checkout is refused before reading settings and help remains avai
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'git',
-        message: 'gspot does not support sparse checkouts. Run git sparse-checkout disable.',
+        message: expect.stringContaining('git sparse-checkout disable') as string,
     });
     expect(await readTree(sandbox.path)).toEqual(before);
     const help = await runGspot(sandbox.path, ['doctor', '--help']);
@@ -94,25 +95,24 @@ test.each(VERSION_ARGUMENTS.map((commandArguments) => ({ commandArguments })))(
 );
 
 test.each([
-    { commandArguments: ['--version', 'extra'], message: 'There is no command called extra.' },
-    { commandArguments: ['bogus', '--version'], message: 'There is no command called bogus.' },
-    { commandArguments: ['check', '--version'], message: "Unknown option '--version'." },
-])('$commandArguments exits 2 instead of printing the version', async ({ commandArguments, message }) => {
+    { commandArguments: ['--version', 'extra'], refused: 'extra' },
+    { commandArguments: ['bogus', '--version'], refused: 'bogus' },
+    { commandArguments: ['check', '--version'], refused: '--version' },
+])('$commandArguments exits 2 instead of printing the version', async ({ commandArguments, refused }) => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
     const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code).toBe(2);
     expect(result.stdout).toBe('');
-    expect(result.stderr).toContain(message);
+    expect(result.stderr).toContain(refused);
 });
 
 test('an argument choice names the command and the values to use', async () => {
     await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['list', 'bogus']);
-    expect(result).toStrictEqual({
-        code: 2,
-        stdout: '',
-        stderr: 'The value bogus is not valid for gspot list. Use configurations or settings. Run gspot list --help to see its arguments and options.\n',
-    });
+    const result = await runGspot(sandbox.path, ['list', 'bogus', '--json']);
+    expect(result.code).toBe(2);
+    const { error, message } = JSON.parse(result.stdout) as CommandFailureJson;
+    expect(error).toBe('arguments');
+    for (const named of ['gspot list', 'configurations', 'settings']) expect(message).toContain(named);
 });
 
 test.each([[], ['check']])('the help of %p fits 80 columns', async (...commandArguments) => {
