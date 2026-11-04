@@ -21,9 +21,9 @@ function removeTableKeys(scopeTable: TomlTable, key: string, names: string[]): v
 function formatUnsetSummary(
     key: string,
     keys: string[],
-    scope: string,
+    scopePath: string,
 ): Pick<SettingsEditOptions, 'summary' | 'unchangedSummary'> {
-    const where = scope === '' ? '' : ` in scope ${scope}`;
+    const where = scopePath === '' ? '' : ` in scope ${scopePath}`;
     const names = formatNameList(keys);
     return {
         summary: keys.length === 0 ? `Removed your value for ${key}${where}.` : `Removed ${names} from ${key}${where}.`,
@@ -37,7 +37,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 
     const edit = await readSettingsEditContext(options.root, options.scope);
-    const { root, edit: input, scopeTable, scope } = edit;
+    const { root, edit: input, scopeTable, scopePath } = edit;
     const { match } = selectSettingToEdit(edit, key);
 
     if (keys.length > 0 && !['list', 'table'].includes(match.setting.type))
@@ -52,7 +52,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
         cache: edit.cache,
         listing: edit.listing,
         edit: input,
-        ...formatUnsetSummary(key, keys, scope),
+        ...formatUnsetSummary(key, keys, scopePath),
     });
 }
 

@@ -155,7 +155,7 @@ export async function readSettingsEditContext(root: string, scopePath?: string):
             'arguments',
             `There is no scope called ${path}. Name a project folder or a written scope.`,
         );
-    return { ...context, session, scope: path, scopeTable: addScopeTable(input.table, path) };
+    return { ...context, session, scopePath: path, scopeTable: addScopeTable(input.table, path) };
 }
 
 /**
@@ -184,22 +184,24 @@ Validate the configuration names and the scope for add and remove before either 
 export async function readConfigurationEditContext(options: ConfigurationsOptions): Promise<{
     root: string;
     input: SettingsEdit;
-    scope: string;
+    scopePath: string;
     scopeTable: TomlTable;
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
     selected: string[];
     context: SettingsEditContext;
 }> {
     const context = await readSettingsEditContext(options.root, options.scope);
-    const { root, edit: input, settings, scope, scopeTable } = context;
+    const { root, edit: input, settings, scopePath, scopeTable } = context;
     assertConfigurationsExist(options.configurations);
     assertConfigurationsEditable(options.configurations);
     const scopeSettings =
-        scope === '' ? settings : (settings.scopes.get(scope) ?? { configurations: [], removed_configurations: [] });
-    const selected = selectScope(scope, context.session.scopes).configurations.map(
+        scopePath === ''
+            ? settings
+            : (settings.scopes.get(scopePath) ?? { configurations: [], removed_configurations: [] });
+    const selected = selectScope(scopePath, context.session.scopes).configurations.map(
         (configuration) => configuration.name,
     );
-    return { root, input, scope, scopeTable, scopeSettings, selected, context };
+    return { root, input, scopePath, scopeTable, scopeSettings, selected, context };
 }
 
 /**
@@ -240,7 +242,7 @@ export function selectSettingToEdit(
         throw new GspotError('arguments', ADD_REMOVE_MESSAGE);
     const { settings } = context;
     const session = context.session;
-    const selected = selectScope(context.scope, session.scopes);
+    const selected = selectScope(context.scopePath, session.scopes);
     const { availableSettings } = selected;
     const match = findSetting(availableSettings, key);
     if (match === undefined) {

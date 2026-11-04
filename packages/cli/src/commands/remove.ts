@@ -61,11 +61,11 @@ function removeUnusedSettings(table: TomlTable, scopePath: string): string {
 
 function listReturningConfigurations(
     session: Session,
-    removal: { scope: string; removed: string[]; written: string[] },
+    removal: { scopePath: string; removed: string[]; written: string[] },
 ): string[] {
-    const { scope, removed, written } = removal;
+    const { scopePath, removed, written } = removal;
     const proposed = selectProposedConfigurations({ repository: session.repository, options: {} });
-    const detected = scope === '' ? proposed.rootNames : (proposed.scopeConfigurations.get(scope) ?? []);
+    const detected = scopePath === '' ? proposed.rootNames : (proposed.scopeConfigurations.get(scopePath) ?? []);
     return removed.filter((name) => detected.includes(name) || !written.includes(name));
 }
 
@@ -73,14 +73,14 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const {
         root,
         input,
-        scope,
+        scopePath,
         scopeTable,
         scopeSettings,
         selected: selectedNames,
         context,
     } = await readConfigurationEditContext(options);
     const detected = listDetectedAdditions(context.session)
-        .filter((addition) => addition.scope === scope)
+        .filter((addition) => addition.scope === scopePath)
         .flatMap((addition) => addition.configurations);
     const selected = [...new Set([...selectedNames, ...detected])];
     const kept = selected.filter((name) => !options.configurations.includes(name));
@@ -92,18 +92,18 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const previous = scopeTable['removed_configurations'];
     const removed = options.configurations.filter((name) => selected.includes(name));
     const written = scopeSettings.configurations;
-    const returning = listReturningConfigurations(context.session, { scope, removed, written });
+    const returning = listReturningConfigurations(context.session, { scopePath, removed, written });
     scopeTable['configurations'] = written.filter((name) => !removed.includes(name));
     const reasons = {
         ...(isTable(previous) && previous),
         ...Object.fromEntries(returning.map((name) => [name, options.reason])),
     };
     if (Object.keys(reasons).length > 0) scopeTable['removed_configurations'] = reasons;
-    const where = scope === '' ? '' : ` from scope ${scope}`;
+    const where = scopePath === '' ? '' : ` from scope ${scopePath}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
         formatConfigurationChange({ action: 'Removed', changed: removed, where, unchanged, state: 'not selected' }) +
-        removeUnusedSettings(input.table, scope);
+        removeUnusedSettings(input.table, scopePath);
     const hasManagedKeys = readConfigurations()
         .values()
         .filter((configuration) => removed.includes(configuration.name))

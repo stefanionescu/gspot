@@ -107,7 +107,7 @@ export type IgnoreEditContext = {
     listing: RepositoryListing;
 };
 
-export type SettingsEditContext = IgnoreEditContext & { session: Session; scope: string; scopeTable: TomlTable };
+export type SettingsEditContext = IgnoreEditContext & { session: Session; scopePath: string; scopeTable: TomlTable };
 
 export type SettingsEditOptions = {
     edit: SettingsEdit;
