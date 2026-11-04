@@ -20,7 +20,7 @@ When the repository does not pin gspot, init adds the pin to `package.json`, or 
 a `package.json`. Its last line then names the install of your package manager, which installs the pinned gspot that
 the Git hooks run.
 
-The level decides which tools run and which config files init replaces. To start at level `all`:
+The level decides which tools run and which tool configs init replaces. To start at level `all`:
 
 ```shell
 gspot init --level all
@@ -34,7 +34,7 @@ The plan has these parts:
 | Part                                           | What gspot does                                                                                                                 | What you do                                                                     |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `write`                                        | Writes `gspot.toml`, `.gspot/`, and the generated files.                                                                        | Commit them after `gspot init`.                                                 |
-| `delete`                                       | Deletes the config files that gspot replaces, such as `.eslintrc.json` and `ruff.toml`. Git keeps them: `git show HEAD:<path>`. | Read the table of what init carries.                                            |
+| `delete`                                       | Deletes the tool configs that gspot replaces, such as `.eslintrc.json` and `ruff.toml`. Git keeps them: `git show HEAD:<path>`. | Read the table of what init carries.                                            |
 | `keep`                                         | Keeps tool sections in shared files, such as `[tool.ruff]` in `pyproject.toml`, and your CI files.                              | Delete each tool section. `gspot/conflicting-configs` reports it until it goes. |
 | `change`                                       | Adds its managed block to `.gitattributes`, and sets keys in your own files, such as the Stylelint fields of `package.json`.    | Review the change.                                                              |
 | `lint folders; delete when nothing calls them` | Names folders of lint scripts, such as `lint/`, for you to review; it does not change or stop them.                             | Check that nothing uses them, then delete them.                                 |
@@ -94,7 +94,7 @@ Each tool reads its rules from one place:
 | Tool         | Rules from                    | Compared by       | `gspot.toml` setting       |
 | ------------ | ----------------------------- | ----------------- | -------------------------- |
 | Ruff         | `ruff.toml`, `pyproject.toml` | init and scan     | `tools.ruff.rules`         |
-| markdownlint | its config file               | init and scan     | `tools.markdownlint.rules` |
+| markdownlint | its tool config               | init and scan     | `tools.markdownlint.rules` |
 | commitlint   | `commitlint --print-config`   | init and scan     | `tools.commitlint.rules`   |
 | ESLint       | `eslint --print-config`       | `gspot scan` only | `tools.eslint.rules`       |
 | Stylelint    | `stylelint --print-config`    | `gspot scan` only | `tools.stylelint.rules`    |

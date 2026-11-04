@@ -78,7 +78,7 @@ With import rules present, `structure/import-rules` reports each code file that 
 rule:
 
 - test files, from `test_files`;
-- tool settings files, such as `vite.config.ts`, `.eslintrc.cjs`, `Package.swift`, and `setup.py`;
+- tool configs, such as `vite.config.ts`, `.eslintrc.cjs`, `Package.swift`, and `setup.py`;
 - the files that `[[tools.eslint.plugins]]` records name;
 - the script files of `javascript.script_files`, and `mise` task scripts;
 - scripts that start with a Node.js shebang, and files under `.gspot/`.

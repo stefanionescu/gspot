@@ -3,12 +3,12 @@ title: Editors
 description: Make your editor run the same tools, with the same settings, as gspot.
 ---
 
-Your editor reads the same config files as gspot. ESLint and Prettier extensions run the packages of the workspace, so
-their versions can differ from the tools that gspot installs.
+Your editor reads the same generated config files as gspot. ESLint and Prettier extensions run the packages of the
+workspace, so their versions can differ from the tools that gspot installs.
 
 ## Before you open the editor
 
-Run `gspot install` in each clone first. The config files load their plugins from `.gspot/node_modules` and
+Run `gspot install` in each clone first. The generated config files load their plugins from `.gspot/node_modules` and
 `.gspot/.venv`.
 
 For a repository without its own ESLint, add this setting to VS Code's workspace settings:
@@ -21,7 +21,7 @@ For a repository without its own ESLint, add this setting to VS Code's workspace
 
 Check your editor's output to confirm which ESLint and Prettier versions it runs.
 
-## How editors find the config files
+## How editors find the generated config files
 
 | Tool         | Pointer file                                 |
 | ------------ | -------------------------------------------- |
@@ -34,7 +34,7 @@ Check your editor's output to confirm which ESLint and Prettier versions it runs
 | SwiftLint    | `.swiftlint.yml`, also in Swift test folders |
 
 The Stylelint pointer file sits at the repository root and holds one override for each scope that selects `css`. A
-`package.json` that keeps a `stylelint` field outside the root points at the config file of its scope instead.
+`package.json` that keeps a `stylelint` field outside the root points at the generated config file of its scope instead.
 
 `.editorconfig` carries the `[format]` settings to every editor that reads it.
 [Files and caches](/reference/generated-files/) lists every file gspot writes.

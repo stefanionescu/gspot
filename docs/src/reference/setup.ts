@@ -102,7 +102,7 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
    default level.
 3. Ask the user which level, and wait for the answer. ${CLI_REFERENCE.levelSummaries.basic} ${CLI_REFERENCE.levelSummaries.all} Level \`all\` also
    installs a few more tools. Suggest \`basic\`, the default, for an existing codebase, and \`all\` for a new
-   repository or one that agents write. The level decides which config files the plan replaces.
+   repository or one that agents write. The level decides which tool configs the plan replaces.
 4. Run \`gspot init --level <level>\`. It prints the plan and writes the settings, generated files, and hooks
    without asking a question. Then it installs the pinned tools and turns on the Git hooks. If it names a program
    that it cannot install, tell the user. \`gspot doctor\` lists what is missing. CI stays off. On GitHub or

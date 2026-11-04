@@ -51,8 +51,8 @@ not matter.
 ## Vulnerabilities
 
 `dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. Each check sends the locked
-package names and versions to the Open Source Vulnerabilities (OSV) service. Update the package, then check again. An
-accepted advisory needs an [ignore with a reason](/use/ignore/).
+package names and versions to the Open Source Vulnerabilities (OSV) service. Update the package, then check again. To
+keep a package with an advisory, [ignore the advisory](/use/ignore/#ignore-a-dependency-advisory) with a reason.
 
 The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools. A gspot release fixes
 an advisory in those tools with new pins.
