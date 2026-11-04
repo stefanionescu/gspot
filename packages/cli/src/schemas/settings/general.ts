@@ -16,20 +16,20 @@ export const generalTableSchemas = {
         .strictObject({
             reexports: allowReasonedValue(z.enum(REEXPORT_MODES), {
                 configurations: ['structure'],
-                reason_when: 'adding',
+                reason_for: 'adding',
                 description: 'Where re-exports may go: none, or an index file that re-exports other files.',
                 default: 'none',
             }),
             min_duplicate_lines: allowReasonedValue(z.int().positive(), {
                 configurations: ['structure'],
                 description: 'The fewest lines a copied block has before it counts.',
-                reason_when: 'raising',
+                reason_for: 'raising',
                 default: 8,
             }),
             min_duplicate_tokens: allowReasonedValue(z.int().positive(), {
                 configurations: ['structure'],
                 description: 'The fewest tokens a copied block has before it counts.',
-                reason_when: 'raising',
+                reason_for: 'raising',
                 default: 40,
             }),
             environment_readers: relativePathSchema
@@ -101,7 +101,7 @@ export const generalTableSchemas = {
             allowed_registries: allowReasonedValue(nonemptyStringsSchema, {
                 configurations: ['dependencies'],
                 description: 'The hosts a lockfile may resolve packages from.',
-                reason_when: 'adding',
+                reason_for: 'adding',
                 default: ['registry.npmjs.org', 'registry.yarnpkg.com'],
             }),
             bun_scanner: nonemptyStringSchema.optional().meta({
@@ -117,7 +117,7 @@ export const generalTableSchemas = {
             allowed_urls: allowReasonedValue(z.string().array(), {
                 configurations: ['docs'],
                 description: 'Allowed URL patterns; additions need a reason for the whole list.',
-                reason_when: 'adding',
+                reason_for: 'adding',
                 default: [],
             }),
         })

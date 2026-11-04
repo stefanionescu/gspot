@@ -67,7 +67,7 @@ export type Setting = {
     default?: unknown;
     default_all?: unknown;
     language_defaults?: Record<string, unknown>;
-    reason_when?: ReasonRequirement;
+    reason_for?: ReasonRequirement;
     reason_values?: boolean;
     description: string;
     languages?: string[];

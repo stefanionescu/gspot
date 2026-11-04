@@ -181,7 +181,7 @@ export const scopeSchema = z.strictObject({
         description: 'Configurations for this folder, on top of the root ones; `gspot add --scope` writes this list.',
     }),
     removed_configurations: removedConfigurationsSchema.prefault({}).meta({
-        reason_when: 'adding',
+        reason_for: 'adding',
         description:
             'Configurations removed in this folder, each with the reason why; only `gspot add` and `gspot remove` write this table.',
     }),
@@ -227,7 +227,7 @@ export const settingsSchema = z
                     'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
             }),
             removed_configurations: removedConfigurationsSchema.prefault({}).meta({
-                reason_when: 'adding',
+                reason_for: 'adding',
                 description:
                     'Configurations you removed, each with the reason why, which detection does not add back; only `gspot add` and `gspot remove` write this table.',
             }),

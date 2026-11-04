@@ -39,8 +39,8 @@ function formatSettingSource({ kind, name }: SettingOrigin): string {
 
 function buildSettingsResult(session: Session): CommandResult {
     const settings = buildSettingRows(session.settings, session.scopes);
-    const groups = Map.groupBy(settings, ({ setting, value, reasonWhen, source }) =>
-        JSON.stringify([setting, value, reasonWhen, source]),
+    const groups = Map.groupBy(settings, ({ setting, value, reasonFor, source }) =>
+        JSON.stringify([setting, value, reasonFor, source]),
     );
     const width = Math.max(...settings.map((row) => row.setting.length)) + KEY_GAP;
     const lines = groups
@@ -49,7 +49,7 @@ function buildSettingsResult(session: Session): CommandResult {
             const [row] = rows as [(typeof settings)[number]];
             const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
             const where = session.scopes.length === 1 ? '' : `  in ${formatScopeGroup(rows.map(({ scope }) => scope))}`;
-            return `${row.setting.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${(row.reasonWhen ?? '').padEnd(REASON_HEADER.length)}  ${formatSettingSource(row.source)}${where}`;
+            return `${row.setting.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${(row.reasonFor ?? '').padEnd(REASON_HEADER.length)}  ${formatSettingSource(row.source)}${where}`;
         })
         .toArray();
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);
@@ -124,7 +124,7 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
             setting: row.key,
             value: row.value,
             source: row.origin,
-            reasonWhen: row.setting.reason_when,
+            reasonFor: row.setting.reason_for,
             scope: scopePath,
         }));
     });

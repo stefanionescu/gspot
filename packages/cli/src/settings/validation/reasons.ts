@@ -109,7 +109,7 @@ Check whether a value weakens the shipped default, so it needs a reason.
 @param shipped the default of the configuration.
 */
 export function isWeakening(setting: Setting, value: unknown, shipped: unknown): boolean {
-    if (setting.reason_when === 'adding') {
+    if (setting.reason_for === 'adding') {
         if (Array.isArray(value))
             return value.some(
                 (element) =>
@@ -123,7 +123,7 @@ export function isWeakening(setting: Setting, value: unknown, shipped: unknown):
         return !isDeepStrictEqual(value, shipped);
     }
     return (
-        (setting.reason_when === 'raising' || setting.reason_when === 'lowering') &&
-        isLimitWeakening(setting.reason_when, value, shipped)
+        (setting.reason_for === 'raising' || setting.reason_for === 'lowering') &&
+        isLimitWeakening(setting.reason_for, value, shipped)
     );
 }

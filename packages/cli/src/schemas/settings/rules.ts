@@ -67,7 +67,7 @@ const commitlintRulesSchema = buildRuleTableSchema(commitlintValuesSchema, 'comm
 export const commitsSchema = z
     .strictObject({
         types: allowReasonedValue(nonemptyStringsSchema, {
-            reason_when: 'adding',
+            reason_for: 'adding',
             configurations: ['commits'],
             description: 'The commit types the type-enum rule allows.',
             default: ['feat', 'fix', 'refactor', 'perf', 'docs', 'test', 'build', 'ci', 'chore', 'style', 'revert'],

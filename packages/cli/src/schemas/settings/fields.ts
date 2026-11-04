@@ -144,9 +144,9 @@ export function allowReasonedValue<Output, Input>(
                     reason: z
                         .string()
                         .describe(
-                            definition.reason_when === undefined
+                            definition.reason_for === undefined
                                 ? BOUND_REASON_DESCRIPTION
-                                : REASON_DESCRIPTIONS[definition.reason_when],
+                                : REASON_DESCRIPTIONS[definition.reason_for],
                         ),
                 })
                 .transform((reasoned) => reasoned.value),
@@ -175,7 +175,7 @@ export const namingCategorySchema = z
             configurations: ['naming'],
             description:
                 'The case patterns that one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift), or timestamp-snake (20260103120000_create_users.sql). Ruff checks the case of Python classes, functions, and parameters, and SwiftLint checks Swift types, variables, parameters, and enum cases; this setting covers the rest.',
-            reason_when: 'adding',
+            reason_for: 'adding',
             languages: NAMING_LANGUAGES,
             default: [],
         }),

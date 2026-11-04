@@ -96,7 +96,7 @@ const configurationTables = {
     zustand: z
         .strictObject({
             store_files: allowReasonedValue(relativePathSchema.array(), {
-                reason_when: 'adding',
+                reason_for: 'adding',
                 configurations: ['zustand'],
                 description: 'The files that may create a store.',
                 default: ['**/store.*', '**/stores/*', '**/store/*', '**/*.store.*'],
@@ -167,13 +167,13 @@ const configurationTables = {
                 leftOut: 'repository',
                 configurations: ['site'],
                 description: 'Class names a script adds at run time: the names and the reason.',
-                reason_when: 'adding',
+                reason_for: 'adding',
                 default: [],
             }),
             allowed_unlisted_pages: allowReasonedValue(relativePathSchema.meta({ path_role: 'build' }).array(), {
                 configurations: ['site'],
                 description: 'Built pages the sitemap leaves out on purpose.',
-                reason_when: 'adding',
+                reason_for: 'adding',
                 default: ['404.html'],
             }),
         })

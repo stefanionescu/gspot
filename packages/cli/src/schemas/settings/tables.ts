@@ -132,7 +132,7 @@ export const importRulesSchema = importRuleSchema
 export const pythonSchema = z
     .strictObject({
         externals: allowReasonedValue(z.string().min(1).array(), {
-            reason_when: 'adding',
+            reason_for: 'adding',
             leftOut: 'repository',
             configurations: ['python'],
             description:

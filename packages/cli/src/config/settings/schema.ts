@@ -99,7 +99,7 @@ export const NAMING_LANGUAGES = Object.keys(NAMING_LANGUAGE_CATEGORIES) as Array
 export const HIDDEN_FACT_KEYS = [
     'configurations',
     'languages',
-    'reason_when',
+    'reason_for',
     'reason_values',
     'language_defaults',
     'path_role',

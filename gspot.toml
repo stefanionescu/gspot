@@ -19,7 +19,7 @@ reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 [[naming.override]]
 paths = ["packages/cli/src/types/configurations/general.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/repository.ts", "packages/cli/src/types/settings.ts"]
 categories = ["properties"]
-allowed_names = ["default_all", "language_defaults", "path_role", "reason_values", "reason_when", "removed_configurations", "test_files"]
+allowed_names = ["default_all", "language_defaults", "path_role", "reason_for", "reason_values", "removed_configurations", "test_files"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
 [[naming.override]]
@@ -88,11 +88,6 @@ reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath
 paths = ["packages/cli/src/configurations/language/python/generate.ts", "tests/suites/unit/cli/configurations/language/python/generate.test.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/settings.ts", "packages/cli/src/types/manifests.ts"]
-allowed_names = ["reason_when"]
-reason = "The shipped setting definitions name this field reason_when."
 
 [[naming.override]]
 paths = ["packages/cli/src/configurations/general/data-files/**", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/suites/integration/configurations/general/data-files.test.ts"]

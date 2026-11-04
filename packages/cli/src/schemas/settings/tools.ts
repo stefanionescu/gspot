@@ -23,7 +23,7 @@ import {
 export const javascriptSchema = z
     .strictObject({
         script_files: allowReasonedValue(relativePathSchema.array(), {
-            reason_when: 'adding',
+            reason_for: 'adding',
             configurations: ['javascript'],
             description: 'Script files, which may print to the console and call process.exit.',
             default: ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'],
@@ -37,7 +37,7 @@ export const javascriptSchema = z
                     'Folders that a relative import may not leave, such as src/features/*. An import of a file outside them takes the alias, and eslint --fix writes it.',
             }),
         externals: allowReasonedValue(z.string().min(1).array(), {
-            reason_when: 'adding',
+            reason_for: 'adding',
             leftOut: 'repository',
             configurations: ['javascript'],
             description:
@@ -86,7 +86,7 @@ export const javascriptSchema = z
                 configurations: ['javascript'],
                 description:
                     'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
-                reason_when: 'adding',
+                reason_for: 'adding',
                 default: [],
             },
         ),

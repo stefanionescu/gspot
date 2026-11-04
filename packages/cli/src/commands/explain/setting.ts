@@ -42,7 +42,7 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     return [
         ...formatReasonLines(setting, scopeSetting),
-        `Change it: gspot set ${quoteArgument(key)} <value>${target}${setting.reason_when === undefined ? '' : REASON_OPTION_TEXT}`,
+        `Change it: gspot set ${quoteArgument(key)} <value>${target}${setting.reason_for === undefined ? '' : REASON_OPTION_TEXT}`,
         `Back to the default: gspot unset ${quoteArgument(key)}${target}`,
     ];
 }
@@ -95,7 +95,7 @@ function findSessionSetting(session: Session, key: string): ExplainedSetting | u
         key,
         '',
         first.setting.description.replaceAll('`', ''),
-        ...(first.setting.reason_when === undefined ? [] : ['', `Reason: ${first.setting.reason_when} needs a reason`]),
+        ...(first.setting.reason_for === undefined ? [] : ['', `Reason: needed for ${first.setting.reason_for}`]),
         ...scopes.flatMap((each) => formatSettingScope(key, first.setting, each)),
     ];
     return {
@@ -134,7 +134,7 @@ export function explainSetting(session: Session | undefined, key: string): Expla
             default: setting.default,
             defaultAll: setting.default_all,
             languageDefaults: setting.language_defaults,
-            reasonWhen: setting.reason_when,
+            reasonFor: setting.reason_for,
             scopes,
         },
     };

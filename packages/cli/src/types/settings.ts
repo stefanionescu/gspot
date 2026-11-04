@@ -52,7 +52,7 @@ export type SettingDefinition = {
     minimum?: number;
     maximum?: number;
     configurations?: readonly string[];
-    reason_when?: ReasonRequirement;
+    reason_for?: ReasonRequirement;
     reason_values?: boolean;
     languages?: readonly string[];
     language_defaults?: Readonly<Record<string, unknown>>;

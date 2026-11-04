@@ -106,7 +106,7 @@ export const limitFields = addLimitLanguages({
     min_shared_prefix_files: allowReasonedValue(z.int().min(0).max(Number.MAX_SAFE_INTEGER), {
         configurations: ['structure'],
         description: 'The number of siblings sharing a name prefix that makes a finding.',
-        reason_when: 'raising',
+        reason_for: 'raising',
         default: 2,
     }),
 });

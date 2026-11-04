@@ -103,8 +103,8 @@ test('the settings list reports inherited values and their source scope', async 
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings } = settingsListSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(structured.stdout));
-    expect(settings.find((row) => row.setting === 'test_files')?.reasonWhen).toBeUndefined();
-    expect(settings.find((row) => row.setting === 'limits.max_file_lines')?.reasonWhen).toBe('raising');
+    expect(settings.find((row) => row.setting === 'test_files')?.reasonFor).toBeUndefined();
+    expect(settings.find((row) => row.setting === 'limits.max_file_lines')?.reasonFor).toBe('raising');
     expect(settings.find((row) => row.scope === 'api/worker' && row.setting === 'limits.max_file_lines')).toMatchObject(
         {
             value: 200,

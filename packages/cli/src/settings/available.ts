@@ -107,11 +107,11 @@ function addToolSettings(availableSettings: AvailableSettings, configurations: C
     }
 }
 
-function getBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_when'> | undefined {
+function getBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_for'> | undefined {
     if (definition?.['reasoned'] !== true) return undefined;
     const field = name.slice(name.lastIndexOf('.') + 1);
     const direction = Object.entries(BOUND_PREFIXES).find(([prefix]) => field.startsWith(prefix))?.[1];
-    return direction === undefined ? undefined : { reason_when: direction };
+    return direction === undefined ? undefined : { reason_for: direction };
 }
 
 function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {

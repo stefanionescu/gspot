@@ -187,7 +187,7 @@ Each item of `checks` has `check`, `scope`, and `status`: `on`, or `skipped` wit
 
 Each item has `setting`, `source`, and `scope`, and `value` when a default or `gspot.toml` gives one. `source` says where the value comes from, with
 `kind` and `name`: `default` and `gspot`, `configuration` and its name, `root` and `gspot.toml`, `scope` and the path of
-the scope that sets it, or `unset`. `reasonWhen` holds the change that needs a reason, when one does.
+the scope that sets it, or `unset`. `reasonFor` holds the change that needs a reason, such as `raising`, when one does.
 
 ## `gspot explain`
 
@@ -259,7 +259,7 @@ after its check, such as `gspot explain javascript/eslint no-console --json`.
 | `default`          | When present, its default.                                                                                                    |
 | `defaultAll`       | When present, its default at level `all`.                                                                                     |
 | `languageDefaults` | When present, its default per language.                                                                                       |
-| `reasonWhen`       | When present, the change that needs a reason.                                                                                 |
+| `reasonFor`        | When present, the change that needs a reason.                                                                                 |
 | `scopes`           | Each scope, with `scope`, `default`, `value`, `source` as in `gspot list settings`, and, when present, `readBy` and `reason`. |
 
 ### `path`

@@ -89,7 +89,7 @@ export const settingsListSchema = z.strictObject({
             setting: z.string(),
             value: z.unknown().optional(),
             source: settingOriginSchema,
-            reasonWhen: reasonRequirementSchema.optional(),
+            reasonFor: reasonRequirementSchema.optional(),
             scope: z.string(),
         })
         .array(),
@@ -109,7 +109,7 @@ export const settingExplanationSchema = z.strictObject({
     default: z.unknown().optional(),
     defaultAll: z.unknown().optional(),
     languageDefaults: z.record(z.string(), z.unknown()).optional(),
-    reasonWhen: reasonRequirementSchema.optional(),
+    reasonFor: reasonRequirementSchema.optional(),
     scopes: z
         .strictObject({
             scope: z.string(),

@@ -70,14 +70,14 @@ function formatLanguageDefaults(variants: SettingVariant[]): string {
 
 function formatSetting(node: SettingReference): string {
     const { variants, required } = node;
-    const reasons = [...new Set(variants.flatMap(({ setting }) => setting.reason_when ?? []))];
+    const reasons = [...new Set(variants.flatMap(({ setting }) => setting.reason_for ?? []))];
     const accepted = node.reasoned ? REASONED_VALUE_LABEL : formatAcceptedValue(node.accepted);
     const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (SENTENCE_END.test(accepted) ? '' : '.');
     const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
     const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
     return (
         `${sentence} ${presence}` +
-        (reasons.length === 0 ? '' : ` Reason needed when: ${reasons.join(', ')}.`) +
+        (reasons.length === 0 ? '' : ` Reason needed for: ${reasons.join(', ')}.`) +
         formatLanguageDefaults(variants) +
         (node.description === undefined ? '' : `\n\n${formatText(node.description)}`)
     );

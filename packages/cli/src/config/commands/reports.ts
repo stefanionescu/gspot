@@ -88,7 +88,7 @@ export const VALUE_WIDTH = 28;
 
 export const LIST_KINDS = ['configurations', 'settings'] as const;
 
-export const REASON_HEADER = 'reason needed when';
+export const REASON_HEADER = 'reason for';
 
 export const LIST_ARGUMENT = '[configurations|settings]';
 
