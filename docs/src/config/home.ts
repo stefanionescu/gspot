@@ -1,7 +1,6 @@
 export const HOME_TITLE = 'Lint the code your AI agent writes';
 export const TOOLS = [
     { name: 'ESLint', icon: 'eslint.svg' },
-    { name: 'TypeScript', icon: 'typescript.svg' },
     { name: 'Prettier', icon: 'prettier.svg' },
     { name: 'Ruff', icon: 'ruff.svg' },
     { name: 'Stylelint', icon: 'stylelint.svg' },

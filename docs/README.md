@@ -19,12 +19,11 @@ deploys the site, with the `CLOUDFLARE_API_TOKEN` secret, when `mise run release
 
 Keep the required notices with every distributed copy of the assets.
 
-- Tool logos come from Simple Icons 16.33.0 under CC0-1.0, except the marks of Gitleaks, ShellCheck, TypeScript, and
-  the Open Source Vulnerabilities (OSV) scanner. The owners hold the trademarks for these names and logos.
+- Tool logos come from Simple Icons 16.33.0 under CC0-1.0, except the marks of Gitleaks, ShellCheck, and the Open
+  Source Vulnerabilities (OSV) scanner. The owners hold the trademarks for these names and logos.
 - The Gitleaks logo, from `gitleaks.io`: [Gitleaks license notice](public/licenses/gitleaks.txt).
 - The OSV-Scanner icon, from its repository: [OSV-Scanner license notice](public/licenses/osv-scanner.txt).
 - The ShellCheck icon: [ShellCheck license notice](public/licenses/shellcheck.txt).
-- The TypeScript mark, from the TypeScript branding page: [TypeScript brand terms](public/licenses/typescript.txt).
 - The home page layout adapts the Turborepo homepage: [Turborepo license notice](public/licenses/turborepo.txt).
 - The site self-hosts Geist Sans and Geist Mono from pinned Fontsource packages. The build keeps each font license
   under `licenses/` in the output.

@@ -95,7 +95,7 @@
 
 .tools li {
     display: flex;
-    flex: 0 0 25%;
+    flex: 0 0 33.333%;
     flex-direction: column;
     align-items: center;
     gap: 8px;
@@ -130,15 +130,11 @@
     .tools ul {
         row-gap: 24px;
     }
-
-    .tools li {
-        flex-basis: 20%;
-    }
 }
 
 @media (width >= 72rem) {
     .tools li {
-        flex-basis: 10%;
+        flex-basis: 11.111%;
     }
 }
 
