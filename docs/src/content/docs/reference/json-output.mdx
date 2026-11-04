@@ -91,11 +91,14 @@ The object of `gspot init --json` also has the [generated-file fields](#generate
 | `missing`      | What stays missing after the install, with what to do about it.          |
 | `steps`        | The commands that the install ran, as argument lists.                    |
 
-`plan` holds `level`, `configurations`, the file lists `write`, `deleted`, `keep`, `change`, and `lintFolders`, and the
-lists `lintCommands` and `carryover`. Each row of `lintCommands` has `file`, `line`, `source`, `command`, `tool`, and `fix`.
-Each row of `carryover` has `path`, `tool`, `covered`, `carried`, `differing`, `reasons`, `plugins`, `commandChecks`, and `dropped`. Each
-item of `configurations` has `configuration`, `origin`, `scopes`, `checks`, and `checksOff`. Each file row has `path` and `note`. With `--from`, `plan`
-also has `from`, with the `file` that `--from` names and the `leftOutSettings`.
+| Field of `plan`                                         | Holds                                                                                                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `level`                                                 | The level.                                                                                                                                 |
+| `configurations`                                        | One item per configuration: `configuration`, `origin`, `scopes`, `checks`, and `checksOff`.                                                |
+| `write`, `deleted`, `keep`, `change`, and `lintFolders` | One row per file: `path` and `note`.                                                                                                       |
+| `lintCommands`                                          | One row per command: `file`, `line`, `source`, `command`, `tool`, and `fix`.                                                               |
+| `carryover`                                             | One row per replaced tool config: `path`, `tool`, `covered`, `carried`, `differing`, `reasons`, `plugins`, `commandChecks`, and `dropped`. |
+| `from`                                                  | With `--from`: the `file` that `--from` names, and the `leftOutSettings`.                                                                  |
 
 ## `gspot install`
 
@@ -135,8 +138,8 @@ gspot neither computes nor includes those diffs.
 | `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.                                              |
 
 Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have `help`,
-which says how to fix its findings, `files`,
-`note`, `rerun`, `command`, and, for a skipped check, `cause`. Under `--verbose`, an internal check error also has
+which says how to fix its findings, `fixCommand`, the `gspot check --fix` command that fixes them, `files`, `note`,
+`rerun`, `command`, and, for a skipped check, `cause`. Under `--verbose`, an internal check error also has
 `stack` with its message and stack.
 
 `status` holds `passed`, `failed`, `missing`, `error`, `canceled`, or `skipped`. `missing` and `error` make the run
