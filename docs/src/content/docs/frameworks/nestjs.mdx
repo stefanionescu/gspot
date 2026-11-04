@@ -1,0 +1,53 @@
+---
+title: NestJS
+description: Check the providers, routes, DTOs, and compiler options of NestJS services.
+configurations: [nestjs]
+---
+
+The `nestjs` configuration adds the rules of eslint-plugin-nestjs-typed, two patterns for the response object and
+module cycles, and the compiler options that decorators need. It adds no check of its own and no Semgrep rules;
+its rules run in `javascript/eslint` and `typescript/tsconfig`.
+
+## Detection
+
+gspot selects `nestjs` in a scope that holds a `nest-cli.json` file, or whose `package.json` depends on
+`@nestjs/core`. The configuration requires `typescript`; see the
+[JavaScript and TypeScript guide](/languages/javascript-typescript/).
+
+## Compiler options
+
+With `nestjs` selected, `typescript/tsconfig` requires `experimentalDecorators` and `emitDecoratorMetadata` in each
+tsconfig that you write. The tsconfig that gspot writes for a scope without one turns both on.
+
+## ESLint rules
+
+`javascript/eslint` adds these rules to the TypeScript files of the scope:
+
+- The `flatRecommended` preset of eslint-plugin-nestjs-typed. When the scope does not depend on `@nestjs/swagger`, the
+  `flatNoSwagger` preset too.
+- `@darraghor/nestjs-typed/injectable-should-be-provided`, which reads every TypeScript file of the scope and skips
+  build output, installed packages, and test files.
+- `@typescript-eslint/no-extraneous-class` with `allowWithDecorator`, so a decorated class may hold no members.
+- At level `all`: `@darraghor/nestjs-typed/api-operation-summary-description-capitalized`.
+
+The `gspot/restricted-syntax` rule reports two patterns:
+
+| Pattern                                         | Level | Message                                                                                                                    |
+| ----------------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------- |
+| `@Res()` or `@Response()` without `passthrough` | Both  | Taking the response object turns off interceptors and the return value. Return the value, or pass `{ passthrough: true }`. |
+| A `forwardRef()` call                           | `all` | `forwardRef` hides a cycle between two modules that import each other. Move what both need into a third module.            |
+
+## Exemptions
+
+- A Nest module is an empty decorated class that registers providers and controllers. At level `all`,
+  `gspot/no-trivial-functions` is off in `*.module.ts` files, and `gspot/no-trivial-files` accepts them.
+- `@eslint-react/no-forward-ref` is off in `.ts` files, because Nest `forwardRef` resolves module references and
+  has nothing to do with React refs.
+- At level `all`, `structure/shared-prefixes` leaves out the files that end in a Nest kind, such as
+  `users.controller.ts` and `users.service.ts`. The kinds are `controller`, `service`, `module`, `guard`, `pipe`,
+  `filter`, `interceptor`, `middleware`, `decorator`, `gateway`, `resolver`, `repository`, `entity`, `dto`,
+  `strategy`, and `provider`.
+
+## Rules for coding agents
+
+The `nestjs` configuration installs `NESTJS.md` for coding agents.
