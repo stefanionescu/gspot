@@ -52,14 +52,14 @@ gspot install
 gspot check --only notes
 ```
 
-The check exits with `1` and reports a finding on the first line of the note. Replace that line with the finished
+`gspot check` exits with `1` and reports a finding on the first line of the note. Replace that line with the finished
 instruction:
 
 ```text
 Run the deployment command documented in the release guide.
 ```
 
-Run the same check again. It exits with `0` and reports no findings.
+Run the same check again. `gspot check` exits with `0` and reports no findings.
 
 ## How the command runs
 
