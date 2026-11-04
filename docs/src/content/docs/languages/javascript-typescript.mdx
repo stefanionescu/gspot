@@ -95,12 +95,3 @@ Next.js 15.5 or later. The Next.js security rules run in `javascript/eslint`.
 `gspot init` selects `react-native` and `expo` from their dependencies. The Expo configuration requires React Native and
 adds Expo lint rules and `expo/expo-doctor`. A bare React Native project needs no Expo tool. Native sources keep the
 React hooks and component lint rules.
-
-If a component wraps the React Native `Text`, add its name to the `skip` option of the lint rule:
-
-```shell
-gspot set tools.eslint.rules '{ "react-native/no-raw-text" = [{ skip = ["ThemedText"] }] }'
-```
-
-This allows text inside `ThemedText`. The lint rule still reports bare text inside a `View`. When other projects use
-other components, set the option in the scope of the native project.
