@@ -46,6 +46,11 @@ function formatAcceptedValue(accepted: AcceptedSettingValues): string {
     ].join(' or ');
 }
 
+function formatReasonedValue({ alternatives }: AcceptedSettingValues): string {
+    const values = alternatives.filter(({ types }) => !types.includes('object'));
+    return `${values.map((value) => formatAcceptedValue(value)).join(' or ')}, or ${REASONED_VALUE_LABEL}`;
+}
+
 function formatDefaults(variants: SettingVariant[]): string {
     return variants
         .map(({ setting, owners }) => {
@@ -71,7 +76,7 @@ function formatLanguageDefaults(variants: SettingVariant[]): string {
 function formatSetting(node: SettingReference): string {
     const { variants, required } = node;
     const reasons = [...new Set(variants.flatMap(({ setting }) => setting.reason_for ?? []))];
-    const accepted = node.reasoned ? REASONED_VALUE_LABEL : formatAcceptedValue(node.accepted);
+    const accepted = node.reasoned ? formatReasonedValue(node.accepted) : formatAcceptedValue(node.accepted);
     const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (SENTENCE_END.test(accepted) ? '' : '.');
     const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
     const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
@@ -150,7 +155,7 @@ function formatScopeSection(node: SettingReference): string {
         .map(({ name }) => `\`${name}\``)
         .join(', ');
     return formatSection(
-        '[[scope]]',
+        '`[[scope]]`',
         (node.description === undefined ? '' : `${formatText(node.description)}\n\n`) +
             MONOREPOS_SCOPE_MESSAGE +
             formatSettingKeys(

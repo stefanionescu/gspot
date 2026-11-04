@@ -7,6 +7,8 @@ export const SCHEMA_TYPE_LABELS: Readonly<Record<string, string>> = {
     boolean: '`true` or `false`',
     array: 'List',
     object: 'Table',
+    // A rule table checks each rule through a preprocess step, so its schema reports a transform.
+    transform: 'Table',
 };
 
 export const CHECK_RUN_LABELS = {
@@ -52,7 +54,7 @@ export const ANGLE_BRACKETS = /[<>]/gu;
 
 export const TABLE_HEADING_LEVEL = 2;
 
-export const REASONED_VALUE_LABEL = 'a reasoned value `{ value = …, reason = "…" }`';
+export const REASONED_VALUE_LABEL = 'the table `{ value = …, reason = "…" }` with a reason';
 
 export const LANGUAGE_PLACEHOLDER = '<language>';
 
