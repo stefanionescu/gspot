@@ -1,5 +1,4 @@
 import { testdir } from 'testdirs';
-import { readFileSync } from 'node:fs';
 import { isInside } from '#cli/system/paths.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -7,24 +6,17 @@ import type { GspotProject } from '#tests/types/setup.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { join, resolve, relative, delimiter } from 'node:path';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
+import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import { GSPOT_ENVIRONMENT, OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { LINE_BREAK, TOOL_PATHS_FILE, NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 
-const testToolFolders = new Set(readFileSync(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), 'utf8').split(LINE_BREAK));
-
-// The packed gspot installs its own tools, so the test tools and the source launcher stay off its PATH.
 export const isolatedEnvironment: Record<string, string | undefined> = {
     NODE_PATH: undefined,
     NODE_OPTIONS: undefined,
     PATH: (readEnvironmentVariable('PATH') ?? '')
         .split(delimiter)
-        .filter(
-            (folder) =>
-                !testToolFolders.has(folder) &&
-                [REPOSITORY_ROOT, TEST_RUN_FOLDER].every((root) => !isInside(relative(root, resolve(folder)))),
-        )
+        .filter((folder) => !isInside(relative(REPOSITORY_ROOT, resolve(folder))))
         .join(delimiter),
 };
 

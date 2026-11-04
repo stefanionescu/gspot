@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit. The integration suite also runs the e2e files. A shard such as 1/3 runs one part of the suite. Test files, then bun test options such as -t <name>, narrow the run."
+#MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit. A shard such as 1/3 runs one part of the suite. Test files, then bun test options such as -t <name>, narrow the run."
 #MISE depends=["build"]
 #USAGE arg "[suite]" default="unit" {
 #USAGE   choices "unit" "integration" "e2e"
@@ -29,9 +29,7 @@ main() {
         paths+=("$1")
         shift
     done
-    if [[ ${#paths[@]} -eq 0 && ${usage_suite} == integration ]]; then
-        paths=(./tests/suites/integration ./tests/suites/e2e)
-    elif [[ ${#paths[@]} -eq 0 ]]; then
+    if [[ ${#paths[@]} -eq 0 ]]; then
         paths=("./tests/suites/${usage_suite}")
     fi
 
@@ -43,7 +41,7 @@ main() {
         bun test --timeout=60000 --parallel --no-isolate ${shard:+"--shard=${shard}"} \
             --preload ./tests/setup/runner/unit.ts "$@" "${paths[@]}"
     else
-        bun tests/setup/runner/prepare.ts
+        bun tests/setup/runner/prepare.ts "${usage_suite}"
         bun test --timeout=360000 --parallel ${shard:+"--shard=${shard}"} \
             --preload ./tests/setup/runner/integration.ts "$@" "${paths[@]}"
     fi

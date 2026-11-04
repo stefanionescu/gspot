@@ -29,12 +29,14 @@ await runNpmPack(TEST_RUN_FOLDER, [
 // The tests run in parallel, and two installs of one tool collide in the mise store, so each tool installs here first.
 const paths = await installTestTools();
 
-await writeNodeCommand(
-    TEST_RUN_FOLDER,
-    GSPOT_LAUNCHER_PATH,
-    join(REPOSITORY_ROOT, 'packages/cli', cliPackage.bin.gspot),
-);
-await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
+if (process.argv[2] !== 'e2e') {
+    await writeNodeCommand(
+        TEST_RUN_FOLDER,
+        GSPOT_LAUNCHER_PATH,
+        join(REPOSITORY_ROOT, 'packages/cli', cliPackage.bin.gspot),
+    );
+    await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
+}
 
 async function installTestTools(): Promise<string[]> {
     const folder = join(TEST_RUN_FOLDER, TOOL_INSTALL_FOLDER);
