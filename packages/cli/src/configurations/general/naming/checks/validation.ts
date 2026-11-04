@@ -12,7 +12,7 @@ import type {
     NamingCheck,
     CategoryLimits,
     NamingSettings,
-    CompiledOverride,
+    CompiledException,
     CheckedIdentifier,
 } from '#cli/types/configurations/general.ts';
 import {
@@ -83,10 +83,10 @@ function hasTerm(words: string[], term: BannedWord): boolean {
     return false;
 }
 
-function stripPrefixes(name: string, overrides: CompiledOverride[]): string {
+function stripPrefixes(name: string, exceptions: CompiledException[]): string {
     let result = name;
-    for (const override of overrides)
-        if (override.ignoredPrefix !== undefined) result = result.replace(override.ignoredPrefix, '');
+    for (const exception of exceptions)
+        if (exception.ignoredPrefix !== undefined) result = result.replace(exception.ignoredPrefix, '');
     return result === '' ? name : result;
 }
 
@@ -109,10 +109,10 @@ function validateCase(checked: CheckedIdentifier, name: string, limits: Category
           };
 }
 
-function validateDigits(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
+function validateDigits(checked: CheckedIdentifier, words: string[], exceptions: CompiledException[]) {
     if (
         words.every((segment) => !DIGIT.test(segment) || NUMERIC_WORDS.has(segment)) ||
-        overrides.some((override) => override.digitsAllowed)
+        exceptions.some((exception) => exception.digitsAllowed)
     )
         return undefined;
     return {
@@ -140,8 +140,8 @@ function validateWordCount(checked: CheckedIdentifier, words: string[], limits: 
     };
 }
 
-function validateRepeatedWords(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
-    if (overrides.some((override) => override.repeatedWordsAllowed)) return undefined;
+function validateRepeatedWords(checked: CheckedIdentifier, words: string[], exceptions: CompiledException[]) {
+    if (exceptions.some((exception) => exception.repeatedWordsAllowed)) return undefined;
     const repeated = findRepeatedWord(words);
     return repeated === undefined
         ? undefined
@@ -212,27 +212,27 @@ function findRepeatedWord(words: string[]): string | undefined {
     return undefined;
 }
 
-function selectOverrides(settings: NamingSettings, identifier: Identifier): CompiledOverride[] {
+function selectExceptions(settings: NamingSettings, identifier: Identifier): CompiledException[] {
     const path = identifier.folder ?? identifier.file;
-    return settings.overrides.filter(
-        (override) =>
-            override.matches(path) &&
-            (override.languages === undefined || override.languages.has(identifier.language)) &&
-            (override.categories === undefined || override.categories.has(identifier.category)),
+    return settings.exceptions.filter(
+        (exception) =>
+            exception.matches(path) &&
+            (exception.languages === undefined || exception.languages.has(identifier.language)) &&
+            (exception.categories === undefined || exception.categories.has(identifier.category)),
     );
 }
 
 function buildIdentifierLimits(
     settings: NamingSettings,
     identifier: Identifier,
-    overrides: CompiledOverride[],
+    exceptions: CompiledException[],
 ): CategoryLimits {
     const base = settings.limitLookup(identifier.language, identifier.category);
     if (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category)) return { ...base, cases: [] };
-    const caseOverride = overrides.findLast((override) => override.cases !== undefined);
+    const caseException = exceptions.findLast((exception) => exception.cases !== undefined);
     return identifier.language === 'swift' && SWIFTLINT_CATEGORIES.has(identifier.category)
         ? { ...base, cases: [], maxCharacters: 0 }
-        : { ...base, cases: [...(caseOverride?.cases ?? base.cases), ...(identifier.addedCases ?? [])] };
+        : { ...base, cases: [...(caseException?.cases ?? base.cases), ...(identifier.addedCases ?? [])] };
 }
 
 function validateIdentifier(identifier: Identifier, naming: FileNaming): CheckFinding[] {
@@ -243,25 +243,25 @@ function validateIdentifier(identifier: Identifier, naming: FileNaming): CheckFi
         prefix: `${identifier.label} "${identifier.name}": `,
     };
     const { settings } = naming;
-    const overrides = selectOverrides(settings, identifier);
+    const exceptions = selectExceptions(settings, identifier);
     if (
-        overrides.some(
-            (override) =>
-                override.allowedNames?.has(identifier.name) === true ||
-                override.ignoredNames?.test(identifier.name) === true,
+        exceptions.some(
+            (exception) =>
+                exception.allowedNames?.has(identifier.name) === true ||
+                exception.ignoredNames?.test(identifier.name) === true,
         )
     )
         return [];
-    const limits = buildIdentifierLimits(settings, identifier, overrides);
-    const name = stripPrefixes(identifier.name, overrides);
+    const limits = buildIdentifierLimits(settings, identifier, exceptions);
+    const name = stripPrefixes(identifier.name, exceptions);
     const nameWords = splitWords(name);
     const words = splitWords(name.split('.', 1)[0] ?? name).filter((segment) => !DIGITS_ONLY.test(segment));
     const findings = [
         validateCase(context, name, limits),
-        validateDigits(context, nameWords, overrides),
+        validateDigits(context, nameWords, exceptions),
         validateLength(context, name, limits),
         validateWordCount(context, words, limits),
-        validateRepeatedWords(context, words, overrides),
+        validateRepeatedWords(context, words, exceptions),
         validateBannedWords(context, nameWords),
     ];
     return findings.filter((finding) => finding !== undefined);

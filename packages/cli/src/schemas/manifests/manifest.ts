@@ -10,7 +10,7 @@ import {
     manifestToolSchema,
     nonemptyStringSchema,
     operatingSystemSchema,
-    writtenNamingOverrideSchema,
+    writtenNamingExceptionSchema,
 } from '#cli/schemas/manifests/tools.ts';
 import {
     GROUPS,
@@ -220,7 +220,7 @@ const namingTableSchema = z.strictObject({
     allowed_names: z.string().array().default([]),
     allowed_phrases: z.string().array().default([]),
     languages: z.record(z.string(), languageSchema).default({}),
-    exception: writtenNamingOverrideSchema.array().default([]),
+    exception: writtenNamingExceptionSchema.array().default([]),
 });
 
 export const manifestSchema = z

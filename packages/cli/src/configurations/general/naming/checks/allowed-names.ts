@@ -7,13 +7,13 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { UNUSED_RECORD_RULE } from '#cli/config/configurations/naming.ts';
-import type { FileNames, NamedCategory, NamingOverride } from '#cli/types/configurations/general.ts';
+import type { FileNames, NamedCategory, NamingException } from '#cli/types/configurations/general.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/configurations/general/naming/checks/paths.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three name lists share this one reading of an override without categories.
-function isCategoryCovered(override: Pick<NamingOverride, 'categories'>, category: NamedCategory): boolean {
-    return override.categories === undefined || override.categories.includes(category);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three name lists share this one reading of an exception without categories.
+function isCategoryCovered(exception: Pick<NamingException, 'categories'>, category: NamedCategory): boolean {
+    return exception.categories === undefined || exception.categories.includes(category);
 }
 
 async function readSourceNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
@@ -44,30 +44,30 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
     return files;
 }
 
-function listOverrideNames(
-    override: Session['settings']['naming']['exception'][number],
+function listExceptionNames(
+    exception: Session['settings']['naming']['exception'][number],
     files: FileNames[],
     folders: FileNames['folders'],
 ): Set<string> {
-    const isMatched = buildPathMatcher(override.paths);
+    const isMatched = buildPathMatcher(exception.paths);
     const sourceNames = new Set(
         files
             .filter((file) => isMatched(file.path))
             .flatMap((file) => {
                 const declarations = file.declarations
-                    .filter((identifier) => isCategoryCovered(override, identifier.category))
+                    .filter((identifier) => isCategoryCovered(exception, identifier.category))
                     .map((identifier) => identifier.name);
-                return isCategoryCovered(override, 'files') ? [file.stem, ...declarations] : declarations;
+                return isCategoryCovered(exception, 'files') ? [file.stem, ...declarations] : declarations;
             }),
     );
-    if (isCategoryCovered(override, 'folders'))
+    if (isCategoryCovered(exception, 'folders'))
         for (const identifier of folders)
             if (isMatched(identifier.folder ?? identifier.file)) sourceNames.add(identifier.name);
     return sourceNames;
 }
 
 /**
-Reports allowed names in root naming exceptions that match no code or path name. Only the files that an override with
+Reports allowed names in root naming exceptions that match no code or path name. Only the files that an exception with
 allowed names covers, by their path or a folder above them, get parsed.
 
 @param session the repository and its tools.
@@ -75,8 +75,8 @@ allowed names covers, by their path or a folder above them, get parsed.
 */
 export async function checkAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const matchers = session.settings.naming.exception
-        .filter((override) => (override.allowed_names ?? []).length > 0)
-        .map((override) => buildPathMatcher(override.paths));
+        .filter((exception) => (exception.allowed_names ?? []).length > 0)
+        .map((exception) => buildPathMatcher(exception.paths));
     const covered = session.repository.files.filter((file) => {
         const segments = file.path.split('/');
         return segments.some((_, index) => {
@@ -86,9 +86,9 @@ export async function checkAllowedNames(session: Session, planned: PlannedCheck)
     });
     const files = await readSourceNames(session, { ...planned, files: covered });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');
-    return session.settings.naming.exception.flatMap((override, index) => {
-        const sourceNames = listOverrideNames(override, files, folders);
-        return (override.allowed_names ?? [])
+    return session.settings.naming.exception.flatMap((exception, index) => {
+        const sourceNames = listExceptionNames(exception, files, folders);
+        return (exception.allowed_names ?? [])
             .filter((name) => !sourceNames.has(name))
             .map((name) => ({
                 file: SETTINGS_FILE,

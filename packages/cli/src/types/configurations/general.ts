@@ -7,8 +7,8 @@ import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { Config, TrackedFile } from '#cli/types/repository.ts';
 import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
-import type { namingOverrideSchema } from '#cli/schemas/manifests/tools.ts';
 import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
+import type { namingExceptionSchema } from '#cli/schemas/manifests/tools.ts';
 import type { Finding, Substitutions } from '#cli/types/engine/tool-runs.ts';
 import type { Level, ImportRule, TableSettings } from '#cli/types/settings.ts';
 import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
@@ -81,7 +81,7 @@ export type FileNaming = { settings: NamingSettings; isTestFile: boolean };
 
 export type CheckedIdentifier = FileNaming & { identifier: Identifier; place: FindingPlace; prefix: string };
 
-export type CompiledOverride = {
+export type CompiledException = {
     matches: (path: string) => boolean;
     languages: Set<string> | undefined;
     categories: Set<string> | undefined;
@@ -98,7 +98,7 @@ export type CategoryLimits = { cases: NamingCase[]; maxCharacters: number; maxWo
 export type NamingSettings = {
     bannedWords: BannedWord[];
     allowedPhrases: string[][];
-    overrides: CompiledOverride[];
+    exceptions: CompiledException[];
     limitLookup: (language: string, category: string) => CategoryLimits;
 };
 
@@ -178,7 +178,7 @@ export type GeneratorOutput = NonNullable<Check['generator_outputs']>[number];
 
 export type PathContainer = NonNullable<Configuration['naming']>['path_containers'][number];
 
-export type NamingOverride = z.infer<typeof namingOverrideSchema>;
+export type NamingException = z.infer<typeof namingExceptionSchema>;
 
 export type NamedCategory = (typeof NAMED_CATEGORIES)[number];
 

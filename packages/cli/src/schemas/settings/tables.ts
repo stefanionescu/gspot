@@ -6,7 +6,7 @@ import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
 import type { ImportRule, SettingsError, NamingCategory } from '#cli/types/settings.ts';
-import { nonemptyStringSchema, namingOverrideSchema, operatingSystemSchema } from '#cli/schemas/manifests/tools.ts';
+import { nonemptyStringSchema, namingExceptionSchema, operatingSystemSchema } from '#cli/schemas/manifests/tools.ts';
 
 import {
     allowReasonedValue,
@@ -250,17 +250,19 @@ const lists = {
             description:
                 'Words this repository replaces, each with the word to use instead. The naming checks report the word in identifiers, and the prose checks in documentation, code comments, and commit messages. A scope adds its words to the root words.',
         }),
-    exception: namingOverrideSchema
+    exception: namingExceptionSchema
         .extend({
-            paths: nonemptyPathsSchema.default(['**']).describe(namingOverrideSchema.shape.paths.description as string),
+            paths: nonemptyPathsSchema
+                .default(['**'])
+                .describe(namingExceptionSchema.shape.paths.description as string),
             languages: z
                 .enum(SETTING_LANGUAGES)
                 .array()
                 .optional()
-                .describe(namingOverrideSchema.shape.languages.description as string),
-            allow_digits: namingOverrideSchema.shape.allow_digits.default(false),
-            allow_repeated_words: namingOverrideSchema.shape.allow_repeated_words.default(false),
-            reason: z.string().describe(namingOverrideSchema.shape.reason.description as string),
+                .describe(namingExceptionSchema.shape.languages.description as string),
+            allow_digits: namingExceptionSchema.shape.allow_digits.default(false),
+            allow_repeated_words: namingExceptionSchema.shape.allow_repeated_words.default(false),
+            reason: z.string().describe(namingExceptionSchema.shape.reason.description as string),
         })
         .array()
         .default([])

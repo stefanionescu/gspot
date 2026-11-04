@@ -50,7 +50,7 @@ const identifierCategorySchema = z.enum(NAMED_CATEGORIES);
 
 const sourcePathSchema = z.string().min(1);
 
-export const namingOverrideSchema = z.strictObject({
+export const namingExceptionSchema = z.strictObject({
     paths: sourcePathSchema.array().min(1).optional().meta({ description: 'Where the exception applies.' }),
     languages: z.string().array().optional().meta({ description: 'The languages it applies to.' }),
     categories: identifierCategorySchema
@@ -68,7 +68,7 @@ export const namingOverrideSchema = z.strictObject({
     reason: z.string().optional().meta({ description: 'Why these names may break the rules.' }),
 });
 
-export const writtenNamingOverrideSchema = namingOverrideSchema.extend({
+export const writtenNamingExceptionSchema = namingExceptionSchema.extend({
     reason: z.string().min(1),
 });
 

@@ -10,30 +10,34 @@ import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/
 import type {
     NamingCase,
     BannedWord,
-    NamingOverride,
     NamingSettings,
-    CompiledOverride,
+    NamingException,
+    CompiledException,
     ParsedNamingLanguageFields,
 } from '#cli/types/configurations/general.ts';
 
 // JavaScript files follow the naming table of TypeScript, so one set of naming.typescript settings covers both.
 const SHARED_NAMING_LANGUAGES: Readonly<Record<string, string>> = { javascript: 'typescript' };
 
-function compileOverride(override: NamingOverride): CompiledOverride {
-    const [languages, categories, allowedNames] = [override.languages, override.categories, override.allowed_names].map(
-        (names) => (names === undefined || names.length === 0 ? undefined : new Set(names)),
-    );
+function compileException(exception: NamingException): CompiledException {
+    const [languages, categories, allowedNames] = [
+        exception.languages,
+        exception.categories,
+        exception.allowed_names,
+    ].map((names) => (names === undefined || names.length === 0 ? undefined : new Set(names)));
     return {
-        matches: buildPathMatcher(override.paths ?? ['**']),
+        matches: buildPathMatcher(exception.paths ?? ['**']),
         languages,
         categories,
         allowedNames,
-        digitsAllowed: override.allow_digits === true,
-        repeatedWordsAllowed: override.allow_repeated_words === true,
-        ignoredPrefix: override.ignored_prefix === undefined ? undefined : new RegExp(override.ignored_prefix, 'u'),
+        digitsAllowed: exception.allow_digits === true,
+        repeatedWordsAllowed: exception.allow_repeated_words === true,
+        ignoredPrefix: exception.ignored_prefix === undefined ? undefined : new RegExp(exception.ignored_prefix, 'u'),
         ignoredNames:
-            override.ignored_names_pattern === undefined ? undefined : new RegExp(override.ignored_names_pattern, 'u'),
-        cases: override.cases,
+            exception.ignored_names_pattern === undefined
+                ? undefined
+                : new RegExp(exception.ignored_names_pattern, 'u'),
+        cases: exception.cases,
     };
 }
 
@@ -101,20 +105,20 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
             .entries()
             .flatMap(([term, replacement]) => compileBannedWords([term], { setting: 'naming.terms', replacement })),
     ];
-    const overrides = [
-        compileOverride({ allowed_names: shipped.allowed_names }),
-        ...shipped.exception.map((override) => compileOverride(override)),
+    const exceptions = [
+        compileException({ allowed_names: shipped.allowed_names }),
+        ...shipped.exception.map((exception) => compileException(exception)),
         ...configurations
             .filter((configuration) => configuration.name !== 'naming')
             .flatMap((configuration) =>
-                (configuration.naming?.exception ?? []).map((override) => compileOverride(override)),
+                (configuration.naming?.exception ?? []).map((exception) => compileException(exception)),
             ),
-        ...settings.naming.exception.map((override) => compileOverride(override)),
+        ...settings.naming.exception.map((exception) => compileException(exception)),
     ];
     return {
         bannedWords: terms,
         allowedPhrases: shipped.allowed_phrases.map((phrase) => splitWords(phrase)),
-        overrides,
+        exceptions,
         limitLookup: buildLimitLookup(scopeSettings),
     };
 }
