@@ -137,10 +137,10 @@ now fails the check.
 
 ## Ruff
 
-Ruff takes rule codes to add in `tools.ruff.rules`, not rule options. Its limits, such as `limits.max_cyclomatic_complexity` and
-`limits.max_function_parameters`, come from [limits](/reference/gspot-toml/#limits), and `python.docstring_convention`
-sets the pydocstyle convention. To turn a Ruff lint rule off, ignore it by its code:
-`gspot ignore python/ruff --rule <code> --reason "<why>"`.
+Ruff takes rule codes to add in `tools.ruff.rules`, not rule options. Its limits, such as
+`limits.max_cyclomatic_complexity` and `limits.max_function_parameters`, come from
+[limits](/reference/gspot-toml/#limits), and `python.docstring_convention` sets the pydocstyle convention. To turn a
+Ruff lint rule off, ignore it by its code: `gspot ignore python/ruff --rule <code> --reason "<why>"`.
 
 ## Stylelint
 

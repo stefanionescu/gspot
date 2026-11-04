@@ -72,9 +72,9 @@ Each check runs at one stage:
 | `message` | On each new commit message.              |
 | `manual`  | Only when `gspot check --only` names it. |
 
-Git runs the `commit` checks in the `pre-commit` hook, the `push` checks in the `pre-push` hook, and the `message` checks
-in the `commit-msg` hook. No hook runs the `manual` checks. CI and `gspot check` with no `--stage` run the commit and
-push checks.
+Git runs the `commit` checks in the `pre-commit` hook, the `push` checks in the `pre-push` hook, and the `message`
+checks in the `commit-msg` hook. No hook runs the `manual` checks. CI and `gspot check` with no `--stage` run the commit
+and push checks.
 
 ```mermaid
 flowchart LR

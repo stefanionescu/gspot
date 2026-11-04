@@ -34,8 +34,9 @@ gspot remove nextjs --reason "The app no longer uses Next.js."
 
 `gspot remove` saves the configuration and its reason under `removed_configurations`, so gspot stops suggesting it.
 `gspot add nextjs` undoes the removal. gspot refuses to remove a configuration that another selected configuration
-needs. It also refuses to add or remove the [configurations that it selects in every repository](/reference/configurations/#always-selected);
-change the level or ignore a check instead. When the configurations need new tools, run `gspot install`.
+needs. It also refuses to add or remove the [configurations that it selects in every
+repository](/reference/configurations/#always-selected); change the level or ignore a check instead. When the
+configurations need new tools, run `gspot install`.
 
 In the file, the selection reads:
 
@@ -95,7 +96,8 @@ To pass a value that starts with `-`, put `--` before the values:
 gspot set ci.setup_command -- bun install --frozen-lockfile
 ```
 
-To change a setting in one folder, add `--scope <path>`. See [Settings in a scope](/configure/monorepos/#settings-in-a-scope).
+To change a setting in one folder, add `--scope <path>`. See [Settings in a
+scope](/configure/monorepos/#settings-in-a-scope).
 
 ## Edit records by hand
 

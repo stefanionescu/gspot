@@ -26,8 +26,9 @@ The level decides which tools run and which tool configs init replaces. To start
 gspot init --level all
 ```
 
-To select configurations explicitly, use `gspot init --configurations typescript,react`. Repeat `--configurations`
-to add more names, such as `--configurations vitest`. See [Add or remove a configuration](/configure/gspot-toml/#add-or-remove-a-configuration).
+To select configurations explicitly, use `gspot init --configurations typescript,react`. Repeat `--configurations` to
+add more names, such as `--configurations vitest`. See [Add or remove a
+configuration](/configure/gspot-toml/#add-or-remove-a-configuration).
 
 The plan has these parts:
 
@@ -70,10 +71,10 @@ repository without code gets the defaults of gspot: 4 spaces, 120 columns, and s
 
 ## Ignored paths
 
-`gspot init` turns `.prettierignore`, `.eslintignore`, the Ruff `exclude` and `extend-exclude` settings, and the
-pyright `include` and `exclude` settings into `[[ignore]]` records. A pyright `include` becomes an ignore of each folder
-of Python files that it leaves out. init keeps a pattern only when it matches a tracked file, because gspot reads only
-tracked files. It drops a pattern that starts with `!`, and the table lists it as dropped.
+`gspot init` turns `.prettierignore`, `.eslintignore`, the Ruff `exclude` and `extend-exclude` settings, and the pyright
+`include` and `exclude` settings into `[[ignore]]` records. A pyright `include` becomes an ignore of each folder of
+Python files that it leaves out. `gspot init` keeps a pattern only when it matches a tracked file, because gspot reads
+only tracked files. It drops a pattern that starts with `!`, and the table lists it as dropped.
 
 ## Lint rules
 
@@ -103,14 +104,14 @@ gspot resolves its own ESLint and Stylelint rules through the plugins that `gspo
 it installs them. Run `gspot scan` before init to see their table. commitlint, ESLint, and Stylelint print your rules
 through the copy in your `node_modules`, so run the install of your package manager first.
 
-gspot does not compare the other replaced configs. The plan lists each of them under `delete`. init reads the settings
-of Prettier at the root and at a scope, and the settings of Ruff and markdownlint at the root. The table names every
-other config of these tools as dropped.
+gspot does not compare the other replaced configs. The plan lists each of them under `delete`. `gspot init` reads the
+settings of Prettier at the root and at a scope, and the settings of Ruff and markdownlint at the root. The table names
+every other config of these tools as dropped.
 
 To keep a rule of an ESLint or Stylelint plugin, add a `[[tools.eslint.plugins]]` or `[[tools.stylelint.plugins]]`
-record. init never writes one, because a record adds code that runs in every check. See
-[plugins](/configure/lint-rules/#plugins). A tool that gspot does not run can remain a
-[command check](/configure/command-checks/).
+record. `gspot init` never writes one, because a record adds code that runs in every check. See
+[plugins](/configure/lint-rules/#plugins). A tool that gspot does not run can remain a [command
+check](/configure/command-checks/).
 
 ## Commands that still call your old tools
 
@@ -136,8 +137,8 @@ gspot init --from ../api/gspot.toml
 
 `gspot init` selects the configurations of that file and the ones it detects here. It copies the settings that fit any
 repository: the level, limits and their reasons, naming, formatting, prose, coverage, and lint rule lists. It also
-copies word lists and each ignore of a whole check or lint rule. `--level` wins over the level of the file. init turns
-on the hooks and the rules for the new repository; it does not copy their switches.
+copies word lists and each ignore of a whole check or lint rule. `--level` wins over the level of the file. `gspot init`
+turns on the hooks and the rules for the new repository; it does not copy their switches.
 
 The plan lists under `left out` each setting that belongs to the other repository:
 
@@ -151,12 +152,13 @@ In a repository with code, init sets the indentation, line width, and quotes fro
 Prettier, EditorConfig, or Ruff file, or else from the Prettier defaults. The `[format]` of the file sets only the other
 formatting keys.
 
-init selects each configuration of the file even when this repository has none of its files yet, so its rules reach
-your coding agent before the first file. Its checks report `skipped (no-files)` until the files exist. To drop one,
-run `gspot remove <name> --reason "<why>"`.
+`gspot init` selects each configuration of the file even when this repository has none of its files yet, so its rules
+reach your coding agent before the first file. Its checks report `skipped (no-files)` until the files exist. To drop
+one, run `gspot remove <name> --reason "<why>"`.
 
-init copies the file once. A later change to it does not reach this repository. To share a setup with a team, keep its
-`gspot.toml` in a repository that everyone clones. To use one file without a clone, download it at a commit first:
+`gspot init` copies the file once. A later change to it does not reach this repository. To share a setup with a team,
+keep its `gspot.toml` in a repository that everyone clones. To use one file without a clone, download it at a commit
+first:
 
 ```shell
 curl -fsSL -o ../team.toml https://raw.githubusercontent.com/acme/policies/<commit>/gspot.toml
