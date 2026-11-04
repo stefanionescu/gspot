@@ -24,6 +24,7 @@ A more specific rule wins over a general one.
 - `.gspot/rules/JAVASCRIPT.md`: when you change JavaScript or TypeScript code.
 - `.gspot/rules/NODE.md`: when code runs on Node.
 - `.gspot/rules/OPERATIONS.md`: when you write a deployment, publishing, or remote shell script.
+- `.gspot/rules/PLAYWRIGHT.md`: when you write or change a Playwright test.
 - `.gspot/rules/SAFETY.md`: when a shell script deletes files, downloads, uses `sudo`, starts background jobs, or parses JSON or YAML.
 - `.gspot/rules/TYPESCRIPT.md`: when you change TypeScript code.
 
