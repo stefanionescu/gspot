@@ -165,17 +165,17 @@ Find newly detected configurations in each project scope, respecting removals.
 */
 export function listDetectedAdditions(
     session: ConfigurationSelection,
-): Array<{ scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }> {
+): Array<{ scopePath: string; configurations: string[]; evidence: ConfigurationEvidence[] }> {
     const proposed = selectProposedConfigurations({ repository: session.repository, options: {} });
     return [
-        { scope: '', names: proposed.rootNames },
-        ...[...proposed.scopeConfigurations].map(([scope, names]) => ({ scope, names })),
-    ].flatMap(({ scope, names }) => {
-        const selected = session.scopes.find((each) => each.path === scope)?.configurations ?? [];
+        { scopePath: '', names: proposed.rootNames },
+        ...[...proposed.scopeConfigurations].map(([scopePath, names]) => ({ scopePath, names })),
+    ].flatMap(({ scopePath, names }) => {
+        const selected = session.scopes.find((each) => each.path === scopePath)?.configurations ?? [];
         const removed = new Set([
             ...session.settings.removed_configurations,
             ...[...session.settings.scopes]
-                .filter(([ancestor]) => isInScope(scope, ancestor))
+                .filter(([ancestor]) => isInScope(scopePath, ancestor))
                 .flatMap(([, table]) => table.removed_configurations),
         ]);
         const configurations = names.filter(
@@ -185,7 +185,7 @@ export function listDetectedAdditions(
             ? []
             : [
                   {
-                      scope,
+                      scopePath,
                       configurations,
                       evidence: proposed.detected.filter((match) => configurations.includes(match.configuration)),
                   },

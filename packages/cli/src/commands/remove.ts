@@ -80,7 +80,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         context,
     } = await readConfigurationEditContext(options);
     const detected = listDetectedAdditions(context.session)
-        .filter((addition) => addition.scope === scopePath)
+        .filter((addition) => addition.scopePath === scopePath)
         .flatMap((addition) => addition.configurations);
     const selected = [...new Set([...selectedNames, ...detected])];
     const kept = selected.filter((name) => !options.configurations.includes(name));

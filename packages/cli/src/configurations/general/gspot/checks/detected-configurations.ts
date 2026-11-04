@@ -14,8 +14,8 @@ Reports each configuration that the files of a scope suggest and that gspot.toml
 @param _planned the configured check and selected scope files.
 */
 function checkDetectedConfigurations(session: Session, _planned: PlannedCheck): CheckFinding[] {
-    return listDetectedAdditions(session).flatMap(({ scope, evidence }) => {
-        const scopeArgument = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
+    return listDetectedAdditions(session).flatMap(({ scopePath, evidence }) => {
+        const scopeArgument = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
         return evidence.map(({ configuration, evidence: found }) => ({
             file: SETTINGS_FILE,
             line: 1,
