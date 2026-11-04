@@ -1,0 +1,34 @@
+---
+title: React Native
+description: Lint React Native apps for lists, touch targets, window size, and stored secrets.
+configurations: [react-native]
+---
+
+The `react-native` configuration adds the rules of `@react-native/eslint-plugin`, and patterns for lists, touch
+targets, the window size, and secrets in AsyncStorage. It adds no check of its own and no Semgrep rules; its rules run
+in `javascript/eslint`.
+
+## Detection
+
+gspot selects `react-native` in a scope whose `package.json` depends on `react-native`. The configuration requires
+`react`, so the [React](/frameworks/react/) rules run too. The browser accessibility rules of `react-dom` stay off in
+a scope that selects `react-native`. The [Expo](/frameworks/expo/) configuration requires `react-native`.
+
+Native sources get the React Native globals, with `process` and `require` but no other Node.js globals; see
+[JavaScript runtimes](/languages/javascript-typescript/#javascript-runtimes).
+
+## ESLint rules
+
+`javascript/eslint` adds `@react-native/platform-colors` and `@react-native/no-deep-imports` to the JavaScript and
+TypeScript files of the scope. The `gspot/restricted-syntax` rule reports these patterns:
+
+| Pattern                                                                                                         | Level | Message                                                                                      |
+| --------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------------------- |
+| A `.map()` call inside a `ScrollView`                                                                           | Both  | A ScrollView renders every row at once. Render a list that grows through FlatList.           |
+| `AsyncStorage.setItem` with a key that names a token, secret, password, or credential                           | Both  | AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform. |
+| `Dimensions.get` at the top level of a module                                                                   | Both  | The window size changes after load. Read it with useWindowDimensions in a component.         |
+| An import of `TouchableOpacity`, `TouchableHighlight`, `TouchableWithoutFeedback`, or `TouchableNativeFeedback` | `all` | Use Pressable. The Touchable components are kept for old code and get no new behavior.       |
+
+## Rules for coding agents
+
+The `react-native` configuration installs `REACT-NATIVE.md` for coding agents.
