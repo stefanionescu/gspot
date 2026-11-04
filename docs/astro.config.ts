@@ -158,11 +158,6 @@ export default defineConfig({
     site: cliPackage.homepage,
     image: { service: passthroughImageService() },
     prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
-    redirects: {
-        '/start/overview/': '/start/quickstart/',
-        '/start/footprint/': '/reference/generated-files/',
-        '/configure/files/': '/use/ignore/#ignore-files-in-every-check',
-    },
     vite: {
         define: { 'import.meta.env.PUBLIC_GSPOT_README_OPENING': JSON.stringify(README_OPENING) },
         resolve: {
