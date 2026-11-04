@@ -11,9 +11,10 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGspot, spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
 import type { Sandbox, SandboxPlan, ProcessOutput, InstalledSandboxPlan } from '#tests/types/setup.ts';
+import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON, SANDBOX_REMOVAL_REASON } from '#tests/config/setup/sandboxes.ts';
 
 async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });
@@ -46,6 +47,23 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     if (plan.dependencies !== undefined) await pinSandboxNpm(root);
 }
 
+/**
+Write gspot.toml and the generated files of a sandbox that installs no tools, with the format that init carries from
+the Prettier config of an installed sandbox.
+*/
+async function writeUninstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<void> {
+    const removed = (plan.without ?? []).map((name) => `${name} = ${JSON.stringify(SANDBOX_REMOVAL_REASON)}\n`);
+    const tables = `[format]\nindent_width = ${String(JSON_INDENT)}\nquotes = "single"\n${
+        removed.length === 0 ? '' : `[removed_configurations]\n${removed.join('')}`
+    }`;
+    await writeFile(
+        join(root, SETTINGS_FILE),
+        buildSandboxSettings([...plan.configurations], { level: plan.level ?? 'all', rules: true, tables }),
+    );
+    commitAll(root);
+    await applyGeneratedFiles(root);
+}
+
 async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<void> {
     await writeSandbox(root, plan);
     if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
@@ -53,6 +71,10 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
     for (const command of commands) {
         const result = await runCommand([...command], { cwd: root });
         if (result.code !== 0) throw new Error(`${command.join(' ')} failed: ${result.stdout}${result.stderr}`);
+    }
+    if (plan.install === false) {
+        await writeUninstalledSandbox(root, plan);
+        return;
     }
     await writeFile(
         join(root, '.prettierrc.json'),
@@ -69,7 +91,6 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
             configurations: plan.configurations,
             without: [...(plan.without ?? [])],
             level: plan.level ?? 'all',
-            ...(plan.install === false && { install: false }),
         },
     );
 }
@@ -113,7 +134,7 @@ export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox
 
 /**
 Run init in a sandbox at its level, which installs the tools, and remove the configurations that it leaves out. After
-a removal, install the tools of the remaining configurations, unless the plan asks for no install.
+a removal, install the tools of the remaining configurations.
 */
 export async function initSandbox(
     sandbox: Sandbox,
@@ -121,7 +142,6 @@ export async function initSandbox(
         configurations: readonly string[];
         level?: Level;
         without?: readonly string[];
-        install?: false;
     },
 ): Promise<ProcessOutput> {
     const configurations =
@@ -132,12 +152,7 @@ export async function initSandbox(
     const initialized = await runGspotStep(sandbox, ['init', ...configurations, ...level, '--json']);
     const excluded = options.without ?? [];
     for (const configuration of excluded)
-        await runGspotStep(sandbox, [
-            'remove',
-            configuration,
-            '--reason',
-            'The sandbox exercises selected checks without this configuration.',
-        ]);
-    if (options.install !== false && excluded.length > 0) await runGspotStep(sandbox, ['install']);
+        await runGspotStep(sandbox, ['remove', configuration, '--reason', SANDBOX_REMOVAL_REASON]);
+    if (excluded.length > 0) await runGspotStep(sandbox, ['install']);
     return initialized;
 }

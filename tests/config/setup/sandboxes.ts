@@ -243,3 +243,5 @@ export const IGNORE_ALL_PATTERN = '*\n';
 export const CHANGED_CONTEXT = 'changed context';
 
 export const EMPTY_TOOL_INSTALL = { installed: [], missing: [], notes: [], steps: [] };
+
+export const SANDBOX_REMOVAL_REASON = 'The sandbox exercises selected checks without this configuration.';

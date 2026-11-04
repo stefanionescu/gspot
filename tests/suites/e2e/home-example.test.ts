@@ -48,7 +48,6 @@ async function prepareExample(installation: GspotProject): Promise<string> {
         {
             configurations: ['typescript'],
             level: 'all',
-            install: false,
         },
     );
     // init turns on the hooks, which start the gspot that npm installs; this test runs gspot from its installation.

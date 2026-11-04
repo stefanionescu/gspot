@@ -5,9 +5,9 @@ import { createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { GITHUB_WORKFLOW } from '#cli/config/generation.ts';
-import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -40,9 +40,11 @@ test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Workflow test\n' });
 
     commitAll(sandbox.path);
-    await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['github-actions'], install: false });
-    const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['github-actions'], { level: 'all', rules: true }),
+    );
+    await applyGeneratedFiles(sandbox.path);
     const ci = await spawnGspot(sandbox.path, ['set', 'ci.enabled', 'true']);
     expect(ci.code, ci.stdout + ci.stderr).toBe(0);
     const workflow = join(sandbox.path, GITHUB_WORKFLOW);
