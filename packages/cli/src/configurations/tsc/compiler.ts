@@ -104,21 +104,21 @@ Shares a project compile across scopes, but never skips a second run in the same
 @param projectCheck what identifies the compile.
 @param projectCheck.check the ID of the planned tsc run.
 @param projectCheck.path the tsconfig of the project.
-@param projectCheck.scope the folder that runs it.
+@param projectCheck.scopePath the folder that runs it.
 @param projectCheck.required the compiler flags for one scope.
 @returns whether this scope owns the project: true when it won the claim, or won it earlier in this run.
 */
 export function claimProjectCheck(
     cache: RunCache,
-    projectCheck: { check: string; path: string; scope: string; required: Record<string, boolean> },
+    projectCheck: { check: string; path: string; scopePath: string; required: Record<string, boolean> },
 ): boolean {
-    const { check, path, scope, required } = projectCheck;
+    const { check, path, scopePath, required } = projectCheck;
     const key = JSON.stringify([
         check,
         path,
         Object.entries(required).toSorted(([left], [right]) => compareText(left, right)),
     ]);
-    return remember(cache, CHECKED_PROJECTS, key, () => scope) === scope;
+    return remember(cache, CHECKED_PROJECTS, key, () => scopePath) === scopePath;
 }
 
 /**
@@ -145,7 +145,7 @@ export async function runTsc(
         !claimProjectCheck(session.cache, {
             check: planned.check.id,
             path: target,
-            scope: planned.scope.path,
+            scopePath: planned.scope.path,
             required,
         })
     )
@@ -200,9 +200,9 @@ Lists the tsconfig files and sources of each project, for the copy.
 */
 export function listCompilerFiles(session: Session, projects: Iterable<readonly [string, ParsedTsconfig]>): string[] {
     return [...projects]
-        .flatMap(([scope, config]) => [
+        .flatMap(([scopePath, config]) => [
             ...config.tsconfigFiles,
-            ...listSourceFiles(session.root, scope, session.cache, config).map((source) => source.fileName),
+            ...listSourceFiles(session.root, scopePath, session.cache, config).map((source) => source.fileName),
         ])
         .map((path) => convertToPosixPath(relative(session.root, path)))
         .filter(isInside);

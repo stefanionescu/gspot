@@ -63,7 +63,7 @@ function claimOwnedProjects(
         const isOwned = claimProjectCheck(session.cache, {
             check: planned.check.id,
             path: join(session.root, project.path),
-            scope: planned.scope.path,
+            scopePath: planned.scope.path,
             required,
         });
         if (isOwned) owned.push(project);
