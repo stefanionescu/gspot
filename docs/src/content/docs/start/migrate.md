@@ -27,7 +27,7 @@ gspot init --level all
 ```
 
 To select configurations explicitly, use `gspot init --configurations typescript,react`. Repeat `--configurations`
-to add more names, such as `--configurations vitest`. See [Choose configurations](/configure/gspot-toml/#choose-configurations).
+to add more names, such as `--configurations vitest`. See [Add or remove a configuration](/configure/gspot-toml/#add-or-remove-a-configuration).
 
 The plan has these parts:
 

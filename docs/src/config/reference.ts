@@ -158,7 +158,7 @@ export const TYPE_INFORMATION_MESSAGE =
     ' The rule needs the type information of a TypeScript project, and reports nothing without it.';
 
 export const BANNED_NAME_MESSAGE =
-    'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name override.\n\n';
+    'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name exception.\n\n';
 
 export const MONOREPOS_SCOPE_MESSAGE = 'See [Monorepos](/configure/monorepos/) for how a scope inherits settings.\n\n';
 
