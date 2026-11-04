@@ -25,7 +25,6 @@ export const SIDEBAR = [
         items: [
             { slug: 'start/quickstart' },
             { slug: 'start/install' },
-            { slug: 'start/footprint' },
             { slug: 'start/migrate' },
             { slug: 'start/upgrade' },
             { slug: 'start/compare' },

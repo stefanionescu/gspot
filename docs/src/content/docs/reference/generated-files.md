@@ -1,51 +1,97 @@
 ---
-title: Generated files
-description: Which files gspot writes, which to commit, and which to leave alone.
+title: Files and caches
+description: The files gspot writes in your repository, the tools it installs, and the caches it keeps.
 ---
 
-Change `gspot.toml`, then run `gspot install`; gspot writes every generated file from it.
+gspot writes its files from `gspot.toml`. To change one, change `gspot.toml` and run `gspot install`.
 
-## What gspot writes
+```mermaid
+flowchart LR
+    accTitle: What gspot init writes
+    accDescr: gspot init writes gspot.toml and generated files that you commit, installs tools into folders that Git ignores, and fills caches outside the repository.
+    init["gspot init"]
+    subgraph commit["Files to commit"]
+        settings["gspot.toml"]
+        folder[".gspot/: tool configs, rules, hooks, tool pins"]
+        outside["Pointer files and the gspot blocks of AGENTS.md and .gitattributes"]
+    end
+    subgraph ignored["Kept out of Git"]
+        tools[".gspot/node_modules/, .gspot/.venv/, .gspot/vale/"]
+    end
+    subgraph machine["Outside the repository"]
+        caches["mise tools, uv Python versions, the gspot cache"]
+    end
+    init --> commit
+    init --> ignored
+    init --> machine
+```
 
-| Path                                                                                                                      | What it holds                                                                                                                                                                                                                                               | Commit |
-| ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `gspot.toml`                                                                                                              | Your settings.                                                                                                                                                                                                                                              | Yes    |
-| `gspot.baseline.json`                                                                                                     | The findings that you accepted. `gspot baseline` writes it, and `gspot install` leaves it alone. See [Baseline existing findings](/use/baseline/).                                                             | Yes    |
-| `.gspot/configurations/<group>/<configuration>/`                                                                          | The config files of each configuration, named after their tool. Each configuration with ESLint rules gets its own `eslint.mjs`, which the JavaScript configuration imports. A scope that needs other text gets `scopes/<scope path>/<file>` in that folder. | Yes    |
-| The `rules` folder of `.gspot/`                                                                                           | The rules for coding agents.                                                                                                                                                                                                                                | Yes    |
-| `.gspot/package.json` and its lockfile                                                                                    | The npm tools.                                                                                                                                                                                                                                              | Yes    |
-| `pyproject.toml` and `uv.lock` in `.gspot/`                                                                               | The Python tools.                                                                                                                                                                                                                                           | Yes    |
-| `.gspot/mise.toml` and its `mise.lock`                                                                                    | The programs that mise installs, and their locked versions.                                                                                                                                                                                                 | Yes    |
-| `.gspot/hooks/`                                                                                                           | The Git hook scripts.                                                                                                                                                                                                                                       | Yes    |
-| Pointer files, such as `eslint.config.mjs`, `ruff.toml`, `pyrightconfig.json`, and `.swiftlint.yml` in Swift test folders | Files that lead a tool or editor to its config file, at each scope root that needs one and inside test folders.                                                                                                                                             | Yes    |
-| `.editorconfig` and `.prettierignore`                                                                                     | Editor settings and the files the formatter skips.                                                                                                                                                                                                          | Yes    |
-| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`                                                                   | The CI job.                                                                                                                                                                                                                                                 | Yes    |
-| The managed blocks in `AGENTS.md` and `.gitattributes`                                                                    | The part between the gspot markers. The rest of each file stays yours.                                                                                                                                                                                      | Yes    |
-| Keys in your own files, such as `install.security.scanner` in `bunfig.toml` and tool keys in `package.json`               | Install options. The other keys stay yours.                                                                                                                                                                                                                 | Yes    |
-| `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`                                                                   | Installed tools. The `.gitignore` in `.gspot/` keeps them out of Git.                                                                                                                                                                                       | No     |
+## Files to commit
 
-The gspot block of `.gitattributes` marks every generated path outside `.gspot/` with `linguist-generated`.
-Use that block to find the generated pointer files and enabled CI workflow in your repository. Run `gspot install` in
-each new clone.
+| Path                                                                                    | Holds                                                                        |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `gspot.toml`                                                                            | Your settings.                                                               |
+| `gspot.baseline.json`                                                                   | The counts of a [baseline](/use/baseline/). `gspot install` leaves it alone. |
+| `.gspot/configurations/`                                                                | The config files of the tools.                                               |
+| `.gspot/rules/`                                                                         | The rules for coding agents.                                                 |
+| `.gspot/hooks/`                                                                         | The Git hooks.                                                               |
+| `.gspot/package.json`, `.gspot/pyproject.toml`, `.gspot/mise.toml`, and their lockfiles | The pinned tools.                                                            |
+| Pointer files, such as `eslint.config.mjs` and `ruff.toml`                              | Files that lead a tool or an editor to its config file in `.gspot/`.         |
+| `.editorconfig` and `.prettierignore`                                                   | Editor settings, and the files that Prettier skips.                          |
+| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`                                 | The CI job, when [CI](/use/ci/) is on.                                       |
+| The gspot blocks in `AGENTS.md` and `.gitattributes`                                    | The text between the gspot markers. The rest of each file stays yours.       |
+| Keys in your files, such as `install.security.scanner` in `bunfig.toml`                 | Install options. The other keys stay yours.                                  |
 
-For installed tools, temporary check copies, and caches, see [What gspot adds to your repository and machine](/start/footprint/).
+The gspot block of `.gitattributes` marks each generated file outside `.gspot/` with `linguist-generated`. A new clone
+runs `gspot install` to install its tools.
 
 ## Do not edit generated files
 
-Do not edit a generated file. Each one sits in `.gspot/`, starts with a gspot header, or sits in a managed block between
-the gspot markers. Files in `.gspot/` carry no header; the managed block of `.gitattributes` marks them generated.
+`gspot install` replaces each generated file, including local edits and merge markers. Move the change into
+`gspot.toml` first. A file outside `.gspot/` that starts with the gspot header stays yours unless gspot writes that
+path. `gspot install` names each file that it removes.
 
-`gspot install` replaces those files from your settings, even files with
-local edits or merge markers. Move any change you need into `gspot.toml` before you run it.
+## Installed tools
 
-A file outside `.gspot/` that starts with the gspot header belongs to gspot only when gspot writes that path. Any other
-file with the header stays yours, and `gspot install` leaves it in place.
+These folders stay out of Git. `.gspot/.gitignore` lists the first three.
 
-`gspot install` names each file that it removes. The hooks of Git Large File Storage (LFS) exist only when a file of the
-repository uses `filter=lfs`. When you turn off `dependencies.bun_scanner`, its key stays in `bunfig.toml` as yours,
-and `gspot install` says so.
+| Path                   | Holds                                                               | To clear it                                                                            |
+| ---------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `.gspot/node_modules/` | The npm tools.                                                      | Delete it, then run `gspot install`.                                                   |
+| `.gspot/.venv/`        | The Python tools. It is separate from the `.venv/` of your project. | Delete it, then run `gspot install`.                                                   |
+| `.gspot/vale/`         | The Vale packages.                                                  | Delete it, then run `gspot install`.                                                   |
+| `.gspot-copies/`       | Temporary copies for `gspot scan` and for staged checks.            | gspot deletes each copy after its run. Delete a leftover folder after all checks stop. |
+
+Keep the other files in `.gspot/`, such as the tool pins and lockfiles. To remove gspot itself, see
+[Uninstall](/start/install/#uninstall-gspot).
+
+## Caches outside the repository
+
+| What                         | Where                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------- |
+| mise tools                   | The mise data folder. Other repositories share them.                                           |
+| Python versions and packages | The uv data and cache folders.                                                                 |
+| The gspot cache              | `gspot/` in your cache folder. It holds the tree-sitter grammars and the Swift build products. |
+
+The cache folder is `$XDG_CACHE_HOME` when you set it. Otherwise it is `%LOCALAPPDATA%` on Windows,
+`~/Library/Caches` on macOS, and `~/.cache` on other systems. `gspot install` downloads the grammars from their GitHub
+releases into `gspot/grammars/` there, for the checks that need them.
+
+## Free disk space
+
+Preview the mise versions that no project uses, then remove them:
+
+```shell
+mise prune --dry-run
+mise prune
+```
+
+Other repositories can still need a version, so read the preview first.
+
+`uv cache prune` removes cached packages that nothing uses. It keeps the Python versions; remove one with
+`uv python uninstall <version>`.
 
 ## Dependency bots
 
-gspot updates the files in `.gspot/` when you upgrade gspot. Tell dependency bots to skip that folder;
-for Renovate, set `"ignorePaths": [".gspot/**"]`.
+gspot updates the files in `.gspot/` when you upgrade gspot. Tell your dependency bot to skip that folder. For
+Renovate, set `"ignorePaths": [".gspot/**"]`.

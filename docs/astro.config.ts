@@ -149,6 +149,7 @@ export default defineConfig({
     prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
     redirects: {
         '/start/overview/': '/start/quickstart/',
+        '/start/footprint/': '/reference/generated-files/',
         '/configure/files/': '/use/ignore/#ignore-files-in-every-check',
     },
     vite: {
