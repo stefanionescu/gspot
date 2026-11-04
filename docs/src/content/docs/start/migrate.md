@@ -1,21 +1,20 @@
 ---
-title: Migrate existing tools
-description: See what gspot carries over from your configs, what needs a reason, and which commands to change.
+title: Migrate your linters
+description: See what gspot carries over from your tool configs, what needs a reason, and which commands to change.
 ---
 
-gspot replaces the config files of the tools it runs, and `gspot.toml` becomes the one place for their settings. Move a
-repository in these steps:
+gspot replaces the tool configs of the tools it runs, and `gspot.toml` becomes the one place for their settings. Move
+a repository in these steps:
 
-1. Run `gspot scan`. It changes nothing in your repository, and prints the plan of `gspot init`.
-2. Commit your config files, so that Git holds the versions that init replaces.
+1. Run `gspot scan`. It works on a copy, changes nothing in your repository, and prints the plan of `gspot init`.
+2. Commit your tool configs, so that Git holds the versions that init replaces.
 3. Run `gspot init`. It also installs the tools and turns on the Git hooks.
 4. Work through the table and the list of commands that `gspot scan` printed.
-5. Run `gspot baseline` to keep the findings that predate gspot.
+5. [Record a baseline](/use/baseline/) to keep the findings that predate gspot.
 
 ## Read the plan
 
-`gspot init` prints its plan and writes without asking. To read the plan first, run `gspot scan`: it prints the plan of
-the default level and changes nothing in your repository.
+`gspot init` prints its plan and carries it out without asking, so read the plan of `gspot scan` first.
 
 When the repository does not pin gspot, init adds the pin to `package.json`, or to `mise.toml` in a repository without
 a `package.json`. Its last line then names the install of your package manager, which installs the pinned gspot that
@@ -42,9 +41,9 @@ The plan has these parts:
 | the table of what init carries                 | Names what init wrote into `gspot.toml`, and what it could not.                                                                 | Run the lines that the table names.                                             |
 | `lint commands`                                | Lists each command that calls a replaced tool. gspot edits none of them.                                                        | Replace or delete each one.                                                     |
 
-## Style
+## Formatting that init carries over
 
-init reads the options of your formatters and writes them into `[format]`, so code that passes today keeps passing:
+`gspot init` reads the options of your formatters and writes them into `[format]`, so code that passes today keeps passing:
 
 - Prettier: the indent style, indent width, line width, quotes, semicolons, trailing commas, `bracketSpacing`,
   `arrowParens`, and `proseWrap`, from a JSON, YAML, or TOML file, the `prettier` key of `package.json`, or a JavaScript
@@ -54,10 +53,10 @@ init reads the options of your formatters and writes them into `[format]`, so co
 - Ruff: `line-length`, `indent-width`, `format.indent-style`, and `format.quote-style`, in a `[[format.override]]` record
   for the Python files.
 
-init loads a JavaScript or TypeScript Prettier config as Prettier does, so the code of that file runs. When the file
+`gspot init` loads a JavaScript or TypeScript Prettier config as Prettier does, so the code of that file runs. When the file
 does not load, the plan says so, and you set `format.indent_width` and `format.print_width` by hand. Prettier has more
 options than `gspot.toml` holds, such as `quoteProps`. The table lists each of those as dropped. It does the same for a
-value that `gspot.toml` cannot hold, such as the Ruff quote style `preserve`, and for a config file that does not parse.
+value that `gspot.toml` cannot hold, such as the Ruff quote style `preserve`, and for a tool config that does not parse.
 
 A config that init replaces never stops init or `gspot scan`. A `package.json` below the root or a `pyproject.toml` that
 does not parse gets a row too, and gives no dependencies or scope. A `tsconfig.json`, `pnpm-workspace.yaml`, `mise.toml`,
@@ -71,12 +70,12 @@ repository without code gets the defaults of gspot: 4 spaces, 120 columns, and s
 
 ## Ignored paths
 
-`.prettierignore`, `.eslintignore`, the Ruff `exclude` and `extend-exclude` settings, and the pyright `include` and
-`exclude` settings become `[[ignore]]` records with paths. A pyright `include` becomes an ignore of each folder of
-Python files that it leaves out. init keeps a pattern when it matches a tracked file, because gspot reads only tracked files. A pattern that
-starts with `!` has no place in an ignore, so the table lists it as dropped.
+`gspot init` turns `.prettierignore`, `.eslintignore`, the Ruff `exclude` and `extend-exclude` settings, and the
+pyright `include` and `exclude` settings into `[[ignore]]` records. A pyright `include` becomes an ignore of each folder
+of Python files that it leaves out. init keeps a pattern only when it matches a tracked file, because gspot reads only
+tracked files. It drops a pattern that starts with `!`, and the table lists it as dropped.
 
-## Rules
+## Lint rules
 
 gspot compares the names and options of your rules with the rules it runs. The table prints one row per replaced config:
 
@@ -101,8 +100,8 @@ Each tool reads its rules from one place:
 | Stylelint    | `stylelint --print-config`    | `gspot scan` only | `tools.stylelint.rules`    |
 
 gspot resolves its own ESLint and Stylelint rules through the plugins that `gspot install` adds, and init plans before
-it installs them. Run `gspot scan` before init to see their table. commitlint, ESLint, and Stylelint print your rules through
-the copy in your `node_modules`, so run your package manager's install first.
+it installs them. Run `gspot scan` before init to see their table. commitlint, ESLint, and Stylelint print your rules
+through the copy in your `node_modules`, so run the install of your package manager first.
 
 gspot does not compare the other replaced configs. The plan lists each of them under `delete`. init reads the settings
 of Prettier at the root and at a scope, and the settings of Ruff and markdownlint at the root. The table names every
@@ -113,7 +112,7 @@ record. init never writes one, because a record adds code that runs in every che
 [plugins](/configure/lint-rules/#plugins). A tool that gspot does not run can remain a
 [command check](/configure/command-checks/).
 
-## Lint commands
+## Commands that still call your old tools
 
 gspot edits no script, hook, or CI file. The plan and `gspot scan` list what still calls or repeats a replaced tool:
 
@@ -123,23 +122,54 @@ gspot edits no script, hook, or CI file. The plan and `gspot scan` list what sti
 - the settings of black, flake8, isort, and mypy
 
 Each row names the line and what to do with it. `gspot/conflicting-configs` reports each row until it goes. Change these
-commands, because CI runs no `gspot install`, so a script that calls ESLint cannot load the generated config.
+commands, because a script that calls ESLint in a clone without `gspot install` cannot load the generated config. A
+`lint` script in a workspace package becomes one `gspot check` at the repository root; see
+[Turborepo and Nx](/configure/monorepos/#turborepo-and-nx).
 
 ## Start from another gspot repository
 
-`gspot init --from <settings-file>`, with the `gspot.toml` of another repository, copies settings that apply across repositories and selects the
-configurations named there. The plan lists settings it leaves out because they name the old repository's files or
-folders. It detects the new repository's scopes and files again. Review the resulting `gspot.toml` before installing
-tools.
+Start a repository from the setup of another one with the path of its `gspot.toml`:
 
-## Findings in existing code
+```shell
+gspot init --from ../api/gspot.toml
+```
 
-The first `gspot check` reports what the code holds today. To fix those findings over time, run `gspot baseline`. See
-[Baseline existing findings](/use/baseline/).
+`gspot init` selects the configurations of that file and the ones it detects here. It copies the settings that fit any
+repository: the level, limits and their reasons, naming, formatting, prose, coverage, and lint rule lists. It also
+copies word lists and each ignore of a whole check or lint rule. `--level` wins over the level of the file. init turns
+on the hooks and the rules for the new repository; it does not copy their switches.
 
-## Old settings files after init
+The plan lists under `left out` each setting that belongs to the other repository:
 
-When you raise the level or add a configuration later, a tool that starts to run can find its old settings file.
+- settings and records that name paths, such as `test_files` and `[[scope]]`
+- settings and command checks that run code
+- settings that describe that repository, such as `javascript.import_extension`
+- `ci.enabled` and `ci.provider`, because CI stays off until you turn it on
+- ignores with paths
+
+In a repository with code, init sets the indentation, line width, and quotes from this repository: from an existing
+Prettier, EditorConfig, or Ruff file, or else from the Prettier defaults. The `[format]` of the file sets only the other
+formatting keys.
+
+init selects each configuration of the file even when this repository has none of its files yet, so its rules reach
+your coding agent before the first file. Its checks report `skipped (no-files)` until the files exist. To drop one,
+run `gspot remove <name> --reason "<why>"`.
+
+init copies the file once. A later change to it does not reach this repository. To share a setup with a team, keep its
+`gspot.toml` in a repository that everyone clones. To use one file without a clone, download it at a commit first:
+
+```shell
+curl -fsSL -o ../team.toml https://raw.githubusercontent.com/acme/policies/<commit>/gspot.toml
+gspot init --from ../team.toml
+```
+
+Your own ESLint plugins, Semgrep rule files, and command checks stay behind with their files. To share ESLint rules,
+publish them as an ESLint plugin package, install it, and name a module that exports it again in
+`[[tools.eslint.plugins]]`. Copy Semgrep rule files and command check scripts with their lines in `gspot.toml`.
+
+## Old tool configs that come back
+
+When you raise the level or add a configuration later, a tool that starts to run can find its old tool config.
 `gspot/conflicting-configs` reports such a file, such as `.commitlintrc.json` while commitlint runs. Delete it, and move
 any rule you need into `gspot.toml`.
 
