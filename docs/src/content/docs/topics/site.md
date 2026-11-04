@@ -1,11 +1,12 @@
 ---
 title: Static sites
 description: Check a built site, including sites deployed below a URL path.
+configurations: [site]
 ---
 
 The `site` configuration checks the built pages, internal links, sitemap, styles, and assets. Select it with
-`gspot add site`, then run `gspot install`. Set `site.build_command` to your build command and `site.build_folder` to
-its output folder when the defaults do not fit your project.
+`gspot add site`, then run `gspot install`. `gspot add` writes the `build` script of your package manager into
+`site.build_command`, and `site.build_folder` defaults to `dist`. Set either one when it does not fit your project.
 
 Run `gspot check --only site/sitemap,site/lychee` to build the site and check its sitemap and internal links.
 The checks read the built files without starting a server. The link check makes no network requests.
@@ -17,9 +18,7 @@ gspot reads the deployment path from a sitemap index. For example, an index that
 `/docs/`. The sitemap check removes that prefix before finding the built page. The link check maps links under that
 path to the same build folder.
 
-gspot infers the path from the first nested sitemap it finds in the build. You do not need another setting. Without
-a sitemap index, it uses `/`. Sitemap locations may use XML entities or `<![CDATA[...]]>` sections; gspot decodes
-their text before reading the URL.
+gspot reads the path from the first nested sitemap it finds in the build. Without a sitemap index, it uses `/`.
 
 ## Unused styles
 
