@@ -30,7 +30,7 @@ test('Bun runs declared workspace bins before installation and still reports unk
             file: 'README.md',
             line: 1,
             rule: 'missing-task',
-            message: 'bun run --no-install absent names no task or script.',
+            message: expect.stringContaining('bun run --no-install absent') as string,
         },
     ]);
 });

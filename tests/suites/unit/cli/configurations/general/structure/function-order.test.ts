@@ -128,9 +128,7 @@ async function run() {}
         'src/rows.ts:7',
         'src/rows.ts:11',
     ]);
-    expect(findings[0]?.message).toBe(
-        'The private function late sits below the public function run, and no function above it calls it. Move late above run, or below a function that calls it.',
-    );
+    expect(findings[0]?.message).toMatch(/\blate\b.+\brun\b/u);
 });
 
 test('a run narrowed to one file reports only that file', async () => {

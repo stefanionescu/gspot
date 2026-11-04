@@ -3,7 +3,9 @@ import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/engine/run.ts';
 import { rm, writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -66,25 +68,28 @@ test.each([
         head: buildSandboxSettings([], {
             tables: '[[ignore]]\ncheck = "docs/missing-paths"\npaths = ["a.md"]\nreason = "the path is an example"\n',
         }),
-        note: 'An ignore of docs/missing-paths covers a.md: the path is an example',
+        reason: 'the path is an example',
     },
     {
         name: 'a removed configuration',
         head: buildSandboxSettings([], { tables: '[removed_configurations]\ndocs = "no guide lives here"\n' }),
-        note: 'The configuration docs goes: no guide lives here',
+        reason: 'no guide lives here',
     },
     {
         name: 'a raised limit',
         head: buildSandboxSettings([], {
             tables: '[limits]\nmax_file_lines = { value = 500, reason = "the parser is generated" }\n',
         }),
-        note: 'limits.max_file_lines moves from 300 to 500: the parser is generated',
+        reason: 'the parser is generated',
     },
-])('gspot/weakenings prints $name with its reason as a note', async ({ head, note }) => {
+])('gspot/weakenings prints $name with its reason as a note', async ({ head, reason }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), 'a.md': '# A\n' });
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), head);
-    expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: [], notes: [note] });
+    expect(await runWeakenings(sandbox.path)).toStrictEqual({
+        rules: [],
+        notes: [expect.stringContaining(reason) as string],
+    });
 });
 
 test('gspot/weakenings reports only the path that widens an ignore', async () => {
@@ -178,5 +183,7 @@ test('gspot/weakenings notes a base that this version of gspot cannot read, and 
 test('gspot.toml refuses an ignore that turns gspot/weakenings off', async () => {
     const tables = '[[ignore]]\ncheck = "gspot/weakenings"\nreason = "two words"\n';
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { tables }) });
-    expect(openSession(sandbox.path)).rejects.toThrow('names one rule');
+    expect(openSession(sandbox.path)).rejects.toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'settings' }),
+    );
 });

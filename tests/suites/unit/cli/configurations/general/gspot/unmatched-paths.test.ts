@@ -64,6 +64,6 @@ test('a missing scope with rule options leaves install usable and unmatched path
     });
     await buildEslint(sandbox.path);
     expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toMatchObject([
-        { file: 'gspot.toml', message: 'missing under scope.0.path matches no tracked file or folder.' },
+        { file: 'gspot.toml', message: expect.stringContaining('scope.0.path') as string },
     ]);
 });

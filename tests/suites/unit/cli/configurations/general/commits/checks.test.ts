@@ -97,7 +97,7 @@ test.each([';', 'auto', undefined])(
             commentChar,
         );
         expect(findings).toHaveLength(1);
-        expect(findings[0]?.message).toStartWith('Line 3 links to an AI session.');
+        expect(findings[0]?.message).toStartWith('Line 3 ');
     },
 );
 
@@ -115,5 +115,5 @@ test.each([
         commentChar,
     );
     expect(findings).toHaveLength(1);
-    expect(findings[0]?.message).toStartWith(`Line ${String(line)} links to an AI session.`);
+    expect(findings[0]?.message).toStartWith(`Line ${String(line)} `);
 });

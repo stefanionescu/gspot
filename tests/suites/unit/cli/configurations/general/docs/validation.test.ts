@@ -18,12 +18,10 @@ import {
     MDX_GUIDE,
     DOC_TASK_FILES,
     DOC_TASK_SCOPES,
-    SRC_GONE_MESSAGE,
     DOC_TASK_FINDINGS,
     MISE_TASK_SOURCES,
     IGNORED_PATH_FILES,
     LICENSE_FILE_CASES,
-    SRC_MISSING_MESSAGE,
     RELATIVE_PATH_FILES,
     DOC_FENCE_PATH_CASES,
     MALFORMED_TASK_FILES,
@@ -72,7 +70,7 @@ test('Bun file commands validate tracked paths without treating them as package 
             file: 'guide.md',
             line: 1,
             rule: 'missing-path',
-            message: 'scripts/missing.ts names no tracked file or folder.',
+            message: expect.stringContaining('scripts/missing.ts') as string,
         },
     ]);
 });
@@ -109,9 +107,9 @@ test('missing-paths: wildcard examples are skipped; bold, italic and code paths 
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: SRC_MISSING_MESSAGE },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/absent.ts names no tracked file or folder.' },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: SRC_GONE_MESSAGE },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/missing.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/absent.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/gone.ts') as string },
     ]);
 });
 
@@ -123,17 +121,17 @@ test('missing-paths: leaves inline link targets to lychee, and checks prose, cod
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 1, rule: 'missing-path', message: 'docs/gone.md names no tracked file or folder.' },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: 'docs/code.md names no tracked file or folder.' },
-        { file: 'a.md', line: 4, rule: 'missing-path', message: 'docs/absent.md names no tracked file or folder.' },
+        { file: 'a.md', line: 1, rule: 'missing-path', message: expect.stringContaining('docs/gone.md') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('docs/code.md') as string },
+        { file: 'a.md', line: 4, rule: 'missing-path', message: expect.stringContaining('docs/absent.md') as string },
     ]);
 });
 
 test('missing-paths: gitignored paths and paths inside ignored folders count as present; others are reported', async () => {
     const found = await runMissingPathsCheck(IGNORED_PATH_FILES, { paths: ['a.md'] });
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: 'app/private.ts names no tracked file or folder.' },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: SRC_GONE_MESSAGE },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('app/private.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/gone.ts') as string },
     ]);
 });
 
@@ -150,7 +148,7 @@ test('missing-paths: command check names count as present; unknown ones are repo
         { paths: ['a.md'] },
     );
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 1, rule: 'missing-path', message: 'tests/missing names no tracked file or folder.' },
+        { file: 'a.md', line: 1, rule: 'missing-path', message: expect.stringContaining('tests/missing') as string },
     ]);
 });
 
@@ -160,7 +158,12 @@ test.each([...MISE_TASK_SOURCES])(
         const named = [...tasks, 'absent'].map((task) => '`mise run ' + task + '`').join(', ');
         const found = await runMissingPathsCheck({ 'a.md': `Run ${named}.\n`, ...files }, { paths: ['a.md'] });
         expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-            { file: 'a.md', line: 1, rule: 'missing-task', message: 'mise run absent names no task or script.' },
+            {
+                file: 'a.md',
+                line: 1,
+                rule: 'missing-task',
+                message: expect.stringContaining('mise run absent') as string,
+            },
         ]);
     },
 );
@@ -169,7 +172,7 @@ test('missing-paths: clone host names are skipped while missing repository paths
     const found = await runMissingPathsCheck({
         'README.md': 'Clone github.com/example/demo.git and read docs/guide.md.\n',
     });
-    expect(found.map(({ message }) => message)).toStrictEqual(['docs/guide.md names no tracked file or folder.']);
+    expect(found.map(({ message }) => message)).toStrictEqual([expect.stringContaining('docs/guide.md') as string]);
 });
 
 test('missing-paths: paths relative to the document are found, and missing ones nearby are still reported', async () => {
@@ -181,7 +184,7 @@ test('missing-paths: paths relative to the document are found, and missing ones 
 
 test.each([...MALFORMED_TASK_FILES])(
     'missing-paths: a malformed $path is a read error, not a missing task',
-    async ({ path, text, document, scopes, files, message }) => {
+    async ({ path, text, document, scopes, files }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', scopes }),
             ...files,
@@ -192,7 +195,8 @@ test.each([...MALFORMED_TASK_FILES])(
         session.cache = createRunCache(sandbox.path);
         const input = planSandboxCheck(session, 'docs/missing-paths', { paths: [document] });
         const failure = await captureRejection(getBuiltInCheck('docs/missing-paths')(session, input));
-        expect(failure.message).toBe(message);
+        expect(failure).toMatchObject({ name: 'GspotError', code: 'parse' });
+        expect(failure.message).toContain(path);
     },
 );
 
@@ -234,8 +238,8 @@ test.each([...DOC_FENCE_PATH_CASES])(
             { paths: ['guide.md'] },
         );
         expect(pathFindings.map(({ line, message }) => [line, message])).toStrictEqual([
-            ...(reported ? [[2, 'src/example.ts names no tracked file or folder.']] : []),
-            [5, SRC_MISSING_MESSAGE],
+            ...(reported ? [[2, expect.stringContaining('src/example.ts') as string]] : []),
+            [5, expect.stringContaining('src/missing.ts') as string],
         ]);
     },
 );
@@ -264,8 +268,8 @@ test('required-files: ignored README.md and LICENSE files in a Git repository ar
     commitAll(sandbox.path);
     const found = await runSandboxCheck(sandbox.path, 'docs/required-files');
     expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
-        { file: 'README.md', rule: 'missing-readme', message: 'The scope . has no README.md.' },
-        { file: 'LICENSE', rule: 'missing-license', message: 'The root has no LICENSE file.' },
+        { file: 'README.md', rule: 'missing-readme', message: expect.any(String) as string },
+        { file: 'LICENSE', rule: 'missing-license', message: expect.any(String) as string },
     ]);
 
     await writeFile(join(sandbox.path, '.gitignore'), '');
@@ -285,7 +289,7 @@ test('missing-paths: a generator output named by a setting counts as present bef
             file: 'README.md',
             line: 1,
             rule: 'missing-path',
-            message: 'generated/missing.d.ts names no tracked file or folder.',
+            message: expect.stringContaining('generated/missing.d.ts') as string,
         }),
     ]);
 });

@@ -103,7 +103,6 @@ export const MISE_TASK_SOURCES = [
 export const MALFORMED_TASK_FILES = [
     {
         path: 'package.json',
-        message: 'package.json:1:2 is not valid JSON: InvalidSymbol. Fix the file.',
         text: '{broken',
         document: 'a.md',
         scopes: [],
@@ -111,7 +110,6 @@ export const MALFORMED_TASK_FILES = [
     },
     {
         path: 'mise.toml',
-        message: 'mise.toml:1:7 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
         text: '[tasks',
         document: 'a.md',
         scopes: [],
@@ -173,7 +171,3 @@ command = ["true"]
 paths = ["tests/**"]
 stage = "manual"
 `;
-
-export const SRC_MISSING_MESSAGE = 'src/missing.ts names no tracked file or folder.';
-
-export const SRC_GONE_MESSAGE = 'src/gone.ts names no tracked file or folder.';

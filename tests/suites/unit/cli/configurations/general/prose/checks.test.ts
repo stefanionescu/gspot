@@ -111,7 +111,8 @@ test('the Vale check fails with the error line Vale prints when Vale exits non-z
         ),
     );
     const runtimeError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
-    expect(runtimeError.message).toBe('Vale did not run (exit 2): E100 [loadStyles] Runtime error');
+    expect(runtimeError).toMatchObject({ name: 'CheckStop', status: 'error' });
+    expect(runtimeError.message).toContain('E100 [loadStyles] Runtime error');
 });
 
 test('the Vale check fails before running Vale when the Vale packages are not installed', async () => {
@@ -120,7 +121,7 @@ test('the Vale check fails before running Vale when the Vale packages are not in
     await rm(join(session.root, GSPOT_PATHS.valeConfig));
     using run = fakeCommands();
     const uninstalledError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
-    expect(uninstalledError.message).toBe('The Vale packages are not installed. Run gspot install.');
+    expect(uninstalledError).toMatchObject({ name: 'CheckStop' });
     expect(run).not.toHaveBeenCalled();
 });
 

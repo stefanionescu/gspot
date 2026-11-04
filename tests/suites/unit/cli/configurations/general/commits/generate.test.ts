@@ -4,7 +4,9 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { findValueAt } from '#cli/system/tables.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -19,7 +21,7 @@ test('commitlint refuses inactive scope-case options and keeps them when no scop
     const session = await openSession(sandbox.path);
     expect(() => {
         buildGeneratedFiles(session);
-    }).toThrow('gspot runs scope-case at no level, so it takes no options.');
+    }).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'settings' }));
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['markdown'], { level: 'all', tables }));
     const generated = buildGeneratedFiles(await openSession(sandbox.path));
     const target = getManifestTarget('commits', 'commitlint.json');

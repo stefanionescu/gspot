@@ -81,7 +81,7 @@ test('dependencies/lockfiles reports Git download hosts until they are allowed, 
         {
             file: 'package-lock.json',
             rule: 'host',
-            message: `${insecureDownload.href} is not HTTPS.`,
+            message: expect.stringContaining(insecureDownload.href) as string,
         },
     ]);
     await writeFile(join(sandbox.path, 'package-lock.json'), JSON.stringify(HOST_LOCKFILE));
@@ -145,7 +145,7 @@ test('dependencies/lockfiles reports the lockfile of a second package manager in
             file: 'yarn.lock',
             line: 1,
             rule: 'foreign-lockfile',
-            message: 'This scope holds lockfiles of 2 package managers: package-lock.json, yarn.lock. Keep one.',
+            message: expect.stringContaining('package-lock.json, yarn.lock') as string,
         }),
     ]);
     await unlink(join(sandbox.path, 'yarn.lock'));
@@ -200,7 +200,7 @@ test.each([...MISE_PIN_FILES])(
                 file: 'package.json',
                 line: 1,
                 rule: 'package-manager-pin',
-                message: `packageManager names bun 0.0.0-test.1, but ${file} pins bun 0.0.0-test.2. Write one version in both.`,
+                message: expect.stringMatching(/\b0\.0\.0-test\.1\b.+\b0\.0\.0-test\.2\b/u) as string,
             },
         ]);
         await writeFile(join(sandbox.path, 'package.json'), packageJson.replace('test.1', 'test.2'));

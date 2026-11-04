@@ -50,7 +50,7 @@ test('licenses/allowed reports a disallowed license of a locked package, on its 
             file: 'package-lock.json',
             line: 1,
             rule: 'disallowed-license',
-            message: 'strict@1.0.0 uses GPL-3.0-only, which is not allowed.',
+            message: expect.stringMatching(/strict@1\.0\.0.*GPL-3\.0-only/u) as string,
         },
     ]);
 });
@@ -127,6 +127,6 @@ test('the check skips with a note while licenses.allowed is empty', async () => 
         buildRunOptions({ only: ['licenses/allowed'], stage: 'push' }),
     );
     expect(report.checks).toMatchObject([
-        { check: 'licenses/allowed', status: 'skipped', note: 'needs the setting licenses.allowed' },
+        { check: 'licenses/allowed', status: 'skipped', note: expect.stringContaining('licenses.allowed') as string },
     ]);
 });

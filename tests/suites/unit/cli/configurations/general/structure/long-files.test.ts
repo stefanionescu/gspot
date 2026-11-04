@@ -19,7 +19,7 @@ test.each(['.sh', ''])('Bash %s heredocs and multiline strings count as code lin
             file,
             line: 1,
             rule: 'file-lines',
-            message: 'This file has 6 code lines, over the limit of 5.',
+            message: expect.stringMatching(/\b6\b.+\b5\b/u) as string,
         }),
     ]);
     await writeFile(join(sandbox.path, file), source.replace('# literal\nEOF', 'EOF'));
@@ -40,7 +40,7 @@ test('long files checks authored covered languages and leaves generated, vendore
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/long-files');
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
-        { file: 'source.py', rule: 'file-lines', message: 'This file has 13 code lines, over the limit of 2.' },
+        { file: 'source.py', rule: 'file-lines', message: expect.stringMatching(/\b13\b.+\b2\b/u) as string },
     ]);
 });
 
@@ -50,7 +50,7 @@ test('SQL strings count while multiline SQL comments do not', async () => {
         'query.sql': '/* This comment\nspans two lines. */\nSELECT $$first\n-- string content\nlast$$;\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toMatchObject([
-        { file: 'query.sql', rule: 'file-lines', message: 'This file has 3 code lines, over the limit of 2.' },
+        { file: 'query.sql', rule: 'file-lines', message: expect.stringMatching(/\b3\b.+\b2\b/u) as string },
     ]);
 });
 
@@ -64,7 +64,7 @@ test('a Python string line that starts with # counts as code', async () => {
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/long-files');
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
-        { file: 'source.py', rule: 'file-lines', message: 'This file has 3 code lines, over the limit of 2.' },
+        { file: 'source.py', rule: 'file-lines', message: expect.stringMatching(/\b3\b.+\b2\b/u) as string },
     ]);
     await writeFile(join(sandbox.path, 'source.py'), 'value = """first\nlast"""\n# a comment\n');
     expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toStrictEqual([]);

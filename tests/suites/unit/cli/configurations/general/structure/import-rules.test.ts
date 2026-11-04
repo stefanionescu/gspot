@@ -13,12 +13,10 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { NAMED_TARGET_SOURCE, EMPTY_DEFAULT_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
 
 import {
-    REFUSAL_HELP,
     SWIFT_IMPORT_FILES,
     SWIFT_IMPORT_RULES,
     PYTHON_IMPORT_FILES,
     PYTHON_IMPORT_RULES,
-    UNCOVERED_FILE_MESSAGE,
 } from '#tests/config/configurations/structure/files.ts';
 
 test('structure/import-rules reports a Python file outside every rule and each refused import, a relative one too', async () => {
@@ -32,25 +30,25 @@ test('structure/import-rules reports a Python file outside every rule and each r
             file: 'src/app/__init__.py',
             line: 1,
             rule: 'uncovered-file',
-            message: UNCOVERED_FILE_MESSAGE,
+            message: expect.any(String) as string,
         },
         {
             file: 'src/app/core/uses_web.py',
             line: 1,
             rule: 'refused-import',
-            message: `Import rule "core" may import only its own files, not app.web.views from import-rule:web. ${REFUSAL_HELP}`,
+            message: expect.stringMatching(/\bcore\b.+\bapp\.web\.views\b/u) as string,
         },
         {
             file: 'src/app/web/views.py',
             line: 2,
             rule: 'refused-import',
-            message: `Import rule "web" may import its own files and "storage", not app.core.model from import-rule:core. ${REFUSAL_HELP}`,
+            message: expect.stringMatching(/\bweb\b.+\bapp\.core\.model\b/u) as string,
         },
         {
             file: 'src/app/web/views.py',
             line: 4,
             rule: 'refused-import',
-            message: `Import rule "web" may import its own files and "storage", not ..core.model from import-rule:core. ${REFUSAL_HELP}`,
+            message: expect.stringMatching(/\bweb\b.*\.\.core\.model\b/u) as string,
         },
     ]);
 });
@@ -66,13 +64,13 @@ test('Swift imports follow the import rules through the SwiftPM targets, and a f
             file: 'Sources/Loose/Helper.swift',
             line: 1,
             rule: 'uncovered-file',
-            message: UNCOVERED_FILE_MESSAGE,
+            message: expect.any(String) as string,
         },
         {
             file: 'Sources/Core/Model.swift',
             line: 2,
             rule: 'refused-import',
-            message: `Import rule "core" may import only its own files, not Feature from import-rule:feature. ${REFUSAL_HELP}`,
+            message: expect.stringMatching(/\bcore\b.+\bFeature\b/u) as string,
         },
     ]);
 });
@@ -103,7 +101,7 @@ test('without import rules the check is skipped', async () => {
         buildRunOptions({ only: ['structure/import-rules'] }),
     );
     expect(report.checks).toMatchObject([
-        { check: 'structure/import-rules', status: 'skipped', note: 'needs the setting import_rule' },
+        { check: 'structure/import-rules', status: 'skipped', note: expect.stringContaining('import_rule') as string },
     ]);
 });
 

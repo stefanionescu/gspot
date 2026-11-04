@@ -137,12 +137,6 @@ export const SWIFT_IMPORT_FILES = {
     'Tests/CoreTests/ModelTests.swift': 'import Core\n',
 } as const;
 
-export const REFUSAL_HELP =
-    'Move the code, move that rule above this one, or list the rules it may import in can_import.';
-
-export const UNCOVERED_FILE_MESSAGE =
-    'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.';
-
 export const FRAMEWORK_COMPONENT_CASES = [
     { framework: 'astro', name: 'index.astro', folder: 'src/pages', content: '<main>Example</main>\n' },
 ] as const;

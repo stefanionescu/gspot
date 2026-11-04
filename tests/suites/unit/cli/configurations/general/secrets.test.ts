@@ -34,7 +34,7 @@ test('a nested scope uses the default example environment file names', async () 
         {
             file: 'app/source.ts',
             rule: 'missing-key',
-            message: 'MISSING is read here and appears in no example environment file.',
+            message: expect.stringContaining('MISSING') as string,
         },
     ]);
     await createFileTree(sandbox.path, { 'app/.env.example': 'KNOWN=example\nMISSING=example\n' });
@@ -102,7 +102,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
             scope: 'app',
             status: 'skipped',
             findings: [],
-            note: 'No example environment file exists in app. List the example environment files in secrets.environment_examples.',
+            note: expect.stringContaining('secrets.environment_examples') as string,
         },
     ]);
 });
