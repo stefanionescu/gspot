@@ -4,15 +4,17 @@ description: Check vulnerable packages, dependency licenses, and registry hosts.
 configurations: [dependencies, licenses]
 ---
 
-Check dependencies for known vulnerabilities and review the licenses and registry hosts your repository accepts.
+gspot checks your dependencies for known vulnerabilities. It can also check their licenses, and the registry hosts that
+your lockfiles download from.
 
 ## Licenses
 
-`gspot add licenses` adds the general `licenses` configuration. At the push stage, it reads the license of every locked
-package through osv-scanner, which asks the deps.dev service, so the check needs the network and a lockfile.
+`gspot add licenses` turns on the `licenses` configuration. Its check runs before each push. It reads the license of
+every package in your lockfiles through osv-scanner, which asks the deps.dev service, so the check needs the network
+and a lockfile.
 
-gspot picks no allowed licenses for you, and scans none until you set `licenses.allowed` or an allowed package. After
-you review the licenses that your project accepts, list them:
+gspot does not choose the allowed licenses for you. The check scans nothing until you set `licenses.allowed` or add an
+allowed package. Decide which licenses your project accepts, then list them:
 
 ```shell
 gspot set licenses.allowed MIT Apache-2.0 BSD-3-Clause
@@ -24,8 +26,8 @@ The check reads the lockfiles of each scope, such as `uv.lock`, `package-lock.js
 
 ## Allow a license or one package
 
-Add a license to `licenses.allowed` to allow every package under it. To allow one package version with a license you
-reviewed, add a `[[licenses.allowed_package]]` record. Name the license in the reason:
+To allow every package under a license, add the license to `licenses.allowed`. To allow one package version whose
+license you reviewed, add a `[[licenses.allowed_package]]` record, and name the license in the reason:
 
 ```toml
 [[licenses.allowed_package]]
@@ -34,8 +36,8 @@ version = "0.4.6"
 reason = "BSD. Installed metadata reports the reviewed BSD license in its short form."
 ```
 
-`version` takes an exact version, a version range such as `^1.2.0`, or `*`. `name` takes a glob for a package built for
-each platform:
+`version` takes an exact version, a version range such as `^1.2.0`, or `*` for any version. For a package with one
+build for each platform, `name` takes a glob pattern:
 
 ```toml
 [[licenses.allowed_package]]
@@ -44,22 +46,23 @@ version = "*"
 reason = "LGPL-3.0-or-later. sharp loads the library as a separate file."
 ```
 
-gspot reports a record that matches no package of the lockfile. A package that the lockfile records for another platform
-still counts as a match. Python package names match as pip matches them: letter case and runs of `.`, `_`, and `-` do
-not matter.
+gspot reports a record that matches no package in the lockfile. A package that the lockfile lists for another platform
+still counts as a match. Python package names match the way pip matches them: letter case and runs of `.`, `_`, and
+`-` do not matter.
 
 ## Vulnerabilities
 
-`dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. Each check sends the locked
-package names and versions to the Open Source Vulnerabilities (OSV) service. Update the package, then check again. To
-keep a package with an advisory, [ignore the advisory](/use/ignore/#ignore-a-dependency-advisory) with a reason.
+Before each push, `dependencies/osv-scanner` reads your lockfiles and reports each package with a known vulnerability.
+Each run sends the names and versions of the locked packages to the Open Source Vulnerabilities (OSV) service. To fix a
+finding, update the package, then check again. To keep a package that has an advisory,
+[ignore the advisory](/use/ignore/#ignore-a-dependency-advisory) with a reason.
 
-The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools. A gspot release fixes
-an advisory in those tools with new pins.
+The check skips `.gspot/`, because you cannot change the versions that gspot pins for its tools. A new gspot release
+fixes an advisory in those tools by pinning new versions.
 
-A new advisory can name a version that no commit changed. gspot adds no scheduled job to your CI. To scan on a schedule,
-add a workflow of your own beside `.github/workflows/gspot.yml`. Copy its steps through `Install gspot tools`, set
-`on.schedule`, and end with this step, which reads every lockfile:
+A new advisory can name a version that is already locked, and then no commit runs the check. gspot adds no scheduled
+job to your CI. To scan on a schedule, add a workflow of your own next to `.github/workflows/gspot.yml`. Copy its steps
+up to and including `Install gspot tools`, set `on.schedule`, and end with this step, which reads every lockfile:
 
 ```yaml
 - run: gspot check --only dependencies/osv-scanner
@@ -67,21 +70,22 @@ add a workflow of your own beside `.github/workflows/gspot.yml`. Copy its steps 
 
 ## Lockfiles and package managers
 
-These checks read the project files, without the network:
+These checks read the project files and do not use the network:
 
 | Check                              | Stage             | Reports                                                                                                                             |
 | ---------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `dependencies/stale-lockfile`      | commit            | A `package.json` whose dependencies differ from what its npm, pnpm, or Bun lockfile records.                                        |
-| `dependencies/package-manager-pin` | commit            | A `packageManager` field that names another version than the mise pin of that package manager.                                      |
+| `dependencies/package-manager-pin` | commit            | A `packageManager` field that names a different version from the one that mise pins for that package manager.                       |
 | `dependencies/lockfiles`           | commit            | Lockfile downloads that do not use HTTPS or an allowed registry host, and a scope that holds the lockfiles of two package managers. |
 | `dependencies/syncpack`            | push, level `all` | A dependency that two workspace packages resolve to different versions.                                                             |
 
-For a stale lockfile, run the install of your package manager, such as `bun install`, and commit the lockfile.
+When a lockfile is out of date, run the install command of your package manager, such as `bun install`, and commit the
+lockfile.
 
 ## Registry hosts
 
-Lockfile downloads may use `registry.npmjs.org` and `registry.yarnpkg.com`. To allow another host, list every host,
-because `gspot set` replaces the list:
+By default, lockfile downloads may come from `registry.npmjs.org` and `registry.yarnpkg.com`. To allow another host,
+list every host, because `gspot set` replaces the whole list:
 
 ```shell
 gspot set dependencies.allowed_registries registry.npmjs.org registry.yarnpkg.com npm.example.com --reason "<why>"
@@ -91,20 +95,21 @@ Downloads must still use HTTPS. A host allowed in a scope counts for that folder
 
 ## Release age of the gspot tools
 
-gspot installs its own tools in `.gspot/`. Each package that it installs there waits `dependencies.min_release_age_days`
-days after its release, 7 by default. The hold covers the tools that gspot pins and the packages that they pull in. Only
-the gspot packages install at the version of the CLI.
+gspot installs its own tools in `.gspot/`. It installs a package there only after the package has been out for
+`dependencies.min_release_age_days` days, 7 by default. This wait covers the tools that gspot pins and the packages that
+they depend on. Only the gspot packages skip the wait, and install at the version of the CLI.
 
-When a pinned tool came out less than that many days ago, `gspot install` stops and names the tool and the setting.
-Wait for the release to age, or lower the setting. Bun does not hold back a package that a project pins to one version,
-so with Bun the pinned tools install at once.
+When a pinned tool came out fewer days ago, `gspot install` stops and names the tool and the setting. Wait until the
+release is old enough, or lower the setting. Bun does not apply the wait to a package that a project pins to one
+version, so with Bun the pinned tools install at once.
 
-gspot leaves the install settings of your project alone: to hold back your own dependencies, set the release age option
-of your package manager. To make gspot wait 14 days:
+gspot does not change the install settings of your project. To make your own dependencies wait, set the release age
+option of your package manager. To make gspot wait 14 days for its tools:
 
 ```shell
 gspot set dependencies.min_release_age_days 14
 ```
 
-Use `gspot explain dependencies.min_release_age_days` to inspect its default and when a change needs a reason. See the
-[dependencies reference](/reference/configurations/dependencies/) for every check.
+To see the default of the setting, and which changes need a reason, run
+`gspot explain dependencies.min_release_age_days`. The [dependencies reference](/reference/configurations/dependencies/)
+lists every check.

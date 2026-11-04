@@ -1,22 +1,22 @@
 ---
-title: Real catches
+title: Mistakes that gspot catches
 slug: topics/real-catches
 description: Mistakes from the Git history of gspot that its own checks report, with the rule, the code, and the commits.
 ---
 
-These mistakes come from the Git history of the gspot repository. Each one says what went wrong, and names the rule
-that reports it and its level. It shows the code before and after the fix, and links the commits that brought the code
-in and fixed it. Each output comes from a run of gspot on the current file with the old lines put back, so its line
-numbers belong to the current file.
+These three mistakes come from the Git history of the gspot repository. Each example says what went wrong, names the
+lint rule that reports it, and gives the level of that rule. It shows the code before and after the fix, and links the
+commit that added the mistake and the commit that fixed it. To get each output, gspot ran on the current file with the
+old lines put back, so the line numbers are those of the current file.
 
-Two of the three catches come from a rule that runs only at level `all`. `gspot init` starts at level `basic`; see
-[Levels](/start/concepts/#levels).
+A rule that runs only at level `all` reports two of the three mistakes. `gspot init` starts at level `basic`, as
+[Levels](/start/concepts/#levels) explains.
 
 ## `String#replace` reads patterns in its replacement
 
-The docs site builds the page of the ESLint plugin from the plugin README. It inserted the install and use text with
-`String#replace` and a template string. `replace` reads `$&`, `$'`, and `$$` in a replacement string as patterns, so a
-`$&` in that text turns into the matched text on the page:
+The docs site builds the page of the ESLint plugin from the README of the plugin. The code inserted the install and use
+text with `String#replace` and a template string. `replace` reads `$&`, `$'`, and `$$` in a replacement string as
+special patterns, so a `$&` in the inserted text turned into the matched text on the page:
 
 ```js
 '## Install\n'.replace('## Install\n', '## Install\n\nUse `$&` to repeat the match.\n');
@@ -38,7 +38,7 @@ const introduction = readme
     .replace('## Use\n', `## Use\n\n${formatPluginPresets()}\n`);
 ```
 
-After, a replacer function returns the text as it is:
+After the fix, a replacer function returns the text unchanged:
 
 ```ts
 const introduction = readme
@@ -48,7 +48,7 @@ const introduction = readme
     .replace('## Use\n', () => `## Use\n\n${formatPluginPresets()}\n`);
 ```
 
-With the old lines back, `gspot check --only javascript/eslint` reports:
+With the old lines put back, `gspot check --only javascript/eslint` reports:
 
 ```text
 failed   docs  javascript/eslint  2 findings
@@ -80,8 +80,8 @@ Before:
 }
 ```
 
-After, each heading reads a size in `rem` from a token that steps up at two breakpoints, between the same smallest
-and largest sizes. This excerpt leaves out the other tokens of `:root`:
+After the fix, each heading takes a size in `rem` from a CSS variable. The variable grows at two screen widths, from
+the same smallest size to the same largest size as before. This excerpt leaves out the other variables of `:root`:
 
 ```css
 :root {
@@ -112,7 +112,7 @@ and largest sizes. This excerpt leaves out the other tokens of `:root`:
 }
 ```
 
-With the old lines back, `gspot check --only css/stylelint` fails with two findings, one for each heading:
+With the old lines put back, `gspot check --only css/stylelint` fails with two findings, one for each heading:
 
 ```text
 declaration-property-unit-allowed-list  Disallowed unit "vw" for property "font-size"
@@ -124,9 +124,9 @@ November 2, 2026.
 
 ## `replaceAll` with a folder path
 
-gspot runs some checks in a temporary copy of the repository. It then swaps the path of the copy for the path of the
-repository in the commands and notes that it reports. The swap passed the repository path as the replacement string of
-`replaceAll`, so a `$$` in a folder name turns into `$` in the reported path:
+gspot runs some checks in a temporary copy of the repository. In the commands and notes that it reports, it then
+replaces the path of the copy with the path of the repository. The code passed the repository path as the replacement
+string of `replaceAll`, so a `$$` in a folder name turned into `$` in the reported path:
 
 ```js
 '/tmp/copy-1/src/a.ts'.replaceAll('/tmp/copy-1', '/srv/$$app');
@@ -146,7 +146,7 @@ for (const root of new Set([session.root, realpathSync(session.root)])) {
 }
 ```
 
-After:
+After the fix:
 
 ```ts
 const roots = new Set([session.root, realpathSync(session.root)]);
@@ -156,7 +156,7 @@ for (const root of roots) {
 }
 ```
 
-With the old lines back, `gspot check --only javascript/eslint` reports:
+With the old lines put back, `gspot check --only javascript/eslint` reports:
 
 ```text
 failed   packages/cli  javascript/eslint  2 findings
