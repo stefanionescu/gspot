@@ -12,7 +12,7 @@ export function buildLevelRows(): Array<{ level: string; description: string; co
             level: 'basic',
             description: `${CLI_REFERENCE.levelSummaries.basic} ${LEVEL_ADVICE.basic}`,
             count: defaultLevelChecks.length,
-            tools: '—',
+            tools: 'None',
         },
         {
             level: 'all',

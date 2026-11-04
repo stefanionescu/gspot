@@ -40,7 +40,7 @@ export const DOCS_PATHS = {
     configurations: `${REFERENCE_URL}configurations/`,
     checks: `${REFERENCE_URL}checks/`,
     eslintPlugin: `${REFERENCE_URL}eslint-plugin/`,
-    stage: `${cliPackage.homepage}/start/concepts/#stage`,
+    stage: `${cliPackage.homepage}/start/concepts/#stages`,
     levels: `${cliPackage.homepage}/start/concepts/#levels`,
     schema: `${cliPackage.homepage}/${SCHEMA_FILE}`,
 } as const;
