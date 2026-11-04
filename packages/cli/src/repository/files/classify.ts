@@ -154,8 +154,8 @@ function listPointerFiles(path: string, files: Config[]): string[] {
     return files.flatMap((file) => {
         const pointer = file.pointer;
         if (pointer === undefined) return [];
-        const scope = file.per_scope ? path : '';
-        return (pointer.folders ?? ['']).map((folder) => posix.join(scope, folder, pointer.path));
+        const scopePath = file.per_scope ? path : '';
+        return (pointer.folders ?? ['']).map((folder) => posix.join(scopePath, folder, pointer.path));
     });
 }
 

@@ -41,8 +41,10 @@ function buildProjectInstallHelp(folders: ToolFolders, name: string): string {
     const { root, cwd } = folders;
     const project = readPackageJson(cwd, PACKAGE_JSON);
     if (project?.dependencies?.[name] !== undefined || project?.devDependencies?.[name] !== undefined) {
-        const scope = relative(root, cwd);
-        return PROJECT_DEPENDENCIES_MESSAGE.replace('{folder}', () => (scope === '' ? ROOT_FOLDER_NAME : scope));
+        const scopePath = relative(root, cwd);
+        return PROJECT_DEPENDENCIES_MESSAGE.replace('{folder}', () =>
+            scopePath === '' ? ROOT_FOLDER_NAME : scopePath,
+        );
     }
     const { installCommand } = START_RUNNERS[detectPackageManager(root, []).name];
     return `Run ${installCommand.replace('<package>@<version>', () => name)}.`;
@@ -203,15 +205,15 @@ export function findMissingDependencies(
     planned: Pick<ScopeCheck, 'check' | 'scope'>,
 ): ProcessFailure | undefined {
     if (planned.check.needs?.includes('dependencies') !== true) return undefined;
-    const scope = planned.scope.path;
-    const names = listProjectDependencyNames(session.repository.dependencyFiles, scope);
+    const scopePath = planned.scope.path;
+    const names = listProjectDependencyNames(session.repository.dependencyFiles, scopePath);
     if (names.every((name) => (GSPOT_PACKAGES as readonly string[]).includes(name))) return undefined;
     const files = openFiles(session.toolsRoot);
-    const isInstalled = listEnclosingFolders(scope).some((folder) => {
+    const isInstalled = listEnclosingFolders(scopePath).some((folder) => {
         const modules = files.findStats(joinScope(folder, NODE_MODULES));
         return modules?.isDirectory() === true || modules?.isSymbolicLink() === true;
     });
-    const folder = scope === '' ? ROOT_FOLDER_NAME : scope;
+    const folder = scopePath === '' ? ROOT_FOLDER_NAME : scopePath;
     return isInstalled
         ? undefined
         : { status: 'missing', note: PROJECT_DEPENDENCIES_MESSAGE.replace('{folder}', () => folder) };

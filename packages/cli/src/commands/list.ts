@@ -25,7 +25,7 @@ import {
 } from '#cli/config/commands/reports.ts';
 
 function formatScopeGroup(scopes: readonly string[]): string {
-    const nested = scopes.filter((scope) => scope !== '');
+    const nested = scopes.filter((scopePath) => scopePath !== '');
     const named = nested.length === 1 ? formatScope(nested[0] as string) : formatCount(nested.length, 'scope');
     if (nested.length === 0) return formatScope('');
     return nested.length === scopes.length ? named : `${formatScope('')} and ${named}`;

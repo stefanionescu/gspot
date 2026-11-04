@@ -32,7 +32,7 @@ Check whether a scope reads the root config of a tool that walks up to its paren
 */
 export function isPointerInherited(owned: OwnedConfig, generated: Pick<ConfigTargets, 'targets'>): boolean {
     const { config, owner } = owned;
-    const files = ['', owner.scope.path].map((scope) => generated.targets.get(scope)?.get(config.target));
+    const files = ['', owner.scope.path].map((scopePath) => generated.targets.get(scopePath)?.get(config.target));
     return config.pointer?.inherit === true && owner.scope.path !== '' && files.every((file) => file === config.target);
 }
 

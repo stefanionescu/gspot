@@ -55,16 +55,16 @@ function findFilenameSkip(
 
 function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip | undefined {
     const { configuration, dependencies, filenames, tags } = { ...planned.check.when };
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     if (configuration !== undefined && !planned.scope.settings.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
         };
     return (
-        findDependencySkip(dependencies, scope, repository.dependencyFiles) ??
-        findFilenameSkip(filenames, scope, repository.files) ??
-        findTagSkip(tags, scope, repository.files)
+        findDependencySkip(dependencies, scopePath, repository.dependencyFiles) ??
+        findFilenameSkip(filenames, scopePath, repository.files) ??
+        findTagSkip(tags, scopePath, repository.files)
     );
 }
 

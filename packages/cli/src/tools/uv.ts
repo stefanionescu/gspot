@@ -113,10 +113,10 @@ export function findMissingEnvironment(
     planned: Pick<ScopeCheck, 'check' | 'scope'>,
 ): ProcessFailure | undefined {
     if (planned.check.needs?.includes('python-environment') !== true) return undefined;
-    const scope = planned.scope.path;
-    const project = joinScope(scope, PYPROJECT_TOML);
+    const scopePath = planned.scope.path;
+    const project = joinScope(scopePath, PYPROJECT_TOML);
     if (session.repository.files.every((file) => file.path !== project)) return undefined;
-    return findProjectEnvironment(session.toolsRoot, scope) === undefined
+    return findProjectEnvironment(session.toolsRoot, scopePath) === undefined
         ? { status: 'missing', note: PROJECT_ENVIRONMENT_MESSAGE }
         : undefined;
 }

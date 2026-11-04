@@ -62,7 +62,7 @@ Type-checks JavaScript with the type declarations the project uses.
 @param planned the JavaScript compiler check.
 */
 async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
         return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = getConfigPath(session, planned, extractConfigName(JSCONFIG_FILE));
@@ -71,10 +71,10 @@ async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck):
         throw new CheckStop('missing', `The generated file ${target} is missing. Run gspot install.`);
     const project = {
         ...generated,
-        ...buildScopeCompilerProject(session, scope, generated),
+        ...buildScopeCompilerProject(session, scopePath, generated),
     };
     if (project.fileNames.length === 0) return { ...buildBaseResult(planned, session), fileCount: 0 };
-    const prerequisites = listCompilerFiles(session, [[scope, project]]);
+    const prerequisites = listCompilerFiles(session, [[scopePath, project]]);
     using folder = await createCheckCopy(session, planned, [target, ...prerequisites]);
     const generatedPath = join(folder.path, target);
     chmodSync(generatedPath, PRIVATE_FILE);

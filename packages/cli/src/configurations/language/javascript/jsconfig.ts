@@ -62,14 +62,14 @@ function listTrackedDeclarationFiles(planned: PlannedConfig, authored: ParsedTsc
 
 function hasExtensionlessSources(planned: PlannedConfig, importStyle: string): boolean {
     const { files } = planned.session.repository;
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     return (
         importStyle === 'extensionless' &&
         files.some(
             (file) =>
                 file.kind === 'source' &&
                 file.tags.includes('javascript') &&
-                selectScopePath(file.path, planned.session.scopes) === scope,
+                selectScopePath(file.path, planned.session.scopes) === scopePath,
         )
     );
 }
@@ -91,23 +91,23 @@ Build jsconfig.json: the JavaScript type-checking project and its scoped source 
 function buildJsconfigFile(planned: PlannedConfig): string {
     const { root, cache } = planned.session;
     const { targetPath: target } = planned;
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     const importStyle = getTable(planned.scope.settings, 'javascript').import_extension;
     const ignoredGlobs = convertToGlobs(
         planned.ignoreSections.filter((section) => planned.level !== 'all' || section.key !== 'build'),
     );
     const rootPrefix = convertToPosixPath(relative(dirname(target), '.')) + '/';
-    const scopePrefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
+    const scopePrefix = convertToPosixPath(relative(dirname(target), scopePath)) + '/';
     const excluded = [...new Set([...ignoredGlobs, ...JAVASCRIPT_IGNORED_GLOBS])]
         .filter((path) => !path.startsWith('!'))
         .flatMap((path) => {
             if (path.startsWith('**/')) return [`${scopePrefix}${path}`];
-            return scope === '' || path.startsWith(`${scope}/`) ? [`${rootPrefix}${path}`] : [];
+            return scopePath === '' || path.startsWith(`${scopePath}/`) ? [`${rootPrefix}${path}`] : [];
         });
-    const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), cache);
+    const jsconfigOwner = readTsconfig(root, join(root, scopePath, JSCONFIG_FILE), cache);
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
-    const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), cache);
-    const prefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
+    const authored = jsconfigOwner ?? readTsconfig(root, join(root, scopePath, owner), cache);
+    const prefix = convertToPosixPath(relative(dirname(target), scopePath)) + '/';
     const compilerOptions: Record<string, unknown> = {
         ...JAVASCRIPT_OPTIONS,
         jsx: STANDALONE_OPTIONS.jsx,
@@ -129,7 +129,7 @@ function buildJsconfigFile(planned: PlannedConfig): string {
         planned,
         {
             prefix,
-            owner: join(root, scope, owner),
+            owner: join(root, scopePath, owner),
             ignoredGlobs: excluded,
         },
         authored,

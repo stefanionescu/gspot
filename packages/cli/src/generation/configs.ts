@@ -95,10 +95,10 @@ function replaceReferences(
 
 function addConfigFailures(generated: ConfigBuildState, owners: OwnedSourceFile[], error: GspotError): void {
     for (const { owner, config } of owners) {
-        const scope = owner.scope.path;
-        const failures = generated.failures.get(scope) ?? new Map<string, Error>();
+        const scopePath = owner.scope.path;
+        const failures = generated.failures.get(scopePath) ?? new Map<string, Error>();
         failures.set(config.target, error);
-        generated.failures.set(scope, failures);
+        generated.failures.set(scopePath, failures);
     }
 }
 
@@ -135,10 +135,10 @@ function addToolOutput(target: string, group: BuiltConfig[], index: number, gene
     const { file, companions } = written === target ? first : buildConfigFile(first, written, generated);
     for (const written of [file, ...companions]) generated.files.set(written.path, written);
     for (const { owner } of group) {
-        const scope = owner.scope.path;
-        const paths = generated.targets.get(scope) ?? new Map<string, string>();
+        const scopePath = owner.scope.path;
+        const paths = generated.targets.get(scopePath) ?? new Map<string, string>();
         paths.set(target, written);
-        generated.targets.set(scope, paths);
+        generated.targets.set(scopePath, paths);
     }
 }
 

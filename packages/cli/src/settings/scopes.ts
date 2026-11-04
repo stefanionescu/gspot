@@ -126,9 +126,13 @@ List the configurations that gspot.toml removes, in the root and in each scope, 
 @param settings the parsed gspot.toml.
 */
 export function listRemovedConfigurations(settings: Settings): RemovedConfiguration[] {
-    return [['', settings] as const, ...settings.scopes].flatMap(([scope, table]) => {
+    return [['', settings] as const, ...settings.scopes].flatMap(([scopePath, table]) => {
         const reasons = table.written['removed_configurations'] as Record<string, string>;
-        return table.removed_configurations.map((name) => ({ name, scope, reason: reasons[name] as string }));
+        return table.removed_configurations.map((name) => ({
+            name,
+            scope: scopePath,
+            reason: reasons[name] as string,
+        }));
     });
 }
 

@@ -111,8 +111,8 @@ function checkLocalFiles(session: Session, planned: PlannedCheck): CheckFinding[
     );
     const tracked = [...new Set(session.repository.index.map(({ path }) => path))]
         .filter((path) => {
-            const scope = selectScopePath(path, scopes);
-            return matchers.get(scope)?.(posix.relative(scope, path)) === true;
+            const scopePath = selectScopePath(path, scopes);
+            return matchers.get(scopePath)?.(posix.relative(scopePath, path)) === true;
         })
         .map((path) => ({
             file: path,

@@ -20,10 +20,10 @@ function checkPassThroughFolders(session: Session, planned: PlannedCheck): Check
     );
     const code = listCodeFiles(planned).filter((file) => extensions.some((extension) => file.path.endsWith(extension)));
     const tree = buildFolderTree(session.repository.files);
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     const folders = new Set(code.flatMap((file) => listEnclosingFolders(extractParentFolder(file.path))));
     return [...folders]
-        .filter((folder) => folder !== scope && (scope === '' || folder.startsWith(`${scope}/`)))
+        .filter((folder) => folder !== scopePath && (scopePath === '' || folder.startsWith(`${scopePath}/`)))
         .filter((folder) => !isInInstalledFolder(folder))
         .toSorted((left, right) => compareText(left, right))
         .flatMap((folder) => {

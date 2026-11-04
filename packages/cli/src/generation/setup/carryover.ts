@@ -219,8 +219,8 @@ function listPrettierRows({
     tools,
 }: CarryoverInput): CarryoverRow[] {
     if (!tools.has('prettier')) return [];
-    return session.scopes.flatMap(({ path: scope }) => {
-        const sources = readPrettierOptions(repository.root, scope, prettierScripts);
+    return session.scopes.flatMap(({ path: scopePath }) => {
+        const sources = readPrettierOptions(repository.root, scopePath, prettierScripts);
         const readPath = sources[0]?.path;
         const readKeys = new Set(sources.slice(0, 1).flatMap(({ options }) => Object.keys(options)));
         return sources.map(({ path, options }) => {
@@ -236,7 +236,7 @@ function listPrettierRows({
                 ),
             );
             const isOverridden =
-                held.has(PRETTIER_OVERRIDES_KEY) && buildPrettierOverrides(options, scope, trackedPaths).length > 0;
+                held.has(PRETTIER_OVERRIDES_KEY) && buildPrettierOverrides(options, scopePath, trackedPaths).length > 0;
             return {
                 ...CARRYOVER_ROW_START,
                 path,

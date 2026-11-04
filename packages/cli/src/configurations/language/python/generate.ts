@@ -108,7 +108,7 @@ function buildRuffFile(planned: PlannedConfig): string {
         ...configuration.ruff.basic,
         ...(planned.level === 'all' ? configuration.ruff.all : []),
     ]);
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
         (each) => each.rule !== undefined && each.paths !== undefined,
     );
@@ -123,7 +123,7 @@ function buildRuffFile(planned: PlannedConfig): string {
         (ignore.paths ?? []).map((path) => ({ path, rule: ignore.rule as string })),
     );
     for (const { path, rule } of pathRules) {
-        const target = `${pythonScopePath}/${relative(scope, path)}`;
+        const target = `${pythonScopePath}/${relative(scopePath, path)}`;
         byPath.set(target, [...(byPath.get(target) ?? []), rule]);
     }
     const convention = getTable(planned.scope.settings, 'python').docstring_convention;

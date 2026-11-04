@@ -246,8 +246,8 @@ function checkMissingPaths(session: Session, planned: PlannedCheck): CheckFindin
         session.repository.files.map((file) => file.path),
     );
     const projects = Map.groupBy(files, (file) => selectScopePath(file.path, session.repository.scopeFolders));
-    return [...projects].flatMap(([scope, sources]) => {
-        const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scope) };
+    return [...projects].flatMap(([scopePath, sources]) => {
+        const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scopePath) };
         return sources.flatMap((file) => {
             const text = readText(session.cache, file.path);
             return extractProseLines(text).flatMap((prose) => validateProseLine(file.path, prose, index));

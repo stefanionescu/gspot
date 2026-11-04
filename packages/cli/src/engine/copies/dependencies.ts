@@ -106,9 +106,9 @@ The checks run uv with --no-sync, so the environment does not change.
 @param scopes the scope folders.
 */
 export function linkEnvironments(root: string, target: string, scopes: string[]): void {
-    for (const scope of scopes) {
-        const installed = join(root, scope, PYTHON_ENVIRONMENT_FOLDER);
-        const output = join(target, scope, PYTHON_ENVIRONMENT_FOLDER);
+    for (const scopePath of scopes) {
+        const installed = join(root, scopePath, PYTHON_ENVIRONMENT_FOLDER);
+        const output = join(target, scopePath, PYTHON_ENVIRONMENT_FOLDER);
         if (existsSync(installed) && !existsSync(output)) symlinkSync(installed, output, 'junction');
     }
 }

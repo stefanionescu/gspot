@@ -48,9 +48,9 @@ function buildCssModulesOverrides(
     picked: Record<string, unknown>,
     offRules: string[],
 ) {
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     const hasModules = planned.session.repository.files.some(
-        (file) => isInScope(file.path, scope) && file.path.endsWith(CSS_MODULES_OVERRIDE.suffix),
+        (file) => isInScope(file.path, scopePath) && file.path.endsWith(CSS_MODULES_OVERRIDE.suffix),
     );
     if (!hasModules) return [];
     const rules: Record<string, unknown> = {

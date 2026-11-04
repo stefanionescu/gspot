@@ -8,7 +8,7 @@ import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository.ts'
 
 function buildCoverageMatcher(
     table: Configuration['files'],
-    { configurations, scopePath: scope, settings }: CoveredFilesOptions,
+    { configurations, scopePath, settings }: CoveredFilesOptions,
 ): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
     const isTestFile = buildPathMatcher(table.test_files ? settings.test_files : []);
     const defaults: Array<Configuration['files']> = [];
@@ -38,7 +38,7 @@ function buildCoverageMatcher(
         ...(owners.languages ? listSourceConfigurations(configurations).map(({ files }) => files) : []),
     ].map((files) => buildFileMatcher(files));
     return (file) => {
-        const scopeFile = { ...file, path: scope === '' ? file.path : file.path.slice(scope.length + 1) };
+        const scopeFile = { ...file, path: scopePath === '' ? file.path : file.path.slice(scopePath.length + 1) };
         return isTestFile(file.path) || isSettingPath(file.path) || matches.some((match) => match(scopeFile));
     };
 }

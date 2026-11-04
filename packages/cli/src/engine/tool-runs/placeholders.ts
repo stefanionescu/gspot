@@ -167,7 +167,7 @@ Lists the config files that a check command or its environment names.
 */
 export function listCommandConfigs(session: CheckSession, planned: PlannedCheck, command: readonly string[]): string[] {
     const words = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     return [
         ...new Set(
             words.flatMap((segment) => {
@@ -181,7 +181,7 @@ export function listCommandConfigs(session: CheckSession, planned: PlannedCheck,
                     .matchAll(POINTER_PLACEHOLDER)
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => selectPointerPath(session, scope, name))
+                    .map((name) => selectPointerPath(session, scopePath, name))
                     .toArray();
                 return [...configured, ...pointed];
             }),
@@ -198,9 +198,9 @@ Lists the source and config files that a copy needs for a command.
 @returns repository-relative paths for the copy.
 */
 export function listCopyFiles(session: CheckSession, planned: PlannedCheck, command: string[]): string[] {
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     const owned = (planned.configuration?.configs ?? []).map((config) =>
-        getConfigTarget(scope, config, session.generation.buildConfigs(session)),
+        getConfigTarget(scopePath, config, session.generation.buildConfigs(session)),
     );
     return [
         ...new Set([

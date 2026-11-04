@@ -44,12 +44,12 @@ files of this run.
 @returns each unused definition and each line of unreachable code.
 */
 async function checkVulture(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     const scopePaths = session.scopes.map(({ path }) => path);
-    const children = listNestedScopes(scopePaths, scope);
+    const children = listNestedScopes(scopePaths, scopePath);
     const sources = session.repository.files
         .filter((file) => file.kind === 'source' && file.path.endsWith(PYTHON_EXTENSION))
-        .filter((file) => isInScope(file.path, scope) && isOutsideChildScopes(file.path, children))
+        .filter((file) => isInScope(file.path, scopePath) && isOutsideChildScopes(file.path, children))
         .map((file) => file.path);
     if (sources.length === 0) return [];
     const result = await runCheckTool(session, planned, [...VULTURE_COMMAND, ...sources], { cwd: session.root });
