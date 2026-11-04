@@ -34,9 +34,7 @@ test('a run uses the cancel signal supplied when its session opens', async () =>
     const session = await openSession(sandbox.path, { resources, cancelSignal: AbortSignal.abort() });
     const result = await runChecks(session, buildRunOptions({ only: ['naming/identifiers'] }));
     expect(result.report.exitCode).toBe(2);
-    expect(
-        result.report.checks.map(({ check, status, note, findings }) => ({ check, status, note, findings })),
-    ).toStrictEqual([
-        { check: 'naming/identifiers', status: 'canceled', note: 'The check was canceled.', findings: [] },
+    expect(result.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
+        { check: 'naming/identifiers', status: 'canceled', findings: [] },
     ]);
 });

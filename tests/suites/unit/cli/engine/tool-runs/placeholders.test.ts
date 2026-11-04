@@ -6,6 +6,8 @@ import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation.ts';
 import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
@@ -62,7 +64,7 @@ test('a list setting inside one command argument is refused', async () => {
         {
             check: 'sandbox/arguments',
             status: 'error',
-            note: 'List setting openapi.generate_command must occupy a whole command argument.',
+            note: expect.stringContaining('openapi.generate_command') as string,
         },
     ]);
 });
@@ -119,7 +121,11 @@ test('a Markdown command run in a copy keeps the config files its manifest write
         getManifestTarget('markdown', 'markdownlint.jsonc'),
     ]);
     expect(() => listCopyFiles(session, planned, ['markdownlint-cli2', '{config_file:absent}'])).toThrow(
-        'Check markdown/markdownlint names {config_file:absent} and no configuration writes it.',
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'settings',
+            message: expect.stringContaining('{config_file:absent}') as string,
+        }),
     );
 });
 

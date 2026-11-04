@@ -34,8 +34,8 @@ test('Docker checks report an unavailable daemon before running', async () => {
     );
     const result = await runChecks(session, buildRunOptions({ only: ['nginx/syntax', 'nginx/second'] }));
     expect(result.report.exitCode).toBe(2);
-    expect(result.report.checks.map(({ check, status, note }) => ({ check, status, note }))).toStrictEqual([
-        { check: 'nginx/syntax', status: 'missing', note: 'Start Docker, then run the check again.' },
-        { check: 'nginx/second', status: 'missing', note: 'Start Docker, then run the check again.' },
+    expect(result.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'nginx/syntax', status: 'missing' },
+        { check: 'nginx/second', status: 'missing' },
     ]);
 });

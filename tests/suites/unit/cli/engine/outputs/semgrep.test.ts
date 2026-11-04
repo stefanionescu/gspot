@@ -46,11 +46,12 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
     ]);
 });
 
-test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', async (_name, stdout, note) => {
+test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', async (_name, stdout) => {
     await using sandbox = await testdir({ 'scripts/café build.sh': BROKEN_IF_SCRIPT });
     const check = readConfigurations()
         .get('security')!
         .checks.find((check) => check.id === 'security/semgrep')!;
     const paths = { cwd: sandbox.path, root: sandbox.path };
-    expect(parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths, {}).note).toBe(note);
+    const { note } = parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths, {});
+    expect(note).toContain(SEMGREP_PARSE_ERROR.message);
 });

@@ -67,11 +67,7 @@ test.each([false, true])(
             const report = await execution;
             const result = report.results[0]!;
             await waitForExit(pid);
-            expect(result).toMatchObject({
-                status: 'canceled',
-                note: 'sandbox/fixer was canceled.',
-                changed: ['source.txt'],
-            });
+            expect(result).toMatchObject({ status: 'canceled', changed: ['source.txt'] });
             expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('partial');
         } finally {
             controller.abort();

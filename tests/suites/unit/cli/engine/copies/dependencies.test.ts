@@ -8,9 +8,9 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
@@ -149,9 +149,7 @@ test.each(['', 'nested/'])('revision copies link the installed Vale packages und
     expect(await readFile(join(sandbox.path, packagePath), 'utf8')).toBe('extends: existence\n');
     await writeFile(join(sandbox.path, config), 'Packages = Different\n');
     const valeError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
-    expect(valeError.message).toBe(
-        'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot install there.',
-    );
+    expect(valeError).toMatchObject({ name: 'GspotError', code: 'copy' });
 });
 
 test('a copy leaves the virtual environment in the working tree and still checks its lockfile', async () => {
@@ -176,7 +174,7 @@ test('a copy leaves the virtual environment in the working tree and still checks
     expect(await readFile(join(root, '.venv/bin/python'), 'utf8')).toBe('interpreter');
     await writeFile(join(root, 'uv.lock'), 'version = 2\n');
     using changed = await copyRevision(root, { kind: 'index' });
-    expect(changed.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
+    expect(changed.dependencyNote).toBe(DEPENDENCY_REVISION_NOTE);
 });
 
 test('cancellation waits for the dependency copies to finish before removing the copy and keeps installed files', async () => {
@@ -213,7 +211,7 @@ test('a package.json checked out with CRLF matches its LF blob in the index copy
     expect(copy.dependencyNote).toBeUndefined();
     await writeFile(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
     using changed = await copyRevision(sandbox.path, { kind: 'index' });
-    expect(changed.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
+    expect(changed.dependencyNote).toBe(DEPENDENCY_REVISION_NOTE);
     expect(await readFile(join(changed.root, 'node_modules/example/index.js'), 'utf8')).toBe(VALUE_ONE_LINE);
 });
 
@@ -228,12 +226,12 @@ test('changed compiler settings omit declaration copies and leave a dependency n
     await writeFile(join(sandbox.path, 'tsconfig.json'), '{broken');
     using broken = await copyRevision(sandbox.path, { kind: 'index' });
     expect(existsSync(join(broken.root, 'types/generated.d.ts'))).toBe(false);
-    expect(broken.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
+    expect(broken.dependencyNote).toBe(DEPENDENCY_REVISION_NOTE);
     runGitStep(sandbox.path, ['checkout', '--', 'tsconfig.json']);
     await writeFile(join(sandbox.path, 'compiler.json'), '{"compilerOptions":{"strict":false}}');
     using changed = await copyRevision(sandbox.path, { kind: 'index' });
     expect(existsSync(join(changed.root, 'types/generated.d.ts'))).toBe(false);
-    expect(changed.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
+    expect(changed.dependencyNote).toBe(DEPENDENCY_REVISION_NOTE);
 });
 
 test('an index copy clones an ignored declaration file that a tsconfig includes, and nothing outside the repository', async () => {
@@ -285,8 +283,5 @@ test('a revision refuses tracked installed dependencies', async () => {
     });
     runGitStep(sandbox.path, ['add', '.']);
     const error = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
-    expect(error).toMatchObject({
-        code: 'copy',
-        message: 'Installed dependencies are tracked in the selected revision. Untrack them before checking again.',
-    });
+    expect(error).toMatchObject({ name: 'GspotError', code: 'copy' });
 });

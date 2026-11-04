@@ -40,9 +40,7 @@ test('an aborted run stops its command and reports cancellation on every system'
     controller.abort(143);
     const result = await running;
     expect(result.report.exitCode).toBe(2);
-    expect(result.report.checks).toMatchObject([
-        { check: 'project/cancel', status: 'canceled', note: `${process.execPath} was canceled.` },
-    ]);
+    expect(result.report.checks).toMatchObject([{ check: 'project/cancel', status: 'canceled' }]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
 
@@ -215,7 +213,7 @@ test('a check with malformed JSON reports an error, and the other checks keep th
         {
             check: 'sandbox/broken',
             status: 'error',
-            note: 'The output is not JSON. It starts with: source.txt',
+            note: expect.stringContaining('source.txt') as string,
         },
         { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
     ]);

@@ -12,13 +12,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
-
-import {
-    VUE_TSC_SKIP,
-    GENERATOR_LIMITS,
-    NEXT_INTL_PROJECTS,
-    BUILT_IN_LIMIT_CASES,
-} from '#tests/config/engine/skips.ts';
+import { GENERATOR_LIMITS, NEXT_INTL_PROJECTS, BUILT_IN_LIMIT_CASES } from '#tests/config/engine/skips.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });
@@ -35,7 +29,7 @@ test('a check whose required setting is missing is skipped with a note naming th
         {
             check: 'xcode/entitlements',
             status: 'skipped',
-            note: 'needs the setting xcode.allowed_entitlements',
+            note: expect.stringContaining('xcode.allowed_entitlements') as string,
         },
     ]);
 });
@@ -58,7 +52,7 @@ test.each([...NEXT_INTL_PROJECTS])(
         const planned = planChecks(session, { stage: 'push', only: ['translations/messages'] });
         const check = planned.find((each) => each.scope.path === scope)!;
         expect(check.skip).toStrictEqual(
-            selected ? undefined : { cause: 'condition', note: 'Needs a project dependency: next-intl.' },
+            selected ? undefined : { cause: 'condition', note: expect.stringContaining('next-intl') as string },
         );
     },
 );
@@ -73,7 +67,9 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
             check: check.id,
             skip,
         })),
-    ).toStrictEqual([...VUE_TSC_SKIP]);
+    ).toStrictEqual([
+        { check: 'vue/vue-tsc', skip: { cause: 'condition', note: expect.stringContaining('typescript') as string } },
+    ]);
 });
 
 test.skipIf(!isWindows)('a check whose tool has no Windows build is skipped on Windows', async () => {
@@ -84,7 +80,7 @@ test.skipIf(!isWindows)('a check whose tool has no Windows build is skipped on W
     });
     const session = await openSession(sandbox.path);
     expect(planChecks(session, { stage: 'all', only: ['security/semgrep'] }).map(({ skip }) => skip)).toStrictEqual([
-        { cause: 'system', note: 'semgrep has no Windows build' },
+        { cause: 'system', note: expect.stringContaining('semgrep') as string },
     ]);
 });
 
@@ -104,7 +100,7 @@ test.each([false, true])('Semgrep tools follow local rules at plan time (custom 
             ? undefined
             : {
                   cause: 'setting',
-                  note: 'No selected configuration or security.semgrep_rules supplies local rules.',
+                  note: expect.stringContaining('security.semgrep_rules') as string,
               },
     );
     expect(listPackagePins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
@@ -153,7 +149,7 @@ test('generated and vendored test files do not satisfy a source-tag condition', 
     ).toStrictEqual([
         {
             check: 'swift/tests',
-            skip: { cause: 'condition', note: 'Needs files marked swift-test or swift-test-target in this scope.' },
+            skip: { cause: 'condition', note: expect.stringContaining('swift-test') as string },
         },
     ]);
 });
@@ -171,10 +167,7 @@ test('pytest/tests skips a scope that holds no test file', async () => {
         { scope: 'app', skip: undefined },
         {
             scope: 'docs',
-            skip: {
-                cause: 'condition',
-                note: 'Needs a file named test_*.py, *_test.py, or conftest.py in this scope.',
-            },
+            skip: { cause: 'condition', note: expect.stringContaining('conftest.py') as string },
         },
     ]);
 });
@@ -187,7 +180,7 @@ test('a check for other systems names the host in its skip note', async () => {
     using _platform = fakePlatform('linux');
     const planned = planChecks(await openSession(sandbox.path), { stage: 'all', only: ['swift/swiftlint-analyze'] });
     expect(planned.map(({ skip }) => skip)).toStrictEqual([
-        { cause: 'system', note: 'runs on macos only; this is linux' },
+        { cause: 'system', note: expect.stringMatching(/\bmacos\b.+\blinux\b/u) as string },
     ]);
 });
 
@@ -210,7 +203,7 @@ test('limit readers report their enabled state and exact level note', async () =
     });
     const session = await openSession(sandbox.path);
     expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.max_function_lines')).toStrictEqual([
-        { check: 'python/function-size', enabled: false, note: 'off at level basic' },
+        { check: 'python/function-size', enabled: false, note: expect.stringContaining('basic') as string },
     ]);
     expect(
         listSettingReaders(

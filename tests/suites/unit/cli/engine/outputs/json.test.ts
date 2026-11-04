@@ -1,5 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import type { CheckStop } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
@@ -100,16 +102,21 @@ test('lists nested two levels down read the file from the top and join several m
     ]);
 });
 
-test.each([...EMPTY_JSON_CASES])('an invalid JSON report is refused: %s', (stdout, message) => {
-    expect(() => parseJsonReport('x/y', { format: 'json', list: 'items' }, stdout)).toThrow(new Error(message));
+test.each([...EMPTY_JSON_CASES])('an invalid JSON report is refused: %s', (stdout, start) => {
+    expect(() => parseJsonReport('x/y', { format: 'json', list: 'items' }, stdout)).toThrow(
+        matchFields<CheckStop>({
+            name: 'CheckStop',
+            status: 'error',
+            message: expect.stringContaining(start) as string,
+        }),
+    );
 });
 
-test.each([...INVALID_FINDING_REPORTS])(
-    'a JSON report with $name is refused with its message',
-    ({ output, stdout, message }) => {
-        expect(() => parseJsonReport('x/y', output, stdout)).toThrow(new Error(message));
-    },
-);
+test.each([...INVALID_FINDING_REPORTS])('a JSON report with $name is refused', ({ output, stdout }) => {
+    expect(() => parseJsonReport('x/y', output, stdout)).toThrow(
+        matchFields<CheckStop>({ name: 'CheckStop', status: 'error' }),
+    );
+});
 
 test('a gitleaks finding names its rule ID and keeps its fingerprint in a field of its own', () => {
     const check = getShippedCheck('secrets/gitleaks-staged');

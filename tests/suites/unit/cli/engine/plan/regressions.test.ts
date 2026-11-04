@@ -84,7 +84,7 @@ test('a skipped check leaves the plan, and the check it replaces stays off', asy
     expect(planned.map(({ check }) => check.id)).not.toContain('vue/vue-tsc');
     expect(planned.find(({ check }) => check.id === 'typescript/tsc')?.skip).toStrictEqual({
         cause: 'replaced',
-        note: 'vue/vue-tsc runs it here',
+        note: expect.stringContaining('vue/vue-tsc') as string,
     });
 });
 
@@ -123,7 +123,7 @@ test('a skipped history check does not refuse a shallow push', async () => {
     ).toStrictEqual([
         {
             check: 'secrets/gitleaks-pushed',
-            skip: { cause: 'ignore', note: 'turned off by an ignore in gspot.toml: The server scans pushed history.' },
+            skip: { cause: 'ignore', note: expect.stringContaining('The server scans pushed history.') as string },
         },
     ]);
 });

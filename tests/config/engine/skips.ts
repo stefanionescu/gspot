@@ -125,10 +125,3 @@ export const NEXT_INTL_PROJECTS = [
         selected: false,
     },
 ] as const;
-
-export const VUE_TSC_SKIP = [
-    {
-        check: 'vue/vue-tsc',
-        skip: { cause: 'condition', note: 'Needs the typescript configuration, which this scope does not select.' },
-    },
-] as const;

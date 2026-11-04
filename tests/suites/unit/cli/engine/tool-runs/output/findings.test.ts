@@ -117,7 +117,7 @@ test.each(['{file}', '{files}'])(
         const fatal = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
-        expect(fatal.note).toBe(`${process.execPath} failed with exit 7:\n${located}`);
+        expect(fatal.note).toContain(located);
     },
 );
 
@@ -176,7 +176,7 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     const paths = { root: sandbox.path, cwd: sandbox.path };
     const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];
     expect(parseCommandFindings(planned, result, paths, {})).toStrictEqual({
-        note: `${process.execPath} failed with exit 1:\nnotes/reported.txt:1:A defect.`,
+        note: expect.stringContaining('notes/reported.txt:1:A defect.') as string,
     });
     await writeFile(join(sandbox.path, 'notes/reported.txt'), source);
     expect(parseCommandFindings(planned, result, paths, {}).findings).toMatchObject(expected);

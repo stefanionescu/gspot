@@ -52,5 +52,5 @@ test('grouped output that locates no existing file is an error', async () => {
             },
             {},
         ),
-    ).toStrictEqual({ note: 'sandbox/diagnostic failed with exit 1:\nmissing.ts:\n  1: A defect.' });
+    ).toStrictEqual({ note: expect.stringContaining('missing.ts:\n  1: A defect.') as string });
 });

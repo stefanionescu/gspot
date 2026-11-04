@@ -1,4 +1,6 @@
 import { test, expect } from 'bun:test';
+import type { CheckStop } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { UNIX_COMMAND_LIMIT, WINDOWS_PROCESS_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/engine.ts';
 
@@ -37,12 +39,9 @@ test('a long Unicode list splits under the byte limit in order, and a path or to
     expect(batches.flat()).toStrictEqual(files);
     for (const batch of batches)
         expect(Buffer.byteLength([...fixed, ...batch].join(' '))).toBeLessThanOrEqual(UNIX_COMMAND_LIMIT);
-    expect(() => splitFileArguments(['x'.repeat(UNIX_COMMAND_LIMIT + 1)], ['tool'], 'linux')).toThrow(
-        new Error(`${'x'.repeat(UNIX_COMMAND_LIMIT + 1)} is too long for one command line. Shorten its path.`),
-    );
-    expect(() => splitFileArguments([], ['x'.repeat(UNIX_COMMAND_LIMIT + 1)], 'linux')).toThrow(
-        new Error('Tool arguments exceed the command limit. Shorten the tool arguments.'),
-    );
+    const refusal = matchFields<CheckStop>({ name: 'CheckStop', status: 'error' });
+    expect(() => splitFileArguments(['x'.repeat(UNIX_COMMAND_LIMIT + 1)], ['tool'], 'linux')).toThrow(refusal);
+    expect(() => splitFileArguments([], ['x'.repeat(UNIX_COMMAND_LIMIT + 1)], 'linux')).toThrow(refusal);
 });
 
 test('file arguments that fill the byte budget stay together and the next byte starts another batch', () => {

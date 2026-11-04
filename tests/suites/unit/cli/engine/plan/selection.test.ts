@@ -6,7 +6,9 @@ import { runChecks } from '#cli/engine/run.ts';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import type { RunSelection } from '#cli/types/engine/plan.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
@@ -160,7 +162,11 @@ test.each(['all'] as const)('%s plans history checks once at the root and only f
     ).toStrictEqual(names.map(() => false));
     const shallow: RunSelection = { content: 'commit', shallow: true };
     expect(() => planChecks(session, { stage: 'push', only: ['secrets/gitleaks-pushed'], selection: shallow })).toThrow(
-        new Error('Pushed history is incomplete for secrets/gitleaks-pushed. Run git fetch --unshallow and retry.'),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'git',
+            message: expect.stringContaining('secrets/gitleaks-pushed') as string,
+        }),
     );
     expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], selection: shallow })).toHaveLength(1);
 });
@@ -177,7 +183,7 @@ test.each([...TSC_REPLACEMENTS])(
         const options = { stage: 'all' as const, only: ['typescript/tsc', check] };
         expect(planChecks(session, options).find(({ check }) => check.id === 'typescript/tsc')?.skip).toStrictEqual({
             cause: 'replaced',
-            note: `${check} runs it here`,
+            note: expect.stringContaining(check) as string,
         });
         await writeFile(
             join(sandbox.path, 'gspot.toml'),

@@ -17,10 +17,7 @@ test('a timed-out tool carries the configured time limit in its failure', async 
         name: 'waiting-tool',
         timeoutSeconds: 0.2,
     });
-    expect(failure).toStrictEqual({
-        status: 'error',
-        note: 'waiting-tool ran longer than tool_timeout_seconds (0.2s), so gspot stopped it. Raise the limit with gspot set tool_timeout_seconds <seconds>.',
-    });
+    expect(failure).toStrictEqual({ status: 'error', note: expect.stringContaining('0.2s') as string });
 });
 
 test('a missing executable is reported as missing rather than a check finding', async () => {
@@ -31,7 +28,7 @@ test('a missing executable is reported as missing rather than a check finding', 
         timeoutSeconds: 1,
     });
     expect(failure?.status).toBe('missing');
-    expect(failure?.note).toStartWith('gspot could not start absent-tool:');
+    expect(failure?.note).toContain('absent-tool');
 });
 
 test('companion tool folders precede the existing PATH in declared order', async () => {

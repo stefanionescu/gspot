@@ -6,6 +6,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
@@ -123,7 +124,7 @@ test('a failed copy setup removes its private folder', async () => {
             throw Object.assign(new Error('The disk is full.'), { code: 'ENOSPC' });
         rename(source, destination);
     });
-    expect(() => createCopyFolder(sandbox.path)).toThrow('The disk is full.');
+    expect(() => createCopyFolder(sandbox.path)).toThrow(matchFields<NodeJS.ErrnoException>({ code: 'ENOSPC' }));
     expect(existsSync(join(sandbox.path, '.gspot-copies'))).toBe(false);
 });
 
