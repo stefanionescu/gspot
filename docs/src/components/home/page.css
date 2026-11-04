@@ -5,6 +5,18 @@
 :root {
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 14%, transparent);
     --home-code-text: #d6deeb;
+    --home-code-bg: #011627;
+    --home-code-border: #1d3b53;
+    --home-code-key: #7fdbca;
+    --home-code-string: #ecc48d;
+    --home-code-punctuation: #c792ea;
+    --home-code-muted: #8ba3b8;
+    --home-flagged-line: rgb(248 81 73 / 16%);
+    --home-fixed-line: rgb(46 160 67 / 18%);
+    --home-step-flagged: #ff7b72;
+    --home-step-stopped: #f0883e;
+    --home-step-fixed: #56d364;
+    --home-stopped-text: #ffa657;
     --home-width: 1200px;
     --home-section-space: 64px;
     --home-title-size: 2.5rem;
@@ -15,6 +27,18 @@
 :root[data-theme='light'] {
     --home-code-text: #403f53;
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 12%, transparent);
+    --home-code-bg: #fbfbfb;
+    --home-code-border: #d9d9d9;
+    --home-code-key: #0c969b;
+    --home-code-string: #984e4d;
+    --home-code-punctuation: #8844ae;
+    --home-code-muted: #6e7781;
+    --home-flagged-line: rgb(207 34 46 / 10%);
+    --home-fixed-line: rgb(26 127 55 / 12%);
+    --home-step-flagged: #cf222e;
+    --home-step-stopped: #bc4c00;
+    --home-step-fixed: #1a7f37;
+    --home-stopped-text: #9a3d00;
 }
 
 @media (width >= 50rem) {

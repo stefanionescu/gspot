@@ -1,42 +1,35 @@
 ---
-import { Code } from '@astrojs/starlight/components';
 import { CAUGHT_EXAMPLE } from '#docs/config/home.ts';
-import InlineText from '#docs/components/InlineText.astro';
 
-const REPLACEMENT_TEMPLATE = /`[^`]*`/gu;
-const REPLACEMENT_FUNCTION = '() =>';
-const { file, lines, message, before, after } = CAUGHT_EXAMPLE;
+const { added, pulled, check, lockfile, advisory, summary, fix, fixedIn } = CAUGHT_EXAMPLE;
 ---
 
-<div class="example">
-    <figure class="panel">
-        <figcaption class="panel-head">Before</figcaption>
-        <Code code={before.join('\n')} lang="ts" title={file} del={REPLACEMENT_TEMPLATE} />
-    </figure>
-    <figure class="panel">
-        <figcaption class="panel-head">
-            <span class="run">gspot</span>
-            <span class="status failed">Failed</span>
-        </figcaption>
-        <ol class="findings">
-            {lines.map((line) => (
-                <li>
-                    <span class="location">
-                        {file}:{line}
-                    </span>
-                    <span class="message">
-                        <InlineText text={message} />
-                    </span>
-                </li>
-            ))}
-        </ol>
-    </figure>
-    <p class="example-note">
-        <code>replace</code> treats <code>{'$&'}</code> in the new text as a special pattern, so any text with{' '}
-        <code>{'$&'}</code> would come out wrong.
-    </p>
-    <figure class="panel">
-        <figcaption class="panel-head">After</figcaption>
-        <Code code={after.join('\n')} lang="ts" title={file} ins={REPLACEMENT_FUNCTION} />
-    </figure>
-</div>
+<ol class="caught not-content">
+    <li class="caught-step caught-step-flagged">
+        <div class="caught-head">
+            <h3><span class="caught-number" aria-hidden="true">1</span>The agent added</h3>
+            <span class="caught-file">{added.file}</span>
+        </div>
+        <pre class="caught-code"><code><span class="caught-line"><span class="caught-key">"{added.table}"</span><span class="caught-punctuation">:</span> {'{'}</span><span class="caught-line caught-line-nested caught-line-flagged"><span class="caught-key">"{added.name}"</span><span class="caught-punctuation">:</span> <span class="caught-string">"{added.version}"</span></span><span class="caught-line">{'}'}</span></code></pre>
+        <p class="caught-note">It pulls in {pulled.name} {pulled.version}.</p>
+    </li>
+    <li class="caught-step caught-step-stopped">
+        <div class="caught-head">
+            <h3><span class="caught-number" aria-hidden="true">2</span>gspot stopped the push</h3>
+        </div>
+        <div class="caught-finding">
+            <p class="caught-command">$ git push</p>
+            <span class="caught-check">{check}</span>
+            <p class="caught-where">{lockfile} · {advisory}</p>
+            <p class="caught-message">{pulled.name} {pulled.version}: {summary}</p>
+        </div>
+    </li>
+    <li class="caught-step caught-step-fixed">
+        <div class="caught-head">
+            <h3><span class="caught-number" aria-hidden="true">3</span>The fix</h3>
+            <span class="caught-file">{fix.file}</span>
+        </div>
+        <pre class="caught-code"><code><span class="caught-line"><span class="caught-key">"{fix.table}"</span><span class="caught-punctuation">:</span> {'{'}</span><span class="caught-line caught-line-nested caught-line-fixed"><span class="caught-key">"{fix.name}"</span><span class="caught-punctuation">:</span> <span class="caught-string">"{fix.version}"</span></span><span class="caught-line">{'}'}</span></code></pre>
+        <p class="caught-note">{fix.name} {fixedIn} and later fix the advisory.</p>
+    </li>
+</ol>

@@ -11,18 +11,14 @@ export const TOOLS = [
     { name: 'Trivy', icon: 'trivy.svg' },
 ] as const;
 export const CAUGHT_EXAMPLE = {
-    file: 'eslint-plugin.ts',
-    lines: [114, 115],
-    rule: 'unicorn/no-unsafe-string-replacement',
-    message: 'Do not use a non-literal replacement value with `String#replace()`.',
-    before: [
-        `page.replace('## Install\\n', \`## Install\\n\\n\${requirements}\\n\`)`,
-        `page.replace('## Use\\n', \`## Use\\n\\n\${presets}\\n\`)`,
-    ],
-    after: [
-        `page.replace('## Install\\n', () => \`## Install\\n\\n\${requirements}\\n\`)`,
-        `page.replace('## Use\\n', () => \`## Use\\n\\n\${presets}\\n\`)`,
-    ],
+    added: { file: 'docs/package.json', table: 'dependencies', name: 'mermaid-isomorphic', version: '3.1.0' },
+    pulled: { name: 'katex', version: '0.16.47' },
+    check: 'dependencies/osv-scanner',
+    lockfile: 'bun.lock',
+    advisory: 'GHSA-238p-pmpm-9mq7',
+    summary: 'Existing prototype pollution can bypass trust restrictions',
+    fix: { file: 'package.json', table: 'overrides', name: 'katex', version: '0.18.11' },
+    fixedIn: '0.18.2',
 } as const;
 export const URL_BREAK = /(?<=\/)(?!\/)/u;
 export const COPY_FAILED_MESSAGE = 'Copy failed. Select and copy the text.';

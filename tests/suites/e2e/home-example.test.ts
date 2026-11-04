@@ -59,46 +59,50 @@ async function prepareExample(installation: GspotProject): Promise<string> {
     return root;
 }
 
-test('the home example reports its rule on both replace calls and passes after its fix', async () => {
-    await using installation = await createGspotProject();
-    const root = await prepareExample(installation);
-    const { rule, message } = CAUGHT_EXAMPLE;
-    for (const expected of [
-        { calls: CAUGHT_EXAMPLE.before, code: 1, findings: CAUGHT_EXAMPLE.lines.map(() => ({ rule, message })) },
-        { calls: CAUGHT_EXAMPLE.after, code: 0, findings: [] },
-    ]) {
-        const [install, use] = expected.calls;
-        const source = `/**
-Fill the install and use sections of the plugin page.
-
-@param page the text of the plugin page
-@param requirements the line that names the requirements
-@param presets the list of presets
-@returns the page once with each section filled
-*/
-export function fillPluginPage(page: string, requirements: string, presets: string): string[] {
-    const installPage = ${install};
-    const usePage = ${use};
-    return [installPage, usePage];
+function writeKatexLockfile(root: string, version: string): void {
+    const project = { name: 'katex-example', private: true, dependencies: { katex: version } };
+    const lockfile = {
+        name: project.name,
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+            '': { name: project.name, dependencies: project.dependencies },
+            'node_modules/katex': {
+                version,
+                resolved: `https://registry.npmjs.org/katex/-/katex-${version}.tgz`,
+            },
+        },
+    };
+    writeFileSync(join(root, 'package.json'), `${JSON.stringify(project, null, 4)}\n`);
+    writeFileSync(join(root, 'package-lock.json'), `${JSON.stringify(lockfile, null, 4)}\n`);
 }
-`;
-        writeFileSync(join(root, PAGE_FILE), source);
-        runGitStep(root, ['add', '--', PAGE_FILE]);
+
+test('osv-scanner reports the katex advisory of the home example, and passes after the override', async () => {
+    await using installation = await createGspotProject();
+    const root = join(installation.workspace, 'katex-example');
+    mkdirSync(root);
+    const { pulled, advisory, summary, fix } = CAUGHT_EXAMPLE;
+    writeKatexLockfile(root, pulled.version);
+    commitAll(root);
+    await initSandbox({ root, run: installation.online.run }, { configurations: ['dependencies'] });
+    const cases: Array<{ version: string; code: number; advisories: string[] }> = [
+        { version: pulled.version, code: 1, advisories: [advisory] },
+        { version: fix.version, code: 0, advisories: [] },
+    ];
+    for (const expected of cases) {
+        writeKatexLockfile(root, expected.version);
+        runGitStep(root, ['add', '-A']);
         const checked = parseCheckReport(
-            await installation.offline.run(root, [
-                'check',
-                '--staged',
-                '--only',
-                'javascript/eslint',
-                '--json',
-                PAGE_FILE,
-            ]),
+            await installation.online.run(root, ['check', '--only', 'dependencies/osv-scanner', '--json']),
         );
         expect(checked.code, checked.stdout + checked.stderr).toBe(expected.code);
-        const findings = checked.report.checks
-            .flatMap((check) => check.findings)
-            .map((finding) => ({ rule: finding.rule, message: finding.message }));
-        expect(findings).toStrictEqual(expected.findings);
+        const findings = checked.report.checks.flatMap((check) => check.findings);
+        const shown = findings.filter((finding) => expected.advisories.includes(finding.rule ?? ''));
+        expect(shown.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
+            expected.advisories.map((rule) => ({ file: 'package-lock.json', rule })),
+        );
+        for (const finding of shown) expect(finding.message).toContain(`${pulled.name}: ${pulled.version}: `);
+        for (const finding of shown) expect(finding.message).toEndWith(summary);
     }
 });
 
