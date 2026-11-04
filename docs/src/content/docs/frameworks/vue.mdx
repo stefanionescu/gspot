@@ -1,0 +1,52 @@
+---
+title: Vue
+description: Lint and type-check Vue single-file components.
+configurations: [vue]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+The `vue` configuration lints Vue components with eslint-plugin-vue and eslint-plugin-vuejs-accessibility, and
+type-checks them with vue-tsc. Prettier formats `.vue` files through the always-selected `format` configuration. The
+configuration adds no Semgrep rules. These checks run for it:
+
+<ChecksTable guide="frameworks/vue" />
+
+## Detection
+
+gspot selects `vue` in a scope that holds a `.vue` file, or whose `package.json` depends on `vue`. The configuration
+requires `javascript`. It makes `extensionless` the default of `javascript.import_extension`, so relative imports
+leave out the file extension.
+
+## Type check
+
+When the scope selects `typescript`, `vue/vue-tsc` runs in place of `typescript/tsc`, at push. It type-checks every
+component and TypeScript file of the scope with the strict compiler options of the level. A scope without
+`typescript` runs no type check of its components.
+
+## ESLint rules
+
+`javascript/eslint` reads `.vue` files with vue-eslint-parser, and with the TypeScript parser for scripts when the
+scope selects `typescript`. It adds these rules:
+
+- The `flat/recommended` presets of eslint-plugin-vue and eslint-plugin-vuejs-accessibility.
+- `vue/no-setup-props-reactivity-loss`, `vue/no-ref-object-reactivity-loss`, `vue/no-unused-refs`,
+  `vue/require-typed-ref`, `vue/html-button-has-type`, and `vue/no-template-target-blank`.
+- At level `all`: `vue/component-api-style` with `script-setup` only, `vue/no-useless-v-bind`, and
+  `vue/prefer-true-attribute-shorthand`. With `typescript` selected, also `vue/define-props-declaration` and
+  `vue/define-emits-declaration`.
+
+Level `basic` turns off the style, naming, and ordering rules of the eslint-plugin-vue preset, and level `all` runs them:
+`vue/attribute-hyphenation`, `vue/attributes-order`, `vue/block-order`, `vue/component-definition-name-casing`,
+`vue/multi-word-component-names`, `vue/one-component-per-file`, `vue/order-in-components`, `vue/prop-name-casing`,
+`vue/this-in-template`, `vue/v-bind-style`, `vue/v-on-event-hyphenation`, `vue/v-on-style`, and `vue/v-slot-style`.
+
+## Exemptions
+
+- `import-x/no-default-export` is off in `.vue` files, because Vue compiles each component to a default export.
+- `vue/require-default-prop` is off.
+
+## Rules for coding agents
+
+The `vue` configuration installs `VUE.md` for coding agents. The [CSS guide](/languages/css/#component-styles) covers
+the style blocks of components.
