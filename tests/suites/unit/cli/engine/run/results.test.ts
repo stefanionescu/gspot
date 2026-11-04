@@ -86,9 +86,7 @@ test('a run canceled during its tool lookups reports the check canceled', async 
     });
     const running = runChecks(session, buildRunOptions({ only: ['spelling/typos'] }));
     const result = await running;
-    expect(result.report.checks).toMatchObject([
-        { check: 'spelling/typos', status: 'error', note: CANCELED_CHECK_NOTE },
-    ]);
+    expect(result.report.checks).toMatchObject([{ check: 'spelling/typos', status: 'canceled' }]);
 });
 
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {

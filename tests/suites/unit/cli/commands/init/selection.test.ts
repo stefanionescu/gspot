@@ -265,6 +265,7 @@ test('init names an uninstalled tsconfig extension and the dependency install st
 });
 
 test('init in a workspace whose root package.json holds only tools writes what the detection check expects', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'package.json': '{"name":"root","private":true,"devDependencies":{"typescript":"5.9.3"}}\n',
         'pnpm-workspace.yaml': 'packages:\n  - "packages/*"\n',
