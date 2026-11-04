@@ -23,7 +23,7 @@ change after that date.
 ## Which linters run
 
 gspot picks the linters. `gspot init` reads the files and dependencies of each scope, and selects the configurations
-that fit; see [Choose configurations](/configure/gspot-toml/#choose-configurations). Each configuration names the
+that fit; see [Add or remove a configuration](/configure/gspot-toml/#add-or-remove-a-configuration). Each configuration names the
 tools it runs and the settings it writes for them.
 
 pre-commit runs the hook repositories that you list in `.pre-commit-config.yaml`. Source:
@@ -49,7 +49,7 @@ Trunk Code Quality gives "linter recommendations based on your project's files" 
 ## How versions stay fixed
 
 Each gspot version pins the version of every tool that it installs. `.gspot/mise.toml` pins the programs with checksums, and gspot
-writes lockfiles for its npm and Python tools; see [What gspot adds](/start/footprint/).
+writes lockfiles for its npm and Python tools; see [Files and caches](/reference/generated-files/).
 
 In pre-commit, each hook repository takes a `rev`, which pre-commit treats as an immutable ref, and
 `pre-commit autoupdate` moves it to the latest version. Source: [pre-commit](https://pre-commit.com/), read on
