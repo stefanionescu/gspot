@@ -1,0 +1,76 @@
+---
+title: FastAPI
+description: Check FastAPI routes with the Ruff FastAPI rules and three Semgrep rules.
+configurations: [fastapi]
+---
+
+The `fastapi` configuration adds the FastAPI rules of Ruff, and three Semgrep rules for the settings and errors of a
+FastAPI application. It adds no check of its own: the Ruff rules run in `python/ruff`, and the Semgrep rules in
+`security/semgrep`.
+
+## Detection
+
+gspot selects `fastapi` in a scope whose project depends on `fastapi`, such as through the `dependencies` of
+`pyproject.toml`. The configuration requires `python`; see the [Python guide](/languages/python/).
+
+## Ruff rules
+
+`python/ruff` runs three FastAPI rules at both levels:
+
+| Rule      | Reports                                                                |
+| --------- | ---------------------------------------------------------------------- |
+| `FAST001` | A route with a `response_model` that repeats its return type.          |
+| `FAST002` | A dependency in a parameter default, instead of an `Annotated` type.   |
+| `FAST003` | A path parameter that the route function does not take as a parameter. |
+
+## Semgrep rules
+
+The configuration writes a Semgrep rule file for each scope, so `security/semgrep` runs at push. Semgrep runs on macOS
+and Linux. The rules report:
+
+| Rule                                           | Reports                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------ |
+| `gspot.fastapi.cors-wildcard-with-credentials` | `CORSMiddleware` that allows every origin with `allow_credentials=True`. |
+| `gspot.fastapi.debug-enabled`                  | `FastAPI(debug=True)`, which returns tracebacks to the client.           |
+| `gspot.fastapi.exception-text-in-response`     | An `HTTPException` whose `detail` holds the text of a caught exception.  |
+
+For example, this module reports all three:
+
+```python title="app/main.py"
+"""The API."""
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(debug=True)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True)
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int) -> dict:
+    """Read one item."""
+    try:
+        return {"id": item_id}
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+```
+
+```text
+failed   security/semgrep  3 findings
+  app/main.py:6:7  gspot.fastapi.debug-enabled  Debug mode returns tracebacks to the client. Read the flag from configuration, off by default.
+  app/main.py:7:1  gspot.fastapi.cors-wildcard-with-credentials  Every origin is allowed together with credentials, so any site reads an authenticated response. List the origins.
+  app/main.py:16:15  gspot.fastapi.exception-text-in-response  The text of an internal exception goes to the client. Log it, and return a stable message.
+```
+
+gspot refuses a `nosemgrep` comment. To accept a finding, ignore the rule with a reason:
+
+```shell title="example"
+gspot ignore security/semgrep --rule gspot.fastapi.debug-enabled --paths "dev/server.py" --reason "The local server runs only on a developer machine."
+```
+
+To add rules of your own, see [Semgrep](/topics/security/#semgrep).
+
+## Rules for coding agents
+
+The `fastapi` configuration installs `FASTAPI.md` for coding agents. To check an OpenAPI description of the service,
+add the [`openapi` configuration](/reference/configurations/openapi/).
