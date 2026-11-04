@@ -43,9 +43,6 @@ export const INIT_FILES = {
 
 export const CANCELED_CHECK_NOTE = 'The check was canceled.';
 
-export const MANAGED_KEYS_NOTE =
-    'Keys that gspot no longer manages stay in your files. Review your shared tool configs after you remove a configuration.';
-
 export const MISE_LOCK_ENVIRONMENT = { MISE_GITHUB_ATTESTATIONS: 'false', MISE_SLSA: 'false' } as const;
 
 export const GIT_ISOLATION_ENVIRONMENT = {

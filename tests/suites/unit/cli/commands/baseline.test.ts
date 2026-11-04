@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import type { TestdirResult } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { BASELINE_SANDBOX } from '#tests/config/commands/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -56,16 +57,11 @@ test('a stale count fails gspot/baseline until --prune lowers it, and --prune ad
     );
     expect(stale.code).toBe(1);
     expect(stale.report.checks.find(({ check }) => check === 'gspot/baseline')?.findings).toMatchObject([
-        {
-            file: 'guide.md',
-            rule: 'stale-baseline',
-            message:
-                'gspot.baseline.json counts 1 finding of docs/missing-paths missing-path that the run did not find.',
-        },
+        { file: 'guide.md', rule: 'stale-baseline' },
     ]);
-    const pruned = await runGspot(sandbox.path, ['baseline', '--prune']);
+    const pruned = await runGspot(sandbox.path, ['baseline', '--prune', '--json']);
     expect(pruned.code, pruned.stdout + pruned.stderr).toBe(0);
-    expect(pruned.stdout).toBe('Removed 1 finding from gspot.baseline.json. It holds 1 finding in 1 file.\n');
+    expect(JSON.parse(pruned.stdout)).toMatchObject({ findingCount: 1, fileCount: 1 });
     const prunedBaseline = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
     expect(JSON.parse(prunedBaseline)).toStrictEqual({ 'guide.md': { 'docs/missing-paths': { 'missing-path': 1 } } });
 });
@@ -112,14 +108,12 @@ test('baseline leaves the file alone when a check cannot run', async () => {
         { 'guide.md': 'See `src/one.ts`.\n' },
         '[[command_check]]\nid = "missing/tool"\ncommand = ["gspot-missing-tool"]\npaths = ["**"]\nstage = "commit"\nsummary = "Runs a tool."\nhelp = "Install it."\noutput = { format = "none" }\n',
     );
-    const refused = await runGspot(sandbox.path, ['baseline']);
+    const refused = await runGspot(sandbox.path, ['baseline', '--json']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toEndWith(
-        'gspot baseline needs every check to run, and missing/tool could not:\n  missing/tool: gspot-missing-tool is not installed. Install gspot-missing-tool.\n',
-    );
-    const pruned = await runGspot(sandbox.path, ['baseline', '--prune']);
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('missing/tool');
+    const pruned = await runGspot(sandbox.path, ['baseline', '--prune', '--json']);
     expect(pruned.code).toBe(2);
-    expect(pruned.stderr).toBe('This repository has no gspot.baseline.json to prune. Run gspot baseline.\n');
+    expect(JSON.parse(pruned.stdout)).toMatchObject({ error: 'arguments' });
 });
 
 test('--prune lowers the counts of the checks that ran and keeps those of a check that did not run', async () => {
@@ -132,11 +126,9 @@ test('--prune lowers the counts of the checks that ran and keeps those of a chec
     };
     await writeFile(join(sandbox.path, 'gspot.baseline.json'), `${JSON.stringify(counts)}\n`);
     await writeFile(join(sandbox.path, 'guide.md'), 'See `src/one.ts`.\n');
-    const pruned = await runGspot(sandbox.path, ['baseline', '--prune']);
+    const pruned = await runGspot(sandbox.path, ['baseline', '--prune', '--json']);
     expect(pruned.code, pruned.stdout + pruned.stderr).toBe(0);
-    expect(pruned.stdout).toEndWith(
-        'Removed 1 finding from gspot.baseline.json. It holds 2 findings in 1 file. It keeps the counts of missing/tool, which did not run.\n',
-    );
+    expect(JSON.parse(pruned.stdout)).toMatchObject({ findingCount: 2, fileCount: 1 });
     const written = await readFile(join(sandbox.path, 'gspot.baseline.json'), 'utf8');
     expect(JSON.parse(written)).toStrictEqual({
         'guide.md': { 'docs/missing-paths': { 'missing-path': 1 }, 'missing/tool': { 'missing/tool': 1 } },

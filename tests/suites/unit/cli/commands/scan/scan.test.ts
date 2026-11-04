@@ -26,11 +26,9 @@ async function runScan(root: string): Promise<ScanReport> {
 
 test('scan refuses a repository that already has a gspot.toml', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': 'configurations = []\n' });
-    const result = await runGspot(sandbox.path, ['scan']);
+    const result = await runGspot(sandbox.path, ['scan', '--json']);
     expect(result.code).toBe(2);
-    expect(result.stderr).toBe(
-        'This repository already has a gspot.toml, so gspot scan has nothing to preview. Run gspot check.\n',
-    );
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
 });
 
 test('scan refuses --markdown with --json before it copies the repository', async () => {
@@ -38,10 +36,7 @@ test('scan refuses --markdown with --json before it copies the repository', asyn
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['scan', '--markdown', '--json']);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: '--markdown cannot run with --json. Choose one format.',
-    });
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

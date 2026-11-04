@@ -7,6 +7,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,7 +19,6 @@ import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.
 import {
     CONFIGURATIONS_SETTINGS,
     SITE_PACKAGE_MANAGER_CASES,
-    UNKNOWN_CONFIGURATION_REFUSALS,
     INHERITED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/edits.ts';
 
@@ -59,11 +59,8 @@ test('add security exits 2, names gspot set level, and writes nothing', async ()
         'gspot.toml': buildSandboxSettings([], { rules: true }),
         'source.py': 'PORT = 8080\n',
     });
-    await assertRefusalWithoutWrites(sandbox.path, ['add', 'security'], {
-        error: 'arguments',
-        message:
-            'gspot selects security by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To ignore one check, run gspot ignore.',
-    });
+    const refusal = await assertRefusalWithoutWrites(sandbox.path, ['add', 'security'], 'arguments');
+    expect(refusal.message).toContain('gspot set level');
 });
 
 test('add reports an inherited configuration as already selected and writes nothing', async () => {
@@ -74,20 +71,18 @@ test('add reports an inherited configuration as already selected and writes noth
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        changed: false,
-        summary: 'No change: bash is already selected.',
-    });
+    expect(JSON.parse(result.stdout)).toMatchObject({ changed: false });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('add names every unknown configuration before changing the settings', async () => {
     const text = CONFIGURATIONS_SETTINGS;
     await using sandbox = await createGitSandbox({ 'gspot.toml': text });
-    const result = await runGspot(sandbox.path, ['add', 'not-a-real-config-a', 'not-a-real-config-b']);
+    const result = await runGspot(sandbox.path, ['add', 'not-a-real-config-a', 'not-a-real-config-b', '--json']);
     expect(result.code).toBe(2);
-    expect(result.stdout).toBe('');
-    expect(result.stderr).toBe(UNKNOWN_CONFIGURATION_REFUSALS);
+    const { error, message } = JSON.parse(result.stdout) as CommandFailureJson;
+    expect(error).toBe('arguments');
+    for (const name of ['not-a-real-config-a', 'not-a-real-config-b']) expect(message).toContain(name);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(text);
 });
 

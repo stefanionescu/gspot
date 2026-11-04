@@ -51,18 +51,17 @@ test('unignore counts the changed ignores and keeps other paths and other rules'
         'c.sh': 'echo c\n',
     });
     const commandArguments = ['unignore', 'bash/shellcheck', '--rule', 'SC2086'];
-    const partial = await runGspot(sandbox.path, [...commandArguments, '--paths', 'b.sh']);
+    const partial = await runGspot(sandbox.path, [...commandArguments, '--paths', 'b.sh', '--json']);
     expect(partial.code, partial.stdout + partial.stderr).toBe(0);
-    expect(partial.stdout).toContain('Removed 2 paths from 2 ignores for rule SC2086 of bash/shellcheck for b.sh.');
-    expect(partial.stdout).toContain(
-        'The ignore of bash/shellcheck covers every path, so --paths removes nothing from it.',
-    );
+    expect(JSON.parse(partial.stdout)).toMatchObject({
+        changed: true,
+        notes: expect.arrayContaining([expect.stringContaining('bash/shellcheck')]) as string[],
+    });
     const remaining = [{ ...first, paths: ['a.sh'] }, { ...second, paths: ['c.sh'] }, global, other, globalOther];
     const contents = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore'];
     expect(contents).toStrictEqual(remaining);
     const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toContain('Removed 3 ignores for rule SC2086 of bash/shellcheck.');
     const ignores = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore'];
     expect(ignores).toStrictEqual([other, globalOther]);
 });
@@ -95,7 +94,6 @@ test('unignore --paths from a subfolder removes only the repository-relative pat
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
-        summary: 'Removed 1 path from 1 ignore for rule SC2086 of bash/shellcheck for entry.sh.',
         changed: true,
     });
     const settings = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;

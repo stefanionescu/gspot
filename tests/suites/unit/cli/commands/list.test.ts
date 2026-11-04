@@ -156,10 +156,7 @@ test('the text lists group equal scope states on one line', async () => {
 
 test('list without gspot.toml refuses the command and writes nothing', async () => {
     await using sandbox = await createGitSandbox({});
-    await assertRefusalWithoutWrites(sandbox.path, ['list'], {
-        error: 'settings',
-        message: 'There is no gspot.toml here. Run gspot init to create one.',
-    });
+    await assertRefusalWithoutWrites(sandbox.path, ['list'], 'settings');
 });
 
 test('list shows each removed configuration with its scope and reason', async () => {

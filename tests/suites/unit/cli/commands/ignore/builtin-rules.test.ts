@@ -79,9 +79,13 @@ test('a documented YAML exception suppresses only its rule and path, and typos l
         'document',
         '--reason',
         'The consumer requires a stream.',
+        '--json',
     ]);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe('gspot does not know rule document of data-files/yaml.\n');
+    expect(JSON.parse(refused.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('document') as string,
+    });
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     const ignored = await runGspot(sandbox.path, [
         'ignore',

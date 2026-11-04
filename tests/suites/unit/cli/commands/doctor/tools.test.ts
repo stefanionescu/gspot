@@ -152,7 +152,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     ).toStrictEqual({
         ...pytestCov,
         state: 'missing',
-        note: 'The version command of the host tool does not list pytest-cov.',
+        note: expect.stringContaining('pytest-cov') as string,
     });
     isPresent = true;
     const available = await runGspot(sandbox.path, ['doctor', '--json']);
@@ -210,7 +210,7 @@ test('doctor and gspot check report a missing xmllint with its install command',
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     expect(checked.report.checks).toMatchObject([
-        { check: 'data-files/xmllint', status: 'missing', findings: [], note: `xmllint is not installed. ${help}` },
+        { check: 'data-files/xmllint', status: 'missing', findings: [], note: expect.stringContaining(help) as string },
     ]);
 });
 

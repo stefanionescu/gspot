@@ -14,8 +14,8 @@ import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/edits.ts';
 import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { UPDATED_AGENTS, FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/edits.ts';
 
 test('install leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
@@ -132,10 +132,11 @@ test('removing rules from a fresh clone removes the managed AGENTS.md block', as
     runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     expect(await runGspot(checkout, ['install'])).toHaveProperty('code', 0);
     await writeFile(join(checkout, 'gspot.toml'), buildSandboxSettings([]));
-    const removed = await runGspot(checkout, ['install']);
+    const removed = await runGspot(checkout, ['install', '--json']);
     expect(removed.code).toBe(0);
-    expect(removed.stdout).toContain(UPDATED_AGENTS);
-    expect(removed.stdout).not.toContain('removed  AGENTS.md');
+    const report = installOutputSchema.parse(JSON.parse(removed.stdout));
+    expect(report.updated).toContain('AGENTS.md');
+    expect(report.deleted).not.toContain('AGENTS.md');
     expect(await readFile(join(checkout, 'AGENTS.md'), 'utf8')).toBe(authored);
 });
 

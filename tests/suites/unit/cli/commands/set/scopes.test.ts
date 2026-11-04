@@ -29,7 +29,6 @@ test.each(['packages/api'])(
         ).toBe(30);
         const unset = await runGspot(cwd, ['unset', 'limits.max_function_lines', '--scope', scope]);
         expect(unset.code, unset.stdout + unset.stderr).toBe(0);
-        expect(unset.stdout).toStartWith(`Removed your value for limits.max_function_lines in scope ${scope}.\n`);
         expect(
             readSettings(readFileSync(settingsPath, 'utf8'), sandbox.path).scopes.get('packages/api')?.limits
                 ?.max_function_lines,

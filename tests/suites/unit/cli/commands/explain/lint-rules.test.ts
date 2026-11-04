@@ -77,9 +77,12 @@ test('explain reads installed rule metadata without executing generated configur
     }
     expect(described.stdout).toContain('Ask the user before you ignore a rule (SUPPRESSIONS.md).');
     for (const [check, rule] of UNKNOWN_RULES) {
-        const refused = await runGspot(sandbox.path, ['explain', check, rule]);
+        const refused = await runGspot(sandbox.path, ['explain', check, rule, '--json']);
         expect(refused.code).toBe(2);
-        expect(refused.stderr).toBe(`gspot does not know rule ${rule} of ${check}.\n`);
+        expect(JSON.parse(refused.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(rule) as string,
+        });
     }
 });
 
@@ -137,9 +140,12 @@ test.each(['javascript/eslint', 'css/stylelint'])('explain refuses ancestor pack
         }),
         [`node_modules/${name}/index.cjs`]: 'require("node:fs").writeFileSync(__dirname + "/executed", "yes");',
     });
-    const result = await runGspot(sandbox.path, ['explain', check, 'no-var']);
+    const result = await runGspot(sandbox.path, ['explain', check, 'no-var', '--json']);
     expect(result.code).toBe(2);
-    expect(result.stderr).toContain('resolves outside .gspot/node_modules');
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'tool',
+        message: expect.stringContaining('.gspot/node_modules') as string,
+    });
     expect(existsSync(join(sandbox.path, `node_modules/${name}/executed`))).toBe(false);
 });
 
@@ -150,19 +156,23 @@ test.skipIf(isWindows)('explain refuses an installed plugin symlink that leaves 
         '.gspot/node_modules/.keep': '',
     });
     await symlink(join(sandbox.path, 'outside'), join(sandbox.path, '.gspot/node_modules/eslint-plugin-n'));
-    const result = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'n/prefer-global/process']);
+    const result = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'n/prefer-global/process', '--json']);
     expect(result.code).toBe(2);
-    expect(result.stderr).toContain('resolves outside .gspot/node_modules');
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'tool',
+        message: expect.stringContaining('.gspot/node_modules') as string,
+    });
 });
 
 test('explain requires installed tools and refuses rules of checks with no rule documentation', async () => {
     await using sandbox = await createGitSandbox({});
-    const missing = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-var']);
+    const missing = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-var', '--json']);
     expect(missing.code).toBe(2);
-    expect(missing.stderr).toContain('Run gspot install.');
-    const unknown = await runGspot(sandbox.path, ['explain', 'bash/shfmt', 'unknown']);
+    expect(JSON.parse(missing.stdout)).toMatchObject({ error: 'tool' });
+    const unknown = await runGspot(sandbox.path, ['explain', 'bash/shfmt', 'unknown', '--json']);
     expect(unknown.code).toBe(2);
-    expect(unknown.stderr).toBe(
-        'gspot cannot explain one lint rule of bash/shfmt. Leave out the rule to explain the whole check.\n',
-    );
+    expect(JSON.parse(unknown.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('bash/shfmt') as string,
+    });
 });

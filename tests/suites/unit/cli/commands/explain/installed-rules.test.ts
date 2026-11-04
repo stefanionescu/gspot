@@ -38,9 +38,12 @@ test('Markdownlint validates a rule against its installed catalog without evalua
         rule: 'MD001',
         description: 'Heading levels should only increment by one level at a time',
     });
-    const missing = await runGspot(sandbox.path, ['explain', 'markdown/markdownlint', 'MD999']);
+    const missing = await runGspot(sandbox.path, ['explain', 'markdown/markdownlint', 'MD999', '--json']);
     expect(missing.code).toBe(2);
-    expect(missing.stderr).toContain('does not know rule MD999');
+    expect(JSON.parse(missing.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('MD999') as string,
+    });
     const ignored = await runGspot(sandbox.path, [
         'ignore',
         'markdown/markdownlint',
@@ -89,9 +92,12 @@ test('SwiftLint validates rules with installed metadata and an empty explicit co
         devNull,
         'force_cast',
     ]);
-    const unknown = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'force_castt']);
+    const unknown = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'force_castt', '--json']);
     expect(unknown.code).toBe(2);
-    expect(unknown.stderr).toContain('does not know rule force_castt');
+    expect(JSON.parse(unknown.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('force_castt') as string,
+    });
 });
 
 test('declarative Biome rule selection and ShellCheck identifiers refuse misspelled rule names', async () => {
@@ -100,9 +106,12 @@ test('declarative Biome rule selection and ShellCheck identifiers refuse misspel
         ['javascript/biome', 'lint/complexity/notARule'],
         ['bash/shellcheck', 'SC20X6'],
     ]) {
-        const unknown = await runGspot(sandbox.path, ['explain', check!, rule!]);
+        const unknown = await runGspot(sandbox.path, ['explain', check!, rule!, '--json']);
         expect(unknown.code).toBe(2);
-        expect(unknown.stderr).toContain('does not know rule');
+        expect(JSON.parse(unknown.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(rule!) as string,
+        });
     }
     const described = await runGspot(sandbox.path, [
         'explain',
@@ -117,9 +126,9 @@ test('Vale reads a rule from the style files that Vale loads, and gspot ignore t
         'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
         'guide.md': '# Guide\n',
     });
-    const uninstalled = await runGspot(sandbox.path, ['explain', 'prose/vale', 'gspot.home-paths']);
+    const uninstalled = await runGspot(sandbox.path, ['explain', 'prose/vale', 'gspot.home-paths', '--json']);
     expect(uninstalled.code).toBe(2);
-    expect(uninstalled.stderr).toBe('The Vale packages are not installed. Run gspot install.\n');
+    expect(JSON.parse(uninstalled.stdout)).toMatchObject({ error: 'tool' });
     await createFileTree(sandbox.path, {
         ...VALE_INSTALLED_FILES,
         [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
@@ -135,9 +144,12 @@ test('Vale reads a rule from the style files that Vale loads, and gspot ignore t
         expect(described.code, described.stdout + described.stderr).toBe(0);
         expect(JSON.parse(described.stdout)).toMatchObject({ tool: 'vale', rule, ...docs });
     }
-    const unknown = await runGspot(sandbox.path, ['explain', 'prose/vale', 'gspot.home-path']);
+    const unknown = await runGspot(sandbox.path, ['explain', 'prose/vale', 'gspot.home-path', '--json']);
     expect(unknown.code).toBe(2);
-    expect(unknown.stderr).toBe('gspot does not know rule gspot.home-path of prose/vale.\n');
+    expect(JSON.parse(unknown.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringMatching(/\bgspot\.home-path\b/u) as string,
+    });
     const reason = 'The guide shows a home folder on purpose.';
     const ignored = await runGspot(sandbox.path, [
         'ignore',

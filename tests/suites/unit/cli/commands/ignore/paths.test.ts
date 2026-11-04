@@ -61,20 +61,19 @@ test.each(['ignore', 'unignore'])(
             'source.txt': 'Input.\n',
             'bash/shellcheck': 'A file that shares a check name.\n',
         });
-        for (const [path, message] of [
-            ['bash/shellcheck', 'names a check'],
-            ['project/sample', 'names a check'],
-            ['missing/**', 'matches no repository file'],
-            ['!missing.txt', 'matches no repository file'],
-        ]) {
+        for (const path of ['bash/shellcheck', 'project/sample', 'missing/**', '!missing.txt']) {
             const result = await runGspot(sandbox.path, [
                 command,
                 '--paths',
-                path!,
+                path,
                 ...(command === 'ignore' ? ['--reason', 'Generated samples stay outside lint checks.'] : []),
+                '--json',
             ]);
             expect(result.code, result.stdout + result.stderr).toBe(2);
-            expect(result.stderr).toContain(message!);
+            expect(JSON.parse(result.stdout)).toMatchObject({
+                error: 'arguments',
+                message: expect.stringContaining(path) as string,
+            });
             expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
         }
     },

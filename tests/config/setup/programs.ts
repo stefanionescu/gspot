@@ -8,8 +8,6 @@ export const ROOT_LABEL = 'the root';
 
 export const CAFE_SCRIPT_PATH = 'scripts/café build.sh';
 
-export const PACKAGE_JSON_ERROR = 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.';
-
 export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
 
 export const OFFLINE_ENVIRONMENT = {

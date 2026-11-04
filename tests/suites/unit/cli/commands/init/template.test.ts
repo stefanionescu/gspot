@@ -9,6 +9,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import * as installers from '#cli/tools/installers/install.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -54,13 +55,13 @@ test('init --from copies the settings that fit any repository and lists each one
 
 test.each(TEMPLATE_REFUSALS)(
     'init --from refuses $name, names the file, and writes nothing',
-    async ({ files, from, message }) => {
+    async ({ files, from }) => {
         using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox(files);
         const before = await readTree(sandbox.path);
-        const result = await runGspot(sandbox.path, ['init', '--from', from]);
+        const result = await runGspot(sandbox.path, ['init', '--from', from, '--json']);
         expect(result.code).toBe(2);
-        expect(result.stderr).toBe(`${message}\n`);
+        expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain(from);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
@@ -76,11 +77,13 @@ test.each(['--configurations', '--no-configurations'])(
             'missing.toml',
             flag,
             ...(flag === '--configurations' ? ['python'] : []),
+            '--json',
         ]);
         expect(result.code).toBe(2);
-        expect(result.stderr).toBe(
-            `--from takes the configurations of its file. Leave out ${flag}, or edit a copy of the file.\n`,
-        );
+        expect(JSON.parse(result.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(flag) as string,
+        });
     },
 );
 

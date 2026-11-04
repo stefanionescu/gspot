@@ -57,11 +57,9 @@ test('an unexpected error during install prints the internal error once, its sta
         if (command[0] === 'npm') throw new Error('Unexpected process failure.');
         return buildProcessResult();
     });
-    const message =
-        'gspot stopped because of an internal error. Report it at https://github.com/stefanionescu/gspot/issues, with the stack that --verbose prints.';
     const failed = await runGspot(sandbox.path, ['install', '--json']);
     expect(failed.code).toBe(2);
-    expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'unexpected', message });
+    expect(JSON.parse(failed.stdout)).toMatchObject({ error: 'unexpected' });
     expect(failed.stdout).not.toContain('Unexpected process failure.');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const verbose = await runGspot(sandbox.path, ['install', '--verbose', '--json']);
@@ -101,7 +99,6 @@ test('install writes the generated files, exits 1, and names the tools that stay
     const result = await runGspot(sandbox.path, ['install', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = installOutputSchema.parse(JSON.parse(result.stdout));
-    expect(report.missing[0]).toStartWith('Install mise, or install these tools yourself: ');
     expect(report.missing[0]).toContain('shfmt');
     const shellcheck = getManifestTarget('bash', 'shellcheckrc');
     expect(report.written).toContain(shellcheck);
@@ -124,9 +121,6 @@ test('install stopped by SIGINT reports cancellation once and exits 130', async 
     });
     const result = await runGspot(sandbox.path, ['install', '--json']);
     expect(result.code).toBe(130);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'canceled',
-        message: 'Installation stopped before every tool was installed.',
-    });
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'canceled' });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

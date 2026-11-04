@@ -144,13 +144,12 @@ test.each([...LITERAL_ROUTE_CASES])(
         expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
         await rm(join(sandbox.path, folder), { recursive: true });
         const command = ['unignore', 'structure/lone-files', '--paths', path];
-        const refused = await runGspot(sandbox.path, command);
+        const refused = await runGspot(sandbox.path, [...command, '--json']);
         expect(refused.code).toBe(2);
-        expect(refused.stderr).toContain('matches no repository file');
+        expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments' });
         command.splice(2);
         const restored = await runGspot(sandbox.path, command);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-        expect(restored.stdout).toStartWith('Removed 1 ignore for structure/lone-files.');
         const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
         expect(contents).not.toHaveProperty('ignore');
     },

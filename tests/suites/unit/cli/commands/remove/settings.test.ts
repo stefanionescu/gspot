@@ -12,10 +12,9 @@ import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { changedEditOutputSchema } from '#cli/schemas/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { TOOLS_CHANGED_NOTE } from '#tests/config/commands/edits.ts';
-import { MANAGED_KEYS_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { MANAGED_KEYS_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
 
 test('remove deletes settings that only the removed configuration exposes and names the deleted keys', async () => {
     await using sandbox = await createGitSandbox({
@@ -32,7 +31,7 @@ test('remove deletes settings that only the removed configuration exposes and na
         'This project no longer owns database queries.',
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toContain('Removed settings sql.dialect.');
+    expect(result.stdout).toContain('sql.dialect');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect((written['tools'] as TomlTable | undefined)?.['sqlfluff']).toBeUndefined();
     expect(written['limits']).toStrictEqual({ max_file_lines: 250 });

@@ -21,10 +21,7 @@ test('with a baseline, set level all names the checks it turns on and the baseli
     const all = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
     expect(all.code, all.stdout + all.stderr).toBe(0);
     const note = (JSON.parse(all.stdout) as { notes: string[] }).notes.find((line) => line.includes('gspot baseline'));
-    expect(note).toMatch(
-        /^This change turns on .+\. To accept their findings and keep the other counts of gspot\.baseline\.json, run gspot baseline --only [\w/,-]+\.$/u,
-    );
-    const named = note?.slice(note.lastIndexOf(' ') + 1, -1).split(',') ?? [];
+    const named = /gspot baseline --only (?<checks>[\w/,-]+)/u.exec(note ?? '')?.groups?.['checks']?.split(',') ?? [];
     expect(named).toContain('prose/vale');
     expect(named).not.toContain('markdown/markdownlint');
 });

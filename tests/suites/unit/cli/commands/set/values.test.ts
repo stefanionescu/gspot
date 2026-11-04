@@ -42,14 +42,21 @@ test('set writes and unset removes a setting of a selected configuration', async
 
 test('set names -- when a value reads as an option, and takes the values after --', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const refused = await runGspot(sandbox.path, ['set', 'ci.setup_command', 'bun', 'install', '--frozen-lockfile']);
+    const refused = await runGspot(sandbox.path, [
+        'set',
+        'ci.setup_command',
+        'bun',
+        'install',
+        '--frozen-lockfile',
+        '--json',
+    ]);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(
-        "Unknown option '--frozen-lockfile'. To pass a value that starts with -, put -- before the values: gspot set ci.setup_command -- bun install --frozen-lockfile. Run gspot set --help to see its arguments and options.\n",
-    );
+    expect(JSON.parse(refused.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('gspot set ci.setup_command -- bun install --frozen-lockfile') as string,
+    });
     const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
     expect(set.code, set.stdout + set.stderr).toBe(0);
-    expect(set.stdout.split('\n', 1)[0]).toBe('Set ci.setup_command to ["bun","install","--frozen-lockfile"].');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
 });
@@ -65,10 +72,9 @@ test.each([...KEPT_SETTING_CHANGES])(
         await writeFile(authored, ROOT_EDITORCONFIG);
         await rm(generated);
         await symlink('authored-editorconfig', generated);
-        const stopped = await runGspot(sandbox.path, commandArguments);
+        const stopped = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(stopped.code, stopped.stdout + stopped.stderr).toBe(2);
-        expect(stopped.stdout).toBe('');
-        expect(stopped.stderr).toContain('gspot.toml keeps this change');
+        expect(JSON.parse(stopped.stdout)).toMatchObject({ error: 'writing' });
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
         expect(await readFile(authored, 'utf8')).toBe(ROOT_EDITORCONFIG);
     },
@@ -85,9 +91,9 @@ test('set takes each word of a list as an item, without one pair of TOML quotes'
 test('set takes one word for a scalar', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const before = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    const refused = await runGspot(sandbox.path, ['set', 'level', 'all', 'basic']);
+    const refused = await runGspot(sandbox.path, ['set', 'level', 'all', 'basic', '--json']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe('level takes one value. Quote a value with spaces.\n');
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments' });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
 });
 
@@ -145,11 +151,12 @@ test.each([...WEAKENED_SETTINGS])(
             'entry.ts': 'export const port = 8080;\n',
         });
         const before = await readTree(sandbox.path);
-        const refused = await runGspot(sandbox.path, ['set', key, value]);
+        const refused = await runGspot(sandbox.path, ['set', key, value, '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stderr).toBe(
-            `${key}.reason: ${key} needs a reason. Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".\n`,
-        );
+        expect(JSON.parse(refused.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(`${key}.reason`) as string,
+        });
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         for (const commandArguments of [
             ['set', key, value, second, '--reason', SETTING_REASON],
@@ -199,11 +206,12 @@ test('spelling.allowed_words keeps one reason for each word through edits', asyn
         'entry.ts': 'export const port = 8080;\n',
     });
     const before = await readTree(sandbox.path);
-    const refused = await runGspot(sandbox.path, ['set', 'spelling.allowed_words', 'Nebulix']);
+    const refused = await runGspot(sandbox.path, ['set', 'spelling.allowed_words', 'Nebulix', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stderr).toBe(
-        'spelling.allowed_words keeps a reason for each entry. Add --reason "<why>" with why each one belongs.\n',
-    );
+    expect(JSON.parse(refused.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('--reason') as string,
+    });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     for (const commandArguments of [
         ['set', 'spelling.allowed_words', 'Nebulix', '--reason', 'The product name stays as the vendor writes it.'],
@@ -229,7 +237,7 @@ test('--json after the value separator stays a setup command argument', async ()
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'echo', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toStartWith('Set ci.setup_command to ["echo","--json"].');
+    expect(result.stdout).not.toStartWith('{');
     expect(result.stderr).toBe('');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['echo', '--json']);

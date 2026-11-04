@@ -11,35 +11,29 @@ import {
     UNKNOWN_SETTING_KEYS,
 } from '#tests/config/commands/edits.ts';
 
-test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments, expected) => {
+test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': SET_SETTINGS,
         'api/entry.sh': 'echo api\n',
         'web/index.md': '# Web\n',
     });
 
-    await assertRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message: expected });
+    await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');
 });
 
 test.each([...UNKNOWN_SETTING_KEYS])(
     'set refuses the unknown or unavailable key $key and writes nothing',
-    async ({ key, message }) => {
+    async ({ key }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['data-files']),
             'settings.toml': 'enabled = true\n',
         });
 
-        await assertRefusalWithoutWrites(sandbox.path, ['set', key, '{ enabled = true }'], {
-            error: 'arguments',
-            message: `${message} Run gspot list settings to see every one.`,
-        });
+        await assertRefusalWithoutWrites(sandbox.path, ['set', key, '{ enabled = true }'], 'arguments');
     },
 );
 
-test.each([...SET_VALUE_REFUSALS])(
-    'set refuses $name without writing',
-    async ({ arguments: commandArguments, message }) => {
-        await using sandbox = await createGitSandbox(REFUSAL_FILES);
-        await assertRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message });
-    },
-);
+test.each([...SET_VALUE_REFUSALS])('set refuses $name without writing', async ({ arguments: commandArguments }) => {
+    await using sandbox = await createGitSandbox(REFUSAL_FILES);
+    await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');
+});

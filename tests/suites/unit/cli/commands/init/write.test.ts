@@ -14,7 +14,7 @@ import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { STOPPED_ERROR_MESSAGE, GENERATED_WRITE_MESSAGE } from '#tests/config/generation/plan.ts';
+import { GENERATED_WRITE_MESSAGE } from '#tests/config/generation/plan.ts';
 
 test('init keeps the old config file when the generated one cannot be written', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
@@ -28,9 +28,9 @@ test('init keeps the old config file when the generated one cannot be written', 
             throw new Error(GENERATED_WRITE_MESSAGE);
         rename(source, target);
     });
-    const refused = await runGspot(sandbox.path, ['init', '--configurations', 'spelling']);
+    const refused = await runGspot(sandbox.path, ['init', '--configurations', 'spelling', '--json']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(STOPPED_ERROR_MESSAGE);
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'unexpected' });
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
     const generated = join(sandbox.path, getManifestTarget('spelling', 'typos.toml'));
     expect(existsSync(generated)).toBe(false);

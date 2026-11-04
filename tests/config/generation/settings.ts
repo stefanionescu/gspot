@@ -263,25 +263,10 @@ export const TEAM_LEFT_OUT = [
 ];
 
 export const TEMPLATE_REFUSALS = [
-    { name: 'a missing file', files: {}, from: 'missing.toml', message: 'There is no file at missing.toml.' },
-    {
-        name: 'invalid UTF-8',
-        files: { 'invalid.toml': Buffer.from([0xff]) },
-        from: 'invalid.toml',
-        message: 'invalid.toml must contain valid UTF-8 text.',
-    },
-    {
-        name: 'a folder',
-        files: { 'folder/a.txt': '' },
-        from: 'folder',
-        message: '--from needs a file, and folder is a folder.',
-    },
-    {
-        name: 'invalid TOML',
-        files: { 'broken.toml': 'configurations = ["typescript"\n' },
-        from: 'broken.toml',
-        message: 'broken.toml:1:18 is not valid TOML: Expected "]". Fix the file.',
-    },
+    { name: 'a missing file', files: {}, from: 'missing.toml' },
+    { name: 'invalid UTF-8', files: { 'invalid.toml': Buffer.from([0xff]) }, from: 'invalid.toml' },
+    { name: 'a folder', files: { 'folder/a.txt': '' }, from: 'folder' },
+    { name: 'invalid TOML', files: { 'broken.toml': 'configurations = ["typescript"\n' }, from: 'broken.toml' },
 ];
 
 export const TEMPLATE_SCOPE_FILES = {

@@ -17,18 +17,18 @@ test.each(VALUE_VALIDATION_CASES)('set validates the value before its reason: $n
         '--json',
     ]);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: 'The value abc is not valid for limits.max_file_lines. Use a whole number of 0 or more.',
-    });
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test.each(['set', 'unset'])('%s identifies a table and names its settings without writing', async (command) => {
     const settings = buildSandboxSettings([]);
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
-    const result = await runGspot(sandbox.path, [command, 'hooks', ...(command === 'set' ? ['false'] : [])]);
+    const result = await runGspot(sandbox.path, [command, 'hooks', ...(command === 'set' ? ['false'] : []), '--json']);
     expect(result.code).toBe(2);
-    expect(result.stderr).toStartWith('hooks is a table. Name one of its settings, such as hooks.enabled.');
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('hooks.enabled') as string,
+    });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });

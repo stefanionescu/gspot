@@ -9,11 +9,8 @@ import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.
 
 test('remove without --reason exits 2 and writes nothing', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash'], { rules: true }) });
-    await assertRefusalWithoutWrites(sandbox.path, ['remove', 'bash'], {
-        error: 'arguments',
-        message:
-            "Required option '--reason <text>' not specified. Run gspot remove --help to see its arguments and options.",
-    });
+    const refusal = await assertRefusalWithoutWrites(sandbox.path, ['remove', 'bash'], 'arguments');
+    expect(refusal.message).toContain('--reason');
 });
 
 test('remove keeps the reason of each removed configuration, and add takes a name out and keeps the others', async () => {

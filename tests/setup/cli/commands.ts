@@ -11,13 +11,13 @@ import type { InitJson } from '#cli/types/commands/edits.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
-import type { CancelableSpawnOptions } from '#cli/types/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { initOutputSchema, checkReportSchema } from '#cli/schemas/commands.ts';
+import type { ErrorCode, CommandFailureJson, CancelableSpawnOptions } from '#cli/types/system.ts';
 import type { Sandbox, FindingRow, StdinOptions, ProcessOutput, ScopeFindingRow } from '#tests/types/setup.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
@@ -118,17 +118,19 @@ export async function runGspotStep(sandbox: Sandbox, commandArguments: readonly 
 }
 
 /**
-Run a refused command with --json, and check that it refuses it with the error kind and message of the refusal, and
-writes nothing.
+Run a refused command with --json, check that it exits 2 with the error code and writes nothing, and return the
+failure so that a test can check a value that the message names.
 */
 export async function assertRefusalWithoutWrites(
     root: string,
     commandArguments: readonly string[],
-    refusal: { error: string; message: string },
-): Promise<void> {
+    error: ErrorCode,
+): Promise<CommandFailureJson> {
     const before = await readTree(root);
     const structured = await runGspot(root, [...commandArguments, '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
-    expect(JSON.parse(structured.stdout)).toMatchObject(refusal);
+    const failure = JSON.parse(structured.stdout) as CommandFailureJson;
+    expect(failure).toMatchObject({ error });
     expect(await readTree(root)).toStrictEqual(before);
+    return failure;
 }

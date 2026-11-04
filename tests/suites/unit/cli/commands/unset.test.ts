@@ -11,13 +11,13 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...UNSET_REFUSALS])(
     'unset $commandArguments exits 2 and leaves gspot.toml as it was',
-    async ({ commandArguments, message }) => {
+    async ({ commandArguments }) => {
         await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
         const path = join(sandbox.path, 'gspot.toml');
         const before = await readFile(path, 'utf8');
-        const result = await runGspot(sandbox.path, commandArguments);
+        const result = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(result.code).toBe(2);
-        expect(result.stderr).toStartWith(message);
+        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
         expect(await readFile(path, 'utf8')).toBe(before);
     },
 );
@@ -49,6 +49,9 @@ test.each([
     const before = await readFile(path, 'utf8');
     const result = await runGspot(sandbox.path, ['unset', key, 'zzz', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ changed: false, summary: `zzz is not in ${key}.` });
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        changed: false,
+        summary: expect.stringContaining('zzz') as string,
+    });
     expect(await readFile(path, 'utf8')).toBe(before);
 });

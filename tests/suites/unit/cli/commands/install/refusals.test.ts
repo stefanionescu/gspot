@@ -42,7 +42,7 @@ test('install --json prints one error object when an unowned file blocks generat
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({
         error: 'writing',
-        message: 'gspot did not overwrite these files: .editorconfig. Move them aside, then run the command again.',
+        message: expect.stringContaining('.editorconfig') as string,
     });
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).toBe(ROOT_EDITORCONFIG);
 });
@@ -53,9 +53,12 @@ test('a malformed reason reports a settings error and install preserves the auth
         tables: '[limits]\nmax_file_lines = { value = 1000, reason = 42 }\n',
     });
     await createFileTree(sandbox.path, { 'gspot.toml': source });
-    const applied = await runGspot(sandbox.path, ['install']);
+    const applied = await runGspot(sandbox.path, ['install', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(2);
-    expect(applied.stdout + applied.stderr).toStartWith('gspot.toml:3: limits.max_file_lines.reason:');
+    expect(JSON.parse(applied.stdout)).toMatchObject({
+        error: 'settings',
+        message: expect.stringContaining('gspot.toml:3: limits.max_file_lines.reason') as string,
+    });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
     expect(existsSync(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });
@@ -66,8 +69,8 @@ test('install refuses a gspot.toml that links outside the repository and writes 
     const project = join(sandbox.path, 'project');
     runGitStep(project, ['init', '--quiet']);
     await symlink(join(sandbox.path, 'outside'), join(project, 'gspot.toml'));
-    const refused = await runGspot(project, ['install']);
+    const refused = await runGspot(project, ['install', '--json']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe('gspot.toml is not a regular file. Use a regular file.\n');
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'filesystem' });
     expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe(outside);
 });

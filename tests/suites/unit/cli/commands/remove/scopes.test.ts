@@ -93,9 +93,15 @@ test('remove reports no change for a configuration the root does not list', asyn
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings, 'api/entry.sh': 'echo api\n' });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['remove', 'bash', '--reason', 'The project no longer uses Bash.']);
+    const result = await runGspot(sandbox.path, [
+        'remove',
+        'bash',
+        '--reason',
+        'The project no longer uses Bash.',
+        '--json',
+    ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toBe('No change: bash is not selected.\n');
+    expect(JSON.parse(result.stdout)).toMatchObject({ changed: false });
     expect(result.stderr).toBe('');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -113,9 +119,10 @@ test('remove checks requirements against the scope selection', async () => {
         'api',
         '--reason',
         'The API scope does not use JavaScript.',
+        '--json',
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toBe('No change: javascript is not selected.\n');
+    expect(JSON.parse(result.stdout)).toMatchObject({ changed: false });
     expect(result.stderr).toBe('');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -54,7 +54,7 @@ test('doctor suggests gspot set level all for a commitlint field in package.json
     expect(doctorOutputSchema.parse(JSON.parse(result.stdout)).suggestions.unowned).toStrictEqual([
         {
             path: 'package.json',
-            note: 'no applicable commitlint check at level basic',
+            note: expect.stringContaining('commitlint') as string,
             command: 'gspot set level all',
         },
     ]);

@@ -151,9 +151,6 @@ export const NEXTJS_LOCALE_CASES = [
 
 export const GENERATED_WRITE_MESSAGE = 'Generated write denied';
 
-export const STOPPED_ERROR_MESSAGE =
-    'gspot stopped because of an internal error. Report it at https://github.com/stefanionescu/gspot/issues, with the stack that --verbose prints.\n';
-
 export const SQLFLUFF_KEPT_NOTE =
     'sqlfluff settings stay here, and the generated file for sqlfluff takes over. Delete the section; the generated file replaces it.';
 

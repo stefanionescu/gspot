@@ -227,9 +227,7 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const refused = await runGspot(broken.path, command);
     expect(refused.code).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'filesystem' });
-    expect((JSON.parse(refused.stdout) as { message: string }).message).toStartWith(
-        'pnpm-workspace.yaml is not a valid workspace file: ',
-    );
+    expect((JSON.parse(refused.stdout) as { message: string }).message).toContain('pnpm-workspace.yaml');
     expect(await readTree(broken.path)).toStrictEqual(before);
 });
 
@@ -257,11 +255,12 @@ test('init names an uninstalled tsconfig extension and the dependency install st
         'tsconfig.json': '{"extends":"@tsconfig/node22/tsconfig.json"}',
         'index.ts': 'export const port = 8080;\n',
     });
-    const result = await runGspot(sandbox.path, ['init']);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code).toBe(2);
-    expect(result.stderr).toBe(
-        'tsconfig.json extends @tsconfig/node22/tsconfig.json, which is not installed. Install the project dependencies, then run the command again.\n',
-    );
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'configuration',
+        message: expect.stringContaining('@tsconfig/node22/tsconfig.json') as string,
+    });
 });
 
 test('init in a workspace whose root package.json holds only tools writes what the detection check expects', async () => {

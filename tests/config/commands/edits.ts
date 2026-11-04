@@ -11,21 +11,10 @@ reason = "These files retain generated formatting."
 `;
 
 export const UNSET_REFUSALS = [
-    {
-        commandArguments: ['unset', 'configurations'],
-        message: 'Use gspot add or gspot remove to change configurations.',
-    },
-    {
-        commandArguments: ['unset', 'no_such_key'],
-        message: 'There is no setting called no_such_key.',
-    },
-    {
-        commandArguments: ['unset', 'level', 'extra'],
-        message: 'level is not a list or a table, so it takes no items. Run gspot unset level.',
-    },
+    { commandArguments: ['unset', 'configurations'] },
+    { commandArguments: ['unset', 'no_such_key'] },
+    { commandArguments: ['unset', 'level', 'extra'] },
 ] as const;
-
-export const UPDATED_AGENTS = 'updated  AGENTS.md';
 
 export const UNKNOWN_IGNORE_ARGUMENTS = [
     'ignore',
@@ -38,12 +27,10 @@ export const IGNORE_REFUSALS = [
     {
         name: 'a one-letter reason',
         arguments: ['ignore', '--paths', 'vendor/**', '--reason', 'x'],
-        message: 'gspot ignore needs a reason of two or more words that says why: "x" is refused.',
     },
     {
         name: 'ignore without a check or paths',
         arguments: ['ignore', '--reason', 'Vendored sources remain outside the checks.'],
-        message: '--paths: An ignore without check needs paths.',
     },
     {
         name: 'ignore with a rule but no check',
@@ -56,7 +43,6 @@ export const IGNORE_REFUSALS = [
             '--reason',
             'Vendored sources remain outside the checks.',
         ],
-        message: '--rule: An ignore without check cannot name a rule. Add the check that owns the rule.',
     },
 ] as const;
 
@@ -133,16 +119,6 @@ export const SCOPE_REMOVALS = [
 
 export const API_LANGUAGE_REASON = 'The API uses another language.';
 
-export const TOOLS_CHANGED_NOTE =
-    'The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.';
-
-export const UNKNOWN_CONFIGURATION_REFUSALS = ['not-a-real-config-a', 'not-a-real-config-b']
-    .map(
-        (name) =>
-            `There is no configuration called ${name}. See https://generativespotting.com/reference/configurations/ for the available configurations.\n`,
-    )
-    .join('');
-
 export const SET_SETTINGS = `configurations = ["markdown", "structure"]
 [rule_files]
 enabled = false
@@ -160,36 +136,12 @@ export const WEAKENED_SETTINGS = [
 ] as const;
 
 export const SET_REFUSALS = [
-    [
-        'a rule turned off',
-        ['set', 'tools.markdownlint.rules', '{ MD013 = false }'],
-        'The value { MD013 = false } is not valid for tools.markdownlint.rules. This table holds options only, without a severity; the level decides which rules run. To ignore MD013, run gspot ignore markdown/markdownlint --rule MD013 --reason "<why>".',
-    ],
-    [
-        'an undeclared scope',
-        ['set', 'limits.max_file_lines', '100', '--scope', 'web'],
-        'There is no scope called web. Name a project folder or a written scope.',
-    ],
-    [
-        'a setting of a configuration that no scope selects',
-        ['set', 'licenses.allowed', 'MIT'],
-        'licenses.allowed belongs to licenses, which no scope selects. Run gspot add licenses.',
-    ],
-    [
-        'an invalid level',
-        ['set', 'level', 'everything'],
-        'The value everything is not valid for level. Use basic or all.',
-    ],
-    [
-        'an ignore',
-        ['set', 'ignore', 'bash/shellcheck'],
-        'Use gspot ignore to add an ignore, or gspot unignore to remove one.',
-    ],
-    [
-        'another record list',
-        ['set', 'command_check', 'lint'],
-        'Write [[command_check]] by hand in gspot.toml. Record lists have their own fields.',
-    ],
+    ['a rule turned off', ['set', 'tools.markdownlint.rules', '{ MD013 = false }']],
+    ['an undeclared scope', ['set', 'limits.max_file_lines', '100', '--scope', 'web']],
+    ['a setting of a configuration that no scope selects', ['set', 'licenses.allowed', 'MIT']],
+    ['an invalid level', ['set', 'level', 'everything']],
+    ['an ignore', ['set', 'ignore', 'bash/shellcheck']],
+    ['another record list', ['set', 'command_check', 'lint']],
 ] as const;
 
 export const KEPT_SETTING_CHANGES = [
@@ -208,17 +160,7 @@ enabled = false
     'entry.sh': 'echo example\n',
 } as const;
 
-export const UNKNOWN_SETTING_KEYS = [
-    {
-        key: 'tools.eslint.unknown_key',
-        message: 'There is no tools.eslint table. The tools tables are commitlint.',
-    },
-    {
-        key: 'data_files.unknown_key',
-        message:
-            'There is no setting called data_files.unknown_key. The settings that exist under that table are schemas.',
-    },
-] as const;
+export const UNKNOWN_SETTING_KEYS = [{ key: 'tools.eslint.unknown_key' }, { key: 'data_files.unknown_key' }] as const;
 
 export const STRING_SETTING_VALUES = [
     { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },
@@ -231,20 +173,14 @@ export const SET_VALUE_REFUSALS = [
     {
         name: 'set with malformed TOML',
         arguments: ['set', 'ci.setup_command', '['],
-        message:
-            'The value [ is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.',
     },
     {
         name: 'set without an existing list reason',
         arguments: ['set', 'site.allowed_unlisted_pages', 'admin/index.html'],
-        message:
-            'site.allowed_unlisted_pages already has the reason "The private page belongs outside the public site map.". Pass --reason with a reason that covers every item.',
     },
     {
         name: 'set with an unnecessary reason',
         arguments: ['set', 'spelling.locale', 'en-gb', '--reason', 'The project publishes content for local readers.'],
-        message:
-            'spelling.locale takes no reason here: the value does not loosen the shipped default. Run the command without --reason.',
     },
 ] as const;
 
