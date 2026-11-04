@@ -1,0 +1,63 @@
+---
+title: HTML
+description: Validate HTML files and keep scripts out of the markup.
+configurations: [html]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+gspot validates HTML files with html-validate, and its own check reports inline scripts and event handler attributes.
+Prettier formats the files through the always-selected `format` configuration. These checks run for the `html`
+configuration:
+
+<ChecksTable guide="languages/html" />
+
+## What gspot detects
+
+gspot selects `html` in a scope that holds a file ending in `.html` or `.htm`. The `site` configuration requires `html`
+too, and checks the pages that your build writes; [Static sites](/topics/site/) covers it.
+
+## Validation
+
+`html/html-validate` starts from the `html-validate:recommended` preset, which checks nesting, required attributes, and
+text alternatives. For example, an image without `alt` text and a button without a `type` report:
+
+```text
+failed   html/html-validate  2 findings
+  index.html:9:14  wcag/h37  <img> is missing required "alt" attribute
+  index.html:10:14  no-implicit-button-type  <button> is missing recommended "type" attribute
+```
+
+gspot turns off six style rules of the preset: `doctype-style`, `void-style`, `attr-quotes`, `attr-case`,
+`element-case`, and `no-trailing-whitespace`.
+
+At level `basic`, gspot also turns off `no-inline-style`, `prefer-button`, and `prefer-native-element`. Level `all`
+runs them, so a `style` attribute or a `div` with `role="button"` reports a finding.
+
+## Inline scripts
+
+A content security policy can block injected code only when the pages carry no inline script. `html/inline-scripts`
+reports three kinds of code in the markup:
+
+- `inline-script`: a `<script>` element whose body holds executable code. A script with a `src` attribute, and a
+  data block such as `application/ld+json`, pass.
+- `handler-attribute`: an event handler attribute, such as `onclick`.
+- `script-link`: a `javascript:` or `vbscript:` URL, or a `data:` URL that holds a script or a page.
+
+Move the code into a script file, and attach each handler with `addEventListener`.
+
+## Settings
+
+The `html` configuration has no settings of its own. To turn off one html-validate rule, ignore it with a reason:
+
+```shell
+gspot ignore html/html-validate --rule no-inline-style --reason "The email template needs inline styles."
+```
+
+To allow one element, write a comment with a reason above it, such as
+`<!-- [html-validate-disable-next no-inline-style -- reason: the email client strips classes] -->`.
+
+## Rules for coding agents
+
+The `html` configuration installs `HTML.md` for coding agents. The
+[`html` configuration](/reference/configurations/html/) lists the rules of `html/inline-scripts`.
