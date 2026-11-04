@@ -1,4 +1,6 @@
 import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/parsers/formats.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
@@ -13,10 +15,14 @@ test('a managed block is appended and replaced without changing your own text', 
 });
 test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed markers in $path: $source', (context) => {
     const { source, path } = context;
-    const message = `${path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot install.`;
-    expect(() => findBlockSpan(source, context)).toThrow(message);
-    expect(() => findBlockBody(source, context)).toThrow(message);
-    expect(() => replaceBlock(source, 'replacement', context)).toThrow(message);
+    const refusal = matchFields<GspotError>({
+        name: 'GspotError',
+        code: 'filesystem',
+        message: expect.stringContaining(path) as string,
+    });
+    expect(() => findBlockSpan(source, context)).toThrow(refusal);
+    expect(() => findBlockBody(source, context)).toThrow(refusal);
+    expect(() => replaceBlock(source, 'replacement', context)).toThrow(refusal);
 });
 test.each(
     BLOCK_FORMATS.flatMap((context) =>

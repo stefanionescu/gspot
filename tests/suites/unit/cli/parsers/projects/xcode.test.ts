@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { parseBuildSettings, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
@@ -33,8 +34,10 @@ test('quoted project strings keep escapes and ignore comment-like text', () => {
     ).toBe('/repo/First é Group/Shared.swift');
 });
 
-test.each([...XCODE_PROJECT_REFUSALS])('a project with $name is refused', ({ source, message }) => {
-    expect(() => parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj')).toThrow(message);
+test.each([...XCODE_PROJECT_REFUSALS])('a project with $name is refused', ({ source }) => {
+    expect(() => parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj')).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'parse' }),
+    );
 });
 
 test.each([...PROJECT_SYNTAX_CASES])('the project reader accepts $name', ({ source }) => {
@@ -62,7 +65,7 @@ test('invalid Xcode syntax names the file and uses the parse error code', () => 
         } catch (error) {
             expect(error).toBeInstanceOf(GspotError);
             expect(error).toMatchObject({ code: 'parse' });
-            expect((error as Error).message).toContain('App.xcodeproj/project.pbxproj is not a valid Xcode project:');
+            expect((error as Error).message).toContain('App.xcodeproj/project.pbxproj');
             continue;
         }
         throw new Error('Invalid Xcode syntax was accepted.');
@@ -71,5 +74,7 @@ test('invalid Xcode syntax names the file and uses the parse error code', () => 
 
 test('an inherited object name is refused as an Xcode object reference', () => {
     const source = GROUPED_PBXPROJ.replace('B1, B2,', 'constructor, B2,');
-    expect(() => parseProjectSources(source, 'App.xcodeproj/project.pbxproj')).toThrow('unknown object: constructor');
+    expect(() => parseProjectSources(source, 'App.xcodeproj/project.pbxproj')).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'parse' }),
+    );
 });

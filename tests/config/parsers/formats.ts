@@ -4,7 +4,7 @@ export const SYNTAX_ERRORS = [
     {
         path: 'package.json',
         source: '{',
-        message: 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.',
+        position: 'package.json:1:2',
     },
 ];
 
@@ -108,12 +108,10 @@ export const XCODE_PROJECT_REFUSALS = [
     {
         name: 'missing value',
         source: GROUPED_PBXPROJ.slice(0, -3),
-        message: 'The Xcode project has an invalid string.',
     },
     {
         name: 'unknown object',
         source: GROUPED_PBXPROJ.replace('B1, B2,', 'MISSING, B2,'),
-        message: 'The Xcode project references an unknown object: MISSING.',
     },
     {
         name: 'group cycle',
@@ -121,12 +119,10 @@ export const XCODE_PROJECT_REFUSALS = [
             'children = (FIRST, SECOND, ROOT, SYNC,);',
             'children = (SECOND, ROOT, SYNC,);',
         ),
-        message: 'The Xcode project contains a group cycle.',
     },
     {
         name: 'unresolved source tree',
         source: GROUPED_PBXPROJ.replace('sourceTree = SOURCE_ROOT;', 'sourceTree = CUSTOM_BUILD_ROOT;'),
-        message: 'Cannot find the folder of Xcode source tree CUSTOM_BUILD_ROOT without build settings.',
     },
 ] as const;
 

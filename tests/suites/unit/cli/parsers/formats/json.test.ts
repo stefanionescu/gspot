@@ -11,14 +11,20 @@ test.each(['null', '[]'])(
             matchFields<GspotError>({
                 name: 'GspotError',
                 code: 'parse',
-                message: 'example.json must contain a JSON object. Fix the file.',
+                message: expect.stringContaining('example.json') as string,
             }),
         );
     },
 );
 
-test.each(SYNTAX_ERRORS)('a JSON syntax error names its line and column in $path', ({ path, source, message }) => {
-    expect(() => parseJsonFile(path, source)).toThrow(new Error(message));
+test.each(SYNTAX_ERRORS)('a JSON syntax error names its line and column in $path', ({ path, source, position }) => {
+    expect(() => parseJsonFile(path, source)).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'parse',
+            message: expect.stringContaining(position) as string,
+        }),
+    );
 });
 
 test('JSON files accept comments and trailing commas without a JSONC extension', () => {

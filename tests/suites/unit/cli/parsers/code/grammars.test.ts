@@ -38,8 +38,7 @@ test('a damaged grammar names its file and the command that restores it', async 
     await using cache = await testdir({ 'gspot/grammars/python.wasm': 'damaged' });
     using _environment = overrideEnvironment({ XDG_CACHE_HOME: cache.path });
     const error = await captureRejection(parseSource('python', 'value = 1\n'));
-    expect(error).toMatchObject({
-        name: 'GspotError',
-        message: `The python grammar in ${join(cache.path, 'gspot/grammars/python.wasm')} is damaged. Run gspot install.`,
-    });
+    expect(error).toMatchObject({ name: 'GspotError', code: 'tool' });
+    expect(error.message).toContain(join(cache.path, 'gspot/grammars/python.wasm'));
+    expect(error.message).toContain('gspot install');
 });

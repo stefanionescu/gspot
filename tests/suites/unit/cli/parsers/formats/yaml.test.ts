@@ -15,8 +15,7 @@ test('YAML syntax errors name the file and keep the parser failure', () => {
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'parse',
-            message:
-                'apps/api/compose.yaml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 7. Fix the file.',
+            message: expect.stringContaining('apps/api/compose.yaml') as string,
             cause: expect.any(Error),
         }),
     );

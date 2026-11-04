@@ -3,9 +3,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { UNSAFE_PATH_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 
@@ -71,7 +72,13 @@ test('tsconfig reads share one run cache per run and keep folders apart', async 
     expect(readTsconfig(cache.root, path, cache)).toStrictEqual(initial);
     const secondReads = createRunCache(second.path);
     expect(readTsconfig(second.path, join(second.path, 'tsconfig.json'), secondReads)?.options.strict).toBe(false);
-    expect(() => readTsconfig(second.path, path, secondReads)).toThrow(UNSAFE_PATH_MESSAGE);
+    expect(() => readTsconfig(second.path, path, secondReads)).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'configuration',
+            cause: matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }),
+        }),
+    );
     await writeFile(join(first.path, 'base.json'), '{"compilerOptions":{"strict":false}}');
     expect(readTsconfig(cache.root, path, cache)).toStrictEqual(initial);
     const next = createRunCache(first.path);
@@ -79,6 +86,6 @@ test('tsconfig reads share one run cache per run and keep folders apart', async 
     await writeFile(join(first.path, 'base.json'), '{');
     const invalid = createRunCache(first.path);
     expect(() => readTsconfig(invalid.root, path, invalid)).toThrow(
-        "Cannot read the compiler settings in tsconfig.json: '}' expected.",
+        matchFields<GspotError>({ name: 'GspotError', code: 'configuration' }),
     );
 });

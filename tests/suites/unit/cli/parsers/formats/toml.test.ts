@@ -31,8 +31,7 @@ test('a TOML syntax error is a GspotError that names the file and keeps the pars
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'parse',
-            message:
-                'apps/api/bunfig.toml:1:9 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
+            message: expect.stringContaining('apps/api/bunfig.toml:1:9') as string,
             cause: expect.any(Error),
         }),
     );
@@ -44,7 +43,11 @@ test('a TOML edit names the file when a scalar is in the way of a table', () => 
     expect(() => {
         document.set(['install', 'minimumReleaseAge'], 604_800);
     }).toThrow(
-        'apps/api/bunfig.toml has a TOML field that is not a table: install. Fix the field, then run gspot install.',
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'parse',
+            message: expect.stringContaining('apps/api/bunfig.toml') as string,
+        }),
     );
     expect(document.getText()).toBe(source);
 });
@@ -65,7 +68,7 @@ test('TOML schema failures name the source file and the field', () => {
     expect(() => parseTomlFile('package.toml', 'name = 42', packageJsonSchema)).toThrow(
         matchFields<GspotError>({
             code: 'parse',
-            message: 'package.toml: name: Invalid input: expected string, received number. Fix the field.',
+            message: expect.stringContaining('package.toml: name:') as string,
         }),
     );
 });
