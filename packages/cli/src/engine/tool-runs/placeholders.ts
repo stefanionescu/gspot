@@ -1,6 +1,5 @@
 import { statSync } from 'node:fs';
 import { sep, join } from 'node:path';
-import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -10,6 +9,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { formatScope, compareText } from '#cli/system/text.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { addPluginExtensions } from '#cli/repository/files/selection.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
@@ -98,7 +98,7 @@ function buildPlaceholderReaders(
                 .join(sep),
         pointer: (name) => selectPointerPath(session, substitutions.scope, name).split('/').join(sep),
         formatted_extensions: () => buildFormattedExtensions(planned),
-        scope: () => (substitutions.scope === '' ? '.' : substitutions.scope),
+        scope: () => formatScope(substitutions.scope),
         root: () => substitutions.root,
         message_file: () => substitutions.messageFile ?? '',
     };
