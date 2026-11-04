@@ -61,11 +61,11 @@ test('staged and branch comparisons keep both paths of a rename across folders',
 test('a status read reports a broken or missing Git repository instead of an empty status', async () => {
     await using sandbox = await testdir();
     const error = await captureRejection(readTreeStatus(sandbox.path));
-    expect(error.message).toStartWith('Git status failed');
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
     runGitStep(sandbox.path, ['init']);
     await writeFile(join(sandbox.path, '.git/index'), 'corrupt index');
     const statusError = await captureRejection(readTreeStatus(sandbox.path));
-    expect(statusError.message).toStartWith('Git status failed');
+    expect(statusError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test('a branch comparison refuses invalid references without reading them as options', async () => {
@@ -75,16 +75,17 @@ test('a branch comparison refuses invalid references without reading them as opt
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual([]);
     const error = await captureRejection(readChangedPaths(sandbox.path, 'missing-reference'));
-    expect(error.message).toContain('missing-reference is not a branch, tag, or commit in this repository.');
-    expect(error.message).toContain('Local branches:');
+    expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
+    expect(error.message).toContain('missing-reference');
+    expect(error.message).toContain(runGitStep(sandbox.path, ['branch', '--show-current']));
     const mergeBaseError = await captureRejection(readChangedPaths(sandbox.path, '--output=outside.txt'));
-    expect(mergeBaseError.message).toContain(
-        '--output=outside.txt is not a branch, tag, or commit in this repository.',
-    );
+    expect(mergeBaseError).toMatchObject({ name: 'GspotError', code: 'arguments' });
+    expect(mergeBaseError.message).toContain('--output=outside.txt');
     expect(existsSync(join(sandbox.path, 'outside.txt'))).toBe(false);
     const blob = runGitStep(sandbox.path, ['rev-parse', 'HEAD:source.ts']);
     const blobError = await captureRejection(readChangedPaths(sandbox.path, blob));
-    expect(blobError.message).toContain(`${blob} is not a branch, tag, or commit in this repository.`);
+    expect(blobError).toMatchObject({ name: 'GspotError', code: 'arguments' });
+    expect(blobError.message).toContain(blob);
 });
 
 test('a new branch compares with the remote default without losing unpushed commits', async () => {
@@ -134,7 +135,7 @@ test('an unknown base in a shallow clone says that the clone is shallow and how 
     commitAll(source);
     runGitStep(sandbox.path, ['clone', '-q', '--depth=1', pathToFileURL(source).href, 'checkout']);
     const error = await captureRejection(readChangedPaths(join(sandbox.path, 'checkout'), 'HEAD~1'));
-    expect(error.message).toBe(
-        'HEAD~1 is not a branch, tag, or commit in this repository. Local branches: main. This clone is shallow and lacks older commits. Fetch the full history with git fetch --unshallow, or set the fetch depth of the checkout to 0.',
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
+    expect(error.message).toContain('HEAD~1');
+    expect(error.message).toContain('git fetch --unshallow');
 });

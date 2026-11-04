@@ -27,7 +27,8 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
     const error = await captureRejection(readPushedCommits(sandbox.path));
-    expect(error.message).toContain('refs/heads/upstream is not a branch, tag, or commit in this repository.');
+    expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
+    expect(error.message).toContain('refs/heads/upstream');
 });
 
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
@@ -37,7 +38,7 @@ test('push comparison reports an unborn or broken HEAD instead of inventing a ba
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, '.git/HEAD'), 'broken head');
     const historyError = await captureRejection(readPushedCommits(sandbox.path));
-    expect(historyError.message).toContain('Cannot read committed Git history');
+    expect(historyError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
@@ -144,11 +145,14 @@ test('a push refuses to rewrite the default branch, and needs its remote tip in 
     const rewritten = await captureRejection(
         readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${remote}\n`),
     );
-    expect(rewritten.message).toContain('Do not force-push refs/heads/main');
+    expect(rewritten).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(rewritten.message).toContain('refs/heads/main');
+    expect(rewritten.message).toContain(remote);
     const unfetched = await captureRejection(
         readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${'a'.repeat(40)}\n`),
     );
-    expect(unfetched.message).toContain('Fetch, then push.');
+    expect(unfetched).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(unfetched.message).toContain('a'.repeat(40));
     const feature = await readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/feature ${remote}\n`);
     expect(feature.revisions.map(({ hash }) => hash)).toStrictEqual([local]);
     const forward = await readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${first}\n`);

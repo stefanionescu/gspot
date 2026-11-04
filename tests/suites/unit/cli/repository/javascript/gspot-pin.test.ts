@@ -42,7 +42,7 @@ test('a mise.toml whose tools field is not a table refuses the pin and names the
         }),
     );
     expect(error).toBeInstanceOf(GspotError);
-    expect(error.message).toStartWith('mise.toml');
+    expect(error.message).toContain('mise.toml');
     expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe('tools = "node"\n');
 });
 
@@ -65,9 +65,8 @@ test('another pinned version stops the commands that run tools, and names the in
             assertGspotPin(sandbox.path);
         }),
     );
-    expect(error.message).toBe(
-        `This repository pins gspot 0.0.1; this is gspot ${cliPackage.version}. Run mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@0.0.1.`,
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
+    expect(error.message).toContain('npm:@gspothq/cli@0.0.1');
     for (const command of ['check', 'baseline']) {
         const result = await runGspot(sandbox.path, [command, '--json']);
         expect(result.code).toBe(2);

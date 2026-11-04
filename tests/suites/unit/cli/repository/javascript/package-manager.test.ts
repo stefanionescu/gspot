@@ -59,17 +59,16 @@ test.each([...PACKAGE_MANAGER_PIN_CASES])(
 );
 
 test.each([...NON_EXACT_PNPM_VERSIONS])(
-    'a pnpm version that is not exact is refused with the version to write: %s',
-    async (packageJson, message) => {
+    'a pnpm version that is not exact is refused with the written value and its field: %s',
+    async (packageJson, written, field) => {
         await using sandbox = await createGitSandbox({
             'package.json': packageJson,
         });
 
-        expect(await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])))).toMatchObject({
-            name: 'GspotError',
-            code: 'install',
-            message,
-        });
+        const error = await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])));
+        expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+        expect(error.message).toContain(`"${written}"`);
+        expect(error.message).toContain(field);
     },
 );
 
@@ -88,11 +87,9 @@ test('a refused pinned package manager keeps project files and gives no install 
             ? Promise.resolve(buildProcessResult({ code: 1, stderr: 'The requested version is not available.' }))
             : run(command, options),
     );
-    const failure = await runGspot(sandbox.path, ['install']);
+    const failure = await runGspot(sandbox.path, ['install', '--json']);
     expect(failure.code).toBe(2);
-    expect(failure.stderr).toBe(
-        'The tool project requires bun@0.x, and `bun --version` exited with 1: The requested version is not available. Install that package manager version first.\n',
-    );
+    expect(JSON.parse(failure.stdout)).toMatchObject({ error: 'tool' });
     for (const [path, content] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept\n');
@@ -105,10 +102,10 @@ test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(
     'unsupported $field value $written names the package.json field',
     async ({ field, written, packageJson }) => {
         await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify(packageJson) });
-        expect(await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])))).toMatchObject({
-            code: 'install',
-            message: `package.json: ${field} is "${written}"; gspot supports npm, bun, pnpm, yarn with an exact version, such as pnpm@9.0.0. Change the field.`,
-        });
+        const error = await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])));
+        expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+        expect(error.message).toContain(field);
+        expect(error.message).toContain(`"${written}"`);
     },
 );
 

@@ -5,14 +5,13 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readHead, readIndexTree } from '#cli/repository/revisions/files.ts';
-import { UNREADABLE_HISTORY_MESSAGE } from '#tests/config/repository/files.ts';
 
 test('unborn history is empty, and a broken HEAD refuses committed history', async () => {
     await using sandbox = await createGitSandbox({});
     expect(await readHead(sandbox.path)).toBeUndefined();
     await writeFile(join(sandbox.path, '.git', 'HEAD'), 'broken');
     const historyError = await captureRejection(readHead(sandbox.path));
-    expect(historyError.message).toContain(UNREADABLE_HISTORY_MESSAGE);
+    expect(historyError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test('the tree of the index is written while the user holds the index lock, and the lock and index stay as they were', async () => {

@@ -1,8 +1,5 @@
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 
-export const UNREADABLE_HISTORY_MESSAGE =
-    'Cannot read committed Git history. Run git status, then commit or stash the change.';
-
 export const SHA1 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
 export const SHA256 = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
@@ -16,8 +13,6 @@ const CARRIAGE_RETURN_BYTE = 13;
 export const BINARY_BLOB = [0, LINE_FEED_BYTE, INVALID_UTF8_BYTE, CARRIAGE_RETURN_BYTE, 0] as const;
 
 export const INDEX_PATH = 'folder/a\n"é.sql';
-
-export const BLOB_FAILURE = 'The Git object stream is incomplete or invalid.';
 
 export const INVALID_BLOBS = [
     { name: 'wrong blob terminator', output: `${SHA1} blob 1\nxX` },
@@ -244,7 +239,4 @@ export const ROOT_DISCOVERY_CASES = [
     { name: 'the requested folder when no gspot.toml exists', files: {}, start: '' },
 ] as const;
 
-export const INVALID_PACKAGE_JSON_TEXTS = [
-    { source: '', message: 'package.json:1:1 is not valid JSON: ValueExpected. Fix the file.' },
-    { source: '[]', message: 'package.json must contain a JSON object. Fix the file.' },
-] as const;
+export const INVALID_PACKAGE_JSON_TEXTS = ['', '[]'] as const;

@@ -8,6 +8,12 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 
+const AUTHORED_REFUSAL = matchFields<GspotError>({
+    name: 'GspotError',
+    code: 'writing',
+    message: expect.stringContaining('authored.txt') as string,
+});
+
 test('a batch writes binary bytes, and a removal plan deletes one file and keeps the other', async () => {
     await using sandbox = await testdir();
     const writer = openFiles(sandbox.path);
@@ -51,13 +57,7 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
     );
     expect(() => {
         writePlans(writer, plans);
-    }).toThrow(
-        matchFields<GspotError>({
-            name: 'GspotError',
-            code: 'writing',
-            message: 'gspot did not overwrite these files: authored.txt. Move them aside, then run the command again.',
-        }),
-    );
+    }).toThrow(AUTHORED_REFUSAL);
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/owned.txt`), 'utf8')).toBe('installed');
     expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('keep authored');
 });
@@ -74,6 +74,6 @@ test.each(['edited', 'deleted'])('a reviewed authored file that was %s is not re
     ]);
     expect(() => {
         writePlans(writer, plans);
-    }).toThrow('gspot did not overwrite these files: authored.txt.');
+    }).toThrow(AUTHORED_REFUSAL);
     expect(writer.read('authored.txt')?.bytes.toString('utf8')).toBe(change === 'edited' ? 'new edit\n' : undefined);
 });

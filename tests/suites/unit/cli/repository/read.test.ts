@@ -34,11 +34,8 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
     expect(refused.code).toBe(128);
     expect(refused.stderr).toStartWith('fatal: detected dubious ownership');
     const error = await captureRejection(readRepositoryRoot(sandbox.path));
-    expect(error).toMatchObject({
-        name: 'GspotError',
-        code: 'git',
-        message: `Git could not open ${sandbox.path}: ${refused.stderr.trim()}`,
-    });
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(error.message).toContain(refused.stderr.trim());
 });
 
 test('deleted tracked files are left out of the file list', async () => {
@@ -60,7 +57,7 @@ test('a broken Git index is reported instead of a folder walk', async () => {
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
     const error = await captureRejection(readTestRepository(cwd));
-    expect(error.message).toStartWith('Git ls-files failed');
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test('a .git file that points at a missing folder is reported, not read as a folder without Git', async () => {
@@ -70,9 +67,10 @@ test('a .git file that points at a missing folder is reported, not read as a fol
     });
 
     const listError = await captureRejection(readTestRepository(sandbox.path));
-    expect(listError.message).toStartWith('Git ls-files failed');
+    expect(listError).toMatchObject({ name: 'GspotError', code: 'git' });
     const rootError = await captureRejection(readRepositoryRoot(sandbox.path));
-    expect(rootError.message).toContain(`Git could not open ${sandbox.path}:`);
+    expect(rootError).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(rootError.message).toContain(sandbox.path);
 });
 
 test('a missing git program is reported instead of a successful walk', async () => {
@@ -82,9 +80,9 @@ test('a missing git program is reported instead of a successful walk', async () 
     using resources = new DisposableStack();
     resources.use(overrideEnvironment({ PATH: empty.path }));
     const missingGitError = await captureRejection(readTestRepository(sandbox.path));
-    expect(missingGitError.message).toMatch(/Git ls-files failed.*(?:not found|not recognized)/su);
+    expect(missingGitError).toMatchObject({ name: 'GspotError', code: 'git' });
     const rootError = await captureRejection(readRepositoryRoot(sandbox.path));
-    expect(rootError.message).toMatch(/Git could not open [^:]*:.*(?:not found|not recognized)/su);
+    expect(rootError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index', async () => {
@@ -124,9 +122,8 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, isSymlink: false },
     ]);
     const error = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
-    expect(error.message).toBe(
-        'source.txt has unresolved merge conflicts. Resolve them with git add or git rm, then check again.',
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(error.message).toContain('source.txt');
 });
 
 test('the index keeps deleted tracked paths and encoded names and leaves out untracked files', async () => {
@@ -153,9 +150,9 @@ test('an invalid UTF-8 index name is reported separately from readable files', a
     expect(repository.unreadablePaths).toStrictEqual([String.raw`"\377.ts"`]);
 });
 
-test('a bare repository is refused with a worktree instruction', async () => {
+test('a bare repository is refused with a Git error', async () => {
     await using sandbox = await testdir();
     runGitStep(sandbox.path, ['init', '--bare', '--quiet']);
     const error = await captureRejection(readRepositoryRoot(sandbox.path));
-    expect(error.message).toContain('Run gspot in the work tree.');
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
 });

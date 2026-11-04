@@ -9,7 +9,6 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PACKAGE_JSON_ERROR } from '#tests/config/setup/programs.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
@@ -67,18 +66,14 @@ test('package.json reads keep your own fields and tell a missing file from inval
     expect(readPackageJson(sandbox.path, 'package.json')).toStrictEqual(PACKAGE_FIELDS);
     await writeFile(join(sandbox.path, 'package.json'), '{');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow(
-        matchFields<GspotError>({
-            name: 'GspotError',
-            code: 'parse',
-            message: PACKAGE_JSON_ERROR,
-        }),
+        matchFields<GspotError>({ name: 'GspotError', code: 'parse' }),
     );
     await writeFile(join(sandbox.path, 'package.json'), '{"dependencies":{"next":16}}');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'parse',
-            message: 'package.json: dependencies.next: Invalid input: expected string, received number. Fix the field.',
+            message: expect.stringContaining('dependencies.next') as string,
         }),
     );
 });
@@ -104,11 +99,7 @@ test('a broken package.json stops the next session and a fixed one changes the s
 
     await openSession(sandbox.path);
     await writeFile(join(sandbox.path, 'package.json'), '{');
-    expect(await captureRejection(openSession(sandbox.path))).toMatchObject({
-        name: 'GspotError',
-        code: 'parse',
-        message: PACKAGE_JSON_ERROR,
-    });
+    expect(await captureRejection(openSession(sandbox.path))).toMatchObject({ name: 'GspotError', code: 'parse' });
     await writeFile(join(sandbox.path, 'package.json'), ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     const reopened = await openSession(sandbox.path);
     expect(

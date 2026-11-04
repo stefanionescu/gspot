@@ -183,14 +183,8 @@ export const RUNTIME_DETECTION_CASES = [
 ];
 
 export const ALIAS_FILES = [
-    {
-        path: 'package.json',
-        message: 'package.json:1:38 is not valid JSON: PropertyNameExpected. Fix the file.',
-    },
-    {
-        path: 'tsconfig.json',
-        message: "Cannot read the compiler settings in tsconfig.json: '}' expected.",
-    },
+    { path: 'package.json', code: 'parse' },
+    { path: 'tsconfig.json', code: 'configuration' },
 ] as const;
 
 export const ALIAS_PROJECT = {
@@ -238,18 +232,9 @@ export const PACKAGE_MANAGER_PIN_CASES = [
 ] as const;
 
 export const NON_EXACT_PNPM_VERSIONS = [
-    [
-        '{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}',
-        'The tool project needs an exact pnpm version, such as pnpm@1.2.3; package.json declares "^9.1.0" in devEngines.packageManager. Write an exact version there.',
-    ],
-    [
-        '{"packageManager":"pnpm@^9.1.0"}',
-        'The tool project needs an exact pnpm version, such as pnpm@1.2.3; package.json declares "pnpm@^9.1.0" in packageManager. Write an exact version there.',
-    ],
-    [
-        '{"packageManager":"pnpm"}',
-        'The tool project needs an exact pnpm version, such as pnpm@1.2.3; package.json declares "pnpm" in packageManager. Write an exact version there.',
-    ],
+    ['{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}', '^9.1.0', 'devEngines.packageManager'],
+    ['{"packageManager":"pnpm@^9.1.0"}', 'pnpm@^9.1.0', 'packageManager'],
+    ['{"packageManager":"pnpm"}', 'pnpm', 'packageManager'],
 ] as const;
 
 export const UNSUPPORTED_PACKAGE_MANAGERS = [

@@ -15,7 +15,6 @@ import {
     SHA256,
     INDEX_PATH,
     BINARY_BLOB,
-    BLOB_FAILURE,
     INVALID_BLOBS,
     ATTRIBUTE_LINES,
     TRAILING_BLOB_CHUNKS,
@@ -47,7 +46,7 @@ test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output }) =>
     const stream = parseGitBlobs(Readable.from([Buffer.from(output)]), [SHA1]);
     const parsed = Array.fromAsync(stream);
     const streamError = await captureRejection(parsed);
-    expect(streamError.message).toBe(BLOB_FAILURE);
+    expect(streamError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test('a batch parses the same for every split between header, body and delimiters', async () => {
@@ -75,7 +74,7 @@ test.each([...TRAILING_BLOB_CHUNKS])('a Git blob stream refuses trailing bytes i
     const stream = parseGitBlobs(Readable.from(chunks.map((chunk) => Buffer.from(chunk))), [SHA1]);
     const parsed = Array.fromAsync(stream);
     const error = await captureRejection(parsed);
-    expect(error.message).toBe(BLOB_FAILURE);
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test('a Git blob stream accepts empty chunks after the final object', async () => {

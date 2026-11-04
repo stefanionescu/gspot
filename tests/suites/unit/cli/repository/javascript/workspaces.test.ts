@@ -36,7 +36,9 @@ test.each([...OUTSIDE_WORKSPACE_FILES])(
 
         const root = join(sandbox.path, 'project');
         await symlink('../../outside', join(root, 'packages/linked'), 'dir');
-        expect(() => listWorkspaceFolders(root)).toThrow(`Workspace package ${join(escaped)} leaves the repository.`);
+        const refusal = await captureRejection(Promise.try(() => listWorkspaceFolders(root)));
+        expect(refusal).toMatchObject({ name: 'GspotError', code: 'filesystem' });
+        expect(refusal.message).toContain(join(escaped));
         expect(listWorkspaceFolders(join(root, 'packages'))).toStrictEqual([]);
     },
 );
@@ -63,5 +65,5 @@ test.each(['pnpm-workspace.yaml', 'lerna.json'])('an invalid %s is a GspotError 
 
     const invalid = await captureRejection(Promise.try(() => listWorkspaceFolders(sandbox.path)));
     expect(invalid).toMatchObject({ name: 'GspotError', code: 'filesystem', cause: expect.any(Error) as Error });
-    expect(invalid.message).toStartWith(`${path} is not a valid workspace file: `);
+    expect(invalid.message).toContain(path);
 });

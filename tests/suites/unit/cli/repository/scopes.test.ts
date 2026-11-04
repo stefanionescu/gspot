@@ -111,8 +111,9 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
 test('a path argument outside the repository reports an arguments error', () => {
     expect(() => buildArgumentPath('/repo', '/repo/app', '../../outside')).toThrow(
         matchFields<GspotError>({
+            name: 'GspotError',
             code: 'arguments',
-            message: 'Path ../../outside is outside this repository.',
+            message: expect.stringContaining('../../outside') as string,
         }),
     );
 });

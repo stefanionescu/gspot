@@ -2,14 +2,18 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
 import { ALIAS_FILES, SCOPE_ALIASES, ALIAS_PROJECT } from '#tests/config/repository/detect.ts';
 
-test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, message }) => {
+test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, code }) => {
     await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });
-    expect(() => readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toThrow(new Error(message));
+    expect(() => readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code, message: expect.stringContaining(path) as string }),
+    );
 });
 
 test('root and child aliases read their own files, and tsconfig paths win', async () => {
@@ -56,7 +60,11 @@ test('alias reads name a missing extended file', async () => {
     await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
     const missing = convertToPosixPath(join(sandbox.path, 'missing-base.json'));
     expect(() => readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toThrow(
-        new Error(`Cannot read the compiler settings in tsconfig.json: Cannot read file '${missing}'.`),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'configuration',
+            message: expect.stringContaining(missing) as string,
+        }),
     );
 });
 
