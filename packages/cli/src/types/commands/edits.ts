@@ -23,7 +23,7 @@ export type CommandDefinition<Arguments extends readonly unknown[] = readonly un
     name: keyof typeof COMMAND_HELP;
     arguments?: readonly CommandArgument[];
     options?: readonly CommandOption[];
-    run(args: Arguments, flags: Flags, location: CommandLocation): Promise<CommandResult<object>>;
+    run(input: { arguments: Arguments; flags: Flags } & CommandLocation): Promise<CommandResult<object>>;
 };
 
 export type CommandHelp = {

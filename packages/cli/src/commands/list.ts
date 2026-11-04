@@ -133,7 +133,8 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
 export const LIST_COMMAND: CommandDefinition<[(typeof LIST_KINDS)[number]]> = {
     name: 'list',
     arguments: [{ term: LIST_ARGUMENT, choices: LIST_KINDS, defaultValue: 'configurations' }],
-    run: async ([kind], _flags, { root }) => {
+    run: async ({ arguments: commandArguments, root }) => {
+        const [kind] = commandArguments;
         const session = await openSession(root);
         return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);
     },

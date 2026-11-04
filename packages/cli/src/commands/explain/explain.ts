@@ -67,6 +67,8 @@ function explainSubject(session: Session | undefined, { subject, cwd }: { subjec
 export const EXPLAIN_COMMAND: CommandDefinition<[string, string | undefined], { verbose?: true }> = {
     name: 'explain',
     arguments: [{ term: '<subject>' }, { term: '[rule]' }],
-    run: async ([subject, rule], { verbose }, location) =>
-        await runExplainCommand(location, subject, rule, verbose === true),
+    run: async ({ arguments: commandArguments, flags: { verbose }, ...location }) => {
+        const [subject, rule] = commandArguments;
+        return await runExplainCommand(location, subject, rule, verbose === true);
+    },
 };

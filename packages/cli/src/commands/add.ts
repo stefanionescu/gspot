@@ -66,6 +66,8 @@ export const ADD_COMMAND: CommandDefinition<[string[]], ScopeFlags> = {
     name: 'add',
     arguments: [{ term: '<configuration...>' }],
     options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
-    run: async ([configurations], { scope }, { root, cwd }) =>
-        await runAddCommand({ root, cwd, configurations: [...new Set(configurations)], scope }),
+    run: async ({ arguments: commandArguments, flags: { scope }, root, cwd }) => {
+        const [configurations] = commandArguments;
+        return await runAddCommand({ root, cwd, configurations: [...new Set(configurations)], scope });
+    },
 };

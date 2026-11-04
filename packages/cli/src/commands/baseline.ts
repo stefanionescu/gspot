@@ -151,7 +151,7 @@ async function runBaselineCommand(
 export const BASELINE_COMMAND: CommandDefinition<[], BaselineFlags> = {
     name: 'baseline',
     options: [{ flags: PRUNE_FLAG }, { flags: ONLY_OPTION, parse: parseCheckNames }],
-    run: async (_arguments, flags, { root }) =>
+    run: async ({ flags, root }) =>
         await runCancelableCommand(
             (cancelSignal) => runBaselineCommand(root, flags, cancelSignal),
             BASELINE_STOPPED_MESSAGE,

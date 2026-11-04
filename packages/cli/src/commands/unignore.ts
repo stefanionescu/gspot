@@ -121,7 +121,8 @@ export const UNIGNORE_COMMAND: CommandDefinition<[string | undefined], Partial<I
     name: 'unignore',
     arguments: [{ term: '[check]' }],
     options: [{ flags: RULE_OPTION }, pathsOption],
-    run: async ([check], { rule, paths }, { root, cwd }) => {
+    run: async ({ arguments: commandArguments, flags: { rule, paths }, root, cwd }) => {
+        const [check] = commandArguments;
         if (check === undefined && rule !== undefined) throw new GspotError('arguments', RULE_WITHOUT_CHECK_MESSAGE);
         return await runUnignoreCommand({ root, cwd, check, rule, paths });
     },

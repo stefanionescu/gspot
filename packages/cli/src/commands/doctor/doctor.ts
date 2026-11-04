@@ -240,5 +240,5 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
 
 export const DOCTOR_COMMAND: CommandDefinition = {
     name: 'doctor',
-    run: async (_arguments, _flags, { root }) => await runDoctorCommand(root),
+    run: async ({ root }) => await runDoctorCommand(root),
 };

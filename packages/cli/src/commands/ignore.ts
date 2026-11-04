@@ -95,7 +95,8 @@ export const IGNORE_COMMAND: CommandDefinition<[string | undefined], IgnoreFlags
     name: 'ignore',
     arguments: [{ term: '[check]' }],
     options: [{ flags: REASON_OPTION, required: true }, { flags: RULE_OPTION }, pathsOption],
-    run: async ([check], { reason, rule, paths }, { root, cwd }) => {
+    run: async ({ arguments: commandArguments, flags: { reason, rule, paths }, root, cwd }) => {
+        const [check] = commandArguments;
         const message = validateReason(`gspot ignore ${check ?? ''}`.trimEnd(), reason, IGNORE_CHECK_MESSAGE);
         if (message !== undefined) throw new GspotError('arguments', message);
         return await runIgnoreCommand({ root, cwd, check, paths, rule, reason });

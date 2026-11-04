@@ -121,7 +121,7 @@ export const INIT_COMMAND: CommandDefinition<[], InitFlags> = {
         },
         { flags: LEVEL_OPTION, choices: LEVELS },
     ],
-    run: async (_arguments, { from, configurations, level }, { root, cwd }) => {
+    run: async ({ flags: { from, configurations, level }, root, cwd }) => {
         assertTemplateFlags(from, configurations);
         const template = from === undefined ? undefined : readTemplate(from, cwd);
         return await runInitCommand(root, {

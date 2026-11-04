@@ -60,5 +60,8 @@ export const UNSET_COMMAND: CommandDefinition<[string, string[]], ScopeFlags> = 
     name: 'unset',
     arguments: [{ term: '<setting>' }, { term: '[items...]' }],
     options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
-    run: async ([key, keys], { scope }, { root, cwd }) => await runUnsetCommand({ root, cwd, key, keys, scope }),
+    run: async ({ arguments: commandArguments, flags: { scope }, root, cwd }) => {
+        const [key, keys] = commandArguments;
+        return await runUnsetCommand({ root, cwd, key, keys, scope });
+    },
 };

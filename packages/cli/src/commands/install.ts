@@ -40,7 +40,7 @@ async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promi
 
 export const INSTALL_COMMAND: CommandDefinition = {
     name: 'install',
-    run: async (_arguments, _flags, { root }) =>
+    run: async ({ root }) =>
         await runCancelableCommand(
             (cancelSignal) => runInstallCommand(root, cancelSignal),
             INSTALLATION_STOPPED_MESSAGE,

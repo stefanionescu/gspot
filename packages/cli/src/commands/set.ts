@@ -180,6 +180,8 @@ export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags> = {
     name: 'set',
     arguments: [{ term: '<setting>' }, { term: '<values...>' }],
     options: [{ flags: REASON_OPTION }, { flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
-    run: async ([key, values], { reason, scope }, { root, cwd }) =>
-        await runSetCommand({ root, cwd, key, values, reason, scope }),
+    run: async ({ arguments: commandArguments, flags: { reason, scope }, root, cwd }) => {
+        const [key, values] = commandArguments;
+        return await runSetCommand({ root, cwd, key, values, reason, scope });
+    },
 };

@@ -237,7 +237,13 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
     for (const definition of definitions) {
         const command = addCommandDefinition(program, definition, helpWidth);
         command.action(async () => {
-            onResult(await definition.run(command.processedArgs, command.optsWithGlobals(), location));
+            onResult(
+                await definition.run({
+                    arguments: command.processedArgs,
+                    flags: command.optsWithGlobals(),
+                    ...location,
+                }),
+            );
         });
     }
     program.configureHelp({

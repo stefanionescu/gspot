@@ -247,5 +247,8 @@ export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {
         { flags: FIX_FLAG },
         { flags: HOOK_OPTION, choices: CHECK_INPUT_HOOKS, hidden: true },
     ],
-    run: async ([paths], flags, location) => await runCheckCommand(paths, flags, location),
+    run: async ({ arguments: commandArguments, flags, ...location }) => {
+        const [paths] = commandArguments;
+        return await runCheckCommand(paths, flags, location);
+    },
 };
