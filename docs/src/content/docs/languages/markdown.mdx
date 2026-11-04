@@ -1,0 +1,88 @@
+---
+title: Markdown
+description: Lint Markdown files, and check that their code blocks parse.
+configurations: [markdown, mkdocs]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+gspot lints Markdown and Markdown with JSX (MDX) files with markdownlint, and its own check parses the code blocks inside them. Prettier
+formats the files through the always-selected `format` configuration. These checks run for the `markdown` and `mkdocs`
+configurations:
+
+<ChecksTable guide="languages/markdown" />
+
+The `prose` and `spelling` configurations check the words of the same files; see
+[Spelling and prose](/topics/prose/).
+
+## What gspot detects
+
+gspot selects `markdown` in a scope that holds a file ending in `.md` or `.mdx`. It selects `mkdocs` when an
+`mkdocs.yml` or `mkdocs.yaml` file turns on the `admonition`, `pymdownx.details`, or `pymdownx.tabbed` extension.
+
+## Lint rules
+
+markdownlint starts from its Prettier style, which turns off the rules that Prettier settles, such as line length and
+list indentation. gspot changes these rules on top of it:
+
+| Rule    | Setting                                                                                                |
+| ------- | ------------------------------------------------------------------------------------------------------ |
+| `MD018` | On: a heading needs a space after its `#`.                                                             |
+| `MD020` | On: a closed heading needs spaces inside its `#` marks.                                                |
+| `MD024` | Two headings with the same text report only when they share a parent heading.                          |
+| `MD026` | A heading may not end in `.`, `,`, `;`, `:`, `!`, or `?`, or their full-width forms.                   |
+| `MD033` | Off: inline HTML is allowed.                                                                           |
+| `MD046` | Code blocks are fenced, not indented.                                                                  |
+| `MD059` | Link text such as `here`, `this page`, `read more`, `click here`, `link`, or `docs` reports a finding. |
+
+Level `all` adds `MD041`, which asks for a top-level heading on the first line, and `MD025`, which allows one
+top-level heading per file. For `MD025`, gspot sets `front_matter_title` to an empty string, so a `title` in the front
+matter does not count as a top-level heading.
+
+markdownlint skips the front matter of a file. In an `.mdx` file, the rules start after the leading `import` and
+`export` lines.
+
+## Code blocks
+
+`markdown/fences` parses the code blocks of these languages: JSON, JSON with comments (JSONC), TOML, YAML, Bash,
+JavaScript, JSX, TypeScript, TSX, and Python. It reports a syntax error at its line. For example:
+
+```text
+failed   markdown/fences  2 findings
+  README.md:10  syntax  Fix this code example: JSON syntax error: property name expected.
+  README.md:14  syntax  Fix this code example: Syntax error.
+```
+
+The check accepts the shortcuts that documentation uses:
+
+- The check skips a block with a line of only `...`.
+- `(...)` reads as an empty argument list.
+- A placeholder such as `<name>` in a Bash block reads as a word.
+- A JavaScript or TypeScript block may hold an expression or object members instead of a whole program, and a
+  TypeScript block may hold a type. A Python block may hold an expression.
+
+Label a block `text` when it holds no code.
+
+## Settings
+
+`tools.markdownlint.rules` sets the options of a rule that the level runs. Each entry takes an option table:
+
+```shell
+gspot set tools.markdownlint.rules '{ MD024 = { siblings_only = false } }'
+```
+
+gspot refuses options for a rule that the level does not run, and names the level that runs it. gspot runs `MD013`,
+the line length rule, at no level. To turn a rule off, ignore it with a reason:
+
+```shell
+gspot ignore markdown/markdownlint --rule MD033 --reason "The pages embed video players."
+```
+
+gspot writes a `.markdownlint.jsonc` that extends its rules file, so an editor reads the same rules; see
+[Editors](/use/editors/#how-editors-find-the-config-files).
+
+## Admonitions and content tabs
+
+markdownlint reads the four-space body of an admonition, a details block, or a content tab as an indented code block,
+and the link references inside it as unused. The `mkdocs` configuration turns off `MD046` and `MD053`, so these
+blocks report nothing.
