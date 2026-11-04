@@ -6,7 +6,7 @@ export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
 
 export const RELEASES_URL = `${REPOSITORY_URL}/releases`;
 
-export const DOCS_PATH = '/start/overview/';
+export const DOCS_PATH = '/start/quickstart/';
 
 export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
 
@@ -23,7 +23,6 @@ export const SIDEBAR = [
         label: 'Basics',
         collapsed: false,
         items: [
-            { slug: 'start/overview' },
             { slug: 'start/quickstart' },
             { slug: 'start/install' },
             { slug: 'start/footprint' },

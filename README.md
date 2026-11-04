@@ -12,7 +12,7 @@ gspot is a command-line tool that lints AI-generated code and installs rules for
 - **Writes rules for your agent.** `AGENTS.md` lists rule files for your languages, frameworks, and level. They say
   how to write code that passes the checks.
 
-[What it flags](https://generativespotting.com/start/overview/#what-it-flags) lists the problems that gspot finds.
+[What it flags](https://generativespotting.com/reference/checks/) lists the problems that gspot finds.
 
 ## Requirements
 
