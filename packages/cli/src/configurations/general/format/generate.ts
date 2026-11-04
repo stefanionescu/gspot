@@ -98,22 +98,22 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
     const orderedTables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scopePath, second.scopePath),
     );
-    const tables: Array<{ scope: string; format: WrittenFormat }> = [];
+    const tables: Array<{ scopePath: string; format: WrittenFormat }> = [];
     for (const { scopePath = '', table } of orderedTables) {
         const authored = table.written['format'];
         if (table.format === undefined || !isTable(authored)) continue;
         const format = Object.fromEntries(
             Object.entries(table.format).filter(([key]) => Object.hasOwn(authored, key)),
         ) as WrittenFormat;
-        tables.push({ scope: scopePath, format });
+        tables.push({ scopePath, format });
     }
-    const base = tables.flatMap(({ scope, format: { override: _overrides, ...format } }) =>
-        scope === '' || Object.keys(format).length === 0 ? [] : { scope, paths: ['**/*'], format },
+    const base = tables.flatMap(({ scopePath, format: { override: _overrides, ...format } }) =>
+        scopePath === '' || Object.keys(format).length === 0 ? [] : { scopePath, paths: ['**/*'], format },
     );
-    const overrides = tables.flatMap(({ scope, format }) =>
+    const overrides = tables.flatMap(({ scopePath, format }) =>
         (format.override ?? []).map(({ paths, ...format }) => ({
-            scope,
-            paths: paths.map((path) => joinScopeSelector(path, scope)),
+            scopePath,
+            paths: paths.map((path) => joinScopeSelector(path, scopePath)),
             format,
         })),
     );
@@ -121,11 +121,11 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
 }
 
 function listFormatOverrides(settings: Settings): FormatOverride[] {
-    return listScopeFormats(settings).map(({ scope, paths, format }) => {
+    return listScopeFormats(settings).map(({ scopePath, paths, format }) => {
         const included = includeFolderContents(paths);
         const files = included.filter((path) => !path.startsWith('!'));
         const excludeFiles = included.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
-        if (scope !== '') excludeFiles.push(`!${escapeGlob(scope)}/**`);
+        if (scopePath !== '') excludeFiles.push(`!${escapeGlob(scopePath)}/**`);
         return {
             files,
             excludeFiles,
@@ -177,14 +177,14 @@ function buildEditorconfigFile(planned: PlannedConfig): string {
             .filter(([path]) => path !== '*')
             .map(([path, options]) => ({ path, options })),
         ...(scriptIndent === undefined ? [] : [{ path: SCRIPT_SECTION, options: scriptIndent }]),
-        ...listScopeFormats(settings).flatMap(({ scope, paths, format }) => {
+        ...listScopeFormats(settings).flatMap(({ scopePath, paths, format }) => {
             const options = {
                 ...(format.indent_style !== undefined && { indent_style: format.indent_style }),
                 ...(format.indent_width !== undefined && { indent_size: format.indent_width }),
             };
             if (Object.keys(options).length === 0) return [];
             return includeFolderContents(paths).map((pattern) => ({
-                path: `/${buildSectionPath(pattern, scope)}`,
+                path: `/${buildSectionPath(pattern, scopePath)}`,
                 options,
             }));
         }),

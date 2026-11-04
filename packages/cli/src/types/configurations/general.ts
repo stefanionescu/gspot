@@ -170,7 +170,7 @@ export type FormatOverride = {
     options: Record<string, unknown>;
 };
 
-export type ScopeFormat = { scope: string; paths: string[]; format: Optional<FormatSettings> };
+export type ScopeFormat = { scopePath: string; paths: string[]; format: Optional<FormatSettings> };
 
 export type SourcedConfig = Extract<Config, { source: string }>;
 
