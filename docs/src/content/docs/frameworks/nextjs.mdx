@@ -1,0 +1,62 @@
+---
+title: Next.js
+description: Type-check Next.js apps with their route types, and lint their pages, server code, and config.
+configurations: [nextjs]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+The `nextjs` configuration type-checks the app after Next.js writes its route types, and adds the Next.js lint rules,
+a rule for server modules, and two rules for `next.config`. It adds no Semgrep rules. These checks run for it:
+
+<ChecksTable guide="frameworks/nextjs" />
+
+## Detection
+
+gspot selects `nextjs` in a scope whose `package.json` depends on `next`. The configuration requires `typescript`,
+`react`, and `react-dom`, so the [React](/frameworks/react/) rules run too.
+
+## Type check
+
+`nextjs/tsc` runs in place of `typescript/tsc`, at push. It copies the repository, runs `next typegen` in the copy,
+and then type-checks the app with the strict compiler options of the level. A fresh clone holds no `next-env.d.ts`
+and no route types, so a plain tsc run fails on imports that the framework resolves.
+
+The check runs the `next` of your project, which must be 15.5.0 or later. When `next typegen` fails, the check stops
+and prints the cause. The workflow that gspot writes for CI runs `next typegen` after it installs the dependencies
+from your lockfile.
+
+## ESLint rules
+
+`javascript/eslint` adds these rules:
+
+- The `core-web-vitals` preset of `@next/eslint-plugin-next`, and the `next` preset of eslint-plugin-react-refresh.
+- `@next/next/no-async-client-component`.
+- `@next/next/no-html-link-for-pages`, only when the project has a `pages` or `src/pages` folder.
+- `gspot/require-server-only` for files under a `server` folder and files named `*.server.*`. Each such module imports
+  `server-only` or declares `"use server"`, so a client bundle can never include it.
+- At level `all`: `@next/next/next-script-for-ga`, `@next/next/no-img-element`, and `@next/next/no-page-custom-font`.
+
+In `next.config.*` files, the `gspot/restricted-syntax` rule reports two patterns at both levels:
+
+| Pattern                                                                                       | Message                                                                            |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `ignoreBuildErrors: true` or `ignoreDuringBuilds: true`                                       | This option lets next build pass with errors. Remove it.                           |
+| A key under `env` whose name holds `SECRET`, `TOKEN`, `PASSWORD`, `PRIVATE_KEY`, or `API_KEY` | A key under env is written into the client bundle. Read this secret on the server. |
+
+## Exemptions
+
+- `import-x/no-default-export` is off in the route files of `app`, such as `page.tsx` and `layout.tsx`, and in every
+  file under `pages`, because Next.js reads their default export.
+- At level `all`, `gspot/no-trivial-files` accepts a route file that holds one export, such as `page.tsx`,
+  `route.ts`, or `middleware.ts`.
+- The naming checks accept the file names that Next.js reserves in `app` and `pages`, such as `not-found` and
+  `global-error`, and the root files `middleware`, `proxy`, and `instrumentation`.
+- The naming checks accept the exports that Next.js finds by name, such as `getServerSideProps` and
+  `generateMetadata`, and capitalized components in the `.js` files of `app` and `pages`.
+- At level `all`, `structure/lone-files` accepts a folder whose only file is a route file, such as `page.tsx`.
+- gspot treats `next-env.d.ts` as generator output, and leaves it out of most checks.
+
+## Rules for coding agents
+
+The `nextjs` configuration installs `NEXTJS.md` for coding agents.
