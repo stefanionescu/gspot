@@ -83,7 +83,7 @@
     color: var(--sl-color-gray-3);
 }
 
-.setup:not([data-mode='human']) .manager {
+.setup[data-mode='agent'] .manager {
     visibility: hidden;
 }
 
@@ -161,14 +161,6 @@
     color: var(--home-code-text);
     font-family: var(--sl-font-mono);
     font-size: 0.875rem;
-    line-height: 1.6;
-}
-
-.try-note {
-    margin: 12px 0 0;
-    color: var(--sl-color-gray-3);
-    font-family: var(--sl-font-mono);
-    font-size: 0.8125rem;
     line-height: 1.6;
 }
 

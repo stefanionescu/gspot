@@ -21,7 +21,7 @@ export const LLMS_URL = `${CLI_REFERENCE.package.homepage}/llms.txt`;
 
 export const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
 
-export const SCAN_COMMAND = `npx ${CLI_REFERENCE.package.name} scan`;
+const SCAN_COMMAND = `npx ${CLI_REFERENCE.package.name} scan`;
 
 const EVALUATION_HEADING = 'Evaluate gspot on this repository';
 
