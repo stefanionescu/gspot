@@ -1,0 +1,50 @@
+---
+title: Astro
+description: Lint and type-check Astro components.
+configurations: [astro]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+The `astro` configuration lints Astro components with eslint-plugin-astro and its accessibility rules, and type-checks
+them with `astro check`. Prettier formats `.astro` files through prettier-plugin-astro. The configuration adds no
+Semgrep rules. These checks run for it:
+
+<ChecksTable guide="frameworks/astro" />
+
+## Detection
+
+gspot selects `astro` in a scope that holds a `.astro` file, or whose `package.json` depends on `astro`. The
+configuration requires `javascript`. It makes `extensionless` the default of `javascript.import_extension`, so
+relative imports leave out the file extension.
+
+## Type check
+
+`astro/astro-check` runs `astro check` in the folder of the scope at push. A warning fails the check as an error does.
+When the scope selects `typescript`, the check runs beside `typescript/tsc`, which cannot read a component file.
+
+## ESLint rules
+
+`javascript/eslint` reads each component, and the scripts inside it, with these rules:
+
+- The `flat/recommended` preset of eslint-plugin-astro.
+- The `flat/jsx-a11y-recommended` preset, which applies the jsx-a11y accessibility rules to the markup. Its
+  `no-noninteractive-tabindex` rule accepts a `tabindex` on the `tabpanel` and `region` roles.
+- `astro/no-set-html-directive`, `astro/no-exports-from-components`, and `astro/no-prerender-export-outside-pages`.
+- At level `all`: `astro/no-unused-css-selector`, `astro/prefer-class-list-directive`, `astro/prefer-object-class-list`,
+  and `astro/prefer-split-class-list`.
+
+The `<script>` blocks of a component run in the browser. In them, `gspot/no-client-environment` allows only
+environment variables that start with `PUBLIC_`, and `NODE_ENV`, `SITE`, and `ASSETS_PREFIX`.
+
+## Exemptions
+
+- `import-x/no-default-export` is off in `.astro` files, because Astro compiles each component to a default export.
+- At level `all`, `gspot/no-trivial-files` accepts a component, or a script block that only imports a module. Astro
+  bundles client code from such a script, and reads the props of a component from the `Props` type in its own
+  frontmatter.
+
+## Rules for coding agents
+
+The `astro` configuration installs `ASTRO.md` for coding agents. The `site` configuration checks the built pages; see
+[Static sites](/topics/site/).
