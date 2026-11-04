@@ -1,5 +1,8 @@
-import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
-
+import {
+    type EslintScope,
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+} from '#cli/types/configurations/language.ts';
 import {
     TESTING_LIBRARY_SCOPE,
     TESTING_LIBRARY_PRESETS,
@@ -12,9 +15,7 @@ Apply the Testing Library presets of the frameworks in use.
 
 @param scope the planned ESLint file of the scope.
 */
-export function buildTestingLibraryBlocks(
-    scope: Pick<EslintScope, 'eslintFiles' | 'dependencies'>,
-): ConfigurationBlocks {
+function buildTestingLibraryBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'dependencies'>): ConfigurationBlocks {
     const { eslintFiles, dependencies: scopeDependencies } = scope;
     const dependencies = scopeDependencies.filter((name) => name.startsWith(TESTING_LIBRARY_SCOPE));
     const presetNames = dependencies
@@ -30,3 +31,7 @@ export function buildTestingLibraryBlocks(
         calls: [{ name: 'addPlugins', args: [{ plugins: ['eslint-plugin-testing-library'] }] }],
     }));
 }
+
+export const TESTING_LIBRARY_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+    'testing-library': buildTestingLibraryBlocks,
+};

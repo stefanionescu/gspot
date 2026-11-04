@@ -1,7 +1,11 @@
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { extractParentFolder, findEnclosingFolder } from '#cli/system/paths.ts';
-import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 
+import {
+    type EslintScope,
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+} from '#cli/types/configurations/language.ts';
 import {
     NEXT_RULES,
     REACT_FILES,
@@ -16,7 +20,7 @@ Apply the Next.js presets and the pages and JSX settings.
 
 @param scope the planned ESLint file of the scope.
 */
-export function buildNextjsBlocks(
+function buildNextjsBlocks(
     scope: Pick<EslintScope, 'path' | 'eslintFiles' | 'dependencyFiles' | 'sourceFiles'>,
 ): ConfigurationBlocks {
     const { path, eslintFiles, dependencyFiles, sourceFiles } = scope;
@@ -55,3 +59,7 @@ export function buildNextjsBlocks(
         },
     ];
 }
+
+export const NEXTJS_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+    nextjs: buildNextjsBlocks,
+};

@@ -5,19 +5,19 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { buildVueBlocks } from '#cli/configurations/framework/vue/generate.ts';
-import { buildAstroBlocks } from '#cli/configurations/framework/astro/generate.ts';
-import { buildVitestBlocks } from '#cli/configurations/testing/vitest/generate.ts';
-import { buildNestjsBlocks } from '#cli/configurations/framework/nestjs/generate.ts';
-import { buildNextjsBlocks } from '#cli/configurations/framework/nextjs/generate.ts';
-import { buildSvelteBlocks } from '#cli/configurations/framework/svelte/generate.ts';
-import { buildDrizzleBlocks } from '#cli/configurations/library/drizzle/generate.ts';
-import { buildZustandBlocks } from '#cli/configurations/library/zustand/generate.ts';
-import { buildReactDomBlocks } from '#cli/configurations/framework/react-dom/generate.ts';
-import { buildTypescriptBlocks } from '#cli/configurations/language/typescript/generate.ts';
+import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
+import { ASTRO_BLOCK_BUILDERS } from '#cli/configurations/framework/astro/generate.ts';
+import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
+import { NESTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nestjs/generate.ts';
+import { NEXTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nextjs/generate.ts';
+import { SVELTE_BLOCK_BUILDERS } from '#cli/configurations/framework/svelte/generate.ts';
+import { DRIZZLE_BLOCK_BUILDERS } from '#cli/configurations/library/drizzle/generate.ts';
+import { ZUSTAND_BLOCK_BUILDERS } from '#cli/configurations/library/zustand/generate.ts';
 import { IMPORT_EXTENSIONS, FILE_EXTENSION_RULE } from '#cli/config/configurations/blocks.ts';
 import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
-import { buildTestingLibraryBlocks } from '#cli/configurations/library/testing-library/generate.ts';
+import { REACT_DOM_BLOCK_BUILDERS } from '#cli/configurations/framework/react-dom/generate.ts';
+import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
+import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
 import type {
@@ -31,17 +31,17 @@ import type {
 
 const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
     ...Object.fromEntries(Object.keys(PLUGIN_RULE_BLOCKS).map((name) => [name, buildPluginRuleBlocks])),
-    astro: buildAstroBlocks,
-    vue: buildVueBlocks,
-    svelte: buildSvelteBlocks,
-    nextjs: buildNextjsBlocks,
-    typescript: buildTypescriptBlocks,
-    zustand: buildZustandBlocks,
-    'testing-library': buildTestingLibraryBlocks,
-    vitest: buildVitestBlocks,
-    'react-dom': buildReactDomBlocks,
-    nestjs: buildNestjsBlocks,
-    drizzle: buildDrizzleBlocks,
+    ...ASTRO_BLOCK_BUILDERS,
+    ...DRIZZLE_BLOCK_BUILDERS,
+    ...NESTJS_BLOCK_BUILDERS,
+    ...NEXTJS_BLOCK_BUILDERS,
+    ...REACT_DOM_BLOCK_BUILDERS,
+    ...SVELTE_BLOCK_BUILDERS,
+    ...TESTING_LIBRARY_BLOCK_BUILDERS,
+    ...TYPESCRIPT_BLOCK_BUILDERS,
+    ...VITEST_BLOCK_BUILDERS,
+    ...VUE_BLOCK_BUILDERS,
+    ...ZUSTAND_BLOCK_BUILDERS,
     supabase: buildSupabaseBlocks,
 };
 

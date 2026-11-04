@@ -1,17 +1,20 @@
-import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
-
 import {
     REACT_FILES,
     REACT_DOM_RULE_OPTIONS,
     REACT_NATIVE_CONFIGURATION,
 } from '#cli/config/configurations/framework.ts';
+import {
+    type EslintScope,
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+} from '#cli/types/configurations/language.ts';
 
 /**
 Apply the accessibility lint rules to the React DOM files.
 
 @param scope the planned ESLint file of the scope.
 */
-export function buildReactDomBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
+function buildReactDomBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
     const blocks: ConfigurationBlocks = [];
     if (!scope.settings.configurations.includes(REACT_NATIVE_CONFIGURATION)) {
         blocks.push({
@@ -25,3 +28,7 @@ export function buildReactDomBlocks(scope: Pick<EslintScope, 'settings'>): Confi
     }
     return blocks;
 }
+
+export const REACT_DOM_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+    'react-dom': buildReactDomBlocks,
+};

@@ -1,8 +1,13 @@
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { ASTRO_FILES } from '#cli/config/configurations/framework.ts';
-import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/configurations/language.ts';
 import { DEFAULT_PROJECT_FILE_LIMIT, DEFAULT_PROJECT_LIMIT_OPTION } from '#cli/config/configurations/blocks.ts';
+
+import {
+    type EslintScope,
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+} from '#cli/types/configurations/language.ts';
 
 /**
 Apply the parser of typescript-eslint to TypeScript files, its strict typed rules to every typed file, and the
@@ -10,7 +15,7 @@ project files.
 
 @param scope the file selectors and projects of the scope.
 */
-export function buildTypescriptBlocks(
+function buildTypescriptBlocks(
     scope: Pick<EslintScope, 'eslintFiles' | 'projects' | 'defaultProjectFiles'>,
 ): ConfigurationBlocks {
     const { eslintFiles, projects, defaultProjectFiles } = scope;
@@ -61,3 +66,7 @@ export function buildTypescriptBlocks(
         { fields: { files: eslintFiles.tests, rules: TYPESCRIPT_TEST_RULES } },
     ];
 }
+
+export const TYPESCRIPT_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+    typescript: buildTypescriptBlocks,
+};

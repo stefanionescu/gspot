@@ -1,5 +1,8 @@
-import type { EslintScope, ConfigurationBlocks } from '#cli/types/configurations/language.ts';
-
+import {
+    type EslintScope,
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+} from '#cli/types/configurations/language.ts';
 import {
     ASTRO_RULES,
     ASTRO_FILES,
@@ -14,7 +17,7 @@ Apply Astro's presets and its component parser.
 
 @param scope the selected configurations.
 */
-export function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
+function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
     const blocks: ConfigurationBlocks = [
         {
             fields: { files: [...ASTRO_FILES, ...ASTRO_SCRIPT_FILES] },
@@ -53,3 +56,7 @@ export function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): Configur
     }
     return blocks;
 }
+
+export const ASTRO_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+    astro: buildAstroBlocks,
+};
