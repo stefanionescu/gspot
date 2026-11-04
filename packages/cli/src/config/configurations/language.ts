@@ -94,7 +94,30 @@ export const MARKDOWNLINT_RULES = {
 
 export const PRETTIER_STYLE = 'markdownlint/style/prettier';
 
-export const MARKDOWNLINT_PRETTIER_DISABLED = ['MD013'] as const;
+// The rules that markdownlint's prettier style turns off, less MD018 and MD020, which gspot turns back on.
+export const MARKDOWNLINT_PRETTIER_DISABLED = [
+    'MD003',
+    'MD005',
+    'MD007',
+    'MD009',
+    'MD010',
+    'MD012',
+    'MD013',
+    'MD019',
+    'MD021',
+    'MD022',
+    'MD023',
+    'MD027',
+    'MD028',
+    'MD029',
+    'MD030',
+    'MD031',
+    'MD032',
+    'MD035',
+    'MD048',
+    'MD049',
+    'MD050',
+] as const;
 
 export const TYPESCRIPT_RULES = {
     'no-const-assign': 'error',

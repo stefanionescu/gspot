@@ -43,7 +43,7 @@ test.each(INVALID_MARKDOWNLINT_NAMES)('markdownlint refuses $name with the rule 
             stringify({ configurations: ['markdown'], tools: { markdownlint: { rules: { [name]: value } } } }),
         ),
     ).toStrictEqual([
-        `gspot.toml:4: tools.markdownlint.rules.${name}: Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.`,
+        `gspot.toml:4: tools.markdownlint.rules.${name}: Name a rule by its ID, such as MD024 = { siblings_only = false }. This table holds rule options only.`,
     ]);
 });
 

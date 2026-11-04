@@ -251,7 +251,7 @@ export const ESLINT_PLUGIN_MODULE = /\.m?js$/u;
 export const PLUGIN_SOURCE_REFUSAL = 'Name a tracked module with path, or an npm package with package and version.';
 
 export const MARKDOWNLINT_RULE_ID_REFUSAL =
-    'Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.';
+    'Name a rule by its ID, such as MD024 = { siblings_only = false }. This table holds rule options only.';
 
 export const MARKDOWNLINT_RULE_ID = /^MD\d{3}$/u;
 
