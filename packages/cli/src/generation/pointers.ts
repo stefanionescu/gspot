@@ -52,16 +52,16 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
 function buildPointerLocation(
     file: Config,
     target: string,
-    scope: string,
+    scopePath: string,
     scopePaths: PlannedPointerField['scopePaths'],
-): { scope: string; children: string[]; target: string } {
-    const scopePath = file.per_scope ? scope : '';
-    const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
+): { scopePath: string; children: string[]; target: string } {
+    const pointerScopePath = file.per_scope ? scopePath : '';
+    const children = file.per_scope ? listNestedScopes(scopePaths, pointerScopePath) : [];
     const pointerPath =
-        file.pointer === undefined || (scopePath !== '' && file.pointer.overrides === true)
+        file.pointer === undefined || (pointerScopePath !== '' && file.pointer.overrides === true)
             ? target
-            : joinScope(scopePath, file.pointer.path);
-    return { scope: scopePath, children, target: pointerPath };
+            : joinScope(pointerScopePath, file.pointer.path);
+    return { scopePath: pointerScopePath, children, target: pointerPath };
 }
 
 function listPointerFieldTargets({
@@ -187,7 +187,9 @@ export function buildPointerFieldEdits(
     const pointerTargets = tools.flatMap((selected) =>
         listPointerFieldTargets({ ...selected, paths, configs, scopePaths }),
     );
-    const pointerFields = new Map(pointerTargets.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]));
+    const pointerFields = new Map(
+        pointerTargets.map((row) => [JSON.stringify([row.key, row.scopePath, row.target]), row]),
+    );
     if (pointerFields.size === 0) return [];
     const packages = new Set([
         PACKAGE_JSON,
@@ -208,7 +210,7 @@ export function buildPointerFieldEdits(
             .filter(
                 (row) =>
                     Object.hasOwn(document, row.key) &&
-                    isInScope(path, row.scope) &&
+                    isInScope(path, row.scopePath) &&
                     isOutsideChildScopes(path, row.children) &&
                     (paths.has(row.target) || isDeepStrictEqual(document[row.key], { extends: row.extends })),
             )
@@ -244,8 +246,8 @@ export function buildPointerFiles(
                 JSON.stringify(
                     [...targets]
                         .toSorted(([left], [right]) => compareText(left, right))
-                        .map(([scope, target]) => ({
-                            files: [scope === '' ? '**' : `${escapeGlob(scope)}/**`],
+                        .map(([scopePath, target]) => ({
+                            files: [scopePath === '' ? '**' : `${escapeGlob(scopePath)}/**`],
                             extends: buildModuleSpecifier(path, target),
                         })),
                 ),
