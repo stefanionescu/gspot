@@ -5,7 +5,7 @@ import { formatNameList } from '#cli/system/text.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, addScopeTable } from '#cli/settings/edit.ts';
@@ -26,14 +26,10 @@ import {
     readConfigurationEditContext,
 } from '#cli/commands/edits.ts';
 
-function assertRemovable(
-    names: string[],
-    kept: string[],
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): void {
+function assertRemovable(names: string[], kept: string[]): void {
     for (const configuration of names) {
         const chain = kept
-            .map((name) => findRequirementChain(configuration, name, configurationsByName, new Set()))
+            .map((name) => findRequirementChain(configuration, name, new Set()))
             .find((found) => found !== undefined);
         if (chain)
             throw new GspotError(
@@ -43,20 +39,16 @@ function assertRemovable(
     }
 }
 
-function removeUnusedSettings(
-    table: TomlTable,
-    configurationsByName: ReadonlyMap<string, Configuration>,
-    scopePath: string,
-): string {
+function removeUnusedSettings(table: TomlTable, scopePath: string): string {
     const edited = buildSettings(settingsSchema.parse(table), table);
-    const general = configurationsByName
+    const general = readConfigurations()
         .values()
         .filter((configuration) => configuration.group === 'general')
         .toArray();
     const removed: string[] = [];
     const affected = listSettingsTables(edited).filter((written) => isInScope(written.scope, scopePath));
     for (const written of affected) {
-        const selected = selectConfigurationsForScope(edited, written.scope, configurationsByName);
+        const selected = selectConfigurationsForScope(edited, written.scope);
         const available = buildAvailableSettings([...general, ...selected], edited.level);
         const keys = listWrittenKeys(written.table, available).filter(
             (key) => findSetting(available, key) === undefined,
@@ -69,19 +61,10 @@ function removeUnusedSettings(
 
 function listReturningConfigurations(
     session: Session,
-    removal: {
-        scope: string;
-        removed: string[];
-        written: string[];
-        configurationsByName: ReadonlyMap<string, Configuration>;
-    },
+    removal: { scope: string; removed: string[]; written: string[] },
 ): string[] {
-    const { scope, removed, written, configurationsByName } = removal;
-    const proposed = selectProposedConfigurations({
-        repository: session.repository,
-        configurationsByName,
-        options: {},
-    });
+    const { scope, removed, written } = removal;
+    const proposed = selectProposedConfigurations({ repository: session.repository, options: {} });
     const detected = scope === '' ? proposed.rootNames : (proposed.scopeConfigurations.get(scope) ?? []);
     return removed.filter((name) => detected.includes(name) || !written.includes(name));
 }
@@ -94,7 +77,6 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         scopeTable,
         scopeSettings,
         selected: selectedNames,
-        configurationsByName,
         context,
     } = await readConfigurationEditContext(options);
     const detected = listDetectedAdditions(context.session)
@@ -102,7 +84,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         .flatMap((addition) => addition.configurations);
     const selected = [...new Set([...selectedNames, ...detected])];
     const kept = selected.filter((name) => !options.configurations.includes(name));
-    assertRemovable(options.configurations, kept, configurationsByName);
+    assertRemovable(options.configurations, kept);
     if (options.configurations.every((name) => !selected.includes(name))) {
         const verb = options.configurations.length === 1 ? 'is' : 'are';
         return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} not selected.`);
@@ -110,7 +92,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const previous = scopeTable['removed_configurations'];
     const removed = options.configurations.filter((name) => selected.includes(name));
     const written = scopeSettings.configurations;
-    const returning = listReturningConfigurations(context.session, { scope, removed, written, configurationsByName });
+    const returning = listReturningConfigurations(context.session, { scope, removed, written });
     scopeTable['configurations'] = written.filter((name) => !removed.includes(name));
     const reasons = {
         ...(isTable(previous) && previous),
@@ -121,8 +103,8 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
         formatConfigurationChange({ action: 'Removed', changed: removed, where, unchanged, state: 'not selected' }) +
-        removeUnusedSettings(input.table, configurationsByName, scope);
-    const hasManagedKeys = configurationsByName
+        removeUnusedSettings(input.table, scope);
+    const hasManagedKeys = readConfigurations()
         .values()
         .filter((configuration) => removed.includes(configuration.name))
         .flatMap((configuration) => configuration.tools)
@@ -136,18 +118,13 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     });
 }
 
-function findRequirementChain(
-    required: string,
-    from: string,
-    configurationsByName: ReadonlyMap<string, Configuration>,
-    seen: Set<string>,
-): string[] | undefined {
+function findRequirementChain(required: string, from: string, seen: Set<string>): string[] | undefined {
     if (from === required) return [from];
     if (seen.has(from)) return undefined;
     seen.add(from);
-    const requirements = configurationsByName.get(from)?.requires ?? [];
+    const requirements = readConfigurations().get(from)?.requires ?? [];
     for (const next of requirements) {
-        const rest = findRequirementChain(required, next, configurationsByName, seen);
+        const rest = findRequirementChain(required, next, seen);
         if (rest !== undefined) return [from, ...rest];
     }
     return undefined;

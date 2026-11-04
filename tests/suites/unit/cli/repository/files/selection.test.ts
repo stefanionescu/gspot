@@ -61,7 +61,7 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
 test('with bash selected, structure covers the Bash script and not README.md', () => {
     const configurationsByName = readConfigurations();
 
-    const selected = selectConfigurations(['bash'], configurationsByName);
+    const selected = selectConfigurations(['bash']);
     const structure = configurationsByName.get('structure')!;
     const owned = listCoveredFiles(
         structure.files,
@@ -125,7 +125,7 @@ test.each([...PRETTIER_PLUGIN_CASES])(
         ];
         expect(
             listCoveredFiles(configurationsByName.get('format')!.files, files, {
-                configurations: selectConfigurations([...configurationNames], configurationsByName),
+                configurations: selectConfigurations([...configurationNames]),
                 scopePath: '',
                 settings: { test_files: [], valuesByKey: {} },
             }).map((coveredFile) => coveredFile.path),
@@ -146,7 +146,7 @@ test.each(MIGRATION_CASES)(
         );
         const table = configurationsByName.get('postgres')!.files;
         const options = {
-            configurations: selectConfigurations(['postgres'], configurationsByName),
+            configurations: selectConfigurations(['postgres']),
             scopePath: scope,
             settings: { test_files: [], valuesByKey: {} },
         };
@@ -160,7 +160,7 @@ test.each(MIGRATION_CASES)(
 test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope" with $tests', ({ scope, tests, expected }) => {
     const configurationsByName = readConfigurations();
 
-    const selected = selectConfigurations(['jest'], configurationsByName);
+    const selected = selectConfigurations(['jest']);
     const files = JEST_PATHS.map((path) => ({
         path,
         ...TRACKED_SOURCE,

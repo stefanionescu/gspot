@@ -5,14 +5,13 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
-import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { detectConditions, detectConfigurations } from '#cli/repository/detect.ts';
+import { buildConfiguration, listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 
 import {
     MKDOCS_CASES,
@@ -24,38 +23,30 @@ import {
 async function detectSandboxConfigurations(root: string): Promise<string[]> {
     const repository = await readTestRepository(root);
     const dependencyFiles = await readDependencyFiles(createRunCache(root), repository.files);
-    return detectConfigurations({ root, files: repository.files, dependencyFiles }, readConfigurations()).map(
+    return detectConfigurations({ root, files: repository.files, dependencyFiles }).map(
         ({ configuration }) => configuration,
     );
 }
 
 test('detection proposes a language from an extension and the always-selected configurations', () => {
-    const always = { ...buildConfiguration('always'), always_selected: true };
-    const bashConfiguration = buildConfiguration('shell', { tables: '[detect]\nextensions = [".sh"]\n' });
-    const plans = detectConfigurations(
-        {
-            root: process.cwd(),
-            files: [
-                {
-                    path: 'a.sh',
-                    kind: 'source' as const,
-                    kindOrigin: SOURCE_KIND.origin,
-                    tags: ['text'],
-                    executable: false,
-                    size: 1,
-                },
-            ],
-            dependencyFiles: [],
-        },
-        new Map([
-            [always.name, always],
-            [bashConfiguration.name, bashConfiguration],
-        ]),
-    );
-    expect(plans).toStrictEqual([
-        { configuration: 'always', group: 'language', evidence: 'every repository' },
-        { configuration: 'shell', group: 'language', evidence: '1 .sh file', count: 1 },
-    ]);
+    const plans = detectConfigurations({
+        root: process.cwd(),
+        files: [
+            {
+                path: 'a.sh',
+                kind: 'source' as const,
+                kindOrigin: SOURCE_KIND.origin,
+                tags: ['text'],
+                executable: false,
+                size: 1,
+            },
+        ],
+        dependencyFiles: [],
+    });
+    const names = new Set(plans.map(({ configuration }) => configuration));
+    expect(plans).toContainEqual({ configuration: 'bash', group: 'language', evidence: '1 .sh file', count: 1 });
+    expect(plans).toContainEqual({ configuration: 'gspot', group: 'general', evidence: 'every repository' });
+    expect(listAlwaysSelected().filter((name) => !names.has(name))).toStrictEqual([]);
 });
 
 test.each(['.d.ts'])('TypeScript declarations in %s need a tsconfig.json to propose typescript', async (extension) => {
@@ -67,15 +58,14 @@ test.each(['.d.ts'])('TypeScript declarations in %s need a tsconfig.json to prop
     });
 
     const before = await openSession(sandbox.path);
-    expect(
-        detectConfigurations(before.repository, readConfigurations()).map(({ configuration }) => configuration),
-    ).not.toContain('typescript');
+    expect(detectConfigurations(before.repository).map(({ configuration }) => configuration)).not.toContain(
+        'typescript',
+    );
     await writeFile(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
     const configured = await openSession(sandbox.path);
     expect(
-        detectConfigurations(configured.repository, readConfigurations()).find(
-            ({ configuration }) => configuration === 'typescript',
-        )?.evidence,
+        detectConfigurations(configured.repository).find(({ configuration }) => configuration === 'typescript')
+            ?.evidence,
     ).toBe('tsconfig.json');
 });
 
@@ -88,31 +78,22 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
-    const configurationsByName = readConfigurations();
-    const proposed = detectConfigurations(
-        { root: sandbox.path, files: repository.files, dependencyFiles },
-        configurationsByName,
-        'api',
-    );
+    const proposed = detectConfigurations({ root: sandbox.path, files: repository.files, dependencyFiles }, 'api');
     expect(proposed.find((detection) => detection.configuration === 'fastapi')?.evidence).toBe(
         `fastapi in api/${path}`,
     );
     expect(proposed.find((detection) => detection.configuration === 'python')?.evidence).toBe(`api/${path}`);
     expect(
-        detectConfigurations(
-            { root: sandbox.path, files: repository.files, dependencyFiles },
-            configurationsByName,
-            'other',
-        ).filter((detection) => detection.configuration === 'fastapi'),
+        detectConfigurations({ root: sandbox.path, files: repository.files, dependencyFiles }, 'other').filter(
+            (detection) => detection.configuration === 'fastapi',
+        ),
     ).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
     const corrected = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     expect(
-        detectConfigurations(
-            { root: sandbox.path, files: repository.files, dependencyFiles: corrected },
-            configurationsByName,
-            'api',
-        ).filter((detection) => detection.configuration === 'fastapi'),
+        detectConfigurations({ root: sandbox.path, files: repository.files, dependencyFiles: corrected }, 'api').filter(
+            (detection) => detection.configuration === 'fastapi',
+        ),
     ).toStrictEqual([]);
 });
 
@@ -128,20 +109,15 @@ test.each(
             'other/prisma/schema.prisma': 'datasource db {\n  provider = "postgresql"\n}\n',
         });
         const repository = await readTestRepository(sandbox.path);
-        const configurationsByName = readConfigurations();
         expect(
-            detectConfigurations(
-                { root: sandbox.path, files: repository.files, dependencyFiles: [] },
-                configurationsByName,
-                scope,
-            ).filter((detection) => detection.configuration === 'postgres'),
+            detectConfigurations({ root: sandbox.path, files: repository.files, dependencyFiles: [] }, scope).filter(
+                (detection) => detection.configuration === 'postgres',
+            ),
         ).toStrictEqual(detected ? [{ configuration: 'postgres', group: 'database', evidence: owned }] : []);
         expect(
-            detectConfigurations(
-                { root: sandbox.path, files: repository.files, dependencyFiles: [] },
-                configurationsByName,
-                'other',
-            ).find((detection) => detection.configuration === 'postgres'),
+            detectConfigurations({ root: sandbox.path, files: repository.files, dependencyFiles: [] }, 'other').find(
+                (detection) => detection.configuration === 'postgres',
+            ),
         ).toStrictEqual({ configuration: 'postgres', group: 'database', evidence: 'other/prisma/schema.prisma' });
     },
 );
@@ -150,10 +126,9 @@ test.each([...MKDOCS_CASES])('mkdocs is detected from $name: $detected', async (
     await using sandbox = await createGitSandbox({ [path]: source });
     const repository = await readTestRepository(sandbox.path);
     expect(
-        detectConfigurations(
-            { root: sandbox.path, files: repository.files, dependencyFiles: [] },
-            readConfigurations(),
-        ).filter((detection) => detection.configuration === 'mkdocs'),
+        detectConfigurations({ root: sandbox.path, files: repository.files, dependencyFiles: [] }).filter(
+            (detection) => detection.configuration === 'mkdocs',
+        ),
     ).toStrictEqual(detected ? [{ configuration: 'mkdocs', group: 'framework', evidence: path }] : []);
 });
 
@@ -172,33 +147,23 @@ test('Testing Library is detected only in the scope that declares it', async () 
         ['child', 'neighbor'].map((scope) =>
             detectConfigurations(
                 { root: sandbox.path, files: session.repository.files, dependencyFiles: projects },
-                readConfigurations(),
                 scope,
             ).find((row) => row.configuration === 'testing-library'),
         ),
     ).toMatchObject([{ evidence: `${dependency} in child/package.json` }, undefined]);
 });
 
-test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its project', async (row) => {
+test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection', async (row) => {
     await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({ engines: { [row.runtime]: '>=1' } }),
-        'api/package.json': JSON.stringify(row.package),
-        'api/entry.js': row.source,
+        'package.json': JSON.stringify(row.package),
+        'entry.js': row.source,
         [GSPOT_PATHS.npmProject]: JSON.stringify('toolProjectPackageJson' in row ? row.toolProjectPackageJson : {}),
     });
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
-    const configuration = buildConfiguration('runtime', {
-        group: 'general',
-        tables: `[detect]\nruntimes = ["${row.runtime}"]\n`,
-    });
-    const detected = detectConfigurations(
-        { root: sandbox.path, files: repository.files, dependencyFiles },
-        new Map([['runtime', configuration]]),
-        'api',
-    );
-    expect(detected.map(({ configuration }) => configuration)).toStrictEqual(row.detected ? ['runtime'] : []);
+    const { detect } = buildConfiguration('runtime', { tables: `[detect]\nruntimes = ["${row.runtime}"]\n` });
+    expect(detectConditions([detect], repository.files, dependencyFiles).has(detect)).toBe(row.detected);
 });
 
 test('site is detected from a sitemap.xml in any folder', async () => {
@@ -216,22 +181,19 @@ test('site detection excludes a server framework even when a sitemap is present'
 
 test('a favicon manifest alone does not select the static site checks', () => {
     expect(
-        detectConfigurations(
-            {
-                root: process.cwd(),
-                files: [
-                    {
-                        path: 'public/site.webmanifest',
-                        kind: 'source' as const,
-                        kindOrigin: SOURCE_KIND.origin,
-                        tags: ['text'],
-                        executable: false,
-                        size: 1,
-                    },
-                ],
-                dependencyFiles: [],
-            },
-            readConfigurations(),
-        ).map(({ configuration }) => configuration),
+        detectConfigurations({
+            root: process.cwd(),
+            files: [
+                {
+                    path: 'public/site.webmanifest',
+                    kind: 'source' as const,
+                    kindOrigin: SOURCE_KIND.origin,
+                    tags: ['text'],
+                    executable: false,
+                    size: 1,
+                },
+            ],
+            dependencyFiles: [],
+        }).map(({ configuration }) => configuration),
     ).not.toContain('site');
 });

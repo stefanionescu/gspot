@@ -157,9 +157,7 @@ export async function readRepositorySetup(
     const root = cache.root;
     const { files } = repository;
     const paths = new Set(files.map((file) => file.path));
-    const configurationsByName = readConfigurations();
-
-    const conflictingConfigs = listConflictingConfigs(root, files, configurationsByName.values());
+    const conflictingConfigs = listConflictingConfigs(root, files, readConfigurations().values());
     const { hooks } = await readHooks({ root });
     return {
         conflictingConfigs: new Map(

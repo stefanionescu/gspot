@@ -2,7 +2,6 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { setKey, addScopeTable } from '#cli/settings/edit.ts';
 import type { Scope, TomlTable } from '#cli/types/settings.ts';
 import { TWO_WORDS } from '#tests/config/setup/configurations.ts';
@@ -122,7 +121,6 @@ test.each([...PROJECT_SCOPE_CASES])('scope $scope selects $name: $selected', ({ 
             ),
         },
         scope,
-        readConfigurations(),
     ).map((configuration) => configuration.name);
     expect(names.includes(name)).toBe(selected);
 });

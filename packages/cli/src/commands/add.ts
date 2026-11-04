@@ -25,7 +25,7 @@ function restoreConfigurations(table: TomlTable, added: string[]): void {
 }
 
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    const { root, input, scope, scopeTable, scopeSettings, selected, configurationsByName, context } =
+    const { root, input, scope, scopeTable, scopeSettings, selected, context } =
         await readConfigurationEditContext(options);
     if (options.configurations.every((name) => selected.includes(name))) {
         const verb = options.configurations.length === 1 ? 'is' : 'are';
@@ -38,9 +38,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     scopeTable['configurations'] = list;
     restoreConfigurations(scopeTable, options.configurations);
     const { repository } = context.session;
-    const newlySelected = selectConfigurations(added, configurationsByName).filter(
-        ({ name }) => !selected.includes(name),
-    );
+    const newlySelected = selectConfigurations(added).filter(({ name }) => !selected.includes(name));
     const detected = buildDetectedTables([{ scope, selected: newlySelected }], {
         repository,
         scopes: repository.scopeFolders,

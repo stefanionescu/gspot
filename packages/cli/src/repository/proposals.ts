@@ -7,14 +7,22 @@ import { detectConfigurations, listAutomaticConfigurations } from '#cli/reposito
 import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/manifests/select.ts';
 
 import type {
+    Repository,
     ScopeFolder,
     ConfigurationOrigin,
-    ConfigurationRequest,
     ConfigurationChoices,
     ConfigurationEvidence,
     ProposedConfigurations,
     ConfigurationSelection,
 } from '#cli/types/repository.ts';
+
+type ConfigurationRequest = {
+    repository: Repository;
+    options: {
+        configurations?: string[] | undefined;
+        template?: { configurations: string[]; removed: string[] } | undefined;
+    };
+};
 
 function selectRootConfigurations(
     request: ConfigurationRequest,
@@ -26,7 +34,7 @@ function selectRootConfigurations(
     const root = selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []);
     const detectedConfigurations = detected
         .filter((evidence) => {
-            const configuration = request.configurationsByName.get(evidence.configuration);
+            const configuration = readConfigurations().get(evidence.configuration);
             if (!configuration) return false;
             const { group } = configuration;
             return !hasScopes || group === 'general' || group === 'language' || root.includes(configuration.name);
@@ -54,16 +62,16 @@ function selectScopeConfigurations(
                   ),
               }
             : request.repository;
-    const names = detectConfigurations(repository, request.configurationsByName, scopeFolder.path)
+    const names = detectConfigurations(repository, scopeFolder.path)
         .filter((evidence) => {
-            const configuration = request.configurationsByName.get(evidence.configuration);
+            const configuration = readConfigurations().get(evidence.configuration);
             return configuration !== undefined && configuration.group !== 'general';
         })
         .map((evidence) => evidence.configuration);
     const atRoot = new Set(rootNames);
     return names.filter(
         (name) =>
-            (!atRoot.has(name) || request.configurationsByName.get(name)?.group !== 'language') &&
+            (!atRoot.has(name) || readConfigurations().get(name)?.group !== 'language') &&
             request.options.template?.removed.includes(name) !== true,
     );
 }
@@ -91,21 +99,21 @@ function getConfigurationOrigin(name: string, sources: ConfigurationChoices): Co
 /**
 Select configurations from the files, the named configurations, and the project scopes.
 
-@param request the repository, the shipped configurations, and the flags.
+@param request the repository and the flags.
 */
 export function selectProposedConfigurations(request: ConfigurationRequest): ProposedConfigurations {
-    const { repository, configurationsByName, options } = request;
-    assertConfigurationsExist(options.configurations ?? [], configurationsByName);
+    const { repository, options } = request;
+    assertConfigurationsExist(options.configurations ?? []);
     const scopes = repository.scopeFolders;
     const hasScopes = scopes.length > 1;
-    const detected = detectConfigurations(repository, configurationsByName);
+    const detected = detectConfigurations(repository);
     const proposedRoot = selectRootConfigurations(request, detected);
     const scopeConfigurations = new Map<string, string[]>();
     const rootDetected = new Set(
         selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []),
     );
     const heldAtRoot = proposedRoot.filter((name) => {
-        const configuration = getRequired(configurationsByName, name, 'configuration');
+        const configuration = getRequired(readConfigurations(), name, 'configuration');
         return (
             configuration.group === 'general' ||
             !hasScopes ||
@@ -119,10 +127,9 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
     const inScopes = new Set(scopeConfigurations.values().toArray().flat());
     const named = new Set(options.configurations);
     const template = new Set(options.template?.configurations);
-    const automatic = new Set(listAutomaticConfigurations(configurationsByName, repository));
+    const automatic = new Set(listAutomaticConfigurations(repository));
     const rootNames = expandSuggestions(
         [...proposedRoot, ...inScopes],
-        configurationsByName,
         new Set(detected.map((evidence) => evidence.configuration)),
     ).filter(
         (name) =>
@@ -130,7 +137,7 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
             (!automatic.has(name) || named.has(name) || template.has(name)),
     );
     const selectedNames = new Set(
-        selectConfigurations([...rootNames, ...proposedRoot, ...inScopes, ...automatic], configurationsByName).map(
+        selectConfigurations([...rootNames, ...proposedRoot, ...inScopes, ...automatic]).map(
             (configuration) => configuration.name,
         ),
     );
@@ -143,7 +150,7 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
     const origins = new Map(
         [...selectedNames].map((name) => [
             name,
-            configurationsByName.get(name)?.always_selected === true && !named.has(name) && !template.has(name)
+            readConfigurations().get(name)?.always_selected === true && !named.has(name) && !template.has(name)
                 ? ('always' as const)
                 : getConfigurationOrigin(name, sources),
         ]),
@@ -159,11 +166,7 @@ Find newly detected configurations in each project scope, respecting removals.
 export function listDetectedAdditions(
     session: ConfigurationSelection,
 ): Array<{ scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }> {
-    const proposed = selectProposedConfigurations({
-        repository: session.repository,
-        configurationsByName: readConfigurations(),
-        options: {},
-    });
+    const proposed = selectProposedConfigurations({ repository: session.repository, options: {} });
     return [
         { scope: '', names: proposed.rootNames },
         ...[...proposed.scopeConfigurations].map(([scope, names]) => ({ scope, names })),

@@ -4,7 +4,6 @@ import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { LEADING_COMMENTS } from '#cli/config/generation.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
@@ -13,11 +12,7 @@ import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
 import type { Repository, ProposedConfigurations } from '#cli/types/repository.ts';
 
-function buildSettingsTable(
-    draft: SettingsDraft,
-    repository: Repository,
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): TomlTable {
+function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlTable {
     const selected = {
         configurations: draft.configurations,
         removed_configurations: [],
@@ -26,7 +21,7 @@ function buildSettingsTable(
     const scopes = ['', ...draft.scopes.map((each) => each.path)];
     const scopeConfigurations = scopes.map((scopePath) => ({
         scope: scopePath,
-        selected: selectConfigurationsForScope(selected, scopePath, configurationsByName),
+        selected: selectConfigurationsForScope(selected, scopePath),
     }));
     const detected = buildDetectedTables(scopeConfigurations, { repository, scopes: draft.scopes });
     const tables = new Map(
@@ -60,15 +55,10 @@ Build the gspot.toml text for a settings draft.
 
 @param draft the settings choices.
 @param repository the tracked source files.
-@param configurationsByName the configurations to choose from.
 @returns the TOML text, with the preface and the comments of the copied keys.
 */
-export function buildInitSettings(
-    draft: SettingsDraft,
-    repository: Repository,
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): string {
-    const document = buildSettingsTable(draft, repository, configurationsByName);
+export function buildInitSettings(draft: SettingsDraft, repository: Repository): string {
+    const document = buildSettingsTable(draft, repository);
     delete document['ci'];
     return `${formatSettingsPreface()}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }

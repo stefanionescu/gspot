@@ -4,7 +4,6 @@ import { setKey } from '#cli/settings/edit.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { statSync, readFileSync } from 'node:fs';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { LOCAL_RECORDS } from '#cli/config/commands/edits.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
@@ -134,7 +133,6 @@ export function readTemplate(file: string, cwd: string): Template {
     const lines = result.success
         ? listUnknownConfigurations(
               result.data.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
-              readConfigurations(),
           ).map((error) => formatSettingsError(error, syntax, file))
         : result.error.issues
               .flatMap((issue) => formatSettingsIssue(issue, syntax))

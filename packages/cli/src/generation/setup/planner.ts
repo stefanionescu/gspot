@@ -9,11 +9,11 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { readCarryover } from '#cli/generation/setup/carryover.ts';
@@ -24,6 +24,7 @@ import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
 import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
+import type { Repository, ConflictingConfig } from '#cli/types/repository.ts';
 import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/settings.ts';
 import { readConflictingConfigs, deleteConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
@@ -34,9 +35,17 @@ import type {
     ApplyReport,
     InitOptions,
     InitPlanning,
-    SettingsPlan,
+    SettingsDraft,
     PlannedSettings,
 } from '#cli/types/generation.ts';
+
+type SettingsPlan = {
+    root: string;
+    draft: SettingsDraft;
+    repository: Repository;
+    conflictingConfigs: ConflictingConfig[];
+    sessionOptions: Pick<SessionOptions, 'cache' | 'listing'>;
+};
 
 function choosePin(root: string, planned: Session): Pick<InitPlanning, 'session' | 'pinPath'> {
     if (readGspotPin(root) !== undefined) return { session: planned, pinPath: undefined };
@@ -49,8 +58,8 @@ function choosePin(root: string, planned: Session): Pick<InitPlanning, 'session'
 }
 
 async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
-    const { root, draft, repository, configurationsByName, conflictingConfigs, sessionOptions } = plan;
-    const first = readSettings(buildInitSettings(draft, repository, configurationsByName), root);
+    const { root, draft, repository, conflictingConfigs, sessionOptions } = plan;
+    const first = readSettings(buildInitSettings(draft, repository), root);
     const session = await openSession(root, { settings: first, ...sessionOptions });
     const configurations = session.toolConfigurations;
     const carryover = await readCarryover({
@@ -64,7 +73,7 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
         trackedPaths: draft.trackedPaths,
         templateIgnore: (draft.template?.table['ignore'] ?? []) as TomlTable[],
     });
-    const settingsText = buildInitSettings({ ...draft, carried: carryover.settings }, repository, configurationsByName);
+    const settingsText = buildInitSettings({ ...draft, carried: carryover.settings }, repository);
     const settings = readSettings(settingsText, root);
     return { carryover, settingsText, settings, planned: await openSession(root, { settings, ...sessionOptions }) };
 }
@@ -78,10 +87,9 @@ Read the repository and work out what init writes, replaces, and leaves. It chan
 */
 export async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const cache = createRunCache(root);
-    const configurationsByName = readConfigurations();
     const listing = await listRepositoryFiles(cache);
-    const repository = await readRepository(cache, listing, { generatedPaths: [], scopes: [], configurationsByName });
-    const proposed = selectProposedConfigurations({ repository, configurationsByName, options });
+    const repository = await readRepository(cache, listing, { generatedPaths: [], scopes: [] });
+    const proposed = selectProposedConfigurations({ repository, options });
     const repositorySetup = await readRepositorySetup(cache, repository);
     const prettierScripts = await readPrettierScripts(root, repository.files, proposed.scopes);
     const trackedPaths = [...includeParentFolders(repository.files.map(({ path }) => path))];
@@ -89,7 +97,6 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         root,
         draft: buildSettingsDraft(proposed, options, { prettierScripts, trackedPaths }),
         repository,
-        configurationsByName,
         conflictingConfigs: repositorySetup.conflictingConfigs,
         sessionOptions: { cache, listing },
     });
@@ -125,7 +132,6 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
             repositorySetup,
             owned: detected.filter((tool) => tools.has(tool)),
             unowned: detected.filter((tool) => !tools.has(tool)),
-            configurationsByName,
         },
         session,
         generated,

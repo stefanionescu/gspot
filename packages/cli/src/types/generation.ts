@@ -1,5 +1,4 @@
 import type { z } from 'zod';
-import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { TextRange, FileContents } from '#cli/types/system.ts';
@@ -149,15 +148,6 @@ export type CarryoverInput = {
     templateIgnore: readonly TomlTable[];
 };
 
-export type SettingsPlan = {
-    root: string;
-    draft: SettingsDraft;
-    repository: Repository;
-    configurationsByName: ReadonlyMap<string, Configuration>;
-    conflictingConfigs: ConflictingConfig[];
-    sessionOptions: Pick<SessionOptions, 'cache' | 'listing'>;
-};
-
 export type PlannedSettings = { carryover: Carryover; settingsText: string; settings: Settings; planned: Session };
 
 export type RuleState = { on: boolean; options: unknown[] };
@@ -231,7 +221,6 @@ export type DetectionSummary = {
     repositorySetup: RepositorySetup;
     owned: string[];
     unowned: string[];
-    configurationsByName: ReadonlyMap<string, Configuration>;
 };
 
 export type InitFileRow = { path: string; note: string };

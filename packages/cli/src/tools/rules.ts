@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import { getTool } from '#cli/tools/pins.ts';
 import { isInside } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { readFileSync, realpathSync } from 'node:fs';
 import { findText } from '#cli/system/files/reads.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -14,7 +15,6 @@ import { join, dirname, resolve, relative } from 'node:path';
 import { hasValePackages } from '#cli/tools/installers/vale.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
 import type { LintRuleDocs, RuleToolSearch, RuleDocsOptions } from '#cli/types/tools.ts';
@@ -128,17 +128,16 @@ async function readSwiftlintRule(
     if (result.end !== 'exited')
         throw new GspotError('tool', `SwiftLint could not read rule ${identifier}. ${result.stderr.trim()}`);
     if (result.code !== 0) return undefined;
-    const url = findRulePage('swiftlint', identifier, readConfigurations());
+    const url = findRulePage('swiftlint', identifier);
     return { description: result.stdout.trim(), ...(url !== undefined && { url }) };
 }
 
 function readManifestRuleDocs(tool: string, identifier: string): LintRuleDocs | undefined {
     if (tool === 'shellcheck' && !SHELLCHECK_RULE_IDENTIFIER.test(identifier)) return undefined;
-    const configurations = readConfigurations();
     if (
         tool === 'biome' &&
         (!identifier.startsWith('lint/') ||
-            !configurations
+            !readConfigurations()
                 .values()
                 .some((configuration) =>
                     configuration.checks.some(
@@ -147,14 +146,14 @@ function readManifestRuleDocs(tool: string, identifier: string): LintRuleDocs | 
                 ))
     )
         return undefined;
-    const url = findRulePage(tool, identifier, configurations);
+    const url = findRulePage(tool, identifier);
     return url === undefined ? undefined : { url };
 }
 
 async function readEslintPluginRule(root: string, identifier: string): Promise<unknown> {
     const prefix = extractRulePrefix(identifier);
     if (prefix === undefined) return undefined;
-    const plugin = findRulePlugin(prefix, readConfigurations());
+    const plugin = findRulePlugin(prefix);
     const npm = plugin?.installers['npm'];
     if (npm === undefined) return undefined;
     const installed = await importInstalledTool(root, npm.name);
@@ -163,24 +162,20 @@ async function readEslintPluginRule(root: string, identifier: string): Promise<u
     return findValueAt(rules, [identifier.slice(prefix.length + 1)]);
 }
 
-function findRulePlugin(prefix: string, configurationsByName: ReadonlyMap<string, Configuration>): Tool | undefined {
-    return configurationsByName
+function findRulePlugin(prefix: string): Tool | undefined {
+    return readConfigurations()
         .values()
         .flatMap((configuration) => configuration.tools)
         .find((pin) => pin.rule_prefix === prefix);
 }
 
-function findRulePage(
-    tool: string,
-    rule: string,
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): string | undefined {
+function findRulePage(tool: string, rule: string): string | undefined {
     const prefix = extractRulePrefix(rule);
     if (prefix === undefined) {
-        const pin = getTool(configurationsByName.values(), tool);
+        const pin = getTool(readConfigurations().values(), tool);
         return pin.rule_url?.replace(RULE_PLACEHOLDER, () => rule);
     }
-    const plugin = findRulePlugin(prefix, configurationsByName);
+    const plugin = findRulePlugin(prefix);
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, () => rule.slice(prefix.length + 1));
 }
 
@@ -283,5 +278,5 @@ export async function readLintRuleDocs(
     if (readRule !== undefined) return readRule();
     if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool)) return readManifestRuleDocs(tool, identifier);
     const rule = await readInstalledRule(root, tool, identifier);
-    return rule === undefined ? undefined : getRuleMetadata(rule, findRulePage(tool, identifier, readConfigurations()));
+    return rule === undefined ? undefined : getRuleMetadata(rule, findRulePage(tool, identifier));
 }

@@ -12,13 +12,6 @@ export type ShippedRule = {
 
 export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
 
-export type RequirementWalk = {
-    configurationsByName: ReadonlyMap<string, Configuration>;
-    errors: string[];
-    order: Configuration[];
-    seen: Set<string>;
-};
-
 export type ManifestSource = { folder: string; text: string };
 
 export type ParsedManifest = z.infer<typeof manifestSchema>;

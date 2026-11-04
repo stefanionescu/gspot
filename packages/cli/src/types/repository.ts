@@ -27,15 +27,6 @@ export type ProposedConfigurations = {
     origins: Map<string, ConfigurationOrigin>;
 };
 
-export type ConfigurationRequest = {
-    repository: Repository;
-    configurationsByName: ReadonlyMap<string, Configuration>;
-    options: {
-        configurations?: string[] | undefined;
-        template?: { configurations: string[]; removed: string[] } | undefined;
-    };
-};
-
 export type ConfigurationChoices = {
     template: Set<string>;
     named: Set<string>;
@@ -147,12 +138,6 @@ export type ConfigurationEvidence = {
 };
 
 export type DetectionEvidence = { evidence: string; count?: number };
-
-export type RepositoryReadOptions = {
-    generatedPaths: GeneratedPaths[];
-    scopes: Array<Pick<ScopeFolder, 'path' | 'configurations'>>;
-    configurationsByName: ReadonlyMap<string, Configuration>;
-};
 
 export type RepositoryListing = Pick<Repository, 'root' | 'index' | 'attributes' | 'unreadablePaths'> & {
     files: Array<ListedFile & { prefix: Buffer }>;

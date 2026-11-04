@@ -1,16 +1,17 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { DOCS_PATHS, SOURCE_FILE_GROUPS } from '#cli/config/manifests.ts';
-import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/manifests.ts';
+import { type Configuration, type WrittenConfiguration } from '#cli/types/manifests.ts';
+
+type RequirementWalk = { errors: string[]; order: Configuration[]; seen: Set<string> };
 
 function addRequiredConfigurations(walk: RequirementWalk, name: string): void {
     if (walk.seen.has(name)) return;
     walk.seen.add(name);
-    const configuration = walk.configurationsByName.get(name);
+    const configuration = readConfigurations().get(name);
     if (!configuration) {
-        walk.errors.push(
-            ...listUnknownConfigurations([{ name }], walk.configurationsByName).map(({ message }) => message),
-        );
+        walk.errors.push(...listUnknownConfigurations([{ name }]).map(({ message }) => message));
         return;
     }
     for (const required of configuration.requires) addRequiredConfigurations(walk, required);
@@ -21,19 +22,10 @@ function addRequiredConfigurations(walk: RequirementWalk, name: string): void {
 Resolve configuration names to configurations in order, and throw for unknown names.
 
 @param names the names to resolve.
-@param configurationsByName every configuration.
 @returns the configurations, requirements first, in order of first mention.
 */
-export function selectConfigurations(
-    names: string[],
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): Configuration[] {
-    const walk: RequirementWalk = {
-        configurationsByName,
-        errors: [],
-        order: [],
-        seen: new Set(),
-    };
+export function selectConfigurations(names: string[]): Configuration[] {
+    const walk: RequirementWalk = { errors: [], order: [], seen: new Set() };
     for (const configurationName of names) addRequiredConfigurations(walk, configurationName);
     if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
     return walk.order;
@@ -81,15 +73,14 @@ export function isConfigurationSelected(
 Find the unknown configuration names, and keep their order and location.
 
 @param written the requested names, with their original fields.
-@param configurationsByName the shipped configurations.
 */
 export function listUnknownConfigurations<Written extends Pick<WrittenConfiguration, 'name'>>(
     written: readonly Written[],
-    configurationsByName: ReadonlyMap<string, Configuration>,
 ): Array<Written & { message: string }> {
-    const available = configurationsByName.keys().toArray();
+    const configurations = readConfigurations();
+    const available = configurations.keys().toArray();
     return written
-        .filter(({ name }) => !configurationsByName.has(name))
+        .filter(({ name }) => !configurations.has(name))
         .map((missing) => ({
             ...missing,
             message: `There is no configuration called ${missing.name}.${formatSimilarNames(missing.name, available)} See ${DOCS_PATHS.configurations} for the available configurations.`,
@@ -100,13 +91,9 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
 Refuse explicit edits to configurations that gspot selects itself.
 
 @param names the configurations that the command edits.
-@param configurationsByName the shipped configurations
 */
-export function assertConfigurationsEditable(
-    names: string[],
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): void {
-    const name = names.find((each) => configurationsByName.get(each)?.always_selected === true);
+export function assertConfigurationsEditable(names: string[]): void {
+    const name = names.find((each) => readConfigurations().get(each)?.always_selected === true);
     if (name !== undefined)
         throw new GspotError(
             'arguments',
@@ -118,16 +105,9 @@ export function assertConfigurationsEditable(
 Refuse every unknown configuration named by a command.
 
 @param names the requested configuration names.
-@param configurationsByName every available configuration.
 */
-export function assertConfigurationsExist(
-    names: string[],
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): void {
-    const unknown = listUnknownConfigurations(
-        names.map((name) => ({ name })),
-        configurationsByName,
-    );
+export function assertConfigurationsExist(names: string[]): void {
+    const unknown = listUnknownConfigurations(names.map((name) => ({ name })));
     if (unknown.length > 0) throw new GspotError('arguments', unknown.map(({ message }) => message).join('\n'));
 }
 
@@ -135,21 +115,17 @@ export function assertConfigurationsExist(
 Include suggested configurations when their detection has evidence or they need none.
 
 @param names the configurations already chosen.
-@param configurationsByName every shipped configuration.
 @param detected the configurations with detection evidence.
 @returns chosen names and applicable suggestions, once each.
 */
-export function expandSuggestions(
-    names: string[],
-    configurationsByName: ReadonlyMap<string, Configuration>,
-    detected: Set<string>,
-): string[] {
-    const suggestions = names.flatMap((name) => configurationsByName.get(name)?.suggests ?? []);
+export function expandSuggestions(names: string[], detected: Set<string>): string[] {
+    const configurations = readConfigurations();
+    const suggestions = names.flatMap((name) => configurations.get(name)?.suggests ?? []);
     return [
         ...new Set([
             ...names,
             ...suggestions.filter((name) => {
-                const configuration = configurationsByName.get(name);
+                const configuration = configurations.get(name);
                 const hasDetection =
                     configuration !== undefined &&
                     Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0);

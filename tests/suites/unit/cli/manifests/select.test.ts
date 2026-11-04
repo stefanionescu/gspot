@@ -1,25 +1,15 @@
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
-import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 
 test('adds required configurations, dependencies first, in order of first mention', () => {
-    const configurationsByName = new Map([
-        ['app', buildConfiguration('app', { requires: ['client', 'server'] })],
-        ['client', buildConfiguration('client', { requires: ['base'] })],
-        ['server', buildConfiguration('server', { requires: ['base'] })],
-        ['base', buildConfiguration('base')],
-    ]);
-    const ids = selectConfigurations(['app', 'client'], configurationsByName).map(
-        (configuration) => configuration.name,
-    );
-    expect(ids).toStrictEqual(['base', 'client', 'server', 'app']);
+    const ids = selectConfigurations(['nextjs', 'react']).map((configuration) => configuration.name);
+    expect(ids).toStrictEqual(['javascript', 'typescript', 'react', 'react-dom', 'nextjs']);
 });
 
 test('an unknown configuration names the near matches', () => {
-    expect(() => selectConfigurations(['bassh'], readConfigurations())).toThrow(
+    expect(() => selectConfigurations(['bassh'])).toThrow(
         matchFields<GspotError>({
             code: 'arguments',
             message:

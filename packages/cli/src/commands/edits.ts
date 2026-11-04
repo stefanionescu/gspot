@@ -1,6 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { listCheckIds } from '#cli/manifests/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
@@ -10,7 +11,6 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { PATHS_OPTION } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import type { Session, Generation } from '#cli/types/tools.ts';
 import type { Files, CommandResult } from '#cli/types/system.ts';
@@ -18,7 +18,6 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { BASELINE_STAGES, BASELINE_EXEMPT_CHECK } from '#cli/config/engine.ts';
@@ -189,20 +188,18 @@ export async function readConfigurationEditContext(options: ConfigurationsOption
     scopeTable: TomlTable;
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
     selected: string[];
-    configurationsByName: ReadonlyMap<string, Configuration>;
     context: SettingsEditContext;
 }> {
     const context = await readSettingsEditContext(options.root, options.scope);
     const { root, edit: input, settings, scope, scopeTable } = context;
-    const configurationsByName = readConfigurations();
-    assertConfigurationsExist(options.configurations, configurationsByName);
-    assertConfigurationsEditable(options.configurations, configurationsByName);
+    assertConfigurationsExist(options.configurations);
+    assertConfigurationsEditable(options.configurations);
     const scopeSettings =
         scope === '' ? settings : (settings.scopes.get(scope) ?? { configurations: [], removed_configurations: [] });
     const selected = selectScope(scope, context.session.scopes).configurations.map(
         (configuration) => configuration.name,
     );
-    return { root, input, scope, scopeTable, scopeSettings, selected, configurationsByName, context };
+    return { root, input, scope, scopeTable, scopeSettings, selected, context };
 }
 
 /**

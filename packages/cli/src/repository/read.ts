@@ -5,6 +5,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
@@ -27,8 +28,8 @@ import type {
     ScopeFolder,
     TrackedFile,
     UntrackedFiles,
+    GeneratedPaths,
     RepositoryListing,
-    RepositoryReadOptions,
 } from '#cli/types/repository.ts';
 import {
     SET_VALUES,
@@ -43,6 +44,11 @@ import {
     GIT_UNTRACKED_FILES_ARGUMENTS,
     GIT_CHECK_ATTRIBUTES_ARGUMENTS,
 } from '#cli/config/repository/files.ts';
+
+type RepositoryReadOptions = {
+    generatedPaths: GeneratedPaths[];
+    scopes: Array<Pick<ScopeFolder, 'path' | 'configurations'>>;
+};
 
 async function readAttributes(root: string, paths: string[]): Promise<Map<string, Record<string, string>>> {
     if (paths.length === 0) return new Map();
@@ -94,12 +100,11 @@ Classify the listed files, and read the dependency files and the written and dis
 @param options what the read needs.
 @param options.generatedPaths the generated and vendored path rules.
 @param options.scopes the written scope tables.
-@param options.configurationsByName the shipped configurations.
 */
 export async function readRepository(
     cache: RunCache,
     listing: RepositoryListing,
-    { generatedPaths, scopes, configurationsByName }: RepositoryReadOptions,
+    { generatedPaths, scopes }: RepositoryReadOptions,
 ): Promise<Repository> {
     const { root, index, attributes, unreadablePaths } = listing;
     const files = openFiles(root);
@@ -113,7 +118,7 @@ export async function readRepository(
         tracked.push(file);
     }
     const dependencyFiles = await readDependencyFiles(cache, tracked);
-    const discovered = detectScopeFolders(tracked, dependencyFiles, configurationsByName.values());
+    const discovered = detectScopeFolders(tracked, dependencyFiles, readConfigurations().values());
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes

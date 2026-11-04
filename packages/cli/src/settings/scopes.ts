@@ -102,14 +102,9 @@ Select the configurations of the root and each parent scope, each once, in order
 
 @param selected the configuration lists as written.
 @param scopePath the folder to select for.
-@param configurationsByName every configuration.
 */
-export function selectConfigurationsForScope(
-    selected: SelectedConfigurations,
-    scopePath: string,
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): Configuration[] {
-    const automatic = listAutomaticConfigurations(configurationsByName);
+export function selectConfigurationsForScope(selected: SelectedConfigurations, scopePath: string): Configuration[] {
+    const automatic = listAutomaticConfigurations();
     const choices = new Set<string>([...selected.configurations, ...automatic]);
     const tables = [
         selected,
@@ -122,7 +117,7 @@ export function selectConfigurationsForScope(
         for (const configuration of table.configurations) choices.add(configuration);
         for (const removed of table.removed_configurations) choices.delete(removed);
     }
-    return selectConfigurations([...choices], configurationsByName);
+    return selectConfigurations([...choices]);
 }
 
 /**

@@ -19,7 +19,6 @@ import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/se
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'suggested' | 'undetected'> {
     const { repository, settings } = session;
-    const configurationsByName = readConfigurations();
     const selectedConfigurations = listSelectedConfigurations(session.scopes);
     const selected = new Set(selectedConfigurations.map((configuration) => configuration.name));
     const choices = [
@@ -29,11 +28,11 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'sugg
     const undetected = choices
         .filter(({ configurations: names }) => names.length > 0)
         .flatMap(({ path, configurations: names }) => {
-            const evidence = detectConfigurations(repository, configurationsByName, path);
+            const evidence = detectConfigurations(repository, path);
             const found = new Set(evidence.map((detection) => detection.configuration));
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
             return names.flatMap((name) => {
-                const configuration = configurationsByName.get(name);
+                const configuration = readConfigurations().get(name);
                 if (configuration === undefined || configuration.group === 'general' || found.has(name)) return [];
                 const hasDetectConditions = Object.values(configuration.detect).some(
                     (patterns) => Object.keys(patterns).length > 0,
@@ -51,7 +50,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'sugg
     const detectedNames = new Set(listDetectedAdditions(session).flatMap(({ configurations }) => configurations));
     const rows = new Map<string, Suggestions['suggested'][number]>();
     for (const configuration of selectedConfigurations) {
-        const suggested = expandSuggestions([configuration.name], configurationsByName, detectedNames);
+        const suggested = expandSuggestions([configuration.name], detectedNames);
         for (const name of suggested)
             if (!selected.has(name) && !rows.has(name))
                 rows.set(name, {

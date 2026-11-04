@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { buildSettings } from '#cli/settings/read.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import type { WrittenTable } from '#cli/types/generation.ts';
 import { DETECTED_SETTINGS } from '#cli/config/generation.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
@@ -96,7 +95,6 @@ Drop written values that equal the default, but keep a scope override of its par
 @param settings the ordered draft, whose settings give the defaults.
 */
 export function stripDefaults(settings: TomlTable): TomlTable {
-    const configurationsByName = readConfigurations();
     const allSettings = buildSettings(settingsSchema.parse(settings), settings);
     const level = settingsSchema.shape.level.parse(settings['level']);
     const scopes = ((settings['scope'] ?? []) as TomlTable[]).map((table) => ({
@@ -121,20 +119,14 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     const root = {
         scope: '',
         table: settings,
-        availableSettings: buildAvailableSettings(
-            selectConfigurationsForScope(selected, '', configurationsByName),
-            level,
-        ),
+        availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, ''), level),
     };
     const tables = [
         root,
         ...scopes.map<WrittenTable>(({ path, table }) => ({
             scope: path,
             table,
-            availableSettings: buildAvailableSettings(
-                selectConfigurationsForScope(selected, path, configurationsByName),
-                level,
-            ),
+            availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, path), level),
         })),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.availableSettings.defaults.delete(key);

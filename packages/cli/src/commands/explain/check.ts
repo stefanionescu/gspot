@@ -47,10 +47,9 @@ function listCheckIgnores(session: Session | undefined, checkId: string): CheckI
 function buildCheckFacts(
     check: Check,
     configuration: Configuration | undefined,
-    configurationsByName: ReadonlyMap<string, Configuration>,
     session: Session | undefined,
 ): CheckFacts {
-    const reference = describeCheck(check, configurationsByName.values().toArray());
+    const reference = describeCheck(check, readConfigurations().values().toArray());
     const toolName = reference.toolName;
     const installedRules = new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path));
     const settings = (configuration === undefined ? [] : (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []))
@@ -63,7 +62,7 @@ function buildCheckFacts(
                   .filter((file) => installedRules.has(file.path))
                   .map((file) => file.path);
     const crashPattern =
-        toolName === undefined ? undefined : getTool(configurationsByName.values(), toolName).crash_pattern;
+        toolName === undefined ? undefined : getTool(readConfigurations().values(), toolName).crash_pattern;
     return {
         settings,
         ruleFiles,
@@ -179,11 +178,10 @@ function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
 
 function buildCheckExplanation(
     found: Pick<ScopeCheck, 'check' | 'configuration'>,
-    configurationsByName: ReadonlyMap<string, Configuration>,
     session: Session | undefined,
 ): CheckExplanation {
     const { check, configuration } = found;
-    const described = buildCheckFacts(check, configuration, configurationsByName, session);
+    const described = buildCheckFacts(check, configuration, session);
     const selected =
         session === undefined || configuration === undefined
             ? undefined
@@ -218,13 +216,12 @@ Explain a shipped check or a command check.
 @returns undefined when no check has the ID.
 */
 export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
-    const configurationsByName = readConfigurations();
     const commandCheck = session?.settings.commandChecks[checkId];
     const found: Pick<ScopeCheck, 'check' | 'configuration'> | undefined =
-        listChecksById(configurationsByName.values()).get(checkId) ??
+        listChecksById(readConfigurations().values()).get(checkId) ??
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;
-    const facts = buildCheckExplanation(found, configurationsByName, session);
+    const facts = buildCheckExplanation(found, session);
     return { kind: 'check', subject: checkId, text: formatCheckExplanation(facts), facts };
 }
 

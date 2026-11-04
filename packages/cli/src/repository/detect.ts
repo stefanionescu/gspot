@@ -1,5 +1,6 @@
 import { formatCount } from '#cli/system/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
@@ -152,22 +153,20 @@ const EVIDENCE_FINDERS = [
 Propose configurations from the files and the dependencies, with the evidence for each.
 
 @param repository the inventory and parsed package declarations.
-@param configurationsByName every configuration manifest.
 @param scopePath the folder, '' for the root.
 */
 export function detectConfigurations(
     repository: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
-    configurationsByName: ReadonlyMap<string, Configuration>,
     scopePath = '',
 ): ConfigurationEvidence[] {
     const { root, files, dependencyFiles } = repository;
-    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, configurationsByName.values());
+    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, readConfigurations().values());
     const contents = buildScopeContents(
         files.filter((file) => !toolOnlyPackages.has(file.path)),
         dependencyFiles.filter((dependencyFile) => !toolOnlyPackages.has(dependencyFile.path)),
         scopePath,
     );
-    return configurationsByName
+    return readConfigurations()
         .values()
         .map((configuration) => findConfigurationEvidence(root, configuration, contents))
         .filter((evidence) => evidence !== undefined)
@@ -199,14 +198,12 @@ export function detectConditions(
 /**
 List the general configurations that gspot adds without an explicit selection.
 
-@param configurationsByName every shipped configuration
 @param repository the available inventory, if any
 */
 export function listAutomaticConfigurations(
-    configurationsByName: ReadonlyMap<string, Configuration>,
     repository?: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
 ): string[] {
-    const general = new Map([...configurationsByName].filter(([, configuration]) => configuration.group === 'general'));
+    const general = new Map([...readConfigurations()].filter(([, configuration]) => configuration.group === 'general'));
     const automatic = new Set(
         general
             .values()
@@ -214,9 +211,7 @@ export function listAutomaticConfigurations(
             .map((configuration) => configuration.name),
     );
     if (repository === undefined) return [...automatic];
-    const detected = new Set(
-        detectConfigurations(repository, configurationsByName).map(({ configuration }) => configuration),
-    );
+    const detected = new Set(detectConfigurations(repository).map(({ configuration }) => configuration));
     for (const configuration of general.values())
         if (detected.has(configuration.name)) automatic.add(configuration.name);
     return general

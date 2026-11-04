@@ -4,7 +4,6 @@ import type { RunCache } from '#cli/types/system.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { listEnabledChecks } from '#cli/engine/plan.ts';
 import { readSettingsText } from '#cli/settings/file.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
@@ -18,16 +17,12 @@ import { buildScopeSettings, selectConfigurationsForScope } from '#cli/settings/
 import type { Repository, UntrackedFiles, RepositoryListing } from '#cli/types/repository.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 
-function buildScopes(
-    settings: Settings,
-    repository: Repository,
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): Scope[] {
+function buildScopes(settings: Settings, repository: Repository): Scope[] {
     const { scopeFolders } = repository;
-    const automatic = listAutomaticConfigurations(configurationsByName, repository);
+    const automatic = listAutomaticConfigurations(repository);
     const active = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
     return scopeFolders.map((scope) => {
-        const selected = selectConfigurationsForScope(active, scope.path, configurationsByName);
+        const selected = selectConfigurationsForScope(active, scope.path);
         const available = buildAvailableSettings(selected, settings.level);
         const scopeSettings = buildScopeSettings(available, active, selected, scope.path);
         return {
@@ -42,14 +37,12 @@ function buildScopes(
 
 async function readSessionRepository({
     settings,
-    configurationsByName,
     cache,
     listing,
     untracked,
     unreadablePaths,
 }: {
     settings: Settings;
-    configurationsByName: ReadonlyMap<string, Configuration>;
     cache: RunCache;
     listing: RepositoryListing | undefined;
     untracked: UntrackedFiles | undefined;
@@ -57,10 +50,7 @@ async function readSessionRepository({
 }): Promise<Repository> {
     const listed = listing ?? (await listRepositoryFiles(cache, untracked));
     const selected = new Map(
-        ['', ...settings.scopes.keys()].map((path) => [
-            path,
-            selectConfigurationsForScope(settings, path, configurationsByName),
-        ]),
+        ['', ...settings.scopes.keys()].map((path) => [path, selectConfigurationsForScope(settings, path)]),
     );
     return readRepository(
         cache,
@@ -71,7 +61,6 @@ async function readSessionRepository({
                 path,
                 configurations: scope.configurations,
             })),
-            configurationsByName,
         },
     );
 }
@@ -117,16 +106,8 @@ export async function openSession(
         cancelSignal,
     }: SessionOptions = {},
 ): Promise<Session> {
-    const configurationsByName = readConfigurations();
-    const repository = await readSessionRepository({
-        settings,
-        configurationsByName,
-        cache,
-        listing,
-        untracked,
-        unreadablePaths,
-    });
-    const scopes = buildScopes(settings, repository, configurationsByName);
+    const repository = await readSessionRepository({ settings, cache, listing, untracked, unreadablePaths });
+    const scopes = buildScopes(settings, repository);
     const configuredChecks = listEnabledChecks(scopes, settings);
     const base: SessionBase = {
         configuredChecks,

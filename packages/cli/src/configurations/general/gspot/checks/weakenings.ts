@@ -4,7 +4,6 @@ import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { parseBaseline } from '#cli/engine/baseline.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
@@ -85,15 +84,11 @@ function listSwitchWeakenings(base: Settings, head: Settings): Weakening[] {
 }
 
 function listSettingMoves(base: Settings, head: Settings): Weakening[] {
-    const configurationsByName = readConfigurations();
     const tables = new Map(listSettingsTables(base).map(({ table, scope }) => [scope, table]));
     return listSettingsTables(head).flatMap(({ table, scope = '' }) => {
         const previous = tables.get(scope);
         if (previous === undefined) return [];
-        const available = buildAvailableSettings(
-            selectConfigurationsForScope(head, scope, configurationsByName),
-            head.level,
-        );
+        const available = buildAvailableSettings(selectConfigurationsForScope(head, scope), head.level);
         const keys = new Set([...listWrittenKeys(table, available), ...listWrittenKeys(previous, available)]);
         const place = scope === '' ? '' : ` in ${scope}`;
         return [...keys].flatMap((key) => {

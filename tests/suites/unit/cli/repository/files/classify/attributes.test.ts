@@ -6,7 +6,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -51,7 +50,6 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     const configuredRepository = await readRepository(cache, await listRepositoryFiles(cache), {
         generatedPaths: declarations,
         scopes: [],
-        configurationsByName: readConfigurations(),
     });
     expect(configuredRepository.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
         kind: 'generated',

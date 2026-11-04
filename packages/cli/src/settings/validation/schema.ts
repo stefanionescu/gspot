@@ -133,7 +133,6 @@ Return what makes the configuration lists, tool options, ignores, or paths inval
 @param root the folder for checking declared scope paths.
 */
 export function validateSettings(settings: Settings, root: string): SettingsError[] {
-    const configurationsByName = readConfigurations();
     const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
         ...settings.scopes.values().flatMap((scope, scopeIndex) =>
@@ -143,24 +142,18 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
             })),
         ),
     ];
-    const unknown = listUnknownConfigurations(written, configurationsByName);
+    const unknown = listUnknownConfigurations(written);
     if (unknown.length > 0) return unknown;
     const scopes = new Map(
         settings.scopes
             .keys()
             .map((scope) => [
                 scope,
-                buildAvailableSettings(
-                    selectConfigurationsForScope(settings, scope, configurationsByName),
-                    settings.level,
-                ),
+                buildAvailableSettings(selectConfigurationsForScope(settings, scope), settings.level),
             ]),
     );
-    const rootKeys = buildAvailableSettings(
-        selectConfigurationsForScope(settings, '', configurationsByName),
-        settings.level,
-    );
-    const general = configurationsByName
+    const rootKeys = buildAvailableSettings(selectConfigurationsForScope(settings, ''), settings.level);
+    const general = readConfigurations()
         .values()
         .filter((configuration) => configuration.group === 'general')
         .toArray();
@@ -170,7 +163,7 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
         ...validateSettingRules(settings),
         ...validateSwiftTargets(settings, rootKeys),
         ...validateCheckIds(settings),
-        ...validateRuleExcludes(settings.rule_files.exclude, configurationsByName),
+        ...validateRuleExcludes(settings.rule_files.exclude),
         ...validateScopePaths(root, settings),
         ...validateRuleFilePaths(root, settings),
         ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(general, settings.level)),

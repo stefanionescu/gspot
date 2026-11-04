@@ -1,5 +1,6 @@
 import { extractExtension } from '#cli/system/paths.ts';
 import { GROUP_LABELS } from '#cli/config/generation.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { DetectionSummary } from '#cli/types/generation.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 
@@ -55,7 +56,7 @@ function formatDetectedTools(summary: DetectionSummary): Array<string | undefine
 }
 
 function formatUncheckedFiles(summary: DetectionSummary): string[] {
-    const matchers = summary.configurationsByName
+    const matchers = readConfigurations()
         .values()
         .flatMap((configuration) => [
             configuration.files,
@@ -96,7 +97,7 @@ Format the detection header: tracked files, the evidence for each group, scopes,
 */
 export function formatDetection(summary: DetectionSummary): string {
     const detected = summary.detected.filter(
-        (evidence) => summary.configurationsByName.get(evidence.configuration)?.always_selected !== true,
+        (evidence) => readConfigurations().get(evidence.configuration)?.always_selected !== true,
     );
     const languages = detected
         .filter((evidence) => evidence.group === 'language')

@@ -3,12 +3,11 @@ import { LINK_REFUSAL } from '#cli/config/system.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { listRuleFiles } from '#cli/manifests/read.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
 import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings, SettingsError, AvailableSettings, WrittenScopeTable } from '#cli/types/settings.ts';
 
@@ -123,15 +122,11 @@ Find the errors in [rules] exclude: an item that matches no rule, and an item th
 first.
 
 @param exclude the written items, relative to the rules folder.
-@param configurationsByName the shipped configurations by name.
 @returns each error with its position in the exclusion list.
 */
-export function validateRuleExcludes(
-    exclude: string[],
-    configurationsByName: ReadonlyMap<string, Configuration>,
-): SettingsError[] {
+export function validateRuleExcludes(exclude: string[]): SettingsError[] {
     if (exclude.length === 0) return [];
-    const paths = configurationsByName
+    const paths = readConfigurations()
         .values()
         .flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path))
         .toArray();

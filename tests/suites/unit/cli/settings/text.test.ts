@@ -3,7 +3,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { buildInitSettings } from '#cli/generation/setup/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -54,16 +53,13 @@ test('a key set in a later scope writes a table that an earlier scope extends wi
 test('setting level keeps the opening init comments first', async () => {
     await using sandbox = await createGitSandbox({});
     const cache = createRunCache(sandbox.path);
-    const configurationsByName = readConfigurations();
     const repository = await readRepository(cache, await listRepositoryFiles(cache), {
         generatedPaths: [],
         scopes: [],
-        configurationsByName,
     });
     const text = buildInitSettings(
         { configurations: [], scopes: [], base: '', prettierScripts: new Map(), trackedPaths: [] },
         repository,
-        configurationsByName,
     );
     await createFileTree(sandbox.path, { 'gspot.toml': text });
     const edit = readSettingsFile(sandbox.path);
