@@ -57,16 +57,16 @@ function listAliasSpecifiers(path: string, aliases: Record<string, string>): str
     });
 }
 
-function buildAssetPattern(pattern: string, importer: string, scope: string): string {
+function buildAssetPattern(pattern: string, importer: string, scopePath: string): string {
     const isNegative = pattern.startsWith('!');
     const bare = isNegative ? pattern.slice(1) : pattern;
     const target = bare.startsWith('/')
-        ? posix.join(scope, bare.slice(1))
+        ? posix.join(scopePath, bare.slice(1))
         : posix.join(extractParentFolder(importer), bare);
     return isNegative ? `!${target}` : target;
 }
 
-async function readAssetSource(path: string, text: string, session: Session, scope: string): Promise<AssetSource> {
+async function readAssetSource(path: string, text: string, session: Session, scopePath: string): Promise<AssetSource> {
     const matchers: Array<(path: string) => boolean> = [];
     let references = text;
     const sources = text.includes(ASSET_GLOB_CALL) ? await listJavascriptSources(path, text) : [];
@@ -74,7 +74,7 @@ async function readAssetSource(path: string, text: string, session: Session, sco
         const imports = await readGlobImports(source, session);
         for (const imported of imports) {
             matchers.push(
-                buildPathMatcher(imported.patterns.map((pattern) => buildAssetPattern(pattern, path, scope))),
+                buildPathMatcher(imported.patterns.map((pattern) => buildAssetPattern(pattern, path, scopePath))),
             );
             references = references.replaceAll(imported.text, '');
         }

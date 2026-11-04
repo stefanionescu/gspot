@@ -192,13 +192,13 @@ Build the format overrides of a Prettier config. A glob that matches no tracked 
 `gspot/unmatched-paths` reports such a glob.
 
 @param options the options that hold the overrides.
-@param scope the scope of the config, empty for the root.
+@param scopePath the scope of the config, empty for the root.
 @param trackedPaths the tracked files and every folder above them.
 @returns one record per override with a path and a format option.
 */
 export function buildPrettierOverrides(
     options: PrettierStyle | null,
-    scope: string,
+    scopePath: string,
     trackedPaths: readonly string[],
 ): TomlTable[] {
     return (options?.overrides ?? [])
@@ -206,7 +206,7 @@ export function buildPrettierOverrides(
             paths: [override.files]
                 .flat()
                 .map((glob) => (glob.includes('/') ? glob : `**/${glob}`))
-                .filter((glob) => trackedPaths.some(buildPathMatcher([joinScopeSelector(glob, scope)]))),
+                .filter((glob) => trackedPaths.some(buildPathMatcher([joinScopeSelector(glob, scopePath)]))),
             ...convertPrettierFormat(override.options),
         }))
         .filter(
@@ -241,30 +241,30 @@ Read the options of each Prettier config of one folder, of the `prettier` key of
 .editorconfig.
 
 @param root the repository root.
-@param scope the folder, empty for the root.
+@param scopePath the folder, empty for the root.
 @param scripts the options of the JavaScript and TypeScript configs that loaded.
 @returns the file and its options, for each config that gspot can read.
 */
 export function readPrettierOptions(
     root: string,
-    scope: string,
+    scopePath: string,
     scripts: PrettierScripts,
 ): Array<{ path: string; options: PrettierOptions }> {
-    const files = PRETTIER_ROOT_FILES.map((name) => joinScope(scope, name)).flatMap((path) => {
+    const files = PRETTIER_ROOT_FILES.map((name) => joinScope(scopePath, name)).flatMap((path) => {
         const text = findText(root, path);
         const options = text === undefined ? undefined : parsePrettierFile(path, text, scripts);
         return options === undefined ? [] : [{ path, options }];
     });
-    const packagePath = joinScope(scope, PACKAGE_JSON);
+    const packagePath = joinScope(scopePath, PACKAGE_JSON);
     const key = readPackagePrettier(root, packagePath);
     const parsed = prettierSettingsSchema.safeParse(key);
-    const editorconfig = readEditorconfig(posix.join(root, scope));
+    const editorconfig = readEditorconfig(posix.join(root, scopePath));
     return [
         ...files,
         ...(key === undefined
             ? []
             : [{ path: packagePath, options: parsed.data ?? { dropped: [PRETTIER_PACKAGE_KEY] } }]),
-        ...(editorconfig === null ? [] : [{ path: joinScope(scope, EDITORCONFIG_FILE), options: editorconfig }]),
+        ...(editorconfig === null ? [] : [{ path: joinScope(scopePath, EDITORCONFIG_FILE), options: editorconfig }]),
     ];
 }
 

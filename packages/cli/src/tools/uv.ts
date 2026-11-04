@@ -30,13 +30,13 @@ function findActiveEnvironment(): string | undefined {
 Find the Python environment of a project: the one that VIRTUAL_ENV names, or else the .venv of the project.
 
 @param toolsRoot the working tree that holds the installed environments.
-@param scope the project folder.
+@param scopePath the project folder.
 @returns the environment folder, or undefined when the project has none.
 */
-function findProjectEnvironment(toolsRoot: string, scope: string): string | undefined {
+function findProjectEnvironment(toolsRoot: string, scopePath: string): string | undefined {
     const active = findActiveEnvironment();
     if (active !== undefined) return active;
-    const folder = joinScope(scope, PYTHON_ENVIRONMENT_FOLDER);
+    const folder = joinScope(scopePath, PYTHON_ENVIRONMENT_FOLDER);
     const environment = openFiles(toolsRoot).findStats(folder);
     return environment?.isDirectory() === true || environment?.isSymbolicLink() === true ? folder : undefined;
 }

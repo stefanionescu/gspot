@@ -10,13 +10,14 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
 import { type CheckCode, type CheckResult, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
 
-function hasProjectCoverage(session: Session, scope: string): boolean {
-    if (findText(session.cache, joinScope(scope, '.coveragerc')) !== undefined) return true;
-    const pyproject = findText(session.cache, joinScope(scope, PYPROJECT_TOML));
-    const project = pyproject === undefined ? undefined : parseTomlFile(joinScope(scope, PYPROJECT_TOML), pyproject);
+function hasProjectCoverage(session: Session, scopePath: string): boolean {
+    if (findText(session.cache, joinScope(scopePath, '.coveragerc')) !== undefined) return true;
+    const pyproject = findText(session.cache, joinScope(scopePath, PYPROJECT_TOML));
+    const project =
+        pyproject === undefined ? undefined : parseTomlFile(joinScope(scopePath, PYPROJECT_TOML), pyproject);
     if (isTable(project?.['tool']) && Object.hasOwn(project['tool'], 'coverage')) return true;
     return ['setup.cfg', 'tox.ini'].some((name) =>
-        COVERAGE_INI_SECTION.test(findText(session.cache, joinScope(scope, name)) ?? ''),
+        COVERAGE_INI_SECTION.test(findText(session.cache, joinScope(scopePath, name)) ?? ''),
     );
 }
 

@@ -39,12 +39,12 @@ export function buildArgumentPath(root: string, cwd: string, subject: string): s
 Lists the scopes inside another scope, excluding that scope itself.
 
 @param paths every scope path.
-@param scope the parent folder, empty for the repository root.
+@param scopePath the parent folder, empty for the repository root.
 @returns the nested paths in their original order.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, generation, and planning list nested scopes by this rule: inside the scope, and not the scope itself.
-export function listNestedScopes(paths: readonly string[], scope: string): string[] {
-    return paths.filter((path) => path !== scope && isInScope(path, scope));
+export function listNestedScopes(paths: readonly string[], scopePath: string): string[] {
+    return paths.filter((path) => path !== scopePath && isInScope(path, scopePath));
 }
 
 /**
@@ -80,12 +80,12 @@ export function isScopeCovered(paths: string[], scopePath: string): boolean {
 /**
 Resolve a scope-relative path within its repository.
 
-@param scope the repository-relative folder.
+@param scopePath the repository-relative folder.
 @param path the scope-relative file.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers join a path to its scope by this rule: the root scope, an empty path, adds no prefix.
-export function joinScope(scope: string, path: string): string {
-    return scope === '' ? path : `${scope}/${path}`;
+export function joinScope(scopePath: string, path: string): string {
+    return scopePath === '' ? path : `${scopePath}/${path}`;
 }
 
 /**
