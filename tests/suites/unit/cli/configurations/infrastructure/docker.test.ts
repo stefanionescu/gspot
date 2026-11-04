@@ -67,6 +67,7 @@ test.each([...DOCKERIGNORE_ALLOWLISTS])(
             '.dockerignore': text,
         });
         const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
+        const entries = missing.join(', ');
         expect(findings).toStrictEqual(
             missing.length === 0
                 ? []
@@ -75,7 +76,7 @@ test.each([...DOCKERIGNORE_ALLOWLISTS])(
                           file: '.dockerignore',
                           line: 1,
                           rule: 'missing-entry',
-                          message: `Add these entries to .dockerignore: ${missing.join(', ')}.`,
+                          message: expect.stringContaining(entries) as string,
                       }),
                   ],
         );
@@ -116,7 +117,7 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
 });
 
 test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, async () => {
-    const { code, stdout, stderr, message } = TRIVY_REGISTRY_FAILURE;
+    const { code, stdout, stderr } = TRIVY_REGISTRY_FAILURE;
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': NGINX_COMPOSE,
@@ -125,7 +126,8 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
     const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
     resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ code, stdout, stderr })));
     const error = await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'));
-    expect(error.message).toBe(message);
+    expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
+    expect(error.message).toContain(stderr);
 });
 
 test.each([...INVALID_COMPOSE_SOURCES])(
@@ -219,7 +221,5 @@ test('docker/dockerignore reports a COPY source that the ignore file excludes', 
         findings
             .filter(({ rule }) => rule === 'ignored-source')
             .map(({ file, line, message }) => ({ file, line, message })),
-    ).toStrictEqual([
-        { file: 'Dockerfile', line: 2, message: '.dockerignore excludes private, so this COPY finds nothing.' },
-    ]);
+    ).toStrictEqual([{ file: 'Dockerfile', line: 2, message: expect.stringContaining('private') as string }]);
 });

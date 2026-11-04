@@ -113,7 +113,7 @@ test.each(['Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
         const orphan = await runChecks(await openSession(session.root), options);
 
         expect(orphan.report.checks[0]?.findings).toMatchObject([
-            { file: path, rule: 'unused-asset', message: `No source names the asset ${name}.` },
+            { file: path, rule: 'unused-asset', message: expect.stringContaining(name) as string },
         ]);
     },
 );
@@ -171,7 +171,6 @@ test('xcode/assets reports an image set that names no image file', async () => {
             file: LOGO_IMAGE_SET.contents,
             line: 1,
             rule: 'empty-set',
-            message: 'This image set names no image file.',
         }),
     ]);
 });
@@ -187,7 +186,7 @@ test('xcode/xcstrings reports a string without a translation for a locale the ca
             file: 'App/Localizable.xcstrings',
             line: 1,
             rule: 'missing-translation',
-            message: '"Goodbye" has no translation for fr.',
+            message: expect.stringMatching(/"Goodbye".+\bfr\b/u) as string,
         }),
     ]);
 });

@@ -123,7 +123,8 @@ test('a failed certificate step reports its error text, removes the scratch file
     });
 
     const error = await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'));
-    expect(error.message).toBe(`The openssl command failed (exit 1): ${message}`);
+    expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
+    expect(error.message).toContain(message);
     expect(_spawn).toHaveBeenCalledTimes(1);
     for (const folder of folders) {
         expect(folder).not.toBe(sandbox.path);

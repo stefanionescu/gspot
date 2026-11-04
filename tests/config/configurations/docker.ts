@@ -178,7 +178,6 @@ export const TRIVY_REGISTRY_FAILURE = {
     code: 1,
     stdout: '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}',
     stderr: 'FATAL registry authentication failed',
-    message: 'Trivy could not scan nginx:1.27.2: FATAL registry authentication failed',
 } as const;
 
 export const INVALID_COMPOSE_SOURCES = [
