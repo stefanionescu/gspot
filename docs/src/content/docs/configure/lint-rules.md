@@ -1,21 +1,23 @@
 ---
-title: Lint rule options
-description: Set lint rule options in gspot.toml instead of the config files.
+title: Lint rules
+description: Set lint rule options in gspot.toml, and add rules from a plugin.
 ---
 
-Set lint rule options in `gspot.toml`; gspot writes them into the config file. To turn a lint rule off, use an
-[ignore](/use/ignore/) with a reason.
+Set lint rule options in `gspot.toml`; gspot writes them into the config file of each tool. The level decides which
+rules run, and the options take no severity. To turn a rule off, [ignore it](/use/ignore/) with a reason. To add
+rules, use a [plugin record](#plugins), or add Ruff rule codes in `tools.ruff.rules`.
 
-gspot refuses options for an ESLint or Stylelint rule that the selected level does not run. The refusal names the
-case: a rule that runs only at level `all`, or a rule that gspot loads and runs at no level:
+You can set options only for a rule that runs at your level. `gspot set` refuses a rule of level `all`:
 
 ```text
 n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.
-gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.
 ```
 
-None of these settings turns a lint rule on or off, and none takes a severity; the level decides which rules run. The
-one exception, `tools.ruff.rules`, adds Ruff rules to the rules of the level.
+For a rule that gspot runs at no level, the next ESLint run stops, and `javascript/eslint` reports `error`:
+
+```text
+gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.
+```
 
 | Tool                  | Setting                                              | Takes                                 |
 | --------------------- | ---------------------------------------------------- | ------------------------------------- |
@@ -39,7 +41,6 @@ gspot writes the options of some rules from a setting, and refuses them in these
 | `no-restricted-imports`                                                                                                  | `javascript.banned_imports`                                                                                        |
 | `gspot/import-boundaries`                                                                                                | `javascript.import_boundaries`, see [Import rules](/configure/import-rules/#keep-relative-imports-inside-a-folder) |
 | `n/file-extension-in-import`                                                                                             | `javascript.import_extension`                                                                                      |
-| `n/no-process-env`, `no-restricted-properties`, `gspot/restricted-syntax`                                                | `structure.environment_readers`                                                                                    |
 
 ## ESLint
 
@@ -67,8 +68,6 @@ The table holds options only. gspot refuses a severity, such as `eqeqeq = "off"`
 ```text
 This table holds options only, without a severity; the level decides which rules run. To ignore eqeqeq, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".
 ```
-
-Options for a rule that no block turns on stop ESLint when it loads the config. The error names the rule.
 
 `gspot explain javascript/eslint eqeqeq` reads the rule from the ESLint that `gspot install` put in `.gspot/node_modules`. It
 prints what the rule looks for, links its documentation, which lists its options, and prints the commands that set its
@@ -138,7 +137,7 @@ now fails the check.
 
 ## Ruff
 
-Ruff takes no lint rule options from `gspot.toml`. Its limits, such as `limits.max_cyclomatic_complexity` and
+Ruff takes rule codes to add in `tools.ruff.rules`, not rule options. Its limits, such as `limits.max_cyclomatic_complexity` and
 `limits.max_function_parameters`, come from [limits](/reference/gspot-toml/#limits), and `python.docstring_convention`
 sets the pydocstyle convention. To turn a Ruff lint rule off, ignore it by its code:
 `gspot ignore python/ruff --rule <code> --reason "<why>"`.
