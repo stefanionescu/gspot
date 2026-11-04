@@ -86,15 +86,15 @@ function listUnsettledConflicts(
 ): SettingsError[] {
     const errors: SettingsError[] = [];
     const availableByScope = [
-        { selected: availableSettings, scope: '', path: ['configurations'] },
-        ...[...scopeAvailable].map(([scope, selected], index) => ({
+        { selected: availableSettings, scopePath: '', path: ['configurations'] },
+        ...[...scopeAvailable].map(([scopePath, selected], index) => ({
             selected,
-            scope,
+            scopePath,
             path: ['scope', index, 'configurations'],
         })),
     ];
-    for (const { selected, scope, path } of availableByScope) {
-        const tables = listApplicableTables(settings, scope);
+    for (const { selected, scopePath, path } of availableByScope) {
+        const tables = listApplicableTables(settings, scopePath);
         for (const { key, message: text } of selected.errors)
             if (tables.every(({ table }) => findWrittenSetting(table, key) === undefined))
                 errors.push({ path, message: text });

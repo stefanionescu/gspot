@@ -147,9 +147,9 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
     const scopes = new Map(
         settings.scopes
             .keys()
-            .map((scope) => [
-                scope,
-                buildAvailableSettings(selectConfigurationsForScope(settings, scope), settings.level),
+            .map((scopePath) => [
+                scopePath,
+                buildAvailableSettings(selectConfigurationsForScope(settings, scopePath), settings.level),
             ]),
     );
     const rootKeys = buildAvailableSettings(selectConfigurationsForScope(settings, ''), settings.level);
