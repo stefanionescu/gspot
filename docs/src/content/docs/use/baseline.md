@@ -54,7 +54,7 @@ every count that is too high, run `gspot check` on every file.
 
 ## Accept the findings of new checks
 
-When `gspot set level` or `gspot add` turns on new checks in a repository that has a baseline, the command lists the
+When `gspot set level` or `gspot add` turns on new checks and your repository has a baseline, the command lists the
 new checks. It also prints a command that adds only their findings to the baseline, such as:
 
 ```shell

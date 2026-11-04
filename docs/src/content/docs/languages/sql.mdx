@@ -46,7 +46,7 @@ For example, `select id from user_accounts;` gets a `CP01` finding for each lowe
 rewrites it as `SELECT id FROM user_accounts;`.
 
 SQLFluff takes its line length from `format.print_width`, and its indent from the `format` settings of SQL files. When
-the rest of the repository uses another indent, `gspot init` writes a `[[format.override]]` record that indents SQL
+the rest of your repository uses another indent, `gspot init` writes a `[[format.override]]` record that indents SQL
 files by four spaces. To change the SQL indent, change that record.
 
 ## Levels

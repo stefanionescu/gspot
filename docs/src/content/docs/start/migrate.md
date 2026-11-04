@@ -19,7 +19,7 @@ tools. To move your repository to gspot, follow these steps:
 `gspot init` prints its plan and then carries it out without asking. Read the plan that `gspot scan` prints before you
 run init.
 
-If the repository does not pin a gspot version yet, init adds gspot to `package.json`. Without a `package.json`, it
+If your repository does not pin a gspot version yet, init adds gspot to `package.json`. Without a `package.json`, it
 adds gspot to `mise.toml`. The last line of the init output then names the install command of your package manager.
 Run it, so that the Git hooks run that gspot version.
 
