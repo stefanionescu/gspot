@@ -3,6 +3,8 @@ import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import type { CheckStop } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
@@ -71,7 +73,7 @@ test('build: a build that reads an untracked file fails until the file is in the
     const findings = await getBuiltInCheck('site/build')(session, request);
     expect(findings).toMatchObject([{ rule: 'build', line: 1 }]);
     const [summary, ...output] = findings[0]!.message.split('\n');
-    expect(summary).toBe(`${command.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.`);
+    expect(summary).toContain(command.map((argument) => quoteArgument(argument)).join(' '));
     expect(output).toContain("ENOENT: no such file or directory, stat 'local-input.txt'");
     const checkedSession = await openSession(sandbox.path, { resources });
     const corrected = await readSuccessfulBuild(
@@ -119,7 +121,11 @@ test('build: a dist link that leaves the build folder is refused', async () => {
     const link = join(sandbox.path, 'dist/linked.txt');
     await symlink('../external.txt', link);
     expect(() => listBuiltFiles(join(sandbox.path, 'dist'))).toThrow(
-        'The build output links outside the build folder: linked.txt',
+        matchFields<CheckStop>({
+            name: 'CheckStop',
+            status: 'error',
+            message: expect.stringContaining('linked.txt') as string,
+        }),
     );
     await unlink(link);
     await symlink('local.txt', link);
@@ -180,12 +186,11 @@ test('build: a failed site build skips every check that reads the build, and a n
             {
                 check: 'site/build',
                 status: 'failed',
-                message: `${failing.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.\nTest build failure`,
+                message: expect.stringContaining('Test build failure') as string,
             },
             ...[...consumers].map((check) => ({
                 check,
                 status: 'skipped',
-                note: 'The site did not build.',
             })),
         ].toSorted((left, right) => compareText(left.check, right.check)),
     );

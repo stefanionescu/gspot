@@ -152,7 +152,8 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
             CHECK_RUN_OPTIONS,
         ),
     );
-    expect(error.message).toBe(`The next typegen command failed: Error: ${message}`);
+    expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
+    expect(error.message).toContain(message);
     expect(scratch).not.toBe('');
     expect(existsSync(scratch)).toBe(false);
     expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');

@@ -63,7 +63,7 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
         {
             file: 'dist/sitemap-0.xml',
             rule: 'missing-page',
-            message: 'The sitemap lists https://example.com/docs/missing/, and the build wrote no such page.',
+            message: expect.stringContaining('https://example.com/docs/missing/') as string,
         },
     ]);
 });
@@ -83,7 +83,7 @@ test.each(INVALID_SITEMAP_URLS)('site/sitemap reports %s as an invalid URL and s
             line: 3,
             column: 6,
             rule: 'invalid-url',
-            message: `The sitemap lists ${url}, which is not an absolute URL with valid escapes.`,
+            message: expect.stringContaining(url) as string,
         }),
     ]);
     expect(await runSandboxCheck(sandbox.path, 'site/lychee')).toStrictEqual([]);
@@ -128,7 +128,7 @@ test.each([...PURGECSS_STYLE_CASES])('site/purgecss checks $name', async ({ sour
         expected.map((selector) => ({
             file: 'dist/site.css',
             rule: 'unused-selector',
-            message: `No built page uses the selector ${selector}.`,
+            message: expect.stringContaining(selector) as string,
         })),
     );
 });

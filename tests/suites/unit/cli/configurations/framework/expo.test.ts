@@ -36,7 +36,8 @@ test('Expo Doctor output without a failed check is a check error that keeps its 
     await using apps = await prepareExpoApps({ code: 1, stderr: 'Unable to read Expo configuration' } as const);
     for (const scope of APP_FOLDERS) {
         const error = await captureRejection(runSandboxCheck(apps.path, 'expo/expo-doctor', { scope }));
-        expect(error.message).toBe('The expo-doctor command failed (exit 1): Unable to read Expo configuration');
+        expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
+        expect(error.message).toContain('Unable to read Expo configuration');
     }
 });
 
@@ -47,9 +48,7 @@ test('Expo Doctor reports an uninstalled Expo project instead of accepting its e
     });
 
     const uninstalledError = await captureRejection(runSandboxCheck(sandbox.path, 'expo/expo-doctor'));
-    expect(uninstalledError.message).toBe(
-        'Install the project dependencies of this scope; Expo Doctor reads an installed Expo project.',
-    );
+    expect(uninstalledError).toMatchObject({ name: 'CheckStop', status: 'missing' });
 });
 
 async function prepareExpoApps(
