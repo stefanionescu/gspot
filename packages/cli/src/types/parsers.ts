@@ -157,8 +157,6 @@ export type EditableFile = {
 
 export type CodeFence = { language: string; attributes: string; body: string; startLine: number; endLine: number };
 
-export type DirectiveScan = { token: string | undefined; end: number };
-
 type TomlComment = { raw: string; start: number };
 
 export type TomlDocument = ReturnType<typeof parseDocument>;

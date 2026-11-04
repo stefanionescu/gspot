@@ -155,16 +155,6 @@ export const uvLockfileSchema = z.looseObject({
         .default([]),
 });
 
-const taskSchema = z.looseObject({
-    alias: z.union([z.string(), z.string().array()]).optional(),
-});
-
-const taskValueSchema = z.union([z.string(), z.string().array(), taskSchema]);
-
-export const miseTasksSchema = z.object({
-    tasks: z.record(z.string(), taskValueSchema).default({}),
-});
-
 export const miseToolsSchema = z.looseObject({
     tools: z.record(z.string(), z.unknown()).default({}),
 });

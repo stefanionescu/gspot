@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
+import { parseMiseTasks } from '#cli/configurations/general/docs/mise.ts';
 
 test('mise keeps string tasks, command lists, and task-table aliases', () => {
     expect(

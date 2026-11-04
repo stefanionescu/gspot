@@ -1,6 +1,16 @@
+import { z } from 'zod';
 import { isTable } from '#cli/system/tables.ts';
-import { miseTasksSchema } from '#cli/schemas/parsers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+
+const taskSchema = z.looseObject({
+    alias: z.union([z.string(), z.string().array()]).optional(),
+});
+
+const taskValueSchema = z.union([z.string(), z.string().array(), taskSchema]);
+
+const miseTasksSchema = z.object({
+    tasks: z.record(z.string(), taskValueSchema).default({}),
+});
 
 /**
 Read task names and aliases from a mise document.

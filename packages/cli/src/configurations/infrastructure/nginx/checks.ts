@@ -8,12 +8,12 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/engine.ts';
 import type { CheckSession, BuiltInCheckResult } from '#cli/types/engine/run.ts';
 import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
+import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
 
 import {
     MOUNT_FLAG,

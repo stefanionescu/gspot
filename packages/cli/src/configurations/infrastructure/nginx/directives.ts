@@ -1,15 +1,27 @@
-import type { DirectiveScan } from '#cli/types/parsers.ts';
+type DirectiveScan = { token: string | undefined; end: number };
 
-import {
-    WORD_STOPS,
-    ESCAPE_LENGTH,
-    NGINX_ESCAPES,
-    QUOTED_ARGUMENT,
-    WORD_START_STOPS,
-    ESCAPED_CHARACTER,
-    NGINX_PUNCTUATION,
-    WHITESPACE_CHARACTER,
-} from '#cli/config/parsers.ts';
+const NGINX_ESCAPES: Readonly<Record<string, string>> = {
+    t: '\t',
+    r: '\r',
+    n: '\n',
+    '"': '"',
+    "'": "'",
+    '\\': '\\',
+};
+
+const WORD_START_STOPS = /[\s"'{};#\\]/u;
+
+const WORD_STOPS = /[\s{};\\]/u;
+
+const NGINX_PUNCTUATION = new Set([';', '{', '}']);
+
+const ESCAPE_LENGTH = 2;
+
+const QUOTED_ARGUMENT = /^(["'])([\s\S]*)\1$/u;
+
+const ESCAPED_CHARACTER = /\\([trn"'\\])/gu;
+
+const WHITESPACE_CHARACTER = /\s/u;
 
 function findQuotedEnd(text: string, start: number): number {
     const quote = text.charAt(start);
