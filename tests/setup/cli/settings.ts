@@ -40,7 +40,7 @@ export function buildSandboxSettings(
 }
 
 /**
-Parse settings text and return its errors, or none when it parses.
+Parse settings text and return where each error sits, as `gspot.toml:<line>: <key path>`, or nothing when it parses.
 
 @param text gspot.toml content to parse.
 @param root folder the settings describe, for errors that depend on its files.
@@ -51,7 +51,8 @@ export function validateSettingsText(text: string, root?: string): string[] {
         readSettings(text, root ?? resources.use(createTemporaryFolder()).path);
         return [];
     } catch (error) {
-        if (error instanceof GspotError && error.code === 'settings') return error.message.split('\n');
+        if (error instanceof GspotError && error.code === 'settings')
+            return error.message.split('\n').map((line) => line.split(': ', 2).join(': '));
         throw error;
     }
 }

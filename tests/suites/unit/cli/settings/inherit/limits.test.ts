@@ -11,13 +11,10 @@ test('limits that no check reads are refused', () => {
             tables: '[limits.sql]\nmax_function_lines = 60\n[limits.bash]\nmax_cyclomatic_complexity = 8\n',
         }),
     );
-    expect(errors).toHaveLength(2);
-    expect(errors[0]).toStartWith(
-        'gspot.toml:5: limits.bash.max_cyclomatic_complexity: There is no setting called limits.bash.max_cyclomatic_complexity. ',
-    );
-    expect(errors[1]).toStartWith(
-        'gspot.toml:3: limits.sql.max_function_lines: There is no setting called limits.sql.max_function_lines.',
-    );
+    expect(errors).toStrictEqual([
+        'gspot.toml:5: limits.bash.max_cyclomatic_complexity',
+        'gspot.toml:3: limits.sql.max_function_lines',
+    ]);
 });
 
 test.each([

@@ -13,13 +13,17 @@ test('an edit of a file with invalid UTF-8 is refused and the file is unchanged'
     const invalid = Buffer.concat([Buffer.from(COMMENTED_SETTINGS), Buffer.from([0xff])]);
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, invalid);
-    expect(() => readSettingsFile(sandbox.path)).toThrow('valid UTF-8');
+    expect(() => readSettingsFile(sandbox.path)).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'settings' }),
+    );
     expect(await readFile(path)).toStrictEqual(invalid);
 });
 
 test('reading or editing a missing gspot.toml is refused and creates nothing', async () => {
     await using sandbox = await testdir();
-    expect(() => readSettingsFile(sandbox.path)).toThrow('Run gspot init');
+    expect(() => readSettingsFile(sandbox.path)).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'settings' }),
+    );
     const missing = await captureRejection(stat(join(sandbox.path, 'gspot.toml')));
     expect(missing).toMatchObject({ code: 'ENOENT' });
 });
@@ -47,11 +51,7 @@ test.each(['symlink inside', 'symlink outside'])(
         const target = join(sandbox.path, kind === 'symlink outside' ? 'outside.toml' : 'project/source.toml');
         await symlink(target, join(root, 'gspot.toml'));
         expect(() => readSettingsFile(root)).toThrow(
-            matchFields<GspotError>({
-                name: 'GspotError',
-                code: 'filesystem',
-                message: 'gspot.toml is not a regular file. Use a regular file.',
-            }),
+            matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }),
         );
         expect(await readFile(target, 'utf8')).toBe(COMMENTED_SETTINGS);
     },

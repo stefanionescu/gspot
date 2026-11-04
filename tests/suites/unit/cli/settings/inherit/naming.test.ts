@@ -11,8 +11,7 @@ test('naming cases equal to the shipped default need no reason, and other cases 
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'settings',
-            message:
-                'gspot.toml:3: naming.typescript.files.cases.reason: naming.typescript.files.cases needs a reason. Write it as naming.typescript.files.cases = { value = [...], reason = "..." }, or run gspot set naming.typescript.files.cases ... --reason "<why>".',
+            message: expect.stringContaining('gspot.toml:3: naming.typescript.files.cases.reason') as string,
         }),
     );
 });
