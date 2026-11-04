@@ -18,7 +18,6 @@ import {
     TOOL_PATHS_FILE,
     TOOL_INSTALL_FOLDER,
     GSPOT_LAUNCHER_PATH,
-    MISE_LOCK_ENVIRONMENT,
 } from '#tests/config/setup/sandboxes.ts';
 
 await runNpmPack(TEST_RUN_FOLDER, [
@@ -41,7 +40,7 @@ if (process.argv[2] !== 'e2e') {
 async function installTestTools(): Promise<string[]> {
     const folder = join(TEST_RUN_FOLDER, TOOL_INSTALL_FOLDER);
     const config = join(folder, TOOL_PINS_FILE);
-    const env = { ...MISE_LOCK_ENVIRONMENT, MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state') };
+    const env = { MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state') };
     const configurations = readConfigurations().values().toArray();
     const names = listDistinctTools(configurations)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))
