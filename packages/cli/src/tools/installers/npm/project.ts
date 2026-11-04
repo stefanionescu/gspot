@@ -44,6 +44,11 @@ import {
     NPM_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/tools/installers.ts';
 
+const LOCK_ONLY_FLAG = '--package-lock-only';
+
+const DELETED_LOCKFILE_MESSAGE =
+    'npm wrote registry credentials into the lockfile of the tool project, so gspot deleted that lockfile. Remove the credentials from the registry URL, then run gspot install again.';
+
 async function createNpmLockfile(
     install: NpmToolInstall,
     { toolProjectFile, lockfileName }: { toolProjectFile: GeneratedFile; lockfileName: string },
@@ -155,23 +160,65 @@ export async function planNpmLockfile(
     install: NpmToolInstall,
     toolProjectFile: GeneratedFile,
 ): Promise<ReplacementRequest> {
-    const { packageManager, registryEnvironment } = install;
-    const lockfile = selectLockfileName(packageManager.name);
+    const lockfile = selectLockfileName(install.packageManager.name);
     const path = `${GSPOT_FOLDER}/${lockfile}`;
     const previous = install.writer.read(path);
-    const saved = previous?.bytes.toString('utf8');
-    if (saved !== undefined) {
-        assertCredentialFreeLockfile(
-            saved,
-            extractRegistryCredentials(registryEnvironment),
-            NPM_LOCKFILE_CREDENTIAL_MESSAGE,
-        );
-        const dependencies = listPackagePins(install.session.toolConfigurations).npm;
-        if (isLockfileFresh(packageManager.name, saved, dependencies, registryEnvironment))
-            return { path, next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE }, previous: previous };
+    if (previous !== undefined && isNpmLockfileFresh(install)) {
+        const bytes = Buffer.from(previous.bytes.toString('utf8'));
+        return { path, next: { bytes, mode: OWNER_WRITABLE_FILE }, previous: previous };
     }
     const content = await createNpmLockfile(install, { toolProjectFile, lockfileName: lockfile });
     return { path, next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE }, previous: previous };
+}
+
+/**
+Check whether the saved npm tool lockfile exists and names every pin at its version. Refuse one that holds registry
+credentials.
+
+@param install what install needs for this step.
+*/
+export function isNpmLockfileFresh(install: NpmToolInstall): boolean {
+    const { packageManager, registryEnvironment } = install;
+    const saved = install.writer.read(`${GSPOT_FOLDER}/${selectLockfileName(packageManager.name)}`);
+    if (saved === undefined) return false;
+    const text = saved.bytes.toString('utf8');
+    const credentials = extractRegistryCredentials(registryEnvironment);
+    assertCredentialFreeLockfile(text, credentials, NPM_LOCKFILE_CREDENTIAL_MESSAGE);
+    const dependencies = listPackagePins(install.session.toolConfigurations).npm;
+    return isLockfileFresh(packageManager.name, text, dependencies, registryEnvironment);
+}
+
+/**
+Resolve and install the npm tool project in one npm run in .gspot, when its lockfile is missing or stale. The run
+starts with no lockfile and no node_modules folder, so npm resolves the tree as a lock run in an empty folder does, and
+writes the lockfile that later installs read. A lockfile that holds credentials is deleted, and the error stays.
+
+@param install what install needs for this step, with npm as the package manager.
+*/
+export async function installUnlockedNpmTools(install: NpmToolInstall): Promise<string> {
+    if (findProgram(NODE_TOOL) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
+    const { root, toolConfigurations } = install.session;
+    const { packageManager, writer } = install;
+    const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager.name)}`;
+    assertSettingsFree(install);
+    writer.deleteTree(GSPOT_PATHS.nodeModules);
+    if (writer.findStats(path) !== undefined) writer.deleteFile(path);
+    const lockArguments = PACKAGE_MANAGER_ARGUMENTS.npm.lockfile.filter((argument) => argument !== LOCK_ONLY_FLAG);
+    const run = await runPackageManager(install, {
+        runFolder: join(root, GSPOT_FOLDER),
+        packageManager,
+        commandArguments: prepareReleaseAge(lockArguments, packageManager, install.releaseAgeDays),
+        failure: INSTALL_FAILURE,
+        environment: install.registryEnvironment,
+    });
+    try {
+        assertCredentialFreeLockfile(readFileSync(join(root, path), 'utf8'), run.credentials, DELETED_LOCKFILE_MESSAGE);
+    } catch (error) {
+        writer.deleteFile(path);
+        throw error;
+    }
+    const count = Object.keys(listPackagePins(toolConfigurations).npm).length;
+    return `installed ${formatCount(count, NPM_TOOL_NOUN)} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }
 
 /**

@@ -16,7 +16,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
+import { installNpmTools, planNpmLockfile, installUnlockedNpmTools } from '#cli/tools/installers/npm/project.ts';
 
 import {
     CREDENTIAL_TOKEN,
@@ -121,6 +121,59 @@ test('a lockfile that the package manager writes with registry credentials is re
     );
     for (const [path, text] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
+});
+
+test('npm resolves and installs a stale tool project in one run that starts from no lockfile', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"private":true,"packageManager":"npm@11.19.0"}',
+        'gspot.toml': buildSandboxSettings([]),
+        [GSPOT_PATHS.npmProject]: CREDENTIAL_PACKAGE_JSON,
+        [`${GSPOT_FOLDER}/package-lock.json`]: '{"stale":true}\n',
+        [`${GSPOT_PATHS.nodeModules}/stale/package.json`]: '{}\n',
+    });
+    const runs: Array<{ command: string[]; hasLockfile: boolean; hasModules: boolean }> = [];
+    using _npm = fakeCommands('mise', async (command, options) => {
+        if (command.at(-1) === '--version') return buildProcessResult({ stdout: '11.19.0\n' });
+        runs.push({
+            command: command.slice(command.indexOf('--') + 1),
+            hasLockfile: existsSync(join(options.cwd, 'package-lock.json')),
+            hasModules: existsSync(join(options.cwd, 'node_modules')),
+        });
+        await writeFile(join(options.cwd, 'package-lock.json'), '{"lockfileVersion":3}\n');
+        return buildProcessResult();
+    });
+    const install = await buildNpmToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    await installUnlockedNpmTools(install);
+    expect(runs.map(({ hasLockfile, hasModules }) => ({ hasLockfile, hasModules }))).toStrictEqual([
+        { hasLockfile: false, hasModules: false },
+    ]);
+    const [command] = runs.map((run) => run.command);
+    expect(command?.slice(0, 2)).toStrictEqual(['npm', 'install']);
+    expect(command?.some((argument) => argument.startsWith('--min-release-age='))).toBe(true);
+    expect(command?.filter((argument) => ['--package-lock-only', '--no-save'].includes(argument))).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, GSPOT_FOLDER, 'package-lock.json'), 'utf8')).toBe(
+        '{"lockfileVersion":3}\n',
+    );
+});
+
+test('a lockfile that npm writes with registry credentials in its one run is deleted, and the install fails', async () => {
+    await using sandbox = await createGitSandbox({
+        '.npmrc': `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`,
+        'package.json': '{"private":true,"packageManager":"npm@11.19.0"}',
+        'gspot.toml': buildSandboxSettings([]),
+        [GSPOT_PATHS.npmProject]: CREDENTIAL_PACKAGE_JSON,
+    });
+    using _npm = fakeCommands('mise', async (command, options) => {
+        if (command.at(-1) !== '--version')
+            await writeFile(join(options.cwd, 'package-lock.json'), CREDENTIAL_LOCKFILE);
+        return buildProcessResult({ stdout: command.at(-1) === '--version' ? '11.19.0\n' : '' });
+    });
+    const install = await buildNpmToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const error = await captureRejection(installUnlockedNpmTools(install));
+    expect(error.message).toBe(
+        'npm wrote registry credentials into the lockfile of the tool project, so gspot deleted that lockfile. Remove the credentials from the registry URL, then run gspot install again.',
+    );
+    expect(existsSync(join(sandbox.path, GSPOT_FOLDER, 'package-lock.json'))).toBe(false);
 });
 
 test('a missing Node stops npm before it writes a lockfile and keeps a cached lockfile', async () => {

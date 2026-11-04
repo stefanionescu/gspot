@@ -13,7 +13,6 @@ import type { ReplacementRequest } from '#cli/types/repository.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { installNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { UV_TOOL, UV_REINSTALL_FLAG, UV_PROJECT_INSTALL_ARGUMENTS } from '#cli/config/tools/installers.ts';
 
@@ -24,6 +23,12 @@ import {
     listNpmProjectPins,
     buildPythonProjectTable,
 } from '#cli/tools/pins.ts';
+import {
+    installNpmTools,
+    planNpmLockfile,
+    isNpmLockfileFresh,
+    installUnlockedNpmTools,
+} from '#cli/tools/installers/npm/project.ts';
 import {
     installPythonTools,
     planPythonLockfile,
@@ -159,7 +164,8 @@ export function listStaleLockfiles(
 
 /**
 Resolve the npm tool lockfile, then install the frozen npm tool project. A changed lockfile installs into an empty
-node_modules folder. The npm project needs no tool that mise installs, so it can install beside them.
+node_modules folder. With npm, a missing or stale lockfile resolves and installs in one npm run. The npm project needs
+no tool that mise installs, so it can install beside them.
 
 @param install what install needs for this step.
 @returns nothing installed and no tools without a package manager.
@@ -168,12 +174,13 @@ export async function installNpmToolProject(install: ToolInstall): Promise<ToolP
     const { session, writer, tools, packageManager } = install;
     if (packageManager === undefined) return { installed: [], tools: [] };
     const npm = { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
+    const npmTools = tools.filter((tool) => tool.system !== true && findPackagePin(tool)?.kind === 'npm');
+    const isProject = install.generated.files.some((file) => file.path === GSPOT_PATHS.npmProject);
+    if (isProject && packageManager.name === 'npm' && !isNpmLockfileFresh(npm))
+        return { installed: [await installUnlockedNpmTools(npm)], tools: npmTools };
     const lockfiles = await planLockfiles(install, { npm, uvPath: undefined });
     writePlans(writer, planReplacements(writer, lockfiles));
-    return {
-        installed: [await installNpmProject(npm, lockfiles)],
-        tools: tools.filter((tool) => tool.system !== true && findPackagePin(tool)?.kind === 'npm'),
-    };
+    return { installed: [await installNpmProject(npm, lockfiles)], tools: npmTools };
 }
 
 /**
