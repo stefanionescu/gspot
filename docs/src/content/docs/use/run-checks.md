@@ -82,14 +82,14 @@ names the file and exits with code 2.
 
 ## Statuses and exit codes
 
-| Status     | Meaning                                                                                                    | Exit code |
-| ---------- | ---------------------------------------------------------------------------------------------------------- | --------- |
-| `failed`   | The check reported findings.                                                                               | 1         |
-| `missing`  | The tool needs installation: run `gspot install`.                                                          | 2         |
-| `error`    | The check stopped with an error; findings collected before it stopped remain in the report.                | 2         |
-| `canceled` | Ctrl-C or SIGTERM stopped the check.                                                                       | 130, 143  |
-| `passed`   | No findings.                                                                                               | 0         |
-| `skipped`  | The check did not run. The row names the cause, such as `skipped (level)`; `--json` reports it in `cause`. | 0         |
+| Status     | Meaning                                                                                                    | Exit code     |
+| ---------- | ---------------------------------------------------------------------------------------------------------- | ------------- |
+| `failed`   | The check reported findings.                                                                               | 1             |
+| `missing`  | The tool needs installation: run `gspot install`.                                                          | 2             |
+| `error`    | The check stopped with an error; findings collected before it stopped remain in the report.                | 2             |
+| `canceled` | SIGHUP, Ctrl-C, or SIGTERM stopped the check.                                                              | 129, 130, 143 |
+| `passed`   | No findings.                                                                                               | 0             |
+| `skipped`  | The check did not run. The row names the cause, such as `skipped (level)`; `--json` reports it in `cause`. | 0             |
 
 The report shows the `failed`, `missing`, `error`, and `canceled` rows. Add `--verbose` for the `passed` and `skipped`
 rows, each command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object;

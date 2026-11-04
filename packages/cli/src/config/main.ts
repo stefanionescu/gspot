@@ -25,7 +25,7 @@ export const PROGRAM_EXIT_CODES = [
     ['0', 'The command finished. For check: no findings remain.'],
     ['1', 'check found findings, init or install left a tool missing, or doctor found a setup problem.'],
     ['2', 'The command could not finish, or an argument is not valid.'],
-    ['130, 143', 'check, baseline, init, install, or scan stopped because of Ctrl-C or SIGTERM.'],
+    ['129, 130, 143', 'check, baseline, init, install, or scan stopped because of SIGHUP, Ctrl-C, or SIGTERM.'],
 ] as const;
 
 export const PROGRAM_HELP_FOOTER =
