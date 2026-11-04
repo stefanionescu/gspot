@@ -1,5 +1,3 @@
-export const MIGRATION_ORDER_MESSAGE = 'A new migration sorts before 20240201_teams.sql, which is already committed.';
-
 export const DEFINER_FUNCTION_SQL =
     'CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n';
 

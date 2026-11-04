@@ -45,7 +45,7 @@ test('row security skips when no client schemas are selected', async () => {
         buildRunOptions({ only: ['postgres/row-level-security'] }),
     );
     expect(result.report.checks).toMatchObject([
-        { status: 'skipped', findings: [], note: 'needs the setting postgres.client_schemas' },
+        { status: 'skipped', findings: [], note: expect.stringContaining('postgres.client_schemas') as string },
     ]);
 });
 

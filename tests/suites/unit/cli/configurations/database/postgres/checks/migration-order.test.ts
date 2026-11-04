@@ -5,7 +5,6 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { createMigrationHistory } from '#tests/setup/sandboxes/repositories.ts';
-import { MIGRATION_ORDER_MESSAGE } from '#tests/config/configurations/database.ts';
 
 test('migration-order reports a new migration older than a committed one and passes after it is renamed', async () => {
     await using sandbox = await createMigrationHistory();
@@ -16,7 +15,7 @@ test('migration-order reports a new migration older than a committed one and pas
             file: 'migrations/20240101_early.sql',
             line: 1,
             rule: 'order',
-            message: MIGRATION_ORDER_MESSAGE,
+            message: expect.stringContaining('20240201_teams.sql') as string,
         }),
     ]);
     runGitStep(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);

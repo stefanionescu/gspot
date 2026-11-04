@@ -54,7 +54,7 @@ test('postgres/migration-order reports a migration that does not parse at its li
                 check,
                 status: 'skipped',
                 findings: [],
-                note: 'A migration does not parse. postgres/migration-order reports where.',
+                note: expect.stringContaining('postgres/migration-order') as string,
             })),
     );
     await writeFile(

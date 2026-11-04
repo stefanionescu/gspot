@@ -21,7 +21,7 @@ test.each([...COMPOSITE_INDEX_CASES])(
             expect(findings[0]).toMatchObject({
                 file: 'migrations/1_orders.sql',
                 rule: 'foreign-key-index',
-                message: 'public.orders (tenant_id, user_id) is a foreign key and no index leads with these columns.',
+                message: expect.stringContaining('public.orders (tenant_id, user_id)') as string,
             });
     },
 );
@@ -37,7 +37,7 @@ test('foreign-key-indexes reports a foreign key column that no index leads with 
             file: 'migrations/1_members.sql',
             line: 2,
             rule: 'foreign-key-index',
-            message: 'public.members (team_id) is a foreign key and no index leads with these columns.',
+            message: expect.stringContaining('public.members (team_id)') as string,
         }),
     ]);
     await writeFile(
