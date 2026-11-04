@@ -49,22 +49,38 @@ file.
 
 ## Settings in a scope
 
-At level `all`, raise the function length limit with a reason:
+Add `--scope <path>` to `gspot set`, `unset`, `add`, and `remove`:
 
 ```shell
-gspot set limits.max_function_lines 80 --scope api --reason "The parser is one state machine."
+gspot set test_files "e2e/**" --scope web
 ```
 
 Root settings cover every scope. Paths in a root table start at the repository root, and paths in a `[[scope]]` table
 start at that scope. The default paths of a configuration resolve inside the scope that selects it.
 
-The first value that you write replaces the shipped default. In a scope, a list of plain values, such as `test_files`,
-adds to the lists of the root and of the parent scopes, without repeats. A table, such as `spelling.allowed_words`,
-adds its keys. A command, such as `site.build_command`, a list of records, such as `[[tools.eslint.plugins]]`, and a
-single value take the nearest value that you wrote.
+A scope inherits the settings of the root and of its parent scopes. The first value that you write replaces the
+shipped default:
 
-List defaults of several configurations add up. When two selected configurations give a single-value setting
-different defaults, a framework, platform, library, or database configuration wins over the others. With two others,
-gspot stops with an error that names both. To pick one, set the value at the root or in a scope.
+| Kind of setting                                                         | In a scope                                 |
+| ----------------------------------------------------------------------- | ------------------------------------------ |
+| A list of values, such as `test_files`                                  | Adds to the parent lists, without repeats. |
+| A table, such as `spelling.allowed_words`                               | Adds its keys.                             |
+| A single value, a command such as `site.build_command`, or record lists | Replaces the parent value.                 |
+
+The list defaults of several configurations add up. When two configurations of one scope give a single value
+different defaults, the framework, platform, library, or database configuration wins. When neither is one of those,
+gspot stops and names both. Set the value yourself to choose.
 
 [Scope settings](/reference/gspot-toml/#scope) lists the keys and the values they accept.
+
+## Turborepo and Nx
+
+gspot handles the packages of a workspace through scopes, so run `gspot check` once at the root, not in the `lint`
+script of each package. A run in each package repeats the work, skips the checks of the root scope, and lets the task
+cache keep a pass after `gspot.toml` changes, because the files of a package do not include `gspot.toml` or `.gspot/`.
+
+To keep gspot in the task graph of Turborepo, make it a
+[root task](https://turborepo.dev/docs/crafting-your-repository/configuring-tasks), such as `//#lint`, and set
+`"cache": false` on it. Or add `gspot.toml` and `.gspot/**` to `globalDependencies`; see the
+[Turborepo configuration](https://turborepo.dev/docs/reference/configuration). In Nx, add them to the
+[`sharedGlobals` named input](https://nx.dev/docs/reference/inputs).
