@@ -41,12 +41,12 @@ function listUntrackedOutputs(
     named: string[],
     excluded: string[],
 ): CheckFinding[] {
-    const scope = planned.scope.path;
+    const scopePath = planned.scope.path;
     const tracked = new Set(session.repository.index.map(({ path }) => path));
     return named.length === 0
         ? []
-        : listMatchingPaths(join(session.root, scope), [...named, ...excluded])
-              .map((path) => joinScope(scope, path))
+        : listMatchingPaths(join(session.root, scopePath), [...named, ...excluded])
+              .map((path) => joinScope(scopePath, path))
               .filter((path) => !tracked.has(path))
               .toSorted((left, right) => compareText(left, right))
               .map((path) => ({
@@ -59,21 +59,21 @@ function listUntrackedOutputs(
 
 function readOutputContents({
     root,
-    scope,
+    scopePath,
     patterns,
     targets,
     excluded,
 }: {
     root: string;
-    scope: string;
+    scopePath: string;
     patterns: string[];
     targets: GeneratorOutput[];
     excluded: string[];
 }): Map<string, Buffer> {
-    const cwd = join(root, scope);
+    const cwd = join(root, scopePath);
     return new Map([
         ...listMatchingPaths(cwd, [...patterns, ...excluded]).map((path): [string, Buffer] => [
-            joinScope(scope, path),
+            joinScope(scopePath, path),
             readBytes(cwd, path),
         ]),
         ...targets.map((target): [string, Buffer] => [target.path, readBytes(root, target.path)]),
@@ -152,7 +152,7 @@ export async function checkGeneratorOutputs(session: CheckSession, planned: Plan
         targets.map((target) => target.path),
     );
     const cwd = join(folder.path, planned.scope.path);
-    const outputFiles = { root: folder.path, scope: planned.scope.path, patterns, targets, excluded };
+    const outputFiles = { root: folder.path, scopePath: planned.scope.path, patterns, targets, excluded };
     const stdoutPaths = new Set(targets.filter((target) => target.kind === 'stdout').map((target) => target.path));
     const before = new Map(
         readOutputContents(outputFiles)
