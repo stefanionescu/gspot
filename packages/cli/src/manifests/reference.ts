@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { formatNameList } from '#cli/system/text.ts';
-import { listRuleFiles } from '#cli/manifests/read.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { listRuleFiles } from '#cli/manifests/read.ts';
 import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
 
 const DETECTION_LABELS = {
@@ -27,11 +27,15 @@ function formatListCondition(kind: keyof typeof DETECTION_LABELS, patterns: read
         names.map((name) => `\`${name}\``),
         'disjunction',
     );
-    const except = formatNameList(
-        excepted.map((name) => `\`${name}\``),
-        'disjunction',
-    );
-    return `${names.length === 1 ? one : many} ${listed}${excepted.length === 0 ? '' : `, except ${except}`}`;
+    const except =
+        excepted.length === 0
+            ? ''
+            : ', except ' +
+              formatNameList(
+                  excepted.map((name) => `\`${name}\``),
+                  'disjunction',
+              );
+    return `${names.length === 1 ? one : many} ${listed}${except}`;
 }
 
 /**
@@ -44,20 +48,16 @@ export function formatDetectionConditions(detect: Configuration['detect']): {
     conditions: string[];
     exclusions: string[];
 } {
-    const conditions: string[] = [];
-    for (const [kind, patterns] of Object.entries(detect)) {
-        if (kind === 'absent_dependencies') continue;
+    const conditions = Object.entries(detect).flatMap(([kind, patterns]) => {
+        if (kind === 'absent_dependencies') return [];
         if (Array.isArray(patterns)) {
             const condition = formatListCondition(kind as keyof typeof DETECTION_LABELS, patterns);
-            if (condition !== undefined) conditions.push(condition);
-            continue;
+            return condition === undefined ? [] : [condition];
         }
-        conditions.push(
-            ...Object.entries(patterns).map(
-                ([path, pattern]) => `a file \`${path}\` whose text matches the regular expression \`${pattern}\``,
-            ),
+        return Object.entries(patterns).map(
+            ([path, pattern]) => `a file \`${path}\` whose text matches the regular expression \`${pattern}\``,
         );
-    }
+    });
     const dependencies = formatNameList(
         detect.absent_dependencies.map((name) => `\`${name}\``),
         'disjunction',
