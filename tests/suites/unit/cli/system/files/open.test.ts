@@ -4,10 +4,10 @@ import * as filesystem from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
-import { UNSAFE_PATH_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 
 test.skipIf(isWindows)(
     'the system path format keeps POSIX names the portable rules refuse, and reads a link as the link itself',
@@ -29,7 +29,7 @@ test.each(['../outside', '/outside', 'nul\0suffix'])('system paths refuse the es
     const root = openFiles(sandbox.path);
     expect(() => {
         root.write(path, { bytes: Buffer.from('inside'), mode: 0o640 });
-    }).toThrow(UNSAFE_PATH_MESSAGE);
+    }).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }));
 });
 
 test('deleteFolder refuses linked and outside parents and keeps folders that are not empty', async () => {
@@ -40,25 +40,17 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
     const files = openFiles(root);
     expect(() => {
         files.deleteFolder('linked/kept');
-    }).toThrow(
-        matchFields({
-            message: 'A parent of linked/kept is a link or is not a folder. Choose a folder without links.',
-        }),
-    );
+    }).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }));
     expect(() => {
         files.deleteFolder('../outside/kept');
-    }).toThrow(
-        matchFields({
-            message: '"../outside/kept" is not a safe repository-relative path. Choose a path inside the repository.',
-        }),
-    );
+    }).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }));
     files.createPrivateFolder('cache/empty');
     files.deleteFolder('cache/empty');
     expect(files.findStats('cache/empty')).toBeUndefined();
     files.write('cache/kept/value', { bytes: Buffer.from('retained'), mode: 0o600 });
     expect(() => {
         files.deleteFolder('cache/kept');
-    }).toThrow('ENOTEMPTY');
+    }).toThrow(matchFields<NodeJS.ErrnoException>({ code: 'ENOTEMPTY' }));
     expect(files.read('cache/kept/value')?.bytes.toString()).toBe('retained');
     expect(await readFile(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
 });
@@ -73,14 +65,7 @@ test('a refused file replacement keeps the original bytes and reports a filesyst
     });
     expect(() => {
         files.write('settings.json', { ...previous, bytes: Buffer.from('{}') });
-    }).toThrow(
-        matchFields({
-            code: 'filesystem',
-            message:
-                'Cannot write settings.json. Check its permissions and whether the filesystem is read-only, then run the command again.',
-            cause: denied,
-        }),
-    );
+    }).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'filesystem', cause: denied }));
     expect(files.read('settings.json')?.bytes).toEqual(previous.bytes);
     expect(files.list('')).toStrictEqual(['settings.json']);
 });

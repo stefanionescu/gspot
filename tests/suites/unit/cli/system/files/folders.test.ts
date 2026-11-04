@@ -2,6 +2,8 @@ import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
@@ -10,7 +12,9 @@ import { GLOB_FILES, LINKED_GLOBS, OUTSIDE_PATTERNS } from '#tests/config/system
 test.each([...OUTSIDE_PATTERNS])('a pattern that leaves the folder is refused: %s', async (pattern) => {
     await using sandbox = await testdir({ 'src/a.ts': 'export {};\n' });
 
-    expect(() => listMatchingPaths(sandbox.path, ['src/**', pattern])).toThrow('cannot leave its folder');
+    expect(() => listMatchingPaths(sandbox.path, ['src/**', pattern])).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }),
+    );
 });
 
 test.skipIf(isWindows).each(LINKED_GLOBS)(

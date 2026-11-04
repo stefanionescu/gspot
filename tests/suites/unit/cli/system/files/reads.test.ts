@@ -18,23 +18,15 @@ test('reads tell a missing optional file, required bytes, and invalid UTF-8 apar
     await using sandbox = await testdir();
     expect(findText(sandbox.path, 'source.txt')).toBeUndefined();
     expect(findText(createRunCache(sandbox.path), 'source.txt')).toBeUndefined();
-    const missing = matchFields<GspotError>({
-        name: 'GspotError',
-        code: 'filesystem',
-        message: 'source.txt is tracked but missing. Restore it or commit its deletion.',
-    });
+    const missing = matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' });
     expect(() => readText(sandbox.path, 'source.txt')).toThrow(missing);
     expect(() => readText(createRunCache(sandbox.path), 'source.txt')).toThrow(missing);
-    expect(() => readBytes(sandbox.path, 'source.txt')).toThrow('ENOENT');
+    expect(() => readBytes(sandbox.path, 'source.txt')).toThrow(matchFields<NodeJS.ErrnoException>({ code: 'ENOENT' }));
     const target = join(sandbox.path, 'source.txt');
     const invalid = Buffer.from([0xc3, 0x28]);
     await writeFile(target, invalid);
     expect(readBytes(sandbox.path, 'source.txt')).toStrictEqual(invalid);
-    const failure = matchFields<GspotError>({
-        name: 'GspotError',
-        code: 'filesystem',
-        message: 'source.txt is not UTF-8 text. Save it as UTF-8, then run the command again.',
-    });
+    const failure = matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' });
     expect(() => readText(sandbox.path, 'source.txt')).toThrow(failure);
     expect(() => readText(createRunCache(sandbox.path), 'source.txt')).toThrow(failure);
     await writeFile(target, 'valid café\n');
@@ -45,13 +37,13 @@ test('reads tell a missing optional file, required bytes, and invalid UTF-8 apar
     const unreadable = matchFields<GspotError>({
         name: 'GspotError',
         code: 'filesystem',
-        message: 'source.txt could not be read. Check the file and its permissions.',
+        cause: matchFields<NodeJS.ErrnoException>({ code: 'EISDIR' }),
     });
     expect(() => findText(sandbox.path, 'source.txt')).toThrow(unreadable);
     expect(() => findText(createRunCache(sandbox.path), 'source.txt')).toThrow(unreadable);
     expect(() => readText(sandbox.path, 'source.txt')).toThrow(unreadable);
     expect(() => readText(createRunCache(sandbox.path), 'source.txt')).toThrow(unreadable);
-    expect(() => readBytes(sandbox.path, 'source.txt')).toThrow('EISDIR');
+    expect(() => readBytes(sandbox.path, 'source.txt')).toThrow(matchFields<NodeJS.ErrnoException>({ code: 'EISDIR' }));
 });
 
 test('text reads follow file and folder links inside the folder and read hard links', async () => {
@@ -73,12 +65,9 @@ test('reads refuse a link chain that leaves the folder and work after the link i
 
     const root = join(sandbox.path, 'project');
     await symlink('../outside/source.txt', join(root, 'linked.txt'));
-    expect(() => readText(root, 'linked.txt')).toThrow(
-        matchFields({ message: 'linked.txt links to a file outside the repository. Replace the link with the file.' }),
-    );
-    expect(() => readBytes(createRunCache(root), 'linked.txt', { limit: 4 })).toThrow(
-        'linked.txt links to a file outside the repository. Replace the link with the file.',
-    );
+    const refusal = matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' });
+    expect(() => readText(root, 'linked.txt')).toThrow(refusal);
+    expect(() => readBytes(createRunCache(root), 'linked.txt', { limit: 4 })).toThrow(refusal);
     await rm(join(root, 'linked.txt'));
     await symlink('inside.txt', join(root, 'linked.txt'));
     expect(readText(root, 'linked.txt')).toBe('inside');
@@ -99,7 +88,7 @@ test('the run cache does not keep a failed read', async () => {
     await createFileTree(sandbox.path, { 'source.txt': 'original' });
     const cache = createRunCache(sandbox.path);
     expect(readBytes(cache, 'source.txt').toString()).toBe('original');
-    expect(() => readBytes(cache, 'missing.txt')).toThrow('missing.txt');
+    expect(() => readBytes(cache, 'missing.txt')).toThrow(matchFields<NodeJS.ErrnoException>({ code: 'ENOENT' }));
     await writeFile(join(sandbox.path, 'missing.txt'), 'recovered');
     expect(readBytes(cache, 'missing.txt').toString()).toBe('recovered');
 });

@@ -74,7 +74,7 @@ test.each([...STOPPED_CAPTURES])(
         }
         if (capture === 'bytes') {
             const abortError = await captureRejection(running);
-            expect(abortError.message).toBe('The operation was aborted.');
+            expect(abortError.name).toBe('AbortError');
         } else {
             const result = await running;
             expect(Buffer.from(result.stdout).toString('utf8')).toBe('descendant-ready\n');

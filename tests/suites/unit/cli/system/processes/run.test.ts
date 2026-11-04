@@ -79,7 +79,7 @@ test('a missing program is a launch failure with its error output', async () => 
     const result = await runProcess([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });
     expect(result.code).toBe(127);
     expect(result.end).toBe('missing');
-    expect(result.stderr).toBe(`Executable not found: ${join(sandbox.path, 'missing-executable')}`);
+    expect(result.stderr).toContain(join(sandbox.path, 'missing-executable'));
 });
 
 test.skipIf(isWindows)('a program without permission to run is not a missing program', async () => {

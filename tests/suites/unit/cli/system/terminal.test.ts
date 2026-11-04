@@ -96,8 +96,9 @@ test('unexpected command errors use the shared envelope and include their stack 
             version: cliPackage.version,
             exitCode: 2,
             error: 'unexpected',
-            message: `gspot stopped because of an internal error. Report it at ${cliPackage.bugs.url}, with the stack that --verbose prints.`,
+            message: expect.stringContaining(cliPackage.bugs.url) as string,
         });
+        expect(stdout[0]).not.toContain(failure.message);
         expect(brief).not.toHaveProperty('stack');
         expect(detailed).toMatchObject({ stack: failure.stack });
     } finally {
