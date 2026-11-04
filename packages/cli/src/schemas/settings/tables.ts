@@ -260,8 +260,12 @@ const lists = {
                 .array()
                 .optional()
                 .describe(namingExceptionSchema.shape.languages.description as string),
-            allow_digits: namingExceptionSchema.shape.allow_digits.default(false),
-            allow_repeated_words: namingExceptionSchema.shape.allow_repeated_words.default(false),
+            allow_digits: namingExceptionSchema.shape.allow_digits
+                .default(false)
+                .describe(namingExceptionSchema.shape.allow_digits.description as string),
+            allow_repeated_words: namingExceptionSchema.shape.allow_repeated_words
+                .default(false)
+                .describe(namingExceptionSchema.shape.allow_repeated_words.description as string),
             reason: z.string().describe(namingExceptionSchema.shape.reason.description as string),
         })
         .array()
