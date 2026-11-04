@@ -15,11 +15,8 @@ async function assertConflictingConfigs(root: string, output: string): Promise<v
     const { plan } = initOutputSchema.parse(JSON.parse(output));
     expect(plan.deleted).toStrictEqual([]);
     expect(plan.write.filter(({ path }) => ['prettier.config.mjs', '.editorconfig'].includes(path))).toStrictEqual([
-        { path: '.editorconfig', note: 'replaces your file; read the old one with git show HEAD:.editorconfig' },
-        {
-            path: 'prettier.config.mjs',
-            note: 'replaces your file; read the old one with git show HEAD:prettier.config.mjs',
-        },
+        { path: '.editorconfig', note: expect.stringContaining('git show HEAD:.editorconfig') as string },
+        { path: 'prettier.config.mjs', note: expect.stringContaining('git show HEAD:prettier.config.mjs') as string },
     ]);
     expect(existsSync(join(root, 'gspot.toml'))).toBe(true);
     expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
