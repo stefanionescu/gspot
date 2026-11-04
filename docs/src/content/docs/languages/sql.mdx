@@ -1,0 +1,75 @@
+---
+title: SQL
+description: Lint SQL files in the dialect of your database.
+configurations: [sql]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+gspot lints SQL files with SQLFluff, in the dialect of your database. `gspot check --fix` rewrites what SQLFluff can
+fix, such as the case of keywords and the layout of a statement. These checks run for the `sql` configuration:
+
+<ChecksTable guide="languages/sql" />
+
+## What gspot detects
+
+gspot selects `sql` in a scope that holds a file ending in `.sql`, `.pgsql`, or `.psql`. The
+[`postgres` configuration](/reference/configurations/postgres/) requires `sql` too. It checks Postgres migrations, and
+sets the SQLFluff dialect to `postgres`.
+
+`gspot install` installs SQLFluff into `.gspot/.venv`, apart from the Python environment of your project.
+
+## Dialect
+
+`sql.dialect` names the dialect that SQLFluff parses, such as `postgres`, `mysql`, or `sqlite`. Its default is `ansi`.
+Set it to the dialect of your database:
+
+```shell
+gspot set sql.dialect postgres
+```
+
+SQLFluff reads each file as plain SQL. It renders no Jinja or other template.
+
+## Style
+
+gspot sets the case of each kind of word:
+
+| Words       | Case       |
+| ----------- | ---------- |
+| Keywords    | Upper case |
+| Identifiers | Lower case |
+| Functions   | Lower case |
+| Literals    | Upper case |
+| Types       | Upper case |
+
+For example, `select id from user_accounts;` reports `CP01` for each lowercase keyword. `gspot check --fix` writes it as
+`SELECT id FROM user_accounts;`.
+
+SQLFluff takes its line length from `format.print_width`, and its indent from the `format` settings of SQL files.
+`gspot init` writes a `[[format.override]]` record that indents SQL files by four spaces when the rest of the
+repository uses another indent. Change the record to change the SQL indent.
+
+## Levels
+
+At level `basic`, gspot turns off six SQLFluff rules about joins, casts, subqueries, and `LIMIT`: `AM05`, `AM09`,
+`CV11`, `ST05`, `ST07`, and `ST09`. Level `all` runs them.
+
+## Exemptions and ignores
+
+SQLFluff runs with `--ignore-local-config`, so it reads only the config file that gspot writes. `gspot init` deletes a
+`.sqlfluff` or `.sqlfluffignore` file, and Git keeps the committed version. A SQLFluff table in `pyproject.toml`,
+`setup.cfg`, or `tox.ini` stays, and `gspot/conflicting-configs` reports it until you delete it; see
+[Migrate existing tools](/start/migrate/#read-the-plan).
+
+To turn one rule off, ignore it with a reason:
+
+```shell
+gspot ignore sql/sqlfluff --rule AM04 --reason "The reporting views mirror every column of their table."
+```
+
+To allow one statement, add a `noqa` comment with a reason, such as
+`SELECT * FROM orders -- noqa: AM04 -- reason: the view mirrors every column`.
+
+## Rules for coding agents
+
+The `sql` configuration installs `SQL.md` for coding agents.
