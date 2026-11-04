@@ -3,6 +3,7 @@ import { CLI_REFERENCE } from '#cli/reference.ts';
 
 import {
     CURL_COMMAND,
+    CHANGELOG_PATH,
     REFERENCE_FOLDERS,
     DISJUNCTION_FORMAT,
     CONJUNCTION_FORMAT,
@@ -93,12 +94,15 @@ export const LLMS_PAGES = {
     promote: SIDEBAR.flatMap(({ items }) => items.map(({ slug }) => slug.replace(/\/index$/u, ''))),
     demote: ['reference/**'],
     exclude: [
-        REFERENCE_FOLDERS.commands,
-        REFERENCE_FOLDERS.settings,
-        REFERENCE_FOLDERS.configurations,
-        REFERENCE_FOLDERS.checks,
-        REFERENCE_FOLDERS.eslintPlugin,
-    ].map((folder) => `reference/${folder}/**`),
+        ...[
+            REFERENCE_FOLDERS.commands,
+            REFERENCE_FOLDERS.settings,
+            REFERENCE_FOLDERS.configurations,
+            REFERENCE_FOLDERS.checks,
+            REFERENCE_FOLDERS.eslintPlugin,
+        ].map((folder) => `reference/${folder}/**`),
+        `reference/${CHANGELOG_PATH}`,
+    ],
     minify: { whitespace: false },
     customSets: [
         {

@@ -38,6 +38,8 @@ export const REFERENCE_FOLDERS = Object.fromEntries(
     ]),
 ) as Record<'commands' | 'settings' | 'jsonOutput' | 'configurations' | 'checks' | 'eslintPlugin', string>;
 
+export const CHANGELOG_PATH = 'changelog';
+
 export const SECTION_HEADING = /^## /mu;
 
 export const LISTED_VALUES_LIMIT = 12;
