@@ -1,0 +1,52 @@
+---
+title: Svelte
+description: Lint and type-check Svelte components with eslint-plugin-svelte and svelte-check.
+configurations: [svelte]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+The `svelte` configuration lints Svelte components with eslint-plugin-svelte, and checks their compiler warnings,
+accessibility warnings, and types with svelte-check. Prettier formats `.svelte` files through prettier-plugin-svelte.
+The configuration adds no Semgrep rules. These checks run for it:
+
+<ChecksTable guide="frameworks/svelte" />
+
+## Detection
+
+gspot selects `svelte` in a scope that holds a `.svelte` file, or whose `package.json` depends on `svelte`. The
+configuration requires `javascript`. It makes `extensionless` the default of `javascript.import_extension`, so
+relative imports leave out the file extension.
+
+## Type and compiler check
+
+`svelte/svelte-check` runs in place of `typescript/tsc`, at push, once for each scope. It checks every component and
+TypeScript file with a tsconfig that gspot writes for the scope. That tsconfig extends your own tsconfig when the
+scope has one, and turns on the strict compiler options of the level when it has none. A warning fails the check as
+an error does. For example, `<img src={source} />` reports `a11y_missing_attribute`.
+
+svelte-check loads the Svelte compiler of your project. Install the project dependencies before you run
+`gspot install`; otherwise svelte-check fails to start.
+
+To accept one warning, write a `svelte-ignore` comment with a reason, such as
+`<!-- svelte-ignore a11y_autofocus - reason: the dialog opens with the search field in focus -->`.
+
+## ESLint rules
+
+`javascript/eslint` reads `.svelte`, `.svelte.js`, and `.svelte.ts` files with svelte-eslint-parser, and with the
+TypeScript parser for scripts when the scope selects `typescript`. It adds these rules:
+
+- The `recommended` preset of eslint-plugin-svelte.
+- `svelte/no-target-blank` and `svelte/button-has-type`.
+- At level `all`: `svelte/no-useless-mustaches`, `svelte/prefer-const`, and `svelte/require-event-dispatcher-types`.
+
+## Exemptions
+
+- `import-x/no-default-export` is off in `.svelte` files, because Svelte compiles each component to a default export.
+- At level `all`, `structure/lone-files` accepts a folder whose only file is a SvelteKit route file: `+page`,
+  `+layout`, `+server`, or `+error`.
+
+## Rules for coding agents
+
+The `svelte` configuration installs `SVELTE.md` for coding agents. The [CSS guide](/languages/css/#component-styles)
+covers the style blocks of components.
