@@ -10,8 +10,9 @@ FastAPI application. It adds no check of its own: the Ruff rules run in `python/
 
 ## Detection
 
-gspot selects `fastapi` in a scope whose project depends on `fastapi`, such as through the `dependencies` of
-`pyproject.toml`. The configuration requires `python`; see the [Python guide](/languages/python/).
+gspot turns on `fastapi` in a scope whose project depends on `fastapi`, for example through the `dependencies` of
+`pyproject.toml`. The configuration needs `python`, so gspot turns that on too. The [Python guide](/languages/python/)
+describes its checks.
 
 ## Ruff rules
 
@@ -25,7 +26,7 @@ gspot selects `fastapi` in a scope whose project depends on `fastapi`, such as t
 
 ## Semgrep rules
 
-The configuration writes a Semgrep rule file for each scope, so `security/semgrep` runs at push. Semgrep runs on macOS
+The configuration writes a Semgrep rule file for each scope, so `security/semgrep` runs before each push. Semgrep runs on macOS
 and Linux. The rules report:
 
 | Rule                                           | Reports                                                                  |
@@ -34,7 +35,7 @@ and Linux. The rules report:
 | `gspot.fastapi.debug-enabled`                  | `FastAPI(debug=True)`, which returns tracebacks to the client.           |
 | `gspot.fastapi.exception-text-in-response`     | An `HTTPException` whose `detail` holds the text of a caught exception.  |
 
-For example, this module reports all three:
+For example, this module gets all three findings:
 
 ```python title="app/main.py"
 """The API."""
@@ -62,15 +63,15 @@ failed   security/semgrep  3 findings
   app/main.py:16:15  gspot.fastapi.exception-text-in-response  The text of an internal exception goes to the client. Log it, and return a stable message.
 ```
 
-gspot refuses a `nosemgrep` comment. To accept a finding, ignore the rule with a reason:
+gspot rejects a `nosemgrep` comment. To accept a finding, ignore the rule with a reason:
 
 ```shell title="example"
 gspot ignore security/semgrep --rule gspot.fastapi.debug-enabled --paths "dev/server.py" --reason "The local server runs only on a developer machine."
 ```
 
-To add rules of your own, see [Semgrep](/topics/security/#semgrep).
+To add rules of your own, follow [Semgrep](/topics/security/#semgrep).
 
 ## Rules for coding agents
 
-The `fastapi` configuration installs `FASTAPI.md` for coding agents. To check an OpenAPI description of the service,
+The `fastapi` configuration writes the rule file `FASTAPI.md` for coding agents. To check an OpenAPI description of the service,
 add the [`openapi` configuration](/reference/configurations/openapi/).

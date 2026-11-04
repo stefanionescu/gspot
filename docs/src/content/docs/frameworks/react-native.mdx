@@ -5,17 +5,18 @@ configurations: [react-native]
 ---
 
 The `react-native` configuration adds the rules of `@react-native/eslint-plugin`, and patterns for lists, touch
-targets, the window size, and secrets in AsyncStorage. It adds no check of its own and no Semgrep rules; its rules run
+targets, the window size, and secrets in AsyncStorage. It adds no check of its own and no Semgrep rules. Its rules run
 in `javascript/eslint`.
 
 ## Detection
 
-gspot selects `react-native` in a scope whose `package.json` depends on `react-native`. The configuration requires
-`react`, so the [React](/frameworks/react/) rules run too. The browser accessibility rules of `react-dom` stay off in
-a scope that selects `react-native`. The [Expo](/frameworks/expo/) configuration requires `react-native`.
+gspot turns on `react-native` in a scope whose `package.json` depends on `react-native`. The configuration needs
+`react`, so gspot turns that on too, and the [React](/frameworks/react/) rules also run. In a scope that uses
+`react-native`, the browser accessibility rules of `react-dom` stay off. The [Expo](/frameworks/expo/) configuration
+needs `react-native`.
 
-Native sources get the React Native globals, with `process` and `require` but no other Node.js globals; see
-[JavaScript runtimes](/languages/javascript-typescript/#javascript-runtimes).
+React Native sources get the React Native globals, with `process` and `require` but no other Node.js globals, as
+[JavaScript runtimes](/languages/javascript-typescript/#javascript-runtimes) describes.
 
 ## ESLint rules
 
@@ -31,4 +32,4 @@ TypeScript files of the scope. The `gspot/restricted-syntax` rule reports these 
 
 ## Rules for coding agents
 
-The `react-native` configuration installs `REACT-NATIVE.md` for coding agents.
+The `react-native` configuration writes the rule file `REACT-NATIVE.md` for coding agents.

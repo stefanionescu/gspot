@@ -5,29 +5,29 @@ configurations: [nestjs]
 ---
 
 The `nestjs` configuration adds the rules of eslint-plugin-nestjs-typed, two patterns for the response object and
-module cycles, and the compiler options that decorators need. It adds no check of its own and no Semgrep rules;
-its rules run in `javascript/eslint` and `typescript/tsconfig`.
+module cycles, and the compiler options that decorators need. It adds no check of its own and no Semgrep rules.
+Its rules run in `javascript/eslint` and `typescript/tsconfig`.
 
 ## Detection
 
-gspot selects `nestjs` in a scope that holds a `nest-cli.json` file, or whose `package.json` depends on
-`@nestjs/core`. The configuration requires `typescript`; see the
-[JavaScript and TypeScript guide](/languages/javascript-typescript/).
+gspot turns on `nestjs` in a scope that has a `nest-cli.json` file, or whose `package.json` depends on
+`@nestjs/core`. The configuration needs `typescript`, so gspot turns that on too. The
+[JavaScript and TypeScript guide](/languages/javascript-typescript/) describes its checks.
 
 ## Compiler options
 
-With `nestjs` selected, `typescript/tsconfig` requires `experimentalDecorators` and `emitDecoratorMetadata` in each
-tsconfig that you write. The tsconfig that gspot writes for a scope without one turns both on.
+When a scope uses `nestjs`, `typescript/tsconfig` requires `experimentalDecorators` and `emitDecoratorMetadata` in
+each tsconfig that you write. For a scope without a tsconfig, gspot writes one that turns both on.
 
 ## ESLint rules
 
 `javascript/eslint` adds these rules to the TypeScript files of the scope:
 
-- The `flatRecommended` preset of eslint-plugin-nestjs-typed. When the scope does not depend on `@nestjs/swagger`, the
-  `flatNoSwagger` preset too.
+- The `flatRecommended` preset of eslint-plugin-nestjs-typed. When the scope does not depend on `@nestjs/swagger`, also
+  the `flatNoSwagger` preset.
 - `@darraghor/nestjs-typed/injectable-should-be-provided`, which reads every TypeScript file of the scope and skips
   build output, installed packages, and test files.
-- `@typescript-eslint/no-extraneous-class` with `allowWithDecorator`, so a decorated class may hold no members.
+- `@typescript-eslint/no-extraneous-class` with `allowWithDecorator`, so a class with a decorator may have no members.
 - At level `all`: `@darraghor/nestjs-typed/api-operation-summary-description-capitalized`.
 
 The `gspot/restricted-syntax` rule reports two patterns:
@@ -41,8 +41,8 @@ The `gspot/restricted-syntax` rule reports two patterns:
 
 - A Nest module is an empty decorated class that registers providers and controllers. At level `all`,
   `gspot/no-trivial-functions` is off in `*.module.ts` files, and `gspot/no-trivial-files` accepts them.
-- `@eslint-react/no-forward-ref` is off in `.ts` files, because Nest `forwardRef` resolves module references and
-  has nothing to do with React refs.
+- `@eslint-react/no-forward-ref` is off in `.ts` files, because the Nest `forwardRef` resolves module references and
+  is not related to React refs.
 - At level `all`, `structure/shared-prefixes` leaves out the files that end in a Nest kind, such as
   `users.controller.ts` and `users.service.ts`. The kinds are `controller`, `service`, `module`, `guard`, `pipe`,
   `filter`, `interceptor`, `middleware`, `decorator`, `gateway`, `resolver`, `repository`, `entity`, `dto`,
@@ -50,4 +50,4 @@ The `gspot/restricted-syntax` rule reports two patterns:
 
 ## Rules for coding agents
 
-The `nestjs` configuration installs `NESTJS.md` for coding agents.
+The `nestjs` configuration writes the rule file `NESTJS.md` for coding agents.

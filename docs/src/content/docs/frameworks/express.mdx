@@ -4,13 +4,14 @@ description: Find request data that reaches SQL, HTML, or a redirect in Express 
 configurations: [express]
 ---
 
-The `express` configuration adds ESLint rules for the code of an Express service: request data passed to SQL text,
-`res.send()`, or `res.redirect()`, and values or stack traces in the error a client reads. It adds no check of its own
-and no Semgrep rules; its rules run in `javascript/eslint`.
+The `express` configuration adds ESLint rules for the code of an Express service. They report request data passed to
+SQL text, `res.send()`, or `res.redirect()`, and values or stack traces in the error that a client gets. The
+configuration adds no check of its own and no Semgrep rules. Its rules run in `javascript/eslint`.
 
 ## Detection
 
-gspot selects `express` in a scope whose `package.json` depends on `express`. The configuration requires `javascript`.
+gspot turns on `express` in a scope whose `package.json` depends on `express`. The configuration needs `javascript`, so
+gspot turns that on too.
 
 ## ESLint rules
 
@@ -38,10 +39,10 @@ app.get('/hello', (req, res) => {
 src/server.js:6:5  gspot/restricted-syntax  res.send() returns request data as HTML, which allows reflected XSS. Escape the value, or send JSON with res.json().
 ```
 
-The rules of the `javascript` configuration read Express code too, such as `gspot/no-powered-by-header`; see the
+The rules of the `javascript` configuration also check Express code, such as `gspot/no-powered-by-header` in the
 [Servers rules](/reference/eslint-plugin/servers/#no-powered-by-header).
 
 ## Rules for coding agents
 
-The `express` configuration installs `EXPRESS.md` for coding agents. To check an OpenAPI description of the service,
+The `express` configuration writes the rule file `EXPRESS.md` for coding agents. To check an OpenAPI description of the service,
 add the [`openapi` configuration](/reference/configurations/openapi/).

@@ -7,24 +7,25 @@ configurations: [react, react-dom]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 Two configurations cover React. `react` adds the React, hooks, and Fast Refresh lint rules to every React project.
-`react-dom` adds the accessibility rules of the browser, and a check that `react` and `react-dom` resolve to one
-version. They add no Semgrep rules. These checks run for them:
+`react-dom` adds accessibility rules for React apps in the browser, and a check that `react` and `react-dom` resolve to
+the same version. They add no Semgrep rules. They run these checks:
 
 <ChecksTable guide="frameworks/react" />
 
 ## Detection
 
-gspot selects `react` in a scope whose `package.json` depends on `react`, and `react-dom` when it depends on
-`react-dom`. `react` requires `javascript`, and `react-dom` requires `react`. The [Next.js](/frameworks/nextjs/),
-[React Native](/frameworks/react-native/), and [Expo](/frameworks/expo/) configurations select `react` too.
+gspot turns on `react` in a scope whose `package.json` depends on `react`, and `react-dom` when it depends on
+`react-dom`. `react` needs `javascript`, and `react-dom` needs `react`, so gspot turns those on too. The
+[Next.js](/frameworks/nextjs/), [React Native](/frameworks/react-native/), and [Expo](/frameworks/expo/)
+configurations also turn on `react`.
 
 `react` makes `extensionless` the default of `javascript.import_extension`, so relative imports leave out the file
-extension. React sources get browser globals; see
-[JavaScript runtimes](/languages/javascript-typescript/#javascript-runtimes).
+extension. React sources get the browser globals, as
+[JavaScript runtimes](/languages/javascript-typescript/#javascript-runtimes) describes.
 
 ## ESLint rules of `react`
 
-`javascript/eslint` reads the `.js`, `.jsx`, `.ts`, and `.tsx` files of the scope with these rules:
+`javascript/eslint` checks the `.js`, `.jsx`, `.ts`, and `.tsx` files of the scope with these rules:
 
 - The `recommended` presets of `@eslint-react/eslint-plugin` and eslint-plugin-react-refresh, and the
   `recommended-latest` preset of eslint-plugin-react-hooks.
@@ -39,13 +40,14 @@ type on the parameter instead of FC."
 ## ESLint rules of `react-dom`
 
 `react-dom` adds the `recommended` preset of eslint-plugin-jsx-a11y-x, which checks labels, alternative text,
-keyboard access, and Accessible Rich Internet Applications (ARIA) attributes. Its `no-noninteractive-tabindex` rule accepts a `tabindex` on the `tabpanel`
-and `region` roles. When the scope also selects `react-native`, gspot leaves these rules out.
+keyboard access, and Accessible Rich Internet Applications (ARIA) attributes. Its `no-noninteractive-tabindex` rule
+accepts a `tabindex` on the `tabpanel` and `region` roles. When the scope also uses `react-native`, gspot leaves these
+rules out.
 
 ## Matching versions
 
-`react-dom/react-versions` checks at commit that `react` and `react-dom` resolve to one version. It reads the
-lockfile of the scope, or the version ranges of `package.json` when no lockfile exists:
+Before each commit, `react-dom/react-versions` checks that `react` and `react-dom` resolve to the same version. It
+reads the lockfile of the scope, or the version ranges of `package.json` when no lockfile exists:
 
 ```text
 failed   react-dom/react-versions  1 finding
@@ -56,8 +58,7 @@ failed   react-dom/react-versions  1 finding
 
 - `eslint-plugin-react-hooks` reports the hook mistakes, so gspot turns off the `@eslint-react` rules that report the
   same ones under other names, such as `@eslint-react/rules-of-hooks` and `@eslint-react/exhaustive-deps`.
-- React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks
-  for. At level `all`, `gspot/no-trivial-functions` is off in `.jsx` and `.tsx` files, and `gspot/no-trivial-files`
+- React renders a component by its name, so React expects a component of one statement alone in its file. At level `all`, `gspot/no-trivial-functions` is off in `.jsx` and `.tsx` files, and `gspot/no-trivial-files`
   accepts them.
 - In `.jsx` and `.tsx` files, the naming checks accept a file name in PascalCase or kebab-case, and a component
   function in PascalCase. A variable that holds a component, such as the result of `memo` or `lazy`, may use
@@ -65,4 +66,4 @@ failed   react-dom/react-versions  1 finding
 
 ## Rules for coding agents
 
-The `react` configuration installs `REACT.md` for coding agents.
+The `react` configuration writes the rule file `REACT.md` for coding agents.

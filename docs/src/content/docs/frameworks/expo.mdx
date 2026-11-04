@@ -7,23 +7,24 @@ configurations: [expo]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `expo` configuration runs Expo Doctor, and adds the lint rules of eslint-plugin-expo for public environment
-variables and DOM components. It adds no Semgrep rules. These checks run for it:
+variables and DOM components. It adds no Semgrep rules. It runs these checks:
 
 <ChecksTable guide="frameworks/expo" />
 
 ## Detection
 
-gspot selects `expo` in a scope whose `package.json` depends on `expo`. The configuration requires `react-native`, so
-the [React Native](/frameworks/react-native/) and [React](/frameworks/react/) rules run too.
+gspot turns on `expo` in a scope whose `package.json` depends on `expo`. The configuration needs `react-native`, so
+gspot turns that on too, and the [React Native](/frameworks/react-native/) and [React](/frameworks/react/) rules also
+run.
 
 ## Doctor check
 
-`expo/expo-doctor` runs Expo Doctor at push, once for each scope. It reports each Doctor check that fails, with its
-details, on the `package.json` of the scope. Doctor needs network access.
+`expo/expo-doctor` runs Expo Doctor before each push, once for each scope. It reports each Doctor check that fails, with
+its details, as a finding on the `package.json` of the scope. Doctor needs network access.
 
-The check reads the installed Expo project. When `expo` is missing from the installed dependencies of the scope, it
-stops and asks you to install them. For example, a `react-native` version that differs from the one the Expo SDK
-requires fails a Doctor check. Run `npx expo install --check` to install the matching version.
+The check reads the installed dependencies of the Expo project. When `expo` is not installed in the scope, the check
+stops and asks you to install the dependencies. A Doctor check fails, for example, when the installed `react-native`
+version differs from the one that the Expo SDK needs. Run `npx expo install --check` to install the matching version.
 
 ## ESLint rules
 
@@ -34,6 +35,6 @@ requires fails a Doctor check. Run `npx expo install --check` to install the mat
 - `expo/use-dom-exports`, for components that render with the `"use dom"` directive.
 - At level `all`: `expo/prefer-box-shadow`.
 
-The app runs on the device, so `gspot/no-client-environment` allows it only environment variables that start with
-`EXPO_PUBLIC_`. API routes that end in `+api.js` or `+api.ts`, config files such as `app.config.ts`, and files under a
-`scripts` folder run elsewhere, so the rule skips them.
+The app runs on the device, so `gspot/no-client-environment` allows the app only the environment variables that start
+with `EXPO_PUBLIC_`. API routes that end in `+api.js` or `+api.ts`, config files such as `app.config.ts`, and files
+under a `scripts` folder do not run on the device, so the rule skips them.
