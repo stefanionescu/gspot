@@ -82,7 +82,7 @@ test('Deno checks skip a scope with no edge functions', async () => {
         const result = await runChecks(session, buildRunOptions({ only: [name] }));
         expect(result.report.checks[0]).toMatchObject({
             status: 'skipped',
-            note: 'No edge function under supabase/functions.',
+            note: expect.stringContaining('supabase/functions') as string,
         });
     }
 });

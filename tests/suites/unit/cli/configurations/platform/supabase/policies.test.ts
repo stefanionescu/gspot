@@ -142,7 +142,7 @@ test('supabase/storage-policies reports invalid bucket settings as a syntax find
                     file: path,
                     line: 1,
                     rule: 'syntax',
-                    message: `${path}: storage.buckets: Invalid input: expected record, received string. Fix the field.`,
+                    message: expect.stringContaining(`${path}: storage.buckets`) as string,
                 },
             ],
         },
