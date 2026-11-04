@@ -127,7 +127,7 @@ export type ScopeContents = {
     extensionCounts: Map<string, number>;
     runtimes: Map<string, string>;
     dependencies: Map<string, string>;
-    scope: string;
+    scopePath: string;
 };
 
 export type ConfigurationEvidence = {

@@ -46,7 +46,7 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
         dependencies: new Map(
             scopeDependencyFiles.flatMap((file) => Object.keys(file.dependencies).map((name) => [name, file.path])),
         ),
-        scope: scopePath,
+        scopePath,
     };
 }
 
@@ -66,7 +66,7 @@ function findContentEvidence(
     contents: ScopeContents,
 ): DetectionEvidence | undefined {
     for (const [path, pattern] of Object.entries(detect.content)) {
-        const isTarget = buildPathMatcher([joinScope(escapeGlob(contents.scope), path)]);
+        const isTarget = buildPathMatcher([joinScope(escapeGlob(contents.scopePath), path)]);
         const file = contents.files.find((each) => {
             if (!isTarget(each.path)) return false;
             const text = findText(root, each.path);
@@ -88,7 +88,7 @@ function findConfigurationEvidence(
             .map((source) => source(configuration.detect, contents))
             .find((found) => found !== undefined) ?? findContentEvidence(root, configuration.detect, contents);
     if (evidence !== undefined) return { configuration: configuration.name, group: configuration.group, ...evidence };
-    return configuration.always_selected && contents.scope === ''
+    return configuration.always_selected && contents.scopePath === ''
         ? { configuration: configuration.name, group: configuration.group, evidence: EVERY_REPOSITORY_EVIDENCE }
         : undefined;
 }
