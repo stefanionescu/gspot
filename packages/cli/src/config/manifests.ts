@@ -105,16 +105,6 @@ export const RULES_FOLDER = 'rules';
 
 export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
 
-export const DETECTION_LABELS = {
-    extensions: 'file extensions',
-    filenames: 'filenames',
-    dependencies: 'dependencies',
-    runtimes: 'JavaScript runtimes',
-    tags: 'files marked',
-    paths: 'file paths',
-    project_files: 'project files',
-} as const;
-
 export const CONFIGURATIONS_FOLDER = 'src/configurations';
 
 export const GROUPS = [
