@@ -30,6 +30,8 @@ const EMPTY_LIST = '[]';
 
 type ListCounts = Map<string, { key: string; count: number }>;
 
+const compiledGlobs = new Map<string, string>();
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Each printed call records its import here, at one place.
 function serializeCall(writer: EslintFileWriter, name: string, args: string[]): string {
     writer.functions.add(name);
@@ -80,11 +82,22 @@ function serializeArgument(writer: EslintFileWriter, argument: EslintCallArgumen
     return `{ ${[...shipped, ...local].join(', ')} }`;
 }
 
+function compileGlob(glob: string): string {
+    let source = compiledGlobs.get(glob);
+    if (source === undefined) {
+        source = picomatch.makeRe(glob, { dot: true }).source;
+        compiledGlobs.set(glob, source);
+    }
+    return source;
+}
+
+// The config file of every scope lists the runtimes of every scope, so each glob compiles once per run.
 function serializeRuntimes({ runtimes, constants }: EslintFileWriter): string {
+    if (constants.has(ESLINT_RUNTIMES_CONSTANT)) return ESLINT_RUNTIMES_CONSTANT;
     const compiled = runtimes.map((runtime) => ({
         ...runtime,
-        includes: runtime.includes.map((glob) => picomatch.makeRe(glob, { dot: true }).source),
-        excludes: runtime.excludes.map((glob) => picomatch.makeRe(glob, { dot: true }).source),
+        includes: runtime.includes.map((glob) => compileGlob(glob)),
+        excludes: runtime.excludes.map((glob) => compileGlob(glob)),
     }));
     constants.set(ESLINT_RUNTIMES_CONSTANT, JSON.stringify(compiled, null, JSON_INDENT));
     return ESLINT_RUNTIMES_CONSTANT;
