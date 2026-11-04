@@ -21,7 +21,7 @@ function formatChoices(value: Pick<CommandReference['arguments'][number], 'choic
         value.choices === undefined
             ? ''
             : ' Choices: ' + value.choices.map((choice) => `\`${choice}\``).join(', ') + '.';
-    const defaultValue = value.default === undefined ? '' : ` Default: \`${JSON.stringify(value.default)}\`.`;
+    const defaultValue = value.default === undefined ? '' : ` Default: \`${String(value.default)}\`.`;
     return choices + defaultValue;
 }
 
@@ -43,8 +43,9 @@ function formatCommand(command: CommandReference): string {
             [EXIT_CODE_HEADING, 'Meaning'],
             command.exitCodes.map(([codes, meaning]) => [`\`${codes}\``, meaning]),
         ),
-        EXAMPLE_MESSAGE,
-        `\`\`\`shell\n${command.example}\n\`\`\``,
+        ...(command.example === `gspot ${command.name}`
+            ? []
+            : [EXAMPLE_MESSAGE, `\`\`\`shell\n${command.example}\n\`\`\``]),
     ];
     return formatSection(`gspot ${command.name}`, blocks.filter(Boolean).join('\n\n'));
 }

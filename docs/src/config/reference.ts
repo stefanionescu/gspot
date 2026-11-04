@@ -63,6 +63,14 @@ export const CATEGORY_PLACEHOLDER = '<category>';
 export const ENVIRONMENT_VARIABLES: ReadonlyArray<[name: string, meaning: string]> = [
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
     ['`XDG_CACHE_HOME`, `LOCALAPPDATA`', 'The cache folder; it must be an absolute path.'],
+    [
+        '`GITHUB_TOKEN`',
+        'A GitHub token for the release lookups of mise in `gspot init`, `gspot install`, and `gspot scan`. Without one, GitHub allows 60 lookups an hour.',
+    ],
+    [
+        '`GITHUB_ACTIONS`',
+        'When `true`, `gspot check` keeps tool output from running workflow commands, and prints each finding as an error annotation.',
+    ],
 ];
 
 export const CONJUNCTION_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
