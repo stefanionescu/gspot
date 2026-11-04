@@ -89,14 +89,14 @@ function formatArgumentError(error: CommanderError, program: Command, command: s
     return `${formatCommanderSentence(error, command)}${correction} ${helpLine}`;
 }
 
-function printFailure(error: unknown, program: Command, commandArguments: string[]): number {
+function printFailure(error: unknown, program: Command, options: string[]): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
         if (error.code === HELP_ERROR_CODE && program.getOptionValue('version') === true) {
             printResult({ text: cliPackage.version, json: {}, exitCode: 0 });
             return 0;
         }
-        const command = program.commands.find((each) => each.name() === commandArguments[0])?.name();
+        const command = program.commands.find((each) => each.name() === options[0])?.name();
         printError({ error: 'arguments', message: formatArgumentError(error, program, command) });
         return EXIT_ERROR;
     }
@@ -104,9 +104,7 @@ function printFailure(error: unknown, program: Command, commandArguments: string
         printError({ error: error.code, message: error.message });
         return EXIT_ERROR;
     }
-    const separator = commandArguments.indexOf('--');
-    const flags = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
-    printUnexpectedError(error, flags.includes(VERBOSE_FLAG));
+    printUnexpectedError(error, options.includes(VERBOSE_FLAG));
     return EXIT_ERROR;
 }
 
@@ -275,7 +273,7 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
         await program.parseAsync(commandArguments, { from: 'user' });
         return exitCode;
     } catch (error) {
-        return printFailure(error, program, commandArguments);
+        return printFailure(error, program, options);
     } finally {
         endReport?.();
         for (const annotation of annotations) print(annotation);
