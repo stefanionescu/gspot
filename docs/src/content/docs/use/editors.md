@@ -3,8 +3,8 @@ title: Editors
 description: Make your editor run the same tools, with the same settings, as gspot.
 ---
 
-Your editor reads the same config files as gspot. ESLint and Prettier extensions normally run the workspace's own
-packages, so their versions can differ from the tools that gspot installs.
+Your editor reads the same config files as gspot. ESLint and Prettier extensions run the packages of the workspace, so
+their versions can differ from the tools that gspot installs.
 
 ## Before you open the editor
 
@@ -36,9 +36,25 @@ Check your editor's output to confirm which ESLint and Prettier versions it runs
 The Stylelint pointer file sits at the repository root and holds one override for each scope that selects `css`. A
 `package.json` that keeps a `stylelint` field outside the root points at the config file of its scope instead.
 
-`.editorconfig` carries the `[format]` settings to every editor that reads it. Some tools have no pointer file; gspot
-passes their config file when it runs them, so give your editor the same path.
-[Generated files](/reference/generated-files/) lists every file gspot writes.
+`.editorconfig` carries the `[format]` settings to every editor that reads it.
+[Files and caches](/reference/generated-files/) lists every file gspot writes.
+
+## Tools without a pointer file
+
+Five tools cannot extend a config file at another path, so gspot writes no pointer file for them. It passes their config
+file with `--config` when it runs them. Without that path, an editor extension uses the defaults of the tool, and
+format-on-save writes text that the check rejects. Give the extension the same path:
+
+| Tool                 | Config file of the root scope                         | VS Code setting                                                                                                           |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Taplo                | `.gspot/configurations/general/data-files/taplo.toml` | `evenBetterToml.taplo.configFile.path` of [Even Better TOML](https://github.com/tamasfe/taplo/tree/master/editors/vscode) |
+| typos                | `.gspot/configurations/general/spelling/typos.toml`   | `typos.config` of [typos-lsp](https://github.com/tekumara/typos-lsp)                                                      |
+| Vale, at level `all` | `.gspot/configurations/general/prose/vale.ini`        | `vale.valeCLI.config` of [Vale VSCode](https://github.com/chrischinchilla/vale-vscode)                                    |
+| SQLFluff             | `.gspot/configurations/language/sql/sqlfluff.cfg`     | `sqlfluff.config` of [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                                       |
+| SwiftFormat          | `.gspot/configurations/language/swift/swiftformat`    | `swiftformat.configSearchPaths` of [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)                    |
+
+A tool config of your own, such as `.taplo.toml` at the root, does not help: `gspot/conflicting-configs` reports it,
+because gspot writes the settings of that tool.
 
 ## Validate `gspot.toml`
 
