@@ -321,32 +321,32 @@ export function parsePrettierFile(path: string, text: string, scripts: PrettierS
 Read the formatting options of one scope that init sets up.
 
 @param selection the scope and its selected configurations.
-@param selection.scope the scope path, empty for the root.
+@param selection.scopePath the scope path, empty for the root.
 @param selection.selected the configurations selected in the scope.
 @param draft the configurations and the template.
 @param repository the root and the tracked files.
 */
 export function readScopeFormat(
-    { scope, selected }: ScopeConfigurations,
+    { scopePath, selected }: ScopeConfigurations,
     draft: SettingsDraft,
     repository: Repository,
 ): TomlTable {
     const format = selected.find((configuration) => configuration.name === FORMAT_CONFIGURATION);
     if (format === undefined) return {};
     const read = readFormatOptions(
-        { root: repository.root, scopePath: scope, scripts: draft.prettierScripts },
+        { root: repository.root, scopePath, scripts: draft.prettierScripts },
         Object.fromEntries(
             repository.dependencyFiles
-                .filter((dependencyFile) => selectScopePath(dependencyFile.path, draft.scopes) === scope)
+                .filter((dependencyFile) => selectScopePath(dependencyFile.path, draft.scopes) === scopePath)
                 .flatMap((dependencyFile) => Object.entries(dependencyFile.dependencies)),
         ),
         getTool([format], 'prettier').replace as string[],
     );
-    const options = scope === '' && hasCode(repository) ? { ...PRETTIER_DEFAULTS, ...read } : read;
+    const options = scopePath === '' && hasCode(repository) ? { ...PRETTIER_DEFAULTS, ...read } : read;
     const fields = options === null ? {} : convertPrettierFormat(options);
     const overrides = [
-        ...buildPrettierOverrides(options, scope, draft.trackedPaths),
-        ...(scope === '' ? buildFormatterOverrides(fields, repository) : []),
+        ...buildPrettierOverrides(options, scopePath, draft.trackedPaths),
+        ...(scopePath === '' ? buildFormatterOverrides(fields, repository) : []),
     ];
     const table: TomlTable = { ...fields, ...(overrides.length > 0 && { override: overrides }) };
     return Object.values(table).every((value) => value === undefined) ? {} : { format: table };

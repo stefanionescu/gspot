@@ -16,7 +16,7 @@ export type Level = (typeof LEVELS)[number];
 
 export type ImportExtensionStyle = (typeof IMPORT_EXTENSION_STYLES)[number];
 
-export type ScopeConfigurations = { scope: string; selected: Configuration[] };
+export type ScopeConfigurations = { scopePath: string; selected: Configuration[] };
 
 export type DetectedScopes = { repository: Repository; scopes: ReadonlyArray<{ path: string }> };
 

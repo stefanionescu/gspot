@@ -20,14 +20,14 @@ function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlT
     };
     const scopes = ['', ...draft.scopes.map((each) => each.path)];
     const scopeConfigurations = scopes.map((scopePath) => ({
-        scope: scopePath,
+        scopePath,
         selected: selectConfigurationsForScope(selected, scopePath),
     }));
     const detected = buildDetectedTables(scopeConfigurations, { repository, scopes: draft.scopes });
     const tables = new Map(
         scopeConfigurations.map((selection) => [
-            selection.scope,
-            { ...detected.get(selection.scope), ...readScopeFormat(selection, draft, repository) },
+            selection.scopePath,
+            { ...detected.get(selection.scopePath), ...readScopeFormat(selection, draft, repository) },
         ]),
     );
     const scope = draft.scopes.map(({ path, configurations }) => ({ path, configurations, ...tables.get(path) }));

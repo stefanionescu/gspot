@@ -41,7 +41,7 @@ function buildOpenApiTable(selection: ScopeConfigurations, { repository, scopes 
     if (openapi === undefined) return {};
     const isDocument = buildFilenameMatcher(openapi.detect.filenames);
     const document = repository.files.find(
-        (file) => selectScopePath(file.path, scopes) === selection.scope && isDocument(file.path),
+        (file) => selectScopePath(file.path, scopes) === selection.scopePath && isDocument(file.path),
     )?.path;
     return document === undefined ? {} : { openapi: { document } };
 }
@@ -49,7 +49,7 @@ function buildOpenApiTable(selection: ScopeConfigurations, { repository, scopes 
 function buildSwiftTable(selection: ScopeConfigurations, { repository, scopes }: DetectedScopes): TomlTable {
     if (selection.selected.every(({ name }) => name !== SWIFT_CONFIGURATION)) return {};
     const file = repository.files.find(
-        ({ path }) => path.endsWith(PBXPROJ_SUFFIX) && selectScopePath(path, scopes) === selection.scope,
+        ({ path }) => path.endsWith(PBXPROJ_SUFFIX) && selectScopePath(path, scopes) === selection.scopePath,
     )?.path;
     if (file === undefined) return {};
     const text = findText(repository.root, file);
@@ -72,13 +72,13 @@ function buildSiteTable(selection: ScopeConfigurations, { repository }: Detected
 
 function buildCloudflareTable(selection: ScopeConfigurations, { repository }: DetectedScopes): TomlTable {
     if (selection.selected.every(({ name }) => name !== CLOUDFLARE_CONFIGURATION)) return {};
-    const dependencies = listProjectDependencyNames(repository.dependencyFiles, selection.scope);
+    const dependencies = listProjectDependencyNames(repository.dependencyFiles, selection.scopePath);
     return dependencies.includes(OPENNEXT_PACKAGE) ? { cloudflare: { ...OPENNEXT_TYPE_DEFAULTS } } : {};
 }
 
 function buildTranslationsTable(selection: ScopeConfigurations, { repository }: DetectedScopes): TomlTable {
     if (selection.selected.every(({ name }) => name !== TRANSLATIONS_CONFIGURATION)) return {};
-    const folder = joinScope(selection.scope, MESSAGES_FOLDER);
+    const folder = joinScope(selection.scopePath, MESSAGES_FOLDER);
     const hasMessages = repository.files.some(
         ({ path }) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGES_FILE_SUFFIX),
     );
@@ -120,12 +120,12 @@ function hasTsImports(repository: Repository, scopePath: string, cache: RunCache
 
 function buildImportExtensionTable(selection: ScopeConfigurations, repository: Repository, cache: RunCache): TomlTable {
     if (selection.selected.every(({ name }) => name !== JAVASCRIPT_CONFIGURATION)) return {};
-    const style = detectImportExtension(repository, selection.scope, cache);
+    const style = detectImportExtension(repository, selection.scopePath, cache);
     if (style === undefined) return {};
     const hasFrameworkStyle = selection.selected.some((configuration) =>
         Object.hasOwn(configuration.defaults, IMPORT_EXTENSION_SETTING),
     );
-    const isSuffixRequired = style === 'js' || (style === 'ts' && hasTsImports(repository, selection.scope, cache));
+    const isSuffixRequired = style === 'js' || (style === 'ts' && hasTsImports(repository, selection.scopePath, cache));
     if (hasFrameworkStyle && !isSuffixRequired) return {};
     const table: TomlTable = {};
     setKey(table, IMPORT_EXTENSION_SETTING, style);
@@ -146,7 +146,7 @@ export function buildDetectedTables(
     const cache = createRunCache(detected.repository.root);
     return new Map(
         selections.map((selection) => [
-            selection.scope,
+            selection.scopePath,
             {
                 ...buildSwiftTable(selection, detected),
                 ...buildOpenApiTable(selection, detected),

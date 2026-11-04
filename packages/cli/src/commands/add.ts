@@ -39,7 +39,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     restoreConfigurations(scopeTable, options.configurations);
     const { repository } = context.session;
     const newlySelected = selectConfigurations(added).filter(({ name }) => !selected.includes(name));
-    const detected = buildDetectedTables([{ scope: scopePath, selected: newlySelected }], {
+    const detected = buildDetectedTables([{ scopePath, selected: newlySelected }], {
         repository,
         scopes: repository.scopeFolders,
     });
