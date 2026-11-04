@@ -13,12 +13,12 @@ import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/
 import type { Explanation, SettingScope, ExplainedSetting } from '#cli/types/commands/reports.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
-    const { scope, shipped, inherited } = scopeSetting;
+    const { scopePath, shipped, inherited } = scopeSetting;
     const shown =
         inherited?.value === undefined ? NOT_SET : `${JSON.stringify(inherited.value)} (from ${inherited.source})`;
     return [
         '',
-        `Scope: ${formatScope(scope)}`,
+        `Scope: ${formatScope(scopePath)}`,
         `Shipped default: ${shipped === undefined ? NOT_SET : JSON.stringify(shipped)}`,
         `Current value: ${shown}`,
         ...(scopeSetting.readBy.length === 0 ? [] : [`Read by: ${scopeSetting.readBy.join(', ')}`]),
@@ -38,8 +38,8 @@ function formatReasonLines(setting: Setting, { shipped, inherited }: SettingScop
 function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     if (Object.hasOwn(RECORD_FIELDS, key))
         return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot install.`];
-    const { scope } = scopeSetting;
-    const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
+    const { scopePath } = scopeSetting;
+    const target = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     return [
         ...formatReasonLines(setting, scopeSetting),
         `Change it: gspot set ${quoteArgument(key)} <value>${target}${setting.reason_for === undefined ? '' : REASON_OPTION_TEXT}`,
@@ -53,7 +53,7 @@ function readShippedSetting(key: string): ExplainedSetting | undefined {
     const match = findSetting(available, key);
     if (match === undefined) return undefined;
     const shipped = findSettingDefault(available, settings, match, '')?.value;
-    const scope = { scope: '', shipped, inherited: undefined, readBy: [] };
+    const scopeSetting = { scopePath: '', shipped, inherited: undefined, readBy: [] };
     const owners = findSettingSchema(key)?.meta()?.['configurations'] as string[] | undefined;
     const ownership = owners === undefined ? [] : [`Configurations: ${formatNameList(owners)}`];
     return {
@@ -65,7 +65,7 @@ function readShippedSetting(key: string): ExplainedSetting | undefined {
             match.setting.description.replaceAll('`', ''),
             ...ownership,
             'No gspot.toml here: these are the shipped values',
-            ...formatSettingScope(key, match.setting, scope),
+            ...formatSettingScope(key, match.setting, scopeSetting),
             '',
         ].join('\n'),
     };
@@ -79,7 +79,7 @@ function findSessionSetting(session: Session, key: string): ExplainedSetting | u
         if (match === undefined || (!isScopeKey && scope.path !== '')) return [];
         return [
             {
-                scope: scope.path,
+                scopePath: scope.path,
                 setting: match.setting,
                 readBy: listSettingReaders(settings, scope, key).map((reader) =>
                     reader.note === undefined ? reader.check : `${reader.check} (${reader.note})`,
@@ -101,8 +101,8 @@ function findSessionSetting(session: Session, key: string): ExplainedSetting | u
     return {
         setting: first.setting,
         text: `${lines.join('\n')}\n`,
-        scopes: scopes.map(({ scope, shipped, inherited, readBy }) => ({
-            scope,
+        scopes: scopes.map(({ scopePath, shipped, inherited, readBy }) => ({
+            scope: scopePath,
             default: shipped,
             value: inherited?.value,
             source: inherited?.origin,

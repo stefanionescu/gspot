@@ -115,7 +115,7 @@ export type CheckIgnore = z.infer<typeof checkIgnoreSchema>;
 export type PathExplanation = z.infer<typeof pathExplanationSchema>;
 
 export type SettingScope = {
-    scope: string;
+    scopePath: string;
     shipped: unknown;
     inherited: InheritedSetting | undefined;
     readBy: string[];
