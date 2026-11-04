@@ -54,8 +54,8 @@ Each name must match an import rule.
 
 ## Keep relative imports inside a folder
 
-At level `all`, `gspot/import-boundaries` checks JavaScript and TypeScript imports, so this section and its example
-work at level `all` only. A relative import may not leave its folder: an import of a file elsewhere goes through
+`gspot/import-boundaries` checks JavaScript and TypeScript imports at level `all` only, so at level `basic`,
+`javascript.import_boundaries` changes nothing. A relative import may not leave its folder: an import of a file elsewhere goes through
 the alias of `tsconfig.json` or `package.json`, and `eslint --fix` writes it. By default, the folders two levels down,
 such as `src/features/`, and each scope draw that line. To make each feature its own folder:
 

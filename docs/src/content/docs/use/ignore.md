@@ -3,7 +3,7 @@ title: Ignore findings
 description: Ignore a check or a lint rule for some files, with a reason that gspot records.
 ---
 
-An ignore turns off a check or one of its lint rules, for every file or for some paths. gspot records it in
+An ignore turns off a check or one of its lint rules. It covers every file or some paths. gspot records it in
 `gspot.toml` with your reason. Fix the code first. Ignore a finding only when you can say why the rule does not fit.
 
 ## Ignore a lint rule

@@ -7,7 +7,8 @@ configurations: [prose, spelling]
 gspot selects two configurations in every repository:
 
 - `spelling` runs typos on code, comments, and docs.
-- `prose` reports dates that read two ways, with the day and the month both as numbers, in Markdown and code comments.
+- `prose` reports dates that read two ways in Markdown files and code comments: dates with the day and the month as
+  numbers.
   At level `all`, it also runs Vale on Markdown, code comments, and commit messages.
 
 ## Spelling

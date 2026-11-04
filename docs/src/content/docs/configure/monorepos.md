@@ -73,11 +73,12 @@ gspot stops and names both. Set the value yourself to choose.
 
 [Scope settings](/reference/gspot-toml/#scope) lists the keys and the values they accept.
 
-## Turborepo and Nx
+## Monorepo task runners
 
 gspot handles the packages of a workspace through scopes, so run `gspot check` once at the root, not in the `lint`
-script of each package. A run in each package repeats the work, skips the checks of the root scope, and lets the task
-cache keep a pass after `gspot.toml` changes, because the files of a package do not include `gspot.toml` or `.gspot/`.
+script of each package. A run in each package repeats the work and skips the checks of the root scope. The task cache
+of a package also keeps a pass after `gspot.toml` changes, because the files of a package do not include `gspot.toml`
+or `.gspot/`.
 
 To keep gspot in the task graph of Turborepo, make it a
 [root task](https://turborepo.dev/docs/crafting-your-repository/configuring-tasks), such as `//#lint`, and set

@@ -7,7 +7,7 @@ description: Change gspot.toml with commands, and learn which changes need a rea
 change `gspot.toml` instead of the tool configs. Each command on this page edits `gspot.toml` and writes the generated
 files again. It keeps your comments and the order of your settings.
 
-A change that weakens a check needs a reason, such as a raised limit or a removed configuration.
+A raised limit, a removed configuration, and every other change that weakens a check need a reason.
 [Changes that weaken the checks](/use/ignore/#changes-that-weaken-the-checks) shows how gspot reviews them.
 
 ## See the current settings
@@ -154,8 +154,8 @@ Other names in that file keep their checks.
 
 ## What settings cannot change
 
-The level decides which rules run, and each gspot release pins the tool versions. So every repository at one level and
-one gspot version runs the same checks.
+The level decides which rules run, and each gspot release pins the tool versions. Every repository at one level and
+one gspot version therefore runs the same checks.
 
 - To run a rule of level `all`, set the level to `all`, then ignore the rules you do not want.
 - Every finding fails its check. Only your own command checks choose their stage.

@@ -3,13 +3,13 @@ title: Coding agents
 description: What gspot writes for coding agents, and how to change it.
 ---
 
-gspot writes rules for coding agents: Markdown files in `.gspot/rules/`, chosen by your configurations and your level.
+gspot writes rules for coding agents: Markdown files in `.gspot/rules/`. Your configurations and your level pick them.
 Level `all` adds sections to some of them. The rules guide agents; the checks still stop code that fails.
 
 ## The `AGENTS.md` block
 
 gspot writes one block in `AGENTS.md`, the part between the gspot markers, and keeps your own text outside it. The
-block lists the rule files and says when to read each one. It tells the agent to commit and fix what the hook reports,
+block lists the rule files and says when to read each one. It says to commit and fix what the hook reports,
 and to run `gspot check --changed --stage push` before a push. It also names the commands that change settings, and
 says which files gspot generates.
 

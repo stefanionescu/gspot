@@ -30,7 +30,7 @@ When a check cannot run, `gspot baseline` stops and writes nothing.
 
 ## Shrink the baseline
 
-After you fix an old finding, `gspot/baseline` fails, because the file counts a finding that the checks no longer find:
+After you fix an old finding, `gspot/baseline` fails, because the file counts a finding that the run does not find:
 
 ```text
 failed   gspot/baseline  1 finding

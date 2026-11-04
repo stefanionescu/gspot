@@ -125,7 +125,7 @@ gspot edits no script, hook, or CI file. The plan and `gspot scan` list what sti
 Each row names the line and what to do with it. `gspot/conflicting-configs` reports each row until it goes. Change these
 commands, because a script that calls ESLint in a clone without `gspot install` cannot load the generated config. A
 `lint` script in a workspace package becomes one `gspot check` at the repository root; see
-[Turborepo and Nx](/configure/monorepos/#turborepo-and-nx).
+[Monorepo task runners](/configure/monorepos/#monorepo-task-runners).
 
 ## Start from another gspot repository
 

@@ -164,8 +164,8 @@ files in `.gspot/` that pin the tools, and your lockfiles.
 ## Run gspot in a container
 
 `.gspot/node_modules/` and `.gspot/.venv/` hold tools built for one system. When a dev container shares the checkout
-with the host, an install in the container replaces the tools of the host, and the host then reports errors until it
-runs `gspot install` again. Mount `.gspot/node_modules/` and `.gspot/.venv/` as volumes of the container, and run
+with the host, an install in the container replaces the tools of the host. The host then reports errors until it runs
+`gspot install` again. Mount `.gspot/node_modules/` and `.gspot/.venv/` as volumes of the container, and run
 `gspot install` in its `postCreateCommand`.
 
 ## Turn CI off

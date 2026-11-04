@@ -45,13 +45,15 @@ Five tools cannot extend a config file at another path, so gspot writes no point
 file with `--config` when it runs them. Without that path, an editor extension uses the defaults of the tool, and
 format-on-save writes text that the check rejects. Give the extension the same path:
 
-| Tool                 | Config file of the root scope                         | VS Code setting                                                                                                           |
-| -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Taplo                | `.gspot/configurations/general/data-files/taplo.toml` | `evenBetterToml.taplo.configFile.path` of [Even Better TOML](https://github.com/tamasfe/taplo/tree/master/editors/vscode) |
-| typos                | `.gspot/configurations/general/spelling/typos.toml`   | `typos.config` of [typos-lsp](https://github.com/tekumara/typos-lsp)                                                      |
-| Vale, at level `all` | `.gspot/configurations/general/prose/vale.ini`        | `vale.valeCLI.config` of [Vale VSCode](https://github.com/chrischinchilla/vale-vscode)                                    |
-| SQLFluff             | `.gspot/configurations/language/sql/sqlfluff.cfg`     | `sqlfluff.config` of [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                                       |
-| SwiftFormat          | `.gspot/configurations/language/swift/swiftformat`    | `swiftformat.configSearchPaths` of [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)                    |
+| Tool                 | Config file in `.gspot/configurations/` | VS Code setting                                                                                                           |
+| -------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Taplo                | `taplo.toml` in `general/data-files/`   | `evenBetterToml.taplo.configFile.path` of [Even Better TOML](https://github.com/tamasfe/taplo/tree/master/editors/vscode) |
+| typos                | `typos.toml` in `general/spelling/`     | `typos.config` of [typos-lsp](https://github.com/tekumara/typos-lsp)                                                      |
+| Vale, at level `all` | `vale.ini` in `general/prose/`          | `vale.valeCLI.config` of [Vale VSCode](https://github.com/chrischinchilla/vale-vscode)                                    |
+| SQLFluff             | `sqlfluff.cfg` in `language/sql/`       | `sqlfluff.config` of [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                                       |
+| SwiftFormat          | `swiftformat` in `language/swift/`      | `swiftformat.configSearchPaths` of [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)                    |
+
+These are the files of the root scope.
 
 A tool config of your own, such as `.taplo.toml` at the root, does not help: `gspot/conflicting-configs` reports it,
 because gspot writes the settings of that tool.

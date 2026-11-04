@@ -13,7 +13,7 @@ version. Git hooks run them before each commit and push. gspot also writes `AGEN
 agents how to write code that passes.
 
 gspot has configurations for JavaScript, TypeScript, Python, Swift, shell scripts, CSS, HTML, SQL, and Markdown. The
-[configuration reference](/reference/configurations/) lists them, with the frameworks and tools that gspot checks.
+[configuration reference](/reference/configurations/) lists every configuration, the frameworks among them.
 Files in other languages, such as Go, Rust, or Java, get only the checks that run in every repository, such as the
 secret scan and the spelling check.
 
@@ -51,8 +51,10 @@ Run these commands at the root of your repository:
 1. The first command adds gspot to your project at one exact version. With mise, the line before it pins Node.js in
    `mise.toml`.
 2. `gspot init` prints its plan and carries it out without asking. It writes `gspot.toml` and the generated files: the
-   config files of the tools, `AGENTS.md`, the rules for coding agents, and the Git hooks. It deletes the tool configs
-   that it replaces; Git keeps their history. Then it installs the pinned tools and turns on the Git hooks.
+   config files of the tools, `AGENTS.md`, the rules for coding agents, and the Git hooks.
+
+`gspot init` deletes the tool configs that it replaces; Git keeps their history. Then it installs the pinned tools and
+turns on the Git hooks.
 
 The pre-commit hook now checks the staged files, and the pre-push hook checks the pushed files. CI stays off until you
 [turn it on](/use/ci/#turn-ci-on).
