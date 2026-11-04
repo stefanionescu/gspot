@@ -19,13 +19,13 @@ depends on `react-dom` also gets the `react-dom` configuration and its DOM acces
 
 Each file gets one ESLint runtime:
 
-| Files                                      | Runtime                                                 |
-| ------------------------------------------ | ------------------------------------------------------- |
-| Ordinary modules and build scripts         | Node.js built-ins                                       |
-| `.cjs` and `.cts` files                    | Node.js built-ins and CommonJS globals                  |
-| React, Vue, and Svelte application sources | Browser globals                                         |
-| React Native sources                       | Native globals                                          |
-| Next.js sources                            | Node.js built-ins, since server components can use them |
+| Files                                      | Runtime                                                   |
+| ------------------------------------------ | --------------------------------------------------------- |
+| Ordinary modules and build scripts         | Node.js built-ins                                         |
+| `.cjs` and `.cts` files                    | Node.js built-ins and CommonJS globals                    |
+| React, Vue, and Svelte application sources | Browser globals                                           |
+| React Native sources                       | Native globals                                            |
+| Next.js sources                            | Node.js built-ins, because server components can use them |
 
 To give some files another runtime, add a `[[tools.eslint.override]]` record. Write paths relative to the repository
 root. When records overlap, the later one counts.
@@ -54,22 +54,17 @@ get no other Node.js globals, such as `Buffer` and `__dirname`.
 
 ## TypeScript compiler
 
-TypeScript source files or your own `tsconfig.json` select the TypeScript checks. A TypeScript tool dependency or
-declaration files alone do not.
+gspot runs the TypeScript checks when the project has TypeScript source files or a `tsconfig.json` of its own. A
+TypeScript tool dependency or declaration files alone do not count.
 
-The checks use the TypeScript compiler of your project. Without one, gspot uses its pinned compiler from the tool
-project before any global compiler. `gspot install` installs the pinned compiler.
+- With your own `tsconfig.json`, gspot keeps your compiler options and adds the strict options that the level needs.
+- Without one, gspot writes a project for the source files of each scope. It leaves out generator output, vendored
+  files, and child scopes.
+- gspot uses the TypeScript compiler of your project, for the type checks and for the type-aware lint rules. Without
+  one, it uses the compiler that `gspot install` pins.
 
-Your own `tsconfig.json` keeps its compiler options and gets the strict ones that the selected level requires. When a
-scope has no `tsconfig.json` of your own, gspot writes a standalone compiler project for its source files and
-declarations. That project leaves out generator output, vendored files, and child scopes.
-
-JavaScript checks extend your own `jsconfig.json`, or your `tsconfig.json` when no `jsconfig.json` exists. From a
-`tsconfig.json`, they keep the compiler options and declarations but select only JavaScript sources.
-
-Your own JSX setting stays; without one, the generated project uses `jsx: "preserve"`. A scope with neither file uses
-Bundler resolution when imports without extensions name JavaScript source files. Ambient types come from the source
-project, including your own type roots.
+JavaScript files get the same check through your `jsconfig.json`, or through your `tsconfig.json` when no
+`jsconfig.json` exists.
 
 ## Import extensions
 
@@ -109,7 +104,3 @@ gspot set tools.eslint.rules '{ "react-native/no-raw-text" = [{ skip = ["ThemedT
 
 This allows text inside `ThemedText`. The lint rule still reports bare text inside a `View`. When other projects use
 other components, set the option in the scope of the native project.
-
-## Settings that change lint rule options
-
-See [Lint rule options](/configure/lint-rules/#settings-that-set-rule-options) for the settings that control lint rules.

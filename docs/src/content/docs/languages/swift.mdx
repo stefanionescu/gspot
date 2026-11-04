@@ -12,14 +12,12 @@ package or Xcode scheme, finds declarations that nothing uses, and measures test
 
 <ChecksTable guide="languages/swift" />
 
+`[[import_rule]]` records apply to Swift imports too; [Import rules](/configure/import-rules/#swift) shows how gspot maps
+each module to the folder of its target.
+
 ## Before you start
 
 Install the Swift toolchain, then install gspot with mise, as the [Quickstart](/start/quickstart/) shows.
-
-## Import rules
-
-`[[import_rule]]` records apply to Swift imports. gspot maps each module to the folder of its SwiftPM or Xcode target;
-[Import rules](/configure/import-rules/#swift) has an example.
 
 ## Xcode projects
 
@@ -63,7 +61,8 @@ minimum, and skips a scope that holds no tests.
 
 ## Coverage
 
-To set a line coverage limit for a Swift target, write a record by hand; `gspot set` writes no record lists:
+To set a line coverage limit for a Swift target, write a record by hand; `gspot set` cannot write
+`[[coverage.swift_target]]` records:
 
 ```toml title="gspot.toml"
 [[coverage.swift_target]]
@@ -71,7 +70,8 @@ name = "Orders"
 min_line_percent = 80
 ```
 
-Replace `Orders` with the target named in the coverage report. Add `reason` when `lines` falls below `coverage.min_line_percent`.
+Replace `Orders` with the target named in the coverage report. Add `reason` when `min_line_percent` falls below
+`coverage.min_line_percent`.
 Then write the generated files and run the check:
 
 ```shell

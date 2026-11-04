@@ -11,6 +11,9 @@ checks. These checks run for the `python` configuration:
 
 <ChecksTable guide="languages/python" />
 
+Import rules and pytest work for Python too; see [Import rules](/configure/import-rules/#python) and
+[Tests and coverage](/topics/testing/).
+
 ## Before you start
 
 Install gspot with mise, as the [Quickstart](/start/quickstart/) shows for a repository without `package.json`. Use uv for
@@ -24,8 +27,8 @@ uv sync
 `gspot init` writes the basedpyright settings for the `.venv` only when `uv.lock` exists. If you sync after init, run
 `gspot install` to write them again.
 
-gspot names its pinned Python on every uv call. A `.python-version` file or a `UV_PYTHON` variable in the repository
-leaves the tool environment alone, and your project keeps its own pin.
+gspot runs its Python tools with its own pinned Python. Your `.python-version` file and `UV_PYTHON` variable affect only
+your project.
 
 ## Quotes
 
@@ -41,24 +44,22 @@ gspot set format.quotes single
 Name the modules that a host application provides in `python.externals`; see
 [modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
 
-`python.import_folders` adds folders inside the scope where basedpyright and the import rules check resolve imports. For a host outside the
-repository, add a `.pth` file to the `site-packages` folder of `.venv` that lists the host folder. Python and
-basedpyright read the folder paths of a `.pth` file, as they do for an editable install:
+`python.import_folders` adds folders inside the scope where basedpyright and the import rules check resolve imports.
+For a host outside the repository, add a `.pth` file to the `site-packages` folder of `.venv` that lists the host
+folder. Python and basedpyright read the folder paths of a `.pth` file, as they do for an editable install:
 
-```shell
-echo "$HOME/ComfyUI" > .venv/lib/<python-folder>/site-packages/comfyui.pth
+```shell title="example"
+echo "<host-folder>" > .venv/lib/<python-folder>/site-packages/host.pth
 ```
 
-Here `<python-folder>` names the Python of the environment, such as `python3.12`.
-
-## Import rules
-
-`[[import_rule]]` records apply to Python imports too; [Import rules](/configure/import-rules/#python) shows how
-gspot finds each module.
+Here `<host-folder>` is the absolute path of the host application, and `<python-folder>` names the Python of the
+environment, such as `python3.12`.
 
 ## Unused code and long functions
 
-At level all, `python/vulture` finds functions, classes, and attributes that no file of the scope uses, and code that never runs. It cannot tell the public API of a library from dead code, so level basic leaves it out. A framework can call a definition by name; ignore the file that holds it, with a reason:
+At level `all`, `python/vulture` finds functions, classes, and attributes that no file of the scope uses, and code that
+never runs. It cannot tell the public API of a library from dead code, so level `basic` leaves it out. A framework can
+call a definition by name; ignore the file that holds it, with a reason:
 
 ```shell
 gspot ignore python/vulture --paths nodes.py --reason "ComfyUI calls the execute method of each node."
@@ -76,7 +77,3 @@ pydoclint takes its docstring style from the first source that sets one:
 4. Google or NumPy sections that gspot finds in your docstrings.
 
 Otherwise, pydoclint uses its default.
-
-## Tests
-
-[Tests and coverage](/topics/testing/#python-with-pytest) covers pytest.

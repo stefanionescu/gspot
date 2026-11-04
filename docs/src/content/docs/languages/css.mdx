@@ -6,15 +6,16 @@ configurations: [css]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot checks style sheets, and the style blocks inside Vue and Svelte components, with Stylelint. Its options come from
-`gspot.toml`; [Lint rules](/configure/lint-rules/#stylelint) shows how to change them.
+gspot checks style sheets, and the style blocks inside Vue, Svelte, and Astro components, with Stylelint. Its options
+come from `gspot.toml`; [Lint rules](/configure/lint-rules/#stylelint) shows how to change them.
 
 <ChecksTable guide="languages/css" />
 
 ## Component styles
 
-The Vue and Svelte configurations hold their own style parsers and syntax exemptions; plain CSS gets neither. gspot
-installs the HTML parser package only when Stylelint reads component styles from a selected framework.
+Stylelint also checks the style blocks of Vue, Svelte, and Astro components, through the `postcss-html` parser that the
+`css` configuration installs. Each kind of component keeps its own selectors, such as `:deep` and `:slotted` in Vue,
+and `:global` in Svelte and Astro.
 
 Tailwind directives and `theme()` need a `tailwindcss` dependency in the nearest npm project.
 
