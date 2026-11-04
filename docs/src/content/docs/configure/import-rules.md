@@ -32,8 +32,11 @@ Import rule "core" may import only its own files, not ../features/cart.ts from i
 ```
 
 Each file belongs to one rule: the first rule whose paths match it. gspot refuses a path with a leading `!`, except an
-extglob such as `!(generated)/**`. To exclude files, put a narrower rule first, and list what it may import in
-`can_import`.
+extglob such as `!(generated)/**`. To leave files out of a rule, put a narrower rule first, and list what it may import
+in `can_import`.
+
+After you write the rules, run `gspot install`. JavaScript and TypeScript import rules need an ESLint plugin that
+`gspot install` adds; until then, `javascript/eslint` reports `missing`.
 
 ## Allow a rule listed below
 
@@ -51,7 +54,8 @@ Each name must match an import rule.
 
 ## Keep relative imports inside a folder
 
-In JavaScript and TypeScript, a relative import may not leave its folder: an import of a file elsewhere goes through
+At level `all`, `gspot/import-boundaries` checks JavaScript and TypeScript imports, so this section and its example
+work at level `all` only. A relative import may not leave its folder: an import of a file elsewhere goes through
 the alias of `tsconfig.json` or `package.json`, and `eslint --fix` writes it. By default, the folders two levels down,
 such as `src/features/`, and each scope draw that line. To make each feature its own folder:
 
