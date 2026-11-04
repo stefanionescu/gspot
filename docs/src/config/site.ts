@@ -20,19 +20,19 @@ export const README_OPENING_BLOCKS = 2;
 
 export const SIDEBAR = [
     {
-        label: 'Basics',
+        label: 'Start',
         collapsed: false,
         items: [
             { slug: 'start/quickstart' },
+            { slug: 'start/concepts' },
             { slug: 'start/install' },
             { slug: 'start/migrate' },
             { slug: 'start/upgrade' },
             { slug: 'start/compare' },
-            { slug: 'start/concepts' },
         ],
     },
     {
-        label: 'Usage',
+        label: 'Use',
         collapsed: false,
         items: [
             { slug: 'use/run-checks' },
@@ -40,20 +40,20 @@ export const SIDEBAR = [
             { slug: 'use/baseline' },
             { slug: 'use/hooks' },
             { slug: 'use/ci' },
-            { slug: 'use/editors' },
             { slug: 'use/coding-agents' },
+            { slug: 'use/editors' },
             { slug: 'use/troubleshooting' },
         ],
     },
     {
-        label: 'Configuration',
+        label: 'Configure',
         collapsed: false,
         items: [
             { slug: 'configure/gspot-toml' },
             { slug: 'configure/lint-rules' },
             { slug: 'configure/import-rules' },
-            { slug: 'configure/monorepos' },
             { slug: 'configure/command-checks' },
+            { slug: 'configure/monorepos' },
         ],
     },
     {
@@ -93,8 +93,8 @@ export const SIDEBAR = [
             { slug: 'topics/security' },
             { slug: 'topics/dependencies' },
             { slug: 'topics/testing' },
-            { slug: 'topics/site' },
             { slug: 'topics/prose' },
+            { slug: 'topics/site' },
             { slug: 'topics/real-catches' },
         ],
     },
@@ -103,10 +103,10 @@ export const SIDEBAR = [
         collapsed: false,
         items: [
             { slug: 'reference/commands/index' },
-            { slug: 'reference/checks/index' },
+            { slug: 'reference/gspot-toml/index', label: 'Settings' },
             { slug: 'reference/configurations/index' },
-            { slug: 'reference/gspot-toml/index' },
-            { slug: 'reference/eslint-plugin/index' },
+            { slug: 'reference/checks/index' },
+            { slug: 'reference/eslint-plugin/index', label: 'ESLint plugin' },
             { slug: 'reference/json-output' },
             { slug: 'reference/generated-files' },
             { slug: 'reference/changelog' },
