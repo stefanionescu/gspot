@@ -4,6 +4,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { dirname, relative } from 'node:path/posix';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
@@ -59,27 +60,11 @@ function listAllowedWords(session: Session): string[] {
 }
 
 /**
-Build the `heading-case` style of Vale: sentence case for titles and headings, except for the accepted vocabulary and
-file names. A file name is code, and a front matter title cannot format it as code.
-
-@param planned the generated config file and scope.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects the generator of heading-case.yml through its shared builder interface.
-export function buildHeadingCaseStyle(planned: PlannedConfig): string {
-    return stringify({
-        ...HEADING_CASE_STYLE,
-        extends: 'capitalization',
-        level: 'error',
-        exceptions: [...listExceptions(listAllowedWords(planned.session)), FILE_NAME_PATTERN],
-    });
-}
-
-/**
 Build the `acronyms` style of Vale: the Vale acronym rule with the allowed acronyms.
 
 @param planned the config file to build.
 */
-export function buildAcronymsStyle(planned: PlannedConfig): string {
+function buildAcronymsStyle(planned: PlannedConfig): string {
     const words = listAllowedWords(planned.session);
 
     return stringify({
@@ -98,7 +83,7 @@ Build vale.ini: the Vale style locations and rule levels for the prose checks.
 
 @param planned the config file to build.
 */
-export function buildValeIniFile(planned: PlannedConfig): string {
+function buildValeIniFile(planned: PlannedConfig): string {
     const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
         'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
     );
@@ -138,7 +123,7 @@ Build the `banned-headings` style of Vale: the Vale rule for the banned headings
 
 @param planned the config file to build.
 */
-export function buildBannedHeadingsStyle(planned: PlannedConfig): string {
+function buildBannedHeadingsStyle(planned: PlannedConfig): string {
     const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'prose').banned_headings])];
     return stringify({
         extends: 'existence',
@@ -159,7 +144,7 @@ Build the `terms` style of Vale: each word of naming.terms, with the word to use
 
 @param planned the config file to build.
 */
-export function buildTermsStyle(planned: PlannedConfig): string {
+function buildTermsStyle(planned: PlannedConfig): string {
     const terms = Object.entries(getTable(planned.scope.settings, 'naming').terms);
     return stringify({
         extends: 'substitution',
@@ -176,7 +161,7 @@ Build a prose length rule with its configured ceiling.
 @param planned the generated config file and scope.
 @param name the prose unit that the rule limits.
 */
-export function buildLengthStyle(planned: PlannedConfig, name: keyof typeof LENGTH_STYLES): string {
+function buildLengthStyle(planned: PlannedConfig, name: keyof typeof LENGTH_STYLES): string {
     const { setting, message, ...style } = LENGTH_STYLES[name];
     const max = getTable(planned.scope.settings, 'prose')[setting];
     return stringify({ ...style, message: message.replace('{{max}}', () => String(max)), level: 'error', max });
@@ -187,8 +172,37 @@ Build the accepted words of Vale: the accepted product names and your own allowe
 
 @param planned the config file to build.
 */
-export function buildAcceptedWordsFile(planned: PlannedConfig): string {
+function buildAcceptedWordsFile(planned: PlannedConfig): string {
     const words = listAllowedWords(planned.session);
 
     return words.toSorted((left, right) => compareText(left, right)).join('\n');
 }
+
+export const PROSE_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
+    'prose/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
+    'prose/vale.ini': buildValeIniFile,
+    'prose/commit-message.ini': (planned) =>
+        [
+            `StylesPath = ${relative(dirname(planned.targetPath), VALE_STYLES_PATH)}`,
+            MIN_ALERT_LINE,
+            VOCAB_LINE,
+            '',
+            ALL_FILES_SECTION,
+            'BasedOnStyles = gspot',
+            `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
+        ].join('\n'),
+    'prose/styles/gspot/heading-case.yml': (planned) => {
+        return stringify({
+            ...HEADING_CASE_STYLE,
+            extends: 'capitalization',
+            level: 'error',
+            exceptions: [...listExceptions(listAllowedWords(planned.session)), FILE_NAME_PATTERN],
+        });
+    },
+    'prose/styles/gspot/paragraph-length.yml': (planned) => buildLengthStyle(planned, 'paragraph'),
+    'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
+    'prose/styles/gspot/terms.yml': buildTermsStyle,
+    'prose/styles/gspot/sentence-length.yml': (planned) => buildLengthStyle(planned, 'sentence'),
+    'prose/styles/gspot/item-length.yml': (planned) => buildLengthStyle(planned, 'item'),
+};

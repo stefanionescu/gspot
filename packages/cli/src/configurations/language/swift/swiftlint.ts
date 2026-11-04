@@ -1,3 +1,4 @@
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import { getTable, getLimit, selectFormat } from '#cli/settings/scopes.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { Document, type Node, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
@@ -63,7 +64,7 @@ Build swiftlint.yml: the SwiftLint rules with the source limits of the repositor
 
 @param planned the config file to build.
 */
-export function buildSwiftlintFile(planned: PlannedConfig): string {
+function buildSwiftlintFile(planned: PlannedConfig): string {
     const { always } = readToolDisabledRules(planned);
     const off = listDisabledRules(planned);
     const offSet = new Set(off);
@@ -84,3 +85,7 @@ export function buildSwiftlintFile(planned: PlannedConfig): string {
     if (firstLevelOff !== undefined) firstLevelOff.commentBefore = SWIFTLINT_LEVEL_NOTE;
     return document.toString({ lineWidth: 0 }).trimEnd();
 }
+
+export const SWIFTLINT_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'swift/swiftlint.yml': buildSwiftlintFile,
+};

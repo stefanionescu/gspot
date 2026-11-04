@@ -1,5 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listDisabledRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 
@@ -16,7 +17,7 @@ that the selected configurations of the scope turn off.
 
 @param planned the config file to build.
 */
-export function buildMarkdownlintFile(planned: PlannedConfig): string {
+function buildMarkdownlintFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';
     const document: Record<string, string | boolean | Record<string, unknown>> = {
         extends: PRETTIER_STYLE,
@@ -44,3 +45,7 @@ export function buildMarkdownlintFile(planned: PlannedConfig): string {
     for (const rule of [...listDisabledRules(planned), ...configurationRules]) document[rule] = false;
     return JSON.stringify(document, null, JSON_INDENT);
 }
+
+export const MARKDOWN_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'markdown/markdownlint.jsonc': buildMarkdownlintFile,
+};

@@ -5,6 +5,7 @@ import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { SCANNER_KEY, BUNFIG_FILE, OSV_SCANNER_CHECK, OSV_SCANNER_NOTES } from '#cli/config/configurations/general.ts';
 
@@ -13,7 +14,7 @@ Build osv-scanner.toml: a note on why the file exists, and the package ignores a
 
 @param planned the config file to build.
 */
-export function buildOsvScannerFile(planned: PlannedConfig): string {
+function buildOsvScannerFile(planned: PlannedConfig): string {
     const ignores = listIgnores(planned.scope.settings, OSV_SCANNER_CHECK).filter(
         (ignore) => ignore.rule !== undefined && ignore.paths === undefined,
     );
@@ -43,3 +44,7 @@ export function buildBunScannerEdits(session: Session): ManagedKeys[] {
             : { path: joinScope(scope.path, BUNFIG_FILE), keys: [{ key: SCANNER_KEY, value: scanner }] };
     });
 }
+
+export const DEPENDENCIES_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'dependencies/osv-scanner.toml': buildOsvScannerFile,
+};

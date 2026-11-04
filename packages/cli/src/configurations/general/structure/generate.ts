@@ -1,5 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/configurations/general.ts';
@@ -9,7 +10,7 @@ Build jscpd.json: the duplicate size limits, the skipped import lines, and the i
 
 @param planned the config file to build.
 */
-export function buildJscpdFile(planned: PlannedConfig): string {
+function buildJscpdFile(planned: PlannedConfig): string {
     const limits = getTable(planned.scope.settings, 'structure');
     const settings = {
         mode: 'strict',
@@ -28,3 +29,7 @@ export function buildJscpdFile(planned: PlannedConfig): string {
     };
     return JSON.stringify(settings, null, JSON_INDENT);
 }
+
+export const STRUCTURE_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'structure/jscpd.json': buildJscpdFile,
+};

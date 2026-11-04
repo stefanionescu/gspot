@@ -9,6 +9,7 @@ import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
@@ -87,7 +88,7 @@ Build jsconfig.json: the JavaScript type-checking project and its scoped source 
 
 @param planned the config file to build.
 */
-export function buildJsconfigFile(planned: PlannedConfig): string {
+function buildJsconfigFile(planned: PlannedConfig): string {
     const { root, cache } = planned.session;
     const { targetPath: target } = planned;
     const scope = planned.scope.path;
@@ -136,3 +137,7 @@ export function buildJsconfigFile(planned: PlannedConfig): string {
     if (jsconfigOwner === undefined) jsconfig['files'] = listTrackedDeclarationFiles(planned, authored);
     return JSON.stringify(jsconfig, null, JSON_INDENT);
 }
+
+export const JSCONFIG_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'javascript/jsconfig.json': buildJsconfigFile,
+};

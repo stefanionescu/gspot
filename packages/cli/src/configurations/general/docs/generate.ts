@@ -1,6 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
@@ -18,7 +19,7 @@ Build lychee.toml: a note on why the file exists, and the lychee link exclusions
 
 @param planned the config file to build.
 */
-export function buildLycheeFile(planned: PlannedConfig): string {
+function buildLycheeFile(planned: PlannedConfig): string {
     const { configurations, settings } = planned.scope;
 
     const exclude = [...getTable(settings, 'docs').allowed_urls, LYCHEE_MDX_EXPRESSION];
@@ -32,3 +33,7 @@ export function buildLycheeFile(planned: PlannedConfig): string {
         stringifyToml(document, CONFIG_TOML_FORMAT),
     ].join('\n');
 }
+
+export const DOCS_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'docs/lychee.toml': buildLycheeFile,
+};

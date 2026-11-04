@@ -1,5 +1,6 @@
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 
@@ -41,3 +42,7 @@ export function buildHtmlValidateFile(planned: PlannedConfig): string {
         rules[rule] = 'off';
     return JSON.stringify({ extends: HTML_VALIDATE_EXTENDS, rules }, null, JSON_INDENT);
 }
+
+export const HTML_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'html/html-validate.json': buildHtmlValidateFile,
+};

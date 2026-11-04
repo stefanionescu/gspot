@@ -13,6 +13,7 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { getTable, getLimit, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
@@ -70,7 +71,7 @@ Build basedpyright.json: the Python environment and source paths used by Basedpy
 
 @param planned the config file to build.
 */
-export function buildBasedpyrightFile(planned: PlannedConfig): string {
+function buildBasedpyrightFile(planned: PlannedConfig): string {
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
     const pythonScopePath = posix.join(root, planned.scope.path);
     const pythonVenv = planned.session.repository.files.some(
@@ -99,7 +100,7 @@ Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
 
 @param planned the config file to build.
 */
-export function buildRuffFile(planned: PlannedConfig): string {
+function buildRuffFile(planned: PlannedConfig): string {
     const format = selectFormat(planned.scope.settings, PYTHON_FILES);
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
     const pythonScopePath = posix.join(root, planned.scope.path);
@@ -158,3 +159,8 @@ export function buildRuffFile(planned: PlannedConfig): string {
 
     return stringify(document, CONFIG_TOML_FORMAT);
 }
+
+export const PYTHON_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'python/basedpyright.json': buildBasedpyrightFile,
+    'python/ruff.toml': buildRuffFile,
+};

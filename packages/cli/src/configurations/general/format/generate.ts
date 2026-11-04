@@ -14,8 +14,13 @@ import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import type { ScopeFormat, WrittenFormat, FormatOverride } from '#cli/types/configurations/general.ts';
 
+import {
+    type ScopeFormat,
+    type ConfigBuilder,
+    type WrittenFormat,
+    type FormatOverride,
+} from '#cli/types/configurations/general.ts';
 import {
     PRETTIER_CHECK,
     DEFAULT_QUOTES,
@@ -151,7 +156,7 @@ The indent of .sh and .bash files follows the scripts, and a format override sti
 
 @param planned the config file to build.
 */
-export function buildEditorconfigFile(planned: PlannedConfig): string {
+function buildEditorconfigFile(planned: PlannedConfig): string {
     const { format } = planned.scope.settings.tables;
     const settings = planned.session.settings;
     const hasBash = planned.session.scopes.some(({ configurations }) =>
@@ -204,7 +209,7 @@ Build prettier.json, which the root pointer file loads: the formatter options, p
 
 @param planned the config file to build.
 */
-export function buildPrettierFile(planned: PlannedConfig): string {
+function buildPrettierFile(planned: PlannedConfig): string {
     const settings = planned.session.settings;
     const format = planned.scope.settings.tables.format;
     const plugins = listPrettierPlugins(planned.session.scopes.flatMap(({ configurations }) => configurations))
@@ -236,7 +241,7 @@ Build .prettierignore: the ignored paths in the shared section order, with the w
 
 @param planned the config file to build.
 */
-export function buildPrettierignoreFile(planned: PlannedConfig): string {
+function buildPrettierignoreFile(planned: PlannedConfig): string {
     const ordered = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK)].map(
         (section) => ({
             ...section,
@@ -261,3 +266,9 @@ export function buildPrettierignoreFile(planned: PlannedConfig): string {
     );
     return [...lines, ''].join('\n').trimStart();
 }
+
+export const FORMAT_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'format/.prettierignore': buildPrettierignoreFile,
+    'format/.editorconfig': buildEditorconfigFile,
+    'format/prettier.json': buildPrettierFile,
+};

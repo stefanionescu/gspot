@@ -1,13 +1,10 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import { buildHtmlValidateFile } from '#cli/configurations/language/html/generate.ts';
 
-/**
-Build the PurgeCSS safelist with the selected names and patterns.
-
-@param planned the config file and scope.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
-export function buildPurgecssSafelistFile(planned: PlannedConfig): string {
-    return JSON.stringify(getTable(planned.scope.settings, 'site').allowed_classes, null, JSON_INDENT);
-}
+export const SITE_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'site/purgecss-safelist.json': (planned) =>
+        JSON.stringify(getTable(planned.scope.settings, 'site').allowed_classes, null, JSON_INDENT),
+    'site/html-validate.json': buildHtmlValidateFile,
+};

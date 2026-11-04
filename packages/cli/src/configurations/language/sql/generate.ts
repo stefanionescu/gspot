@@ -1,5 +1,6 @@
 import { getTable, selectFormat } from '#cli/settings/scopes.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { SQL_FILES, SQL_FILE_EXTENSIONS, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/python.ts';
 
@@ -8,7 +9,7 @@ Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclu
 
 @param planned the config file to build.
 */
-export function buildSqlfluffFile(planned: PlannedConfig): string {
+function buildSqlfluffFile(planned: PlannedConfig): string {
     const format = selectFormat(planned.scope.settings, SQL_FILES);
     const off = listDisabledRules(planned);
     const sections = {
@@ -42,3 +43,7 @@ export function buildSqlfluffFile(planned: PlannedConfig): string {
         ),
     ].join('\n');
 }
+
+export const SQL_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'sql/sqlfluff.cfg': buildSqlfluffFile,
+};

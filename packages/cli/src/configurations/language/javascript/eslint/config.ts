@@ -5,6 +5,8 @@ import type { GeneratedFile } from '#cli/types/tools.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
 import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/blocks.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
@@ -111,7 +113,7 @@ its blocks.
 
 @param planned the config file to build.
 */
-export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
+function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const { session } = planned;
     const eslintFile = buildPlannedEslintFile(planned);
     const blockWriter = {
@@ -157,3 +159,8 @@ export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
         companions: configurationFiles.map(({ file }) => file),
     };
 }
+
+export const ESLINT_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'javascript/eslint/eslint.mjs': buildEslintFile,
+    'javascript/eslint/import-cycles.mjs': () => IMPORT_CYCLES_CONFIG,
+};

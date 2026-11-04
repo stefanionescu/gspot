@@ -10,6 +10,7 @@ import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
@@ -110,7 +111,7 @@ Build knip.json: the workspace entry points, project selectors, and dependency e
 
 @param planned the config file to build.
 */
-export function buildKnipFile(planned: PlannedConfig): string {
+function buildKnipFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { scopes, toolConfigurations: configurations } = planned.session;
     const { settings, root, startRunner } = planned.session;
@@ -161,3 +162,7 @@ export function buildKnipFile(planned: PlannedConfig): string {
         JSON_INDENT,
     );
 }
+
+export const KNIP_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'javascript/knip.json': buildKnipFile,
+};

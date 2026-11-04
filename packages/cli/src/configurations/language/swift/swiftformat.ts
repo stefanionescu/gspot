@@ -5,6 +5,7 @@ import { getTable, selectFormat } from '#cli/settings/scopes.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { PBXPROJ_FILE, PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
@@ -30,7 +31,7 @@ Build swiftformat: the SwiftFormat settings of the repository.
 
 @param planned the config file to build.
 */
-export function buildSwiftformatFile(planned: PlannedConfig): string {
+function buildSwiftformatFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { cache } = planned.session;
     const format = selectFormat(scope.settings, SWIFT_FILES);
@@ -57,3 +58,7 @@ export function buildSwiftformatFile(planned: PlannedConfig): string {
         }),
     ].join('\n');
 }
+
+export const SWIFTFORMAT_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'swift/swiftformat': buildSwiftformatFile,
+};

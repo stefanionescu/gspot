@@ -1,13 +1,7 @@
 import { stringify } from 'yaml';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 
-/**
-Build the Ansible exclusions from configured rule ignores.
-
-@param planned the config file and scope.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_BUILDERS selects this configuration's generator through its shared builder interface.
-export function buildAnsibleLintFile(planned: PlannedConfig): string {
-    return stringify({ skip_list: listDisabledRules(planned) });
-}
+export const ANSIBLE_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'ansible/ansible-lint.yml': (planned) => stringify({ skip_list: listDisabledRules(planned) }),
+};

@@ -1,6 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { isInScope, buildModuleSpecifier } from '#cli/system/paths.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 
@@ -71,7 +72,7 @@ Build stylelint.json: the CSS lint presets and rules for this level.
 
 @param planned the config file to build.
 */
-export function buildStylelintFile(planned: PlannedConfig): string {
+function buildStylelintFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { dependencyFiles } = planned.session.repository;
     const options = getTable(scope.settings, 'tools.stylelint');
@@ -124,3 +125,7 @@ export function buildStylelintFile(planned: PlannedConfig): string {
 
     return JSON.stringify(document, null, JSON_INDENT);
 }
+
+export const CSS_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'css/stylelint.json': buildStylelintFile,
+};

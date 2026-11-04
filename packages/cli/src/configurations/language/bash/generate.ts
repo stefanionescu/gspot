@@ -1,4 +1,5 @@
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 const SHELLCHECK_OPTIONS = [
@@ -25,7 +26,7 @@ Build shellcheckrc: the ShellCheck source-path settings, the optional checks of 
 
 @param planned the config file to build.
 */
-export function buildShellcheckFile(planned: PlannedConfig): string {
+function buildShellcheckFile(planned: PlannedConfig): string {
     const disable = listDisabledRules(planned);
     return [
         ...SHELLCHECK_OPTIONS.map(([key, value]) => `${key}=${value}`),
@@ -33,3 +34,7 @@ export function buildShellcheckFile(planned: PlannedConfig): string {
         ...(disable.length > 0 ? [`disable=${disable.join(',')}`] : []),
     ].join('\n');
 }
+
+export const BASH_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'bash/shellcheckrc': buildShellcheckFile,
+};

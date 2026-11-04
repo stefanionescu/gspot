@@ -1,5 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { listDisabledRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { COMMITLINT_PARSER_PRESET, COMMITLINT_ERROR_SEVERITY } from '#cli/config/configurations/general.ts';
@@ -9,7 +10,7 @@ Build commitlint.json: the Commitlint rules with the allowed types and scopes of
 
 @param planned the config file to build.
 */
-export function buildCommitlintFile(planned: PlannedConfig): string {
+function buildCommitlintFile(planned: PlannedConfig): string {
     const { scopes } = planned.session;
 
     const commits = getTable(planned.scope.settings, 'commits');
@@ -42,3 +43,7 @@ export function buildCommitlintFile(planned: PlannedConfig): string {
     for (const name of listDisabledRules(planned)) rules[name] = [0];
     return JSON.stringify({ parserPreset: COMMITLINT_PARSER_PRESET, rules }, null, JSON_INDENT);
 }
+
+export const COMMITS_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
+    'commits/commitlint.json': buildCommitlintFile,
+};
