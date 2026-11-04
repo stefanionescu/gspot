@@ -113,7 +113,7 @@ export type SettingMatch = { setting: Setting; language?: string; category?: str
 
 export type WrittenSetting = Pick<InheritedSetting, 'value' | 'reason'>;
 
-export type WrittenScopeTable = { table: SettingsTable; scope: string; path: KeyPath };
+export type WrittenScopeTable = { table: SettingsTable; scopePath: string; path: KeyPath };
 
 export type SettingDefault = { value: unknown; configuration: string };
 

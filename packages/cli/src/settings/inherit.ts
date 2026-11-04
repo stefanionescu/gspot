@@ -82,16 +82,16 @@ function mergeTable(
     const written = possibleKeys
         .map((writtenKey) => ({ writtenKey, found: findWrittenSetting(table.table, writtenKey) }))
         .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
-    const owner = table.scope === '' ? SETTINGS_FILE : `scope ${table.scope}`;
+    const owner = table.scopePath === '' ? SETTINGS_FILE : `scope ${table.scopePath}`;
     const origin: SettingOrigin =
-        table.scope === '' ? { kind: 'root', name: SETTINGS_FILE } : { kind: 'scope', name: table.scope };
+        table.scopePath === '' ? { kind: 'root', name: SETTINGS_FILE } : { kind: 'scope', name: table.scopePath };
     for (const { writtenKey, found } of written) {
         const value = findValueAt(table.table, writtenKey.split('.'));
         result = {
             value: mergeValue(
                 setting,
                 ['default', 'configuration'].includes(result.origin.kind) ? undefined : result.value,
-                joinSettingPaths(writtenKey, value, table.scope),
+                joinSettingPaths(writtenKey, value, table.scopePath),
             ),
             source: writtenKey === key ? owner : `${owner} (${writtenKey})`,
             origin,
@@ -170,9 +170,9 @@ List the root settings and every scope table, with their locations in the docume
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Settings validation, the gspot check, remove, and the format and ESLint generators walk the root and scope tables in written order through it.
 export function listSettingsTables(settings: Settings): WrittenScopeTable[] {
     return [
-        { table: settings, scope: '', path: [] },
+        { table: settings, scopePath: '', path: [] },
         ...[...settings.scopes].map(
-            ([scope, table], index) => ({ table, scope, path: ['scope', index] }) satisfies WrittenScopeTable,
+            ([scopePath, table], index) => ({ table, scopePath, path: ['scope', index] }) satisfies WrittenScopeTable,
         ),
     ];
 }
@@ -185,8 +185,8 @@ List the root settings and the scope tables that apply, from outermost to innerm
 */
 export function listApplicableTables(settings: Settings, scopePath: string): WrittenScopeTable[] {
     return listSettingsTables(settings)
-        .filter((settingsTable) => settingsTable.scope === '' || isInScope(scopePath, settingsTable.scope))
-        .toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
+        .filter((settingsTable) => settingsTable.scopePath === '' || isInScope(scopePath, settingsTable.scopePath))
+        .toSorted((left, right) => compareScopeDepth(left.scopePath, right.scopePath));
 }
 
 /**

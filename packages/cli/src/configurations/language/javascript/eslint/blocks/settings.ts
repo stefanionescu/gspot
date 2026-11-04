@@ -203,10 +203,10 @@ Build the lint rule options and the path overrides in order, each for its own pr
 export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
     const scopesByPath = new Map(scopes.map((scope) => [scope.path, scope]));
     const tables = listSettingsTables(settings).toSorted((first, second) =>
-        compareScopeDepth(first.scope, second.scope),
+        compareScopeDepth(first.scopePath, second.scopePath),
     );
-    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) => {
-        const owner = scopesByPath.get(scope);
+    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scopePath = '', table }) => {
+        const owner = scopesByPath.get(scopePath);
         const options = table.tools?.['eslint'];
         return owner === undefined || options === undefined ? [] : { scope: owner, settings: options };
     });

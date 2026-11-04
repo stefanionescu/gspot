@@ -46,15 +46,15 @@ function removeUnusedSettings(table: TomlTable, scopePath: string): string {
         .filter((configuration) => configuration.group === 'general')
         .toArray();
     const removed: string[] = [];
-    const affected = listSettingsTables(edited).filter((written) => isInScope(written.scope, scopePath));
+    const affected = listSettingsTables(edited).filter((written) => isInScope(written.scopePath, scopePath));
     for (const written of affected) {
-        const selected = selectConfigurationsForScope(edited, written.scope);
+        const selected = selectConfigurationsForScope(edited, written.scopePath);
         const available = buildAvailableSettings([...general, ...selected], edited.level);
         const keys = listWrittenKeys(written.table, available).filter(
             (key) => findSetting(available, key) === undefined,
         );
-        for (const key of keys) removeKey(addScopeTable(table, written.scope), key);
-        removed.push(...keys.map((key) => (written.scope === '' ? key : `${key} (scope ${written.scope})`)));
+        for (const key of keys) removeKey(addScopeTable(table, written.scopePath), key);
+        removed.push(...keys.map((key) => (written.scopePath === '' ? key : `${key} (scope ${written.scopePath})`)));
     }
     return removed.length === 0 ? '' : ` Removed settings ${removed.join(', ')}.`;
 }

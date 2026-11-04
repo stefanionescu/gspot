@@ -37,8 +37,8 @@ function buildScopePattern(pattern: string, scopePath: string): string | undefin
 }
 
 function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string): string[] {
-    const authored = listApplicableTables(settings, scopePath).flatMap(({ table, scope = '' }) =>
-        (table.javascript?.entry_files ?? []).map((pattern) => joinScopeSelector(pattern, scope)),
+    const authored = listApplicableTables(settings, scopePath).flatMap(({ table, scopePath: tableScopePath = '' }) =>
+        (table.javascript?.entry_files ?? []).map((pattern) => joinScopeSelector(pattern, tableScopePath)),
     );
     const nearest = scopes
         .filter((each) => each.path === selectScopePath(scopePath, scopes))

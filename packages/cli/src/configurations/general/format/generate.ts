@@ -96,16 +96,16 @@ function buildSectionPath(pattern: string, scopePath: string): string {
 
 function listScopeFormats(settings: Settings): ScopeFormat[] {
     const orderedTables = listSettingsTables(settings).toSorted((first, second) =>
-        compareScopeDepth(first.scope, second.scope),
+        compareScopeDepth(first.scopePath, second.scopePath),
     );
     const tables: Array<{ scope: string; format: WrittenFormat }> = [];
-    for (const { scope = '', table } of orderedTables) {
+    for (const { scopePath = '', table } of orderedTables) {
         const authored = table.written['format'];
         if (table.format === undefined || !isTable(authored)) continue;
         const format = Object.fromEntries(
             Object.entries(table.format).filter(([key]) => Object.hasOwn(authored, key)),
         ) as WrittenFormat;
-        tables.push({ scope, format });
+        tables.push({ scope: scopePath, format });
     }
     const base = tables.flatMap(({ scope, format: { override: _overrides, ...format } }) =>
         scope === '' || Object.keys(format).length === 0 ? [] : { scope, paths: ['**/*'], format },

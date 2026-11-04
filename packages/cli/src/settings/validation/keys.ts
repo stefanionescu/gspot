@@ -207,15 +207,15 @@ export function validateKeys(
         errors: availableSettings.errors,
     };
     const offered = new Set(everywhere.settings.keys());
-    for (const { table, scope, path } of listSettingsTables(settings)) {
-        const active = scope === '' ? everywhere : getRequired(scopeAvailable, scope, 'scope settings');
+    for (const { table, scopePath, path } of listSettingsTables(settings)) {
+        const active = scopePath === '' ? everywhere : getRequired(scopeAvailable, scopePath, 'scope settings');
         const selectedAvailable: AvailableSettings = {
             settings: new Map([...general.settings, ...active.settings]),
             defaults: new Map([...general.defaults, ...active.defaults]),
             errors: active.errors,
         };
         const found = listWrittenKeys(table, selectedAvailable).flatMap((key) =>
-            validateWrittenKey(selectedAvailable, settings, table, { scopePath: scope, offered }, key),
+            validateWrittenKey(selectedAvailable, settings, table, { scopePath, offered }, key),
         );
         errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));
     }

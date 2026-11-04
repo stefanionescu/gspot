@@ -50,20 +50,20 @@ function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weake
 
 function listConfigurationWeakenings(base: Settings, head: Settings, tracked: string[]): Weakening[] {
     const removals = listRemovedConfigurations(head);
-    const tables = new Map(listSettingsTables(head).map(({ table, scope }) => [scope, table]));
-    return listSettingsTables(base).flatMap(({ table, scope = '' }) => {
-        const kept = tables.get(scope);
-        if (kept === undefined && tracked.every((path) => !isInScope(path, scope))) return [];
+    const tables = new Map(listSettingsTables(head).map(({ table, scopePath }) => [scopePath, table]));
+    return listSettingsTables(base).flatMap(({ table, scopePath = '' }) => {
+        const kept = tables.get(scopePath);
+        if (kept === undefined && tracked.every((path) => !isInScope(path, scopePath))) return [];
         const removed = new Set([
             ...table.configurations.filter((name) => kept?.configurations.includes(name) !== true),
             ...(kept?.removed_configurations ?? []).filter((name) => !table.removed_configurations.includes(name)),
         ]);
-        const place = scope === '' ? '' : ` in ${scope}`;
+        const place = scopePath === '' ? '' : ` in ${scopePath}`;
         return [...removed].map((name) => ({
             rule: WEAKENING_RULES.configuration,
             file: SETTINGS_FILE,
             change: `The configuration ${name} goes${place}`,
-            reason: removals.find((each) => each.scope === scope && each.name === name)?.reason,
+            reason: removals.find((each) => each.scope === scopePath && each.name === name)?.reason,
         }));
     });
 }
@@ -90,16 +90,16 @@ function listSwitchWeakenings(base: Settings, head: Settings): Weakening[] {
 }
 
 function listSettingMoves(base: Settings, head: Settings): Weakening[] {
-    const tables = new Map(listSettingsTables(base).map(({ table, scope }) => [scope, table]));
-    return listSettingsTables(head).flatMap(({ table, scope = '' }) => {
-        const previous = tables.get(scope);
+    const tables = new Map(listSettingsTables(base).map(({ table, scopePath }) => [scopePath, table]));
+    return listSettingsTables(head).flatMap(({ table, scopePath = '' }) => {
+        const previous = tables.get(scopePath);
         if (previous === undefined) return [];
-        const available = buildAvailableSettings(selectConfigurationsForScope(head, scope), head.level);
+        const available = buildAvailableSettings(selectConfigurationsForScope(head, scopePath), head.level);
         const keys = new Set([...listWrittenKeys(table, available), ...listWrittenKeys(previous, available)]);
-        const place = scope === '' ? '' : ` in ${scope}`;
+        const place = scopePath === '' ? '' : ` in ${scopePath}`;
         return [...keys].flatMap((key) => {
-            const moved = getSettingValue(available, head, key, scope);
-            const before = getSettingValue(available, base, key, scope);
+            const moved = getSettingValue(available, head, key, scopePath);
+            const before = getSettingValue(available, base, key, scopePath);
             if (moved === undefined || !isWeakening(moved.setting, moved.value, before?.value)) return [];
             const values = `from ${JSON.stringify(before?.value)} to ${JSON.stringify(moved.value)}`;
             return [

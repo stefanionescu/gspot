@@ -81,7 +81,7 @@ Check the rule file paths of the root and every scope against the repository fil
 */
 export function validateRuleFilePaths(root: string, settings: Settings): SettingsError[] {
     const files = openFiles(root);
-    return listSettingsTables(settings).flatMap(({ table, scope, path }) => {
+    return listSettingsTables(settings).flatMap(({ table, scopePath, path }) => {
         const ruleFiles = table.security?.semgrep_rules;
         const paths = [
             ...(['eslint', 'stylelint'] as const).flatMap((tool) =>
@@ -98,7 +98,7 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
             })),
         ];
         return paths.flatMap(({ value, key, path }) => {
-            const stats = readPathStats(files, joinScopeSelector(value, scope));
+            const stats = readPathStats(files, joinScopeSelector(value, scopePath));
             if (stats instanceof Error)
                 return [
                     {

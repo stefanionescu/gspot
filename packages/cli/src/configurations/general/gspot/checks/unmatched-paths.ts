@@ -23,15 +23,15 @@ function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFin
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
     const { text } = readSettingsText(session.root);
-    return listSettingsTables(session.settings).flatMap(({ table, scope = '', path }) => {
+    return listSettingsTables(session.settings).flatMap(({ table, scopePath = '', path }) => {
         const sources: Array<{ pattern: string; selector: string; location: SettingLocation }> = [];
         const visit: PathVisitor = (pattern, location, role) => {
-            const selector = location.keys[0] === 'path' ? pattern : joinScopeSelector(pattern, scope);
+            const selector = location.keys[0] === 'path' ? pattern : joinScopeSelector(pattern, scopePath);
             if (role === 'source') sources.push({ pattern, selector, location });
             return pattern;
         };
         const settings = Object.entries(table.written).filter(([key]) => key !== 'scope');
-        mapSettingPaths(scope === '' ? settingsSchema : scopeSchema, Object.fromEntries(settings), visit, {
+        mapSettingPaths(scopePath === '' ? settingsSchema : scopeSchema, Object.fromEntries(settings), visit, {
             keys: [],
             names: [],
         });
