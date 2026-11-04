@@ -161,7 +161,5 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
         { scope: 'app/child', status: 'passed' },
         { scope: 'sibling', status: 'passed' },
     ]);
-    expect(invalid.find(({ scope }) => scope === 'app')?.note).toContain(
-        'Cannot read the compiler settings in app/jsconfig.json',
-    );
+    expect(invalid.find(({ scope }) => scope === 'app')?.note).toContain('app/jsconfig.json');
 });

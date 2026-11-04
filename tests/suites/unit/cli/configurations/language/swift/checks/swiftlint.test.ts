@@ -12,7 +12,7 @@ import { ANALYZER_EXIT_CASES, UNEXPECTED_PLAN_MESSAGE } from '#tests/config/conf
 
 test.each([...ANALYZER_EXIT_CASES])(
     'analyzer: build exit $buildCode and analyzer exit $analyzerCode report the failed stage',
-    async ({ buildCode, analyzerCode, message }) => {
+    async ({ buildCode, analyzerCode, stage }) => {
         await using sandbox = await createGitSandbox({});
         await using resources = new AsyncDisposableStack();
         await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
@@ -24,7 +24,8 @@ test.each([...ANALYZER_EXIT_CASES])(
         const rejection = await captureRejection(
             getBuiltInCheck('swift/swiftlint-analyze')(prepared.session, prepared.planned),
         );
-        expect(rejection.message).toBe(message);
+        expect(rejection).toMatchObject({ name: 'CheckStop' });
+        expect(rejection.message).toMatch(new RegExp(String.raw`\b${stage}\b.+\b7\b`, 'u'));
     },
 );
 

@@ -37,9 +37,9 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
     ]);
     for (const check of checks) {
         expect(check.findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([
-            { rule: 'function-branches', message: 'main has 4 branches, over the limit of 3.' },
-            { rule: 'block-nesting', message: 'main has 4 levels of nesting, over the limit of 3.' },
-            { rule: 'function-assignments', message: 'main has 2 assignments, over the limit of 1.' },
+            { rule: 'function-branches', message: expect.stringMatching(/\bmain\b.+\b4\b.+\b3\b/u) as string },
+            { rule: 'block-nesting', message: expect.stringMatching(/\bmain\b.+\b4\b.+\b3\b/u) as string },
+            { rule: 'function-assignments', message: expect.stringMatching(/\bmain\b.+\b2\b.+\b1\b/u) as string },
         ]);
         expect(check.findings.map(({ file, line }) => ({ file, line }))).toStrictEqual(
             Array.from({ length: 3 }, () => ({

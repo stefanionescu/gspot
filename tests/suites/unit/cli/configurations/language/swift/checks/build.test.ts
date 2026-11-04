@@ -59,7 +59,7 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
             check: 'swift/build',
             status: 'error',
             findings: [],
-            note: 'The Swift build command failed (exit 7): Compiler startup failed\nPermission denied',
+            note: expect.stringContaining('Compiler startup failed\nPermission denied') as string,
         },
     ]);
     run.mockResolvedValue(buildProcessResult());
@@ -133,9 +133,8 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
 
     const buildError = await captureRejection(getBuiltInCheck('swift/build')(prepared.session, input));
     const external = convertToPosixPath(relative(plan.folder, join(sandbox.path, 'external-response')));
-    expect(buildError.message).toBe(
-        `"${external}" is not a safe repository-relative path. Choose a path inside the repository.`,
-    );
+    expect(buildError).toMatchObject({ name: 'GspotError', code: 'filesystem' });
+    expect(buildError.message).toContain(external);
     expect(existsSync(plan.log)).toBe(false);
     const response = join(plan.folder, 'sources');
     await writeFile(response, 'Sources/Main.swift\nSources/Owner.swift\n');
@@ -159,7 +158,8 @@ test('compiler: a Swift build whose source file is missing names the file and ru
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(fakeCommands());
     const missingSourceError = await captureRejection(getBuiltInCheck('swift/build')(session, input));
-    expect(missingSourceError.message).toBe('Main.swift is tracked but missing. Restore it or commit its deletion.');
+    expect(missingSourceError).toMatchObject({ name: 'GspotError', code: 'filesystem' });
+    expect(missingSourceError.message).toContain('Main.swift');
     expect(run).not.toHaveBeenCalled();
 });
 

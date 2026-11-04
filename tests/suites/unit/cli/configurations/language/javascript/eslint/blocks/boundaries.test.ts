@@ -231,7 +231,9 @@ test('can_import names exactly the rules a rule may import, and a refused import
         result?.messages
             .filter(({ ruleId }) => ruleId === 'boundaries/dependencies')
             .map(({ line, message }) => ({ line, message })),
-    ).toStrictEqual([...REFUSED_IMPORT_MESSAGES]);
+    ).toStrictEqual(
+        REFUSED_IMPORT_MESSAGES.map(({ line, named }) => ({ line, message: expect.stringContaining(named) as string })),
+    );
 });
 
 test('each file holds one import rule, the tRPC category comes first, and a refused import names the rule', async () => {

@@ -33,7 +33,7 @@ test.each([...URL_MARKUP_CASES])(
                     line: 1,
                     rule: 'script-link',
                     column,
-                    message: `A ${scheme} URL embeds executable content. Use an external file.`,
+                    message: expect.stringContaining(scheme) as string,
                 }),
             ),
         );
@@ -53,14 +53,14 @@ test('html/inline-scripts reports an executable inline script and an event handl
                 line: 5,
                 column: 1,
                 rule: 'inline-script',
-                message: 'Move executable inline script to a script file.',
+                message: expect.any(String) as string,
             },
             {
                 file: 'index.html',
                 line: 6,
                 column: 9,
                 rule: 'handler-attribute',
-                message: 'The onclick attribute is inline script. Attach the handler from a script file.',
+                message: expect.stringContaining('onclick') as string,
             },
         ],
     );

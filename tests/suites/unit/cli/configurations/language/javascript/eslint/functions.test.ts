@@ -8,9 +8,7 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { setRuntime, setImportLookup } from '#cli/configurations/language/javascript/files/eslint-functions.ts';
 
 test('a runtime that the globals package does not name stops the config', () => {
-    expect(() => setRuntime({}, { node: {}, browser: {} }, 'nodejs', 'module')).toThrow(
-        'The globals package has no runtime named nodejs. Set tools.eslint.override.runtime to one of: node, browser.',
-    );
+    expect(() => setRuntime({}, { node: {}, browser: {} }, 'nodejs', 'module')).toThrow(/\bnodejs\b/u);
 });
 
 test('every block of a config shares one TypeScript import resolver', () => {

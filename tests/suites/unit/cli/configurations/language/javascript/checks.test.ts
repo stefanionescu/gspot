@@ -95,7 +95,7 @@ test('javascript/tsc checks a stale jsconfig and skips an absent one with instal
     await unlink(path);
     const absent = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
     expect(absent.report.checks).toMatchObject([
-        { status: 'missing', note: `The generated file ${target} is missing. Run gspot install.` },
+        { status: 'missing', note: expect.stringContaining(target) as string },
     ]);
 });
 

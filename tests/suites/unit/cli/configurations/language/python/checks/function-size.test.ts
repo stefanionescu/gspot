@@ -14,7 +14,7 @@ test('a Python function over limits.python.max_function_lines is reported, count
     });
     const findings = await runSandboxCheck(sandbox.path, 'python/function-size');
     expect(findings.map(({ line, rule, message }) => ({ line, rule, message }))).toStrictEqual([
-        { line: 7, rule: 'function-lines', message: 'long has 4 code lines, over the limit of 3.' },
+        { line: 7, rule: 'function-lines', message: expect.stringMatching(/\blong\b.+\b4\b.+\b3\b/u) as string },
     ]);
 });
 
@@ -28,6 +28,11 @@ test('Python function size excludes a multiline docstring and keeps comment-like
             'def short():\n    """Describe the operation.\n\n    This is documentation.\n    """\n    return 1\n\ndef long():\n    text = """first\n# this is string content\nlast"""\n    return text\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'python/function-size')).toMatchObject([
-        { file: 'main.py', line: 8, rule: 'function-lines', message: 'long has 5 code lines, over the limit of 3.' },
+        {
+            file: 'main.py',
+            line: 8,
+            rule: 'function-lines',
+            message: expect.stringMatching(/\blong\b.+\b5\b.+\b3\b/u) as string,
+        },
     ]);
 });

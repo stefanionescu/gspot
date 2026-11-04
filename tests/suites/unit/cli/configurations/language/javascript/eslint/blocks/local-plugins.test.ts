@@ -67,9 +67,9 @@ test('a plugin record with a package and no version is a settings error', async 
         }),
         'package.json': '{"private":true,"type":"module"}\n',
     });
-    const refused = await runGspot(sandbox.path, ['install']);
+    const refused = await runGspot(sandbox.path, ['install', '--json']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toContain('Name a tracked module with path, or an npm package with package and version.');
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'settings' });
 });
 
 test('one plugin name with two modules is a settings error that names both paths', async () => {

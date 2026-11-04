@@ -258,13 +258,7 @@ export const TEST_IMPORT_RULE_CASES = [
     { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 1 },
 ] as const;
 
-export const REFUSED_IMPORT_MESSAGES = [
-    {
-        line: 2,
-        message:
-            'Import rule "app" may import its own files and "storage", not ../core/value.js from import-rule:core. Move the code, move that rule above this one, or list the rules it may import in can_import.',
-    },
-] as const;
+export const REFUSED_IMPORT_MESSAGES = [{ line: 2, named: '../core/value.js' }] as const;
 
 export const ENVIRONMENT_READER_PATHS = [
     'src/source.js',

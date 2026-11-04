@@ -2,6 +2,8 @@ import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { symlink, readFile, writeFile } from 'node:fs/promises';
@@ -26,12 +28,11 @@ test('build cache rejects external output links', async () => {
     await writeFile(authored, 'preserved');
     await symlink(outside.path, join(folder, 'package'));
     const linkedFiles = prepareBuild(session.root, input.files, folder).files;
-    expect(() => linkedFiles.read('package/authored')).toThrow(
-        new Error('A parent of package/authored is a link or is not a folder. Choose a folder without links.'),
-    );
+    const refusal = matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' });
+    expect(() => linkedFiles.read('package/authored')).toThrow(refusal);
     expect(() => {
         linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 });
-    }).toThrow(new Error('A parent of package/authored is a link or is not a folder. Choose a folder without links.'));
+    }).toThrow(refusal);
     expect(await readFile(authored, 'utf8')).toBe('preserved');
 });
 

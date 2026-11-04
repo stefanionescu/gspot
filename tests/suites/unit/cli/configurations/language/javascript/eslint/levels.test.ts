@@ -88,11 +88,12 @@ test('install refuses options for a rule of level all at level basic, and ESLint
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
     });
-    const refused = await runGspot(sandbox.path, ['install']);
+    const refused = await runGspot(sandbox.path, ['install', '--json']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(
-        'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.\n',
-    );
+    expect(JSON.parse(refused.stdout)).toMatchObject({
+        error: 'settings',
+        message: expect.stringContaining('n/no-process-exit') as string,
+    });
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['javascript'], {

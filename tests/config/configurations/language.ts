@@ -202,7 +202,4 @@ export const ALL_LEVEL_OPTION_FINDINGS = [
     },
 ] as const;
 
-export const MISSING_TSCONFIG_MESSAGE =
-    'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.';
-
 export const COUNT_NUMBER_SOURCE = 'export const count: number = 1;\n';

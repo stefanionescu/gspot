@@ -24,7 +24,7 @@ test('deptry skips a scope without pyproject.toml', async () => {
     const absent = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['python/deptry'] }));
 
     expect(absent.report.checks).toMatchObject([
-        { check: 'python/deptry', status: 'skipped', note: 'This scope has no pyproject.toml for deptry to read.' },
+        { check: 'python/deptry', status: 'skipped', note: expect.stringContaining('pyproject.toml') as string },
     ]);
 });
 

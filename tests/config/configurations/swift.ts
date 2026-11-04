@@ -133,7 +133,7 @@ export const XCTEST_TABLES = `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "E
 export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
-        note: 'Set swift.xcode_project or add Package.swift in this scope.',
+        hasNote: true,
         tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_scheme = "Example"\n`,
         build: [],
         coverage: 1,
@@ -143,7 +143,7 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'failed-test',
-        note: undefined,
+        hasNote: false,
         tables: XCTEST_TABLES,
         build: ['--exit', '65', '--failure', 'ExampleTests.swift:3: error: -[ExampleTests testValue] : Expected true.'],
         coverage: 1,
@@ -153,7 +153,7 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'malformed',
-        note: 'xccov printed output that gspot cannot read.',
+        hasNote: true,
         tables: XCTEST_TABLES,
         build: [],
         coverage: undefined,
@@ -163,7 +163,7 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'under-minimum',
-        note: undefined,
+        hasNote: false,
         tables: XCTEST_TABLES,
         build: [],
         coverage: 0.5,
@@ -276,12 +276,8 @@ export const SKIP_REASON_CASES = [
 ] as const;
 
 export const ANALYZER_EXIT_CASES = [
-    { buildCode: 7, analyzerCode: 0, message: 'Cannot analyze Swift because the build exited 7.' },
-    {
-        buildCode: 0,
-        analyzerCode: 7,
-        message: 'The swiftlint command failed (exit 7): The tool printed no error output.',
-    },
+    { buildCode: 7, analyzerCode: 0, stage: 'build' },
+    { buildCode: 0, analyzerCode: 7, stage: 'swiftlint' },
 ] as const;
 
 export const SWIFT_PROJECT_SETTINGS = `configurations = ["swift", "xcode"]

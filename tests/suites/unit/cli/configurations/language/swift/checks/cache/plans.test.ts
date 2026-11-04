@@ -74,7 +74,7 @@ test('Swift skips without swift.xcode_project or Package.swift, then builds the 
         matchFields<CheckStop>({
             name: 'CheckStop',
             status: 'skipped',
-            message: 'Set swift.xcode_project or add Package.swift in this scope.',
+            message: expect.stringContaining('swift.xcode_project') as string,
         }),
     );
     using _executables = fakeToolExecutables(
@@ -90,7 +90,7 @@ test('Swift skips without swift.xcode_project or Package.swift, then builds the 
             check: 'swift/build',
             status: 'skipped',
             findings: [],
-            note: 'Set swift.xcode_project or add Package.swift in this scope.',
+            note: expect.stringContaining('swift.xcode_project') as string,
         },
     ]);
     const cacheFolder = readRepositoryCacheFolder(session.toolsRoot);

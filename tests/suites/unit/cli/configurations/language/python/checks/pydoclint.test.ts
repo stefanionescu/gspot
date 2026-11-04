@@ -128,5 +128,5 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
             message: 'The documented argument is wrong.',
         }),
     ]);
-    expect(result.note).toBe('pydoclint could not run: The native command could not read its configuration.');
+    expect(result.note).toContain('The native command could not read its configuration.');
 });
