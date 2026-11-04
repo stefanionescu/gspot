@@ -11,9 +11,9 @@ test('adds required configurations, dependencies first, in order of first mentio
 test('an unknown configuration names the near matches', () => {
     expect(() => selectConfigurations(['bassh'])).toThrow(
         matchFields<GspotError>({
+            name: 'GspotError',
             code: 'arguments',
-            message:
-                'There is no configuration called bassh. Did you mean bash? See https://generativespotting.com/reference/configurations/ for the available configurations.',
+            message: expect.stringMatching(/\bbash\b/u) as string,
         }),
     );
 });

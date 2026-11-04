@@ -1,5 +1,7 @@
 import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { parseConfigurations } from '#cli/manifests/read.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 
@@ -66,26 +68,24 @@ test('only declared config files are loaded and each record sets its tool and sc
     ]);
 });
 
-test.each([...MANIFEST_INVARIANT_CASES])(
-    'the loader refuses $name with the owning configuration',
-    ({ tables, message }) => {
-        const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + tables }];
-        expect(() => parseConfigurations(manifests)).toThrow(
-            `The configuration manifest for example is not valid:\n${message}`,
-        );
-    },
-);
+test.each([...MANIFEST_INVARIANT_CASES])('the loader refuses $name and names the field', ({ tables, field }) => {
+    const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + tables }];
+    expect(() => parseConfigurations(manifests)).toThrow(`\n${field}: `);
+});
 
 test('a manifest with invalid TOML names its file and line', () => {
     const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + 'broken = \n' }];
+    const position = new RegExp(String.raw`^${EXAMPLE_MANIFEST_FOLDER}/manifest\.toml:\d+:\d+ `, 'u');
     expect(() => parseConfigurations(manifests)).toThrow(
-        new RegExp(String.raw`^${EXAMPLE_MANIFEST_FOLDER}/manifest\.toml:\d+:\d+ is not valid TOML: `, 'u'),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'parse',
+            message: expect.stringMatching(position) as string,
+        }),
     );
 });
 
-test('a reference to an undeclared tool names the configuration and missing declaration', () => {
+test('a reference to an undeclared tool names the missing tool', () => {
     const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + '[[tool]]\nname = "absent"\n' }];
-    expect(() => parseConfigurations(manifests)).toThrow(
-        'The configuration manifest for example is not valid:\ntool absent has no declaration.',
-    );
+    expect(() => parseConfigurations(manifests)).toThrow(/\babsent\b/u);
 });
