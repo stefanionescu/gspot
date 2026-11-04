@@ -19,7 +19,7 @@ import {
     ASSET_RULE_DOCS,
     XCSTRINGS_RULE_DOCS,
     BUILD_SETTING_RULE_DOCS,
-} from '#cli/config/configurations/rule-docs/infrastructure.ts';
+} from '#cli/configurations/infrastructure/xcode/explanations.ts';
 import {
     PLIST_KEY,
     IMAGE_SET,

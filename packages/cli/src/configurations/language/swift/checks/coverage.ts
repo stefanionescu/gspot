@@ -18,7 +18,7 @@ import { join, resolve, relative, basename, isAbsolute } from 'node:path';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { SWIFT_TEST_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
+import { SWIFT_TEST_RULE_DOCS } from '#cli/configurations/language/swift/explanations.ts';
 import type { CoverageRun, CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
 

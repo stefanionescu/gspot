@@ -10,9 +10,9 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
-import { TSCONFIG_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { TSCONFIG_RULE_DOCS } from '#cli/configurations/language/typescript/explanations.ts';
 
 import {
     OPTION_HELP,

@@ -11,7 +11,7 @@ import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseTree, findNodeAtLocation } from 'jsonc-parser/lib/esm/main.js';
 import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
-import { TRANSLATION_RULE_DOCS } from '#cli/config/configurations/rule-docs/framework.ts';
+import { TRANSLATION_RULE_DOCS } from '#cli/configurations/library/translations/explanations.ts';
 
 import {
     TYPE,

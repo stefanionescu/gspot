@@ -19,8 +19,8 @@ import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { SITEMAP_RULE_DOCS } from '#cli/config/configurations/rule-docs/framework.ts';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
+import { SITEMAP_RULE_DOCS } from '#cli/configurations/framework/site/explanations.ts';
 
 import {
     listBuiltFiles,

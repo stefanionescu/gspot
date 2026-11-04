@@ -9,7 +9,7 @@ import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
 import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { CONFLICTING_CONFIG_RULE_DOCS } from '#cli/config/configurations/rule-docs/gspot.ts';
+import { CONFLICTING_CONFIG_RULE_DOCS } from '#cli/configurations/general/gspot/explanations.ts';
 
 /**
 Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs,

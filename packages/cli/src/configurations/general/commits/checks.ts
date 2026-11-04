@@ -11,7 +11,7 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import type { CommitMessage } from '#cli/types/configurations/general.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import { REFERENCE_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
+import { REFERENCE_RULE_DOCS } from '#cli/configurations/general/commits/explanations.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 
 import {

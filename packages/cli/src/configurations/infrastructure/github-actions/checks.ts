@@ -10,7 +10,7 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
-import { WORKFLOW_SHAPE_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
+import { WORKFLOW_SHAPE_RULE_DOCS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
 
 import {
     isMap,

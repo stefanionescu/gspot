@@ -7,7 +7,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
-import { VULTURE_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
+import { VULTURE_RULE_DOCS } from '#cli/configurations/language/python/explanations.ts';
 
 import {
     PYTHON_RULES,

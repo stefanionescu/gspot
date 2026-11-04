@@ -4,7 +4,7 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
-import { IDENTIFIER_RULE_DOCS } from '#cli/config/configurations/rule-docs/structure.ts';
+import { IDENTIFIER_RULE_DOCS } from '#cli/configurations/general/naming/explanations.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';

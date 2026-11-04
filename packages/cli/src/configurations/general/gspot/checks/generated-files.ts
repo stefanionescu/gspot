@@ -1,7 +1,7 @@
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { GENERATED_FILE_RULE_DOCS } from '#cli/config/configurations/rule-docs/gspot.ts';
+import { GENERATED_FILE_RULE_DOCS } from '#cli/configurations/general/gspot/explanations.ts';
 import { TOOL_LOCKFILES, GENERATED_FILE_FINDINGS } from '#cli/config/configurations/structure.ts';
 import { type CheckCode, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
 

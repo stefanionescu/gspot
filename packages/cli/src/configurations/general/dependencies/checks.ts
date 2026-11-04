@@ -15,8 +15,8 @@ import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { LOCKFILE_RULE_DOCS, PACKAGE_MANAGER_PIN_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
 import { PACKAGE_JSON, IMPORTER_LOCKFILES, PNPM_ROOT_IMPORTER, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
+import { LOCKFILE_RULE_DOCS, PACKAGE_MANAGER_PIN_DOCS } from '#cli/configurations/general/dependencies/explanations.ts';
 
 import {
     listSpecifiers,

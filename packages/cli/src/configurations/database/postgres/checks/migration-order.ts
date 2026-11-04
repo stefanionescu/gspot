@@ -3,7 +3,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { compareMigrationVersions } from '#cli/parsers/code/sql.ts';
 import type { Migration } from '#cli/types/configurations/infrastructure.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { MIGRATION_ORDER_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
+import { MIGRATION_ORDER_RULE_DOCS } from '#cli/configurations/database/postgres/explanations.ts';
 import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 import { readMigrations, readCommittedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 

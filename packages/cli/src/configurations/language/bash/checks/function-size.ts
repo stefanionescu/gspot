@@ -6,7 +6,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { COUNT_LIMITS } from '#cli/config/configurations/bash.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { FUNCTION_SIZE_RULE_DOCS } from '#cli/config/configurations/rule-docs/bash.ts';
+import { FUNCTION_SIZE_RULE_DOCS } from '#cli/configurations/language/bash/explanations.ts';
 
 /**
 Checks each shell function against the size limits: code lines, branches, nesting, and assignments.

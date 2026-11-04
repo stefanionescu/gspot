@@ -14,8 +14,8 @@ import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
-import { ENCODING_RULE_DOCS, LOCAL_FILE_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
+import { ENCODING_RULE_DOCS, LOCAL_FILE_RULE_DOCS } from '#cli/configurations/general/repository/explanations.ts';
 
 function listLinkFindings(root: string, path: string): CheckFinding[] {
     const source = join(root, path);

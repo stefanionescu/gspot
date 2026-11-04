@@ -10,8 +10,8 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerIgnoredSource } from '#cli/types/configurations/infrastructure.ts';
-import { DOCKERIGNORE_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
+import { DOCKERIGNORE_RULE_DOCS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { listDockerInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 
 import {

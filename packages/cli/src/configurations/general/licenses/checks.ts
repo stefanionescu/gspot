@@ -15,7 +15,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { LICENSE_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
+import { LICENSE_RULE_DOCS } from '#cli/configurations/general/licenses/explanations.ts';
 import type { LockedPackage, AllowedPackage } from '#cli/types/configurations/general.ts';
 
 import {

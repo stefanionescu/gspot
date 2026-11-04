@@ -8,7 +8,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
 import type { Migration } from '#cli/types/configurations/infrastructure.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
-import { ROW_SECURITY_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
+import { ROW_SECURITY_RULE_DOCS } from '#cli/configurations/database/postgres/explanations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { findNodeFields, listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 

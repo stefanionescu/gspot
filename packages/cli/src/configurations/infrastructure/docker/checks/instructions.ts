@@ -8,8 +8,8 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
-import { INSTRUCTION_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
 import { WHITESPACE_RUN, DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers.ts';
+import { INSTRUCTION_RULE_DOCS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 
 import {
     NGINX_IMAGE,

@@ -12,7 +12,7 @@ import type { Settings, IgnoreRecord } from '#cli/types/settings.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { WEAKENING_RULE_DOCS } from '#cli/config/configurations/rule-docs/gspot.ts';
+import { WEAKENING_RULE_DOCS } from '#cli/configurations/general/gspot/explanations.ts';
 import { getSettingValue, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 

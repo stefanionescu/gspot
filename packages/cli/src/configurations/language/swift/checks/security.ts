@@ -4,7 +4,7 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { SWIFT_SECURITY_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
+import { SWIFT_SECURITY_RULE_DOCS } from '#cli/configurations/language/swift/explanations.ts';
 
 import {
     LOG_METHODS,

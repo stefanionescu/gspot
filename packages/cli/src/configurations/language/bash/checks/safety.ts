@@ -3,8 +3,8 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ScriptFile } from '#cli/types/configurations/language.ts';
-import { SAFETY_RULE_DOCS } from '#cli/config/configurations/rule-docs/bash.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { SAFETY_RULE_DOCS } from '#cli/configurations/language/bash/explanations.ts';
 
 import {
     SAFETY_RULES,

@@ -7,8 +7,8 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { SCRIPT_LAYOUT_RULE_DOCS } from '#cli/config/configurations/rule-docs/bash.ts';
 import type { ScriptFile, LayoutFinding } from '#cli/types/configurations/language.ts';
+import { SCRIPT_LAYOUT_RULE_DOCS } from '#cli/configurations/language/bash/explanations.ts';
 
 import {
     MAIN_CALL,

@@ -16,8 +16,8 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/configurations/python.ts';
 import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
-import { IMPORT_RULE_DOCS } from '#cli/config/configurations/rule-docs/structure.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
+import { IMPORT_RULE_DOCS } from '#cli/configurations/general/structure/explanations.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 
 import type {

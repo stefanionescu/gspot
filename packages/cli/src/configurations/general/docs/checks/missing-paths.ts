@@ -22,7 +22,7 @@ import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
 import { parseMiseTasks } from '#cli/configurations/general/docs/mise.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { MISSING_PATH_RULE_DOCS } from '#cli/config/configurations/rule-docs/general.ts';
+import { MISSING_PATH_RULE_DOCS } from '#cli/configurations/general/docs/explanations.ts';
 import type { PathIndex, TaskNames, ProseLine } from '#cli/types/configurations/general.ts';
 import { escapeGlob, listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 

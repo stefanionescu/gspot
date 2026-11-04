@@ -5,7 +5,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
-import { EDITED_MIGRATION_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
+import { EDITED_MIGRATION_RULE_DOCS } from '#cli/configurations/database/postgres/explanations.ts';
 
 import {
     FROZEN_RULE,

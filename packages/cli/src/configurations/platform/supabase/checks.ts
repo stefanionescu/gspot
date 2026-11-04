@@ -25,7 +25,7 @@ import { buildDatabaseSchema } from '#cli/configurations/database/postgres/check
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
-import { DENO_CHECK_RULE_DOCS, STORAGE_POLICY_RULE_DOCS } from '#cli/config/configurations/rule-docs/infrastructure.ts';
+import { DENO_CHECK_RULE_DOCS, STORAGE_POLICY_RULE_DOCS } from '#cli/configurations/platform/supabase/explanations.ts';
 
 import {
     SYNTAX_RULE,

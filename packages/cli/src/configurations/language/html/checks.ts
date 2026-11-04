@@ -7,7 +7,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
-import { HTML_RULE_DOCS } from '#cli/config/configurations/rule-docs/language.ts';
+import { HTML_RULE_DOCS } from '#cli/configurations/language/html/explanations.ts';
 
 import {
     HTML_RULES,

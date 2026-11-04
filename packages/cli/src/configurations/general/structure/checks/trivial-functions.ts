@@ -10,7 +10,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
-import { TRIVIAL_FUNCTION_RULE_DOCS } from '#cli/config/configurations/rule-docs/structure.ts';
+import { TRIVIAL_FUNCTION_RULE_DOCS } from '#cli/configurations/general/structure/explanations.ts';
 import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 
 import {

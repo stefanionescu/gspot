@@ -7,7 +7,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import { REST_SEGMENT, CATEGORY_LABELS } from '#cli/config/configurations/naming.ts';
-import { NAMING_RULE_DOCS } from '#cli/config/configurations/rule-docs/structure.ts';
+import { NAMING_RULE_DOCS } from '#cli/configurations/general/naming/explanations.ts';
 import type { Identifier, PathContainer } from '#cli/types/configurations/general.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';

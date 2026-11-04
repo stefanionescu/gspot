@@ -9,6 +9,7 @@ import { NEXTJS_CHECKS } from '#cli/configurations/framework/nextjs/checks.ts';
 import { SVELTE_CHECKS } from '#cli/configurations/framework/svelte/checks.ts';
 import { COMMITS_CHECKS } from '#cli/configurations/general/commits/checks.ts';
 import { SECRETS_CHECKS } from '#cli/configurations/general/secrets/checks.ts';
+import { GENERATOR_OUTPUT_RULE_DOCS } from '#cli/configurations/explanations.ts';
 import { LICENSES_CHECKS } from '#cli/configurations/general/licenses/checks.ts';
 import { SECURITY_CHECKS } from '#cli/configurations/general/security/checks.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
@@ -31,7 +32,6 @@ import { SWIFT_BUILD_CHECKS } from '#cli/configurations/language/swift/checks/bu
 import { DEPENDENCIES_CHECKS } from '#cli/configurations/general/dependencies/checks.ts';
 import { NAMING_PATHS_CHECKS } from '#cli/configurations/general/naming/checks/paths.ts';
 import { TRANSLATIONS_CHECKS } from '#cli/configurations/library/translations/checks.ts';
-import { GENERATOR_OUTPUT_RULE_DOCS } from '#cli/config/configurations/rule-docs/gspot.ts';
 import { PYTHON_DEPTRY_CHECKS } from '#cli/configurations/language/python/checks/deptry.ts';
 import { GSPOT_BASELINE_CHECKS } from '#cli/configurations/general/gspot/checks/baseline.ts';
 import { PYTHON_VULTURE_CHECKS } from '#cli/configurations/language/python/checks/vulture.ts';
