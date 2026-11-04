@@ -1,17 +1,17 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { RULES as GENERATOR_OUTPUT_RULES } from '#cli/config/configurations/registry.ts';
 
-export const SYNTAX_RULE_DOCS = {
+export const SYNTAX_EXPLANATIONS = {
     [SYNTAX_RULE]: {
         description: 'A file that the check reads parses without errors.',
         why: 'The check cannot judge a file that it cannot parse.',
         fix: 'Fix the syntax at the reported line, then run the check again.',
         example: 'A JSON file that ends after `{ "name": "app"` reports `syntax`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const GENERATOR_OUTPUT_RULE_DOCS = {
+export const GENERATOR_OUTPUT_EXPLANATIONS = {
     [GENERATOR_OUTPUT_RULES.stale]: {
         description: 'Each committed file holds what the generator command writes now.',
         why: 'A stale file describes code or a schema that has changed since.',
@@ -30,4 +30,4 @@ export const GENERATOR_OUTPUT_RULE_DOCS = {
         fix: 'Add the file with `git add`, and commit it.',
         example: 'A generated migration that nobody added to Git reports `untracked`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

@@ -12,7 +12,7 @@ import type { Settings, IgnoreRecord } from '#cli/types/settings.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { WEAKENING_RULE_DOCS } from '#cli/configurations/general/gspot/explanations.ts';
+import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
 import { getSettingValue, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 
@@ -178,5 +178,5 @@ async function checkWeakenings(session: CheckSession): Promise<BuiltInCheckResul
 }
 
 export const GSPOT_WEAKENINGS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'gspot/weakenings': { check: checkWeakenings, ruleDocs: WEAKENING_RULE_DOCS },
+    'gspot/weakenings': { check: checkWeakenings, explanations: WEAKENING_EXPLANATIONS },
 };

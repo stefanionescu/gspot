@@ -1,8 +1,8 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
-import { SYNTAX_RULE_DOCS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { TRANSLATION_RULES } from '#cli/config/configurations/framework.ts';
 
-export const TRANSLATION_RULE_DOCS = {
+export const TRANSLATION_EXPLANATIONS = {
     [TRANSLATION_RULES.message]: {
         description: 'Each message parses as an ICU message.',
         why: 'A broken message shows raw text or throws when the app formats it.',
@@ -34,5 +34,5 @@ export const TRANSLATION_RULE_DOCS = {
         fix: 'Restore the base locale file, or set `translations.base_locale` to the locale that the project writes first.',
         example: 'A `messages/` folder with `de.json` and no `en.json` reports `base-locale`.',
     },
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;

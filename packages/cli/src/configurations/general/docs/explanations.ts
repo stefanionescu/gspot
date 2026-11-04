@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { DOCS_RULES } from '#cli/config/configurations/general.ts';
 
-export const MISSING_PATH_RULE_DOCS = {
+export const MISSING_PATH_EXPLANATIONS = {
     [DOCS_RULES.missingPath]: {
         description: 'Each path in Markdown prose or in a shell code block leads to a tracked file or folder.',
         why: 'A reader who follows a missing path finds nothing.',
@@ -14,9 +14,9 @@ export const MISSING_PATH_RULE_DOCS = {
         fix: 'Correct the task name, or add the task.',
         example: '`mise run tests` in a project whose task is `test` reports `missing-task`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const REQUIRED_FILE_RULE_DOCS = {
+export const REQUIRED_FILE_EXPLANATIONS = {
     [DOCS_RULES.missingReadme]: {
         description: 'Each scope has a `README.md`.',
         why: 'A reader of the scope needs to know what it does and how to start.',
@@ -29,4 +29,4 @@ export const REQUIRED_FILE_RULE_DOCS = {
         fix: 'Add a `LICENSE` file at the repository root.',
         example: 'A repository with only `docs/LICENSE` reports `missing-license`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

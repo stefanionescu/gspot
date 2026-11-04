@@ -7,7 +7,7 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
-import { VULTURE_RULE_DOCS } from '#cli/configurations/language/python/explanations.ts';
+import { VULTURE_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
 
 import {
     PYTHON_RULES,
@@ -59,5 +59,5 @@ async function checkVulture(session: CheckSession, planned: PlannedCheck): Promi
 }
 
 export const PYTHON_VULTURE_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'python/vulture': { check: checkVulture, ruleDocs: VULTURE_RULE_DOCS },
+    'python/vulture': { check: checkVulture, explanations: VULTURE_EXPLANATIONS },
 };

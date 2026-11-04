@@ -1,8 +1,8 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
-import { SYNTAX_RULE_DOCS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { DEPENDENCY_RULES } from '#cli/config/configurations/general.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 
-export const LOCKFILE_RULE_DOCS = {
+export const LOCKFILE_EXPLANATIONS = {
     [DEPENDENCY_RULES.host]: {
         description: 'Each download URL of a JavaScript lockfile uses HTTPS and a host of `allowed_registries`.',
         why: 'A package from another host, or over plain HTTP, can differ from the package the team reviewed.',
@@ -15,14 +15,14 @@ export const LOCKFILE_RULE_DOCS = {
         fix: 'Keep the lockfile of the package manager that the scope uses, and delete the others.',
         example: '`package-lock.json` beside `pnpm-lock.yaml` reports `foreign-lockfile`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const PACKAGE_MANAGER_PIN_DOCS = {
+export const PACKAGE_MANAGER_PIN_EXPLANATIONS = {
     [DEPENDENCY_RULES.packageManagerPin]: {
         description: '`packageManager` in `package.json` names the version of the package manager that mise pins.',
         why: 'CI installs the version that `packageManager` names, so another local version can write another lockfile.',
         fix: 'Change `packageManager` or the mise pin, so that both name one version.',
         example: '`"packageManager": "pnpm@9.1.0"` beside a mise pin of pnpm 9.4.0 reports `package-manager-pin`.',
     },
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;

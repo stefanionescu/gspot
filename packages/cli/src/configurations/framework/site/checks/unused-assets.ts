@@ -14,8 +14,8 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/language.ts';
 import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
-import { UNUSED_ASSET_RULE_DOCS } from '#cli/configurations/framework/site/explanations.ts';
 import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
+import { UNUSED_ASSET_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 
 import {
     ASSET_FOLDER,
@@ -138,5 +138,5 @@ async function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): P
 }
 
 export const SITE_UNUSED_ASSETS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'site/unused-assets': { check: checkSiteUnusedAssets, ruleDocs: UNUSED_ASSET_RULE_DOCS },
+    'site/unused-assets': { check: checkSiteUnusedAssets, explanations: UNUSED_ASSET_EXPLANATIONS },
 };

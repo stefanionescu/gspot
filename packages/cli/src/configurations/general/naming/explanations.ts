@@ -1,8 +1,8 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
-import { SYNTAX_RULE_DOCS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { RULES as NAMING_RULES } from '#cli/config/configurations/naming.ts';
 
-export const NAMING_RULE_DOCS = {
+export const NAMING_EXPLANATIONS = {
     [NAMING_RULES.case]: {
         description: 'A name uses a case that `naming.<language>.<category>.cases` lists.',
         why: 'One case for each kind of name tells a reader what kind of thing the name is.',
@@ -39,9 +39,9 @@ export const NAMING_RULE_DOCS = {
         fix: 'Choose a word that names the role, or keep the name through `allowed_names` in a `[[naming.exception]]` record.',
         example: '`sessionManager` reports `banned-word`; `sessionStore` does not.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const IDENTIFIER_RULE_DOCS = {
-    ...NAMING_RULE_DOCS,
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+export const IDENTIFIER_EXPLANATIONS = {
+    ...NAMING_EXPLANATIONS,
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;

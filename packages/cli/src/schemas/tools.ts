@@ -47,7 +47,7 @@ export const pypiReleaseSchema = z.looseObject({
     urls: z.looseObject({ upload_time_iso_8601: z.string() }).array(),
 });
 
-export const lintRuleDocsSchema = z.object({
+export const ruleExplanationSchema = z.object({
     description: z.string().exactOptional(),
     url: z.string().exactOptional(),
     why: z.string().exactOptional(),
@@ -57,7 +57,7 @@ export const lintRuleDocsSchema = z.object({
 });
 
 export const ruleDocumentationSchema = z.object({
-    docs: lintRuleDocsSchema.exactOptional(),
+    docs: ruleExplanationSchema.exactOptional(),
     url: z.string().exactOptional(),
 });
 

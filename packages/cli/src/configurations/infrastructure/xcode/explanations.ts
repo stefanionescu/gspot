@@ -1,8 +1,8 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
-import { SYNTAX_RULE_DOCS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { XCODE_RULES } from '#cli/config/configurations/infrastructure.ts';
 
-export const ASSET_RULE_DOCS = {
+export const ASSET_EXPLANATIONS = {
     [XCODE_RULES.emptySet]: {
         description: 'Each image set names at least one image file.',
         why: 'An empty set builds an asset that shows nothing.',
@@ -15,10 +15,10 @@ export const ASSET_RULE_DOCS = {
         fix: 'Add the file to the set folder, or remove its entry from `Contents.json`.',
         example: 'A `Contents.json` that names `logo@2x.png` beside no such file reports `missing-image`.',
     },
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;
 
-export const BUILD_SETTING_RULE_DOCS = {
+export const BUILD_SETTING_EXPLANATIONS = {
     [XCODE_RULES.strictConcurrency]: {
         description: 'Each target sets `SWIFT_STRICT_CONCURRENCY = complete` or builds with Swift 6.',
         why: 'Without it, the compiler lets data races through.',
@@ -37,10 +37,10 @@ export const BUILD_SETTING_RULE_DOCS = {
         fix: 'Remove the lint step from the build phase.',
         example: 'A run-script phase that calls `swiftlint` reports `lint-script`.',
     },
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;
 
-export const XCSTRINGS_RULE_DOCS = {
+export const XCSTRINGS_EXPLANATIONS = {
     [XCODE_RULES.missingTranslation]: {
         description: 'Each string of a catalog has a translation for each locale that the catalog uses.',
         why: 'A string without a translation shows the source language to the users of that locale.',
@@ -48,5 +48,5 @@ export const XCSTRINGS_RULE_DOCS = {
         example:
             'A string with `de` and `fr` translations in a catalog that also uses `es` reports `missing-translation`.',
     },
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;

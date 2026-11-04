@@ -164,7 +164,7 @@ test.skipIf(isWindows)('explain refuses an installed plugin symlink that leaves 
     });
 });
 
-test('explain requires installed tools and refuses rules of checks with no rule documentation', async () => {
+test('explain requires installed tools and refuses rules of checks with no rule explanations', async () => {
     await using sandbox = await createGitSandbox({});
     const missing = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-var', '--json']);
     expect(missing.code).toBe(2);

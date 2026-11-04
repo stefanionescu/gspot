@@ -8,7 +8,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import type { ScriptFile, LayoutFinding } from '#cli/types/configurations/language.ts';
-import { SCRIPT_LAYOUT_RULE_DOCS } from '#cli/configurations/language/bash/explanations.ts';
+import { SCRIPT_LAYOUT_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
 
 import {
     MAIN_CALL,
@@ -128,5 +128,5 @@ async function checkScriptLayout(session: Session, planned: PlannedCheck): Promi
 }
 
 export const BASH_SCRIPT_LAYOUT_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'bash/script-layout': { check: checkScriptLayout, ruleDocs: SCRIPT_LAYOUT_RULE_DOCS },
+    'bash/script-layout': { check: checkScriptLayout, explanations: SCRIPT_LAYOUT_EXPLANATIONS },
 };

@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { SITE_RULES, UNUSED_ASSET_RULE } from '#cli/config/configurations/framework.ts';
 
-export const SITEMAP_RULE_DOCS = {
+export const SITEMAP_EXPLANATIONS = {
     [SITE_RULES.missingPage]: {
         description: 'Each URL of the sitemap has a page in the build.',
         why: 'A search engine that follows the URL gets a page that does not exist.',
@@ -20,13 +20,13 @@ export const SITEMAP_RULE_DOCS = {
         fix: 'Write the full URL, such as `https://example.com/about/`, with its special characters escaped.',
         example: '`<loc>/about/</loc>` reports `invalid-url`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const UNUSED_ASSET_RULE_DOCS = {
+export const UNUSED_ASSET_EXPLANATIONS = {
     [UNUSED_ASSET_RULE]: {
         description: 'No page, stylesheet, or script names a file under an assets folder.',
         why: 'The file ships with every deploy, and nobody can tell whether a page still needs it.',
         fix: 'Delete the file, or name it in the page, stylesheet, or script that loads it.',
         example: '`src/assets/old-logo.png`, which no page or stylesheet names, reports `unused-asset`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

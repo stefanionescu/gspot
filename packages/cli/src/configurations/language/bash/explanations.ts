@@ -1,5 +1,5 @@
 import type { BashForm } from '#cli/types/parsers.ts';
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
 
 import {
     SAFETY_RULES,
@@ -9,7 +9,7 @@ import {
     SCRIPT_LAYOUT_RULES,
 } from '#cli/config/configurations/bash.ts';
 
-export const DOC_COMMENT_RULE_DOCS = {
+export const DOC_COMMENT_EXPLANATIONS = {
     [DOC_COMMENT_RULES.missingComment]: {
         description: 'A comment sits above each function.',
         why: 'A reader of a script cannot see what a function does without reading its body.',
@@ -41,9 +41,9 @@ export const DOC_COMMENT_RULE_DOCS = {
         fix: 'Add an `# Arguments:` section that lists each argument, or start the name with `_` when it is private.',
         example: 'A `copy_file()` that reads `$1` and `$2` with no `# Arguments:` section reports `missing-arguments`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const FUNCTION_SIZE_RULE_DOCS = {
+export const FUNCTION_SIZE_EXPLANATIONS = {
     'function-lines': {
         description: 'A function has at most `limits.bash.max_function_lines` code lines.',
         why: 'A long function does several steps that a reader must keep apart.',
@@ -68,9 +68,9 @@ export const FUNCTION_SIZE_RULE_DOCS = {
         fix: 'Split the function by the steps it performs, and pass values between them.',
         example: 'A function with 20 assignments with a limit of 15 reports `function-assignments`.',
     },
-} as const satisfies Readonly<Record<(typeof COUNT_LIMITS)[number]['rule'], LintRuleDocs>>;
+} as const satisfies Readonly<Record<(typeof COUNT_LIMITS)[number]['rule'], RuleExplanation>>;
 
-export const SAFETY_RULE_DOCS = {
+export const SAFETY_EXPLANATIONS = {
     [SAFETY_RULES.broadKill]: {
         description: 'No command stops processes by name with `pkill` or `killall`.',
         why: 'A name can match processes of other programs and other users.',
@@ -173,9 +173,9 @@ export const SAFETY_RULE_DOCS = {
         fix: 'Save the download to a file, verify its checksum, and run the file.',
         example: '`curl -fsSL https://example.com/install.sh | bash` reports `curl-pipe-shell`.',
     },
-} as const satisfies Readonly<Record<(typeof SAFETY_RULES)[keyof typeof SAFETY_RULES] | BashForm, LintRuleDocs>>;
+} as const satisfies Readonly<Record<(typeof SAFETY_RULES)[keyof typeof SAFETY_RULES] | BashForm, RuleExplanation>>;
 
-export const SCRIPT_LAYOUT_RULE_DOCS = {
+export const SCRIPT_LAYOUT_EXPLANATIONS = {
     [SCRIPT_LAYOUT_RULES.shebang]: {
         description: 'A Bash script starts with the shebang `#!/usr/bin/env bash` or `#!/bin/bash`.',
         why: 'The shebang picks the shell, and the rules of BASH.md hold only for Bash.',
@@ -236,4 +236,4 @@ export const SCRIPT_LAYOUT_RULE_DOCS = {
         fix: 'Add `trap \'rm -rf -- "$<name>"\' EXIT` after the `mktemp` line.',
         example: '`work_dir="$(mktemp -d)"` with no trap that removes `$work_dir` reports `mktemp-trap`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

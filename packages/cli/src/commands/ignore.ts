@@ -3,19 +3,19 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
-import { hasRuleDocs } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
+import { hasRuleExplanations } from '#cli/engine/results.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { readCheckRuleDocs } from '#cli/configurations/rules.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { RULE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
 import { listChecksById, assertCheckExists, readConfigurations } from '#cli/manifests/read.ts';
 import type { IgnoreFlags, IgnoreOptions, CommandDefinition } from '#cli/types/commands/edits.ts';
@@ -34,7 +34,7 @@ function findRuleCheck({ settings }: Session, checkId: string): Check {
     if (
         check === undefined ||
         (!OUTPUT_FORMATS[check.output.format].namesRules(check.output) &&
-            selectCheckCode(check)?.ruleDocs === undefined)
+            selectCheckCode(check)?.explanations === undefined)
     )
         throw new GspotError(
             'arguments',
@@ -48,9 +48,9 @@ async function assertDocumentedRule(
     { checkId, rule }: { checkId: string; rule: string },
 ): Promise<void> {
     const check = findRuleCheck(session, checkId);
-    if (!hasRuleDocs(check, selectCheckCode(check))) return;
+    if (!hasRuleExplanations(check, selectCheckCode(check))) return;
     if (findToolName(check) === 'ruff' && RUFF_RULE_PREFIX.test(rule)) return;
-    const docs = await readCheckRuleDocs(session.root, check, rule, session);
+    const docs = await readCheckRuleExplanation(session.root, check, rule, session);
     if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);
 }
 

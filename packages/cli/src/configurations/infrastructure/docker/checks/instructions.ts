@@ -9,7 +9,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
 import { WHITESPACE_RUN, DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers.ts';
-import { INSTRUCTION_RULE_DOCS } from '#cli/configurations/infrastructure/docker/explanations.ts';
+import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 
 import {
     NGINX_IMAGE,
@@ -111,5 +111,5 @@ export function listDockerInstructions(text: string): DockerInstruction[] {
 }
 
 export const DOCKER_INSTRUCTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'docker/instructions': { check: checkInstructions, ruleDocs: INSTRUCTION_RULE_DOCS },
+    'docker/instructions': { check: checkInstructions, explanations: INSTRUCTION_EXPLANATIONS },
 };

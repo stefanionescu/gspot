@@ -17,7 +17,7 @@ import { PYTHON_CONFIGURATION } from '#cli/config/configurations/python.ts';
 import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
-import { IMPORT_RULE_DOCS } from '#cli/configurations/general/structure/explanations.ts';
+import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 
 import type {
@@ -277,5 +277,5 @@ async function checkImportRules(session: Session, planned: PlannedCheck): Promis
 }
 
 export const STRUCTURE_IMPORT_RULES_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'structure/import-rules': { check: checkImportRules, ruleDocs: IMPORT_RULE_DOCS },
+    'structure/import-rules': { check: checkImportRules, explanations: IMPORT_EXPLANATIONS },
 };

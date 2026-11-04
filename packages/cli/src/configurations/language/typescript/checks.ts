@@ -12,7 +12,7 @@ import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { TSCONFIG_RULE_DOCS } from '#cli/configurations/language/typescript/explanations.ts';
+import { TSCONFIG_EXPLANATIONS } from '#cli/configurations/language/typescript/explanations.ts';
 
 import {
     OPTION_HELP,
@@ -129,5 +129,5 @@ function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] 
 }
 
 export const TYPESCRIPT_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'typescript/tsconfig': { check: checkTsconfig, ruleDocs: TSCONFIG_RULE_DOCS },
+    'typescript/tsconfig': { check: checkTsconfig, explanations: TSCONFIG_EXPLANATIONS },
 };

@@ -10,7 +10,7 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
-import { WORKFLOW_SHAPE_RULE_DOCS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
+import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
 
 import {
     isMap,
@@ -222,5 +222,5 @@ function checkWorkflowShape(session: Session, planned: PlannedCheck): CheckFindi
 
 export const GITHUB_ACTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
     'github-actions/actionlint': { run: checkActionlint },
-    'github-actions/workflow-shape': { check: checkWorkflowShape, ruleDocs: WORKFLOW_SHAPE_RULE_DOCS },
+    'github-actions/workflow-shape': { check: checkWorkflowShape, explanations: WORKFLOW_SHAPE_EXPLANATIONS },
 };

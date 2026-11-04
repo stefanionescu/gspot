@@ -18,7 +18,7 @@ import { join, resolve, relative, basename, isAbsolute } from 'node:path';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { SWIFT_TEST_RULE_DOCS } from '#cli/configurations/language/swift/explanations.ts';
+import { SWIFT_TEST_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
 import type { CoverageRun, CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
 
@@ -210,5 +210,5 @@ async function checkSwiftTests(session: CheckSession, planned: PlannedCheck): Pr
 }
 
 export const SWIFT_COVERAGE_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'swift/tests': { check: checkSwiftTests, ruleDocs: SWIFT_TEST_RULE_DOCS },
+    'swift/tests': { check: checkSwiftTests, explanations: SWIFT_TEST_EXPLANATIONS },
 };

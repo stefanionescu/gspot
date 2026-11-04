@@ -1,8 +1,8 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
-import { SYNTAX_RULE_DOCS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { DOCKER_RULES, INSTRUCTION_RULES } from '#cli/config/configurations/infrastructure.ts';
 
-export const DOCKERIGNORE_RULE_DOCS = {
+export const DOCKERIGNORE_EXPLANATIONS = {
     [DOCKER_RULES.missingFile]: {
         description: 'Each Dockerfile has an ignore file, beside it or in its build context.',
         why: 'Without one, the build sends `.git`, `.env`, and other local files to the builder.',
@@ -21,10 +21,10 @@ export const DOCKERIGNORE_RULE_DOCS = {
         fix: 'Remove the path from the ignore file, or remove it from the `COPY`.',
         example: '`COPY dist/ ./` with `dist` in `.dockerignore` reports `ignored-source`.',
     },
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;
 
-export const INSTRUCTION_RULE_DOCS = {
+export const INSTRUCTION_EXPLANATIONS = {
     [INSTRUCTION_RULES.lockfile]: {
         description: 'No `RUN` installs packages in a way that can rewrite the lockfile.',
         why: 'The image then holds other versions than the lockfile records.',
@@ -49,4 +49,4 @@ export const INSTRUCTION_RULE_DOCS = {
         fix: 'Name the program as the first element, such as `ENTRYPOINT ["node", "server.js"]`.',
         example: '`ENTRYPOINT ["sh", "-c", "node server.js"]` reports `shell-entrypoint`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

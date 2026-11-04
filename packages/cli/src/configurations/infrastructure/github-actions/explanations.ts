@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { WORKFLOW_SHAPE_RULES, WORKFLOW_SHAPE_MESSAGES } from '#cli/config/configurations/infrastructure.ts';
 
-export const WORKFLOW_SHAPE_RULE_DOCS = {
+export const WORKFLOW_SHAPE_EXPLANATIONS = {
     [WORKFLOW_SHAPE_RULES.timeout]: {
         description: 'Each job that runs steps sets `timeout-minutes`.',
         why: 'A hung job otherwise runs for six hours and holds a runner.',
@@ -38,4 +38,4 @@ export const WORKFLOW_SHAPE_RULE_DOCS = {
         fix: WORKFLOW_SHAPE_MESSAGES.retention,
         example: 'An `upload-artifact` step with only `name` and `path` reports `artifact-retention`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

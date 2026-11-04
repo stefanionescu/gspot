@@ -1,5 +1,5 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
-import { SYNTAX_RULE_DOCS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 
 import {
     FROZEN_RULE,
@@ -9,7 +9,7 @@ import {
     ROW_SECURITY_RULE,
 } from '#cli/config/configurations/infrastructure.ts';
 
-export const EDITED_MIGRATION_RULE_DOCS = {
+export const EDITED_MIGRATION_EXPLANATIONS = {
     [FROZEN_RULE]: {
         description: 'A committed migration keeps its committed text.',
         why: 'A database that already ran the migration skips the new text, so it drifts from a new database.',
@@ -23,9 +23,9 @@ export const EDITED_MIGRATION_RULE_DOCS = {
         fix: 'Remove `IF NOT EXISTS`, so that the migration fails when the object already exists.',
         example: '`CREATE TABLE IF NOT EXISTS orders (id bigint)` reports `drift-guard`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const MIGRATION_ORDER_RULE_DOCS = {
+export const MIGRATION_ORDER_EXPLANATIONS = {
     [MIGRATION_RULES.order]: {
         description: 'A new migration sorts after every committed migration.',
         why: 'A database that already ran the committed migrations skips an older version, or runs it out of order.',
@@ -44,10 +44,10 @@ export const MIGRATION_ORDER_RULE_DOCS = {
         fix: 'Give one of the files a new version.',
         example: '`20260101_create_orders.sql` and `20260101_create_users.sql` report `duplicate-version`.',
     },
-    ...SYNTAX_RULE_DOCS,
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+    ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;
 
-export const ROW_SECURITY_RULE_DOCS = {
+export const ROW_SECURITY_EXPLANATIONS = {
     [ROW_SECURITY_RULE]: {
         description: 'Each table in a schema of `postgres.client_schemas` turns on row level security.',
         why: 'Without it, any role that has a grant on the table reads and writes every row.',
@@ -80,4 +80,4 @@ export const ROW_SECURITY_RULE_DOCS = {
         fix: 'Write a `--` comment next to the policy with the reason.',
         example: '`CREATE POLICY read_all ON plans USING (true);` with no comment reports `open-policy`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

@@ -6,7 +6,7 @@ import { type CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
-import { PIP_INSTALL_RULE_DOCS } from '#cli/configurations/language/python/explanations.ts';
+import { PIP_INSTALL_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
 
 import {
     PIP_INSTALL,
@@ -62,5 +62,5 @@ function checkPipInstalls(session: Session, planned: PlannedCheck): CheckFinding
 }
 
 export const PYTHON_PIP_INSTALLS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'python/pip-installs': { check: checkPipInstalls, ruleDocs: PIP_INSTALL_RULE_DOCS },
+    'python/pip-installs': { check: checkPipInstalls, explanations: PIP_INSTALL_EXPLANATIONS },
 };

@@ -5,7 +5,7 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { REQUIRED_FILE_RULE_DOCS } from '#cli/configurations/general/docs/explanations.ts';
+import { REQUIRED_FILE_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
 import { DOCS_RULES, README_FILE, LICENSE_PATH, MISSING_LICENSE_MESSAGE } from '#cli/config/configurations/general.ts';
 
 /**
@@ -37,5 +37,5 @@ function checkRequiredFiles(session: Session, planned: PlannedCheck): CheckFindi
 }
 
 export const DOCS_REQUIRED_FILES_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'docs/required-files': { check: checkRequiredFiles, ruleDocs: REQUIRED_FILE_RULE_DOCS },
+    'docs/required-files': { check: checkRequiredFiles, explanations: REQUIRED_FILE_EXPLANATIONS },
 };

@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type cliPackage from '#cli-package';
-import type { LintRuleDocs } from '#cli/types/tools.ts';
 import type { DOCS_PATHS } from '#cli/config/manifests.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import type { GROUP_LABELS } from '#cli/config/generation.ts';
 import type { SetupReference } from '#cli/types/repository.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
@@ -22,8 +22,7 @@ export type CommandReference = {
     example: string;
 };
 
-export type CheckReference = ConfigurationCheck &
-    CheckDescription & { ruleDocs: Readonly<Record<string, LintRuleDocs>> | undefined };
+export type CheckReference = ConfigurationCheck & CheckDescription & { explanations: RuleExplanations | undefined };
 
 export type CliReference = {
     package: typeof cliPackage;

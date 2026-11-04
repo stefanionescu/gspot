@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
 
-export const ENCODING_RULE_DOCS = {
+export const ENCODING_EXPLANATIONS = {
     [REPOSITORY_RULES.encoding]: {
         description: 'Each tracked text file is UTF-8.',
         why: 'A tool that reads UTF-8 garbles or rejects text in another encoding.',
@@ -14,9 +14,9 @@ export const ENCODING_RULE_DOCS = {
         fix: 'Give the file a name that is valid UTF-8, such as a name in plain ASCII.',
         example: 'A file name in Latin-1 bytes reports `path-encoding`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const LOCAL_FILE_RULE_DOCS = {
+export const LOCAL_FILE_EXPLANATIONS = {
     [REPOSITORY_RULES.trackedFile]: {
         description: 'Git tracks no file that a selected configuration declares local, such as `.env`.',
         why: 'A local file holds the settings or secrets of one machine, and a commit shares them.',
@@ -35,4 +35,4 @@ export const LOCAL_FILE_RULE_DOCS = {
         fix: OUTWARD_LINK_HELP,
         example: 'A link `shared` to `../../other-repository/shared` reports `outward-link`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

@@ -9,7 +9,7 @@ import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
 import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { CONFLICTING_CONFIG_RULE_DOCS } from '#cli/configurations/general/gspot/explanations.ts';
+import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
 
 /**
 Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs,
@@ -47,5 +47,5 @@ function checkConflictingConfigs(session: Session, _planned: PlannedCheck): Chec
 }
 
 export const GSPOT_CONFLICTING_CONFIGS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'gspot/conflicting-configs': { check: checkConflictingConfigs, ruleDocs: CONFLICTING_CONFIG_RULE_DOCS },
+    'gspot/conflicting-configs': { check: checkConflictingConfigs, explanations: CONFLICTING_CONFIG_EXPLANATIONS },
 };

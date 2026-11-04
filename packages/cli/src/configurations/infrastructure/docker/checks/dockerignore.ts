@@ -11,7 +11,7 @@ import { findText, readText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { DockerIgnoredSource } from '#cli/types/configurations/infrastructure.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
-import { DOCKERIGNORE_RULE_DOCS } from '#cli/configurations/infrastructure/docker/explanations.ts';
+import { DOCKERIGNORE_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { listDockerInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 
 import {
@@ -141,5 +141,5 @@ function checkDockerignore(session: Session, planned: PlannedCheck): CheckFindin
 }
 
 export const DOCKER_DOCKERIGNORE_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'docker/dockerignore': { check: checkDockerignore, ruleDocs: DOCKERIGNORE_RULE_DOCS },
+    'docker/dockerignore': { check: checkDockerignore, explanations: DOCKERIGNORE_EXPLANATIONS },
 };

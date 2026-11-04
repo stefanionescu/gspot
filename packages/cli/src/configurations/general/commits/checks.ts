@@ -11,7 +11,7 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import type { CommitMessage } from '#cli/types/configurations/general.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import { REFERENCE_RULE_DOCS } from '#cli/configurations/general/commits/explanations.ts';
+import { REFERENCE_EXPLANATIONS } from '#cli/configurations/general/commits/explanations.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 
 import {
@@ -114,5 +114,5 @@ export async function readCommitMessage(session: CheckSession, messageFile: stri
 
 export const COMMITS_CHECKS: Readonly<Record<string, CheckCode>> = {
     'commits/commitlint-pushed': { run: checkCommitlintPushed },
-    'commits/references': { check: checkReferences, ruleDocs: REFERENCE_RULE_DOCS },
+    'commits/references': { check: checkReferences, explanations: REFERENCE_EXPLANATIONS },
 };

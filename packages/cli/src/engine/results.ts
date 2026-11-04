@@ -4,8 +4,8 @@ import type { Session } from '#cli/types/tools.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { setImmediate } from 'node:timers/promises';
 import type { Check } from '#cli/types/manifests.ts';
-import { canReadRuleDocs } from '#cli/tools/rules.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
+import { canReadRuleExplanations } from '#cli/tools/rules.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
@@ -38,23 +38,23 @@ function listSelectionArguments(selection: RunSelection): string[] {
 }
 
 /**
-Tell whether a check has a rule catalog: rule docs in its code, or a tool whose rules gspot reads. Only then can gspot
-explain one of its rules, or check a rule of an ignore against the rules that exist.
+Tell whether a check has a rule catalog: rule explanations in its code, or a tool whose rules gspot reads. Only then
+can gspot explain one of its rules, or check a rule of an ignore against the rules that exist.
 
 @param check the check that reports the rules.
 @param code the implementation of the check, if it has one.
 */
-export function hasRuleDocs(check: Check, code: CheckCode | undefined): boolean {
-    if (code?.ruleDocs !== undefined) return true;
+export function hasRuleExplanations(check: Check, code: CheckCode | undefined): boolean {
+    if (code?.explanations !== undefined) return true;
     const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
-    return tool !== undefined && canReadRuleDocs(tool);
+    return tool !== undefined && canReadRuleExplanations(tool);
 }
 
 /**
 Build the command that explains a finding's check, and its rule when the rule catalog of the check holds it.
 
 @param finding the reported check and optional rule identifier.
-@param selectCheckCode finds the implementation of a check, whose rule docs name its rules.
+@param selectCheckCode finds the implementation of a check, whose rule explanations name its rules.
 */
 export function formatExplainCommand(
     finding: Pick<Finding, 'check' | 'rule'>,
@@ -66,8 +66,8 @@ export function formatExplainCommand(
     if (
         found !== undefined &&
         finding.rule !== undefined &&
-        hasRuleDocs(found.check, code) &&
-        (code?.ruleDocs === undefined || Object.hasOwn(code.ruleDocs, finding.rule))
+        hasRuleExplanations(found.check, code) &&
+        (code?.explanations === undefined || Object.hasOwn(code.explanations, finding.rule))
     )
         argumentsList.push(finding.rule);
     return `gspot explain ${argumentsList.map((argument) => quoteArgument(argument)).join(' ')}`;

@@ -7,7 +7,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
-import { HTML_RULE_DOCS } from '#cli/configurations/language/html/explanations.ts';
+import { HTML_EXPLANATIONS } from '#cli/configurations/language/html/explanations.ts';
 
 import {
     HTML_RULES,
@@ -130,5 +130,5 @@ async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): 
 }
 
 export const HTML_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'html/inline-scripts': { check: checkHtmlInlineScripts, ruleDocs: HTML_RULE_DOCS },
+    'html/inline-scripts': { check: checkHtmlInlineScripts, explanations: HTML_EXPLANATIONS },
 };

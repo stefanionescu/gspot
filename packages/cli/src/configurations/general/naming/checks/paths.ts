@@ -7,8 +7,8 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import { REST_SEGMENT, CATEGORY_LABELS } from '#cli/config/configurations/naming.ts';
-import { NAMING_RULE_DOCS } from '#cli/configurations/general/naming/explanations.ts';
 import type { Identifier, PathContainer } from '#cli/types/configurations/general.ts';
+import { NAMING_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
@@ -107,5 +107,5 @@ export function buildFolderIdentifiers(path: string, language: string, container
 }
 
 export const NAMING_PATHS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'naming/paths': { check: checkPaths, ruleDocs: NAMING_RULE_DOCS },
+    'naming/paths': { check: checkPaths, explanations: NAMING_EXPLANATIONS },
 };

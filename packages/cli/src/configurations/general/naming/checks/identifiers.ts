@@ -4,8 +4,8 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
-import { IDENTIFIER_RULE_DOCS } from '#cli/configurations/general/naming/explanations.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
+import { IDENTIFIER_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 
@@ -37,5 +37,5 @@ async function checkIdentifiers(session: Session, planned: PlannedCheck): Promis
 }
 
 export const NAMING_IDENTIFIERS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'naming/identifiers': { check: checkIdentifiers, ruleDocs: IDENTIFIER_RULE_DOCS },
+    'naming/identifiers': { check: checkIdentifiers, explanations: IDENTIFIER_EXPLANATIONS },
 };

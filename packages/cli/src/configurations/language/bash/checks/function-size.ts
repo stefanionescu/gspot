@@ -6,7 +6,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { COUNT_LIMITS } from '#cli/config/configurations/bash.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { FUNCTION_SIZE_RULE_DOCS } from '#cli/configurations/language/bash/explanations.ts';
+import { FUNCTION_SIZE_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
 
 /**
 Checks each shell function against the size limits: code lines, branches, nesting, and assignments.
@@ -44,5 +44,5 @@ async function checkBashFunctionSize(session: Session, planned: PlannedCheck): P
 }
 
 export const BASH_FUNCTION_SIZE_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'bash/function-size': { check: checkBashFunctionSize, ruleDocs: FUNCTION_SIZE_RULE_DOCS },
+    'bash/function-size': { check: checkBashFunctionSize, explanations: FUNCTION_SIZE_EXPLANATIONS },
 };

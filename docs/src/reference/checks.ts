@@ -56,12 +56,12 @@ function formatTurnOff(reference: CliReference['checks'][number]): string {
 }
 
 function formatRuleTable(reference: CliReference['checks'][number]): string {
-    if (reference.ruleDocs === undefined) return '';
-    const rules = Object.entries(reference.ruleDocs);
+    if (reference.explanations === undefined) return '';
+    const rules = Object.entries(reference.explanations);
     if (rules.length === 0) return '';
     return formatTable(
         ['Rule', 'Meaning', 'What to do'],
-        rules.map(([name, docs]) => [`\`${name}\``, docs.description ?? '', docs.fix ?? '']),
+        rules.map(([name, explanation]) => [`\`${name}\``, explanation.description ?? '', explanation.fix ?? '']),
     );
 }
 

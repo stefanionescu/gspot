@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { YAML_RULES, YAML_MESSAGES } from '#cli/config/configurations/general.ts';
 
-export const YAML_RULE_DOCS = {
+export const YAML_EXPLANATIONS = {
     [YAML_RULES.syntax]: {
         description: 'YAML must parse without syntax errors.',
         why: 'A consumer cannot read malformed YAML.',
@@ -68,4 +68,4 @@ export const YAML_RULE_DOCS = {
         fix: YAML_MESSAGES.extension,
         example: 'Rename `settings.yaml` to `settings.yml`; keep `pnpm-workspace.yaml`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

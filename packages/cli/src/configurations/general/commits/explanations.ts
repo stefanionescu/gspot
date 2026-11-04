@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanation } from '#cli/types/tools.ts';
 import type { MESSAGE_REFERENCES } from '#cli/config/configurations/general.ts';
 
-export const REFERENCE_RULE_DOCS = {
+export const REFERENCE_EXPLANATIONS = {
     'session-link': {
         description: 'No line of the commit message links to an AI chat session.',
         why: 'Nobody else can open the chat, and the link exposes it to every reader of the history.',
@@ -38,4 +38,4 @@ export const REFERENCE_RULE_DOCS = {
         fix: 'Delete the marker, so that CI runs on the commit.',
         example: '`docs: fix a typo [skip ci]` reports `ci-skip`.',
     },
-} as const satisfies Readonly<Record<(typeof MESSAGE_REFERENCES)[number]['rule'], LintRuleDocs>>;
+} as const satisfies Readonly<Record<(typeof MESSAGE_REFERENCES)[number]['rule'], RuleExplanation>>;

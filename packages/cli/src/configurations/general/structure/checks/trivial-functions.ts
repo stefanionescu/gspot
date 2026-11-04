@@ -10,8 +10,8 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
-import { TRIVIAL_FUNCTION_RULE_DOCS } from '#cli/configurations/general/structure/explanations.ts';
 import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
+import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
 
 import {
     ONE_STATEMENT,
@@ -252,5 +252,5 @@ async function checkTrivialFunctions(session: Session, planned: PlannedCheck): P
 }
 
 export const STRUCTURE_TRIVIAL_FUNCTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'structure/trivial-functions': { check: checkTrivialFunctions, ruleDocs: TRIVIAL_FUNCTION_RULE_DOCS },
+    'structure/trivial-functions': { check: checkTrivialFunctions, explanations: TRIVIAL_FUNCTION_EXPLANATIONS },
 };

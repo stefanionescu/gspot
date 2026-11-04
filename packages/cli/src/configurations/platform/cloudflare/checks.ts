@@ -6,7 +6,7 @@ import type { NumberedLine } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { HEADER_RULE_DOCS } from '#cli/configurations/platform/cloudflare/explanations.ts';
+import { HEADER_EXPLANATIONS } from '#cli/configurations/platform/cloudflare/explanations.ts';
 import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/infrastructure.ts';
 
 import {
@@ -142,6 +142,6 @@ function checkHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
 }
 
 export const CLOUDFLARE_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'cloudflare/headers': { check: checkHeaders, ruleDocs: HEADER_RULE_DOCS },
+    'cloudflare/headers': { check: checkHeaders, explanations: HEADER_EXPLANATIONS },
     'cloudflare/redirects': { check: checkRedirects },
 };

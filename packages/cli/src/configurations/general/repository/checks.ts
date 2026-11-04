@@ -15,7 +15,7 @@ import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/structure.ts';
-import { ENCODING_RULE_DOCS, LOCAL_FILE_RULE_DOCS } from '#cli/configurations/general/repository/explanations.ts';
+import { ENCODING_EXPLANATIONS, LOCAL_FILE_EXPLANATIONS } from '#cli/configurations/general/repository/explanations.ts';
 
 function listLinkFindings(root: string, path: string): CheckFinding[] {
     const source = join(root, path);
@@ -179,7 +179,7 @@ function checkConflictMarkers(session: Session, planned: PlannedCheck): CheckFin
 
 export const REPOSITORY_CHECKS: Readonly<Record<string, CheckCode>> = {
     'repository/conflict-markers': { check: checkConflictMarkers },
-    'repository/encoding': { check: checkEncoding, ruleDocs: ENCODING_RULE_DOCS },
+    'repository/encoding': { check: checkEncoding, explanations: ENCODING_EXPLANATIONS },
     'repository/large-files': { check: checkLargeFiles },
-    'repository/local-files': { check: checkLocalFiles, ruleDocs: LOCAL_FILE_RULE_DOCS },
+    'repository/local-files': { check: checkLocalFiles, explanations: LOCAL_FILE_EXPLANATIONS },
 };

@@ -17,8 +17,8 @@ import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
-import type { LintRuleDocs, RuleToolSearch, RuleDocsOptions } from '#cli/types/tools.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
+import type { RuleToolSearch, RuleExplanation, RuleExplanationOptions } from '#cli/types/tools.ts';
 import { VALE_TOOL, VALE_STYLES_PATH, VALE_RULE_IDENTIFIER, VALE_PACKAGES_MESSAGE } from '#cli/config/tools/vale.ts';
 import { ruffRuleSchema, valeRuleSchema, installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools.ts';
 
@@ -97,7 +97,7 @@ async function importInstalledTool(root: string, specifier: string): Promise<unk
     return import(pathToFileURL(path).href);
 }
 
-function readMarkdownlintRule(root: string, identifier: string): LintRuleDocs | undefined {
+function readMarkdownlintRule(root: string, identifier: string): RuleExplanation | undefined {
     const path = findInstalledToolPath(root, 'markdownlint', MARKDOWNLINT_RULE_SCHEMA);
     if (path === undefined) throw new GspotError('tool', 'Markdownlint is not installed. Run gspot install.');
     const ruleTable = parseJsonFile('markdownlint rule catalog', readFileSync(path, 'utf8'), installedRulesSchema);
@@ -111,7 +111,7 @@ async function readSwiftlintRule(
     root: string,
     identifier: string,
     options: RuleToolSearch,
-): Promise<LintRuleDocs | undefined> {
+): Promise<RuleExplanation | undefined> {
     if (!SWIFTLINT_RULE_IDENTIFIER.test(identifier)) return undefined;
     const { timeoutSeconds } = options;
     const { paths } = await listExecutablePaths(root, 'swiftlint', {
@@ -132,7 +132,7 @@ async function readSwiftlintRule(
     return { description: result.stdout.trim(), ...(url !== undefined && { url }) };
 }
 
-function readManifestRuleDocs(tool: string, identifier: string): LintRuleDocs | undefined {
+function readManifestRuleExplanation(tool: string, identifier: string): RuleExplanation | undefined {
     if (tool === 'shellcheck' && !SHELLCHECK_RULE_IDENTIFIER.test(identifier)) return undefined;
     if (
         tool === 'biome' &&
@@ -179,7 +179,7 @@ function findRulePage(tool: string, rule: string): string | undefined {
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, () => rule.slice(prefix.length + 1));
 }
 
-function readValeRule(root: string, identifier: string): LintRuleDocs | undefined {
+function readValeRule(root: string, identifier: string): RuleExplanation | undefined {
     if (!VALE_RULE_IDENTIFIER.test(identifier)) return undefined;
     if (!hasValePackages(root)) throw new GspotError('tool', VALE_PACKAGES_MESSAGE);
     for (const folder of [VALE_STYLES_PATH, GSPOT_PATHS.valePackages]) {
@@ -197,7 +197,7 @@ async function readRuffRule(
     root: string,
     identifier: string,
     timeoutSeconds: number,
-): Promise<LintRuleDocs | undefined> {
+): Promise<RuleExplanation | undefined> {
     const [path] = listRepositoryExecutablePaths(root, 'ruff', { folders: [], toolFolderKind: 'python' });
     if (path === undefined) throw new GspotError('tool', 'Ruff is not installed in .gspot/.venv. Run gspot install.');
     const result = await runTool([path, 'rule', identifier, '--output-format', 'json'], { cwd: root, timeoutSeconds });
@@ -228,7 +228,7 @@ async function readStylelintRule(installed: unknown, identifier: string): Promis
     return await findValueAt(rules, [identifier]);
 }
 
-function getRuleMetadata(rule: unknown, page: string | undefined): LintRuleDocs {
+function getRuleMetadata(rule: unknown, page: string | undefined): RuleExplanation {
     if (typeof rule !== 'object' && typeof rule !== 'function')
         throw new TypeError('The installed rule has no implementation.');
     if (rule === null) throw new Error('The installed rule has no implementation.');
@@ -245,13 +245,13 @@ manifest. Without either, gspot has no list of the rules to explain or to check 
 
 @param tool the manifest tool name.
 */
-export function canReadRuleDocs(tool: string): boolean {
+export function canReadRuleExplanations(tool: string): boolean {
     if (RULE_READER_TOOLS.has(tool)) return true;
     return getTool(readConfigurations().values(), tool).rule_url !== undefined;
 }
 
 /**
-Read rule documentation from an installed tool without importing generated configuration.
+Read the explanation of a rule from an installed tool without importing generated configuration.
 
 @param root the repository root.
 @param tool the program that runs the rule.
@@ -260,23 +260,24 @@ Read rule documentation from an installed tool without importing generated confi
 @param options.timeoutSeconds the subprocess time limit.
 @param options.readMiseBinPaths locates the tools through the validated generated tool project.
 */
-export async function readLintRuleDocs(
+export async function readLintRuleExplanation(
     root: string,
     tool: string,
     identifier: string,
     {
         timeoutSeconds = rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         readMiseBinPaths,
-    }: RuleDocsOptions = {},
-): Promise<LintRuleDocs | undefined> {
-    const readRule = new Map<string, () => LintRuleDocs | undefined | Promise<LintRuleDocs | undefined>>([
+    }: RuleExplanationOptions = {},
+): Promise<RuleExplanation | undefined> {
+    const readRule = new Map<string, () => RuleExplanation | undefined | Promise<RuleExplanation | undefined>>([
         ['ruff', () => readRuffRule(root, identifier, timeoutSeconds)],
         ['markdownlint-cli2', () => readMarkdownlintRule(root, identifier)],
         [VALE_TOOL, () => readValeRule(root, identifier)],
         ['swiftlint', () => readSwiftlintRule(root, identifier, { timeoutSeconds, readMiseBinPaths })],
     ]).get(tool);
     if (readRule !== undefined) return readRule();
-    if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool)) return readManifestRuleDocs(tool, identifier);
+    if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool))
+        return readManifestRuleExplanation(tool, identifier);
     const rule = await readInstalledRule(root, tool, identifier);
     return rule === undefined ? undefined : getRuleMetadata(rule, findRulePage(tool, identifier));
 }

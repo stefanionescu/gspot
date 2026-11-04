@@ -20,7 +20,7 @@ import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
-import { SITEMAP_RULE_DOCS } from '#cli/configurations/framework/site/explanations.ts';
+import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 
 import {
     listBuiltFiles,
@@ -250,5 +250,5 @@ export const SITE_PAGES_CHECKS: Readonly<Record<string, CheckCode>> = {
     'site/html-validate': { check: checkHtmlValidate },
     'site/lychee': { check: checkLychee },
     'site/purgecss': { check: checkPurgecss },
-    'site/sitemap': { check: checkSitemap, ruleDocs: SITEMAP_RULE_DOCS },
+    'site/sitemap': { check: checkSitemap, explanations: SITEMAP_EXPLANATIONS },
 };

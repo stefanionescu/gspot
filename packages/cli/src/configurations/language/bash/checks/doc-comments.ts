@@ -5,7 +5,7 @@ import type { ScriptFunction } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { DOC_COMMENT_RULE_DOCS } from '#cli/configurations/language/bash/explanations.ts';
+import { DOC_COMMENT_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
 
 import {
     WORD,
@@ -109,5 +109,5 @@ async function checkBashDocComments(session: Session, planned: PlannedCheck): Pr
 }
 
 export const BASH_DOC_COMMENTS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'bash/doc-comments': { check: checkBashDocComments, ruleDocs: DOC_COMMENT_RULE_DOCS },
+    'bash/doc-comments': { check: checkBashDocComments, explanations: DOC_COMMENT_EXPLANATIONS },
 };

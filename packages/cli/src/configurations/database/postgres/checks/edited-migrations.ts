@@ -5,7 +5,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
-import { EDITED_MIGRATION_RULE_DOCS } from '#cli/configurations/database/postgres/explanations.ts';
+import { EDITED_MIGRATION_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
 
 import {
     FROZEN_RULE,
@@ -75,5 +75,5 @@ async function checkEditedMigrations(session: CheckSession, planned: PlannedChec
 }
 
 export const POSTGRES_EDITED_MIGRATIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'postgres/edited-migrations': { check: checkEditedMigrations, ruleDocs: EDITED_MIGRATION_RULE_DOCS },
+    'postgres/edited-migrations': { check: checkEditedMigrations, explanations: EDITED_MIGRATION_EXPLANATIONS },
 };

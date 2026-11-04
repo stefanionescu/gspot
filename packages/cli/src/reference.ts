@@ -73,14 +73,14 @@ function buildCheckReference(
     configurations: Configuration[],
 ): CheckReference {
     const description = describeCheck(check, configurations);
-    const ruleDocs = selectCheckCode(check)?.ruleDocs;
-    if (ruleDocs === undefined) return { check, configuration, ...description, ruleDocs };
-    const firstRule = Object.keys(ruleDocs)[0];
+    const explanations = selectCheckCode(check)?.explanations;
+    if (explanations === undefined) return { check, configuration, ...description, explanations };
+    const firstRule = Object.keys(explanations)[0];
     return {
         check,
         configuration,
         ...description,
-        ruleDocs,
+        explanations,
         turnOff: {
             ...description.turnOff,
             rule:

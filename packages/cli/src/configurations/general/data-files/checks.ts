@@ -3,8 +3,8 @@ import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { YAML_RULE_DOCS } from '#cli/configurations/general/data-files/explanations.ts';
 import type { YamlFinding, YamlAnchorToken } from '#cli/types/configurations/general.ts';
+import { YAML_EXPLANATIONS } from '#cli/configurations/general/data-files/explanations.ts';
 
 import {
     CST,
@@ -173,5 +173,5 @@ function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFinding[]
 }
 
 export const DATA_FILES_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'data-files/yaml': { check: checkYaml, ruleDocs: YAML_RULE_DOCS },
+    'data-files/yaml': { check: checkYaml, explanations: YAML_EXPLANATIONS },
 };

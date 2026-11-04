@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { LimitFunction } from 'p-limit';
 import type { Check } from '#cli/types/manifests.ts';
 import type { CHECK_STATUSES } from '#cli/config/engine.ts';
-import type { Session, LintRuleDocs } from '#cli/types/tools.ts';
+import type { Session, RuleExplanations } from '#cli/types/tools.ts';
 import type { CommandLine, CheckFinding, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { PlanOptions, StageFilter, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { fixReportSchema, fixResultSchema, runReportSchema, reportedCheckSchema } from '#cli/schemas/engine.ts';
@@ -78,7 +78,7 @@ export type RunResult = { report: RunReport; planned: PlannedCheck[]; setup: num
 export type CheckStatus = (typeof CHECK_STATUSES)[number];
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) & {
-    ruleDocs?: Readonly<Record<string, LintRuleDocs>>;
+    explanations?: RuleExplanations;
     runsLast?: boolean;
 };
 

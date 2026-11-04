@@ -17,9 +17,9 @@ import type {
 import type {
     bunPackageSchema,
     hookStatusSchema,
-    lintRuleDocsSchema,
     miseLockfileSchema,
     toolInspectionSchema,
+    ruleExplanationSchema,
     uvProjectSettingsSchema,
 } from '#cli/schemas/tools.ts';
 
@@ -223,7 +223,9 @@ export type Lockfile = (typeof LOCKFILES)[number];
 
 export type ToolProjectLockfileName = Extract<Lockfile, { toolProject: true }>['file'];
 
-export type LintRuleDocs = z.infer<typeof lintRuleDocsSchema>;
+export type RuleExplanation = z.infer<typeof ruleExplanationSchema>;
+
+export type RuleExplanations = Readonly<Record<string, RuleExplanation>>;
 
 export type ToolRunOptions = Pick<CancelableSpawnOptions, 'cwd' | 'env' | 'stdin'> & {
     timeoutSeconds: number;
@@ -236,7 +238,7 @@ export type ProcessFailure = { status: 'error' | 'missing' | 'canceled'; note: s
 
 export type InstalledDependency = { path: string; version: string | undefined };
 
-export type RuleDocsOptions = {
+export type RuleExplanationOptions = {
     timeoutSeconds?: number | undefined;
     readMiseBinPaths?: (() => Promise<string[]>) | undefined;
 };
@@ -247,4 +249,4 @@ export type ToolLookupSession = Pick<
 > &
     Pick<ToolSearch, 'runsVersionCommand'>;
 
-export type RuleToolSearch = RuleDocsOptions & { timeoutSeconds: number };
+export type RuleToolSearch = RuleExplanationOptions & { timeoutSeconds: number };

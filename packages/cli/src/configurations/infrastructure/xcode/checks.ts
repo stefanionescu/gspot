@@ -16,9 +16,9 @@ import { parseBuildTargets, parseProjectSources } from '#cli/parsers/projects/xc
 import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/configurations.ts';
 
 import {
-    ASSET_RULE_DOCS,
-    XCSTRINGS_RULE_DOCS,
-    BUILD_SETTING_RULE_DOCS,
+    ASSET_EXPLANATIONS,
+    XCSTRINGS_EXPLANATIONS,
+    BUILD_SETTING_EXPLANATIONS,
 } from '#cli/configurations/infrastructure/xcode/explanations.ts';
 import {
     PLIST_KEY,
@@ -270,10 +270,10 @@ function checkBuildSettings(session: Session, planned: PlannedCheck): CheckFindi
 
 export const XCODE_CHECKS: Readonly<Record<string, CheckCode>> = {
     'xcode/app-transport-security': { check: checkAppTransportSecurity },
-    'xcode/assets': { check: checkAssets, ruleDocs: ASSET_RULE_DOCS },
-    'xcode/build-settings': { check: checkBuildSettings, ruleDocs: BUILD_SETTING_RULE_DOCS },
+    'xcode/assets': { check: checkAssets, explanations: ASSET_EXPLANATIONS },
+    'xcode/build-settings': { check: checkBuildSettings, explanations: BUILD_SETTING_EXPLANATIONS },
     'xcode/entitlements': { check: checkEntitlements },
     'xcode/files-without-target': { check: checkFilesWithoutTarget },
     'xcode/unused-assets': { check: checkXcodeUnusedAssets },
-    'xcode/xcstrings': { check: checkXcstrings, ruleDocs: XCSTRINGS_RULE_DOCS },
+    'xcode/xcstrings': { check: checkXcstrings, explanations: XCSTRINGS_EXPLANATIONS },
 };

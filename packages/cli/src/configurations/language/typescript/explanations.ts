@@ -1,4 +1,4 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanation } from '#cli/types/tools.ts';
 import type { COMPILER_OPTIONS, NESTJS_COMPILER_OPTIONS } from '#cli/config/configurations/registry.ts';
 
 import {
@@ -7,7 +7,7 @@ import {
     type STRICT_FAMILY_OPTIONS,
 } from '#cli/config/configurations/language.ts';
 
-export const TSCONFIG_RULE_DOCS = {
+export const TSCONFIG_EXPLANATIONS = {
     [MISSING_TSCONFIG_RULE]: {
         description: 'A scope with TypeScript files has a `tsconfig.json`.',
         why: 'Without one, the type checks and the typed lint rules have no project to read.',
@@ -137,6 +137,6 @@ export const TSCONFIG_RULE_DOCS = {
         | keyof typeof COMPILER_OPTIONS
         | keyof typeof NESTJS_COMPILER_OPTIONS
         | (typeof STRICT_FAMILY_OPTIONS)[number],
-        LintRuleDocs
+        RuleExplanation
     >
 >;

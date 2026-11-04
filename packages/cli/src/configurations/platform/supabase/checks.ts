@@ -25,8 +25,11 @@ import { buildDatabaseSchema } from '#cli/configurations/database/postgres/check
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
-import { DENO_CHECK_RULE_DOCS, STORAGE_POLICY_RULE_DOCS } from '#cli/configurations/platform/supabase/explanations.ts';
 
+import {
+    DENO_CHECK_EXPLANATIONS,
+    STORAGE_POLICY_EXPLANATIONS,
+} from '#cli/configurations/platform/supabase/explanations.ts';
 import {
     SYNTAX_RULE,
     DENO_LOCATION,
@@ -328,9 +331,9 @@ function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFinding[]
 }
 
 export const SUPABASE_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'supabase/deno-check': { check: checkDenoCheck, ruleDocs: DENO_CHECK_RULE_DOCS },
+    'supabase/deno-check': { check: checkDenoCheck, explanations: DENO_CHECK_EXPLANATIONS },
     'supabase/deno-lint': { check: checkDenoLint },
     'supabase/service-role-key': { check: checkServiceRoleKey },
-    'supabase/storage-policies': { check: checkStoragePolicies, ruleDocs: STORAGE_POLICY_RULE_DOCS },
+    'supabase/storage-policies': { check: checkStoragePolicies, explanations: STORAGE_POLICY_EXPLANATIONS },
     'supabase/verify-jwt': { check: checkVerifyJwt },
 };

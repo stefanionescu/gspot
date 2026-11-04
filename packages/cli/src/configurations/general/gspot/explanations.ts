@@ -1,4 +1,4 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
 
 import {
     GSPOT_RULES,
@@ -7,7 +7,7 @@ import {
     GENERATED_FILE_FINDINGS,
 } from '#cli/config/configurations/structure.ts';
 
-export const WEAKENING_RULE_DOCS = {
+export const WEAKENING_EXPLANATIONS = {
     [WEAKENING_RULES.baseline]: {
         description: '`gspot.baseline.json` counts more findings than at the base revision.',
         why: 'A count that grows accepts new findings as old ones.',
@@ -44,9 +44,9 @@ export const WEAKENING_RULE_DOCS = {
         fix: WEAKENING_FIXES[WEAKENING_RULES.setting],
         example: '`max_file_lines = 400` where the base has the default of 300 reports `setting`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const GENERATED_FILE_RULE_DOCS = {
+export const GENERATED_FILE_EXPLANATIONS = {
     changed: {
         description: 'Each generated file holds what the settings generate.',
         why: 'An edited file runs its tool with settings that `gspot.toml` does not hold.',
@@ -65,9 +65,9 @@ export const GENERATED_FILE_RULE_DOCS = {
         fix: GENERATED_FILE_FINDINGS.stray.help,
         example: 'A generated file of a configuration that `gspot remove` took out reports `stray`.',
     },
-} as const satisfies Readonly<Record<keyof typeof GENERATED_FILE_FINDINGS, LintRuleDocs>>;
+} as const satisfies Readonly<Record<keyof typeof GENERATED_FILE_FINDINGS, RuleExplanation>>;
 
-export const CONFLICTING_CONFIG_RULE_DOCS = {
+export const CONFLICTING_CONFIG_EXPLANATIONS = {
     [GSPOT_RULES.conflictingConfig]: {
         description:
             'The repository holds no tool config of its own for a tool that gspot writes a generated config file for.',
@@ -81,4 +81,4 @@ export const CONFLICTING_CONFIG_RULE_DOCS = {
         fix: 'Run `gspot check` in its place, or delete the line.',
         example: 'A `lint` script in `package.json` that runs `eslint .` reports `lint-command`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

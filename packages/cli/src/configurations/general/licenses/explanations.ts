@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { LICENSE_RULES } from '#cli/config/configurations/general.ts';
 
-export const LICENSE_RULE_DOCS = {
+export const LICENSE_EXPLANATIONS = {
     [LICENSE_RULES.disallowedLicense]: {
         description: 'Each locked package reports a license that `licenses.allowed` lists.',
         why: 'A license outside the list can bind the project to terms that the team did not accept.',
@@ -14,4 +14,4 @@ export const LICENSE_RULE_DOCS = {
         fix: 'Delete the record, or fix the package name or version range that it gives.',
         example: 'A record for `left-pad` after the lockfile drops `left-pad` reports `unused-record`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

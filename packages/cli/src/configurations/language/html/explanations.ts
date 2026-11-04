@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { HTML_RULES } from '#cli/config/configurations/language.ts';
 
-export const HTML_RULE_DOCS = {
+export const HTML_EXPLANATIONS = {
     [HTML_RULES.inlineScript]: {
         description: 'No `<script>` element holds executable code inline.',
         why: 'A Content Security Policy without `unsafe-inline` blocks inline code, and a script file can be cached and checked.',
@@ -20,4 +20,4 @@ export const HTML_RULE_DOCS = {
         fix: 'Load the code from a script file, and link to a real page.',
         example: '`<a href="javascript:save()">` reports `script-link`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

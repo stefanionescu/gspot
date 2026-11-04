@@ -1,8 +1,8 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { SWIFT_SECURITY_RULES } from '#cli/config/configurations/swift.ts';
 import { COVERAGE_RULE, FAILED_TEST_RULE } from '#cli/config/configurations/builds.ts';
 
-export const SWIFT_SECURITY_RULE_DOCS = {
+export const SWIFT_SECURITY_EXPLANATIONS = {
     [SWIFT_SECURITY_RULES.keychain]: {
         description: 'No Keychain item uses `kSecAttrAccessibleAlways`.',
         why: 'Anyone with the device can then read the item, even while it is locked.',
@@ -33,9 +33,9 @@ export const SWIFT_SECURITY_RULE_DOCS = {
         fix: 'Fetch the secret at run time, and keep it in the Keychain.',
         example: '`Bundle.main.object(forInfoDictionaryKey: "ApiSecret")` reports `secret-in-plist`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const SWIFT_TEST_RULE_DOCS = {
+export const SWIFT_TEST_EXPLANATIONS = {
     [FAILED_TEST_RULE]: {
         description: 'Each Swift test passes.',
         why: 'A failing test shows a behavior that the change broke.',
@@ -49,4 +49,4 @@ export const SWIFT_TEST_RULE_DOCS = {
         fix: 'Add tests for the lines that no test runs.',
         example: 'A target at 62 percent with a limit of 70 reports `coverage`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

@@ -9,7 +9,6 @@ import { NEXTJS_CHECKS } from '#cli/configurations/framework/nextjs/checks.ts';
 import { SVELTE_CHECKS } from '#cli/configurations/framework/svelte/checks.ts';
 import { COMMITS_CHECKS } from '#cli/configurations/general/commits/checks.ts';
 import { SECRETS_CHECKS } from '#cli/configurations/general/secrets/checks.ts';
-import { GENERATOR_OUTPUT_RULE_DOCS } from '#cli/configurations/explanations.ts';
 import { LICENSES_CHECKS } from '#cli/configurations/general/licenses/checks.ts';
 import { SECURITY_CHECKS } from '#cli/configurations/general/security/checks.ts';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
@@ -17,6 +16,7 @@ import { NGINX_CHECKS } from '#cli/configurations/infrastructure/nginx/checks.ts
 import { XCODE_CHECKS } from '#cli/configurations/infrastructure/xcode/checks.ts';
 import { MARKDOWN_CHECKS } from '#cli/configurations/language/markdown/checks.ts';
 import { SUPABASE_CHECKS } from '#cli/configurations/platform/supabase/checks.ts';
+import { GENERATOR_OUTPUT_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { REACT_DOM_CHECKS } from '#cli/configurations/framework/react-dom/checks.ts';
 import { DATA_FILES_CHECKS } from '#cli/configurations/general/data-files/checks.ts';
 import { REPOSITORY_CHECKS } from '#cli/configurations/general/repository/checks.ts';
@@ -181,6 +181,6 @@ Find the implementation of a built-in check or a check that compares generator o
 */
 export function selectCheckCode(check: Check): CheckCode | undefined {
     if (check.generator_outputs !== undefined)
-        return { check: checkGeneratorOutputs, ruleDocs: GENERATOR_OUTPUT_RULE_DOCS };
+        return { check: checkGeneratorOutputs, explanations: GENERATOR_OUTPUT_EXPLANATIONS };
     return CHECK_CODE[check.id];
 }

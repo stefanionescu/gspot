@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { TRIVIAL_FUNCTION_RULES, IMPORT_RULE_CHECK_RULES } from '#cli/config/configurations/structure.ts';
 
-export const IMPORT_RULE_DOCS = {
+export const IMPORT_EXPLANATIONS = {
     [IMPORT_RULE_CHECK_RULES.refusedImport]: {
         description:
             'A Python or Swift file imports only from the import rules that its own rule lists in `can_import`.',
@@ -15,9 +15,9 @@ export const IMPORT_RULE_DOCS = {
         fix: 'Extend the `paths` of the import rule that the file belongs to.',
         example: 'A new `scripts/seed.ts` that no `paths` entry matches reports `uncovered-file`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const TRIVIAL_FUNCTION_RULE_DOCS = {
+export const TRIVIAL_FUNCTION_EXPLANATIONS = {
     [TRIVIAL_FUNCTION_RULES.trivialFunction]: {
         description:
             'A named function has `limits.<language>.min_function_statements` statements or fewer, and one place in the scope calls it at most.',
@@ -31,4 +31,4 @@ export const TRIVIAL_FUNCTION_RULE_DOCS = {
         fix: 'Point each import at the module that defines the code, then delete the file.',
         example: 'A Python `shop/models.py` that holds only `from .cart import Cart` reports `trivial-file`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

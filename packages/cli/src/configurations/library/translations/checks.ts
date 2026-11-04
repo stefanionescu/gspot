@@ -11,7 +11,7 @@ import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { parseTree, findNodeAtLocation } from 'jsonc-parser/lib/esm/main.js';
 import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
-import { TRANSLATION_RULE_DOCS } from '#cli/configurations/library/translations/explanations.ts';
+import { TRANSLATION_EXPLANATIONS } from '#cli/configurations/library/translations/explanations.ts';
 
 import {
     TYPE,
@@ -257,5 +257,5 @@ function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] 
 }
 
 export const TRANSLATIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'translations/messages': { check: checkMessages, ruleDocs: TRANSLATION_RULE_DOCS },
+    'translations/messages': { check: checkMessages, explanations: TRANSLATION_EXPLANATIONS },
 };

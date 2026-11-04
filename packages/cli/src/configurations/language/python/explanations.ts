@@ -1,7 +1,7 @@
-import type { LintRuleDocs } from '#cli/types/tools.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 import { PYTHON_RULES, PIP_INSTALL_MESSAGE } from '#cli/config/configurations/python.ts';
 
-export const PIP_INSTALL_RULE_DOCS = {
+export const PIP_INSTALL_EXPLANATIONS = {
     [PYTHON_RULES.requirementsFile]: {
         description: 'The scope keeps no requirements file by hand beside its lockfile.',
         why: 'A second list of dependencies drifts from `pyproject.toml` and the lockfile.',
@@ -14,9 +14,9 @@ export const PIP_INSTALL_RULE_DOCS = {
         fix: PIP_INSTALL_MESSAGE,
         example: '`pip install requests` in `scripts/setup.sh` reports `pip-install`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;
 
-export const VULTURE_RULE_DOCS = {
+export const VULTURE_EXPLANATIONS = {
     [PYTHON_RULES.unreachableCode]: {
         description: 'No code follows a `return`, `raise`, `break`, or `continue` in the same block.',
         why: 'Code that never runs misleads the reader about what the function does.',
@@ -53,4 +53,4 @@ export const VULTURE_RULE_DOCS = {
         fix: 'Delete the property. When code reads it by name, ignore the finding with a reason.',
         example: 'A `@property def legacy_id(self)` that nothing reads reports `unused-property`.',
     },
-} as const satisfies Readonly<Record<string, LintRuleDocs>>;
+} as const satisfies RuleExplanations;

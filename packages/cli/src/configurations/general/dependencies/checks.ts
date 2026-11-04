@@ -16,8 +16,11 @@ import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { PACKAGE_JSON, IMPORTER_LOCKFILES, PNPM_ROOT_IMPORTER, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
-import { LOCKFILE_RULE_DOCS, PACKAGE_MANAGER_PIN_DOCS } from '#cli/configurations/general/dependencies/explanations.ts';
 
+import {
+    LOCKFILE_EXPLANATIONS,
+    PACKAGE_MANAGER_PIN_EXPLANATIONS,
+} from '#cli/configurations/general/dependencies/explanations.ts';
 import {
     listSpecifiers,
     listLockfileUrls,
@@ -257,7 +260,10 @@ function checkStaleLockfile(session: Session, planned: PlannedCheck): CheckFindi
 }
 
 export const DEPENDENCIES_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'dependencies/lockfiles': { check: checkLockfiles, ruleDocs: LOCKFILE_RULE_DOCS },
-    'dependencies/package-manager-pin': { check: checkPackageManagerPin, ruleDocs: PACKAGE_MANAGER_PIN_DOCS },
+    'dependencies/lockfiles': { check: checkLockfiles, explanations: LOCKFILE_EXPLANATIONS },
+    'dependencies/package-manager-pin': {
+        check: checkPackageManagerPin,
+        explanations: PACKAGE_MANAGER_PIN_EXPLANATIONS,
+    },
     'dependencies/stale-lockfile': { check: checkStaleLockfile },
 };
