@@ -21,7 +21,8 @@ function formatChoices(value: Pick<CommandReference['arguments'][number], 'choic
         value.choices === undefined
             ? ''
             : ' Choices: ' + value.choices.map((choice) => `\`${choice}\``).join(', ') + '.';
-    const defaultValue = value.default === undefined ? '' : ` Default: \`${String(value.default)}\`.`;
+    const shown = typeof value.default === 'string' ? value.default : JSON.stringify(value.default);
+    const defaultValue = value.default === undefined ? '' : ` Default: \`${shown}\`.`;
     return choices + defaultValue;
 }
 
