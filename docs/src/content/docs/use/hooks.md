@@ -4,7 +4,7 @@ description: Run checks before commits and pushes and check commit messages.
 ---
 
 The `gspot init` plan includes Git hooks. With `hooks.enabled = true`, gspot writes each hook below that runs at least
-one check, and `gspot install` turns them on.
+one check, and `gspot install` turns them on. Hooks run code from the repository; see [Trust](/start/concepts/#trust).
 
 | Hook         | Checks                                                                                                                                                                   |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -12,16 +12,28 @@ one check, and `gspot install` turns them on.
 | `pre-push`   | The push-stage checks, on the files the push changes, as they are in the pushed tip. At level `all`, `commits/commitlint-pushed` also checks each pushed commit message. |
 | `commit-msg` | The message-stage checks on the new commit message: `commits/references`, and at level `all` also `commits/commitlint` and `prose/commit-message`.                       |
 
-The commit hook checks the staged files. The push hook checks the tip of each pushed branch; a mistake fixed in a later
-commit of the same push does not fail it. The commit hook already checked each commit, so the push hook leaves out the
-commit-stage checks, and CI runs both stages.
+```mermaid
+flowchart LR
+    accTitle: What the hooks check
+    accDescr: git commit runs the commit checks in the pre-commit hook, then the message checks in the commit-msg hook, and a failed check stops the commit. git push runs the push checks in the pre-push hook, and a failed check stops the push.
+    commit["git commit"] --> precommit["pre-commit hook: commit checks on the staged files"]
+    precommit -- passed --> message["commit-msg hook: message checks"] -- passed --> committed["commit"]
+    precommit -- failed --> stopped["no commit"]
+    message -- failed --> stopped
+    push["git push"] --> prepush["pre-push hook: push checks on the pushed tips"]
+    prepush -- passed --> pushed["push"]
+    prepush -- failed --> refused["no push"]
+```
 
-Some checks, such as the type checker, read the whole project and can report a finding in a file you did not change.
+The push hook checks the tip of each pushed branch, so a mistake that a later commit of the same push fixes does not
+fail it. The commit hook already checked each commit, so the push hook leaves out the commit checks; CI runs both
+stages. Checks that read the whole project, such as the type checker, report findings in files that you did not change.
+
+A hook that cannot start gspot stops the commit; see
+[Troubleshooting](/use/troubleshooting/#a-hook-cannot-find-npm-pnpm-yarn-bun-or-mise).
 
 When dependency files differ, gspot prints: "The dependency files in the working tree differ from the checked revision;
 the checks used the installed dependencies."
-
-Each clone runs `gspot install` once to turn the hooks on; see [Set up a clone](/start/install/#set-up-a-clone).
 
 ## Turn hooks on or off
 
@@ -78,5 +90,3 @@ needs no other hook manager.
 
 Fix each finding, then commit or push again. To stop a finding on every run, add an ignore with a reason. See [Ignore
 findings](/use/ignore/).
-
-The hooks run the code of the repository as you; see [Trust](/start/concepts/#trust).
