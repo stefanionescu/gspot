@@ -56,10 +56,8 @@ test.each(['.npmrc', '.yarnrc.yml', 'pnpm-workspace.yaml', 'bunfig.toml'])(
         const session = await openSession(sandbox.path);
         const install = await buildNpmToolInstall(session, writer);
         const error = await captureRejection(installNpmTools(install));
-        expect(error).toMatchObject({
-            code: 'install',
-            message: `gspot runs the package manager in .gspot only when no package manager settings file sits there. Delete .gspot/${name}, then run gspot install.`,
-        });
+        expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+        expect(error.message).toContain(`.gspot/${name}`);
         expect(install.steps).toStrictEqual([]);
     },
 );

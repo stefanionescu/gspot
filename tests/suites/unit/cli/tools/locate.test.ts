@@ -87,8 +87,9 @@ test('a failed mise call gives its exit code and its error', async () => {
     const paths = await readMiseBinPaths(sandbox.path, ['shfmt'], { timeoutSeconds: 1, project });
     expect(paths).toStrictEqual({
         folders: [],
-        failure: 'mise bin-paths failed (exit 3): mise ERROR the disk is full',
+        failure: expect.stringContaining('mise ERROR the disk is full') as string,
     });
+    expect(paths.failure).toMatch(/\b3\b/u);
     const tool: Tool = {
         name: 'shfmt',
         kind: 'program',

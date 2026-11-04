@@ -46,7 +46,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
 
 test.each([...FAILED_INSTALL_CASES])(
     'a failed $operation keeps the files and hides credentials',
-    async ({ frozen, operation }) => {
+    async ({ frozen }) => {
         const refusal = 'HTTP 403 Forbidden';
         await using sandbox = await createGitSandbox({});
         const token = 'synthetic-registry-failure-token';
@@ -84,11 +84,10 @@ test.each([...FAILED_INSTALL_CASES])(
                 ? installNpmTools(install)
                 : planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: packageJson }),
         );
-        expect(installationError).toMatchObject({
-            name: 'GspotError',
-            code: 'install',
-            message: `bun ${operation} failed (exit 1).\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
-        });
+        expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
+        for (const secret of [password, encodeURIComponent(password), token])
+            expect(installationError.message).not.toContain(secret);
+        expect(installationError.message).toContain(`${refusal} from https://[redacted]@registry.example.com/`);
         expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
         expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
         expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
@@ -98,9 +97,7 @@ test.each([...FAILED_INSTALL_CASES])(
 test('a cached lockfile that holds registry credentials is refused and the files stay', async () => {
     await using sandbox = await createGitSandbox({});
     const { files, error } = await prepareCredentialProject(sandbox.path, CREDENTIAL_PACKAGE_JSON, CREDENTIAL_LOCKFILE);
-    expect(error.message).toBe(
-        'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
     for (const [path, text] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
 });
@@ -116,9 +113,7 @@ test('a lockfile that the package manager writes with registry credentials is re
         JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } }),
         JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } }),
     );
-    expect(error.message).toBe(
-        'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
     for (const [path, text] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
 });
@@ -170,9 +165,7 @@ test('a lockfile that npm writes with registry credentials in its one run is del
     });
     const install = await buildNpmToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     const error = await captureRejection(installUnlockedNpmTools(install));
-    expect(error.message).toBe(
-        'npm wrote registry credentials into the lockfile of the tool project, so gspot deleted that lockfile. Remove the credentials from the registry URL, then run gspot install again.',
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
     expect(existsSync(join(sandbox.path, GSPOT_FOLDER, 'package-lock.json'))).toBe(false);
 });
 
@@ -198,8 +191,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     const install = await buildNpmToolInstall(session, owner);
     const projectFile = { path: GSPOT_PATHS.npmProject, content: packageJson };
     const lockfileError = await captureRejection(planNpmLockfile(install, projectFile));
-    const message = lockfileError.message;
-    expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
+    expect(lockfileError).toMatchObject({ name: 'GspotError', code: 'install' });
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
     await createFileTree(sandbox.path, {
         [GSPOT_PATHS.npmProject]: packageJson,

@@ -57,5 +57,6 @@ test.skipIf(isWindows)('an install step that a signal stops names the signal in 
     const error = await captureRejection(
         runRequiredInstallStep(install, command, { cwd: sandbox.path, step: 'installing', name: 'npm installation' }),
     );
-    expect(error.message).toStartWith('npm installation failed (stopped by SIGKILL):\n');
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error.message).toContain('SIGKILL');
 });

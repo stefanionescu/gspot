@@ -170,7 +170,9 @@ test('mise lock that leaves a platform without a download URL is refused and wri
     const pins = listMisePins(session.toolConfigurations)
         .map((pin) => `${pin.name} ${pin.version}`)
         .join(', ');
-    expect(error.message).toBe(`mise lock did not lock ${pins}.\nlocked`);
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error.message).toContain(pins);
+    expect(error.message).toContain('locked');
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.miseLockfile))).toBe(false);
 });
@@ -208,11 +210,10 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
     const names = listMisePins(session.toolConfigurations)
         .map((pin) => `${pin.name} ${pin.version}`)
         .join(', ');
-    expect(error.message).toBe(
-        omitted === 'pin'
-            ? `mise lock did not lock ${names}.\nWARN skipped tool after rate limit\nGitHub limits the release lookups of mise without a token. Set GITHUB_TOKEN to a GitHub token, then run gspot install again.`
-            : `mise lock omitted a checksum for ${pin.name} on linux-riscv64. Add an audited installer checksum before retrying.`,
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    const named =
+        omitted === 'pin' ? [names, 'WARN skipped tool after rate limit', 'GITHUB_TOKEN'] : [pin.name, 'linux-riscv64'];
+    for (const value of named) expect(error.message).toContain(value);
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
 });

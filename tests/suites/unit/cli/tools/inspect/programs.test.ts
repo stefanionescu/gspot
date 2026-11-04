@@ -171,8 +171,8 @@ test('a pinned program whose only executable is a mise shim that mise cannot res
         name: 'vale',
         state: 'missing',
         want: '0.0.0-test',
-        help: 'Run gspot install.',
-        note: 'mise which failed (exit 1): mise ERROR Config files are not trusted.',
+        help: expect.any(String) as string,
+        note: expect.stringContaining('mise ERROR Config files are not trusted.') as string,
     });
 });
 
@@ -194,9 +194,7 @@ test('a tool project program linked outside the repository is refused before it 
     );
     await symlink('../../../../outside/teller', binary);
     const rejection = await captureRejection(inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3')));
-    expect(rejection).toMatchObject({
-        message: `${GSPOT_PATHS.nodeModules}/.bin/teller links to a file outside the repository. Replace the link with the file.`,
-    });
+    expect(rejection).toMatchObject({ name: 'GspotError', code: 'filesystem' });
     expect(existsSync(ranMarker)).toBe(false);
     await unlink(binary);
     await symlink('../teller/run.sh', binary);

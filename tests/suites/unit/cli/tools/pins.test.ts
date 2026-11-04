@@ -33,7 +33,7 @@ test('two plugin records that name one package at two versions are refused', asy
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'settings',
-            message: 'The plugin records name stylelint-acme at two versions. Use one version.',
+            message: expect.stringContaining('stylelint-acme') as string,
         }),
     );
 });

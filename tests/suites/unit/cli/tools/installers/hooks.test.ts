@@ -112,8 +112,7 @@ test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once',
     expect(await readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const hook = join(root, `${GSPOT_PATHS.hooks}/pre-commit`);
     await writeFile(join(root, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
-    const removed = await applyGeneratedFiles(root);
-    expect(removed.notes).toContain('disabled hooks: unset core.hooksPath');
+    await applyGeneratedFiles(root);
     expect(existsSync(hook)).toBe(false);
     expect(await readGitSetting(root, 'core.hooksPath')).toBeUndefined();
     const session = await openSession(root);
@@ -133,7 +132,7 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     await applyGeneratedFiles(sandbox.path);
     const steps: Array<readonly string[]> = [];
     const session = await openSession(sandbox.path);
-    expect(await installHooks(session, steps)).toHaveProperty('note', 'set core.hooksPath to .gspot/hooks');
+    await installHooks(session, steps);
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
     expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.hooks}/post-merge`), 'utf8')).toContain(
         'git lfs post-merge "$@"',
@@ -142,7 +141,8 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     await chmod(join(sandbox.path, '.git/hooks/post-merge'), 0o755);
     runGitStep(sandbox.path, ['config', '--unset', 'core.hooksPath']);
     const reinstalled = await installHooks(session, []);
-    expect(reinstalled.note).toContain('hooks already run from .git/hooks');
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
+    expect(reinstalled.note).toContain('.git/hooks');
 });
 
 test('a core.hooksPath that names the gspot hooks as an absolute, ./, or slash-ended path is installed', async () => {

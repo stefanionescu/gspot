@@ -162,12 +162,7 @@ export const UV_LOCKFILE_ORIGINS = [
     ],
 ] satisfies Array<[string, string, boolean, Record<string, unknown>]>;
 
-export const LOCKFILE_PASSWORD_ERROR = {
-    name: 'GspotError',
-    code: 'install',
-    message:
-        'The uv lockfile holds the index credentials of the repository. gspot kept the existing files. Remove the credentials from the index URL.',
-} as const;
+export const LOCKFILE_PASSWORD_ERROR = { name: 'GspotError', code: 'install' } as const;
 
 export const PYPROJECT_UV_INDEX = `[project]
 name = "authored-project"

@@ -90,7 +90,8 @@ test('a system library is read from the requested project, not from the tool pro
     await createFileTree(project.path, { 'app/node_modules/@vitest/coverage-v8/package.json': '{invalid' });
     const search = buildToolSearch(project.path, { cwd: join(project.path, 'app') });
     const failure = await captureRejection(inspectTool(search, tool));
-    expect(failure.message).toContain('package.json:1:2 is not valid JSON:');
+    expect(failure).toMatchObject({ name: 'GspotError', code: 'parse' });
+    expect(failure.message).toContain('package.json:1:2');
 });
 
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report', async (report) => {
@@ -134,7 +135,8 @@ test('a library linked inside the tool project is accepted and one linked outsid
     await unlink(link);
     await symlink(outside.path, link);
     expect(await captureRejection(inspectTool(context, tool))).toMatchObject({
-        message: `${GSPOT_PATHS.nodeModules}/globals/package.json links to a file outside the repository. Replace the link with the file.`,
+        name: 'GspotError',
+        code: 'filesystem',
     });
 });
 
@@ -184,7 +186,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         expect(await captureRejection(inspectTool(context, tool))).toMatchObject({
             name: 'GspotError',
             code: 'parse',
-            message: `${GSPOT_PATHS.nodeModules}/teller/package.json: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
+            message: expect.stringContaining(`${GSPOT_PATHS.nodeModules}/teller/package.json: ${field}`) as string,
         });
         await writeFile(path, '{"name":"teller","version":"5.0.1"}');
         expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });

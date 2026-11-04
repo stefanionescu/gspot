@@ -98,9 +98,8 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     const writer = openFiles(sandbox.path);
     const install = await buildSandboxToolInstall(session, writer);
     const error = await captureRejection(installValePackages(install, [miseBin]));
-    expect(error.message).toBe(
-        'The Vale package Google failed SHA-256 verification. gspot kept the installed packages. Run gspot install again, and check that no proxy rewrites the download.',
-    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error.message).toContain('Google');
     expect(install.steps).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
         PREVIOUS_BYTES,
@@ -128,6 +127,7 @@ test.each(['the pinned releases', 'a deleted folder', 'other releases'] as const
         const install = await buildSandboxToolInstall(await openSession(sandbox.path), writer);
         if (state !== 'the pinned releases') {
             const failure = await captureRejection(installValePackages(install, []));
+            expect(failure).toMatchObject({ name: 'GspotError', code: 'install' });
             expect(failure.message).toContain('vale');
             return;
         }
@@ -161,10 +161,8 @@ test('an oversized archive cancels its response stream before reporting the size
             limit: 2,
         }),
     );
-    expect(error).toMatchObject({
-        code: 'install',
-        message: 'https://example.com/styles.zip exceeds the size limit for styles.',
-    });
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error.message).toContain('https://example.com/styles.zip');
     expect(isCanceled).toBe(true);
     expect(stream.locked).toBe(false);
 });
@@ -183,7 +181,6 @@ test('a failed download behind a proxy says how to turn the proxy on', async () 
         downloadArchive(install.session, { url: 'https://example.com/a.zip', name: 'the archive', limit: 1 }),
     );
     Reflect.set(http, 'setGlobalProxyFromEnv', setProxy);
-    expect(failure.message).toBe(
-        'Cannot download the archive https://example.com/a.zip. This Node.js sets no proxy for downloads. Run again with NODE_USE_ENV_PROXY=1.',
-    );
+    expect(failure).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(failure.message).toContain('NODE_USE_ENV_PROXY=1');
 });

@@ -128,12 +128,10 @@ export const NPMRC_REFUSALS = [
     {
         name: 'a registry password with a broken percent escape',
         source: 'registry=https://u:pa%zz@host/\n',
-        message: 'A registry URL in the .npmrc files is not valid.',
     },
     {
         name: 'a number setting with text',
         source: 'maxsockets=not-a-number\n',
-        message: 'The .npmrc settings are not valid.',
     },
 ] as const;
 

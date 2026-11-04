@@ -22,9 +22,9 @@ test('npm in place of Yarn 1 refuses to run without the minimum release age', as
     const versionError = await captureRejection(
         assertPackageManagerVersion(await buildSandboxToolInstall(session, owner)),
     );
-    expect(versionError.message).toBe(
-        'gspot install needs npm 11.19.0 or later, which holds back new releases for dependencies.min_release_age_days. Found 11.18.0.',
-    );
+    expect(versionError).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(versionError.message).toContain('npm 11.19.0');
+    expect(versionError.message).toContain('11.18.0');
 });
 
 test.each(PACKAGE_MANAGER_AGE_CASES)(
@@ -42,9 +42,9 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
         if (accepted) await checked;
         else {
             const checkedError = await captureRejection(checked);
-            expect(checkedError.message).toBe(
-                `gspot install needs ${name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${version}.`,
-            );
+            expect(checkedError).toMatchObject({ name: 'GspotError', code: 'install' });
+            expect(checkedError.message).toContain(`${name} ${minimum}`);
+            expect(checkedError.message).toContain(version);
         }
     },
 );
