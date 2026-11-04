@@ -135,7 +135,7 @@ tools.
 ## Findings in existing code
 
 The first `gspot check` reports what the code holds today. To fix those findings over time, run `gspot baseline`. See
-[Keep the findings that predate gspot](/use/ignore/#keep-the-findings-that-predate-gspot).
+[Baseline existing findings](/use/baseline/).
 
 ## Old settings files after init
 

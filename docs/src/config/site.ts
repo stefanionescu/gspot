@@ -39,6 +39,7 @@ export const SIDEBAR = [
         items: [
             { slug: 'use/run-checks' },
             { slug: 'use/ignore' },
+            { slug: 'use/baseline' },
             { slug: 'use/hooks' },
             { slug: 'use/ci' },
             { slug: 'use/editors' },
@@ -51,7 +52,6 @@ export const SIDEBAR = [
         collapsed: false,
         items: [
             { slug: 'configure/gspot-toml' },
-            { slug: 'configure/files' },
             { slug: 'configure/lint-rules' },
             { slug: 'configure/import-rules' },
             { slug: 'configure/monorepos' },
