@@ -36,7 +36,7 @@ function formatUnsetSummary(
 async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 
-    const edit = await readSettingsEditContext(options.root, options.scope);
+    const edit = await readSettingsEditContext(options.root, options.scopePath);
     const { root, edit: input, scopeTable, scopePath } = edit;
     const { match } = selectSettingToEdit(edit, key);
 
@@ -60,8 +60,8 @@ export const UNSET_COMMAND: CommandDefinition<[string, string[]], ScopeFlags> = 
     name: 'unset',
     arguments: [{ term: '<setting>' }, { term: '[items...]' }],
     options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
-    run: async ({ arguments: commandArguments, flags: { scope }, root, cwd }) => {
+    run: async ({ arguments: commandArguments, flags: { scope: scopePath }, root, cwd }) => {
         const [key, keys] = commandArguments;
-        return await runUnsetCommand({ root, cwd, key, keys, scope });
+        return await runUnsetCommand({ root, cwd, key, keys, scopePath });
     },
 };

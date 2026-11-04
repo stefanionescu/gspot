@@ -162,7 +162,7 @@ function buildSettingChange(
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    const edit = await readSettingsEditContext(options.root, options.scope);
+    const edit = await readSettingsEditContext(options.root, options.scopePath);
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = buildSettingChange(edit, options);
     setSetting(scopeTable, change, setting, options);
@@ -180,8 +180,8 @@ export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags> = {
     name: 'set',
     arguments: [{ term: '<setting>' }, { term: '<values...>' }],
     options: [{ flags: REASON_OPTION }, { flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
-    run: async ({ arguments: commandArguments, flags: { reason, scope }, root, cwd }) => {
+    run: async ({ arguments: commandArguments, flags: { reason, scope: scopePath }, root, cwd }) => {
         const [key, values] = commandArguments;
-        return await runSetCommand({ root, cwd, key, values, reason, scope });
+        return await runSetCommand({ root, cwd, key, values, reason, scopePath });
     },
 };

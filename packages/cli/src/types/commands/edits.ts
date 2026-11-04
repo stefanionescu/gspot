@@ -61,7 +61,7 @@ export type SetOptions = {
     key: string;
     values: string[];
     reason?: string | undefined;
-    scope?: string | undefined;
+    scopePath?: string | undefined;
 };
 
 export type ParsedSettingValue = { type: 'list'; value: unknown[] } | { type: 'scalar'; value: unknown };
@@ -85,11 +85,16 @@ export type IgnoreRemoval = {
 
 export type IgnoreTarget = { unmatched: string; removed: string };
 
-export type UnsetOptions = { root: string; cwd: string; key: string; keys: string[]; scope?: string | undefined };
+export type UnsetOptions = { root: string; cwd: string; key: string; keys: string[]; scopePath?: string | undefined };
 
 export type InitJson = z.infer<typeof initReportSchema>;
 
-export type ConfigurationsOptions = { root: string; cwd: string; configurations: string[]; scope?: string | undefined };
+export type ConfigurationsOptions = {
+    root: string;
+    cwd: string;
+    configurations: string[];
+    scopePath?: string | undefined;
+};
 
 export type ConfigurationChange = {
     action: string;

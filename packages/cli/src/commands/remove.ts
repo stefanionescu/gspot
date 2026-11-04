@@ -137,10 +137,10 @@ export const REMOVE_COMMAND: CommandDefinition<[string[]], ScopeFlags & { reason
         { flags: REASON_OPTION, required: true },
         { flags: SCOPE_OPTION, parse: stripTrailingSlashes },
     ],
-    run: async ({ arguments: commandArguments, flags: { reason, scope }, root, cwd }) => {
+    run: async ({ arguments: commandArguments, flags: { reason, scope: scopePath }, root, cwd }) => {
         const [configurations] = commandArguments;
         const invalid = validateReason(GSPOT_REMOVE, reason, REMOVE_CONFIGURATION_MESSAGE);
         if (invalid !== undefined) throw new GspotError('arguments', invalid);
-        return await runRemoveCommand({ root, cwd, configurations: [...new Set(configurations)], reason, scope });
+        return await runRemoveCommand({ root, cwd, configurations: [...new Set(configurations)], reason, scopePath });
     },
 };

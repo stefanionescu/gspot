@@ -190,7 +190,7 @@ export async function readConfigurationEditContext(options: ConfigurationsOption
     selected: string[];
     context: SettingsEditContext;
 }> {
-    const context = await readSettingsEditContext(options.root, options.scope);
+    const context = await readSettingsEditContext(options.root, options.scopePath);
     const { root, edit: input, settings, scopePath, scopeTable } = context;
     assertConfigurationsExist(options.configurations);
     assertConfigurationsEditable(options.configurations);
