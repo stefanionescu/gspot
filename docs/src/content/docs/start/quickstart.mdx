@@ -8,37 +8,38 @@ import { AGENT_PROMPT, EVALUATION_PROMPT, setup, runtimeMinimums } from '#docs/r
 
 {import.meta.env.PUBLIC_GSPOT_README_OPENING}
 
-gspot picks linters and formatters for the languages and frameworks in your repository, and pins each one to one
-version. Git hooks run them before each commit and push. gspot also writes `AGENTS.md` and rule files that tell coding
-agents how to write code that passes.
+gspot picks linters and formatters for the languages and frameworks in your repository, and pins each tool to one
+version. Git hooks run the tools before each commit and push. gspot also writes `AGENTS.md` and rule files that tell
+coding agents how to write code that passes the checks.
 
-gspot has configurations for JavaScript, TypeScript, Python, Swift, shell scripts, CSS, HTML, SQL, and Markdown. The
-[configuration reference](/reference/configurations/) lists every configuration, the frameworks among them.
+gspot supports JavaScript, TypeScript, Python, Swift, shell scripts, CSS, HTML, SQL, and Markdown. The
+[configuration reference](/reference/configurations/) lists every language, framework, and tool that gspot supports.
 Files in other languages, such as Go, Rust, or Java, get only the checks that run in every repository, such as the
-secret scan and the spelling check.
+secret scan and the spell check.
 
 You need Git and {`Node.js ${runtimeMinimums.node} or newer`}.
 
 ## Try gspot on a copy
 
-Run this at the root of a Git repository:
+Run this command in the root folder of a Git repository:
 
 ```shell
 npx @gspothq/cli scan
 ```
 
-`gspot scan` copies your tracked files into `.gspot-copies/`, sets gspot up in the copy, and runs every check with no
-fixes. Then it deletes the copy. Your repository does not change, but mise installs the tools for your whole machine.
+`gspot scan` copies your tracked files into `.gspot-copies/`, sets gspot up in the copy, and runs every check without
+fixing anything. Then it deletes the copy. Your files do not change, but mise installs the tools for your whole
+machine.
 
-The report counts the findings by category and shows three of each. It also prints the plan of `gspot init`: the files
-it writes and deletes, the settings it carries over, and the commands that stop working. Add `--markdown` for a report
-to paste into a pull request, or `--json` for every finding.
+The report counts the findings in each category and shows three examples of each. It also prints the plan of `gspot init`:
+the files that init writes and deletes, the settings that it carries over, and the commands that stop working. Add `--markdown` to get a report that you can paste into a pull request, or `--json` to get every finding.
 
-The scan runs the tools of your project and loads your Prettier config. Run it only on code you trust.
+The scan runs the tools of your project and loads your Prettier config, which can run code. Run the scan only on code
+that you trust.
 
 ## Set up gspot
 
-Run these commands at the root of your repository:
+Run these commands in the root folder of your repository:
 
 <Tabs syncKey="package-manager">
     {setup.map(({ label, lines }) => (
@@ -48,19 +49,20 @@ Run these commands at the root of your repository:
     ))}
 </Tabs>
 
-1. The first command adds gspot to your project at one exact version. With mise, the line before it pins Node.js in
-   `mise.toml`.
-2. `gspot init` prints its plan and carries it out without asking. It writes `gspot.toml` and the generated files: the
-   config files of the tools, `AGENTS.md`, the rules for coding agents, and the Git hooks.
+1. The first command adds gspot to your project, pinned to one exact version. With mise, the line before it pins
+   Node.js in `mise.toml`.
+2. `gspot init` prints what it will do, then does it without asking. It writes `gspot.toml` and the generated files:
+   the config files of the tools, `AGENTS.md`, the rules for coding agents, and the Git hooks.
 
-`gspot init` deletes the tool configs that it replaces; Git keeps their history. Then it installs the pinned tools and
-turns on the Git hooks.
+`gspot init` deletes the tool config files that it replaces. Git still has them in its history. Then `gspot init`
+installs the tools and turns on the Git hooks.
 
-The pre-commit hook now checks the staged files, and the pre-push hook checks the pushed files. CI stays off until you
-[turn it on](/use/ci/#turn-ci-on).
+From then on, the pre-commit hook checks the staged files before each commit, and the pre-push hook checks the pushed
+files before each push. CI stays off until you [turn it on](/use/ci/#turn-ci-on).
 
-gspot starts at level `basic`. For stricter checks, run `gspot init --level all`. [Levels](/start/concepts/#levels)
-compares the two.
+gspot starts at level `basic`, which turns on only the rules that rarely flag correct code. For stricter checks, run
+`gspot init --level all`.
+[Levels](/start/concepts/#levels) compares the two levels.
 
 ## Clean up the first findings
 
@@ -70,30 +72,30 @@ Format the files that the checks now cover:
 gspot check --fix
 ```
 
-To accept the findings that remain and fix them later, record a [baseline](/use/baseline/). The checks then fail only
-on new findings:
+To keep the remaining findings and fix them later, record a [baseline](/use/baseline/). A baseline lists the findings
+that exist today, so that only new findings fail the checks:
 
 ```shell
 gspot baseline
 ```
 
-Run `gspot check --fix` first. A baseline leaves out the findings that the fixers can fix, so they keep failing until
-you run it.
+Run `gspot check --fix` before `gspot baseline`. A baseline leaves out the findings that the fixers can fix, so those
+findings keep failing until you run the fixers.
 
 Commit `gspot.toml`, `gspot.baseline.json`, and the generated files. [Files and caches](/reference/generated-files/)
-lists them.
+lists the generated files.
 
 ## Set up gspot with a coding agent
 
-Paste this prompt into a coding agent that runs commands, such as Claude Code, Codex, or Cursor:
+Paste this prompt into a coding agent that can run commands, such as Claude Code, Codex, or Cursor:
 
 <Code code={AGENT_PROMPT} lang="text" />
 
 The agent reads the setup steps from `llms.txt`. It runs `gspot scan`, asks you which level to use, and waits for your
 answer. Then it runs `gspot init` and `gspot check`, and shows you the result.
 
-To let the agent judge gspot on your repository first, paste this prompt instead. The agent runs `gspot scan`, reports
-what it found, and changes nothing until you answer:
+To have the agent show you what gspot finds before it sets anything up, paste this prompt instead. The agent runs
+`gspot scan`, reports what it found, and changes nothing until you answer:
 
 <Code code={EVALUATION_PROMPT} lang="text" />
 

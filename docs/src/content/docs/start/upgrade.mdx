@@ -1,13 +1,13 @@
 ---
 title: Upgrade
-description: Install a new gspot version and update the generated files.
+description: Install a new gspot version and write the generated files again.
 ---
 
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { setup } from '#docs/reference/setup.ts';
 
-Commit first, so that you can go back. The [releases page](https://github.com/stefanionescu/gspot/releases) lists the
-versions; put the one you want in place of `<version>`:
+Commit your work first, so that you can go back. The [releases page](https://github.com/stefanionescu/gspot/releases)
+lists the gspot versions. Put the version that you want in place of `<version>`:
 
 <Tabs syncKey="package-manager">
     {setup.map(({ label, start, add }) => (
@@ -20,19 +20,20 @@ versions; put the one you want in place of `<version>`:
     ))}
 </Tabs>
 
-`gspot install` updates the generated files and the tools. If it refuses a key of `gspot.toml`, the message names the
-close keys. Edit `gspot.toml`, then run `gspot install` again. A new release can pin new formatter versions, so run
-`gspot check --fix` before `gspot check`.
+`gspot install` writes the generated files again and installs the tool versions of the new release. If it rejects a key
+in `gspot.toml`, the message names the valid keys with similar names. Fix `gspot.toml`, then run `gspot install` again.
+A new release can pin newer formatters that format code in a new way, so run `gspot check --fix` before
+`gspot check`.
 
-When `gspot install` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in
-`.gspot/` and outside it, and either `package.json` with its lockfile or `mise.toml`, together. Commit `gspot.toml` too
-if you changed it to fix findings. Every other clone then runs `gspot install`. See
-[Set up a clone](/start/install/#set-up-a-clone).
+When `gspot install` succeeds, review the diff and fix the findings. Then commit these files together: the generated
+files that changed, in `.gspot/` and outside it, and either `package.json` with its lockfile or `mise.toml`. If you
+changed `gspot.toml` to fix findings, commit it too. Then run `gspot install` in each other clone, as
+[Set up a clone](/start/install/#set-up-a-clone) describes.
 
-If `gspot install` says that it did not overwrite some files, gspot did not write them. Move each one aside, then run
-`gspot install` again.
+If `gspot install` says `gspot did not overwrite these files`, those files do not come from gspot, so gspot leaves them
+alone. Move each one out of the way, then run `gspot install` again.
 
-To return to an older gspot, check out the commit before the upgrade.
+To go back to the older gspot version, check out the commit from before the upgrade.
 
-An upgrade can leave older tool versions and download caches outside the repository. After you verify the new version,
-see [Free disk space](/reference/generated-files/#free-disk-space).
+An upgrade can leave older tool versions and download caches on your machine, outside the repository. When the new
+version works, [Free disk space](/reference/generated-files/#free-disk-space) shows how to delete them.
