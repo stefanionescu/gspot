@@ -7,7 +7,7 @@ import type { Host, Session, ScopeCheck, SessionBase } from '#cli/types/tools.ts
 import type { Scope, Defined, Settings, TableValues } from '#cli/types/settings.ts';
 import type { TrackedFile, UntrackedFiles, RepositoryListing } from '#cli/types/repository.ts';
 
-export type SkipCause = (typeof SKIP_CAUSES)[number];
+type SkipCause = (typeof SKIP_CAUSES)[number];
 
 export type Skip = { cause: SkipCause; note: string };
 

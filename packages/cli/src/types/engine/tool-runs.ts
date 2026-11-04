@@ -2,27 +2,15 @@ import type { z } from 'zod';
 import type { CHECK_RUNS } from '#cli/config/manifests.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { reportedTypoSchema } from '#cli/schemas/engine.ts';
 import type { GITLINK_MODE } from '#cli/config/repository/files.ts';
 import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { GitFile, TrackedFile } from '#cli/types/repository.ts';
 import type { GeneratedFile, ProcessFailure } from '#cli/types/tools.ts';
+import type { findingSchema, reportedTypoSchema } from '#cli/schemas/engine.ts';
 import type { SpawnResult, SpawnOptions, TemporaryFolder } from '#cli/types/system.ts';
 import type { CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
 
-export type Finding = {
-    check: string;
-    file: string;
-    message: string;
-    fixable: boolean;
-    explain?: string;
-    diff?: string;
-    line?: number | undefined;
-    column?: number;
-    rule?: string;
-    fingerprint?: string;
-    help?: string;
-};
+export type Finding = z.infer<typeof findingSchema>;
 
 export type CheckFinding = Omit<Finding, 'check' | 'fixable'>;
 

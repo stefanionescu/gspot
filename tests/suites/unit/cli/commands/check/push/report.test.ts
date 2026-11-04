@@ -5,12 +5,12 @@ import { readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
-import type { PushReport } from '#cli/types/commands/reports.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
+import { pushOutputSchema, checkReportSchema } from '#cli/schemas/commands.ts';
 import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox, assertWorkingTreeKept, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -22,7 +22,7 @@ async function runBrokenPushCheck(root: string, base: string, broken: string): P
         { stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n` },
     );
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    return (JSON.parse(result.stdout) as PushReport).revisions[0]!.report;
+    return pushOutputSchema.parse(JSON.parse(result.stdout)).revisions[0]!.report;
 }
 
 test('the pre-push report prints a command that reproduces the same findings', async () => {
@@ -46,7 +46,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
         { cwd: checkout.path },
     );
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-    const repeatedReport = JSON.parse(repeated.stdout) as RunReport;
+    const repeatedReport = checkReportSchema.parse(JSON.parse(repeated.stdout));
     expect(repeatedReport.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
     runGitStep(sandbox.path, ['worktree', 'remove', '--force', checkout.path]);
     await assertWorkingTreeKept(sandbox.path, broken);
@@ -78,13 +78,10 @@ test('a pushed commit that changes gspot.toml checks every file of that commit',
         },
     );
     expect(all.code, all.stdout + all.stderr).toBe(1);
-    expect(
-        new Set(
-            (JSON.parse(all.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
-                (finding) => finding.file,
-            ),
-        ),
-    ).toStrictEqual(new Set(['legacy.sh']));
+    const { revisions } = pushOutputSchema.parse(JSON.parse(all.stdout));
+    expect(new Set(revisions[0]?.report.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
+        new Set(['legacy.sh']),
+    );
 });
 
 test('push skips pre-adoption and unchanged refs without opening a copy or parsing settings', async () => {
@@ -101,7 +98,7 @@ test('push skips pre-adoption and unchanged refs without opening a copy or parsi
         const protocol = { stdin: `refs/heads/legacy ${hash} refs/heads/legacy ${remoteHash}\n` };
         const skipped = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
         expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-        expect(JSON.parse(skipped.stdout) as PushReport).toMatchObject({
+        expect(pushOutputSchema.parse(JSON.parse(skipped.stdout))).toMatchObject({
             revisions: [],
             skipped: [{ ref: 'refs/heads/legacy', hash, reason }],
             exitCode: 0,

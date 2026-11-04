@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import type { PausedGit } from '#tests/types/setup.ts';
+import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import type { PushReport } from '#cli/types/commands/reports.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -135,7 +135,7 @@ test.skipIf(isWindows)(
         const started = JSON.parse(await readFile(marker, 'utf8')) as Required<PausedGit>;
         child.kill('SIGINT');
         expect(await child.exited, await errors).toBe(130);
-        const report = JSON.parse(await output) as PushReport;
+        const report = pushOutputSchema.parse(JSON.parse(await output));
         expect(report).toMatchObject({
             revisions: [{ hash: first, report: { checks: [{ status: 'passed' }] } }],
             canceled: { pendingRefs: ['refs/heads/second'] },
@@ -192,7 +192,7 @@ test.skipIf(isWindows)(
                 { stdin: protocol },
             );
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-            expect((JSON.parse(retry.stdout) as PushReport).revisions).toMatchObject([
+            expect(pushOutputSchema.parse(JSON.parse(retry.stdout)).revisions).toMatchObject([
                 {
                     hash: revision,
                     refs: [ref],

@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import type { PushReport } from '#cli/types/commands/reports.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { createGitSandbox, assertWorkingTreeKept, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -43,7 +43,7 @@ test('an annotated tag of a commit is checked while blob tags, blobs, and delete
         },
     );
     expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
-    const report = JSON.parse(pushed.stdout) as PushReport;
+    const report = pushOutputSchema.parse(JSON.parse(pushed.stdout));
     expect(report.revisions.map(({ hash }) => hash)).toStrictEqual([reviewed]);
     expect(report.skipped).toStrictEqual([
         { ref: 'refs/tags/data', hash: tagged, reason: 'non-commit object' },
@@ -65,7 +65,7 @@ test('pre-push reports each pushed ref against its own commit', async () => {
         },
     );
     expect(multiple.code, multiple.stdout + multiple.stderr).toBe(1);
-    const pushed = JSON.parse(multiple.stdout) as PushReport;
+    const pushed = pushOutputSchema.parse(JSON.parse(multiple.stdout));
     expect(pushed.revisions.map((revision) => revision.report.exitCode)).toStrictEqual([1, 0]);
     expect(pushed.revisions.map((revision) => revision.report.comparison?.reference)).toStrictEqual([broken, reviewed]);
     expect(
@@ -88,7 +88,7 @@ test('pre-push checks a commit pushed to two refs once', async () => {
     );
     expect(duplicated.code, duplicated.stdout + duplicated.stderr).toBe(0);
     expect(
-        (JSON.parse(duplicated.stdout) as PushReport).revisions.map(({ hash, refs }) => ({ hash, refs })),
+        pushOutputSchema.parse(JSON.parse(duplicated.stdout)).revisions.map(({ hash, refs }) => ({ hash, refs })),
     ).toStrictEqual([{ hash: reviewed, refs: ['refs/heads/reviewed', 'refs/heads/also-reviewed'] }]);
     await assertWorkingTreeKept(sandbox.path, broken);
 });
@@ -103,6 +103,6 @@ test('pre-push of a forced rewind checks the rewound commit', async () => {
         { stdin: `refs/heads/rewound ${base} refs/heads/feature ${broken}\n` },
     );
     expect(forced.code, forced.stdout + forced.stderr).toBe(0);
-    expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
+    expect(pushOutputSchema.parse(JSON.parse(forced.stdout)).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     await assertWorkingTreeKept(sandbox.path, broken);
 });

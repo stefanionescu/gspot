@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
+import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { ASTRO_PAGE, ANSWER_MODULE, ASTRO_PAGE_PATH, COMPONENT_TSCONFIG } from '#tests/config/integration/framework.ts';
 
@@ -72,6 +72,6 @@ test('install and doctor accept astro-check when the project has a type error', 
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const diagnosed = await spawnGspot(sandbox.root, ['doctor', '--json']);
-    const report = doctorReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(diagnosed.stdout));
+    const report = doctorOutputSchema.parse(JSON.parse(diagnosed.stdout));
     expect(report.tools.find(({ name }) => name === 'astro-check')).toMatchObject({ state: 'ok' });
 });

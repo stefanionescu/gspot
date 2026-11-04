@@ -9,8 +9,14 @@ import type { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
 import type { SourcedConfig, IgnoreSection } from '#cli/types/configurations/general.ts';
 import type { Session, Generation, GeneratedFile, ExecutableSearch } from '#cli/types/tools.ts';
 import type { Level, Scope, Settings, TomlTable, AvailableSettings } from '#cli/types/settings.ts';
-import type { ruffOptionsSchema, generatedFilesSchema, prettierSettingsSchema } from '#cli/schemas/generation.ts';
 
+import type {
+    initPlanSchema,
+    ruffOptionsSchema,
+    carryoverRowSchema,
+    generatedFilesSchema,
+    prettierSettingsSchema,
+} from '#cli/schemas/generation.ts';
 import type {
     Repository,
     ManagedKeys,
@@ -20,7 +26,6 @@ import type {
     RepositorySetup,
     PackageManagerPin,
     ConflictingConfig,
-    ConfigurationOrigin,
     ConfigurationEvidence,
     ProposedConfigurations,
 } from '#cli/types/repository.ts';
@@ -104,36 +109,9 @@ export type InitScan = {
     crlfPaths: string[];
 };
 
-export type InitPlan = {
-    from?: { file: string; leftOutSettings: LeftOutSetting[] };
-    level: Level;
-    configurations: Array<{
-        configuration: string;
-        origin: ConfigurationOrigin;
-        scopes: string[];
-        checks: number;
-        checksOff: number;
-    }>;
-    write: InitFileRow[];
-    deleted: InitFileRow[];
-    keep: InitFileRow[];
-    change: InitFileRow[];
-    lintFolders: InitFileRow[];
-    lintCommands: LintCommand[];
-    carryover: CarryoverRow[];
-};
+export type InitPlan = z.infer<typeof initPlanSchema>;
 
-export type CarryoverRow = {
-    path: string;
-    tool: string;
-    covered: number;
-    carried: readonly string[];
-    differing: readonly string[];
-    reasons: readonly string[];
-    plugins: readonly string[];
-    commandChecks: readonly string[];
-    dropped: readonly string[];
-};
+export type CarryoverRow = z.infer<typeof carryoverRowSchema>;
 
 export type RuleRead = {
     definition: (typeof PRINTED_RULE_TOOLS)[number];

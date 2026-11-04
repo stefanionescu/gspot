@@ -4,9 +4,9 @@ import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import type { PushReport } from '#cli/types/commands/reports.ts';
 import { AWS_KEY_ID } from '#tests/config/setup/configurations.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import type { GitleaksHistory } from '#tests/types/integration.ts';
@@ -119,7 +119,7 @@ test('secrets/gitleaks-pushed reports the secrets of the pushed commits only', a
     );
     expect(history.code, history.stdout + history.stderr).toBe(1);
     assertSecretFindings(
-        (JSON.parse(history.stdout) as PushReport).revisions[0]?.report.checks[0],
+        pushOutputSchema.parse(JSON.parse(history.stdout)).revisions[0]?.report.checks[0],
         history.stdout + history.stderr,
         `${leaked}:`,
     );
@@ -157,7 +157,7 @@ test('secrets/gitleaks-pushed drops a finding only when an ignore names its exac
         },
     );
     expect(reviewed.code, reviewed.stdout + reviewed.stderr).toBe(1);
-    const findings = (JSON.parse(reviewed.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings;
+    const findings = pushOutputSchema.parse(JSON.parse(reviewed.stdout)).revisions[0]?.report.checks[0]?.findings;
     expect(findings?.map(({ file, rule, fingerprint, line }) => ({ file, rule, fingerprint, line }))).toStrictEqual([
         {
             file: 'credential,é.py',
@@ -188,7 +188,9 @@ test('secrets/gitleaks-pushed drops a finding only when an ignore names its exac
         },
     );
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect((JSON.parse(accepted.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings).toStrictEqual([]);
+    expect(pushOutputSchema.parse(JSON.parse(accepted.stdout)).revisions[0]?.report.checks[0]?.findings).toStrictEqual(
+        [],
+    );
 });
 
 const installedSandbox = shareInstalledSandbox({

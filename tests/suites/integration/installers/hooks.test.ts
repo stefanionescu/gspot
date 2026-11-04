@@ -7,6 +7,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
+import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
@@ -14,13 +15,10 @@ import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { MISE_TRUST, HOOKS_SETTINGS, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { UNQUOTED_SCRIPT, HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX } from '#tests/config/integration/commands.ts';
-
-const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await createGitSandbox({

@@ -5,6 +5,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { scanOutputSchema } from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -20,7 +21,7 @@ async function runScan(root: string): Promise<ScanReport> {
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(install).toHaveBeenCalledTimes(1);
     expect(install.mock.calls[0]?.[1].generated.files.map(({ path }) => path)).not.toContain('.gspot/hooks/pre-commit');
-    return JSON.parse(result.stdout) as ScanReport;
+    return scanOutputSchema.parse(JSON.parse(result.stdout));
 }
 
 test('scan refuses a repository that already has a gspot.toml', async () => {

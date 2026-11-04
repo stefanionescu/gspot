@@ -121,7 +121,7 @@ const generatorOutputSchema = z.union([
     })),
 ]);
 
-const checkFieldsSchema = z.strictObject({
+export const checkFieldsSchema = z.strictObject({
     ...commandCheckFields,
     output: outputSchema.optional(),
     name: z.string().regex(NAME_PATTERN),

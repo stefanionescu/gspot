@@ -10,7 +10,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import type { InitJson } from '#cli/types/commands/edits.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -32,7 +32,7 @@ import {
 async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const plan = initOutputSchema.parse(JSON.parse(result.stdout));
     return plan.plan.configurations.map((each) => each.configuration);
 }
 
@@ -178,7 +178,7 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText' | 'plan'>>;
+    const output = initOutputSchema.parse(JSON.parse(result.stdout));
     const proposed = settingsSchema.parse(parse(output.settingsText) as TomlTable);
     expect(proposed.scope!.map(({ path }) => path)).toStrictEqual(['ios']);
     expect(proposed.scope!.find(({ path }) => path === 'ios')?.configurations).toStrictEqual(['swift']);
@@ -202,7 +202,7 @@ test.each([...NEXTJS_LOCALE_CASES])(
         const configurations = ['--configurations', 'nextjs', ...(named ? ['--configurations', 'translations'] : [])];
         const result = await runGspot(sandbox.path, ['init', '--json', ...configurations]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+        const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
         expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(isSelected);
     },
 );
@@ -220,7 +220,7 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const command = ['init', '--json'];
     const proposed = await runGspot(sandbox.path, command);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
-    const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const plan = initOutputSchema.parse(JSON.parse(proposed.stdout));
     const settings = readSettings(plan.settingsText, sandbox.path);
     expect(settings.scopes.keys().toArray()).toStrictEqual(['packages/api']);
     const before = await readTree(broken.path);
@@ -243,7 +243,7 @@ test('init keeps root Docker and GitHub configurations beside an app scope', asy
     });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stderr).toBe(0);
-    const { settingsText } = JSON.parse(result.stdout) as InitJson;
+    const { settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
     const parsed = readSettings(settingsText, sandbox.path);
     expect(parsed.configurations).toContain('docker');
     expect(parsed.configurations).toContain('github-actions');

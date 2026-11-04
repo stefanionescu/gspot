@@ -2,9 +2,9 @@ import { existsSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
+import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import type { PushReport } from '#cli/types/commands/reports.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
@@ -134,7 +134,7 @@ describe('a repository with the commit hooks installed', () => {
             },
         );
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = JSON.parse(rejected.stdout) as PushReport;
+        const report = pushOutputSchema.parse(JSON.parse(rejected.stdout));
         expect(report.revisions.map(({ hash, commits }) => ({ hash, commits }))).toStrictEqual([
             { hash: good, commits: [good] },
             { hash: bad, commits: [bad] },

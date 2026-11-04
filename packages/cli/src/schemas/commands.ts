@@ -1,17 +1,25 @@
 import { z } from 'zod';
-import { checkStateSchema } from '#cli/schemas/engine.ts';
 import { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
-import { generatedFilesSchema } from '#cli/schemas/generation.ts';
-import { TOOL_KINDS, SETTING_TYPES } from '#cli/config/manifests.ts';
+import { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
+import { checkFieldsSchema } from '#cli/schemas/manifests/manifest.ts';
 import { hookStatusSchema, toolInspectionSchema } from '#cli/schemas/tools.ts';
+import { initPlanSchema, generatedFilesSchema } from '#cli/schemas/generation.ts';
+import { GROUPS, TOOL_KINDS, FILE_KINDS, SETTING_TYPES } from '#cli/config/manifests.ts';
 
 import {
     settingOriginSchema,
     reasonRequirementSchema,
     removedConfigurationSchema,
 } from '#cli/schemas/settings/fields.ts';
+import {
+    findingSchema,
+    runReportSchema,
+    fixReportSchema,
+    checkStateSchema,
+    reportedCheckSchema,
+} from '#cli/schemas/engine.ts';
 
-export const commandFieldsSchema = z.strictObject({
+const commandFieldsSchema = z.strictObject({
     version: z.string(),
     exitCode: z.int(),
     notes: z.string().array(),
@@ -95,12 +103,15 @@ export const settingsListSchema = z.strictObject({
         .array(),
 });
 
-export const changedEditReportSchema = generatedFilesSchema.extend({ changed: z.boolean(), summary: z.string() });
+const changedEditReportSchema = generatedFilesSchema.extend({ changed: z.boolean(), summary: z.string() });
 
-export const settingsEditReportSchema = z.union([
-    changedEditReportSchema,
-    z.strictObject({ changed: z.literal(false), summary: z.string(), notes: z.string().array() }),
-]);
+const unchangedEditReportSchema = z.strictObject({
+    changed: z.literal(false),
+    summary: z.string(),
+    notes: z.string().array(),
+});
+
+export const settingsEditReportSchema = z.union([changedEditReportSchema, unchangedEditReportSchema]);
 
 export const settingExplanationSchema = z.strictObject({
     setting: z.string(),
@@ -121,3 +132,161 @@ export const settingExplanationSchema = z.strictObject({
         })
         .array(),
 });
+
+export const checkReportSchema = runReportSchema.extend({ fixes: fixReportSchema.optional() });
+
+export const pushReportSchema = z.strictObject({
+    canceled: z.strictObject({ pendingRefs: z.string().array() }).optional(),
+    revisions: z
+        .strictObject({
+            hash: z.string(),
+            refs: z.string().array(),
+            commits: z.string().array(),
+            shallow: z.boolean(),
+            report: runReportSchema,
+        })
+        .array(),
+    skipped: z.strictObject({ ref: z.string(), hash: z.string(), reason: z.enum(PUSH_SKIP_REASONS) }).array(),
+    exitCode: z.int(),
+});
+
+export const scanCategorySchema = z.strictObject({ name: z.string(), count: z.int(), examples: findingSchema.array() });
+
+const toolTimeSchema = z.strictObject({ name: z.string(), seconds: z.number() });
+
+export const scanReportSchema = z.strictObject({
+    totals: z.strictObject({
+        files: z.int(),
+        checks: z.int(),
+        findings: z.int(),
+        filesFlagged: z.int(),
+        seconds: z.number(),
+    }),
+    categories: scanCategorySchema.array(),
+    filesToFormat: z.int(),
+    notRun: z.string().array(),
+    cost: z.strictObject({ tools: z.int(), megabytes: z.number(), perTool: toolTimeSchema.array() }),
+    plan: initPlanSchema,
+    settingsText: z.string(),
+    nextSteps: z.string().array(),
+    checks: reportedCheckSchema.array().readonly(),
+});
+
+export const initReportSchema = generatedFilesSchema.extend({
+    root: z.string(),
+    plan: initPlanSchema,
+    settingsText: z.string(),
+    installed: z.string().array(),
+    missing: z.string().array(),
+    steps: z.string().array().readonly().array().readonly(),
+});
+
+export const checkIgnoreSchema = z.strictObject({
+    rule: z.string().optional(),
+    paths: z.string().array().optional(),
+    reason: z.string(),
+    command: z.string(),
+});
+
+export const checkExplanationSchema = z.strictObject({
+    check: z.string(),
+    configuration: z.string().optional(),
+    command: z.string().array().readonly().optional(),
+    paths: z.string().array().readonly().optional(),
+    stage: z.string(),
+    level: z.string(),
+    summary: z.string(),
+    why: z.string(),
+    help: z.string(),
+    condition: checkFieldsSchema.shape.when,
+    crashPattern: z.string().optional(),
+    runInCopy: z.boolean().optional(),
+    minVersions: z.record(z.string(), z.string()),
+    turnOff: z.strictObject({ paths: z.string(), rule: z.string().optional() }),
+    settingNames: z.string().array(),
+    ruleFiles: z.string().array(),
+    selected: z.boolean().optional(),
+    ignores: checkIgnoreSchema.array(),
+});
+
+export const lintRuleExplanationSchema = z.strictObject({
+    tool: z.string().optional(),
+    rule: z.string(),
+    check: z.string(),
+    page: z.string().nullable(),
+    description: z.string().nullable(),
+    why: z.string().optional(),
+    fix: z.string().optional(),
+    example: z.string().optional(),
+    explanation: z.string().optional(),
+    turnOff: z.strictObject({ everywhere: z.string(), paths: z.string() }),
+    changeOptions: z.string().optional(),
+});
+
+export const configurationExplanationSchema = z.strictObject({
+    name: z.string(),
+    group: z.enum(GROUPS),
+    title: z.string(),
+    description: z.string(),
+    requires: z.string().array(),
+    tools: z.string().array(),
+    checks: z.strictObject({ check: z.string(), stage: z.string() }).array(),
+    settingNames: z.string().array(),
+    ruleFiles: z.string().array(),
+    alwaysSelected: z.boolean(),
+    removed: z.strictObject({ scope: z.string(), reason: z.string(), command: z.string() }).array(),
+});
+
+export const pathExplanationSchema = z.strictObject({
+    path: z.string(),
+    scope: z.string(),
+    fileKind: z.enum(FILE_KINDS),
+    fileKindOrigin: z.string().optional(),
+    tags: z.string().array(),
+    configurations: z.string().array(),
+    checks: z
+        .strictObject({ check: z.string(), stage: z.string(), state: z.string(), configuration: z.string().optional() })
+        .array(),
+    ignores: z.strictObject({ check: z.string().optional(), rule: z.string().optional(), reason: z.string() }).array(),
+    unchecked: z.string().optional(),
+    remedy: z.string().optional(),
+});
+
+const EXPLAIN_OUTPUT_FIELDS = { ...commandFieldsSchema.shape, subject: z.string() };
+
+export const checkOutputSchema = checkExplanationSchema.extend({ ...EXPLAIN_OUTPUT_FIELDS, kind: z.literal('check') });
+
+export const lintRuleOutputSchema = lintRuleExplanationSchema.extend({
+    ...EXPLAIN_OUTPUT_FIELDS,
+    kind: z.literal('lint-rule'),
+});
+
+export const configurationOutputSchema = configurationExplanationSchema.extend({
+    ...EXPLAIN_OUTPUT_FIELDS,
+    kind: z.literal('configuration'),
+});
+
+export const settingOutputSchema = settingExplanationSchema.extend({
+    ...EXPLAIN_OUTPUT_FIELDS,
+    kind: z.literal('setting'),
+});
+
+export const pathOutputSchema = pathExplanationSchema.extend({ ...EXPLAIN_OUTPUT_FIELDS, kind: z.literal('path') });
+
+export const installOutputSchema = installReportSchema.extend(commandFieldsSchema.shape);
+
+export const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
+
+export const configurationsListOutputSchema = configurationsListSchema.extend(commandFieldsSchema.shape);
+
+export const settingsListOutputSchema = settingsListSchema.extend(commandFieldsSchema.shape);
+
+export const changedEditOutputSchema = changedEditReportSchema.extend(commandFieldsSchema.shape);
+
+export const unchangedEditOutputSchema = unchangedEditReportSchema.extend(commandFieldsSchema.shape);
+
+export const pushOutputSchema = pushReportSchema.extend(commandFieldsSchema.shape);
+
+export const scanOutputSchema = scanReportSchema.extend(commandFieldsSchema.shape);
+
+export const initOutputSchema = initReportSchema.extend(commandFieldsSchema.shape);

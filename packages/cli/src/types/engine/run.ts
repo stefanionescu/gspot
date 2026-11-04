@@ -1,9 +1,11 @@
+import type { z } from 'zod';
 import type { LimitFunction } from 'p-limit';
 import type { Check } from '#cli/types/manifests.ts';
-import type { IgnoreRecord } from '#cli/types/settings.ts';
+import type { CHECK_STATUSES } from '#cli/config/engine.ts';
 import type { Session, LintRuleDocs } from '#cli/types/tools.ts';
-import type { Finding, CommandLine, CheckFinding, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { SkipCause, PlanOptions, StageFilter, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CommandLine, CheckFinding, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import type { PlanOptions, StageFilter, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { fixReportSchema, fixResultSchema, runReportSchema, reportedCheckSchema } from '#cli/schemas/engine.ts';
 
 export type FinishedRun = {
     session: Session;
@@ -23,11 +25,9 @@ export type FixRounds = { results: FixResult[]; before: PathBytes; after: PathBy
 
 export type PushInput = { stdin: string; remote?: string };
 
-export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; conflicted: string[] };
+export type FixReport = z.infer<typeof fixReportSchema>;
 
-export type FixResult = { check: string; changed: string[] } & (
-    { status: 'changed' | 'unchanged' | 'skipped' } | { status: 'failed' | 'canceled'; note: string }
-);
+export type FixResult = z.infer<typeof fixResultSchema>;
 
 export type CheckProgress = {
     finished: number;
@@ -71,26 +71,11 @@ export type RunOptions = PlanOptions & {
     verbose?: boolean | undefined;
 };
 
-export type RunReport = {
-    notes: string[];
-    comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
-    version: string;
-    stages: ReadonlyArray<Check['stage']>;
-    started: string;
-    duration: number;
-    checks: readonly CheckResult[];
-    skippedCount: Readonly<Partial<Record<NonNullable<CheckResult['cause']>, number>>>;
-    ignores: readonly IgnoreRecord[];
-    baselined: Readonly<Record<string, number>>;
-    unstagedChanges: number;
-    partial: boolean;
-    failed: readonly string[];
-    exitCode: number;
-};
+export type RunReport = z.infer<typeof runReportSchema>;
 
 export type RunResult = { report: RunReport; planned: PlannedCheck[]; setup: number; fixes?: FixReport };
 
-export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error' | 'canceled';
+export type CheckStatus = (typeof CHECK_STATUSES)[number];
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) & {
     ruleDocs?: Readonly<Record<string, LintRuleDocs>>;
@@ -117,23 +102,9 @@ export type BuiltInCheck = (
     options: CheckRunOptions,
 ) => CheckFinding[] | BuiltInCheckResult | Promise<CheckFinding[] | BuiltInCheckResult>;
 
-export type CheckResult = {
-    check: string;
-    scope: string;
-    status: CheckStatus;
-    fileCount: number;
-    files?: readonly string[];
-    duration: number;
+export type CheckResult = z.infer<typeof reportedCheckSchema> & {
     span?: { start: number; end: number };
-    findings: readonly Finding[];
-    help?: string;
-    note?: string;
     reportNotes?: readonly string[];
-    stack?: string;
-    cause?: SkipCause | 'no-files';
-    fixCommand?: string;
-    rerun?: string;
-    command?: readonly string[];
 };
 
 export type CommandLaunch = {

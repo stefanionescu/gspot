@@ -8,6 +8,23 @@ import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
+import {
+    scanOutputSchema,
+    initOutputSchema,
+    pathOutputSchema,
+    checkReportSchema,
+    checkOutputSchema,
+    doctorOutputSchema,
+    installOutputSchema,
+    settingOutputSchema,
+    lintRuleOutputSchema,
+    changedEditOutputSchema,
+    settingsListOutputSchema,
+    unchangedEditOutputSchema,
+    configurationOutputSchema,
+    configurationsListOutputSchema,
+} from '#cli/schemas/commands.ts';
+
 const PAGE = await readFile(join(REPOSITORY_ROOT, 'docs/src/content/docs/reference/json-output.mdx'), 'utf8');
 
 function readFields(heading: string): { every: string[]; required: string[] } {
@@ -25,28 +42,72 @@ function readFields(heading: string): { every: string[]; required: string[] } {
 }
 
 test.each([
-    { commandArguments: ['scan', '--json'], headings: ['## `gspot scan`'], settings: false },
-    { commandArguments: ['init', '--json'], headings: ['## `gspot init`', '## Generated files'], settings: false },
-    { commandArguments: ['install', '--json'], headings: ['## `gspot install`', '## Generated files'] },
-    { commandArguments: ['check', '--json'], headings: ['## `gspot check`'], exitCode: 2 },
+    { commandArguments: ['scan', '--json'], headings: ['## `gspot scan`'], settings: false, schema: scanOutputSchema },
+    {
+        commandArguments: ['init', '--json'],
+        headings: ['## `gspot init`', '## Generated files'],
+        settings: false,
+        schema: initOutputSchema,
+    },
+    {
+        commandArguments: ['install', '--json'],
+        headings: ['## `gspot install`', '## Generated files'],
+        schema: installOutputSchema,
+    },
+    { commandArguments: ['check', '--json'], headings: ['## `gspot check`'], exitCode: 2, schema: checkReportSchema },
     {
         commandArguments: ['add', 'bash', '--json'],
         headings: ['## Commands that change settings', '## Generated files'],
+        schema: changedEditOutputSchema,
     },
-    { commandArguments: ['add', 'markdown', '--json'], headings: ['## Commands that change settings'] },
-    { commandArguments: ['list', '--json'], headings: ['## `gspot list`'] },
-    { commandArguments: ['list', 'settings', '--json'], headings: ['## `gspot list settings`'] },
-    { commandArguments: ['doctor', '--json'], headings: ['## `gspot doctor`'], exitCode: 1 },
-    { commandArguments: ['explain', 'markdown/markdownlint', '--json'], headings: ['### `check`'], kind: true },
+    {
+        commandArguments: ['add', 'markdown', '--json'],
+        headings: ['## Commands that change settings'],
+        schema: unchangedEditOutputSchema,
+    },
+    { commandArguments: ['list', '--json'], headings: ['## `gspot list`'], schema: configurationsListOutputSchema },
+    {
+        commandArguments: ['list', 'settings', '--json'],
+        headings: ['## `gspot list settings`'],
+        schema: settingsListOutputSchema,
+    },
+    {
+        commandArguments: ['doctor', '--json'],
+        headings: ['## `gspot doctor`'],
+        exitCode: 1,
+        schema: doctorOutputSchema,
+    },
+    {
+        commandArguments: ['explain', 'markdown/markdownlint', '--json'],
+        headings: ['### `check`'],
+        kind: true,
+        schema: checkOutputSchema,
+    },
     {
         commandArguments: ['explain', 'data-files/yaml', 'documents', '--json'],
         headings: ['### `lint-rule`'],
         kind: true,
+        schema: lintRuleOutputSchema,
     },
-    { commandArguments: ['explain', 'markdown', '--json'], headings: ['### `configuration`'], kind: true },
-    { commandArguments: ['explain', 'limits.max_file_lines', '--json'], headings: ['### `setting`'], kind: true },
-    { commandArguments: ['explain', './README.md', '--json'], headings: ['### `path`'], kind: true },
-])('$commandArguments prints the fields of its section of json-output.mdx', async (row) => {
+    {
+        commandArguments: ['explain', 'markdown', '--json'],
+        headings: ['### `configuration`'],
+        kind: true,
+        schema: configurationOutputSchema,
+    },
+    {
+        commandArguments: ['explain', 'limits.max_file_lines', '--json'],
+        headings: ['### `setting`'],
+        kind: true,
+        schema: settingOutputSchema,
+    },
+    {
+        commandArguments: ['explain', './README.md', '--json'],
+        headings: ['### `path`'],
+        kind: true,
+        schema: pathOutputSchema,
+    },
+])('$commandArguments prints the fields of its section of json-output.mdx, as its schema describes', async (row) => {
     await using sandbox = await createGitSandbox({
         ...(row.settings !== false && { 'gspot.toml': buildSandboxSettings(['markdown', 'data-files']) }),
         'README.md': '# Example\n',
@@ -60,7 +121,7 @@ test.each([
     if (row.settings !== false) await applyGeneratedFiles(sandbox.path);
     const result = await runGspot(sandbox.path, row.commandArguments);
     expect(result.code, result.stdout + result.stderr).toBe(row.exitCode ?? 0);
-    const keys = Object.keys(JSON.parse(result.stdout) as object).filter(
+    const keys = Object.keys(row.schema.parse(JSON.parse(result.stdout))).filter(
         (key) => !['version', 'exitCode', 'notes', ...(row.kind === true ? ['kind', 'subject'] : [])].includes(key),
     );
     const fields = row.headings.map((heading) => readFields(heading));

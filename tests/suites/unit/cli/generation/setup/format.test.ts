@@ -9,7 +9,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import type { InitJson } from '#cli/types/commands/edits.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
@@ -36,7 +36,7 @@ test.each(INVALID_PRETTIER_OPTIONS)(
         commitAll(sandbox.path);
         const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+        const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
         expect(plan.carryover.find(({ path }) => path === file)?.dropped).toStrictEqual([field]);
     },
 );
@@ -44,7 +44,7 @@ test.each(INVALID_PRETTIER_OPTIONS)(
 async function readInitFormatOptions(root: string, commandArguments: string[]): Promise<FormatSettings[]> {
     const result = await runGspot(root, [...commandArguments, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const text = (JSON.parse(result.stdout) as InitJson).settingsText;
+    const text = initOutputSchema.parse(JSON.parse(result.stdout)).settingsText;
     const session = await openSession(root, { settings: readSettings(text, root) });
     return session.scopes.map(({ settings }) => getTable(settings, 'format'));
 }
@@ -64,7 +64,7 @@ test('init reads the format settings of each scope', async () => {
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const text = (JSON.parse(result.stdout) as InitJson).settingsText;
+    const text = initOutputSchema.parse(JSON.parse(result.stdout)).settingsText;
     const session = await openSession(sandbox.path, {
         settings: readSettings(text, sandbox.path),
     });
@@ -109,7 +109,7 @@ test('init leaves out an override that matches no tracked file', async () => {
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const { settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect((parse(settingsText) as TomlTable)['format']).not.toHaveProperty('override');
 });
 
@@ -124,7 +124,7 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
         commitAll(sandbox.path);
         const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan, settingsText } = JSON.parse(result.stdout) as InitJson;
+        const { plan, settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
         expect([...plan.deleted, ...plan.write].find((file) => file.path === path)?.note).toContain(
             'gspot could not load this Prettier config, so set format.indent_width and format.print_width by hand',
         );
@@ -216,7 +216,8 @@ test('init gives code without a style config the defaults of each formatter', as
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(parse((JSON.parse(result.stdout) as InitJson).settingsText) as TomlTable).toHaveProperty('format', {
+    const { settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
+    expect(parse(settingsText) as TomlTable).toHaveProperty('format', {
         indent_width: 2,
         print_width: 80,
         quotes: 'double',
@@ -243,5 +244,6 @@ test('init keeps the house style for a repository without code', async () => {
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(parse((JSON.parse(result.stdout) as InitJson).settingsText) as TomlTable).not.toHaveProperty('format');
+    const { settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
+    expect(parse(settingsText) as TomlTable).not.toHaveProperty('format');
 });

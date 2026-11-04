@@ -3,13 +3,13 @@ import { dirname, delimiter } from 'node:path';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 
 test.each([false, true])(
     'doctor starts the Bun hook executable instead of its package script (installed: %s)',
@@ -37,9 +37,7 @@ test.each([false, true])(
         using _environment = overrideEnvironment({ PATH: folders.join(delimiter) });
         const diagnosed = await runGspot(sandbox.path, ['doctor', '--json']);
         expect(diagnosed.stderr).toBe('');
-        expect(
-            doctorReportSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(diagnosed.stdout)).hooks,
-        ).toStrictEqual(
+        expect(doctorOutputSchema.parse(JSON.parse(diagnosed.stdout)).hooks).toStrictEqual(
             installed
                 ? { ready: true, tool: 'gspot' }
                 : {

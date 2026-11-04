@@ -5,14 +5,14 @@ import { createFileTree } from 'testdirs';
 import { STARTING_FILES } from '#tests/config/e2e.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { InitJson } from '#cli/types/commands/edits.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 
 async function assertConflictingConfigs(root: string, output: string): Promise<void> {
-    const { plan } = JSON.parse(output) as InitJson;
+    const { plan } = initOutputSchema.parse(JSON.parse(output));
     expect(plan.deleted).toStrictEqual([]);
     expect(plan.write.filter(({ path }) => ['prettier.config.mjs', '.editorconfig'].includes(path))).toStrictEqual([
         { path: '.editorconfig', note: 'replaces your file; read the old one with git show HEAD:.editorconfig' },

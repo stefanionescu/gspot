@@ -7,7 +7,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/reports.ts';
-import { settingsListSchema, commandFieldsSchema, configurationsListSchema } from '#cli/schemas/commands.ts';
+import { settingsListOutputSchema, configurationsListOutputSchema } from '#cli/schemas/commands.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using sandbox = await createGitSandbox({});
@@ -20,7 +20,7 @@ test('list shows selected settings and available configurations', async () => {
     const before = await readTree(sandbox.path);
     const listed = await runGspot(sandbox.path, ['list', 'configurations', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
-    const result = configurationsListSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(listed.stdout));
+    const result = configurationsListOutputSchema.parse(JSON.parse(listed.stdout));
     const checks = result.selected.flatMap((configuration) => configuration.checks);
     const named = new Set(['bash/shellcheck', 'bash/shfmt', 'structure/shared-prefixes']);
     expect(checks.filter(({ check }) => named.has(check))).toStrictEqual([
@@ -36,7 +36,7 @@ test('list shows selected settings and available configurations', async () => {
     expect(JSON.parse(defaults.stdout)).toStrictEqual(result);
     const listedSettings = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(listedSettings.code, listedSettings.stdout + listedSettings.stderr).toBe(0);
-    const rows = settingsListSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(listedSettings.stdout)).settings;
+    const rows = settingsListOutputSchema.parse(JSON.parse(listedSettings.stdout)).settings;
     expect(rows.find((row) => row.setting === 'level')?.value).toBe('basic');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -56,9 +56,7 @@ test('the check list reports the state in each scope', async () => {
     const structured = await runGspot(sandbox.path, ['list', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
-    const { selected } = configurationsListSchema
-        .extend(commandFieldsSchema.shape)
-        .parse(JSON.parse(structured.stdout));
+    const { selected } = configurationsListOutputSchema.parse(JSON.parse(structured.stdout));
     const checks = selected.flatMap((configuration) => configuration.checks);
     expect(checks.filter(({ check }) => check === 'bash/shfmt')).toStrictEqual([
         { check: 'bash/shfmt', scope: '', status: 'on' },
@@ -81,7 +79,7 @@ test('checks that run at the root appear once when selected in two child scopes'
     });
     const listed = await runGspot(sandbox.path, ['list', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
-    const { selected } = configurationsListSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(listed.stdout));
+    const { selected } = configurationsListOutputSchema.parse(JSON.parse(listed.stdout));
     const checks = selected.flatMap((configuration) => configuration.checks);
     expect(checks.filter(({ check }) => check === 'docker/dockerignore')).toStrictEqual([
         { check: 'docker/dockerignore', scope: '', status: 'on' },
@@ -102,7 +100,7 @@ test('the settings list reports inherited values and their source scope', async 
     const structured = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
-    const { settings } = settingsListSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(structured.stdout));
+    const { settings } = settingsListOutputSchema.parse(JSON.parse(structured.stdout));
     expect(settings.find((row) => row.setting === 'test_files')?.reasonFor).toBeUndefined();
     expect(settings.find((row) => row.setting === 'limits.max_file_lines')?.reasonFor).toBe('raising');
     expect(settings.find((row) => row.scope === 'api/worker' && row.setting === 'limits.max_file_lines')).toMatchObject(
@@ -129,7 +127,7 @@ test('the text settings list shortens long values', async () => {
     const structured = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
-    const report = settingsListSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(structured.stdout));
+    const report = settingsListOutputSchema.parse(JSON.parse(structured.stdout));
     expect(report.settings.find((row) => row.setting === 'naming.banned_words')?.value).toStrictEqual([
         'generated-long-name-one/**',
         'generated-long-name-two/**',
@@ -183,9 +181,7 @@ test('list shows each removed configuration with its scope and reason', async ()
     });
     const structured = await runGspot(sandbox.path, ['list', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(
-        configurationsListSchema.extend(commandFieldsSchema.shape).parse(JSON.parse(structured.stdout)).removed,
-    ).toStrictEqual([
+    expect(configurationsListOutputSchema.parse(JSON.parse(structured.stdout)).removed).toStrictEqual([
         { name: 'markdown', scope: '', reason: 'The project keeps no Markdown files.' },
         { name: 'bash', scope: 'api', reason: 'The API keeps its scripts elsewhere.' },
     ]);

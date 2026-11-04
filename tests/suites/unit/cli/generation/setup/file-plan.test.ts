@@ -6,7 +6,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import type { InitJson } from '#cli/types/commands/edits.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
@@ -36,7 +36,7 @@ test.each([
     });
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     const pin = { path: 'package.json', note: `pins gspot ${cliPackage.version}` };
     expect(plan.change).toStrictEqual(attributes === 'change' ? [ATTRIBUTES_PLAN_ROW, pin] : [pin]);
     expect(plan.write.filter(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual(
@@ -52,7 +52,7 @@ test('the init plan asks for git add --renormalize when the index holds CRLF fil
     runGitStep(sandbox.path, ['add', '.']);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.write.find(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual({
         path: ATTRIBUTES_PLAN_ROW.path,
         note: `${ATTRIBUTES_PLAN_ROW.note}; then run git add --renormalize . for the 1 file that the index holds with CRLF`,
@@ -64,7 +64,7 @@ test('init leaves an unsupported CI pipeline in place and names it in the plan',
     await using sandbox = await createGitSandbox({ 'bitbucket-pipelines.yml': '{}\n' });
     const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.keep.map((file) => file.path)).toStrictEqual(['bitbucket-pipelines.yml']);
 });
 
@@ -92,7 +92,7 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json', '--level', 'all']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan, settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
+    const { plan, settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.level).toBe('all');
     expect(readSettings(settingsText, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
     expect(plan.lintFolders.map(({ path }) => path)).toStrictEqual(['quality/']);
@@ -108,7 +108,7 @@ test('the init plan names the line of each lint command and leaves the file alon
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.lintCommands).toStrictEqual([
         {
             file: 'package.json',
@@ -128,7 +128,7 @@ test('init names the crlf setting of your .editorconfig as dropped', async () =>
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as InitJson;
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.write.find(({ path }) => path === '.editorconfig')?.note).toContain(
         'gspot always writes lf and a final newline',
     );
@@ -141,7 +141,7 @@ test('init lists your .editorconfig under write and not under delete when the ge
     commitAll(sandbox.path);
     const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    const { plan } = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const { plan } = initOutputSchema.parse(JSON.parse(initialized.stdout));
     expect(plan.deleted.map(({ path }) => path)).not.toContain('.editorconfig');
     expect(plan.write.filter(({ path }) => path === '.editorconfig')).toStrictEqual([...EDITORCONFIG_WRITE]);
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).not.toBe(authored);
@@ -156,7 +156,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     const initialized = await runGspot(sandbox.path, ['init', '--json', '--no-configurations']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(initialized.stderr).toBe('');
-    const report = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
+    const report = initOutputSchema.parse(JSON.parse(initialized.stdout));
     expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes, 'mise.toml']);
     expect(existsSync(join(sandbox.path, '.gitignore'))).toBe(false);
     expect(existsSync(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);
@@ -205,7 +205,7 @@ test('init distinguishes named, required and always selected configurations', as
     });
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.configurations.find(({ configuration }) => configuration === 'typescript')?.origin).toBe('named');
     expect(plan.configurations.find(({ configuration }) => configuration === 'javascript')?.origin).toBe('required');
     expect(plan.configurations.find(({ configuration }) => configuration === 'format')?.origin).toBe('always');
@@ -216,7 +216,7 @@ test('init identifies a configuration detected from a file', async () => {
     await using sandbox = await createGitSandbox({ Dockerfile: 'FROM node:24\n' });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.configurations.find(({ configuration }) => configuration === 'docker')?.origin).toBe('detected');
 });
 

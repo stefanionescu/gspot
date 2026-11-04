@@ -4,9 +4,8 @@ import type { Setting } from '#cli/types/manifests.ts';
 import type { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { RepositoryListing } from '#cli/types/repository.ts';
 import type { RunCache, CommandResult } from '#cli/types/system.ts';
-import type { InitPlan, ApplyReport } from '#cli/types/generation.ts';
-import type { installReportSchema, settingsEditReportSchema } from '#cli/schemas/commands.ts';
 import type { Level, Settings, TomlTable, SettingsEdit, InheritedSetting } from '#cli/types/settings.ts';
+import type { initReportSchema, installReportSchema, settingsEditReportSchema } from '#cli/schemas/commands.ts';
 
 export type CommandLocation = { readonly root: string; readonly cwd: string };
 
@@ -88,8 +87,7 @@ export type IgnoreTarget = { unmatched: string; removed: string };
 
 export type UnsetOptions = { root: string; cwd: string; key: string; keys: string[]; scope?: string | undefined };
 
-export type InitJson = { root: string; plan: InitPlan; settingsText: string } & ApplyReport &
-    Pick<InstallCommandJson, 'installed' | 'missing' | 'steps'>;
+export type InitJson = z.infer<typeof initReportSchema>;
 
 export type ConfigurationsOptions = { root: string; cwd: string; configurations: string[]; scope?: string | undefined };
 

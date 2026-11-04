@@ -1,12 +1,13 @@
 import type { z } from 'zod';
 import type { Ignore } from 'ignore';
-import type { GROUPS, FILE_KINDS } from '#cli/config/manifests.ts';
 import type { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { KeyPath, DependencyFile } from '#cli/types/parsers.ts';
 import type { SpawnResult, FileContents } from '#cli/types/system.ts';
+import type { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import type { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
+import type { GROUPS, FILE_KINDS, CONFIGURATION_ORIGINS } from '#cli/config/manifests.ts';
 
 import type {
     gitFileSchema,
@@ -16,7 +17,7 @@ import type {
     lintCommandPackageSchema,
 } from '#cli/schemas/repository.ts';
 
-export type ConfigurationOrigin = 'named' | 'template' | 'detected' | 'suggested' | 'required' | 'always';
+export type ConfigurationOrigin = (typeof CONFIGURATION_ORIGINS)[number];
 
 export type ProposedConfigurations = {
     scopes: ScopeFolder[];
@@ -90,7 +91,7 @@ export type Repository = {
 
 export type FileTags = { tags: string[]; isBinary: boolean };
 
-export type FileKind = (typeof FILE_KINDS)[number];
+type FileKind = (typeof FILE_KINDS)[number];
 
 export type GeneratedPaths = {
     scopePath: string;
@@ -248,7 +249,7 @@ export type PushedRevisions = {
     skipped: Array<{
         ref: string;
         hash: string;
-        reason: 'deleted ref' | 'non-commit object' | 'the commit has no gspot.toml' | 'no changed paths';
+        reason: (typeof PUSH_SKIP_REASONS)[number];
     }>;
 };
 

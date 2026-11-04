@@ -7,7 +7,6 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import type { InstallCommandJson } from '#cli/types/commands/edits.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -15,7 +14,7 @@ import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
+import { doctorOutputSchema, installOutputSchema } from '#cli/schemas/commands.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_MANAGER_CASES, PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/commands.ts';
@@ -26,8 +25,6 @@ import {
     NPM_REGISTRY_TOKEN,
     AUTHENTICATION_REQUIRED_MESSAGE,
 } from '#tests/config/setup/sandboxes.ts';
-
-const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s: a write of the generated files keeps a stale lockfile and install repairs it',
@@ -107,13 +104,13 @@ test.concurrent.each([...PACKAGE_MANAGER_CASES])(
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const version = await runCommand([toolPackageManager, '--version'], { cwd: root });
-        expect((JSON.parse(installed.stdout) as InstallCommandJson).installed).toContain(
+        expect(installOutputSchema.parse(JSON.parse(installed.stdout)).installed).toContain(
             `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
         );
         const { projectFile, lockfilePath, lockfile, mode } = await readToolProjectFiles(root, toolPackageManager);
         const repeated = await spawnGspot(root, ['install', '--json']);
         expect(
-            { code: repeated.code, installed: (JSON.parse(repeated.stdout) as InstallCommandJson).installed },
+            { code: repeated.code, installed: installOutputSchema.parse(JSON.parse(repeated.stdout)).installed },
             repeated.stdout + repeated.stderr,
         ).toStrictEqual({ code: 0, installed: [] });
         const workspace = join(root, 'pnpm-workspace.yaml');

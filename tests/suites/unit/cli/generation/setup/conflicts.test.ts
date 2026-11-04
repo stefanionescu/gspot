@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import type { InitJson } from '#cli/types/commands/edits.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import * as installers from '#cli/tools/installers/install.ts';
@@ -74,7 +74,7 @@ test('the init plan deletes the conflicting config files and lists the lint fold
         '--json',
     ]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
+    const plan = initOutputSchema.parse(JSON.parse(initialized.stdout)).plan;
     expect(plan.deleted.map(({ path }) => path)).toStrictEqual(REPLACED_CONFIG_DELETIONS.map(({ path }) => path));
     expect(plan.lintFolders).toStrictEqual([
         {
@@ -97,7 +97,7 @@ test.each(['setup.cfg'])('init leaves a shared %p in place and names its SQLFluf
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).ignore;
     expect(settings).toStrictEqual([]);
-    const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
+    const plan = initOutputSchema.parse(JSON.parse(initialized.stdout)).plan;
     expect(plan.keep).toStrictEqual([{ path, note: SQLFLUFF_KEPT_NOTE }]);
     await assertFileKept(sandbox.path, path, SHARED_SETUP_CONFIG);
 });
@@ -141,7 +141,7 @@ test('init keeps a linked shared file and the bytes and mode of the file it link
     await symlink('settings/shared.cfg', join(sandbox.path, 'setup.cfg'));
     const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'sql', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
+    const plan = initOutputSchema.parse(JSON.parse(initialized.stdout)).plan;
     expect(plan.keep).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
     expect(plan.deleted.map(({ path }) => path)).not.toContain('setup.cfg');
     expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
@@ -167,7 +167,7 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         const commandArguments = ['init', '--configurations', configuration];
         const initialized = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect((JSON.parse(initialized.stdout) as InitJson).plan.keep).toStrictEqual([{ path, note: note }]);
+        expect(initOutputSchema.parse(JSON.parse(initialized.stdout)).plan.keep).toStrictEqual([{ path, note: note }]);
         await assertFileKept(sandbox.path, path, previous);
         expect(existsSync(join(sandbox.path, generated))).toBe(true);
     },
@@ -180,7 +180,7 @@ test('at level basic, init keeps the config files of checks that are off', async
     commitAll(sandbox.path);
     const written = await runGspot(sandbox.path, ['init', '--no-configurations', '--level', 'basic', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    const plan = (JSON.parse(written.stdout) as InitJson).plan;
+    const plan = initOutputSchema.parse(JSON.parse(written.stdout)).plan;
     expect(plan.deleted).toStrictEqual([]);
     expect(plan.change.map(({ path }) => path)).toStrictEqual(['package.json']);
     expect(plan.write.map(({ path }) => path).filter((path) => /commitlint|syncpack/u.test(path))).toStrictEqual([]);
@@ -211,7 +211,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         expect(before, before.stderr).toMatchObject({ code: 0, stdout: '[]' });
         const written = await runGspot(sandbox.path, [...initCommand, '--json']);
         expect(written.code, written.stdout + written.stderr).toBe(0);
-        const plan = (JSON.parse(written.stdout) as InitJson).plan;
+        const plan = initOutputSchema.parse(JSON.parse(written.stdout)).plan;
         expect(plan.deleted).toContainEqual({
             path: authoredConfiguration,
             note: 'replaced by the generated file for stylelint',

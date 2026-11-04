@@ -1,13 +1,12 @@
-import { z } from 'zod';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { settingOutputSchema } from '#cli/schemas/commands.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commandFieldsSchema, settingExplanationSchema } from '#cli/schemas/commands.ts';
 import { NAMING_LIMITS, REASON_VALUES, SCOPE_SETTING_EXPLANATION } from '#tests/config/commands/reports.ts';
 
 test.each(NAMING_LIMITS)(
@@ -59,12 +58,7 @@ test('explain reads an inherited limits.max_function_lines value and its reason,
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'app/source.ts': 'export const active = true;\n' });
     const explained = await runGspot(sandbox.path, ['explain', 'limits.max_function_lines', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    const explanationSchema = settingExplanationSchema.extend({
-        ...commandFieldsSchema.shape,
-        kind: z.literal('setting'),
-        subject: z.string(),
-    });
-    expect(explanationSchema.parse(JSON.parse(explained.stdout))).toMatchObject({
+    expect(settingOutputSchema.parse(JSON.parse(explained.stdout))).toMatchObject({
         kind: 'setting',
         setting: 'limits.max_function_lines',
         type: 'number',
@@ -110,11 +104,9 @@ test.each([...REASON_VALUES])(
         const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
         expect(reported.code, reported.stdout + reported.stderr).toBe(0);
         expect(
-            (
-                JSON.parse(reported.stdout) as {
-                    scopes: Array<{ scope: string; value: unknown; source: object; reason?: string }>;
-                }
-            ).scopes.map(({ scope, value, source, reason }) => ({ scope, value, source, reason })),
+            settingOutputSchema
+                .parse(JSON.parse(reported.stdout))
+                .scopes.map(({ scope, value, source, reason }) => ({ scope, value, source, reason })),
         ).toStrictEqual([
             { scope: '', value: row.value[0], source: { kind: 'root', name: 'gspot.toml' }, reason: undefined },
             {
@@ -164,9 +156,7 @@ test('explain shows the default of a path setting joined with the scope, as gspo
     });
     const explained = await runGspot(sandbox.path, ['explain', 'site.build_folder', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    const { scopes } = JSON.parse(explained.stdout) as {
-        scopes: Array<{ scope: string; default: unknown; value: unknown; source: object }>;
-    };
+    const { scopes } = settingOutputSchema.parse(JSON.parse(explained.stdout));
     expect(scopes.filter((each) => each.scope === 'web')).toStrictEqual([
         { scope: 'web', default: 'web/dist', value: 'web/dist', source: { kind: 'configuration', name: 'site' } },
     ]);

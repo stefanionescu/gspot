@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { SKIP_CAUSES } from '#cli/config/engine.ts';
+import { STAGES } from '#cli/config/manifests.ts';
+import { ignoreSchema } from '#cli/schemas/settings/file.ts';
+import { SKIP_CAUSES, CHECK_STATUSES, COMPARED_CONTENTS } from '#cli/config/engine.ts';
 
 const knipSymbolSchema = z.object({
     name: z.string().min(1),
@@ -93,3 +95,67 @@ export const checkStateSchema = z.discriminatedUnion('status', [
     z.strictObject({ status: z.literal('on') }),
     z.strictObject({ status: z.literal('skipped'), cause: z.enum([...SKIP_CAUSES, 'no-files']) }),
 ]);
+
+const skipCauseSchema = z.enum([...SKIP_CAUSES, 'no-files']);
+
+export const findingSchema = z.strictObject({
+    check: z.string(),
+    file: z.string(),
+    message: z.string(),
+    fixable: z.boolean(),
+    explain: z.string().optional(),
+    diff: z.string().optional(),
+    line: z.int().optional(),
+    column: z.int().optional(),
+    rule: z.string().optional(),
+    fingerprint: z.string().optional(),
+    help: z.string().optional(),
+});
+
+export const reportedCheckSchema = z.strictObject({
+    check: z.string(),
+    scope: z.string(),
+    status: z.enum(CHECK_STATUSES),
+    fileCount: z.int(),
+    files: z.string().array().readonly().optional(),
+    duration: z.number(),
+    findings: findingSchema.array().readonly(),
+    help: z.string().optional(),
+    note: z.string().optional(),
+    stack: z.string().optional(),
+    cause: skipCauseSchema.optional(),
+    fixCommand: z.string().optional(),
+    rerun: z.string().optional(),
+    command: z.string().array().readonly().optional(),
+});
+
+const fixedFilesFields = { check: z.string(), changed: z.string().array() };
+
+export const fixResultSchema = z.union([
+    z.strictObject({ ...fixedFilesFields, status: z.enum(['changed', 'unchanged', 'skipped']) }),
+    z.strictObject({ ...fixedFilesFields, status: z.enum(['failed', 'canceled']), note: z.string() }),
+]);
+
+export const fixReportSchema = z.strictObject({
+    results: fixResultSchema.array(),
+    changed: z.string().array(),
+    broken: z.string().array(),
+    conflicted: z.string().array(),
+});
+
+export const runReportSchema = z.strictObject({
+    notes: z.string().array(),
+    comparison: z.strictObject({ content: z.enum(COMPARED_CONTENTS), reference: z.string() }).optional(),
+    version: z.string(),
+    stages: z.enum(STAGES).array().readonly(),
+    started: z.string(),
+    duration: z.number(),
+    checks: reportedCheckSchema.array().readonly(),
+    skippedCount: z.partialRecord(skipCauseSchema, z.int()).readonly(),
+    ignores: ignoreSchema.array().readonly(),
+    baselined: z.record(z.string(), z.int()).readonly(),
+    unstagedChanges: z.int(),
+    partial: z.boolean(),
+    failed: z.string().array().readonly(),
+    exitCode: z.int(),
+});

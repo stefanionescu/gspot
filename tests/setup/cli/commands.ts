@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { spyOn, expect } from 'bun:test';
@@ -14,8 +15,9 @@ import type { CancelableSpawnOptions } from '#cli/types/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import type { RunReport, FixReport, CheckResult } from '#cli/types/engine/run.ts';
+import { initOutputSchema, checkReportSchema } from '#cli/schemas/commands.ts';
 import type { Sandbox, FindingRow, StdinOptions, ProcessOutput, ScopeFindingRow } from '#tests/types/setup.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
@@ -70,13 +72,13 @@ export async function runInit(
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const result = await runGspot(root, ['init', '--json', ...commandArguments]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan, settingsText } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settingsText'>>;
+    const { plan, settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
     return { plan, settings: parse(settingsText) as TomlTable };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: This reader keeps the parsed report cast at one boundary.
-export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: RunReport & { fixes?: FixReport } } {
-    return { ...output, report: JSON.parse(output.stdout) as RunReport & { fixes?: FixReport } };
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: This reader keeps the schema parse of the check report at one boundary.
+export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: z.infer<typeof checkReportSchema> } {
+    return { ...output, report: checkReportSchema.parse(JSON.parse(output.stdout)) };
 }
 
 /**

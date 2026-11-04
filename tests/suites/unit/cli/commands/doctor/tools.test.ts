@@ -9,6 +9,7 @@ import { executableLayout } from '#cli/system/paths.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
+import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,10 +19,7 @@ import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { getTool, findPackagePin, listDistinctTools } from '#cli/tools/pins.ts';
-import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { fakeCommands, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-
-const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 function selectExecutableFolder(tool: Tool): string {
     const installation = findPackagePin(tool);

@@ -6,9 +6,9 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { pathOutputSchema } from '#cli/schemas/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import type { PathExplanation } from '#cli/types/commands/reports.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
@@ -65,7 +65,7 @@ test('a path explanation lists the command checks and the ignores that apply', a
     await writeFile(join(sandbox.path, 'gspot.toml'), settings);
     const corrected = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const explanation = JSON.parse(corrected.stdout) as PathExplanation;
+    const explanation = pathOutputSchema.parse(JSON.parse(corrected.stdout));
     expect(explanation.ignores).toStrictEqual([]);
     expect(explanation.checks.find(({ check }) => check === 'project/syntax')).toStrictEqual({
         check: 'project/syntax',
@@ -73,7 +73,7 @@ test('a path explanation lists the command checks and the ignores that apply', a
         state: 'on',
     });
     expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
-    expect((JSON.parse(ignored.stdout) as PathExplanation).checks.map(({ check }) => check)).toStrictEqual(
+    expect(pathOutputSchema.parse(JSON.parse(ignored.stdout)).checks.map(({ check }) => check)).toStrictEqual(
         explanation.checks.map(({ check }) => check),
     );
 });
@@ -127,7 +127,7 @@ test('a file path reports its scope, checks, and ignores', async () => {
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const explanation = JSON.parse(result.stdout) as PathExplanation;
+    const explanation = pathOutputSchema.parse(JSON.parse(result.stdout));
     expect(explanation).toMatchObject({
         kind: 'path',
         subject: 'api/build.sh',

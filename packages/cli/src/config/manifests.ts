@@ -130,6 +130,8 @@ export const GROUPS = [
 
 export const LEVELS = ['basic', 'all'] as const;
 
+export const CONFIGURATION_ORIGINS = ['named', 'template', 'detected', 'suggested', 'required', 'always'] as const;
+
 export const IGNORE_COMMAND = 'gspot ignore';
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;

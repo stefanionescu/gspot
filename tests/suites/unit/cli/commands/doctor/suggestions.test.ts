@@ -6,15 +6,13 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { doctorReportSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES } from '#tests/config/commands/reports.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
-
-const doctorOutputSchema = doctorReportSchema.extend(commandFieldsSchema.shape);
 
 async function listDetectedNames(root: string): Promise<Array<string | undefined>> {
     const findings = await runSandboxCheck(root, 'gspot/detected-configurations');

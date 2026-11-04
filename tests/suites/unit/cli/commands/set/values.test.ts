@@ -11,12 +11,12 @@ import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { settingsListOutputSchema } from '#cli/schemas/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { settingsListSchema, commandFieldsSchema } from '#cli/schemas/commands.ts';
 
 import {
     WEAKENED_SETTINGS,
@@ -185,8 +185,7 @@ test.each([...WEAKENED_SETTINGS])(
         const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
         expect(listed.code, listed.stdout + listed.stderr).toBe(0);
         expect(
-            settingsListSchema
-                .extend(commandFieldsSchema.shape)
+            settingsListOutputSchema
                 .parse(JSON.parse(listed.stdout))
                 .settings.filter((row) => row.setting === key)
                 .map(({ value }) => value),

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
+import { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
+import { LEVELS, CONFIGURATION_ORIGINS } from '#cli/config/manifests.ts';
 
 /**
 Read the options of a config that init replaces. An option that gspot does not know, or a value that gspot.toml cannot
@@ -81,4 +83,52 @@ export const generatedFilesSchema = z.strictObject({
     deleted: z.string().array(),
     updated: z.string().array(),
     notes: z.string().array(),
+});
+
+const initFileRowSchema = z.strictObject({ path: z.string(), note: z.string() });
+
+export const carryoverRowSchema = z.strictObject({
+    path: z.string(),
+    tool: z.string(),
+    covered: z.int(),
+    carried: z.string().array().readonly(),
+    differing: z.string().array().readonly(),
+    reasons: z.string().array().readonly(),
+    plugins: z.string().array().readonly(),
+    commandChecks: z.string().array().readonly(),
+    dropped: z.string().array().readonly(),
+});
+
+const leftOutSettingSchema = z.strictObject({ key: z.string(), note: z.string() });
+
+const lintCommandSourceSchema = z.enum(Object.keys(LINT_COMMAND_FIXES) as Array<keyof typeof LINT_COMMAND_FIXES>);
+
+const lintCommandSchema = z.strictObject({
+    file: z.string(),
+    line: z.int(),
+    source: lintCommandSourceSchema,
+    command: z.string(),
+    tool: z.string(),
+    fix: z.string(),
+});
+
+export const initPlanSchema = z.strictObject({
+    from: z.strictObject({ file: z.string(), leftOutSettings: leftOutSettingSchema.array() }).optional(),
+    level: z.enum(LEVELS),
+    configurations: z
+        .strictObject({
+            configuration: z.string(),
+            origin: z.enum(CONFIGURATION_ORIGINS),
+            scopes: z.string().array(),
+            checks: z.int(),
+            checksOff: z.int(),
+        })
+        .array(),
+    write: initFileRowSchema.array(),
+    deleted: initFileRowSchema.array(),
+    keep: initFileRowSchema.array(),
+    change: initFileRowSchema.array(),
+    lintFolders: initFileRowSchema.array(),
+    lintCommands: lintCommandSchema.array(),
+    carryover: carryoverRowSchema.array(),
 });

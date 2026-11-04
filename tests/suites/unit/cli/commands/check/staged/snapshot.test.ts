@@ -198,9 +198,7 @@ test.skipIf(!isCaseFolding())(
     'staged paths that differ only by letter case are refused on a case-folding disk',
     async () => {
         await using sandbox = await createCaseClashingSandbox();
-        const result = parseCheckReport(
-            await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']),
-        );
+        const result = await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
         expect(JSON.parse(result.stdout)).toMatchObject({
             error: 'copy',

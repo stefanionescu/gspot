@@ -4,7 +4,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import type { InitJson } from '#cli/types/commands/edits.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -16,7 +16,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
     await using sandbox = await createGitSandbox(WORKSPACE_SITE_FILES);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { settingsText: text } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const { settingsText: text } = initOutputSchema.parse(JSON.parse(result.stdout));
     const settings = readSettings(text, sandbox.path);
     expect({ root: settings.configurations, site: settings.scopes.get('apps/site')?.configurations }).toStrictEqual({
         root: ['typescript'],
@@ -30,7 +30,7 @@ test('init finds the Xcode project of the scope and picks the destination from i
     await using sandbox = await createGitSandbox({ 'App.xcodeproj/project.pbxproj': source });
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'swift,xcode', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const output = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(parse(output.settingsText)).toMatchObject({
         swift: { xcode_project: 'App.xcodeproj', xcode_destination: SIMULATOR_DESTINATION },
     });
@@ -45,7 +45,7 @@ test('init finds the next-intl messages folder', async () => {
     });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const output = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(parse(output.settingsText)).toMatchObject({ translations: { messages_folder: 'messages' } });
 });
 
@@ -54,7 +54,7 @@ test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', asyn
     await using sandbox = await createGitSandbox(files);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const output = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(findValueAt(parse(output.settingsText), ['javascript', 'import_extension'])).toBe(expected);
 });
 
@@ -71,7 +71,7 @@ test.each([
     });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const output = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(findValueAt(parse(output.settingsText), ['javascript', 'import_extension'])).toBe(expected);
 });
 
@@ -85,7 +85,7 @@ test('a nodenext tsconfig wins over the React import extension', async () => {
     });
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { settingsText: text } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settingsText'>>;
+    const { settingsText: text } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(parse(text)).toMatchObject({
         scope: [{ path: 'packages/ui', javascript: { import_extension: 'js' } }],
     });

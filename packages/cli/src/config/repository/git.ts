@@ -137,6 +137,13 @@ export const DELETED_REF_REASON = 'deleted ref';
 
 export const NON_COMMIT_REASON = 'non-commit object';
 
+export const PUSH_SKIP_REASONS = [
+    DELETED_REF_REASON,
+    NON_COMMIT_REASON,
+    'the commit has no gspot.toml',
+    'no changed paths',
+] as const;
+
 export const INVALID_PUSH_INPUT_MESSAGE = 'Invalid Git pre-push input. Supply every local and remote ref/object pair.';
 
 export const PEEL_FAILURE_MESSAGE = 'Git did not resolve every pushed object.';
