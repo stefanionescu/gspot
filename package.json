@@ -16,6 +16,9 @@
         "@types/bun": "1.4.3",
         "@types/node": "24.19.2"
     },
+    "overrides": {
+        "katex": "0.18.11"
+    },
     "description": "Development workspace for the gspot linting CLI.",
     "type": "module"
 }
