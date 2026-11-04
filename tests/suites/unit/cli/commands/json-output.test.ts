@@ -29,8 +29,12 @@ const PAGE = await readFile(join(REPOSITORY_ROOT, 'docs/src/content/docs/referen
 
 function readFields(heading: string): { every: string[]; required: string[] } {
     const section = PAGE.slice(PAGE.indexOf(`\n${heading}\n`) + heading.length + 2).split(/^#{2,3} /mu, 1)[0] ?? '';
-    const rows = section
-        .split('\n')
+    // A section's own fields sit in its "Field | Meaning" table; a "Field of `name`" table describes a nested object.
+    const lines = section.split('\n');
+    const start = lines.findIndex((line) => /^\| Field +\| Meaning/u.test(line));
+    const end = lines.findIndex((line, index) => index > start && !line.startsWith('|'));
+    const rows = lines
+        .slice(start, end === -1 ? undefined : end)
         .map((line) => /^\| `(?<field>[A-Za-z]+)` +\| (?<meaning>.*) \|$/u.exec(line)?.groups)
         .filter((row) => row !== undefined);
     return {
