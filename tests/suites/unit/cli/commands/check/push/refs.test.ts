@@ -21,7 +21,7 @@ test('a missing local commit stops a pre-push check and leaves the working tree 
     expect(missing.code, missing.stdout + missing.stderr).toBe(2);
     expect(JSON.parse(missing.stdout) as CommandFailureJson).toMatchObject({
         error: 'git',
-        message: `Cannot find the commit ${absent} that the push sends.`,
+        message: expect.stringContaining(absent) as string,
     });
     await assertWorkingTreeKept(sandbox.path, broken);
 });

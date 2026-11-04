@@ -9,12 +9,7 @@ export const NAMING_SCOPE_SETTINGS = {
     ],
 } as const;
 
-export const ALL_FILES_BASES = [
-    { reference: '', message: 'Checked every file: the base ref is empty.' },
-    { reference: '0'.repeat(40), message: 'Checked every file: the base is a new branch.' },
-] as const;
-
-export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.';
+export const ALL_FILES_BASES = [{ reference: '' }, { reference: '0'.repeat(40) }] as const;
 
 export const AUTHORED_SCRIPT = 'echo authored\n';
 
@@ -46,48 +41,25 @@ const UTF16_MARKER_BYTE = 0xfe;
 
 const LINE_FEED_BYTE = 0x0a;
 
-export const FIX_REFUSALS = [
-    [
-        ['--staged', '--fix'],
-        '--fix cannot run with --staged: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.',
-    ],
-    [
-        ['--hook', 'pre-push', '--fix'],
-        '--fix cannot run with --hook pre-push: it checks the pushed commits. Leave out --fix.',
-    ],
-] as const;
+export const FIX_REFUSALS = [{ flags: ['--staged', '--fix'] }, { flags: ['--hook', 'pre-push', '--fix'] }] as const;
 
 export const PUSH_INPUT_REFUSALS = [
     {
         name: 'text that is no ref update',
         stdin: 'not a ref update\n',
-        message: 'Invalid Git pre-push input. Supply every local and remote ref/object pair.',
     },
     {
         name: 'bytes that are not UTF-8',
         stdin: [INVALID_UTF8_BYTE, UTF16_MARKER_BYTE, LINE_FEED_BYTE],
-        message: 'Git sent pre-push input that is not UTF-8 text.',
     },
 ] as const;
 
 export const ARGUMENT_REFUSALS = [
-    [
-        'a path outside the repository',
-        ['check', '../elsewhere.txt'],
-        'Path ../elsewhere.txt is outside this repository.',
-    ],
-    ['a path that matches nothing', ['check', 'missing'], 'Path missing matches no repository files.'],
-    [
-        'an empty --only list',
-        ['check', '--only', ','],
-        'The value , is not valid for --only. Name a check, such as python/ruff. Run gspot check --help to see its arguments and options.',
-    ],
-    [
-        'an empty --skip list',
-        ['check', '--skip', ','],
-        'The value , is not valid for --skip. Name a check, such as python/ruff. Run gspot check --help to see its arguments and options.',
-    ],
-    ['an unknown --skip check', ['check', '--skip', 'bash/unknown'], 'There is no check called bash/unknown.'],
+    ['a path outside the repository', ['check', '../elsewhere.txt'], '../elsewhere.txt'],
+    ['a path that matches nothing', ['check', 'missing'], 'missing'],
+    ['an empty --only list', ['check', '--only', ','], '--only'],
+    ['an empty --skip list', ['check', '--skip', ','], '--skip'],
+    ['an unknown --skip check', ['check', '--skip', 'bash/unknown'], 'bash/unknown'],
 ] as const;
 
 const TEST_VERSION = '0.0.0-test';

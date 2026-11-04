@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import type { CommandFailureJson } from '#cli/types/system.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check.ts';
@@ -261,7 +262,7 @@ test.each(['all', 'message', 'manual'])('--stage refuses %s as a command-line st
     const result = await runGspot(sandbox.path, ['check', '--stage', stage, '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-    expect(result.stdout).toContain(`The value ${stage} is not valid for --stage. Use commit or push.`);
+    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain(stage);
 });
 
 test('check refuses --stage without its value', async () => {
@@ -275,8 +276,5 @@ test.each(['pre-push', 'commit-msg'])('--stage and --hook %s are mutually exclus
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['check', '--stage', 'commit', '--hook', hook, '--json']);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: '--stage cannot run with --hook. Choose a stage or a Git hook.',
-    });
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
 });

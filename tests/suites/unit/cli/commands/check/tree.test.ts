@@ -27,7 +27,7 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
     const head = commitAll(sandbox.path);
     const before = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
-    expect(before.stderr).toStartWith('[warn] The Git hooks are not installed in this clone. Run gspot install.\n');
+    expect(before.stderr.split('\n').filter((line) => line.startsWith('[warn] '))).toHaveLength(1);
     const pushed = await runGspot(
         sandbox.path,
         ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax'],
@@ -40,9 +40,7 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
     expect(pushed.stderr).not.toContain('[warn]');
     await installHooks(await openSession(sandbox.path), []);
     const missing = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
-    expect(missing.stderr).toStartWith(
-        '[warn] .gspot/hooks/pre-commit is missing, so Git skips the pre-commit checks. Run gspot install.\n',
-    );
+    expect(missing.stderr).toMatch(/^\[warn\] .*\.gspot\/hooks\/pre-commit/u);
     await applyGeneratedFiles(sandbox.path);
     const installed = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

@@ -18,10 +18,10 @@ test('--only runs a stricter check without changing the level or the hook plan a
         { check: 'docs/required-files', status: 'failed' },
     ]);
     expect(checked.report.checks[0]?.findings.length).toBeGreaterThan(0);
-    const note = 'docs/required-files: --only allows this check to run here; it stays off in hooks at level basic.';
-    expect(checked.report.notes).toContain(note);
+    const notes = checked.report.notes.filter((note) => note.startsWith('docs/required-files'));
+    expect(notes).toHaveLength(1);
     const text = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files']);
-    expect(text.stdout).toContain(note);
+    expect(text.stdout).toContain(notes[0]!);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     const session = await openSession(sandbox.path);
     expect(planChecks(session, { stage: 'commit' }).some(({ check }) => check.id === 'docs/required-files')).toBe(

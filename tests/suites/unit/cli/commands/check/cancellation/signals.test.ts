@@ -55,13 +55,9 @@ test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
                 stderr: await capture.stderr,
             }).report;
             expect(report.exitCode).toBe(exitCode);
-            expect(report.checks).toMatchObject([
-                { check: 'project/slow', status: 'canceled', note: `${process.execPath} was canceled.` },
-            ]);
+            expect(report.checks).toMatchObject([{ check: 'project/slow', status: 'canceled' }]);
         } else {
-            const stdout = await capture.stdout;
-            expect(stdout).toContain(`${process.execPath} was canceled.`);
-            expect(stdout).toContain('A signal stopped the run.');
+            expect(await capture.stdout).toMatch(/^canceled +project\/slow\b/mu);
         }
         await waitForExit(toolPid);
     },

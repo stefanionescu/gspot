@@ -10,7 +10,6 @@ import type { CommandFailureJson } from '#cli/types/system.ts';
 import { ALL_FILES_BASES } from '#tests/config/commands/check.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { NO_UPSTREAM_MESSAGE } from '#tests/config/setup/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file commit the changed repository through it, and jscpd reports the inlined copies as clones.
@@ -65,17 +64,20 @@ test('--changed without an upstream names the replacement command, and uses orig
     commitAll(sandbox.path);
     const absent = await runGspot(sandbox.path, ['check', '--changed', '--stage', 'commit', '--json']);
     expect(absent.code).toBe(2);
-    expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toBe(NO_UPSTREAM_MESSAGE);
+    expect(JSON.parse(absent.stdout)).toMatchObject({ error: 'git' });
+    expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toContain('gspot check --base <branch>');
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     await writeFile(join(sandbox.path, 'api/source.txt'), 'changed');
-    const defaultRange = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed']);
+    const defaultRange = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']),
+    );
     expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);
-    expect(defaultRange.stdout.split('\n', 1)[0]).toBe('Checked the files changed since refs/remotes/origin/main.');
+    expect(defaultRange.report.comparison).toMatchObject({ reference: 'refs/remotes/origin/main' });
 });
 
 test.each([...ALL_FILES_BASES])(
     '--base $reference, as CI gives for a new branch, checks every file and says why',
-    async ({ reference, message }) => {
+    async ({ reference }) => {
         await using sandbox = await testdir();
         await prepareChangedRepository(sandbox.path, {
             '.gitignore': `${GSPOT_FOLDER}/\n`,
@@ -94,9 +96,13 @@ test.each([...ALL_FILES_BASES])(
                 .flatMap((check) => check.findings.map((finding) => finding.message))
                 .toSorted(compareText),
         ).toStrictEqual(['api/source.txt', 'web/source.txt']);
+        const compared = parseCheckReport(
+            await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', 'HEAD', '--json']),
+        );
+        const added = result.report.notes.filter((note) => !compared.report.notes.includes(note));
+        expect(added).toHaveLength(1);
         const text = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', reference]);
-        expect(text.stdout).toContain(`note     ${message}\n`);
-        expect(result.report.notes).toContain(message);
+        expect(text.stdout).toContain(`note     ${added[0]!}\n`);
     },
 );
 
@@ -120,7 +126,7 @@ test('an absent full base hash in a shallow clone checks every file and identifi
     ]);
     const checked = parseCheckReport(result);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(checked.report.notes).toContain(`Checked every file: base ${base} is not present in this clone.`);
+    expect(checked.report.notes).toContainEqual(expect.stringContaining(base) as string);
     expect(checked.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);

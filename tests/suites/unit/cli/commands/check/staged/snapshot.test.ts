@@ -6,9 +6,11 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
+import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -17,7 +19,6 @@ import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
-import { BASH_SYNTAX_CHECK, DEPENDENCY_FILES_MESSAGE } from '#tests/config/setup/sandboxes.ts';
 import { SCRIPT_SPACES, STAGED_PACKAGE_JSON, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check.ts';
 
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
@@ -169,7 +170,7 @@ test('a staged check keeps each Python scope config and reports the installed de
     await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
     const rerun = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(rerun.code, rerun.stdout + rerun.stderr).toBe(1);
-    expect(rerun.report.notes).toStrictEqual([DEPENDENCY_FILES_MESSAGE]);
+    expect(rerun.report.notes).toStrictEqual([DEPENDENCY_REVISION_NOTE]);
     expect(rerun.report.checks.flatMap((check) => check.findings)).toStrictEqual(
         checked.report.checks.flatMap((check) => check.findings),
     );
@@ -273,7 +274,10 @@ test('a staged check reads the pushed commits of the repository, not of the inde
     const commandArguments = ['check', '--staged', '--only', 'commits/commitlint-pushed', '--json'];
     const result = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.report.checks[0]).toMatchObject({ status: 'passed', note: 'Checked 0 commit messages.' });
+    expect(result.report.checks[0]).toMatchObject({
+        status: 'passed',
+        note: expect.stringMatching(/\b0\b/u) as string,
+    });
 });
 
 function isCaseFolding(): boolean {

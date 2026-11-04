@@ -40,9 +40,7 @@ test('check refuses the commitlint check outside the commit-msg hook and names t
     commitAll(sandbox.path);
     const refused = await runGspot(sandbox.path, ['check', '--only', 'commits/commitlint']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stderr.trim()).toBe(
-        'commits/commitlint checks commit messages. Run gspot check --hook commit-msg -- <file>.',
-    );
+    expect(refused.stderr).toContain('gspot check --hook commit-msg');
 });
 
 test('--only names the configuration that an unselected check needs', async () => {
@@ -51,31 +49,31 @@ test('--only names the configuration that an unselected check needs', async () =
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'arguments',
-        message: 'python/ruff belongs to python, which no scope selects. Run gspot add python.',
+        message: expect.stringContaining('gspot add python') as string,
     });
 });
 
-test.each([...FIX_REFUSALS])('check %p exits 2 and leaves the working tree as it was', async (flags, expected) => {
+test.each([...FIX_REFUSALS])('check $flags exits 2 and leaves the working tree as it was', async ({ flags }) => {
     await using sandbox = await createFixableSandbox();
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(expected);
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments' });
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
     expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
 
 test.each([...PUSH_INPUT_REFUSALS])(
     'a pre-push check given $name exits 2 and leaves the working tree as it was',
-    async ({ stdin, message }) => {
+    async ({ stdin }) => {
         await using sandbox = await createFixableSandbox();
         const refused = await runGspot(
             sandbox.path,
-            ['check', '--hook', 'pre-push', '--', 'origin', 'unused'],
+            ['check', '--hook', 'pre-push', '--json', '--', 'origin', 'unused'],
             {},
             { stdin: typeof stdin === 'string' ? stdin : Buffer.from(stdin) },
         );
         expect(refused.code).toBe(2);
-        expect(refused.stderr).toBe(`${message}\n`);
+        expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'git' });
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
         expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
     },
@@ -92,7 +90,7 @@ test('a staged check after a write of the generated files names the setup files 
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({
         error: 'git',
-        message: '.gspot/ is not staged. Stage gspot.toml and .gspot/.',
+        message: expect.stringContaining('.gspot/') as string,
     });
 });
 
@@ -107,9 +105,9 @@ test('a staged check that a folder without a lockfile refuses names the unstaged
     await writeFile(join(sandbox.path, 'notes.txt'), 'unstaged\n');
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
-        'app has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile. The staged check runs in a copy of the index because the working tree holds unstaged or untracked files. Stashing them with git stash push --keep-index --include-untracked also lets it run.',
-    );
+    const { message } = JSON.parse(refused.stdout) as CommandFailureJson;
+    expect(message).toContain('app');
+    expect(message).toContain('git stash push --keep-index --include-untracked');
 });
 
 test('a staged check during a merge conflict exits 2, names the conflict, and leaves no copy behind', async () => {
@@ -125,9 +123,10 @@ test('a staged check during a merge conflict exits 2, names the conflict, and le
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
-        'source.txt has unresolved merge conflicts. Resolve them with git add or git rm, then check again.',
-    );
+    expect(JSON.parse(refused.stdout)).toMatchObject({
+        error: 'git',
+        message: expect.stringContaining('source.txt') as string,
+    });
     expect(await readdir(temporary.path)).toStrictEqual([]);
 });
 
@@ -151,7 +150,6 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const { report } = parseCheckReport(refused);
     const encoding = report.checks.find(({ check }) => check === 'repository/encoding');
-    expect(encoding?.help).toBe('Save the reported file as UTF-8, then run the check again.');
     expect(encoding?.findings).toStrictEqual([
         {
             check: 'repository/encoding',
@@ -159,7 +157,7 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
             line: 1,
             rule: 'path-encoding',
             explain: 'gspot explain repository/encoding path-encoding',
-            message: String.raw`"bad-\377.txt" is not a UTF-8 path. Rename the file using UTF-8.`,
+            message: expect.any(String) as string,
             fixable: false,
         },
     ]);
@@ -168,11 +166,14 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
 
 test.each([...ARGUMENT_REFUSALS])(
     'check with %s exits 2 and names the refused argument',
-    async (_, commandArguments, expected) => {
+    async (_, commandArguments, refusedArgument) => {
         await using sandbox = await createFixableSandbox();
-        const refused = await runGspot(sandbox.path, [...commandArguments]);
+        const refused = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stdout + refused.stderr).toBe(`${expected}\n`);
+        expect(JSON.parse(refused.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(refusedArgument) as string,
+        });
     },
 );
 

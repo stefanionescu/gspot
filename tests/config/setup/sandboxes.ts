@@ -43,9 +43,6 @@ export const INIT_FILES = {
 
 export const CANCELED_CHECK_NOTE = 'The check was canceled.';
 
-export const DEPENDENCY_FILES_MESSAGE =
-    'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.';
-
 export const MANAGED_KEYS_NOTE =
     'Keys that gspot no longer manages stay in your files. Review your shared tool configs after you remove a configuration.';
 

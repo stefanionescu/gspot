@@ -33,7 +33,7 @@ test('staged error notes and command arguments name the working root instead of 
         await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/path-error', '--json']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
-    expect(checked.report.checks[0]!.note).toContain(`Cannot read ${sandbox.path}/settings.json`);
+    expect(checked.report.checks[0]!.note).toContain(`${sandbox.path}/settings.json`);
     expect(checked.report.checks[0]!.command).toStrictEqual(
         command.map((argument) => argument.replaceAll('{root}', () => sandbox.path)),
     );

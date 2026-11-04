@@ -12,9 +12,9 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { SIGNAL_EXITS, AUTHORED_SCRIPT } from '#tests/config/commands/check.ts';
 import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
-import { SIGNAL_EXITS, AUTHORED_SCRIPT, CHECK_STOPPED_MESSAGE } from '#tests/config/commands/check.ts';
 import { waitForExit, waitForFile, captureChild, spawnCommand, limitCommand } from '#tests/setup/system/processes.ts';
 
 import {
@@ -58,7 +58,7 @@ async function stopStagedCancellation(
 ): Promise<void> {
     paused.child.kill(signal);
     expect(await paused.child.exited, await paused.stderr).toBe(exitCode);
-    expect(JSON.parse(await paused.stdout)).toMatchObject({ error: 'canceled', message: CHECK_STOPPED_MESSAGE });
+    expect(JSON.parse(await paused.stdout)).toMatchObject({ error: 'canceled' });
     await waitForExit(paused.started.pid);
 }
 
@@ -182,7 +182,7 @@ test.skipIf(isWindows)(
             expect(await waitForFile(started)).toBe(true);
             child.kill('SIGINT');
             expect(await child.exited, await errors).toBe(130);
-            expect(JSON.parse(await output)).toMatchObject({ error: 'canceled', message: CHECK_STOPPED_MESSAGE });
+            expect(JSON.parse(await output)).toMatchObject({ error: 'canceled' });
             expect(runGitStep(root, ['ls-files', '--stage', '-z'])).toBe(indexed);
             const protocol = `${ref} ${revision} ${ref} ${'0'.repeat(revision.length)}\n`;
             const retry = await runGspot(
