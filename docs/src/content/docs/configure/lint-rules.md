@@ -3,17 +3,20 @@ title: Lint rules
 description: Set lint rule options in gspot.toml, and add rules from a plugin.
 ---
 
-Set lint rule options in `gspot.toml`; gspot writes them into the config file of each tool. The level decides which
-rules run, and the options take no severity. To turn a rule off, [ignore it](/use/ignore/) with a reason. To add
-rules, use a [plugin record](#plugins), or add Ruff rule codes in `tools.ruff.rules`.
+Set the options of lint rules in `gspot.toml`, and gspot writes them into the config file of each tool. The level
+decides which rules run, so you set only options, not a severity such as `off` or `warn`. To turn a rule off,
+[ignore it](/use/ignore/) with a reason. To add rules, use a [plugin record](#plugins), or add Ruff rule codes in
+`tools.ruff.rules`.
 
-You can set options only for a rule that runs at your level. `gspot set` refuses a rule of level `all`:
+You can set options only for a rule that runs at your level. At level `basic`, `gspot set` rejects a rule that runs
+only at level `all`:
 
 ```text
 n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.
 ```
 
-For a rule that gspot runs at no level, the next ESLint run stops, and `javascript/eslint` reports `error`:
+If you set options for a rule that gspot does not run at any level, the next ESLint run stops, and `javascript/eslint`
+reports `error`:
 
 ```text
 gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.
@@ -30,7 +33,8 @@ gspot runs id-length at no level, so it takes no options. For a rule of your own
 
 ## Settings that set rule options
 
-gspot writes the options of some rules from a setting, and refuses them in these tables. Change the setting instead:
+gspot writes the options of some rules from other settings, and rejects these rules in the rule tables. Change the
+setting instead:
 
 | Rules                                                                                                                    | Setting                                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
@@ -50,7 +54,7 @@ For `export const matches = (value) => value == null;`, the `eqeqeq` lint rule c
 Expected '===' and instead saw '=='.
 ```
 
-These settings accept the null comparison while requiring strict equality elsewhere:
+These settings allow the comparison with `null`, and still require `===` everywhere else:
 
 ```toml
 configurations = ["javascript"]
@@ -63,24 +67,24 @@ eqeqeq = ["always", { null = "ignore" }]
 gspot set tools.eslint.rules '{ eqeqeq = ["always", { null = "ignore" }] }'
 ```
 
-The table holds options only. gspot refuses a severity, such as `eqeqeq = "off"`:
+The table holds only options. gspot rejects a severity, such as `eqeqeq = "off"`:
 
 ```text
 This table holds options only, without a severity; the level decides which rules run. To ignore eqeqeq, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".
 ```
 
-`gspot explain javascript/eslint eqeqeq` reads the rule from the ESLint that `gspot install` put in `.gspot/node_modules`. It
-prints what the rule looks for, links its documentation, which lists its options, and prints the commands that set its
-options or ignore it. Before `gspot install`, explain asks you to run it. Stylelint rules work the same way, such as
-`gspot explain css/stylelint color-no-invalid-hex`.
+`gspot explain javascript/eslint eqeqeq` reads the rule from the ESLint that `gspot install` put in
+`.gspot/node_modules`. It prints what the rule looks for and a link to its documentation, which lists its options. It
+also prints the commands that set its options or ignore it. Before you run `gspot install`, `gspot explain` asks you to
+run it. Stylelint rules work the same way, such as `gspot explain css/stylelint color-no-invalid-hex`.
 
 For a Ruff rule, `gspot explain python/ruff E501` prints its summary. Add `--verbose` for its full explanation.
 
 ## Plugins
 
-A plugin adds rules that gspot does not ship. Name it as a module in the repository, or as an npm package at an exact
-version. Each `[[tools.eslint.plugins]]` record names the rule prefix, the plugin, and the rules to turn on as errors
-for the code files of its scope:
+A plugin adds lint rules that gspot does not ship. The plugin can be a module in your repository, or an npm package at
+an exact version. Each `[[tools.eslint.plugins]]` record names the rule prefix, the plugin, and the rules to turn on.
+gspot turns those rules on as errors for the code files of the scope of the record:
 
 ```javascript title="tools/lint/plugin.mjs"
 export default {
@@ -106,8 +110,8 @@ path = "tools/lint/plugin.mjs"
 rules = { "no-legacy-api" = [] }
 ```
 
-Name a tracked `.js` or `.mjs` file as the module. The name cannot take the prefix of a plugin that gspot loads.
-ESLint then reports `local/no-legacy-api`.
+The module must be a `.js` or `.mjs` file that Git tracks. The `name` cannot be the prefix of a plugin that gspot loads
+itself. With this record, ESLint reports the findings of the rule as `local/no-legacy-api`.
 
 For an npm package, set `package` and `version` in place of `path`:
 
@@ -119,8 +123,8 @@ version = "1.2.3"
 rules = { "no-legacy-api" = [] }
 ```
 
-`gspot install` puts the package in `.gspot/node_modules`, beside the ESLint that gspot pins, so the plugin loads that
-ESLint and no package of your repository. Run `gspot install` after you change a record.
+`gspot install` puts the package in `.gspot/node_modules`, next to the ESLint that gspot pins. The plugin then loads
+that ESLint, not a package from your project. Run `gspot install` after you change a record.
 
 `[[tools.stylelint.plugins]]` takes `path`, or `package` and `version`, and `rules`. It has no `name`, because a Stylelint
 plugin names its own rules:
@@ -132,15 +136,15 @@ version = "1.2.3"
 rules = { "acme/no-red" = true }
 ```
 
-The table holds no severity, so gspot reports every rule of a record as an error. A rule that warned in your old config
-now fails the check.
+A record holds no severity, so gspot reports every rule of a record as an error. A rule that only warned in your old
+config fails the check under gspot.
 
 ## Ruff
 
-Ruff takes rule codes to add in `tools.ruff.rules`, not rule options. Its limits, such as
+For Ruff, `tools.ruff.rules` takes rule codes to add, not rule options. The Ruff limits, such as
 `limits.max_cyclomatic_complexity` and `limits.max_function_parameters`, come from
-[limits](/reference/gspot-toml/#limits), and `python.docstring_convention` sets the pydocstyle convention. To turn a
-Ruff lint rule off, ignore it by its code: `gspot ignore python/ruff --rule <code> --reason "<why>"`.
+[limits](/reference/gspot-toml/#limits). `python.docstring_convention` sets the pydocstyle convention. To turn a Ruff
+rule off, ignore it by its code: `gspot ignore python/ruff --rule <code> --reason "<why>"`.
 
 ## Stylelint
 
@@ -151,9 +155,9 @@ Stylelint options go in `tools.stylelint.rules`:
 color-hex-length = "long"
 ```
 
-This requires long hexadecimal colors at both levels.
-To allow a WebKit property that your project needs, use the `ignoreProperties` option of `property-no-vendor-prefix`.
-To allow an at-rule, use the `ignoreAtRules` option of `at-rule-no-unknown`:
+This setting requires the long form of hexadecimal colors, such as `#ffffff`, at both levels. To allow a property with
+a `-webkit-` prefix that your project needs, use the `ignoreProperties` option of `property-no-vendor-prefix`. To allow
+an at-rule, use the `ignoreAtRules` option of `at-rule-no-unknown`:
 
 ```toml
 [tools.stylelint.rules]
@@ -162,13 +166,13 @@ at-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]
 
 ## markdownlint
 
-Each markdownlint entry takes an option table, without an on or off value or a `default` key:
+Each markdownlint entry takes a table of options. It takes no `true` or `false` value, and no `default` key:
 
 ```toml
 [tools.markdownlint.rules]
 MD024 = { siblings_only = false }
 ```
 
-This reports repeated headings throughout a document, not only under the same parent heading.
+With this option, MD024 reports a repeated heading anywhere in a document, not only under the same parent heading.
 
-See [tool options](/reference/gspot-toml/#tools) for the accepted fields.
+[Tool options](/reference/gspot-toml/#tools) lists the accepted fields.
