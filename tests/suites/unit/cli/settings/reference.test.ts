@@ -18,6 +18,10 @@ test('settings reference keeps reasoned values as leaves and names language and 
     expect(typescript?.children.find(({ name }) => name === 'functions')?.variantOf).toBe('naming.<language>');
 });
 
+test('settings reference shows the default of a transformed setting as gspot.toml writes it', () => {
+    expect(settings.find(({ key }) => key === 'removed_configurations')?.default).toEqual({});
+});
+
 test('settings reference distinguishes root-only tables and scope keys from nested required fields', () => {
     expect(settings.find(({ key }) => key === 'ci')?.rootOnly).toBe(true);
     expect(settings.find(({ key }) => key === 'level')?.rootOnly).toBe(true);

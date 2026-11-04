@@ -92,7 +92,8 @@ function buildSettingNode(key: string, schema: z.ZodType, variants: SettingVaria
         kind,
         required: !defaultValue.success,
         description: schema.description ?? inner.description,
-        default: defaultValue.success ? defaultValue.data : undefined,
+        // A prefault value goes through the transforms, so the reference shows the value as gspot.toml writes it.
+        default: schema instanceof z.ZodPrefault ? schema.def.defaultValue : defaultValue.data,
         reasoned: isReasoned,
         variantOf: typeof metadata['variantOf'] === 'string' ? metadata['variantOf'] : undefined,
         rootOnly: scope === undefined,
