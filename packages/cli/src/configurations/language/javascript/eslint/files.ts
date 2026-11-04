@@ -97,15 +97,17 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
             ),
         ],
         javascript: [javascript, ...node],
-        tests: scopes.flatMap(({ scope, tests }) =>
+        tests: scopes.flatMap(({ scopePath, tests }) =>
             buildTestFiles(listCodeTestFiles(tests), code).map(([test, pattern]) => [
                 test,
-                joinScope(escapeGlob(scope), '**/*'),
+                joinScope(escapeGlob(scopePath), '**/*'),
                 pattern,
             ]),
         ),
-        scripts: scopes.flatMap(({ scope, scripts }) =>
-            scripts.flatMap((script) => code.map((pattern) => [script, joinScope(escapeGlob(scope), '**/*'), pattern])),
+        scripts: scopes.flatMap(({ scopePath, scripts }) =>
+            scripts.flatMap((script) =>
+                code.map((pattern) => [script, joinScope(escapeGlob(scopePath), '**/*'), pattern]),
+            ),
         ),
     };
 }

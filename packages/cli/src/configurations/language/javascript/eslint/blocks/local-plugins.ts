@@ -18,7 +18,7 @@ function listPluginRecords(scopes: Scope[]) {
                 const inherited = parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
                 return value
                     .filter((plugin) => inherited.every((record) => !isDeepStrictEqual(record, plugin)))
-                    .map((plugin) => ({ ...plugin, scope: scope.path }));
+                    .map((plugin) => ({ ...plugin, scopePath: scope.path }));
             },
         },
     );
@@ -68,8 +68,11 @@ Build one block per plugin record that turns its rules on as errors for the code
 @param codeFiles the code file patterns of the ESLint file.
 */
 export function buildLocalPluginBlocks(scopes: Scope[], codeFiles: string[]): EslintBlockFields[] {
-    return listPluginRecords(scopes).map(({ name, rules, scope }) => ({
-        files: scope === '' ? codeFiles : codeFiles.map((pattern) => [pattern, joinScope(escapeGlob(scope), '**/*')]),
+    return listPluginRecords(scopes).map(({ name, rules, scopePath }) => ({
+        files:
+            scopePath === ''
+                ? codeFiles
+                : codeFiles.map((pattern) => [pattern, joinScope(escapeGlob(scopePath), '**/*')]),
         rules: Object.fromEntries(
             Object.entries(rules).map(([rule, options]) => [`${name}/${rule}`, ['error', ...options]]),
         ),

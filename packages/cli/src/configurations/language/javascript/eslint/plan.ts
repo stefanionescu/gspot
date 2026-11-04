@@ -61,7 +61,7 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
         components: configurations,
         nodeFiles,
         scopes: scopes.map((each) => ({
-            scope: each.path,
+            scopePath: each.path,
             tests: each.settings.test_files,
             scripts: [
                 ...(each.settings.tables.javascript?.script_files ?? []),

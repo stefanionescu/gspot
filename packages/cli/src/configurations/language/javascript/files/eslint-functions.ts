@@ -110,11 +110,11 @@ Select the files that one runtime declaration covers. A later matching declarati
 @param runtimes the runtime declarations, in order, with their globs compiled to regular expression sources.
 */
 export function buildRuntimeMatcher(index: number, runtimes: EslintRuntime[]): (file: string) => boolean {
-    const matchers = runtimes.map(({ scope, includes, excludes }) => {
+    const matchers = runtimes.map(({ scopePath, includes, excludes }) => {
         const included = includes.map((source) => new RegExp(source, 's'));
         const excluded = excludes.map((source) => new RegExp(source, 's'));
         return (path: string) =>
-            (scope === '' || path.startsWith(`${scope}/`)) &&
+            (scopePath === '' || path.startsWith(`${scopePath}/`)) &&
             included.some((pattern) => pattern.test(path)) &&
             excluded.every((pattern) => !pattern.test(path));
     });
@@ -285,9 +285,9 @@ Set each key of the block to the repository root, or to the scope folder under i
 
 @param block the block that the generated file writes.
 @param keys the dotted keys, such as languageOptions.parserOptions.tsconfigRootDir.
-@param scope the scope folder, from the root.
+@param scopePath the scope folder, from the root.
 */
-export function setRootFolder(block: JavascriptBlock, keys: string[][], scope = ''): JavascriptBlock {
+export function setRootFolder(block: JavascriptBlock, keys: string[][], scopePath = ''): JavascriptBlock {
     const result: JavascriptBlock = { ...block };
     for (const path of keys) {
         let target: Record<string, unknown> = result;
@@ -297,7 +297,7 @@ export function setRootFolder(block: JavascriptBlock, keys: string[][], scope = 
             target[key] = child;
             target = child;
         }
-        target[path.at(-1) as string] = join(root, scope);
+        target[path.at(-1) as string] = join(root, scopePath);
     }
     return result;
 }

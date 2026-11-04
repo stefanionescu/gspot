@@ -100,7 +100,7 @@ function serializeExport(blockTexts: string[], blockWriter: EslintFileWriter): s
     if (blockWriter.ruleOptions.length === 0) return `export default ${blocks};\n`;
     blockWriter.functions.add('setRuleOptions');
     const ruleOptions = blockWriter.ruleOptions.map((options) => ({
-        paths: options.includes.map((path) => [joinScope(escapeGlob(options.scope), '**/*'), path]),
+        paths: options.includes.map((path) => [joinScope(escapeGlob(options.scopePath), '**/*'), path]),
         ignores: options.excludes,
         rules: options.rules,
     }));

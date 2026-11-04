@@ -249,8 +249,8 @@ export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlo
             .filter((group) => group.selectors.length > 0)
             .map((group): ConfigurationBlocks[number] => ({
                 fields: {
-                    files: buildScopeFiles(eslintFiles.code, group.scope, ['**/*']),
-                    ignores: group.ignoredScopes.map((scope) => `${escapeGlob(scope)}/**`),
+                    files: buildScopeFiles(eslintFiles.code, group.scopePath, ['**/*']),
+                    ignores: group.ignoredScopes.map((scopePath) => `${escapeGlob(scopePath)}/**`),
                     rules: { [RESTRICTED_SYNTAX_RULE]: ['error', ...group.selectors] },
                 },
             })),

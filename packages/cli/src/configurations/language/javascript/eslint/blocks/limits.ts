@@ -72,8 +72,8 @@ export function buildLimitRuleBlocks(
                 ([rule, options]) => changed.has(rule) || !isDeepStrictEqual(options, inherited.javascript[rule]),
             );
             return [
-                { scope: scope.path, ...splitGlobs(['**/*']), rules: Object.fromEntries(code) },
-                { scope: scope.path, ...splitGlobs(javascriptFiles), rules: Object.fromEntries(javascript) },
+                { scopePath: scope.path, ...splitGlobs(['**/*']), rules: Object.fromEntries(code) },
+                { scopePath: scope.path, ...splitGlobs(javascriptFiles), rules: Object.fromEntries(javascript) },
             ].filter((block) => Object.keys(block.rules).length > 0);
         },
     });

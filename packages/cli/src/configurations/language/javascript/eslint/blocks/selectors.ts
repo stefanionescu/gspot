@@ -55,7 +55,7 @@ export function buildSelectorBlocks(
             .filter(({ files }) => files === undefined || files.length > 0)
             .toArray();
         return {
-            scope: scope.path,
+            scopePath: scope.path,
             ignoredScopes: listNestedScopes(scopePaths, scope.path),
             selectors: [...(level === 'all' ? BASE_SELECTORS : []), ...applied, ...listSettingSelectors(scope, level)],
         };

@@ -135,9 +135,9 @@ export type SelectorPaths = Pick<ParsedManifest['eslint']['selectors'][number], 
     ignores?: string[];
 };
 
-export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
+export type EslintRuleBlock = PathExpressions & { scopePath: string; rules: Record<string, unknown> };
 
-export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNullable<EslintSettings['rules']> };
+export type EslintRuleOptions = PathExpressions & { scopePath: string; rules: NonNullable<EslintSettings['rules']> };
 
 export type BlockWriter = {
     runtimes: EslintRuntime[];
@@ -156,7 +156,7 @@ export type EslintFileWriter = BlockWriter & {
     constants: Map<string, string>;
 };
 
-export type SelectorBlock = { scope: string; ignoredScopes: string[]; selectors: SelectorPaths[] };
+export type SelectorBlock = { scopePath: string; ignoredScopes: string[]; selectors: SelectorPaths[] };
 
 export type EslintBlock = {
     files: Array<string | string[]>;
@@ -187,7 +187,7 @@ export type ScopeBoundaries = {
 export type ScopeEslintSettings = { scope: Scope; settings: EslintSettings };
 
 export type EslintRuntime = PathExpressions & {
-    scope: string;
+    scopePath: string;
     runtime: string;
 };
 
@@ -202,7 +202,7 @@ export type EslintBlockFields = {
 
 export type EslintFileGroups = {
     components: Configuration[];
-    scopes: Array<{ scope: string; tests: string[]; scripts: string[] }>;
+    scopes: Array<{ scopePath: string; tests: string[]; scripts: string[] }>;
     nodeFiles: string[];
 };
 

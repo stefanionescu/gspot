@@ -46,7 +46,7 @@ function listManifestRuleBlocks(scope: Scope, excluded: string[], dependencyName
             .flatMap(({ client_environment }) => client_environment)
             .filter(({ dependencies }) => dependencies.every((name) => dependencyNames.includes(name)))
             .map(({ files, public_prefixes, allowed_names }) => ({
-                scope: scope.path,
+                scopePath: scope.path,
                 ...splitGlobs([...files.map((file) => joinScopeSelector(file, escapeGlob(scope.path))), ...excluded]),
                 rules: {
                     [CLIENT_ENVIRONMENT_RULE]: [
@@ -62,7 +62,7 @@ function listManifestRuleBlocks(scope: Scope, excluded: string[], dependencyName
         ...tables
             .flatMap(({ rules_off }) => rules_off)
             .map(({ files, rules }) => ({
-                scope: scope.path,
+                scopePath: scope.path,
                 ...splitGlobs([...(files ?? ['**/*']), ...excluded]),
                 rules: Object.fromEntries(rules.map((rule) => [rule, 'off'])),
             })),
@@ -92,7 +92,7 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
                 ? []
                 : [
                       {
-                          scope: scope.path,
+                          scopePath: scope.path,
                           ...splitGlobs([
                               buildExtensionGlob(...ENVIRONMENT_LANGUAGES),
                               ...buildNodePatterns(nodeFiles, scope.path),
@@ -157,7 +157,7 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
         read: (scope) => CODE_LANGUAGES.map((language) => buildTrivialRules(scope, language, reexports)),
         build: ({ scope, parent }) =>
             groupTrivialRules(scope, parent, reexports).map(({ rules, languages }) => ({
-                scope: scope.path,
+                scopePath: scope.path,
                 ...splitGlobs(
                     languages.flatMap((language) =>
                         language === 'javascript'
@@ -177,7 +177,7 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope
             ? []
             : [
                   {
-                      scope: '',
+                      scopePath: '',
                       ...splitGlobs(ignore.paths ?? ['**/*']),
                       rules: { [ignore.rule]: 'off' },
                   },
@@ -215,7 +215,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
             ? []
             : [
                   {
-                      scope: scope.path,
+                      scopePath: scope.path,
                       ...splitGlobs(['**/*']),
                       rules: settings.rules,
                   },
@@ -226,7 +226,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
             rules === undefined
                 ? []
                 : {
-                      scope: scope.path,
+                      scopePath: scope.path,
                       ...splitGlobs(paths.map((path) => joinScopeSelector(path, scope.path))),
                       rules: rules,
                   },
@@ -271,16 +271,16 @@ block for the code files and a block for the package.json files, and drop the bl
 export function splitSettingsBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles' | 'eslintFiles'>,
 ): EslintBlockFields[] {
-    return buildSettingsBlocks(planned).flatMap(({ scope, includes, excludes, rules }) => {
+    return buildSettingsBlocks(planned).flatMap(({ scopePath, includes, excludes, rules }) => {
         const rulePairs = Object.entries(rules);
         return [
             {
-                files: buildScopeFiles(planned.eslintFiles.code, scope, includes),
+                files: buildScopeFiles(planned.eslintFiles.code, scopePath, includes),
                 ignores: excludes,
                 rules: Object.fromEntries(rulePairs.filter(([name]) => !name.startsWith(PACKAGE_JSON_RULE_PREFIX))),
             },
             {
-                files: buildScopeFiles([PACKAGE_JSON_PATTERN], scope, includes),
+                files: buildScopeFiles([PACKAGE_JSON_PATTERN], scopePath, includes),
                 ignores: excludes,
                 rules: Object.fromEntries(rulePairs.filter(([name]) => name.startsWith(PACKAGE_JSON_RULE_PREFIX))),
             },

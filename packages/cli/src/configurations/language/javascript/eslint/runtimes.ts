@@ -44,7 +44,7 @@ function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | u
     if (runtime === undefined) return undefined;
     const scripts = [...(scope.settings.tables.javascript?.script_files ?? []), joinScope(escaped, MISE_TASKS_GLOB)];
     return {
-        scope: scope.path,
+        scopePath: scope.path,
         runtime,
         ...splitGlobs([
             joinScope(escaped, '**/*'),
@@ -70,7 +70,7 @@ function buildPackageRuntime(scope: Scope, escaped: string, packageType: string 
     return isCommonjs || scope.path !== ''
         ? [
               {
-                  scope: scope.path,
+                  scopePath: scope.path,
                   runtime: isCommonjs ? COMMONJS_PACKAGE_TYPE : 'node',
                   ...splitGlobs([joinScope(escaped, TYPELESS_JAVASCRIPT_FILES)]),
               },
@@ -94,8 +94,8 @@ export function buildRuntimes(scopes: Scope[], dependencyFiles: DependencyFile[]
         const escaped = escapeGlob(scopePath);
         if (isRuntimeRoot(scopePath, scopes))
             blocks.push(
-                { scope: scopePath, runtime: 'node', ...splitGlobs([joinScope(escaped, '**/*')]) },
-                { scope: scopePath, runtime: 'commonjs', ...splitGlobs([joinScope(escaped, COMMONJS_FILES)]) },
+                { scopePath, runtime: 'node', ...splitGlobs([joinScope(escaped, '**/*')]) },
+                { scopePath, runtime: 'commonjs', ...splitGlobs([joinScope(escaped, COMMONJS_FILES)]) },
             );
         blocks.push(...buildPackageRuntime(scope, escaped, readNearestPackageType(dependencyFiles, scopePath)));
         const framework = buildFrameworkRuntime(scope, escaped);
@@ -104,7 +104,7 @@ export function buildRuntimes(scopes: Scope[], dependencyFiles: DependencyFile[]
             ...(scope.settings.tables[ESLINT_SETTINGS_TABLE]?.override ?? []).flatMap((override) =>
                 override.runtime === undefined
                     ? []
-                    : { scope: scopePath, runtime: override.runtime, ...splitGlobs(override.paths) },
+                    : { scopePath, runtime: override.runtime, ...splitGlobs(override.paths) },
             ),
         );
     }
