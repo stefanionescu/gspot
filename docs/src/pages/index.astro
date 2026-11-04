@@ -12,33 +12,33 @@ import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
 
 const BENEFITS = [
     {
-        title: 'Catch mistakes before they land',
-        text: 'Every commit runs the checks on the files you staged. A failure stops the commit and shows the file, the line, and the rule.',
+        title: 'Catch problems before every commit',
+        text: 'When you commit, gspot checks the files you changed. If it finds problems, the commit stops and gspot lists each one.',
         icon: ['M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6l7-3z', 'M9 12l2 2 4-4'],
     },
     {
-        title: 'Set up every linter with one command',
-        text: '`gspot init` finds your languages and frameworks, picks the tools, and writes their configs. You stop maintaining a pile of config files.',
+        title: 'Set up all your linters with one command',
+        text: 'Run `gspot init`. It finds the languages and frameworks in your repository, picks the right linters and formatters, and writes their settings for you.',
         icon: ['M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z', 'M7 9l3 3-3 3', 'M12 15h5'],
     },
     {
         title: 'Run the same checks everywhere',
-        text: 'gspot pins every tool to one version, so you, your agent, and CI run the same checks with the same versions.',
+        text: 'Every tool is pinned to one version, so you, your coding agent, and CI all run exactly the same checks.',
         icon: ['M12 16v5', 'M8 3h8l-1 6 3 3v2H6v-2l3-3-1-6z'],
     },
     {
-        title: 'Tell your agent the rules',
-        text: 'gspot writes `AGENTS.md` and a rule file for each language, matched to the checks it runs.',
+        title: 'Teach your coding agent the rules',
+        text: 'gspot writes an `AGENTS.md` file that tells coding agents how to write code that passes the checks.',
         icon: ['M6 3h9l4 4v14H6z', 'M14 3v5h5', 'M9 13h7', 'M9 17h5'],
     },
     {
-        title: 'Close the quiet off switch',
-        text: 'Every ignore and every suppression needs a written reason. Lowering the strictness without one fails the push.',
+        title: 'Every ignored rule needs a reason',
+        text: 'To ignore a check or turn off a lint rule, you write down why. A change that weakens the checks without a reason fails the push.',
         icon: ['M7 11V7a5 5 0 0 1 10 0v4', 'M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z'],
     },
     {
-        title: 'Keep keys and vulnerable packages out',
-        text: 'A commit that adds an API key or a token stops. A push reports packages with known security advisories.',
+        title: 'Keep secrets and vulnerable packages out',
+        text: 'A commit that adds an API key or a token stops. A push stops when a dependency has a known security hole.',
         icon: ['M4 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0', 'M10.9 12.1L20 3', 'M16 7l3 3', 'M13.5 9.5l2 2'],
     },
 ] as const;
