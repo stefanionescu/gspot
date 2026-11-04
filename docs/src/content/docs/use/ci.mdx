@@ -5,8 +5,8 @@ description: Run the checks in GitHub Actions, GitLab, another CI provider, or a
 
 import { cloneInstalls } from '#docs/reference/setup.ts';
 
-gspot can write one CI job that runs the checks on pull requests and on pushes to the default branch. It writes one
-workflow file and leaves your other workflows alone. CI stays off until you turn it on.
+gspot can write a CI workflow that runs the checks on each pull request and on each push to the default branch. It
+writes one workflow file and does not change your other workflows. CI stays off until you turn it on.
 
 ## Turn CI on
 
@@ -31,35 +31,39 @@ include:
   - local: .gitlab/ci/gspot.yml
 ```
 
-`gspot doctor` prints these commands when it finds GitHub or GitLab CI files, or an `origin` remote on either.
+`gspot doctor` prints these commands when it finds GitHub or GitLab CI files, or an `origin` remote on GitHub or
+GitLab.
 
 ## What the job checks
 
 On GitHub, the workflow has one job, `lint`. It runs for pull requests, merge queues, and pushes to the default branch.
-A push to another branch skips the job, so open a pull request to check a branch.
+A push to another branch does not run the job, so open a pull request to check a branch.
 
-When the repository selects a testing configuration such as `jest`, `vitest`, or `pytest`, the workflow adds a `tests`
-job with the same steps, so the lint result does not wait for your test suite. `lint` leaves out the coverage checks
-with `--skip`, and `tests` runs them with `--only`. On GitLab, one job runs both. To run your tests only in your own
-workflow, leave those configurations out.
+When your repository uses a testing configuration, such as `jest`, `vitest`, or `pytest`, the workflow adds a second
+job, `tests`, with the same steps. The `lint` result then does not wait for your tests. `lint` skips the coverage
+checks with `--skip`, and `tests` runs only them with `--only`. On GitLab, one job runs both. To run your tests only in
+a workflow of your own, remove those configurations.
 
-The job checks the files changed after the pull or merge request base, or after the previous push. The first push of a
-branch checks every file. Manual checks run only when you name them with `--only`, so the job does not run them.
+The job checks the files that changed after the base of the pull request or merge request, or after the previous push.
+On the first push of a branch, it checks every file. The job does not run the manual checks, because they run only
+when `--only` names them.
 
-The job fails when `gspot install` changes a file, such as a generated file that someone edited by hand, or a missing
-or stale lockfile. Run `gspot install` on your machine and commit the changed files.
+The job fails when `gspot install` changes a file in the clone. Such a file can be a generated file that someone edited
+by hand, or a lockfile that is missing or out of date. To fix the job, run `gspot install` on your machine and commit
+the changed files.
 
 ## Run on more systems
 
-On GitHub, the job runs on Linux. When the repository selects the `swift` configuration, the workflow also runs on
+On GitHub, the job runs on Linux. When your repository uses the `swift` configuration, the workflow also runs on
 macOS. To add other systems:
 
 ```shell
 gspot set ci.operating_systems linux macos windows
 ```
 
-With more than one system, each system gets its own job: `lint-linux`, `lint-macos`, and `lint-windows`. A `tests` job
-follows the same names: `tests-linux`, `tests-macos`, and `tests-windows`. Pick only systems where your checks can run.
+With more than one system, each system gets its own job: `lint-linux`, `lint-macos`, and `lint-windows`. The `tests`
+job gets the same names: `tests-linux`, `tests-macos`, and `tests-windows`. Choose only systems where your checks can
+run.
 
 To run the Linux job on a larger or self-hosted runner, name its label:
 
@@ -67,19 +71,20 @@ To run the Linux job on a larger or self-hosted runner, name its label:
 gspot set ci.linux_runner ubuntu-24.04-8core
 ```
 
-Both settings work on GitHub only; gspot refuses them with `ci.provider = "gitlab"`.
+Both settings work only on GitHub. With `ci.provider = "gitlab"`, gspot rejects them.
 
 ## Install and cache steps
 
-Each GitHub job installs mise and the pinned gspot version once. It adds the installed tools to `PATH`, then uses that
-gspot for the tool install and the checks. It gives mise the job token as `MISE_GITHUB_TOKEN`.
+Each GitHub job installs mise and the pinned gspot version once. It adds the installed tools to `PATH`, and then uses
+that gspot to install the tools and run the checks. It passes the job token to mise as `MISE_GITHUB_TOKEN`.
 
-The GitLab job runs in the `ghcr.io/jdx/mise` image at the pinned mise version, on the runners of GitLab. It keeps its
-mise folders under the project folder, so GitLab caches them, with a cache key from the mise files in `.gspot/`.
+The GitLab job runs in the `ghcr.io/jdx/mise` image, at the pinned mise version, on the runners of GitLab. It keeps the
+mise folders inside the project folder, so that GitLab can cache them. The cache key comes from the mise files in
+`.gspot/`.
 
-The GitLab job runs in the `.pre` stage, and only in merge request pipelines and pipelines of the default branch. GitLab
-runs `.pre` only when a pipeline also has a job in another stage. To run one pipeline for each merge request, add this
-block to your `.gitlab-ci.yml`:
+The GitLab job runs in the GitLab stage `.pre`, and only in merge request pipelines and in pipelines of the default
+branch. GitLab runs `.pre` only when a pipeline also has a job in another stage. To run one pipeline for each merge
+request, add this block to your `.gitlab-ci.yml`:
 
 ```yaml
 workflow:
@@ -88,8 +93,8 @@ workflow:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
 
-Before `gspot install`, the GitHub job installs the locked dependencies of the root and of each scope, so the checks
-that read them find them:
+Before `gspot install`, the GitHub job installs the dependencies from the lockfiles of the root folder and of each
+scope. The checks that read those dependencies then find them:
 
 <table>
     <thead>
@@ -113,10 +118,11 @@ that read them find them:
     </tbody>
 </table>
 
-Each command fails on a lockfile that does not match its project. In a Next.js scope, the step then runs
-`next typegen`, so the typed lint rules find the route types.
+Each command fails when the lockfile does not match its project. In a Next.js scope, the step then runs
+`next typegen`, so that the lint rules that read types find the route types.
 
-To run your own command instead, set it. The job runs it before `gspot install` and stops if it fails:
+To run your own install command instead, set `ci.setup_command`. The job runs it before `gspot install`, and stops if
+it fails:
 
 ```shell
 gspot set ci.setup_command -- bun install --frozen-lockfile
@@ -126,13 +132,13 @@ gspot quotes each argument, so spaces, quotes, and `$` reach the command as plai
 
 ## Use your own pipeline
 
-Use your own pipeline on another CI provider, when your project installs private packages, or when its tests need a
-database or another service. The generated job passes no secret to the install step and starts no service container.
-Keep `ci.enabled` off in that case.
+Write your own pipeline when you use another CI provider, when your project installs private packages, or when its
+tests need a database or another service. The job that gspot writes passes no secret to the install step and starts no
+service container. In these cases, keep `ci.enabled` off.
 
-Clone with the full history, so that gspot can compare with the base revision. Install mise and the runtime of your
-project, and set `GITHUB_TOKEN` for the release lookups of mise. Then run these steps, started the way your repository
-starts gspot; see [Install](/start/install/#add-gspot). With Bun:
+Clone with the full Git history, so that gspot can compare with the base revision. Install mise and the runtime of your
+project. Set `GITHUB_TOKEN`, which mise uses to look up tool releases. Then run these steps. Start each gspot command
+the way your package manager does, as [Add gspot](/start/install/#add-gspot) shows. With Bun:
 
 ```shell title="example"
 bun install --frozen-lockfile
@@ -142,8 +148,8 @@ git diff --exit-code
 bunx --no-install gspot check --base "$BASE"
 ```
 
-`git diff --exit-code` fails when `gspot install` changed a file, such as a stale lockfile in `.gspot/`. `$BASE` names
-the revision to compare with, so the check reads only the changed files:
+`git diff --exit-code` fails when `gspot install` changed a file, such as an out-of-date lockfile in `.gspot/`. `$BASE`
+names the revision to compare with, so that gspot checks only the changed files:
 
 | Provider                                                                                         | `BASE`                                                  |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
@@ -152,21 +158,24 @@ the revision to compare with, so the check reads only the changed files:
 | [Jenkins](https://www.jenkins.io/doc/book/pipeline/multibranch/)                                 | `origin/$CHANGE_TARGET`                                 |
 | Any other provider, such as CircleCI                                                             | `$(git merge-base origin/<default-branch> HEAD)`        |
 
-An empty `BASE` checks every file. In a CI clone, `--changed` compares the branch with its own copy on the remote and
-checks nothing, so give `--base`. In a shallow clone, gspot cannot find the base revision and says so.
+When `BASE` is empty, gspot checks every file. Use `--base` in CI, not `--changed`. In a CI clone, `--changed` compares
+the branch with its own copy on the remote, and checks nothing. In a shallow clone, gspot cannot find the base revision
+and says so.
 
-Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means the run did not finish. A missing tool
-gives exit code 2, and the report names it. `gspot check --json` prints the report as JSON.
+Let the pipeline fail when gspot exits with a code other than 0. Exit code `1` means that findings remain, and `2`
+means that the run did not finish. A missing tool gives exit code 2, and the report names the tool.
+`gspot check --json` prints the report as JSON.
 
-Do not cache or upload credentials. To cache downloads and installed tools, key the cache on the gspot version, the
-files in `.gspot/` that pin the tools, and your lockfiles.
+Do not cache or upload credentials. To cache downloads and installed tools, build the cache key from the gspot version,
+the files in `.gspot/` that pin the tools, and your lockfiles.
 
 ## Run gspot in a container
 
-`.gspot/node_modules/` and `.gspot/.venv/` hold tools built for one system. When a dev container shares the checkout
-with the host, an install in the container replaces the tools of the host. The host then reports errors until it runs
-`gspot install` again. Mount `.gspot/node_modules/` and `.gspot/.venv/` as volumes of the container, and run
-`gspot install` in its `postCreateCommand`.
+`.gspot/node_modules/` and `.gspot/.venv/` hold tools built for one operating system. When a dev container shares the
+checkout with your machine, a `gspot install` in the container replaces the tools that your machine uses. The checks on
+your machine then report errors until you run `gspot install` there again. To prevent this, mount
+`.gspot/node_modules/` and `.gspot/.venv/` as volumes of the container, and run `gspot install` in its
+`postCreateCommand`.
 
 ## Turn CI off
 
