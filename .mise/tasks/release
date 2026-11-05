@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Tag a tested main commit whose npm pins are past the release hold, so that the release workflow publishes both npm packages and deploys the docs site. Then create the GitHub release from the CHANGELOG.md section of the CLI version, and set the repository description and homepage from the CLI package."
+#MISE description="Tag a tested main commit whose npm pins are past the release hold. Then create the GitHub release from the CHANGELOG.md section of the CLI version, and set the repository description and homepage from the CLI package."
 set -euo pipefail
 
 # shellcheck source=.mise/release/workflows.sh

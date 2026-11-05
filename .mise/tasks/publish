@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Publish the versions of both npm packages that npm does not serve yet, from a CLI tag on a commit that passed CI. The release workflow runs it with npm trusted publishing."
+#MISE description="Publish the versions of both npm packages that npm does not serve yet, from a CLI tag on a commit that passed CI. Run it by hand, with the one-time code in NPM_CONFIG_OTP."
 #MISE depends=["build"]
 #USAGE arg "<tag>" help="The pushed CLI tag, such as v0.4.0"
 set -euo pipefail
