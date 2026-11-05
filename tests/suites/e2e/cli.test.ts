@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { STARTING_FILES } from '#tests/config/e2e.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -26,6 +27,15 @@ async function assertConflictingConfigs(root: string, output: string): Promise<v
     expect(agents).toStartWith('# Team notes\n');
     expect(agents).toContain(getRuleFilePath('engineering', 'WORKING.md'));
 }
+
+test('the installed package carries the license notices of the packages that its bundle inlines', async () => {
+    await using sandbox = await createGspotProject();
+    const notices = await readFile(
+        join(sandbox.root, 'node_modules', cliPackage.name, 'dist/THIRD-PARTY-NOTICES.md'),
+        'utf8',
+    );
+    expect(notices).toContain('Permission is hereby granted');
+});
 
 test('init replaces formatter files, keeps authored notes and CLAUDE.md, and check reports findings', async () => {
     await using sandbox = await createGspotProject();

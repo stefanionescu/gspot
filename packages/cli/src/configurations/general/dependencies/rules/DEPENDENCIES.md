@@ -25,7 +25,7 @@ Read this rule before you add, upgrade, or remove a dependency.
 
 - Delete an override when it matches no package in the lockfile, or when every caller already accepts the fixed version.
 - An override that forces a new major version needs a test of each package that depends on it.
-- Keep third-party license notices in a tracked file, not in a string in code.
+- Keep third-party license notices in a tracked file or a file that the build generates, not in a string in code.
 - When `licenses.allowed` lists licenses, ask the user before you add a dependency with a license outside that list.
 - For a known advisory that has no fix, follow SUPPRESSIONS.md: ask the user, then run `gspot ignore` with the advisory
   ID and a reason. Never ignore advisories in bulk.
