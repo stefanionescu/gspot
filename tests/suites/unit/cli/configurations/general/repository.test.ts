@@ -116,7 +116,7 @@ test('a staged outward link plans local-files, and a run that stages another fil
     runGitStep(sandbox.path, ['add', '-A']);
     using resources = createRunResources();
     const session = await openSession(sandbox.path, { resources });
-    const run = async (staged: string[]): Promise<string[]> => {
+    const run = async (staged: string[]) => {
         const [planned] = planChecks(session, {
             stage: 'commit',
             selection: { content: 'index', paths: staged },
@@ -129,27 +129,10 @@ test('a staged outward link plans local-files, and a run that stages another fil
             selectCheckCode(check.check),
             CHECK_RUN_OPTIONS,
         );
-        return result.findings.map(({ file }) => file);
+        return result.findings.map(({ file, rule, line }) => ({ file, rule, line }));
     };
-    expect(await run(['outside'])).toStrictEqual(['outside']);
+    expect(await run(['outside'])).toStrictEqual([{ file: 'outside', rule: 'outward-link', line: 1 }]);
     expect(await run(['notes.txt'])).toStrictEqual([]);
-});
-
-test('a tracked outward symlink is a local-files finding', async () => {
-    await using outside = await testdir({ 'external.ts': 'export {};\n' });
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    await symlink(relative(sandbox.path, outside.path), join(sandbox.path, 'outside'), 'dir');
-    runGitStep(sandbox.path, ['init', '-q']);
-    runGitStep(sandbox.path, ['add', '-A']);
-    const findings = await runSandboxCheck(sandbox.path, 'repository/local-files');
-    expect(findings).toStrictEqual([
-        expect.objectContaining({
-            file: 'outside',
-            line: 1,
-            rule: 'outward-link',
-            message: 'outside links outside the repository.',
-        }),
-    ]);
 });
 
 test('oversized and invalid UTF-8 files get one repository finding and leave other checks', async () => {
