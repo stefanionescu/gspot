@@ -10,7 +10,11 @@
         "**/bower_components/**",
         "**/coverage/**",
         "**/.dev.vars.*",
-        "**/.wrangler/**"
+        "**/.wrangler/**",
+        "packages/*/dist/**",
+        "docs/dist/**",
+        "docs/.astro/**",
+        "docs/.wrangler/**"
     ],
     "ignoreDependencies": [
         "@gspothq/cli",

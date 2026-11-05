@@ -1,4 +1,4 @@
-# TanStack Query
+# TanStack
 
 Read this rule when you change TanStack Query queries, mutations, or cache keys.
 

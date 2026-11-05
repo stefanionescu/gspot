@@ -1,4 +1,4 @@
-# Task Runners
+# Task runners
 
 Read this rule when you change `mise` tasks, `package.json` scripts, a `Makefile`, or another task runner.
 

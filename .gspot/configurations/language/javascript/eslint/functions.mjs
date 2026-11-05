@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { sep, join, dirname, relative } from 'node:path';
 export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
-let importLookup;
+const importLookups = new WeakMap();
 const componentParserOptions = { tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module' };
 function pickRuleOptions(block, options) {
     const rules = block.rules === undefined ? [] : Object.entries(block.rules);
@@ -23,12 +23,33 @@ function pickRuleOptions(block, options) {
         },
     ];
 }
+function dropProjectService(languageOptions) {
+    const parserOptions = languageOptions['parserOptions'];
+    if (parserOptions === undefined)
+        return languageOptions;
+    const { project: _project, projectService: _projectService, ...parsing } = parserOptions;
+    return { ...languageOptions, parserOptions: parsing };
+}
 function setRuleLevel(value, level) {
     const configured = Array.isArray(value) ? value : [value];
     const [severity, ...options] = configured;
     if (severity === 'off' || severity === 0)
         return value;
     return Array.isArray(value) ? [level, ...options] : level;
+}
+function listScriptLanguages(parsed) {
+    const vueComponent = parsed.services?.getDocumentFragment?.();
+    return vueComponent === undefined
+        ? parsed.ast.body
+            .filter((node) => node.type === 'SvelteScriptElement')
+            .flatMap((script) => script.startTag.attributes)
+            .filter((attribute) => attribute.key?.name === 'lang')
+            .map((attribute) => attribute.value[0]?.value)
+        : vueComponent.children
+            .filter((node) => node.type === 'VElement' && node.name === 'script')
+            .flatMap((script) => script.startTag.attributes)
+            .filter((attribute) => attribute.key?.name === 'lang')
+            .map((attribute) => attribute.value?.value);
 }
 /**
 Remove host runtime globals and keep framework compiler and test names. Runtime APIs get their globals from blocks with
@@ -66,10 +87,10 @@ Select the files that one runtime declaration covers. A later matching declarati
 @param runtimes the runtime declarations, in order, with their globs compiled to regular expression sources.
 */
 export function buildRuntimeMatcher(index, runtimes) {
-    const matchers = runtimes.map(({ scope, includes, excludes }) => {
+    const matchers = runtimes.map(({ scopePath, includes, excludes }) => {
         const included = includes.map((source) => new RegExp(source, 's'));
         const excluded = excludes.map((source) => new RegExp(source, 's'));
-        return (path) => (scope === '' || path.startsWith(`${scope}/`)) &&
+        return (path) => (scopePath === '' || path.startsWith(`${scopePath}/`)) &&
             included.some((pattern) => pattern.test(path)) &&
             excluded.every((pattern) => !pattern.test(path));
     });
@@ -91,19 +112,7 @@ export function buildComponentMatcher(parser, typescriptParser) {
                 filePath: file,
                 parser: scriptParser,
             });
-            const vueComponent = parsed.services?.getDocumentFragment?.();
-            const languages = vueComponent === undefined
-                ? parsed.ast.body
-                    .filter((node) => node.type === 'SvelteScriptElement')
-                    .flatMap((script) => script.startTag.attributes)
-                    .filter((attribute) => attribute.key?.name === 'lang')
-                    .map((attribute) => attribute.value[0]?.value)
-                : vueComponent.children
-                    .filter((node) => node.type === 'VElement' && node.name === 'script')
-                    .flatMap((script) => script.startTag.attributes)
-                    .filter((attribute) => attribute.key?.name === 'lang')
-                    .map((attribute) => attribute.value?.value);
-            return languages.some((language) => language === 'ts' || language === 'typescript');
+            return listScriptLanguages(parsed).some((language) => language === 'ts' || language === 'typescript');
         }
         catch (error) {
             if (error instanceof SyntaxError || (error instanceof Error && error.name === 'TSError'))
@@ -196,11 +205,9 @@ export function setRuleOptions(blocks, ruleOptions) {
         picked: ruleOptions.flatMap((options) => pickRuleOptions(block, options)),
     }));
     const applied = new Set(pairs.flatMap(({ picked }) => picked.flatMap((option) => Object.keys(option.rules))));
-    const refused = [...new Set(ruleOptions.flatMap((options) => Object.keys(options.rules)))].filter((name) => !applied.has(name));
-    if (refused.length > 0)
-        throw new Error(refused
-            .map((name) => `gspot runs ${name} at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`)
-            .join('\n'));
+    const refused = new Set(ruleOptions.flatMap((options) => Object.keys(options.rules))).difference(applied);
+    if (refused.size > 0)
+        throw new Error(Array.from(refused, (name) => `gspot runs ${name} at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`).join('\n'));
     return pairs.flatMap(({ block, picked }) => [block, ...picked]);
 }
 /**
@@ -237,18 +244,19 @@ Set each key of the block to the repository root, or to the scope folder under i
 
 @param block the block that the generated file writes.
 @param keys the dotted keys, such as languageOptions.parserOptions.tsconfigRootDir.
-@param scope the scope folder, from the root.
+@param scopePath the scope folder, from the root.
 */
-export function setRootFolder(block, keys, scope = '') {
+export function setRootFolder(block, keys, scopePath = '') {
     const result = { ...block };
     for (const path of keys) {
         let target = result;
-        for (const key of path.slice(0, -1)) {
+        const parents = path.slice(0, -1);
+        for (const key of parents) {
             const child = { ...target[key] };
             target[key] = child;
             target = child;
         }
-        target[path.at(-1)] = join(root, scope);
+        target[path.at(-1)] = join(root, scopePath);
     }
     return result;
 }
@@ -261,7 +269,9 @@ config shares one resolver.
 @param projects the tsconfig.json paths, from the repository root.
 */
 export function setImportLookup(block, createImportLookup, projects) {
-    importLookup ??= createImportLookup({ project: projects.map((project) => join(root, project)) });
+    const importLookup = importLookups.get(createImportLookup) ??
+        createImportLookup({ project: projects.map((project) => join(root, project)), noWarnOnMultipleProjects: true });
+    importLookups.set(createImportLookup, importLookup);
     return { ...block, settings: { ...block.settings, 'import-x/resolver-next': [importLookup] } };
 }
 /**
@@ -276,7 +286,9 @@ export function setBoundaryLookup(block, projects) {
         ...block,
         settings: {
             ...block.settings,
-            'import/resolver': { typescript: { project: projects.map((project) => join(root, project)) } },
+            'import/resolver': {
+                typescript: { project: projects.map((project) => join(root, project)), noWarnOnMultipleProjects: true },
+            },
         },
     };
 }
@@ -311,9 +323,9 @@ export function setComponentParser(block, parser, typescriptParser) {
             parser,
             parserOptions: {
                 ...options,
-                ...(typescriptParser === undefined
-                    ? {}
-                    : { parser: { ts: typescriptParser, typescript: typescriptParser } }),
+                ...(typescriptParser !== undefined && {
+                    parser: { ts: typescriptParser, typescript: typescriptParser },
+                }),
             },
         },
     };
@@ -346,4 +358,20 @@ Replace the globals of the test block with the Jest globals of the plugin.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setJestGlobals(block, plugin) {
     return { ...block, languageOptions: { ...block.languageOptions, globals: plugin.environments.globals.globals } };
+}
+/**
+Keep the parts of a block that import-x/no-cycle reads: its files, parser, processor, plugins, and import-x settings.
+Leave out its rules and its other settings, which import-x hashes on every resolve, and the TypeScript project
+service, whose type information the rule does not read.
+
+@param block a block of the ESLint config.
+*/
+export function keepCycleFields(block) {
+    const { rules: _rules, settings, languageOptions, ...kept } = block;
+    const importSettings = settings === undefined ? [] : Object.entries(settings).filter(([key]) => key.startsWith('import-x/'));
+    return {
+        ...kept,
+        ...(languageOptions !== undefined && { languageOptions: dropProjectService(languageOptions) }),
+        ...(importSettings.length > 0 && { settings: Object.fromEntries(importSettings) }),
+    };
 }

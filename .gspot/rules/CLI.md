@@ -1,4 +1,4 @@
-# Command-Line Programs
+# Command-line programs
 
 Read this rule when you change a command-line program that the project ships.
 

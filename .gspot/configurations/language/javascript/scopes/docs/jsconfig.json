@@ -6,12 +6,6 @@
         "maxNodeModuleJsDepth": 0,
         "noImplicitAny": true
     },
-    "include": [
-        "../../../../../../docs/**/*.js",
-        "../../../../../../docs/**/*.mjs",
-        "../../../../../../docs/**/*.cjs",
-        "../../../../../../docs/**/*.jsx"
-    ],
     "extends": "../../../../../../docs/tsconfig.json",
     "exclude": [
         "../../../../../../docs/**/gspot.baseline.json",
@@ -27,6 +21,10 @@
         "../../../../../../docs/**/.dev.vars.*",
         "../../../../../../docs/**/.wrangler/**",
         "../../../../../../docs/**/bun.lock",
+        "../../../../../../docs/**/*.log",
+        "../../../../../../docs/dist/**",
+        "../../../../../../docs/.astro/**",
+        "../../../../../../docs/.wrangler/**",
         "../../../../../../docs/**/eslint.config.mjs",
         "../../../../../../docs/**/eslint.config.js",
         "../../../../../../docs/**/eslint.config.cjs",

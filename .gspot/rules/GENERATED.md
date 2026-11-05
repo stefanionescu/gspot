@@ -1,4 +1,4 @@
-# Generated Code
+# Generated code
 
 Read this rule when you change a generated file, or the code that writes one.
 

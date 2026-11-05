@@ -23,7 +23,7 @@ concept reads alike throughout the program.
 
 `naming/identifiers` and `naming/paths` check banned words, case, length, and word count. Fix a finding by renaming.
 Never hide a bad name in a string key, an alias, or a file name. When no file uses a name of `allowed_names` in a
-`[[naming.override]]` record, remove it.
+`[[naming.exception]]` record, remove it.
 
 ## Principles
 
@@ -52,6 +52,9 @@ program shows, and use it everywhere. For example, a command-line tool that writ
 | clear, unset                | unset                | Take a value out of a setting.                                |
 | program, tool               | tool                 | A program that the tool installs and runs.                    |
 | rule, for two concepts      | lint rule, rule file | A rule of a linter; a file of instructions for coding agents. |
+
+Add each word you reject to `naming.terms` with its replacement, such as `"config file" = "generated file"`. The naming
+check then reports the word in identifiers, and the prose check in documentation, code comments, and commit messages.
 
 A role word carries meaning where a primitive or weak type does not.
 
@@ -98,31 +101,31 @@ or a UIKit `@objc handleConfirmButtonTapped`. Never use `Handler` as a type suff
 
 Each act has one verb. Use the table verb for each act, never a synonym:
 
-| Verb                          | Act                                                                                                                     |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `get`                         | Take a value already in memory that always exists: a variable, a map entry, a cache, or a parsed structure.             |
-| `read`                        | Take data from outside memory: a file, Git, the environment, a child process, or the network. Throw when it is missing. |
-| `find`                        | Search for one item. Return nothing when it is absent.                                                                  |
-| `list`                        | Return every item of a kind, such as the orders of a customer.                                                          |
-| `select`                      | Choose among known options.                                                                                             |
-| `detect`                      | Infer a fact from evidence, such as the language of a file.                                                             |
-| `build`                       | Construct a value in memory from other values, such as a message, a plan, or the text of a file.                        |
-| `create`                      | Make a new file, folder, or other resource on disk.                                                                     |
-| `parse`, `decode`             | Raw text to structured data; encoded bytes or payloads to typed values.                                                 |
-| `encode`, `serialize`         | Typed values to bytes; values to the text of a file format.                                                             |
-| `format`                      | Return the text that people read for a value: terminal lines, Markdown, or a message.                                   |
-| `print`                       | Write text that people read to a terminal or a log stream.                                                              |
-| `write`                       | Put data into a file or another store outside memory.                                                                   |
-| `validate`                    | Return what makes one value invalid.                                                                                    |
-| `assert`                      | Throw an error on an invalid value.                                                                                     |
-| `check`                       | Run a check that reports findings, such as a lint check. Use `validate` or `assert` for one value.                      |
-| `run`                         | Start a named program, command, or step, such as `runMigrations`. Never a bare `run`.                                   |
-| `spawn`                       | Start a child process.                                                                                                  |
-| `set`                         | Assign a key or a field of a value in memory.                                                                           |
-| `add`, `remove`               | Put an item into a collection in memory, or take it out.                                                                |
-| `insert`, `update`, `delete`  | Add, change, or destroy a row or item in persisted data, or a file on disk.                                             |
-| `prepare`, `refresh`, `reset` | Set up local state before a workflow; replace presentation state from a source; return to an initial state.             |
-| `is`, `has`, `can`            | Predicates only: `is` for state, `has` for presence, and `can` for capability.                                          |
+| Verb                          | Act                                                                                                                                     |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `get`                         | Take a value already in memory: a variable, a map entry, a cache, or a parsed structure. The return type says if it may be absent.      |
+| `read`                        | Take data from outside memory: a file, Git, the environment, a child process, or the network. The return type says if it may be absent. |
+| `find`                        | Search for one item. Return nothing when it is absent.                                                                                  |
+| `list`                        | Return every item of a kind, such as the orders of a customer.                                                                          |
+| `select`                      | Choose among known options.                                                                                                             |
+| `detect`                      | Infer a fact from evidence, such as the language of a file.                                                                             |
+| `build`                       | Construct a value in memory from other values, such as a message, a plan, or the text of a file.                                        |
+| `create`                      | Make a new file, folder, or other resource on disk.                                                                                     |
+| `parse`, `decode`             | Raw text to structured data; encoded bytes or payloads to typed values.                                                                 |
+| `encode`, `serialize`         | Typed values to bytes; values to the text of a file format.                                                                             |
+| `format`                      | Return the text that people read for a value: terminal lines, Markdown, or a message.                                                   |
+| `print`                       | Write text that people read to a terminal or a log stream.                                                                              |
+| `write`                       | Put data into a file or another store outside memory.                                                                                   |
+| `validate`                    | Return what makes one value invalid.                                                                                                    |
+| `assert`                      | Throw an error on an invalid value.                                                                                                     |
+| `check`                       | Run a check that reports findings, such as a lint check. Use `validate` or `assert` for one value.                                      |
+| `run`                         | Start a named program, command, or step, such as `runMigrations`. Never a bare `run`.                                                   |
+| `spawn`                       | Start a child process.                                                                                                                  |
+| `set`                         | Assign a key or a field of a value in memory.                                                                                           |
+| `add`, `remove`               | Put an item into a collection in memory, or take it out.                                                                                |
+| `insert`, `update`, `delete`  | Add, change, or destroy a row or item in persisted data, or a file on disk.                                                             |
+| `prepare`, `refresh`, `reset` | Set up local state before a workflow; replace presentation state from a source; return to an initial state.                             |
+| `is`, `has`, `can`            | Predicates only: `is` for state, `has` for presence, and `can` for capability.                                                          |
 
 When no table verb fits, pick another plain one that names the act. Plain verbs include `count`, `compare`, `merge`,
 `split`, `sort`, `filter`, `group`, `match`, `replace`, `normalize`, `convert`, `extract`, `strip`, `copy`, `move`,

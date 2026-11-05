@@ -19,6 +19,7 @@ Linux
 Markdown
 NGINX
 Native
+NestJS
 Node
 Prettier
 RPC
@@ -28,6 +29,7 @@ ShellCheck
 Simple
 Stylelint
 TOML
+TanStack
 TypeScript
 USAGE
 Vale

@@ -2,33 +2,18 @@
 
 Read this rule before you write a plan.
 
-## Complete change content
+## Complete changes
 
-A plan holds the complete content of every change it proposes, so another agent can carry it out without inventing
-anything.
+Settle every open question with the user before you write the plan. A plan holds no open question and no choice that
+you made for the user.
 
-- Show the exact diff of each code, configuration, documentation, schema, and text change, and the full contents of
-  every new file. Do not summarize a change the diff can show.
+A plan says what each step changes, so another agent can carry it out without inventing anything.
+
 - Name every command that creates, moves, renames, regenerates, or deletes a file. List each generated file the change
   rewrites.
 - For an image or another binary file, give the source and output paths, the operation, and the command that reproduces
   it.
 - Leave no placeholder such as `update accordingly`, `adjust imports`, or `fix any errors`.
-
-Bad:
-
-```text
-Update the settings screen copy.
-```
-
-Good:
-
-```diff
---- a/app/settings/page.tsx
-+++ b/app/settings/page.tsx
--<h1>Old title</h1>
-+<h1>Account settings</h1>
-```
 
 ## Order and detail
 

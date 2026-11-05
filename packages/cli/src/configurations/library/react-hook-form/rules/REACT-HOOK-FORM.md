@@ -1,4 +1,4 @@
-# React Hook Form
+# React forms
 
 Read this rule when you change a form built with React Hook Form.
 

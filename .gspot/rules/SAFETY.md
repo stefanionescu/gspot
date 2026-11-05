@@ -1,4 +1,4 @@
-# Bash Safety
+# Bash safety
 
 Read this rule when a shell script deletes files, downloads, uses `sudo`, starts background jobs, or parses JSON or
 YAML.

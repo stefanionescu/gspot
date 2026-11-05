@@ -1,10 +1,7 @@
-message: "Write headings below the title in sentence case: '%s'."
+message: "Write titles and headings in sentence case: '%s'."
 scope:
-  - heading.h2
-  - heading.h3
-  - heading.h4
-  - heading.h5
-  - heading.h6
+  - heading
+  - text.frontmatter.title
 match: $sentence
 extends: capitalization
 level: error
@@ -49,6 +46,7 @@ exceptions:
   - Markdown
   - NGINX
   - Native
+  - NestJS
   - Node
   - POSIX
   - Prettier
@@ -69,6 +67,7 @@ exceptions:
   - TODO
   - TOML
   - TSX
+  - TanStack
   - TypeScript
   - UI
   - URL
@@ -148,3 +147,4 @@ exceptions:
   - xmllint
   - zizmor
   - zsh
+  - "[\\w-]+(?:\\.[\\w-]+)*\\.[A-Za-z]\\w*"

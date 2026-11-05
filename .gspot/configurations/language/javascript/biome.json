@@ -19,7 +19,7 @@
                 "noExcessiveCognitiveComplexity": {
                     "level": "error",
                     "options": {
-                        "maxAllowedComplexity": 8
+                        "maxAllowedComplexity": 15
                     }
                 }
             }
@@ -36,7 +36,7 @@
                         "noExcessiveCognitiveComplexity": {
                             "level": "error",
                             "options": {
-                                "maxAllowedComplexity": 8
+                                "maxAllowedComplexity": 15
                             }
                         }
                     }

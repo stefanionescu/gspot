@@ -16,6 +16,42 @@ import { defineConfig } from "eslint/config";
 import typescriptBlocks from "../../typescript/eslint.mjs";
 import astroBlocks from "../../../framework/astro/eslint.mjs";
 import zodBlocks from "../../../library/zod/eslint.mjs";
+const maxLinesList = [
+    "error",
+    {
+        "max": 300,
+        "skipBlankLines": true,
+        "skipComments": true
+    }
+];
+const maxLinesPerFunctionList = [
+    "error",
+    {
+        "max": 60,
+        "skipBlankLines": true,
+        "skipComments": true,
+        "IIFEs": true
+    }
+];
+const maxParamsList = [
+    "error",
+    7
+];
+const maxDepthList = [
+    "error",
+    3
+];
+const maxStatementsList = [
+    "error",
+    30
+];
+const complexityList = [
+    "error",
+    {
+        "max": 8,
+        "variant": "modified"
+    }
+];
 const importBoundaryFolders = [
     "*/*",
     "docs",
@@ -23,9 +59,118 @@ const importBoundaryFolders = [
     "packages/eslint-plugin",
     "tests"
 ];
+const gspotImportBoundariesList = [
+    "error",
+    {
+        "folders": importBoundaryFolders,
+        "aliases": {
+            "#cli/*": "packages/cli/src/*",
+            "#tests/*": "tests/*",
+            "#cli-package": "packages/cli/package.json",
+            "#eslint-plugin/*": "packages/eslint-plugin/src/*",
+            "#eslint-plugin-package": "packages/eslint-plugin/package.json",
+            "#root-package": "package.json",
+            "#docs/*": "docs/src/*",
+            "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
+            "eslint": "node_modules/.test-tools/node_modules/eslint",
+            "html-validate": "node_modules/.test-tools/node_modules/html-validate",
+            "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
+            "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
+            "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
+            "typescript": "node_modules/.test-tools/node_modules/typescript"
+        }
+    }
+];
+const tryExtensionsList = [
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".mjs",
+    ".mts",
+    ".cjs",
+    ".cts",
+    ".json",
+    ".node"
+];
+const nFileExtensionInImportList = [
+    "error",
+    "always"
+];
+const gspotImportBoundariesList2 = [
+    "error",
+    {
+        "folders": importBoundaryFolders,
+        "aliases": {}
+    }
+];
+const ignoresList = [
+    "docs/**",
+    "packages/cli/**",
+    "packages/eslint-plugin/**",
+    "tests/**"
+];
+const patternList = [
+    "**/test/**",
+    "**/tests/**",
+    "**/__tests__/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/Tests/**",
+    "docs/**/test/**",
+    "docs/**/tests/**",
+    "docs/**/__tests__/**",
+    "docs/**/*.test.*",
+    "docs/**/*.spec.*",
+    "docs/**/Tests/**",
+    "packages/cli/**/test/**",
+    "packages/cli/**/tests/**",
+    "packages/cli/**/__tests__/**",
+    "packages/cli/**/*.test.*",
+    "packages/cli/**/*.spec.*",
+    "packages/cli/**/Tests/**",
+    "packages/eslint-plugin/**/test/**",
+    "packages/eslint-plugin/**/tests/**",
+    "packages/eslint-plugin/**/__tests__/**",
+    "packages/eslint-plugin/**/*.test.*",
+    "packages/eslint-plugin/**/*.spec.*",
+    "packages/eslint-plugin/**/Tests/**",
+    "tests/**/test/**",
+    "tests/**/tests/**",
+    "tests/**/__tests__/**",
+    "tests/**/*.test.*",
+    "tests/**/*.spec.*",
+    "tests/**/Tests/**"
+];
+const noneOfList = [
+    "import-rule:cli-types",
+    "import-rule:system",
+    "import-rule:parsers",
+    "import-rule:manifests",
+    "import-rule:repository",
+    "import-rule:settings",
+    "import-rule:tools",
+    "import-rule:engine",
+    "import-rule:shipped-config",
+    "import-rule:configurations",
+    "import-rule:generation",
+    "import-rule:commands",
+    "import-rule:main",
+    "import-rule:plugin-config",
+    "import-rule:plugin-types",
+    "import-rule:plugin",
+    "import-rule:docs-config",
+    "import-rule:docs-types",
+    "import-rule:docs",
+    "import-rule:tests-data",
+    "import-rule:tests-types",
+    "import-rule:tests-setup",
+    "import-rule:tests",
+    "import-rule:release"
+];
 const runtimeDeclarations = [
     {
-        "scope": "",
+        "scopePath": "",
         "runtime": "node",
         "includes": [
             "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
@@ -33,7 +178,7 @@ const runtimeDeclarations = [
         "excludes": []
     },
     {
-        "scope": "",
+        "scopePath": "",
         "runtime": "commonjs",
         "includes": [
             "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"
@@ -41,7 +186,7 @@ const runtimeDeclarations = [
         "excludes": []
     },
     {
-        "scope": "docs",
+        "scopePath": "docs",
         "runtime": "node",
         "includes": [
             "^(?:docs(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
@@ -49,7 +194,7 @@ const runtimeDeclarations = [
         "excludes": []
     },
     {
-        "scope": "tests",
+        "scopePath": "tests",
         "runtime": "node",
         "includes": [
             "^(?:tests(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
@@ -57,7 +202,7 @@ const runtimeDeclarations = [
         "excludes": []
     },
     {
-        "scope": "packages/cli",
+        "scopePath": "packages/cli",
         "runtime": "node",
         "includes": [
             "^(?:packages\\/cli(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
@@ -65,12 +210,143 @@ const runtimeDeclarations = [
         "excludes": []
     },
     {
-        "scope": "packages/eslint-plugin",
+        "scopePath": "packages/eslint-plugin",
         "runtime": "node",
         "includes": [
             "^(?:packages\\/eslint-plugin(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(js|jsx))$"
         ],
         "excludes": []
+    }
+];
+const ignoresList2 = [
+    "**/*.config.*"
+];
+const ignoresList3 = [
+    "packages/cli/src/system/environment.ts",
+    "tests/setup/system/environment.ts",
+    "tests/setup/runner/unit.ts"
+];
+const gspotRestrictedSyntaxList = [
+    "error",
+    {
+        "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
+        "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
+    },
+    {
+        "selector": "TSEnumDeclaration",
+        "message": "Use a literal union or an as-const object instead of an enum."
+    },
+    {
+        "selector": ":matches(TSAsExpression[expression.type=\"TSAsExpression\"], TSTypeAssertion[expression.type=\"TSTypeAssertion\"])",
+        "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
+    },
+    {
+        "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword",
+        "message": "Do not assert to never to silence the type system."
+    },
+    {
+        "selector": "Program:has(> :matches(ExportNamedDeclaration:not([exportKind=\"type\"]), ExportDefaultDeclaration, ExportAllDeclaration:not([exportKind=\"type\"]))) > :matches(ForStatement, ForOfStatement, ForInStatement, WhileStatement, DoWhileStatement, IfStatement, TryStatement)",
+        "message": "A module that exports values runs no statements when it loads. Move this statement into a function that the entry point calls.",
+        "ignores": ignoresList2
+    },
+    {
+        "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])",
+        "message": "Start an error message with a capital letter."
+    },
+    {
+        "selector": "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/])",
+        "message": "Use a label only on a loop or switch statement. Remove this label."
+    },
+    {
+        "selector": "ForStatement[init=null][update=null][test!=null]",
+        "message": "This loop has no initializer or update. Use a while loop for its condition."
+    },
+    {
+        "selector": "UnaryExpression[operator='delete']:not([argument.type='MemberExpression']):not([argument.type='ChainExpression']):not([argument.type='Identifier'])",
+        "message": "The delete operator removes properties. Pass a property access instead of this expression."
+    },
+    {
+        "selector": "AssignmentExpression:not(ExpressionStatement > AssignmentExpression):not(AssignmentExpression > AssignmentExpression):not(BinaryExpression[operator=/^(?:==|!=|===|!==|<|<=|>|>=)$/] > AssignmentExpression):not(SequenceExpression > AssignmentExpression):not(VariableDeclarator > AssignmentExpression):not(ArrowFunctionExpression > AssignmentExpression.body):not(LogicalExpression > AssignmentExpression.right):not(WhileStatement > AssignmentExpression.test):not(DoWhileStatement > AssignmentExpression.test):not(ForStatement > AssignmentExpression.init):not(ForStatement > AssignmentExpression.update)",
+        "message": "Move this assignment into a separate statement before using its value."
+    },
+    {
+        "selector": "CallExpression[callee.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+        "message": "Call a function or method instead of a literal value."
+    },
+    {
+        "selector": "TaggedTemplateExpression[tag.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
+        "message": "Use a function as the template tag instead of a literal value."
+    },
+    {
+        "selector": "ImportDeclaration[source.value=/node_modules/]",
+        "message": "Use the package's public name instead of a node_modules path."
+    },
+    {
+        "selector": "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]",
+        "message": "Use the package's public name instead of a node_modules path."
+    },
+    {
+        "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+        "message": "This continue ends the loop body, so it does nothing. Remove it."
+    },
+    {
+        "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement > IfStatement:last-child > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
+        "message": "This continue ends the loop body, so it does nothing. Remove it."
+    },
+    {
+        "selector": "Literal[regex.flags=/s/][regex.pattern=/\\[(?:\\\\s\\\\S|\\\\S\\\\s)\\]/]",
+        "message": "The s flag makes . match every character. Write . instead of this character class."
+    },
+    {
+        "selector": "LogicalExpression[operator=/^(\\|\\||\\?\\?)$/][right.type=\"ObjectExpression\"][right.properties.length=0]",
+        "message": "An empty-object fallback hides a missing value. Handle the missing case."
+    },
+    {
+        "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
+        "message": "Log a stable message and pass the values as fields."
+    },
+    {
+        "selector": "CallExpression[callee.property.name='waitForLoadState'] > Literal:first-child[value='networkidle']",
+        "message": "Network inactivity does not prove that the page is ready. Wait for the visible state, response, or URL."
+    },
+    {
+        "selector": "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child",
+        "message": "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
+    },
+    {
+        "selector": "AssignmentExpression[left.property.name=/^(?:innerHTML|outerHTML)$/]:not([right.type=\"Literal\"])",
+        "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+    },
+    {
+        "selector": "CallExpression:matches([callee.property.name=\"insertAdjacentHTML\"][arguments.1.type!=\"Literal\"], [callee.object.name=\"document\"][callee.property.name=\"write\"][arguments.0.type!=\"Literal\"])",
+        "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
+    },
+    {
+        "selector": "CallExpression[callee.name=\"fetch\"]:matches([arguments.0.object.object.name=\"req\"], [arguments.0.callee.object.property.name=\"searchParams\"][arguments.0.callee.property.name=\"get\"])",
+        "message": "fetch() takes its URL from the request, which allows server-side request forgery. Allow only known hosts."
+    },
+    {
+        "selector": "CallExpression[callee.property.name=/^(?:log|trace|debug|info|warn|error|fatal)$/][arguments.length=1]:matches([arguments.0.object.object.name=\"process\"][arguments.0.object.property.name=\"env\"][arguments.0.property.name=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/], [arguments.0.callee.object.object.name=\"Deno\"][arguments.0.callee.object.property.name=\"env\"][arguments.0.callee.property.name=\"get\"][arguments.0.arguments.0.value=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/])",
+        "message": "The log writes a secret from the environment. Remove the value, or mask it."
+    },
+    {
+        "selector": "CallExpression[callee.name=/^(?:execSync|exec)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]",
+        "message": "Interpolation in execSync() or exec() allows command injection. Use execFileSync() or execFile() with an argument array."
+    },
+    {
+        "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
+        "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in.",
+        "ignores": ignoresList3
+    },
+    {
+        "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
+        "message": "Give an alias import its file extension."
+    }
+];
+const gspotNoTrivialFunctionsList = [
+    "error",
+    {
+        "trivialFunctionStatements": 2
     }
 ];
 export default setRuleOptions(defineConfig([
@@ -100,7 +376,12 @@ export default setRuleOptions(defineConfig([
         "**/.dev.vars",
         "**/.dev.vars.*",
         "**/.wrangler/**",
-        "**/bun.lock"
+        "**/bun.lock",
+        "**/*.log",
+        "packages/*/dist/**",
+        "docs/dist/**",
+        "docs/.astro/**",
+        "docs/.wrangler/**"
     ]
 },
     setLevelRules({"extends": [eslintJs["configs"]["recommended"]],
@@ -121,16 +402,17 @@ export default setRuleOptions(defineConfig([
             "[/\\\\]node_modules[/\\\\]",
             "[/\\\\]bower_components[/\\\\]",
             "[/\\\\]coverage[/\\\\]",
-            "[/\\\\]\\.wrangler[/\\\\]"
+            "[/\\\\]\\.wrangler[/\\\\]",
+            "[/\\\\]docs[/\\\\]dist[/\\\\]",
+            "[/\\\\]docs[/\\\\]\\.astro[/\\\\]",
+            "[/\\\\]docs[/\\\\]\\.wrangler[/\\\\]"
         ]
     },
     "rules": {
         "array-callback-return": "error",
         "block-scoped-var": "error",
         "no-const-assign": "error",
-        "no-delete-var": "error",
         "no-loop-func": "error",
-        "require-yield": "error",
         "no-labels": "error",
         "no-new": "error",
         "no-nested-ternary": "error",
@@ -169,23 +451,27 @@ export default setRuleOptions(defineConfig([
         "perfectionist/sort-imports": [
             "error",
             {
-                "type": "line-length",
+                "type": "alphabetical",
                 "ignoreCase": false,
                 "groups": [
-                    "singleline-import",
-                    "multiline-import"
+                    "builtin",
+                    "external",
+                    "internal",
+                    [
+                        "parent",
+                        "sibling",
+                        "index"
+                    ],
+                    "unknown"
                 ],
-                "fallbackSort": {
-                    "type": "alphabetical",
-                    "order": "asc"
-                },
+                "newlinesBetween": 1,
                 "useExperimentalDependencyDetection": false
             }
         ],
         "perfectionist/sort-named-imports": [
             "error",
             {
-                "type": "line-length",
+                "type": "alphabetical",
                 "ignoreCase": false
             }
         ],
@@ -208,7 +494,6 @@ export default setRuleOptions(defineConfig([
                 "ignoreCase": false
             }
         ],
-        "unicorn/no-lonely-if": "error",
         "unicorn/name-replacements": "off",
         "unicorn/filename-case": "off",
         "unicorn/no-null": "off",
@@ -217,17 +502,31 @@ export default setRuleOptions(defineConfig([
         "unicorn/prefer-export-from": "off",
         "unicorn/no-unnecessary-array-flat-map": "off",
         "unicorn/no-abusive-eslint-disable": "off",
-        "unicorn/prefer-ternary": [
-            "error",
-            "only-single-line"
-        ],
+        "unicorn/prefer-ternary": "off",
+        "unicorn/prefer-await": "off",
+        "unicorn/no-negated-array-predicate": "off",
+        "unicorn/prefer-simple-condition-first": "off",
+        "unicorn/prefer-combined-guards": "off",
         "unicorn/expiring-todo-comments": "off",
         "unicorn/consistent-boolean-name": [
             "error",
             {
+                "checkFunctions": "never",
                 "ignore": [
+                    "^_",
                     "^(?:enabled|active|retryable)$"
-                ]
+                ],
+                "prefixes": {
+                    "are": false,
+                    "have": false,
+                    "should": false,
+                    "was": false,
+                    "were": false,
+                    "does": false,
+                    "did": false,
+                    "will": false,
+                    "requires": false
+                }
             }
         ],
         "security/detect-disable-mustache-escape": "error",
@@ -253,19 +552,14 @@ export default setRuleOptions(defineConfig([
                 "publicOnly": true,
                 "require": {
                     "FunctionDeclaration": true,
-                    "ArrowFunctionExpression": true,
-                    "FunctionExpression": true,
                     "MethodDefinition": true
-                }
+                },
+                "contexts": [
+                    ":matches(VariableDeclarator, AssignmentExpression, ExportDefaultDeclaration, PropertyDefinition) > :matches(ArrowFunctionExpression, FunctionExpression)"
+                ]
             }
         ],
         "jsdoc/require-description": "error",
-        "jsdoc/require-param": [
-            "error",
-            {
-                "enableFixer": false
-            }
-        ],
         "jsdoc/match-name": [
             "error",
             {
@@ -281,7 +575,6 @@ export default setRuleOptions(defineConfig([
             }
         ],
         "jsdoc/informative-docs": "error",
-        "jsdoc/require-param-description": "error",
         "jsdoc/tag-lines": [
             "error",
             "any",
@@ -341,71 +634,20 @@ export default setRuleOptions(defineConfig([
         "import-x/no-mutable-exports": "error",
         "import-x/no-relative-packages": "error",
         "import-x/no-default-export": "error",
-        "max-lines": [
-            "error",
-            {
-                "max": 300,
-                "skipBlankLines": true,
-                "skipComments": true
-            }
-        ],
-        "max-lines-per-function": [
-            "error",
-            {
-                "max": 60,
-                "skipBlankLines": true,
-                "skipComments": true,
-                "IIFEs": true
-            }
-        ],
-        "max-params": [
-            "error",
-            7
-        ],
-        "max-depth": [
-            "error",
-            3
-        ],
-        "max-statements": [
-            "error",
-            30
-        ],
-        "max-nested-callbacks": [
-            "error",
-            3
-        ],
-        "complexity": [
-            "error",
-            8
-        ],
+        "max-lines": maxLinesList,
+        "max-lines-per-function": maxLinesPerFunctionList,
+        "max-params": maxParamsList,
+        "max-depth": maxDepthList,
+        "max-statements": maxStatementsList,
+        "max-nested-callbacks": maxDepthList,
+        "complexity": complexityList,
         "gspot/no-identical-functions": [
             "error",
             {
                 "minLines": 8
             }
         ],
-        "gspot/import-boundaries": [
-            "error",
-            {
-                "folders": importBoundaryFolders,
-                "aliases": {
-                    "#cli/*": "packages/cli/src/*",
-                    "#tests/*": "tests/*",
-                    "#cli-package": "packages/cli/package.json",
-                    "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                    "#eslint-plugin-package": "packages/eslint-plugin/package.json",
-                    "#root-package": "package.json",
-                    "#docs/*": "docs/src/*",
-                    "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
-                    "eslint": "node_modules/.test-tools/node_modules/eslint",
-                    "html-validate": "node_modules/.test-tools/node_modules/html-validate",
-                    "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
-                    "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
-                    "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
-                    "typescript": "node_modules/.test-tools/node_modules/typescript"
-                }
-            }
-        ],
+        "gspot/import-boundaries": gspotImportBoundariesList,
         "import-x/first": "error",
         "import-x/newline-after-import": [
             "error",
@@ -448,167 +690,50 @@ export default setRuleOptions(defineConfig([
     "files": ["**/*.{js,mjs,cjs,jsx}"]}, gspothqEslintPlugin, "all"),
     setLevelRules({"settings": {
         "n": {
-            "tryExtensions": [
-                ".js",
-                ".ts",
-                ".jsx",
-                ".tsx",
-                ".mjs",
-                ".mts",
-                ".cjs",
-                ".cts",
-                ".json",
-                ".node"
-            ],
+            "tryExtensions": tryExtensionsList,
             "typescriptExtensionMap": []
         }
     },
     "rules": {
-        "n/file-extension-in-import": [
-            "error",
-            "always"
-        ]
+        "n/file-extension-in-import": nFileExtensionInImportList
     },
     "files": [["**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "gspot/import-boundaries": [
-            "error",
-            {
-                "folders": importBoundaryFolders,
-                "aliases": {
-                    "#cli/*": "packages/cli/src/*",
-                    "#tests/*": "tests/*",
-                    "#cli-package": "packages/cli/package.json",
-                    "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                    "#eslint-plugin-package": "packages/eslint-plugin/package.json",
-                    "#root-package": "package.json",
-                    "#docs/*": "docs/src/*",
-                    "ajv/*": "node_modules/.test-tools/node_modules/ajv/*",
-                    "eslint": "node_modules/.test-tools/node_modules/eslint",
-                    "html-validate": "node_modules/.test-tools/node_modules/html-validate",
-                    "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
-                    "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
-                    "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
-                    "typescript": "node_modules/.test-tools/node_modules/typescript"
-                }
-            }
-        ]
+        "gspot/import-boundaries": gspotImportBoundariesList
     },
     "files": ["docs/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "gspot/import-boundaries": [
-            "error",
-            {
-                "folders": importBoundaryFolders,
-                "aliases": {}
-            }
-        ]
+        "gspot/import-boundaries": gspotImportBoundariesList2
     },
     "files": ["packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]}, gspothqEslintPlugin, "all"),
     setLevelRules({"settings": {
         "n": {
-            "tryExtensions": [
-                ".js",
-                ".ts",
-                ".jsx",
-                ".tsx",
-                ".mjs",
-                ".mts",
-                ".cjs",
-                ".cts",
-                ".json",
-                ".node"
-            ],
+            "tryExtensions": tryExtensionsList,
             "typescriptExtensionMap": []
         }
     },
     "rules": {
-        "n/file-extension-in-import": [
-            "error",
-            "always"
-        ],
-        "gspot/import-boundaries": [
-            "error",
-            {
-                "folders": importBoundaryFolders,
-                "aliases": {}
-            }
-        ]
+        "n/file-extension-in-import": nFileExtensionInImportList,
+        "gspot/import-boundaries": gspotImportBoundariesList2
     },
-    "ignores": [
-        "docs/**",
-        "packages/cli/**",
-        "packages/eslint-plugin/**",
-        "tests/**"
-    ],
+    "ignores": ignoresList,
     "files": ["**/*.mjs", "**/*.cjs"]}, gspothqEslintPlugin, "all"),
     setLevelRules({"settings": {
         "n": {
-            "tryExtensions": [
-                ".js",
-                ".ts",
-                ".jsx",
-                ".tsx",
-                ".mjs",
-                ".mts",
-                ".cjs",
-                ".cts",
-                ".json",
-                ".node"
-            ],
+            "tryExtensions": tryExtensionsList,
             "typescriptExtensionMap": []
         }
     },
     "rules": {
-        "n/file-extension-in-import": [
-            "error",
-            "always"
-        ],
-        "gspot/import-boundaries": [
-            "error",
-            {
-                "folders": importBoundaryFolders,
-                "aliases": {}
-            }
-        ]
+        "n/file-extension-in-import": nFileExtensionInImportList,
+        "gspot/import-boundaries": gspotImportBoundariesList2
     },
     "files": ["docs/**/*.mjs", "docs/**/*.cjs", "packages/cli/**/*.mjs", "packages/cli/**/*.cjs", "packages/eslint-plugin/**/*.mjs", "packages/eslint-plugin/**/*.cjs", "tests/**/*.mjs", "tests/**/*.cjs"]}, gspothqEslintPlugin, "all"),
     setBoundaryLookup(setLevelRules({"settings": {
         "boundaries/files": [
             {
                 "category": "tests",
-                "pattern": [
-                    "**/test/**",
-                    "**/tests/**",
-                    "**/__tests__/**",
-                    "**/*.test.*",
-                    "**/*.spec.*",
-                    "**/Tests/**",
-                    "docs/**/test/**",
-                    "docs/**/tests/**",
-                    "docs/**/__tests__/**",
-                    "docs/**/*.test.*",
-                    "docs/**/*.spec.*",
-                    "docs/**/Tests/**",
-                    "packages/cli/**/test/**",
-                    "packages/cli/**/tests/**",
-                    "packages/cli/**/__tests__/**",
-                    "packages/cli/**/*.test.*",
-                    "packages/cli/**/*.spec.*",
-                    "packages/cli/**/Tests/**",
-                    "packages/eslint-plugin/**/test/**",
-                    "packages/eslint-plugin/**/tests/**",
-                    "packages/eslint-plugin/**/__tests__/**",
-                    "packages/eslint-plugin/**/*.test.*",
-                    "packages/eslint-plugin/**/*.spec.*",
-                    "packages/eslint-plugin/**/Tests/**",
-                    "tests/**/test/**",
-                    "tests/**/tests/**",
-                    "tests/**/__tests__/**",
-                    "tests/**/*.test.*",
-                    "tests/**/*.spec.*",
-                    "tests/**/Tests/**"
-                ],
+                "pattern": patternList,
                 "stopMatching": true
             },
             {
@@ -1894,38 +2019,7 @@ export default setRuleOptions(defineConfig([
                     {
                         "from": {
                             "file": {
-                                "path": [
-                                    "**/test/**",
-                                    "**/tests/**",
-                                    "**/__tests__/**",
-                                    "**/*.test.*",
-                                    "**/*.spec.*",
-                                    "**/Tests/**",
-                                    "docs/**/test/**",
-                                    "docs/**/tests/**",
-                                    "docs/**/__tests__/**",
-                                    "docs/**/*.test.*",
-                                    "docs/**/*.spec.*",
-                                    "docs/**/Tests/**",
-                                    "packages/cli/**/test/**",
-                                    "packages/cli/**/tests/**",
-                                    "packages/cli/**/__tests__/**",
-                                    "packages/cli/**/*.test.*",
-                                    "packages/cli/**/*.spec.*",
-                                    "packages/cli/**/Tests/**",
-                                    "packages/eslint-plugin/**/test/**",
-                                    "packages/eslint-plugin/**/tests/**",
-                                    "packages/eslint-plugin/**/__tests__/**",
-                                    "packages/eslint-plugin/**/*.test.*",
-                                    "packages/eslint-plugin/**/*.spec.*",
-                                    "packages/eslint-plugin/**/Tests/**",
-                                    "tests/**/test/**",
-                                    "tests/**/tests/**",
-                                    "tests/**/__tests__/**",
-                                    "tests/**/*.test.*",
-                                    "tests/**/*.spec.*",
-                                    "tests/**/Tests/**"
-                                ]
+                                "path": patternList
                             }
                         },
                         "allow": {
@@ -1940,38 +2034,7 @@ export default setRuleOptions(defineConfig([
                         "allow": {
                             "to": {
                                 "file": {
-                                    "path": [
-                                        "**/test/**",
-                                        "**/tests/**",
-                                        "**/__tests__/**",
-                                        "**/*.test.*",
-                                        "**/*.spec.*",
-                                        "**/Tests/**",
-                                        "docs/**/test/**",
-                                        "docs/**/tests/**",
-                                        "docs/**/__tests__/**",
-                                        "docs/**/*.test.*",
-                                        "docs/**/*.spec.*",
-                                        "docs/**/Tests/**",
-                                        "packages/cli/**/test/**",
-                                        "packages/cli/**/tests/**",
-                                        "packages/cli/**/__tests__/**",
-                                        "packages/cli/**/*.test.*",
-                                        "packages/cli/**/*.spec.*",
-                                        "packages/cli/**/Tests/**",
-                                        "packages/eslint-plugin/**/test/**",
-                                        "packages/eslint-plugin/**/tests/**",
-                                        "packages/eslint-plugin/**/__tests__/**",
-                                        "packages/eslint-plugin/**/*.test.*",
-                                        "packages/eslint-plugin/**/*.spec.*",
-                                        "packages/eslint-plugin/**/Tests/**",
-                                        "tests/**/test/**",
-                                        "tests/**/tests/**",
-                                        "tests/**/__tests__/**",
-                                        "tests/**/*.test.*",
-                                        "tests/**/*.spec.*",
-                                        "tests/**/Tests/**"
-                                    ]
+                                    "path": patternList
                                 }
                             }
                         }
@@ -1980,32 +2043,7 @@ export default setRuleOptions(defineConfig([
                         "from": {
                             "file": {
                                 "categories": {
-                                    "noneOf": [
-                                        "import-rule:cli-types",
-                                        "import-rule:system",
-                                        "import-rule:parsers",
-                                        "import-rule:manifests",
-                                        "import-rule:repository",
-                                        "import-rule:settings",
-                                        "import-rule:tools",
-                                        "import-rule:engine",
-                                        "import-rule:shipped-config",
-                                        "import-rule:configurations",
-                                        "import-rule:generation",
-                                        "import-rule:commands",
-                                        "import-rule:main",
-                                        "import-rule:plugin-config",
-                                        "import-rule:plugin-types",
-                                        "import-rule:plugin",
-                                        "import-rule:docs-config",
-                                        "import-rule:docs-types",
-                                        "import-rule:docs",
-                                        "import-rule:tests-data",
-                                        "import-rule:tests-types",
-                                        "import-rule:tests-setup",
-                                        "import-rule:tests",
-                                        "import-rule:release"
-                                    ]
+                                    "noneOf": noneOfList
                                 }
                             }
                         },
@@ -2022,32 +2060,7 @@ export default setRuleOptions(defineConfig([
                             "to": {
                                 "file": {
                                     "categories": {
-                                        "noneOf": [
-                                            "import-rule:cli-types",
-                                            "import-rule:system",
-                                            "import-rule:parsers",
-                                            "import-rule:manifests",
-                                            "import-rule:repository",
-                                            "import-rule:settings",
-                                            "import-rule:tools",
-                                            "import-rule:engine",
-                                            "import-rule:shipped-config",
-                                            "import-rule:configurations",
-                                            "import-rule:generation",
-                                            "import-rule:commands",
-                                            "import-rule:main",
-                                            "import-rule:plugin-config",
-                                            "import-rule:plugin-types",
-                                            "import-rule:plugin",
-                                            "import-rule:docs-config",
-                                            "import-rule:docs-types",
-                                            "import-rule:docs",
-                                            "import-rule:tests-data",
-                                            "import-rule:tests-types",
-                                            "import-rule:tests-setup",
-                                            "import-rule:tests",
-                                            "import-rule:release"
-                                        ]
+                                        "noneOf": noneOfList
                                     }
                                 }
                             }
@@ -2113,8 +2126,7 @@ export default setRuleOptions(defineConfig([
         "n/no-unpublished-import": [
             "error",
             {
-                "ignoreTypeImport": true,
-                "ignorePrivate": false
+                "ignoreTypeImport": true
             }
         ],
         "n/no-unpublished-require": "error",
@@ -2132,133 +2144,9 @@ export default setRuleOptions(defineConfig([
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(0, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(1, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(2, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(3, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(4, runtimeDeclarations)], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", buildRuntimeMatcher(5, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(0, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(1, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(2, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(3, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(4, runtimeDeclarations)], ["**/*.astro", buildRuntimeMatcher(5, runtimeDeclarations)]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "gspot/restricted-syntax": [
-            "error",
-            {
-                "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-            },
-            {
-                "selector": "TSEnumDeclaration",
-                "message": "Use a literal union or an as-const object instead of an enum."
-            },
-            {
-                "selector": ":matches(TSAsExpression[expression.type=\"TSAsExpression\"], TSTypeAssertion[expression.type=\"TSTypeAssertion\"])",
-                "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-            },
-            {
-                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword",
-                "message": "Do not assert to any. Give the value a real type, or check it at run time."
-            },
-            {
-                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword",
-                "message": "Do not assert to never to silence the type system."
-            },
-            {
-                "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])",
-                "message": "Start an error message with a capital letter."
-            },
-            {
-                "selector": "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/])",
-                "message": "Use a label only on a loop or switch statement. Remove this label."
-            },
-            {
-                "selector": "ForStatement[init=null][update=null][test!=null]",
-                "message": "This loop has no initializer or update. Use a while loop for its condition."
-            },
-            {
-                "selector": "UnaryExpression[operator='delete']:not([argument.type='MemberExpression']):not([argument.type='ChainExpression']):not([argument.type='Identifier'])",
-                "message": "The delete operator removes properties. Pass a property access instead of this expression."
-            },
-            {
-                "selector": "AssignmentExpression:not(ExpressionStatement > AssignmentExpression):not(AssignmentExpression > AssignmentExpression):not(BinaryExpression[operator=/^(?:==|!=|===|!==|<|<=|>|>=)$/] > AssignmentExpression):not(SequenceExpression > AssignmentExpression):not(VariableDeclarator > AssignmentExpression):not(ArrowFunctionExpression > AssignmentExpression.body):not(LogicalExpression > AssignmentExpression.right):not(WhileStatement > AssignmentExpression.test):not(DoWhileStatement > AssignmentExpression.test):not(ForStatement > AssignmentExpression.init):not(ForStatement > AssignmentExpression.update)",
-                "message": "Move this assignment into a separate statement before using its value."
-            },
-            {
-                "selector": "CallExpression[callee.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
-                "message": "Call a function or method instead of a literal value."
-            },
-            {
-                "selector": "TaggedTemplateExpression[tag.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
-                "message": "Use a function as the template tag instead of a literal value."
-            },
-            {
-                "selector": "ImportDeclaration[source.value=/node_modules/]",
-                "message": "Use the package's public name instead of a node_modules path."
-            },
-            {
-                "selector": "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]",
-                "message": "Use the package's public name instead of a node_modules path."
-            },
-            {
-                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
-                "message": "This continue ends the loop body, so it does nothing. Remove it."
-            },
-            {
-                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement > IfStatement:last-child > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
-                "message": "This continue ends the loop body, so it does nothing. Remove it."
-            },
-            {
-                "selector": "Literal[regex.flags=/s/][regex.pattern=/\\[(?:\\\\s\\\\S|\\\\S\\\\s)\\]/]",
-                "message": "The s flag makes . match every character. Write . instead of this character class."
-            },
-            {
-                "selector": "LogicalExpression[operator=/^(\\|\\||\\?\\?)$/][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                "message": "An empty-object fallback hides a missing value. Handle the missing case."
-            },
-            {
-                "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                "message": "Log a stable message and pass the values as fields."
-            },
-            {
-                "selector": "CallExpression[callee.property.name='waitForLoadState'] > Literal:first-child[value='networkidle']",
-                "message": "Network inactivity does not prove that the page is ready. Wait for the visible state, response, or URL."
-            },
-            {
-                "selector": "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child",
-                "message": "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
-            },
-            {
-                "selector": "AssignmentExpression[left.property.name=/^(?:innerHTML|outerHTML)$/]:not([right.type=\"Literal\"])",
-                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
-            },
-            {
-                "selector": "CallExpression:matches([callee.property.name=\"insertAdjacentHTML\"][arguments.1.type!=\"Literal\"], [callee.object.name=\"document\"][callee.property.name=\"write\"][arguments.0.type!=\"Literal\"])",
-                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
-            },
-            {
-                "selector": "CallExpression[callee.name=\"fetch\"]:matches([arguments.0.object.object.name=\"req\"], [arguments.0.callee.object.property.name=\"searchParams\"][arguments.0.callee.property.name=\"get\"])",
-                "message": "fetch() takes its URL from the request, which allows server-side request forgery. Allow only known hosts."
-            },
-            {
-                "selector": "CallExpression[callee.property.name=/^(?:log|trace|debug|info|warn|error|fatal)$/][arguments.length=1]:matches([arguments.0.object.object.name=\"process\"][arguments.0.object.property.name=\"env\"][arguments.0.property.name=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/], [arguments.0.callee.object.object.name=\"Deno\"][arguments.0.callee.object.property.name=\"env\"][arguments.0.callee.property.name=\"get\"][arguments.0.arguments.0.value=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/])",
-                "message": "The log writes a secret from the environment. Remove the value, or mask it."
-            },
-            {
-                "selector": "CallExpression[callee.name=/^(?:execSync|exec)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                "message": "Interpolation in execSync() or exec() allows command injection. Use execFileSync() or execFile() with an argument array."
-            },
-            {
-                "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
-                "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in.",
-                "ignores": [
-                    "packages/cli/src/system/environment.ts",
-                    "tests/setup/system/environment.ts",
-                    "tests/setup/runner/unit.ts"
-                ]
-            },
-            {
-                "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                "message": "Give an alias import its file extension."
-            }
-        ]
+        "gspot/restricted-syntax": gspotRestrictedSyntaxList
     },
-    "ignores": [
-        "docs/**",
-        "packages/cli/**",
-        "packages/eslint-plugin/**",
-        "tests/**"
-    ],
+    "ignores": ignoresList,
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*"], ["**/*.astro", "**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "gspot/restricted-syntax": [
@@ -2276,12 +2164,13 @@ export default setRuleOptions(defineConfig([
                 "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
             },
             {
-                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword",
-                "message": "Do not assert to any. Give the value a real type, or check it at run time."
-            },
-            {
                 "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword",
                 "message": "Do not assert to never to silence the type system."
+            },
+            {
+                "selector": "Program:has(> :matches(ExportNamedDeclaration:not([exportKind=\"type\"]), ExportDefaultDeclaration, ExportAllDeclaration:not([exportKind=\"type\"]))) > :matches(ForStatement, ForOfStatement, ForInStatement, WhileStatement, DoWhileStatement, IfStatement, TryStatement)",
+                "message": "A module that exports values runs no statements when it loads. Move this statement into a function that the entry point calls.",
+                "ignores": ignoresList2
             },
             {
                 "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])",
@@ -2374,11 +2263,7 @@ export default setRuleOptions(defineConfig([
             {
                 "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
                 "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in.",
-                "ignores": [
-                    "packages/cli/src/system/environment.ts",
-                    "tests/setup/system/environment.ts",
-                    "tests/setup/runner/unit.ts"
-                ]
+                "ignores": ignoresList3
             },
             {
                 "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
@@ -2388,126 +2273,7 @@ export default setRuleOptions(defineConfig([
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*"], ["**/*.astro", "docs/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "gspot/restricted-syntax": [
-            "error",
-            {
-                "selector": ":matches(Program, BlockStatement, StaticBlock) > BlockStatement",
-                "message": "A block that stands alone hides a step. Name the step as a function, or remove the braces."
-            },
-            {
-                "selector": "TSEnumDeclaration",
-                "message": "Use a literal union or an as-const object instead of an enum."
-            },
-            {
-                "selector": ":matches(TSAsExpression[expression.type=\"TSAsExpression\"], TSTypeAssertion[expression.type=\"TSTypeAssertion\"])",
-                "message": "Do not assert twice. Narrow the value, fix its type, or check it at run time."
-            },
-            {
-                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword",
-                "message": "Do not assert to any. Give the value a real type, or check it at run time."
-            },
-            {
-                "selector": ":matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword",
-                "message": "Do not assert to never to silence the type system."
-            },
-            {
-                "selector": "NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])",
-                "message": "Start an error message with a capital letter."
-            },
-            {
-                "selector": "LabeledStatement:not([body.type=/^(?:WhileStatement|DoWhileStatement|ForStatement|ForInStatement|ForOfStatement|SwitchStatement)$/])",
-                "message": "Use a label only on a loop or switch statement. Remove this label."
-            },
-            {
-                "selector": "ForStatement[init=null][update=null][test!=null]",
-                "message": "This loop has no initializer or update. Use a while loop for its condition."
-            },
-            {
-                "selector": "UnaryExpression[operator='delete']:not([argument.type='MemberExpression']):not([argument.type='ChainExpression']):not([argument.type='Identifier'])",
-                "message": "The delete operator removes properties. Pass a property access instead of this expression."
-            },
-            {
-                "selector": "AssignmentExpression:not(ExpressionStatement > AssignmentExpression):not(AssignmentExpression > AssignmentExpression):not(BinaryExpression[operator=/^(?:==|!=|===|!==|<|<=|>|>=)$/] > AssignmentExpression):not(SequenceExpression > AssignmentExpression):not(VariableDeclarator > AssignmentExpression):not(ArrowFunctionExpression > AssignmentExpression.body):not(LogicalExpression > AssignmentExpression.right):not(WhileStatement > AssignmentExpression.test):not(DoWhileStatement > AssignmentExpression.test):not(ForStatement > AssignmentExpression.init):not(ForStatement > AssignmentExpression.update)",
-                "message": "Move this assignment into a separate statement before using its value."
-            },
-            {
-                "selector": "CallExpression[callee.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
-                "message": "Call a function or method instead of a literal value."
-            },
-            {
-                "selector": "TaggedTemplateExpression[tag.type=/^(?:ArrayExpression|ClassExpression|ObjectExpression|Literal|TemplateLiteral)$/]",
-                "message": "Use a function as the template tag instead of a literal value."
-            },
-            {
-                "selector": "ImportDeclaration[source.value=/node_modules/]",
-                "message": "Use the package's public name instead of a node_modules path."
-            },
-            {
-                "selector": "CallExpression[callee.type='Identifier'][callee.name='require'][arguments.length=1][arguments.0.type='Literal'][arguments.0.value=type(string)][arguments.0.value=/node_modules/]",
-                "message": "Use the package's public name instead of a node_modules path."
-            },
-            {
-                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
-                "message": "This continue ends the loop body, so it does nothing. Remove it."
-            },
-            {
-                "selector": ":matches(WhileStatement, DoWhileStatement, ForStatement, ForInStatement, ForOfStatement) > BlockStatement > IfStatement:last-child > BlockStatement[body.length>1] > ContinueStatement[label=null]:last-child",
-                "message": "This continue ends the loop body, so it does nothing. Remove it."
-            },
-            {
-                "selector": "Literal[regex.flags=/s/][regex.pattern=/\\[(?:\\\\s\\\\S|\\\\S\\\\s)\\]/]",
-                "message": "The s flag makes . match every character. Write . instead of this character class."
-            },
-            {
-                "selector": "LogicalExpression[operator=/^(\\|\\||\\?\\?)$/][right.type=\"ObjectExpression\"][right.properties.length=0]",
-                "message": "An empty-object fallback hides a missing value. Handle the missing case."
-            },
-            {
-                "selector": "CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name=\"log\"][callee.object.name!=\"console\"]) > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                "message": "Log a stable message and pass the values as fields."
-            },
-            {
-                "selector": "CallExpression[callee.property.name='waitForLoadState'] > Literal:first-child[value='networkidle']",
-                "message": "Network inactivity does not prove that the page is ready. Wait for the visible state, response, or URL."
-            },
-            {
-                "selector": "Program:has(ImportDeclaration[source.value='@playwright/test']) CallExpression[callee.name='expect'] > AwaitExpression:first-child",
-                "message": "Pass the locator to expect, so that the assertion retries, such as await expect(locator).toHaveText(text)."
-            },
-            {
-                "selector": "AssignmentExpression[left.property.name=/^(?:innerHTML|outerHTML)$/]:not([right.type=\"Literal\"])",
-                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
-            },
-            {
-                "selector": "CallExpression:matches([callee.property.name=\"insertAdjacentHTML\"][arguments.1.type!=\"Literal\"], [callee.object.name=\"document\"][callee.property.name=\"write\"][arguments.0.type!=\"Literal\"])",
-                "message": "Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup."
-            },
-            {
-                "selector": "CallExpression[callee.name=\"fetch\"]:matches([arguments.0.object.object.name=\"req\"], [arguments.0.callee.object.property.name=\"searchParams\"][arguments.0.callee.property.name=\"get\"])",
-                "message": "fetch() takes its URL from the request, which allows server-side request forgery. Allow only known hosts."
-            },
-            {
-                "selector": "CallExpression[callee.property.name=/^(?:log|trace|debug|info|warn|error|fatal)$/][arguments.length=1]:matches([arguments.0.object.object.name=\"process\"][arguments.0.object.property.name=\"env\"][arguments.0.property.name=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/], [arguments.0.callee.object.object.name=\"Deno\"][arguments.0.callee.object.property.name=\"env\"][arguments.0.callee.property.name=\"get\"][arguments.0.arguments.0.value=/KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL/])",
-                "message": "The log writes a secret from the environment. Remove the value, or mask it."
-            },
-            {
-                "selector": "CallExpression[callee.name=/^(?:execSync|exec)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]",
-                "message": "Interpolation in execSync() or exec() allows command injection. Use execFileSync() or execFile() with an argument array."
-            },
-            {
-                "selector": "MemberExpression[object.type=\"MetaProperty\"][object.meta.name=\"import\"][object.property.name=\"meta\"][property.name=\"env\"]",
-                "message": "Read environment variables only in the files that structure.environment_readers lists, and pass the value in.",
-                "ignores": [
-                    "packages/cli/src/system/environment.ts",
-                    "tests/setup/system/environment.ts",
-                    "tests/setup/runner/unit.ts"
-                ]
-            },
-            {
-                "selector": ":matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#[^/]+\\/|@\\/)/][source.value!=/\\.[^/?.]+$/]:not([source.value=/\\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))",
-                "message": "Give an alias import its file extension."
-            }
-        ]
+        "gspot/restricted-syntax": gspotRestrictedSyntaxList
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*"], ["**/*.astro", "packages/cli/**/*", "**/*"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*"], ["**/*.astro", "tests/**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
@@ -2596,11 +2362,11 @@ export default setRuleOptions(defineConfig([
     "files": [["scripts/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["scripts/**", "**/*", "**/*.astro"], ["**/*.config.{js,mjs,cjs,ts}", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/*.config.{js,mjs,cjs,ts}", "**/*", "**/*.astro"], ["{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "**/*", "**/*.astro"], ["docs/scripts/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/scripts/**", "docs/**/*", "**/*.astro"], ["docs/**/*.config.{js,mjs,cjs,ts}", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/*.config.{js,mjs,cjs,ts}", "docs/**/*", "**/*.astro"], ["docs/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "docs/**/*", "**/*.astro"], ["packages/cli/scripts/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/scripts/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/*.config.{js,mjs,cjs,ts}", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/*.config.{js,mjs,cjs,ts}", "packages/cli/**/*", "**/*.astro"], ["packages/cli/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/cli/**/*", "**/*.astro"], ["packages/eslint-plugin/scripts/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/scripts/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/*.config.{js,mjs,cjs,ts}", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["tests/scripts/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/scripts/**", "tests/**/*", "**/*.astro"], ["tests/**/*.config.{js,mjs,cjs,ts}", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/*.config.{js,mjs,cjs,ts}", "tests/**/*", "**/*.astro"], ["tests/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**", "tests/**/*", "**/*.astro"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "jsdoc/require-jsdoc": "off",
-        "jsdoc/require-param": "off",
         "jsdoc/require-description": "off",
-        "jsdoc/require-param-description": "off",
         "n/no-unpublished-import": "off",
-        "n/no-unpublished-require": "off"
+        "n/no-unpublished-require": "off",
+        "no-template-curly-in-string": "off",
+        "unicorn/no-incorrect-template-string-interpolation": "off"
     },
     "files": [["**/test/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/test/**", "**/*", "**/*.astro"], ["**/tests/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/tests/**", "**/*", "**/*.astro"], ["**/__tests__/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/__tests__/**", "**/*", "**/*.astro"], ["**/*.test.*", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/*.test.*", "**/*", "**/*.astro"], ["**/*.spec.*", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/*.spec.*", "**/*", "**/*.astro"], ["**/Tests/**", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["**/Tests/**", "**/*", "**/*.astro"], ["docs/**/test/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/test/**", "docs/**/*", "**/*.astro"], ["docs/**/tests/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/tests/**", "docs/**/*", "**/*.astro"], ["docs/**/__tests__/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/__tests__/**", "docs/**/*", "**/*.astro"], ["docs/**/*.test.*", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/*.test.*", "docs/**/*", "**/*.astro"], ["docs/**/*.spec.*", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/*.spec.*", "docs/**/*", "**/*.astro"], ["docs/**/Tests/**", "docs/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["docs/**/Tests/**", "docs/**/*", "**/*.astro"], ["packages/cli/**/test/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/test/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/tests/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/tests/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/__tests__/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/__tests__/**", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/*.test.*", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/*.test.*", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/*.spec.*", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/*.spec.*", "packages/cli/**/*", "**/*.astro"], ["packages/cli/**/Tests/**", "packages/cli/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/cli/**/Tests/**", "packages/cli/**/*", "**/*.astro"], ["packages/eslint-plugin/**/test/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/test/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/tests/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/tests/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/__tests__/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/__tests__/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/*.test.*", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/*.test.*", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/*.spec.*", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/*.spec.*", "packages/eslint-plugin/**/*", "**/*.astro"], ["packages/eslint-plugin/**/Tests/**", "packages/eslint-plugin/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["packages/eslint-plugin/**/Tests/**", "packages/eslint-plugin/**/*", "**/*.astro"], ["tests/**/test/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/test/**", "tests/**/*", "**/*.astro"], ["tests/**/tests/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/tests/**", "tests/**/*", "**/*.astro"], ["tests/**/__tests__/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/__tests__/**", "tests/**/*", "**/*.astro"], ["tests/**/*.test.*", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/*.test.*", "tests/**/*", "**/*.astro"], ["tests/**/*.spec.*", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/*.spec.*", "tests/**/*", "**/*.astro"], ["tests/**/Tests/**", "tests/**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"], ["tests/**/Tests/**", "tests/**/*", "**/*.astro"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"extends": [eslintPluginPackageJson["configs"]["recommended"]],
@@ -2634,43 +2400,13 @@ export default setRuleOptions(defineConfig([
     },
     "files": ["package.json"]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "max-lines": [
-            "error",
-            {
-                "max": 300,
-                "skipBlankLines": true,
-                "skipComments": true
-            }
-        ],
-        "max-lines-per-function": [
-            "error",
-            {
-                "max": 60,
-                "skipBlankLines": true,
-                "skipComments": true,
-                "IIFEs": true
-            }
-        ],
-        "max-params": [
-            "error",
-            7
-        ],
-        "max-depth": [
-            "error",
-            3
-        ],
-        "max-statements": [
-            "error",
-            30
-        ],
-        "max-nested-callbacks": [
-            "error",
-            3
-        ],
-        "complexity": [
-            "error",
-            8
-        ]
+        "max-lines": maxLinesList,
+        "max-lines-per-function": maxLinesPerFunctionList,
+        "max-params": maxParamsList,
+        "max-depth": maxDepthList,
+        "max-statements": maxStatementsList,
+        "max-nested-callbacks": maxDepthList,
+        "complexity": complexityList
     },
     "files": ["**/*.{js,mjs,cjs,jsx}"]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
@@ -2711,12 +2447,7 @@ export default setRuleOptions(defineConfig([
                 "indexExports": 20
             }
         ],
-        "gspot/no-trivial-functions": [
-            "error",
-            {
-                "trivialFunctionStatements": 2
-            }
-        ]
+        "gspot/no-trivial-functions": gspotNoTrivialFunctionsList
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"], ["**/*.astro", "**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.astro", "**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
@@ -2732,78 +2463,24 @@ export default setRuleOptions(defineConfig([
                 ]
             }
         ],
-        "gspot/no-trivial-functions": [
-            "error",
-            {
-                "trivialFunctionStatements": 2,
-                "exportNames": [
-                    {
-                        "files": [
-                            "**/pages/**/*.{js,ts}"
-                        ],
-                        "names": [
-                            "GET",
-                            "HEAD",
-                            "POST",
-                            "PUT",
-                            "DELETE",
-                            "PATCH",
-                            "OPTIONS",
-                            "ALL",
-                            "getStaticPaths"
-                        ]
-                    },
-                    {
-                        "files": [
-                            "**/pages/**/*.astro"
-                        ],
-                        "names": [
-                            "getStaticPaths"
-                        ]
-                    },
-                    {
-                        "files": [
-                            "**/middleware.{js,ts}",
-                            "**/middleware/index.{js,ts}"
-                        ],
-                        "names": [
-                            "onRequest"
-                        ]
-                    }
-                ]
-            }
-        ]
+        "gspot/no-trivial-functions": gspotNoTrivialFunctionsList
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"], ["**/*.astro", "docs/**/*", "**/*.{js,mjs,cjs,jsx}"], ["**/*.astro", "docs/**/*", "**/*.{ts,mts,cts,tsx,vue,svelte,astro}"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "import-x/no-default-export": "off"
+        "import-x/no-default-export": "off",
+        "unicorn/no-top-level-side-effects": "off"
     },
-    "ignores": [
-        "docs/**",
-        "packages/cli/**",
-        "packages/eslint-plugin/**",
-        "tests/**"
-    ],
+    "ignores": ignoresList,
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.config.*"], ["**/*.astro", "**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "@typescript-eslint/consistent-type-definitions": "off"
     },
-    "ignores": [
-        "docs/**",
-        "packages/cli/**",
-        "packages/eslint-plugin/**",
-        "tests/**"
-    ],
+    "ignores": ignoresList,
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.d.ts"], ["**/*.astro", "**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "import-x/no-default-export": "off"
     },
-    "ignores": [
-        "docs/**",
-        "packages/cli/**",
-        "packages/eslint-plugin/**",
-        "tests/**"
-    ],
+    "ignores": ignoresList,
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.d.ts"], ["**/*.astro", "**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "gspot/no-client-environment": [
@@ -2823,7 +2500,8 @@ export default setRuleOptions(defineConfig([
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "docs/**/*.astro/*.{js,ts}"], ["**/*.astro", "docs/**/*", "docs/**/*.astro/*.{js,ts}"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "import-x/no-default-export": "off"
+        "import-x/no-default-export": "off",
+        "unicorn/no-top-level-side-effects": "off"
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.config.*"], ["**/*.astro", "docs/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
@@ -2833,7 +2511,12 @@ export default setRuleOptions(defineConfig([
     setLevelRules({"rules": {
         "import-x/no-default-export": "off"
     },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.d.ts"], ["**/*.astro", "docs/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.astro"], ["**/*.astro", "docs/**/*", "**/*.astro"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*.config.*"], ["**/*.astro", "packages/cli/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.d.ts"], ["**/*.astro", "docs/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "docs/**/*", "**/*.astro"], ["**/*.astro", "docs/**/*", "**/*.astro"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off",
+        "unicorn/no-top-level-side-effects": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*.config.*"], ["**/*.astro", "packages/cli/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "@typescript-eslint/consistent-type-definitions": "off"
     },
@@ -2841,7 +2524,12 @@ export default setRuleOptions(defineConfig([
     setLevelRules({"rules": {
         "import-x/no-default-export": "off"
     },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*.d.ts"], ["**/*.astro", "packages/cli/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*.config.*"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/cli/**/*", "**/*.d.ts"], ["**/*.astro", "packages/cli/**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off",
+        "unicorn/no-top-level-side-effects": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*.config.*"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "@typescript-eslint/consistent-type-definitions": "off"
     },
@@ -2849,7 +2537,12 @@ export default setRuleOptions(defineConfig([
     setLevelRules({"rules": {
         "import-x/no-default-export": "off"
     },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*.d.ts"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*.config.*"], ["**/*.astro", "tests/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "packages/eslint-plugin/**/*", "**/*.d.ts"], ["**/*.astro", "packages/eslint-plugin/**/*", "**/*.d.ts"]]}, gspothqEslintPlugin, "all"),
+    setLevelRules({"rules": {
+        "import-x/no-default-export": "off",
+        "unicorn/no-top-level-side-effects": "off"
+    },
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*.config.*"], ["**/*.astro", "tests/**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "@typescript-eslint/consistent-type-definitions": "off"
     },
@@ -2878,10 +2571,6 @@ export default setRuleOptions(defineConfig([
         "unicorn/no-top-level-side-effects": "off"
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.config.*"], ["**/*.astro", "**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
-    setLevelRules({"rules": {
-        "gspot/no-magic-numbers": "off"
-    },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/collections.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/collections.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/libraries.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/libraries.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/logic.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/config/logic.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/assertions/evidence.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/collections.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/collections.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/libraries.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/libraries.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/logic.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/config/logic.ts/**"]]}, gspothqEslintPlugin, "all"),
 ]), [
     {
         "paths": [
@@ -2904,11 +2593,6 @@ export default setRuleOptions(defineConfig([
                 {
                     "property": "localeCompare",
                     "message": "Use compareText for stable ordering."
-                }
-            ],
-            "n/no-unpublished-import": [
-                {
-                    "ignoreTypeImport": true
                 }
             ],
             "unicorn/consistent-boolean-name": [

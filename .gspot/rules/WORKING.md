@@ -1,4 +1,4 @@
-# Working in a Repository
+# Working in a repository
 
 Read this rule before you change anything in the repository.
 
@@ -28,6 +28,14 @@ During a rolling deploy, readers accept both shapes until no old writer runs.
 
 Before you add a module, folder, or helper, find the code that will call it. When you add a file, tell the user why that
 code needs a new file.
+
+## Open questions
+
+- When a request, a plan, or a feature leaves a decision open, ask the user before you write code or a plan. Ask
+  until no open point remains.
+- Do not fill a gap with a guess, a default you chose, or an idea the user did not ask for.
+- Ask only what the user decides: behavior, scope, names, wording, and trade-offs. Look up yourself what the code,
+  the docs, or a command can answer.
 
 ## Scope discipline
 
@@ -70,9 +78,10 @@ define the behavior instead of adding speculative protection.
 Keep one implementation of each concept, and one copy of each table of values, in the module that uses it. Extract
 shared code only when two or more callers need the same behavior now.
 
-- Delete each named function of `2` statements or fewer, exported or
-  not, and inline its body at each call site. Class methods, accessors, constructors, and recursive functions count
-  too.
+- Inline a function of `2` statements or fewer that has one caller, and delete
+  it. Keep one that two places call, and a JavaScript or TypeScript function that its module exports.
+- A JavaScript or TypeScript class method, accessor, or constructor of that size counts however many places call it,
+  and so does a Swift accessor, initializer, or deinitializer.
 - Keep a callback written inline and a member of an object literal. Keep the implementation of an overload set, and
   an export that a framework calls by its name, such as a route handler.
 - When a function of that size must stay, such as a method that an interface requires, ask the user. Then add a

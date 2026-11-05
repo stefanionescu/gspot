@@ -34,7 +34,7 @@ and errors. Rewrite or delete a comment that describes behavior the code lacks, 
   message records what changed.
 - Never copy a size, time, default, or list of values from the code into a comment; name the constant.
 - Write a `@returns` only for a fact the type lacks.
-- Write a nested `@param a.b` only for a destructured parameter.
+- Write a nested `@param a.b` only for a destructured parameter or a parameter with an inline object type.
 - A suppression reason states one present cause: no caller counts, no counterfactual, and no reason pasted across unlike
   sites.
 

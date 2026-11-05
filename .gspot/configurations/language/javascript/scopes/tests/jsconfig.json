@@ -30,6 +30,7 @@
         "../../../../../../tests/**/.dev.vars.*",
         "../../../../../../tests/**/.wrangler/**",
         "../../../../../../tests/**/bun.lock",
+        "../../../../../../tests/**/*.log",
         "../../../../../../tests/**/eslint.config.mjs",
         "../../../../../../tests/**/eslint.config.js",
         "../../../../../../tests/**/eslint.config.cjs"

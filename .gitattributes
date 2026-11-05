@@ -1,10 +1,9 @@
-* text=auto eol=lf
-
 packages/cli/README.md linguist-generated
 CHANGELOG.md linguist-generated
 tests/setup/sandboxes/test-tools.lock linguist-generated
 
 # >>> gspot managed >>>
+* text=auto eol=lf
 .gspot/** linguist-generated
 /.editorconfig linguist-generated
 /.github/workflows/gspot.yml linguist-generated

@@ -39,6 +39,11 @@
         "../../../../**/.dev.vars.*",
         "../../../../**/.wrangler/**",
         "../../../../**/bun.lock",
+        "../../../../**/*.log",
+        "../../../../packages/*/dist/**",
+        "../../../../docs/dist/**",
+        "../../../../docs/.astro/**",
+        "../../../../docs/.wrangler/**",
         "../../../../**/eslint.config.mjs",
         "../../../../**/eslint.config.js",
         "../../../../**/eslint.config.cjs"

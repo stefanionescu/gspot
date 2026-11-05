@@ -7,8 +7,6 @@ Read these rules first:
 - `.gspot/rules/WORKING.md`
 - `.gspot/rules/WRITING.md`
 - `.gspot/rules/TALKING.md`
-- `.gspot/rules/COMMENTS.md`
-- `.gspot/rules/GIT.md`
 
 Read a rule below when its sentence fits your task.
 A rule marked `in <folder>/` applies only to files in that folder.
@@ -49,10 +47,12 @@ A more specific rule wins over a general one.
 
 - `.gspot/rules/ACCESSIBILITY.md`: when you change a user interface.
 - `.gspot/rules/CLI.md`: when you change a command-line program that the project ships.
+- `.gspot/rules/COMMENTS.md`: when you write or change a comment.
 - `.gspot/rules/DEPENDENCIES.md`: before you add, upgrade, or remove a dependency.
 - `.gspot/rules/DOCS.md`: when you write or change documentation.
 - `.gspot/rules/ERRORS.md`: when you write code that raises, catches, or reports an error.
 - `.gspot/rules/GENERATED.md`: when you change a generated file, or the code that writes one.
+- `.gspot/rules/GIT.md`: before you commit, push, tag, or open a pull request.
 - `.gspot/rules/NAMING.md`: when you name a file, folder, type, function, or variable.
 - `.gspot/rules/PLANNING.md`: before you write a plan.
 - `.gspot/rules/SECRETS.md`: when code reads, stores, or logs a secret.
@@ -67,17 +67,17 @@ A more specific rule wins over a general one.
 
 The rules write `gspot` for `mise exec -- gspot`.
 
-Before you commit, run `gspot check --staged --stage commit`. Before you push, run `gspot check --changed --stage push`.
+Commit, and fix what the hook reports. Before you push, run `gspot check --changed --stage push`.
 
 To change `gspot.toml`, run `gspot set`, `unset`, or `unignore`.
 When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.
 Run `gspot ignore` or `gspot remove` only after the user agrees, with a reason.
-After you edit `gspot.toml`, a package manifest, or a tsconfig, run `gspot apply`.
+After you edit `gspot.toml`, a package manifest, or a tsconfig, run `gspot install`.
 
 ## Generated files
 
 `.gitattributes` marks each file that gspot writes `linguist-generated`, in the block between the gspot markers.
-Do not edit these files. Change `gspot.toml`, then run `gspot apply`.
+Do not edit these files. Change `gspot.toml`, then run `gspot install`.
 
 gspot also sets one key in `bunfig.toml`: `install.security.scanner`.
 You can edit the other keys of that file.

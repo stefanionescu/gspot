@@ -9,8 +9,9 @@ can fail.
 ## Assertions
 
 - Use Arrange, Act, Assert. Test behavior, not private implementation details.
-- Assert exact values that the public interface defines, such as status codes, exit codes, and messages. Do not pin
-  incidental configuration or internal representation.
+- Assert the values a behavior produces: status codes, exit codes, error codes, IDs, and structured fields.
+- Compare message text only when the text itself is the output under test, such as the help of a command.
+- Do not pin incidental configuration or internal representation.
 - Cover relevant empty and null inputs, limits, expected errors, and unexpected internal ones.
 - Assert every changed result: responses, stored rows, outbound requests, side effects, and logs.
 - A test has meaningful assertions; it does not only prove that the code called a collaborator. No test asserts a fake's

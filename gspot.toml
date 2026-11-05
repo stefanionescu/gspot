@@ -11,93 +11,32 @@ enabled = true
 [naming]
 banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "installed root", "working folder", "root path", "item", "items", "part", "parts", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "helper", "helpers", "util", "utils", "payload", "fallback", "attempt", "normalized", "expanded", "composed", "thing", "things", "misc", "info", "details", "stuff", "perform", "execute", "ensure", "wrapper", "temp", "tmp", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "generic", "overall"]
 
-[[naming.override]]
-paths = ["tests/types/integration.ts"]
-allowed_names = ["rule_id"]
-reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/configurations/general.ts", "packages/cli/src/types/manifests.ts", "packages/cli/src/types/repository.ts", "packages/cli/src/types/settings.ts"]
-categories = ["properties"]
-allowed_names = ["default_all", "language_defaults", "path_role", "reason_for", "reason_values", "removed_configurations", "test_files"]
-reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
-
-[[naming.override]]
-paths = ["packages/cli/src/configurations/framework/site/checks/purgecss-process.ts"]
-allowed_names = ["PurgeCSS"]
-reason = "PurgeCSS exports its class under this exact name."
-
-[[naming.override]]
+[[naming.exception]]
 paths = ["packages/cli/src/configurations/framework/svelte/checks.ts"]
 categories = ["functions"]
 allowed_names = ["checkSvelteCheck"]
 reason = "Check functions start with check and spell the svelte/svelte-check check ID without repeating svelte."
 
-[[naming.override]]
+[[naming.exception]]
 paths = ["packages/cli/src/configurations/platform/supabase/checks.ts"]
 categories = ["functions"]
 allowed_names = ["checkDenoCheck"]
 reason = "Check functions start with check and spell the check name of supabase/deno-check."
 
-[[naming.override]]
-paths = ["tests/types/setup.ts"]
-allowed_names = ["with"]
-reason = "GitHub Actions calls its action argument record with."
-
-[[naming.override]]
+[[naming.exception]]
 paths = ["packages/cli/src/configurations/general/data-files/generate.ts", "packages/cli/src/config/configurations/general.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
 
-[[naming.override]]
-paths = ["packages/cli/src/types/configurations/language.ts"]
-allowed_names = ["customSyntax"]
-reason = "Stylelint names its parser option customSyntax."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/parsers.ts"]
-allowed_names = ["objects"]
-reason = "Xcode project files name the object table objects."
-
-[[naming.override]]
+[[naming.exception]]
 paths = ["packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest names the source after its markdownlint-cli2 target, and the placeholder uses that name."
 
-[[naming.override]]
-paths = ["packages/cli/src/types/configurations/language.ts"]
-allowed_names = ["getDocumentFragment"]
-reason = "vue-eslint-parser names this parser service getDocumentFragment."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/configurations/language.ts"]
-allowed_names = ["parseForESLint"]
-reason = "ESLint calls a custom parser through its parseForESLint method."
-
-[[naming.override]]
-paths = ["packages/eslint-plugin/src/rules/aws/aws-s3-bucket-versioning.ts"]
-allowed_names = ["awsS3BucketVersioning"]
-reason = "S3 is an allowed numeric word, and gspot 0.3.8 drops its digit before it tests the case."
-
-[[naming.override]]
-paths = ["packages/cli/src/config/configurations/builds.ts"]
-allowed_names = ["DERIVED_DATA_FLAG", "DERIVED_DATA_FOLDER"]
-reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath."
-
-[[naming.override]]
-paths = ["packages/cli/src/configurations/language/python/generate.ts", "tests/suites/unit/cli/configurations/language/python/generate.test.ts"]
+[[naming.exception]]
+paths = ["packages/cli/src/configurations/language/python/generate.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
-
-[[naming.override]]
-paths = ["packages/cli/src/configurations/general/data-files/**", "tests/suites/unit/cli/configurations/general/data-files.test.ts", "tests/suites/integration/configurations/general/data-files.test.ts"]
-allowed_names = ["data-files", "data-files.test"]
-reason = "These files and folders take the name of the data-files configuration."
-
-[[naming.override]]
-paths = ["tests/types/setup.ts"]
-allowed_names = ["rootDir"]
-reason = "The Next.js ESLint plugin names this setting rootDir."
 
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/unit.ts"]
@@ -132,6 +71,8 @@ version = "1.33.0"
 reason = "Vite depends on it to build the docs site; the license binds changes to its own files, and none are made."
 
 [spelling.allowed_words]
+NestJS = "NestJS is the name of the framework, so a heading keeps its capitals."
+TanStack = "TanStack Query is the name of the library, so a heading keeps its capitals."
 vertica = "SQLFluff names its Vertica dialect vertica."
 IIF = "ESLint names immediately invoked functions IIFEs."
 next-intl = "The next-intl package name."
@@ -156,7 +97,6 @@ entry_files = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "pa
 
 [tools.eslint.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
-"n/no-unpublished-import" = [{ ignoreTypeImport = true }]
 "unicorn/consistent-boolean-name" = [{ checkFunctions = "never", ignore = ["^_", "^(?:enabled|active|retryable)$"] }]
 "jsdoc/require-jsdoc" = [
     { enableFixer = false, publicOnly = true, require = { FunctionDeclaration = true, MethodDefinition = true }, contexts = [":matches(VariableDeclarator, AssignmentExpression, ExportDefaultDeclaration, PropertyDefinition) > :matches(ArrowFunctionExpression, FunctionExpression)"] },
@@ -410,42 +350,3 @@ check = "javascript/eslint"
 rule = "unicorn/no-top-level-side-effects"
 paths = ["**/*.config.*"]
 reason = "A tool reads the default export of its config file, which the file builds when it loads."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "gspot/no-magic-numbers"
-paths = [
-    "packages/eslint-plugin/src/config/assertions/evidence.ts",
-    "packages/eslint-plugin/src/config/collections.ts",
-    "packages/eslint-plugin/src/config/libraries.ts",
-    "packages/eslint-plugin/src/config/logic.ts",
-]
-reason = "Module-level Map and Set tables name their numbers, and gspot/no-magic-numbers in plugin 0.2.3 reads them as unnamed."
-
-[[ignore]]
-check = "site/purgecss"
-reason = "The purgecss bundle of gspot 0.3.8 leaves out a package that it imports, so the check stops before it reads the site."
-
-[[ignore]]
-check = "site/unused-assets"
-rule = "unused-asset"
-paths = ["docs/src/assets/mark.webp"]
-reason = "SiteTitle.astro imports this image through the #docs package alias, which gspot 0.3.8 does not resolve."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.home-paths"
-paths = ["docs/astro.config.ts"]
-reason = "A component path in this file passes through a folder named home, and gspot 0.3.8 matches it as a home folder."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.title-case"
-paths = ["docs/**", "packages/cli/src/configurations/*/*/rules/*.md"]
-reason = "Titles use sentence case, and the title case style of gspot 0.3.8 asks for title case."
-
-[[ignore]]
-check = "github-actions/workflow-shape"
-rule = "push-concurrency"
-paths = [".github/workflows/tests.yml"]
-reason = "The published gspot 0.3.8 refuses a concurrency group on a push-only workflow, and the next release drops that rule."

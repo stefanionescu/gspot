@@ -7,6 +7,10 @@ TALKING.md covers what you say to the user.
 Write in plain language. From `ISO 24495-1`, apply its principles for short sentences, common words, and finding
 information: state the action or result early, and explain a technical term when the reader needs it.
 
+Clear beats clever. Say what happens in common words, and name the thing you mean. Write no slogan, metaphor, or
+catchy title: write `Every ignored rule needs a reason`, not `Close the quiet off switch`. Write `the user's
+repository`, not `this repository` or `a repository`, whenever more than one repository fits the sentence.
+
 ## Evidence
 
 Check commands, fields, defaults, limits, and supported versions against the implementation that defines them. A
@@ -24,7 +28,7 @@ and temporary notes out of shipped content. Examples use fictional people, safe 
 
 ## Voice
 
-Use active voice. Address the reader as you in procedures. Use imperatives for requirements and
+Use active voice in documentation. Address the reader as you in procedures. Use imperatives for requirements and
 label optional steps. Put a condition before its action and keep one main idea per sentence. Name the subject instead of
 relying on an ambiguous pronoun.
 
@@ -48,7 +52,8 @@ term for each concept. Dates shown to people include their time zone; machine va
 - Address the reader as you. Write no first-person pronouns or exclamation marks.
 - Use words instead of an emoji or an arrow.
 - Put a file path in code formatting, and write a placeholder as `<kebab-case>`.
-- Write the page title in title case and every lower heading in sentence case, with no end punctuation.
+- Write every title and heading in sentence case, with no end punctuation. Keep a title to a few words that name its
+  topic.
 - Keep a sentence within 30 words, a list item within
   45 words, and a paragraph within 6 sentences.
 

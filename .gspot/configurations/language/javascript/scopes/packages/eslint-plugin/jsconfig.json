@@ -26,6 +26,7 @@
         "../../../../../../../packages/eslint-plugin/**/.dev.vars.*",
         "../../../../../../../packages/eslint-plugin/**/.wrangler/**",
         "../../../../../../../packages/eslint-plugin/**/bun.lock",
+        "../../../../../../../packages/eslint-plugin/**/*.log",
         "../../../../../../../packages/eslint-plugin/**/eslint.config.mjs",
         "../../../../../../../packages/eslint-plugin/**/eslint.config.js",
         "../../../../../../../packages/eslint-plugin/**/eslint.config.cjs"
