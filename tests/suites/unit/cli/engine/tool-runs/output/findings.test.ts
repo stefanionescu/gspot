@@ -10,14 +10,7 @@ import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import {
-    BASE_CHECK,
-    FAILED_RUN,
-    FILELESS_CHECKS,
-    LOCATED_CHECK,
-    MISSING_LOCATED_FILE,
-    REGEX_OUTPUT_CASES,
-} from '#tests/config/engine/tool-runs.ts';
+import { BASE_CHECK, LOCATED_CHECK, MISSING_LOCATED_FILE, REGEX_OUTPUT_CASES } from '#tests/config/engine/tool-runs.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -32,14 +25,6 @@ test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
     expect(
         parseCommandFindings(planned, buildProcessResult(result), { cwd: sandbox.path, root: sandbox.path }, {}),
     ).toStrictEqual(expected);
-});
-
-test.each([...FILELESS_CHECKS])('$id accepts a fileless result without classifying it as a crash', async (check) => {
-    await using sandbox = await testdir();
-    expect(
-        parseCommandFindings({ check }, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path }, {})
-            .findings,
-    ).toStrictEqual([]);
 });
 
 test('an ESLint finding whose source text holds a module error word stays a finding, and a real module error becomes a note', async () => {

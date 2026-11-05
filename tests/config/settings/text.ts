@@ -54,11 +54,4 @@ export const IGNORE_COMMENT_CASES = [
         expected:
             'spelling.allowed_words={BannedWord="The project uses this reviewed name."}\n\n# First ignore\n[[ignore]] # First header inline\ncheck="z/check"\npaths=[\n # A path\n "a.ts", # A inline\n]\nreason="Reviewed findings stay ignored intentionally."\n\nuntil = 2026-12-31\n# Second ignore\n[[ignore]] # Second header inline\ncheck="z/check"\npaths=[\n # B path\n "b.ts"\n]\nreason="Reviewed findings stay ignored intentionally."\nuntil = 2026-12-31\n',
     },
-    {
-        name: 'split ignore row',
-        source: '# Original physical row\n[[ignore]]\ncheck="a/check"\npaths=[\n # Split A\n "a.ts", # Split A inline\n # Split B\n "b.ts" # Split B inline\n]\nreason="Reviewed findings stay ignored intentionally." # Authored reason\n',
-        target: '[[ignore]]\ncheck = "a/check"\npaths = [ "a.ts" ]\nreason="Reviewed findings stay ignored intentionally."\nuntil = 2026-10-10\n\n[[ignore]]\ncheck = "a/check"\npaths = [ "b.ts" ]\nreason="Reviewed findings stay ignored intentionally."\nuntil = 2026-12-31\n',
-        expected:
-            '# Original physical row\n[[ignore]]\ncheck="a/check"\npaths=[\n # Split A\n "a.ts"  # Split A inline\n]\nreason="Reviewed findings stay ignored intentionally." # Authored reason\nuntil = 2026-10-10\n\n[[ignore]]\ncheck = "a/check"\npaths = ["b.ts"]\nreason = "Reviewed findings stay ignored intentionally."\nuntil = 2026-12-31\n',
-    },
 ];

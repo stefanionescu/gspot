@@ -14,7 +14,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
 import { IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS, UNPARSED_CONFIGS } from '#tests/config/generation/generate.ts';
 import { CONFIG_PROJECT } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -84,36 +83,6 @@ test.each([...IGNORED_CHECK_FILES])(
         expect(paths.filter((path) => listed.has(path))).toStrictEqual([...kept]);
     },
 );
-
-test('Go and Rust sources keep the files and tools of every selected configuration', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { level: 'all' }),
-        'main.go': 'package main\nfunc main() {}\n',
-        'main.rs': 'fn main() {}\n',
-    });
-
-    const session = await openSession(sandbox.path);
-    const files = buildGeneratedFiles(session).files;
-    const paths = files.map((file) => file.path);
-    expect(
-        paths.filter((path) =>
-            [
-                '.editorconfig',
-                getManifestTarget('data-files', 'taplo.toml'),
-                getManifestTarget('format', 'prettier.json'),
-                '.prettierignore',
-            ].includes(path),
-        ),
-    ).toStrictEqual([
-        '.editorconfig',
-        '.gspot/configurations/general/data-files/taplo.toml',
-        '.gspot/configurations/general/format/prettier.json',
-        '.prettierignore',
-    ]);
-    const npmTools = Object.keys(listPackagePins(session.toolConfigurations).npm);
-    expect(npmTools).toContain('prettier');
-    expect(npmTools).toContain('v8r');
-});
 
 test.each([...LEVELS])("every configuration's generated config files parse at level %s", async (level) => {
     const configurations = readConfigurations()

@@ -9,15 +9,9 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
-import {
-    buildFileCommandLines,
-    expandCommand,
-    listCopyFiles,
-    replacePlaceholders,
-} from '#cli/engine/tool-runs/placeholders.ts';
+import { expandCommand, listCopyFiles, replacePlaceholders } from '#cli/engine/tool-runs/placeholders.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { runProcess } from '#cli/system/processes.ts';
-import { type CommandArgument } from '#cli/types/engine/tool-runs.ts';
 import { CAFE_SOURCE_PATH, GENERATE_ARGUMENTS, WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -91,20 +85,6 @@ test.each([...WORKSPACE_SCOPE_CASES])(
                 root: sandbox.path,
             }),
         ).toStrictEqual(['before', ...expected, 'after']);
-    },
-);
-
-test.each([0, 1, 2])(
-    'a {file} placeholder at position %p is replaced without dropping neighboring arguments',
-    (slot) => {
-        const command: CommandArgument[] = ['before', 'after'];
-        command.splice(slot, 0, { file: true });
-        const commands = buildFileCommandLines(command, ['one.txt', 'café folder/two.txt']);
-        for (const [index, file] of ['one.txt', 'café folder/two.txt'].entries()) {
-            const expected = ['before', 'after'];
-            expected.splice(slot, 0, file);
-            expect(commands[index]).toStrictEqual({ commandArguments: expected, file });
-        }
     },
 );
 

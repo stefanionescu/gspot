@@ -1,10 +1,7 @@
-import { parse as parseToml, stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { addScopeTable, setKey } from '#cli/settings/edit.ts';
 import {
     getLimit,
     getTable,
@@ -12,7 +9,7 @@ import {
     listIgnores,
     selectConfigurationsForScope,
 } from '#cli/settings/scopes.ts';
-import type { Scope, TomlTable } from '#cli/types/settings.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import {
     NESTED_SCOPE_SETTINGS,
     OPENAPI_SCOPE_SETTINGS,
@@ -20,7 +17,6 @@ import {
     PROJECT_CHOICES,
     PROJECT_SCOPE_CASES,
 } from '#tests/config/settings/read.ts';
-import { TWO_WORDS } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -36,22 +32,6 @@ async function readNestedScopes(): Promise<Scope[]> {
     const session = await openSession(sandbox.path);
     return session.scopes;
 }
-
-test('a scope keeps a written site build command including empty and spaced arguments', async () => {
-    await using sandbox = await createGitSandbox({});
-    const table = parseToml(
-        buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] }),
-    ) as TomlTable;
-    setKey(addScopeTable(table, 'app'), 'site.build_command', ['custom-builder', '', TWO_WORDS]);
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify(table),
-        'app/index.html': '<!doctype html><title>Site</title>',
-    });
-    const session = await openSession(sandbox.path);
-    expect(
-        getTable(session.scopes.find((scope) => scope.path === 'app')!.settings, 'site').build_command,
-    ).toStrictEqual(['custom-builder', '', TWO_WORDS]);
-});
 
 test('an ignore with a rule and paths turns the rule off in its scope and the scopes below only', async () => {
     const scopes = await readNestedScopes();

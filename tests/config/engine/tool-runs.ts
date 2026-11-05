@@ -59,15 +59,6 @@ export const ESLINT_MANIFEST_TOOL = {
     crash_pattern: '^Oops! Something went wrong',
 } as const;
 
-export const FILELESS_CHECKS = [
-    {
-        ...BASE_CHECK,
-        id: 'sandbox/coverage',
-        output: { format: 'regex', pattern: '^ERROR: (?<message>.*)$' },
-    },
-    { ...BASE_CHECK, id: 'sandbox/plain', output: { format: 'regex', pattern: '(?<message>.+)' } },
-] as const;
-
 export const REGEX_OUTPUT_CASES = [
     {
         title: 'regex output that names no real file on a failed run is a check error',

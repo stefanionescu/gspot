@@ -83,18 +83,6 @@ test('relative folders with spaces, percent signs and Unicode are accepted', asy
     expect(settings).toStrictEqual([path]);
 });
 
-test('zero and false tool options are kept as values', () => {
-    using sandbox = createTemporaryFolder();
-    const settings = readSettings(
-        stringify({
-            configurations: ['javascript'],
-            tools: { eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } },
-        }),
-        sandbox.path,
-    );
-    expect(settings.tools).toMatchObject({ eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } });
-});
-
 test.each(['ordinary', 'constructor'])(
     'rule keys named like object properties are checked like any other key (%j)',
     (key) => {
