@@ -135,8 +135,6 @@ export const UV_LOCKFILE_ORIGINS = [
     ],
 ] satisfies Array<[string, string, boolean, Record<string, unknown>]>;
 
-export const LOCKFILE_PASSWORD_ERROR = { name: 'GspotError', code: 'install' } as const;
-
 export const PYPROJECT_UV_INDEX = `[project]
 name = "authored-project"
 

@@ -7,6 +7,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { UV_LOCKFILE_CREDENTIAL_MESSAGE } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -20,7 +21,6 @@ import {
 import type { PythonToolProject } from '#cli/types/tools.ts';
 import {
     INVALID_UV_SETTINGS,
-    LOCKFILE_PASSWORD_ERROR,
     PYPROJECT_UV_INDEX,
     PYTHON_INSTALL_FILES,
     PYTHON_TOOL_LOCKFILE,
@@ -84,7 +84,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
             'synthetic-uv',
         ),
     );
-    expect(lockfileError).toMatchObject(LOCKFILE_PASSWORD_ERROR);
+    expect(lockfileError).toMatchObject({ code: 'install', message: UV_LOCKFILE_CREDENTIAL_MESSAGE });
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);

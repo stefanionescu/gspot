@@ -8,6 +8,7 @@ import { createFileTree } from 'testdirs';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { LOCKFILE_CREDENTIAL_MESSAGE, NPM_LOCKFILE_CREDENTIAL_MESSAGE } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installNpmTools, installUnlockedNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
@@ -98,7 +99,7 @@ test.each([...FAILED_INSTALL_CASES])(
 test('a cached lockfile that holds registry credentials is refused and the files stay', async () => {
     await using sandbox = await createGitSandbox({});
     const { files, error } = await prepareCredentialProject(sandbox.path, CREDENTIAL_PACKAGE_JSON, CREDENTIAL_LOCKFILE);
-    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error).toMatchObject({ code: 'install', message: NPM_LOCKFILE_CREDENTIAL_MESSAGE });
     for (const [path, text] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
 });
@@ -114,7 +115,7 @@ test('a lockfile that the package manager writes with registry credentials is re
         JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } }),
         JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } }),
     );
-    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error).toMatchObject({ code: 'install', message: LOCKFILE_CREDENTIAL_MESSAGE });
     for (const [path, text] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
 });
