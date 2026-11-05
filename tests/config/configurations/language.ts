@@ -9,7 +9,8 @@ export const REFERENCE_BUILD_FILES = {
     'app/src/main.ts': 'import type { Value } from "@lib/value"; export const port: Value = "wrong";\n',
     'lib/value.d.ts': 'export type Value = number;\n',
     'neighbor/tsconfig.json': '{"compilerOptions":{"strict":true,"types":[]},"include":["*.ts"]}',
-    'neighbor/source.ts': 'export const ignored: number = "wrong";\n',
+    'neighbor/source.ts':
+        'export function read(value: string | null) { if (value === null) return value.length; return 0; }\n',
     'neighbor/node_modules/unrelated/package.json': '{"name":"unrelated","version":"1.0.0"}',
     'neighbor/.venv/pyvenv.cfg': 'home = unrelated\n',
 } as const;
@@ -17,7 +18,7 @@ export const REFERENCE_BUILD_FILES = {
 export const REFERENCE_BUILD_RESULTS = [
     { scope: '', status: 'passed' as const, findings: [] },
     { scope: 'app', status: 'failed' as const, findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
-    { scope: 'neighbor', status: 'failed' as const, findings: [{ file: 'neighbor/source.ts', rule: 'TS2322' }] },
+    { scope: 'neighbor', status: 'failed' as const, findings: [{ file: 'neighbor/source.ts', rule: 'TS18047' }] },
 ];
 
 export const URL_MARKUP_CASES = [
