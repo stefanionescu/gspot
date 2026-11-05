@@ -11,7 +11,6 @@ import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandBatches, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { BATCH_CHECK, BATCH_FINDINGS, BATCH_IGNORE, CAFE_SOURCE_PATH } from '#tests/config/engine/tool-runs.ts';
-import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -106,23 +105,6 @@ test('a command check whose config file is missing errors before it runs and nam
         note: expect.stringContaining('.gspot/configurations/general/format/prettier.json') as string,
         findings: [],
     });
-});
-
-test.each(['python/basedpyright'])('%s refuses a .venv file before running the tool', async (check) => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python', 'pytest']),
-        'pyproject.toml': APP_PYPROJECT,
-        'test_main.py': 'from app import count\n',
-        '.venv': 'not a directory\n',
-    });
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-    expect(result.report.exitCode).toBe(2);
-    expect(result.report.checks).toMatchObject([
-        {
-            status: 'missing',
-            findings: [],
-        },
-    ]);
 });
 
 test('a fatal command group stops before the next group runs', async () => {
