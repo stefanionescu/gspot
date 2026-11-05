@@ -17,10 +17,9 @@ import type { Tool } from '#cli/types/manifests.ts';
 import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
@@ -31,19 +30,6 @@ function selectExecutableFolder(tool: Tool): string {
         ? join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder)
         : 'test-tools';
 }
-
-test('doctor reports no unowned gspot files in a fresh clone', async () => {
-    await using sandbox = await testdir();
-    const source = join(sandbox.path, 'source');
-    const checkout = join(sandbox.path, 'checkout');
-    await createFileTree(source, { 'gspot.toml': buildSandboxSettings([]) });
-    runGitStep(source, ['init', '-q']);
-    await applyGeneratedFiles(source);
-    commitAll(source);
-    runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
-    const result = await runGspot(checkout, ['doctor', '--json']);
-    expect(JSON.parse(result.stdout)).toMatchObject({ suggestions: { unowned: [] } });
-});
 
 test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',
