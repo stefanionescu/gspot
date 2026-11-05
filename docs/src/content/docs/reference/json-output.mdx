@@ -57,18 +57,18 @@ holds paths relative to the root folder of the repository.
 
 ## `gspot scan`
 
-| Field           | Meaning                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------- |
-| `totals`        | The counts of the run: `files`, `checks`, `findings`, `filesFlagged`, and `seconds`.        |
-| `categories`    | The findings by category, real problems first: `name`, `count`, and three `examples`.       |
-| `filesToFormat` | Number of files that differ from your style.                                                |
-| `notRun`        | One line for each check that could not run.                                                 |
-| `leftOut`       | The checks that a scan leaves out, because they run your code.                              |
-| `cost`          | The tools, the megabytes in `.gspot/`, and the seconds in `perTool`.                        |
-| `plan`          | The plan that `gspot init` prints.                                                          |
-| `settingsText`  | The text of the `gspot.toml` that init writes.                                              |
-| `nextSteps`     | The commands to run next.                                                                   |
-| `checks`        | The result of every planned check, as in [`gspot check`](#gspot-check), with every finding. |
+| Field           | Meaning                                                                                                                             |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `totals`        | The counts of the run: `files`, `checks`, `findings`, `filesFlagged`, and `seconds`.                                                |
+| `categories`    | The findings by category, real problems first: `name`, `count`, the five largest `rules`, and three `examples` of the largest rule. |
+| `filesToFormat` | Number of files that differ from your style.                                                                                        |
+| `notRun`        | One line for each check that could not run.                                                                                         |
+| `leftOut`       | The checks that a scan leaves out, because they run your code.                                                                      |
+| `cost`          | The tools, the megabytes in `.gspot/`, and the seconds in `perTool`.                                                                |
+| `plan`          | The plan that `gspot init` prints.                                                                                                  |
+| `settingsText`  | The text of the `gspot.toml` that init writes.                                                                                      |
+| `nextSteps`     | The commands to run next.                                                                                                           |
+| `checks`        | The result of every planned check, as in [`gspot check`](#gspot-check), with every finding.                                         |
 
 ## `gspot baseline`
 

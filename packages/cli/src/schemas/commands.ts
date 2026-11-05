@@ -150,7 +150,12 @@ export const pushReportSchema = z.strictObject({
     exitCode: z.int(),
 });
 
-export const scanCategorySchema = z.strictObject({ name: z.string(), count: z.int(), examples: findingSchema.array() });
+export const scanCategorySchema = z.strictObject({
+    name: z.string(),
+    count: z.int(),
+    rules: z.strictObject({ check: z.string(), rule: z.string(), count: z.int() }).array(),
+    examples: findingSchema.array(),
+});
 
 const toolTimeSchema = z.strictObject({ name: z.string(), seconds: z.number() });
 

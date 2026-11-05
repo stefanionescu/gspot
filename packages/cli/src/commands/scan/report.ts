@@ -14,6 +14,7 @@ import {
     SCAN_NEXT_STEPS_TITLE,
     SCAN_NOT_RUN_TITLE,
     SCAN_PLAN_TITLE,
+    SCAN_RULES_SHOWN,
 } from '#cli/config/commands/reports.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
@@ -32,11 +33,31 @@ function selectCategory({ check }: Finding): string {
     return category?.name ?? SCAN_CODE_CATEGORY;
 }
 
+function listTopRules(findings: Finding[]): ScanCategory['rules'] {
+    const named = findings.filter(({ rule }) => rule !== undefined);
+    const groups = Map.groupBy(named, ({ check, rule = '' }) => `${check} ${rule}`);
+    return groups
+        .values()
+        .map((found) => {
+            const [{ check, rule = '' }] = found as [Finding];
+            return { check, rule, count: found.length };
+        })
+        .toArray()
+        .toSorted((left, right) => right.count - left.count)
+        .slice(0, SCAN_RULES_SHOWN);
+}
+
 function buildCategories(findings: Finding[]): ScanCategory[] {
     const groups = Map.groupBy(findings, (finding) => selectCategory(finding));
     return SCAN_CATEGORIES.flatMap(({ name }) => {
         const found = groups.get(name) ?? [];
-        return found.length === 0 ? [] : [{ name, count: found.length, examples: found.slice(0, SCAN_EXAMPLES_SHOWN) }];
+        if (found.length === 0) return [];
+        const rules = listTopRules(found);
+        const [top] = rules;
+        const largest =
+            top === undefined ? found : found.filter(({ check, rule }) => check === top.check && rule === top.rule);
+        const examples = largest.slice(0, SCAN_EXAMPLES_SHOWN);
+        return [{ name, count: found.length, rules, examples }];
     });
 }
 
@@ -60,13 +81,18 @@ function buildCost({ session, report, toolBytes }: ScanInput): ScanReport['cost'
 
 function listChecksNotRun({ checks }: RunReport): string[] {
     const stopped = checks.filter(({ status }) => INCOMPLETE_STATUSES.has(status));
-    return [...new Set(stopped.map(({ check, note = '' }) => `${check}: ${note}`.trim()))];
+    return [...Map.groupBy(stopped, ({ note = '' }) => note)].map(([note, group]) => {
+        const names = [...new Set(group.map(({ check }) => check))];
+        const hidden = names.length - SCAN_RULES_SHOWN;
+        const more = hidden > 0 ? ` and ${String(hidden)} more` : '';
+        return `${names.slice(0, SCAN_RULES_SHOWN).join(', ')}${more}: ${note}`.trim();
+    });
 }
 
 function listNextSteps({ pinPath, session }: ScanInput['planning']): string[] {
     const { command, installCommand } = session.startRunner;
     const add = installCommand.replace('<version>', () => cliPackage.version);
-    return [...(pinPath === undefined ? [] : [add]), ...SCAN_NEXT_STEPS.map((step) => `${command} ${step}`)];
+    return [...(pinPath === undefined ? [] : [add]), `${command} init`, ...SCAN_NEXT_STEPS];
 }
 
 function formatExample({ file, line, check, rule, message }: Finding): string {
@@ -74,6 +100,16 @@ function formatExample({ file, line, check, rule, message }: Finding): string {
     const name = rule === undefined || rule === check ? check : `${check} ${rule}`;
     const text = message.split(LINE_BREAK).map((line) => line.trim());
     return [place, name, text.join(' ')].filter((field) => field !== '').join('  ');
+}
+
+function formatRuleRows(rules: ScanCategory['rules']): string[] {
+    const [largest] = rules;
+    if (largest === undefined) return [];
+    const { check, rule } = largest;
+    return [
+        ...rules.map((each) => `${each.check} ${each.rule}  ${formatCount(each.count, 'finding')}`),
+        `To leave a rule out: gspot ignore ${check} --rule ${rule} --reason "<why>"`,
+    ];
 }
 
 function formatTotals({ totals }: ScanReport): string {
@@ -86,15 +122,15 @@ function listSections(report: ScanReport): ScanSection[] {
     const { categories, filesToFormat, notRun, leftOut, cost, plan, settingsText, nextSteps } = report;
     const verb = filesToFormat === 1 ? 'differs' : 'differ';
     return [
-        ...categories.map(({ name, count, examples }) => ({
+        ...categories.map(({ name, count, rules, examples }) => ({
             title: `${name}: ${formatCount(count, 'finding')}`,
-            rows: examples.map((finding) => formatExample(finding)),
+            rows: [...formatRuleRows(rules), ...examples.map((finding) => formatExample(finding))],
         })),
         { title: SCAN_FORMATTING_TITLE, rows: [`${formatCount(filesToFormat, 'file')} ${verb} from your style.`] },
         ...(notRun.length === 0 ? [] : [{ title: SCAN_NOT_RUN_TITLE, rows: notRun }]),
         ...(leftOut.length === 0 ? [] : [{ title: SCAN_LEFT_OUT_TITLE, rows: leftOut }]),
         {
-            title: `Cost: ${formatCount(cost.tools, 'tool')}, ${String(cost.megabytes)} MB in ${GSPOT_FOLDER}/`,
+            title: `Cost: ${formatCount(cost.tools, 'tool')}, ${String(cost.megabytes)} MB in ${GSPOT_FOLDER}/. Each time adds up the scopes of a tool, which run side by side.`,
             rows: cost.perTool.map(({ name, seconds }) => `${name}  ${seconds.toFixed(1)}s`),
         },
         ...(plan.lintCommands.length === 0

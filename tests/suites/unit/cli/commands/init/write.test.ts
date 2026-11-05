@@ -42,12 +42,12 @@ test.each([
     {
         name: 'a package.json without a pin needs the install of the package manager',
         manifest: '{"name":"example","private":true,"dependencies":{"left-pad":"1.0.0"}}\n',
-        next: 'Next: run npm install to install the gspot that package.json now pins, then gspot check --fix, then gspot baseline.',
+        next: 'Next: run npm install to install the gspot that package.json now pins, commit the setup files, then fix each file as you touch it.',
     },
     {
         name: 'a repository with a pin goes on to gspot check --fix',
         manifest: `{"name":"example","private":true,"devDependencies":{"${cliPackage.name}":"${cliPackage.version}"}}\n`,
-        next: 'Next: gspot check --fix, then gspot baseline.',
+        next: 'Next: commit the setup files, then fix each file as you touch it.',
     },
 ])('the last line of init: $name', async ({ manifest, next }) => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

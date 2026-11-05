@@ -3,8 +3,13 @@ import { expect, test } from 'bun:test';
 import { buildScanReport, formatScanMarkdown, formatScanText } from '#cli/commands/scan/report.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { SCAN_RUN_REPORT } from '#tests/config/commands/check.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+function buildRuffFinding(rule: string, line: number): Finding {
+    return { check: 'python/ruff', file: 'a.py', line, rule, message: 'A message.', fixable: false };
+}
 
 async function buildSampleReport(): Promise<ScanReport> {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n', 'src/a.js': 'export const a = 1;\n' });
@@ -62,6 +67,46 @@ test('scan lists real problems first, keeps three examples, and counts formattin
     expect(report.checks).toBe(SCAN_RUN_REPORT.checks);
 });
 
+test('scan names the largest rules, takes examples from the largest, and groups what did not run by cause', async () => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const base = { scope: '', fileCount: 1, duration: 1 };
+    const checks = [
+        {
+            ...base,
+            check: 'python/ruff',
+            status: 'failed' as const,
+            findings: [buildRuffFinding('E1', 1), buildRuffFinding('E2', 2), buildRuffFinding('E2', 3)],
+        },
+        ...['a/one', 'a/two'].map((check) => ({
+            ...base,
+            check,
+            status: 'missing' as const,
+            note: 'Install it.',
+            findings: [],
+        })),
+    ];
+    const report = buildScanReport({
+        planning,
+        session: planning.session,
+        report: { ...SCAN_RUN_REPORT, checks },
+        toolBytes: 0,
+        ruleRows: [],
+        leftOut: [],
+    });
+    expect(report.categories[0]).toMatchObject({
+        rules: [
+            { check: 'python/ruff', rule: 'E2', count: 2 },
+            { check: 'python/ruff', rule: 'E1', count: 1 },
+        ],
+    });
+    expect(report.categories[0]?.examples.map(({ line }) => line)).toStrictEqual([2, 3]);
+    expect(report.notRun).toStrictEqual(['a/one, a/two: Install it.']);
+    expect(formatScanText(report)).toContain(
+        'To leave a rule out: gspot ignore python/ruff --rule E2 --reason "<why>"',
+    );
+});
+
 test.each(['data-files/taplo-format', 'bash/shfmt'])('scan counts a file of %s as formatting', async (check) => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
     const planning = await planInit(sandbox.path, { cwd: sandbox.path });
@@ -99,19 +144,15 @@ test('the text report prints each section with its rows', async () => {
     expect(text).toContain('Could not run\n  python/ruff: ruff is not installed.\n');
     expect(text).toContain('  eslint  2.0s\n');
     expect(text).toContain('What gspot init would do\n  configurations\n');
-    expect(text).toEndWith(
-        '  mise exec -- gspot init\n  mise exec -- gspot check --fix\n  mise exec -- gspot baseline\n',
-    );
+    expect(text).toEndWith('  mise exec -- gspot init\n  Commit the setup files.\n  Fix each file as you touch it.\n');
 });
 
 test('the Markdown report uses headings and lists, and fences the plan', async () => {
     const text = formatScanMarkdown(await buildSampleReport());
     expect(text).toStartWith('# gspot scan\n\nChecked 2 files');
-    expect(text).toContain('## Secrets: 1 finding\n\n- src/key.ts:2  secrets/gitleaks-staged generic-api-key');
+    expect(text).toContain('## Secrets: 1 finding\n\n- secrets/gitleaks-staged generic-api-key  1 finding\n');
     expect(text).toContain('## What gspot init would do\n\n```text\nconfigurations\n');
-    expect(text).toEndWith(
-        '- mise exec -- gspot init\n- mise exec -- gspot check --fix\n- mise exec -- gspot baseline\n',
-    );
+    expect(text).toEndWith('- mise exec -- gspot init\n- Commit the setup files.\n- Fix each file as you touch it.\n');
 });
 
 test('the report words one file to format in the singular', async () => {

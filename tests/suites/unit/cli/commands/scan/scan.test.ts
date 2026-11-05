@@ -61,8 +61,8 @@ test('scan reports its run and the plan of init, and leaves the repository as it
     expect(report.nextSteps).toStrictEqual([
         `npm install --save-dev --save-exact @gspothq/cli@${cliPackage.version}`,
         'npm exec --no -- gspot init',
-        'npm exec --no -- gspot check --fix',
-        'npm exec --no -- gspot baseline',
+        'Commit the setup files.',
+        'Fix each file as you touch it.',
     ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

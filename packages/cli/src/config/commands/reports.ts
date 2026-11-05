@@ -185,6 +185,8 @@ export const SCAN_STOPPED_MESSAGE = 'Scan stopped before it finished. Your repos
 
 export const SCAN_EXAMPLES_SHOWN = 3;
 
+export const SCAN_RULES_SHOWN = 5;
+
 export const SCAN_CODE_CATEGORY = 'Code';
 
 export const SCAN_CATEGORIES = [
@@ -222,6 +224,6 @@ export const SCAN_CARRYOVER_TITLE = 'What gspot init would carry over and drop';
 
 export const SCAN_NEXT_STEPS_TITLE = 'Next steps';
 
-export const SCAN_NEXT_STEPS = ['init', 'check --fix', 'baseline'] as const;
+export const SCAN_NEXT_STEPS = ['Commit the setup files.', 'Fix each file as you touch it.'] as const;
 
 export const BYTES_PER_MEGABYTE = 1_048_576;
