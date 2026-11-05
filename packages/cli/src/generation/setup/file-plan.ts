@@ -176,7 +176,7 @@ export function listCarryoverLines(rows: CarryoverRow[]): InitFileRow[] {
 /**
 Build the file changes that init reports before it writes them.
 
-@param scan the repository facts, answers, and configurations.
+@param scan the repository facts and configurations.
 @param settings the validated gspot.toml and its generated files.
 @param settings.settings the parsed gspot.toml for file generation.
 @param settings.requirements the configurations whose tools the checks need.

@@ -85,7 +85,7 @@ export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}):
 }
 
 /**
-Build tool lockfiles that match the pins of the configurations, so that apply finds every lockfile current.
+Build tool lockfiles that match the pins of the configurations, so that install finds every lockfile current.
 */
 export function buildToolLockfiles(configurations: Configuration[]): Record<string, string> {
     const dependencies = listPackagePins(configurations).npm;

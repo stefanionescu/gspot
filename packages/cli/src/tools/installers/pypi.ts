@@ -157,7 +157,7 @@ Resolve the Python tool lockfile outside the repository before writing it.
 @param toolProjectFile the generated pyproject.toml.
 @param executable the path of uv.
 
-@returns credential-free lockfile bytes.
+@returns the path, the next bytes, and the previous bytes of the lockfile, with its credentials removed.
 */
 export async function planPythonLockfile(
     install: ToolInstall,

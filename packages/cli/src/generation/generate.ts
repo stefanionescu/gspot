@@ -112,7 +112,7 @@ Generate every file in memory, and write nothing.
 
 @param session the repository to generate for.
 
-@returns everything that apply writes.
+@returns everything that install writes.
 */
 export function buildGeneratedFiles(session: Session): Generation {
     const { settings } = session;

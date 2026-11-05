@@ -146,7 +146,7 @@ List the state of each tool project lockfile: whether it exists and names every 
 writes nothing, and it reads no package manager settings.
 
 @param session the repository, its tool configurations, and its package manager.
-@param generated the tool project files that apply writes.
+@param generated the tool project files that install writes.
 */
 export function listStaleLockfiles(
     session: Pick<Session, 'root' | 'scopes' | 'toolPackageManager' | 'toolConfigurations'>,

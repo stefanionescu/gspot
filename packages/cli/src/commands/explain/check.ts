@@ -231,7 +231,7 @@ options. ESLint and Stylelint rules must exist in the tools that gspot installed
 @param root the repository root, whose tool project holds ESLint and Stylelint.
 @param checkId the check that runs the rule.
 @param identifier the rule ID, including its plugin prefix.
-@param options the detail level and tool time limit.
+@param options the detail level and the session.
 @param options.verbose whether to include the full explanation.
 @param options.session the repository settings and tool project, when available.
 @returns undefined when no check runs the tool, or when ESLint or Stylelint has no such rule.
