@@ -2,7 +2,7 @@ export const INSECURE_RANDOM_GENERATOR = 'Math.random';
 
 export const PATH_COMMAND_METHODS = new Set(['exec', 'execSync', 'execFile', 'execFileSync', 'spawn', 'spawnSync']);
 
-export const EXPLICIT_COMMAND_PREFIXES = ['./', '.\\', '..', '/', '\\', 'C:\\'];
+export const EXPLICIT_COMMAND = /^(?:\.[/\\]|\.\.|[/\\]|[A-Za-z]:\\)/u;
 
 export const PUBLIC_TEMPORARY_FOLDERS = [
     'tmp',

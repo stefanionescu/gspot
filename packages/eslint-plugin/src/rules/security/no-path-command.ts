@@ -1,4 +1,4 @@
-import { EXPLICIT_COMMAND_PREFIXES, PATH_COMMAND_METHODS } from '../../config/security.ts';
+import { EXPLICIT_COMMAND, PATH_COMMAND_METHODS } from '../../config/security.ts';
 import { getLiteralValue } from '../../language/expressions.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
@@ -32,11 +32,7 @@ export const noPathCommand = createRule<[], 'path'>({
                     return;
                 const argument = node.arguments[0];
                 const command = getLiteralValue(argument, context.sourceCode);
-                if (
-                    argument !== undefined &&
-                    typeof command === 'string' &&
-                    EXPLICIT_COMMAND_PREFIXES.every((prefix) => !command.startsWith(prefix))
-                )
+                if (argument !== undefined && typeof command === 'string' && !EXPLICIT_COMMAND.test(command))
                     context.report({ node: argument, messageId: 'path' });
             },
         };
