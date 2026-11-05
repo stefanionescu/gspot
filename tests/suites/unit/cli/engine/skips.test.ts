@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { parse } from 'yaml';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { runChecks } from '#cli/engine/run.ts';
@@ -6,8 +7,9 @@ import { openSession } from '#cli/engine/session.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import { GENERATOR_LIMITS, NEXT_INTL_PROJECTS } from '#tests/config/engine/skips.ts';
+import { NEXT_INTL_PROJECTS } from '#tests/config/engine/skips.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -225,24 +227,40 @@ test('limit readers report their enabled state and exact level note', async () =
     ).toStrictEqual([{ check: 'python/function-size', enabled: true }]);
 });
 
-test.each(
-    GENERATOR_LIMITS.flatMap(({ check, file, languages, limits }) =>
-        languages.flatMap((language) => limits.map((limit) => ({ check, file, language, limit }))),
-    ),
-)(
-    '$check writes the configured $limit limit of $language into its generated file',
-    async ({ check, file, language, limit }) => {
+test.each(['max_function_lines', 'max_function_statements', 'max_block_nesting', 'max_callback_nesting'])(
+    'javascript/eslint writes the configured %s limit into its generated file',
+    async (limit) => {
         await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([language], {
+            'gspot.toml': buildSandboxSettings(['javascript'], {
                 level: 'all',
-                tables: `[limits.${language}]\n${limit} = { value = 1001, reason = "The generated limit must retain this distinctive value." }\n`,
+                tables: `[limits.javascript]\n${limit} = { value = 1001, reason = "The generated limit must retain this distinctive value." }\n`,
             }),
         });
         const session = await openSession(sandbox.path);
-        const generated = buildGeneratedFiles(session).files.find(({ path }) => path.endsWith(file));
-        expect(generated?.content, `${check} generates ${file}`).toMatch(/\b1001\b/u);
+        const generated = buildGeneratedFiles(session).files.find(({ path }) => path.endsWith('eslint.mjs'));
+        expect(generated?.content).toMatch(/\b1001\b/u);
     },
 );
+
+test('swift/swiftlint writes each configured limit under its own rule', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift'], {
+            level: 'all',
+            tables: '[limits.swift]\nmax_file_lines = 50\nmax_type_lines = 40\nmax_function_lines = 30\nmax_closure_lines = 20\nmax_cyclomatic_complexity = 6\nmax_function_parameters = 5\n',
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    const target = getManifestTarget('swift', 'swiftlint.yml');
+    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === target);
+    expect(parse(generated!.content)).toMatchObject({
+        file_length: { warning: 50, error: 50 },
+        type_body_length: { warning: 40, error: 40 },
+        function_body_length: { warning: 30, error: 30 },
+        closure_body_length: { warning: 20, error: 20 },
+        cyclomatic_complexity: { warning: 6, error: 6 },
+        function_parameter_count: { warning: 5, error: 5 },
+    });
+});
 
 test('bash/function-size counts every line of a function on the first line of a script', async () => {
     await using sandbox = await createGitSandbox({
