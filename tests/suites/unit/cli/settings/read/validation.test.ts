@@ -162,6 +162,13 @@ test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
     expect(validateSettingsText(row.text.replace(row.correction[0], () => row.correction[1]))).toStrictEqual([]);
 });
 
+test('an ignore of ansible/ansible-lint-production is refused and names ansible/ansible-lint', () => {
+    using sandbox = createTemporaryFolder();
+    const text = `configurations = ["ansible"]\n[[ignore]]\ncheck = "ansible/ansible-lint-production"\nreason = "${REVIEWED_REASON}"\n`;
+    expect(validateSettingsText(text)).toStrictEqual(['gspot.toml:3: ignore.0.check']);
+    expect(() => readSettings(text, sandbox.path)).toThrow('Did you mean ansible/ansible-lint?');
+});
+
 test('a record without a reason is refused at its reason field', () => {
     const text = 'configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\n';
     expect(validateSettingsText(text)).toStrictEqual(['gspot.toml:2: ignore.0.reason']);

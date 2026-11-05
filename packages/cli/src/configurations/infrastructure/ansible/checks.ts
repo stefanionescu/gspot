@@ -61,5 +61,4 @@ async function checkAnsibleLint(session: CheckSession, planned: PlannedCheck): P
 
 export const ANSIBLE_CHECKS: Readonly<Record<string, CheckCode>> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
-    'ansible/ansible-lint-production': { check: checkAnsibleLint },
 };

@@ -23,7 +23,7 @@ target = "ansible-lint.yml"
 tool = "ansible-lint"
 
 [[check]]
-command = ["ansible-lint", "-c", "{config_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8", "--profile", "moderate"]
+command = ["ansible-lint", "-c", "{config_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8"]
 example = "A task with `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` instead."
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
 help = "Change the task the way the rule says."
@@ -31,19 +31,5 @@ name = "ansible-lint"
 needs = ["project-code"]
 runs = "scope"
 stage = "commit"
-summary = "Runs the moderate ansible-lint profile beside each ansible.cfg or at the scope root."
-why = "Playbooks run as root on production hosts, and a non-idempotent task changes them each time."
-
-[[check]]
-command = ["ansible-lint", "-c", "{config_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8", "--profile", "production"]
-example = "A task with `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` instead."
-files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
-help = "Change the task the way the rule says."
-instead_of = "ansible/ansible-lint"
-level = "all"
-name = "ansible-lint-production"
-needs = ["project-code"]
-runs = "scope"
-stage = "commit"
-summary = "Runs the production ansible-lint profile beside each ansible.cfg or at the scope root."
+summary = "Runs ansible-lint beside each ansible.cfg or at the scope root, with the moderate profile at level basic and the production profile at level all."
 why = "Playbooks run as root on production hosts, and a non-idempotent task changes them each time."

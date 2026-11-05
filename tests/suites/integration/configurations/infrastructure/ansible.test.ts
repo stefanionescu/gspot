@@ -12,6 +12,8 @@ import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import type { Sandbox } from '#tests/types/setup.ts';
 
+const SHORT_ACTION_PLAYBOOK = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
+
 describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     const installedSandbox = shareInstalledSandbox(ANSIBLE_SANDBOX);
 
@@ -50,11 +52,25 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     test('uses the profile of level all next to the root and scope ansible.cfg files', async () => {
         await assertLevelProfile(installedSandbox());
     });
+
+    test('level basic leaves out a rule of the production profile, through the profile in the generated config', async () => {
+        const { root } = installedSandbox();
+        await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
+            files: {
+                'gspot.toml': buildSandboxSettings(['ansible'], { level: 'basic' }),
+                'deploy/site.yml': SHORT_ACTION_PLAYBOOK,
+            },
+        });
+
+        const { report } = parseCheckReport(
+            await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
+        );
+        expect(report.exitCode, JSON.stringify(report)).toBe(0);
+    });
 });
 
 async function assertLevelProfile(sandbox: Sandbox): Promise<void> {
     const { root } = sandbox;
-    const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
     await using _sourceChange = await writeSandboxChanges(sandbox, {
         files: {
             'gspot.toml': buildSandboxSettings(['ansible'], {
@@ -62,14 +78,14 @@ async function assertLevelProfile(sandbox: Sandbox): Promise<void> {
                 scopes: [{ path: 'app', configurations: ['ansible'] }],
             }),
             'deploy/ansible.cfg': ANSIBLE_CONFIG,
-            'deploy/site.yml': source,
+            'deploy/site.yml': SHORT_ACTION_PLAYBOOK,
             'app/deploy/ansible.cfg': ANSIBLE_CONFIG,
-            'app/deploy/site.yml': source,
+            'app/deploy/site.yml': SHORT_ACTION_PLAYBOOK,
         },
     });
 
     const checked = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint-production', '--json']),
+        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
     ).report;
     expect(checked.exitCode, JSON.stringify(checked)).toBe(1);
     expect(listFindingRows(checked)).toStrictEqual([
@@ -79,7 +95,7 @@ async function assertLevelProfile(sandbox: Sandbox): Promise<void> {
     await writeFile(join(root, 'deploy/site.yml'), ANSIBLE_PLAYBOOK);
     await writeFile(join(root, 'app/deploy/site.yml'), ANSIBLE_PLAYBOOK);
     const fixed = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint-production', '--json']),
+        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
     ).report;
     expect(fixed.exitCode, JSON.stringify(fixed)).toBe(0);
 }
