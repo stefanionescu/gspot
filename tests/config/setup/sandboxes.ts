@@ -150,7 +150,6 @@ export const SANDBOX_PACKAGES = {
     vitest: '4.1.12',
     vue: '3.5.42',
     wrangler: '4.151.1',
-    yarn: '1.22.22',
 } as const;
 
 export const NPM_PROJECT_FILES = {
