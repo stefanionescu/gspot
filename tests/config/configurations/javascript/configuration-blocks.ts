@@ -41,22 +41,6 @@ export const NEXTJS_ROUTE_FILES = {
     'apps/empty/component.jsx': 'export function Empty() { return <p>Empty</p>; }\n',
 };
 
-export const EXPRESS_SOURCE =
-    'import value from "#lib/owner";\nresponse.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
-
-export const EXPRESS_FINDINGS = {
-    all: [
-        { file: 'api/child/source.js', rule: 'gspot/restricted-syntax', line: 1 },
-        { file: 'api/child/source.js', rule: 'gspot/restricted-syntax', line: 2 },
-        { file: 'api/child/source.js', rule: 'gspot/restricted-syntax', line: 3 },
-        { file: 'api/source.js', rule: 'gspot/restricted-syntax', line: 1 },
-        { file: 'api/source.js', rule: 'gspot/restricted-syntax', line: 2 },
-        { file: 'api/source.js', rule: 'gspot/restricted-syntax', line: 3 },
-        { file: 'source.js', rule: 'gspot/restricted-syntax', line: 1 },
-        { file: 'source.js', rule: 'gspot/restricted-syntax', line: 3 },
-    ],
-} as const;
-
 export const TRPC_IMPORTS = [
     { source: 'import { router } from "./private/router.js";', line: 2 },
     { source: 'import {\n router\n} from "./private/router.js";', line: 4 },

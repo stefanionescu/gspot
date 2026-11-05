@@ -79,9 +79,11 @@ export const EXPRESS_SOURCES = {
     'home.js': 'res.redirect("/home");\n',
     'stack.js': 'res.json({ stack: error.stack });\nres.status(500).send({ stack: error.stack });\n',
     'failure.js': 'res.json({ error: "Request failed" });\n',
+    'client-message.js': 'res.json({ message: `Item ${identifier}` });\n',
 } as const;
 
 export const EXPRESS_SOURCE_FINDINGS = [
+    { file: 'client-message.js', line: 1 },
     { file: 'execute-template.js', line: 1 },
     { file: 'field.js', line: 1 },
     { file: 'query-template.js', line: 1 },

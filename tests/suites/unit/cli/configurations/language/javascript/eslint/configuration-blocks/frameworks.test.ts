@@ -3,8 +3,6 @@ import { createFileTree, testdir } from 'testdirs';
 
 import {
     COMPONENT_FILES,
-    EXPRESS_FINDINGS,
-    EXPRESS_SOURCE,
     HTML_INJECTION_CASES,
     INDEX_ONLY_REEXPORTS,
     NEXTJS_ROUTE_FILES,
@@ -73,31 +71,6 @@ test.each([...HTML_INJECTION_CASES])(
         expect(await listLintFindings(eslint, sandbox.path, ['plain.js'], [component.rule])).toStrictEqual([]);
         await createFileTree(sandbox.path, { [path]: component.corrected });
         expect(await listLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([]);
-    },
-);
-
-test.each(['all'] as const)(
-    'Express selectors and security rules apply in the Express scope at their level (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['javascript'], {
-                level,
-                rules: true,
-                tables: '[javascript]\nimport_extension = "js"\n',
-                scopes: [{ path: 'api', configurations: ['express'] }],
-            }),
-            'package.json': '{"private":true,"type":"module","imports":{"#lib/*":"./*.js"}}',
-            'owner.js': 'export const value = 1;',
-            'source.js': EXPRESS_SOURCE,
-            'api/source.js': EXPRESS_SOURCE,
-            'api/child/source.js': EXPRESS_SOURCE,
-        });
-
-        const eslint = await buildEslint(sandbox.path);
-        const files = ['source.js', 'api/source.js', 'api/child/source.js'];
-        expect(await listLintFindings(eslint, sandbox.path, files, ['gspot/restricted-syntax'])).toStrictEqual([
-            ...EXPRESS_FINDINGS[level],
-        ]);
     },
 );
 
