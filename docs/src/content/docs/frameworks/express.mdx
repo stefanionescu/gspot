@@ -5,44 +5,40 @@ configurations: [express]
 ---
 
 The `express` configuration adds ESLint rules for the code of an Express service. They report request data passed to
-SQL text, `res.send()`, or `res.redirect()`, and values or stack traces in the error that a client gets. The
-configuration adds no check of its own and no Semgrep rules. Its rules run in `javascript/eslint`.
+SQL text, `res.send()`, or `res.redirect()`, and values or stack traces in the error that a client gets. Its rules run
+in `javascript/eslint`, before each commit.
 
-## Detection
+## When gspot turns it on
 
-gspot turns on `express` in a scope whose `package.json` depends on `express`. The configuration needs `javascript`, so
-gspot turns that on too.
+gspot turns on `express` in a scope whose `package.json` depends on `express`. To check an OpenAPI description of the
+service, add the [`openapi` configuration](/reference/configurations/openapi/).
 
 ## ESLint rules
 
 The `gspot/restricted-syntax` rule reports these patterns at both levels:
 
-| Pattern                                                                                                                 | Message                                                                                                            |
-| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `req.body`, `req.query`, or `req.params` in the template text of a `query`, `execute`, `raw`, or `$queryRawUnsafe` call | Request data goes into the SQL text of a database call, which allows SQL injection.                                |
-| `res.redirect()` with a target from `req.body`, `req.query`, or `req.params`                                            | `res.redirect()` takes its target from the request, which allows an open redirect.                                 |
-| `res.send()` with a value from the request, alone or inside a template                                                  | `res.send()` returns request data as HTML, which allows reflected XSS.                                             |
-| A template with values in the `message` or `error` field of an object passed to `.json()` or `.send()`                  | Keep values out of the message a client reads; send each value in its own field.                                   |
-| A `stack` field set from an error's `stack` in `res.json()` or `res.send()`, also after `res.status()`                  | A stack trace in an API response leaks implementation details. Log it on the server, and return a generic message. |
+| Pattern                                                                                                                 | Message                                                                                                                    |
+| ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `req.body`, `req.query`, or `req.params` in the template text of a `query`, `execute`, `raw`, or `$queryRawUnsafe` call | Request data goes into the SQL text of a database call, which allows SQL injection. Pass the value as a query parameter.   |
+| `res.redirect()` with a target from `req.body`, `req.query`, or `req.params`                                            | `res.redirect()` takes its target from the request, which allows an open redirect. Redirect only to a URL on an allowlist. |
+| `res.send()` with a value from the request, alone or inside a template                                                  | `res.send()` returns request data as HTML, which allows reflected XSS. Escape the value, or send JSON with `res.json()`.   |
+| A template with values in the `message` or `error` field of an object passed to `.json()` or `.send()`                  | Keep values out of the message a client reads; send each value in its own field.                                           |
+| A `stack` field set from an error's `stack` in `res.json()` or `res.send()`, also after `res.status()`                  | A stack trace in an API response leaks implementation details. Log it on the server, and return a generic message.         |
 
-It also turns on `security/detect-no-csrf-before-method-override` of eslint-plugin-security.
+The `express` configuration also reports `methodOverride()` placed before the CSRF middleware, through
+`security/detect-no-csrf-before-method-override`.
 
 For example, this handler sends request data back as HTML:
 
-```js
+```js title="src/server.js"
 app.get('/hello', (req, res) => {
     res.send(req.query.name);
 });
 ```
 
 ```text
-src/server.js:6:5  gspot/restricted-syntax  res.send() returns request data as HTML, which allows reflected XSS. Escape the value, or send JSON with res.json().
+src/server.js:2:5  gspot/restricted-syntax  res.send() returns request data as HTML, which allows reflected XSS. Escape the value, or send JSON with res.json().
 ```
 
 The rules of the `javascript` configuration also check Express code, such as `gspot/no-powered-by-header` in the
 [Servers rules](/reference/eslint-plugin/servers/#no-powered-by-header).
-
-## Rules for coding agents
-
-The `express` configuration writes the rule file `EXPRESS.md` for coding agents. To check an OpenAPI description of the service,
-add the [`openapi` configuration](/reference/configurations/openapi/).

@@ -7,11 +7,11 @@ configurations: [expo]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `expo` configuration runs Expo Doctor, and adds the lint rules of eslint-plugin-expo for public environment
-variables and DOM components. It adds no Semgrep rules. It runs these checks:
+variables and DOM components. It runs these checks:
 
 <ChecksTable guide="frameworks/expo" />
 
-## Detection
+## When gspot turns it on
 
 gspot turns on `expo` in a scope whose `package.json` depends on `expo`. The configuration needs `react-native`, so
 gspot turns that on too, and the [React Native](/frameworks/react-native/) and [React](/frameworks/react/) rules also
@@ -19,12 +19,12 @@ run.
 
 ## Doctor check
 
-`expo/expo-doctor` runs Expo Doctor before each push, once for each scope. It reports each Doctor check that fails, with
-its details, as a finding on the `package.json` of the scope. Doctor needs network access.
+Before each push, `expo/expo-doctor` runs Expo Doctor and reports each problem that it finds. Expo Doctor needs network
+access and the installed dependencies of the project, so when `expo` is not installed in the scope, the check stops and
+asks you to install them.
 
-The check reads the installed dependencies of the Expo project. When `expo` is not installed in the scope, the check
-stops and asks you to install the dependencies. A Doctor check fails, for example, when the installed `react-native`
-version differs from the one that the Expo SDK needs. Run `npx expo install --check` to install the matching version.
+A Doctor test fails, for example, when the installed `react-native` version differs from the one that the Expo SDK
+needs. Run `npx expo install --check` to install the matching version.
 
 ## ESLint rules
 

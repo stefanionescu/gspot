@@ -1,51 +1,42 @@
 ---
 title: Astro
-description: Lint and type-check Astro components.
+description: The lint rules and the type check for Astro components.
 configurations: [astro]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `astro` configuration lints Astro components with eslint-plugin-astro and its accessibility rules, and type-checks
-them with `astro check`. Prettier formats `.astro` files through prettier-plugin-astro. The configuration adds no
-Semgrep rules. It runs these checks:
+them with `astro check`. Prettier formats `.astro` files. The configuration runs these checks:
 
 <ChecksTable guide="frameworks/astro" />
 
-## Detection
+## When gspot turns it on
 
-gspot turns on `astro` in a scope that has a `.astro` file, or whose `package.json` depends on `astro`. The
-configuration needs `javascript`, so gspot turns that on too. It makes `extensionless` the default of
-`javascript.import_extension`, so relative imports leave out the file extension.
+gspot turns on `astro` in a scope that has a `.astro` file, or whose `package.json` depends on `astro`. When the project
+also uses `@astrojs/sitemap` or Starlight, gspot turns on `site`, which builds the site and checks the pages, as
+[Static sites](/topics/site/) describes.
 
 ## Type check
 
-`astro/astro-check` runs `astro check` in the folder of the scope, before each push. A warning fails the check, as an
-error does. When the scope uses `typescript`, the check runs next to `typescript/tsc`, because `tsc` cannot read a
-component file.
+Before each push, `astro/astro-check` runs `astro check`, which covers the `.astro` files that `tsc` cannot read. A
+warning fails the check, as an error does. When the scope uses `typescript`, `typescript/tsc` still checks your `.ts`
+files.
 
 ## ESLint rules
 
 `javascript/eslint` checks each component, and the scripts inside it, with these rules:
 
 - The `flat/recommended` preset of eslint-plugin-astro.
-- The `flat/jsx-a11y-recommended` preset, which applies the jsx-a11y accessibility rules to the markup. Its
-  `no-noninteractive-tabindex` rule accepts a `tabindex` on the `tabpanel` and `region` roles.
+- The `flat/jsx-a11y-recommended` preset, which applies the jsx-a11y accessibility rules to the markup.
 - `astro/no-set-html-directive`, `astro/no-exports-from-components`, and `astro/no-prerender-export-outside-pages`.
 - At level `all`: `astro/no-unused-css-selector`, `astro/prefer-class-list-directive`, `astro/prefer-object-class-list`,
   and `astro/prefer-split-class-list`.
 
-The `<script>` blocks of a component run in the browser. In them, `gspot/no-client-environment` allows only the
+The `<script>` blocks of a component run in the browser, so in them `gspot/no-client-environment` allows only the
 environment variables that start with `PUBLIC_`, and `NODE_ENV`, `SITE`, and `ASSETS_PREFIX`.
 
-## Rules gspot turns off
+## What gspot accepts
 
-- `import-x/no-default-export` is off in `.astro` files, because Astro compiles each component to a default export.
-- At level `all`, `gspot/no-trivial-files` accepts a component, and a script block that only imports a module. Astro
-  builds client code from such a script, and reads the props of a component from the `Props` type in its own
-  frontmatter.
-
-## Rules for coding agents
-
-The `astro` configuration writes the rule file `ASTRO.md` for coding agents. The `site` configuration checks the built
-pages, as [Static sites](/topics/site/) describes.
+At level `all`, gspot reports files that only forward to another module. An Astro component never counts as one, even
+when its script only imports a module.

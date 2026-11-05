@@ -7,27 +7,25 @@ configurations: [vue]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `vue` configuration lints Vue components with eslint-plugin-vue and eslint-plugin-vuejs-accessibility, and
-type-checks them with vue-tsc. Prettier formats `.vue` files through the `format` configuration, which is on in every
-repository. The `vue` configuration adds no Semgrep rules. It runs these checks:
+type-checks them with vue-tsc. Prettier formats `.vue` files, and the [CSS guide](/languages/css/#component-styles)
+covers the style blocks of components. The configuration runs these checks:
 
 <ChecksTable guide="frameworks/vue" />
 
-## Detection
+## When gspot turns it on
 
-gspot turns on `vue` in a scope that has a `.vue` file, or whose `package.json` depends on `vue`. The configuration
-needs `javascript`, so gspot turns that on too. It makes `extensionless` the default of `javascript.import_extension`, so relative imports
-leave out the file extension.
+gspot turns on `vue` in a scope that has a `.vue` file, or whose `package.json` depends on `vue`.
 
 ## Type check
 
-When the scope uses `typescript`, `vue/vue-tsc` runs in place of `typescript/tsc`, before each push. It checks the
-types of every component and TypeScript file of the scope with the strict compiler options of the level. A scope without
+When the scope uses `typescript`, `vue/vue-tsc` runs in place of `typescript/tsc`, before each push. It checks the types
+of every component and TypeScript file of the scope with the strict compiler options of the level. A scope without
 `typescript` runs no type check of its components.
 
 ## ESLint rules
 
-`javascript/eslint` reads `.vue` files with vue-eslint-parser. When the scope uses `typescript`, it reads their
-scripts with the TypeScript parser. It adds these rules:
+`javascript/eslint` reads `.vue` files with vue-eslint-parser. When the scope uses `typescript`, it reads their scripts
+with the TypeScript parser. It adds these rules:
 
 - The `flat/recommended` presets of eslint-plugin-vue and eslint-plugin-vuejs-accessibility.
 - `vue/no-setup-props-reactivity-loss`, `vue/no-ref-object-reactivity-loss`, `vue/no-unused-refs`,
@@ -36,17 +34,5 @@ scripts with the TypeScript parser. It adds these rules:
   `vue/prefer-true-attribute-shorthand`. When the scope uses `typescript`, also `vue/define-props-declaration` and
   `vue/define-emits-declaration`.
 
-Level `basic` turns off the style, naming, and ordering rules of the eslint-plugin-vue preset, and level `all` runs them:
-`vue/attribute-hyphenation`, `vue/attributes-order`, `vue/block-order`, `vue/component-definition-name-casing`,
-`vue/multi-word-component-names`, `vue/one-component-per-file`, `vue/order-in-components`, `vue/prop-name-casing`,
-`vue/this-in-template`, `vue/v-bind-style`, `vue/v-on-event-hyphenation`, `vue/v-on-style`, and `vue/v-slot-style`.
-
-## Rules gspot turns off
-
-- `import-x/no-default-export` is off in `.vue` files, because Vue compiles each component to a default export.
-- `vue/require-default-prop` is off.
-
-## Rules for coding agents
-
-The `vue` configuration writes the rule file `VUE.md` for coding agents. The [CSS guide](/languages/css/#component-styles) covers
-the style blocks of components.
+Level `basic` turns off the style, naming, and ordering rules of the eslint-plugin-vue preset, and level `all` runs them.
+`vue/require-default-prop` is off at both levels, so an optional prop needs no default value.

@@ -7,47 +7,38 @@ configurations: [svelte]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `svelte` configuration lints Svelte components with eslint-plugin-svelte, and checks their compiler warnings,
-accessibility warnings, and types with svelte-check. Prettier formats `.svelte` files through prettier-plugin-svelte.
-The configuration adds no Semgrep rules. It runs these checks:
+accessibility warnings, and types with svelte-check. Prettier formats `.svelte` files, and the
+[CSS guide](/languages/css/#component-styles) covers the style blocks of components. The configuration runs these
+checks:
 
 <ChecksTable guide="frameworks/svelte" />
 
-## Detection
+## When gspot turns it on
 
-gspot turns on `svelte` in a scope that has a `.svelte` file, or whose `package.json` depends on `svelte`. The
-configuration needs `javascript`, so gspot turns that on too. It makes `extensionless` the default of `javascript.import_extension`, so
-relative imports leave out the file extension.
+gspot turns on `svelte` in a scope that has a `.svelte` file, or whose `package.json` depends on `svelte`.
 
 ## Type and compiler check
 
-`svelte/svelte-check` runs in place of `typescript/tsc`, before each push, once for each scope. It checks every component and
-TypeScript file with a tsconfig that gspot writes for the scope. When the scope has its own tsconfig, the tsconfig of
-gspot extends it. When the scope has none, the tsconfig of gspot turns on the strict compiler options of the level. A
-warning fails the check, as an error does. For example, `<img src={source} />` gets an `a11y_missing_attribute`
-finding.
+Before each push, `svelte/svelte-check` runs in place of `typescript/tsc`, and checks every component and TypeScript
+file. It uses your tsconfig when the scope has one, and the strict options of the level when it has none. A warning
+fails the check, as an error does. For example, `<img src={source} />` gets an `a11y_missing_attribute` finding.
 
-svelte-check loads the Svelte compiler of your project. Install the dependencies of the project before you run
-`gspot install`, or svelte-check fails to start.
+svelte-check loads the Svelte compiler from your `node_modules`. Install your project dependencies first, or
+`svelte/svelte-check` cannot start.
 
 To accept one warning, write a `svelte-ignore` comment with a reason, such as
 `<!-- svelte-ignore a11y_autofocus - reason: the dialog opens with the search field in focus -->`.
 
 ## ESLint rules
 
-`javascript/eslint` reads `.svelte`, `.svelte.js`, and `.svelte.ts` files with svelte-eslint-parser. When the scope
-uses `typescript`, it reads their scripts with the TypeScript parser. It adds these rules:
+`javascript/eslint` reads `.svelte`, `.svelte.js`, and `.svelte.ts` files with svelte-eslint-parser. When the scope uses
+`typescript`, it reads their scripts with the TypeScript parser. It adds these rules:
 
 - The `recommended` preset of eslint-plugin-svelte.
 - `svelte/no-target-blank` and `svelte/button-has-type`.
 - At level `all`: `svelte/no-useless-mustaches`, `svelte/prefer-const`, and `svelte/require-event-dispatcher-types`.
 
-## Rules gspot turns off
+## What gspot accepts
 
-- `import-x/no-default-export` is off in `.svelte` files, because Svelte compiles each component to a default export.
-- At level `all`, `structure/lone-files` accepts a folder whose only file is a SvelteKit route file: `+page`,
-  `+layout`, `+server`, or `+error`.
-
-## Rules for coding agents
-
-The `svelte` configuration writes the rule file `SVELTE.md` for coding agents. The [CSS guide](/languages/css/#component-styles)
-covers the style blocks of components.
+At level `all`, gspot reports a folder that holds one code file and nothing else. A SvelteKit route file, which is
+`+page`, `+layout`, `+server`, or `+error`, does not count, because SvelteKit reads it by its name.

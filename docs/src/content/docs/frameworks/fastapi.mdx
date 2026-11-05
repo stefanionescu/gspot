@@ -5,14 +5,13 @@ configurations: [fastapi]
 ---
 
 The `fastapi` configuration adds the FastAPI rules of Ruff, and three Semgrep rules for the settings and errors of a
-FastAPI application. It adds no check of its own: the Ruff rules run in `python/ruff`, and the Semgrep rules in
-`security/semgrep`.
+FastAPI application. The Ruff rules run in `python/ruff`, and the Semgrep rules in `security/semgrep`.
 
-## Detection
+## When gspot turns it on
 
 gspot turns on `fastapi` in a scope whose project depends on `fastapi`, for example through the `dependencies` of
-`pyproject.toml`. The configuration needs `python`, so gspot turns that on too. The [Python guide](/languages/python/)
-describes its checks.
+`pyproject.toml`. The Python checks also run, and the [Python guide](/languages/python/) describes them. To check an
+OpenAPI description of the service, add the [`openapi` configuration](/reference/configurations/openapi/).
 
 ## Ruff rules
 
@@ -26,8 +25,7 @@ describes its checks.
 
 ## Semgrep rules
 
-The configuration writes a Semgrep rule file for each scope, so `security/semgrep` runs before each push. Semgrep runs on macOS
-and Linux. The rules report:
+`security/semgrep` runs these three rules before each push, on macOS and Linux only:
 
 | Rule                                           | Reports                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------ |
@@ -70,8 +68,3 @@ gspot ignore security/semgrep --rule gspot.fastapi.debug-enabled --paths "dev/se
 ```
 
 To add rules of your own, follow [Semgrep](/topics/security/#semgrep).
-
-## Rules for coding agents
-
-The `fastapi` configuration writes the rule file `FASTAPI.md` for coding agents. To check an OpenAPI description of the service,
-add the [`openapi` configuration](/reference/configurations/openapi/).
