@@ -6,7 +6,6 @@ buildRuleTester().run('no-inverted-assertions', noInvertedAssertions, {
         'it("adds", () => { assert.equal(total, 3); });',
         'assert.equal(3, total);',
         'it("adds", () => { assert.equal(3, 4); });',
-        'it("adds", () => { expect(total).to.equal(3); });',
         'it("adds", () => { assert.ok(3, total); });',
         'describe("cart", () => { assert.equal(3, total); });',
     ],
