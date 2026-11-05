@@ -25,7 +25,7 @@ afterAll(() => resources.disposeAsync());
 const signalListeners = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => ({
     signal,
     listener: (): void => {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises, n/no-process-exit -- reason: The signal handler must dispose resources before exiting with the signal status.
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises, n/no-process-exit -- reason: The signal handler disposes resources and then exits with the signal status, and that finally ends the process, so no rejection goes unhandled.
         resources.disposeAsync().finally(() => process.exit(code));
     },
 }));
