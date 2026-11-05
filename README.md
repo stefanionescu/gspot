@@ -6,7 +6,8 @@ gspot is a command-line tool that lints AI-generated code and installs rules for
 
 - `gspot init` finds the languages and frameworks in your repository, and turns on the linters, formatters, and type
   checkers for them.
-- gspot pins every tool that it installs to one version, so every machine and CI run the same version.
+- gspot pins every tool that it installs to one version, so every machine and CI run the same version. Node.js is yours:
+  gspot needs 22.22.3 or newer.
 - Git hooks check the staged files before each commit, and the pushed files before each push. If gspot finds problems,
   the commit or push stops, and gspot lists each problem. A CI job checks each pull request and each push to the
   default branch.

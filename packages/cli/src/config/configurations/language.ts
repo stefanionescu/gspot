@@ -308,7 +308,9 @@ export const MISSING_TSCONFIG_RULE = 'missing';
 export const UNREADABLE_TSCONFIG_RULE = 'unreadable';
 
 export const MISSING_TSCONFIG_MESSAGE =
-    'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.';
+    'Add a tsconfig.json to this scope. ESLint reads the TypeScript files through it.';
+
+export const MISSING_TSCONFIG_HELP = 'Add a tsconfig.json that includes these files.';
 
 export const OPTION_HELP = 'Turn this compiler option on in this tsconfig.';
 

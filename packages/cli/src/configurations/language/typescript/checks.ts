@@ -2,6 +2,7 @@ import { join, posix, relative } from 'node:path';
 
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import {
+    MISSING_TSCONFIG_HELP,
     MISSING_TSCONFIG_MESSAGE,
     MISSING_TSCONFIG_RULE,
     OPTION_HELP,
@@ -98,6 +99,7 @@ function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] 
                 file: scopeTsconfig,
                 rule: MISSING_TSCONFIG_RULE,
                 message: MISSING_TSCONFIG_MESSAGE,
+                help: MISSING_TSCONFIG_HELP,
             },
         ];
     const tsconfigPaths = new Set([

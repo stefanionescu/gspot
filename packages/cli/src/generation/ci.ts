@@ -26,7 +26,6 @@ import {
     GITLAB_RULES,
     GITLAB_VARIABLES,
     GITLAB_WORKFLOW,
-    MISE_TOKEN_ENVIRONMENT,
 } from '#cli/config/generation.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
@@ -78,7 +77,6 @@ function buildJob(
             },
             {
                 name: CI_STEP_NAMES.gspot,
-                env: { ...MISE_TOKEN_ENVIRONMENT },
                 run: `mise install ${tools}\nmise bin-paths ${tools} >> "$GITHUB_PATH"`,
             },
             ...(pipeline.setupCommand === undefined

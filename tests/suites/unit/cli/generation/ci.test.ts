@@ -25,12 +25,11 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { readCallRecords } from '#tests/setup/system/programs.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
 
-test('the GitHub workflow gives the GitHub token to the gspot install only', () => {
+test('the GitHub workflow gives the GitHub token to no step', () => {
     const workflow = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
-    const steps = workflow.jobs['lint']!.steps;
-    expect(
-        steps.filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined).map((step) => step.name),
-    ).toStrictEqual(['Install gspot']);
+    expect(workflow.jobs['lint']!.steps.filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined)).toStrictEqual(
+        [],
+    );
 });
 
 test.each<Partial<Pipeline>>([{ setupCommand: ['echo', '${{ secrets.DEPLOY_KEY }}'] }])(

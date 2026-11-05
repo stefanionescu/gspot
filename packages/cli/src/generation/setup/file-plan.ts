@@ -43,12 +43,7 @@ import type { Settings } from '#cli/types/settings.ts';
 import type { Generation } from '#cli/types/tools.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
-    const pins = listPackagePins(
-        configurations.map((configuration) => ({
-            ...configuration,
-            tools: configuration.tools.filter((tool) => tool.kind === 'program'),
-        })),
-    );
+    const pins = listPackagePins(configurations);
     const mise = listMisePins(configurations).length;
     const npm = Object.keys(pins.npm).length;
     const python = pins.python.length;

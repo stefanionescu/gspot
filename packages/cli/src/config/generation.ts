@@ -13,8 +13,6 @@ export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
 
 export const CI_TIMEOUT_MINUTES = 60;
 
-export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: `\${{ github.token }}` } as const;
-
 export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 
 export const CI_JOB_NAME = 'lint';
@@ -90,7 +88,8 @@ export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
 export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
 
 export const GIT_ATTRIBUTES_BLOCK = `* text=auto eol=lf
-${GSPOT_FOLDER}/** linguist-generated`;
+${GSPOT_FOLDER}/** linguist-generated
+${GSPOT_FOLDER}/hooks/** linguist-generated=false`;
 
 export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;
 
@@ -139,7 +138,7 @@ export const COMMANDS_HEADING = '## Commands';
 export const GENERATED_FILES_HEADING = '## Generated files';
 
 export const GENERATED_FILES_LINE =
-    '`.gitattributes` marks each file that gspot writes `linguist-generated`, in the block between the gspot markers.';
+    '`.gitattributes` marks each file that gspot writes `linguist-generated`, except the hooks and the CI workflow, which run without a tool, so they stay open in review.';
 
 export const EDIT_KEYS_LINE = 'You can edit the other keys of that file.';
 

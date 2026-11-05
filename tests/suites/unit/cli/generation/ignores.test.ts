@@ -82,9 +82,11 @@ test.each([true, false])('generated file lists include the CI workflow only when
     const prettierIgnore = generated.files.find(({ path }) => path === '.prettierignore')!.content;
     const typos = generated.files.find(({ path }) => path.endsWith('/typos.toml'))!.content;
     const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!.body;
-    for (const text of [prettierIgnore, typos, attributes]) {
+    for (const text of [prettierIgnore, typos]) {
         expect(text.includes('.github/workflows/gspot.yml')).toBe(enabled);
     }
+    expect(attributes).not.toContain('.github/workflows/gspot.yml');
+    expect(attributes).toContain('.gspot/hooks/** linguist-generated=false');
 });
 
 test('shared Markdown settings leave inherited pointer files out of generated path ignores', async () => {

@@ -6,6 +6,8 @@ import {
     ATTRIBUTE_QUOTED_CHARACTERS,
     CI_SYSTEMS_SETTING,
     GIT_ATTRIBUTES_BLOCK,
+    GITHUB_WORKFLOW,
+    GITLAB_WORKFLOW,
     NPM_TOOL_PROJECT,
 } from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -64,7 +66,9 @@ function buildAttributePattern(path: string): string {
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
     const { settings, cache } = session;
-    const outsidePaths = listWrittenPaths(session, buildConfigs(session)).map((path) => path.slice(1));
+    const outsidePaths = listWrittenPaths(session, buildConfigs(session))
+        .map((path) => path.slice(1))
+        .filter((path) => path !== GITHUB_WORKFLOW && path !== GITLAB_WORKFLOW);
     const generatedLines = outsidePaths
         .toSorted((left, right) => compareText(left, right))
         .map((path) => `${buildAttributePattern(path)} linguist-generated`);

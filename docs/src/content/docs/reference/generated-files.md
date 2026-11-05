@@ -43,7 +43,8 @@ flowchart LR
 | The gspot blocks in `AGENTS.md` and `.gitattributes`                                 | The text between the gspot markers. The rest of each file stays yours.                  |
 | Keys in your files, such as `install.security.scanner` in `bunfig.toml`              | Install options. The other keys stay yours.                                             |
 
-The gspot block of `.gitattributes` marks each generated file outside `.gspot/` with `linguist-generated`. In a new
+The gspot block of `.gitattributes` marks the generated files `linguist-generated`, except the hooks and the CI workflow,
+which stay open in review. In a new
 clone, run `gspot install` to install the tools.
 
 ## Do not edit generated files

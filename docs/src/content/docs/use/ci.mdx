@@ -76,7 +76,7 @@ Both settings work only on GitHub. With `ci.provider = "gitlab"`, gspot rejects 
 ## Install and cache steps
 
 Each GitHub job installs mise and the pinned gspot version once. It adds the installed tools to `PATH`, and then uses
-that gspot to install the tools and run the checks. It passes the job token to mise as `MISE_GITHUB_TOKEN`.
+that gspot to install the tools and run the checks.
 
 The GitLab job runs in the `ghcr.io/jdx/mise` image, at the pinned mise version, on the runners of GitLab. It keeps the
 mise folders inside the project folder, so that GitLab can cache them. The cache key comes from the mise files in

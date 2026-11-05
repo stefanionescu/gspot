@@ -4,10 +4,8 @@ import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { overlayTable } from '#cli/settings/edit.ts';
-import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import { formatNameList } from '#cli/system/text.ts';
 import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
 import type { ProposedConfigurations, Repository } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
@@ -40,16 +38,6 @@ function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlT
     });
 }
 
-function formatSettingsPreface(): string {
-    const records = Object.keys(RECORD_FIELDS)
-        .filter((name) => name !== 'ignore')
-        .map((name) => `[[${name}]]`);
-    return [
-        `# Change these settings with ${formatSettingsCommands()}, and the configurations with \`gspot add\` or \`remove\`.`,
-        `# Write the ${formatNameList(records)} records by hand.`,
-    ].join('\n');
-}
-
 /**
 Build the gspot.toml text for a settings draft.
 
@@ -60,7 +48,10 @@ Build the gspot.toml text for a settings draft.
 export function buildInitSettings(draft: SettingsDraft, repository: Repository): string {
     const document = buildSettingsTable(draft, repository);
     delete document['ci'];
-    return `${formatSettingsPreface()}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
+    return `${[
+        `# Change these settings with ${formatSettingsCommands()}, and the configurations with \`gspot add\` or \`remove\`.`,
+        '# Run gspot list settings to see each setting. Records such as [[scope]] and [[command_check]] are written by hand.',
+    ].join('\n')}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }
 
 /**

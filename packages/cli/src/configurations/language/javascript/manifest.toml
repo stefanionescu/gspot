@@ -230,7 +230,7 @@ tool = "eslint"
 
 [config_file.pointer]
 body = "export { default } from {target_module};\n"
-note = "Run gspot install before you use ESLint in your editor."
+note = "Run gspot install before you use ESLint in your editor. https://generativespotting.com/use/editors/"
 path = "eslint.config.mjs"
 
 [[config_file]]
