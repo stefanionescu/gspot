@@ -4,3 +4,5 @@
 /start/footprint/ /reference/generated-files/ 301
 /configure/files /use/ignore/#ignore-files-in-every-check 301
 /configure/files/ /use/ignore/#ignore-files-in-every-check 301
+/use/baseline /start/quickstart/#clean-up-the-first-findings 301
+/use/baseline/ /start/quickstart/#clean-up-the-first-findings 301

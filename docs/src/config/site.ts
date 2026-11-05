@@ -36,7 +36,6 @@ export const SIDEBAR = [
         items: [
             { slug: 'use/run-checks' },
             { slug: 'use/ignore' },
-            { slug: 'use/baseline' },
             { slug: 'use/hooks' },
             { slug: 'use/ci' },
             { slug: 'use/coding-agents' },
