@@ -1,8 +1,15 @@
 import { posix } from 'node:path';
 
-import { BLOCK_STYLES, LEADING_NEWLINE, MARKERS } from '#cli/config/parsers.ts';
+import { BLOCK_STYLES, FIRST_BLOCK_FILE, LEADING_NEWLINE, MARKERS } from '#cli/config/parsers.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { TextRange } from '#cli/types/system.ts';
+
+function addBlock(text: string, body: string, placement: { isFirst: boolean; newline: string }): string {
+    const { isFirst, newline } = placement;
+    if (text === '') return body;
+    if (isFirst) return body + newline + text;
+    return text + (text.endsWith('\n') ? newline : newline + newline) + body;
+}
 
 /**
 Locate one complete block. Refuse ambiguous or malformed markers.
@@ -38,7 +45,8 @@ export function findBlockSpan(text: string, file: { path: string }): TextRange |
 }
 
 /**
-Replace a complete block or append it, and keep the text around it.
+Replace a complete block or add it, and keep the text around it. A new block goes first in `.gitattributes`, because a
+later line wins there, so the rules that the repository already has keep winning over the catch-all in the block.
 
 @param text the file text.
 @param block the body to install.
@@ -54,9 +62,7 @@ export function replaceBlock(text: string, block: string, file: { path: string }
     const newline = authored.includes('\r\n') && !authored.replaceAll('\r\n', '').includes('\n') ? '\r\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`.replaceAll('\r\n', '\n').replaceAll('\n', () => newline);
     if (span !== undefined) return text.slice(0, span.start) + body + text.slice(span.end);
-    if (text === '') return body;
-    const separator = text.endsWith('\n') ? newline : newline + newline;
-    return text + separator + body;
+    return addBlock(text, body, { isFirst: name === FIRST_BLOCK_FILE, newline });
 }
 
 /**

@@ -4,6 +4,8 @@ import { findBlockBody, findBlockSpan, replaceBlock } from '#cli/parsers/formats
 import type { GspotError } from '#cli/system/errors.ts';
 import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/parsers/formats.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a managed block is appended and replaced without changing your own text', () => {
     const first = replaceBlock('# Mine\n\ntext\n', 'block one', { path: 'AGENTS.md' });
@@ -14,6 +16,14 @@ test('a managed block is appended and replaced without changing your own text', 
     expect(second).toStartWith('# Mine\n\ntext\n\n');
     expect(replaceBlock(second, 'block two', { path: 'AGENTS.md' })).toBe(second);
 });
+
+test('a new block goes first in .gitattributes, so the rules of the repository keep winning', async () => {
+    const text = replaceBlock('*.bat text eol=crlf\n', '* text=auto eol=lf', { path: '.gitattributes' });
+    await using sandbox = await createGitSandbox({ '.gitattributes': text });
+    expect(runGitStep(sandbox.path, ['check-attr', 'eol', 'run.bat'])).toBe('run.bat: eol: crlf');
+    expect(runGitStep(sandbox.path, ['check-attr', 'eol', 'run.sh'])).toBe('run.sh: eol: lf');
+});
+
 test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed markers in $path: $source', (context) => {
     const { source, path } = context;
     const refusal = matchFields<GspotError>({
