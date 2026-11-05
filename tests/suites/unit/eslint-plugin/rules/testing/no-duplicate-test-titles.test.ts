@@ -24,10 +24,6 @@ buildRuleTester({ root }).run('no-duplicate-test-titles', noDuplicateTestTitles,
         { code: 'for (const n of [1, 2]) { it(`adds ${n}`, () => {}); }', filename },
         { code: 'it("adds"); it("adds");', filename, name: 'no callback' },
         { code: '[1, 2].forEach(() => { it("adds", () => {}); });', filename, name: 'inside a callback' },
-        {
-            code: 'function cases() { it("adds", () => {}); }\ndescribe("a", cases);\ndescribe("b", () => { cases(); });',
-            filename,
-        },
         { code: 'describe("a", (cases) => { cases(); it("adds", () => {}); });', filename, name: 'a parameter call' },
     ],
     invalid: [

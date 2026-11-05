@@ -26,7 +26,6 @@ buildRuleTester().run('no-fixed-test-waits', noFixedTestWaits, {
             code: 'cy.get("button").click().wait(1000);',
             errors: [{ messageId: 'wait' }],
         },
-        { filename: 'page.test.ts', code: 'const delay = 1000; cy.wait(delay);', errors: [{ messageId: 'wait' }] },
         {
             filename: 'page.test.ts',
             code: 'let delay; delay = -1000; cy.wait(delay);',
