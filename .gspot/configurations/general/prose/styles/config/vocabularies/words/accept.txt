@@ -31,7 +31,6 @@ Stylelint
 TOML
 TanStack
 TypeScript
-USAGE
 Vale
 Windows
 YAML
@@ -40,7 +39,6 @@ actionlint
 ajv
 astro-check
 biome
-certifi
 commitlint
 dotenv-linter
 ede

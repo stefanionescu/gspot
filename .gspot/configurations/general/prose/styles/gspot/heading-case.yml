@@ -71,7 +71,6 @@ exceptions:
   - TypeScript
   - UI
   - URL
-  - USAGE
   - USD
   - UTC
   - UTF
@@ -85,7 +84,6 @@ exceptions:
   - ajv
   - astro\-check
   - biome
-  - certifi
   - commitlint
   - dotenv\-linter
   - ede

@@ -1,15 +1,12 @@
 level = "all"
 configurations = ["typescript", "markdown", "github-actions", "bash"]
 
-[hooks]
-enabled = true
-
 [ci]
 setup_command = ["mise", "run", "setup"]
 enabled = true
 
 [naming]
-banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "installed root", "working folder", "root path", "item", "items", "part", "parts", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "helper", "helpers", "util", "utils", "payload", "fallback", "attempt", "normalized", "expanded", "composed", "thing", "things", "misc", "info", "details", "stuff", "perform", "execute", "ensure", "wrapper", "temp", "tmp", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "generic", "overall"]
+banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "fixture", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "obsolete", "release hold", "installed root", "working folder", "root path", "item", "part", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "payload", "attempt", "normalized", "expanded", "composed", "perform", "execute", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "overall"]
 
 [[naming.exception]]
 paths = ["packages/cli/src/configurations/framework/svelte/checks.ts"]
@@ -39,7 +36,7 @@ allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
 
 [structure]
-environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/unit.ts"]
+environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts"]
 
 [dependencies]
 bun_scanner = "@socketsecurity/bun-security-scanner"
@@ -61,16 +58,14 @@ markdownlint = "Official product name."
 React = "Official product name."
 Native = "Part of the React Native product name."
 Simple = "Part of the Simple Icons product name."
-certifi = "The tests name the Python certificate bundle package certifi."
 writeable = "ESLint accepts writeable as the value of a global."
 styl = "The Stylus stylesheet extension is .styl."
-USAGE = "mise uses USAGE in task argument directives."
 xdescribe = "Jasmine, Jest, and Mocha name their disabled suite xdescribe."
 ede = "OpenSSL names the Triple DES ciphers des-ede and des-ede3."
 
 [javascript]
 import_extension = "ts"
-entry_files = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/test-tools.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts", ".mise/release/changelog.ts", ".mise/release/pin-ages.ts"]
+entry_files = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/test-tools.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts", ".mise/release/changelog.ts", ".mise/release/pin-ages.ts"]
 
 [tools.eslint.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
@@ -83,7 +78,6 @@ no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "De
 path = "docs"
 configurations = ["css", "astro", "cloudflare", "site"]
 site.build_command = ["bun", "--bun", "astro", "build"]
-javascript.allowed_unused_dependencies = { value = ["satteri"], reason = "Astro prerender externalizes the native satteri loader in astro.config.ts." }
 
 [[scope]]
 path = "packages/cli"

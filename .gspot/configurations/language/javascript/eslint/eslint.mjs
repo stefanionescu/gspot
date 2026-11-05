@@ -223,8 +223,7 @@ const ignoresList2 = [
 ];
 const ignoresList3 = [
     "packages/cli/src/system/environment.ts",
-    "tests/setup/system/environment.ts",
-    "tests/setup/runner/unit.ts"
+    "tests/setup/system/environment.ts"
 ];
 const gspotRestrictedSyntaxList = [
     "error",
@@ -2434,9 +2433,7 @@ export default setRuleOptions(defineConfig([
         "packages/cli/src/system/environment.ts",
         "packages/cli/src/system/environment.ts/**",
         "tests/setup/system/environment.ts",
-        "tests/setup/system/environment.ts/**",
-        "tests/setup/runner/unit.ts",
-        "tests/setup/runner/unit.ts/**"
+        "tests/setup/system/environment.ts/**"
     ],
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}"], ["**/*.astro", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {

@@ -48,14 +48,12 @@
             "entry": [
                 "tests/setup/runner/unit.ts",
                 "tests/setup/programs/**/*.ts",
-                "packages/eslint-plugin/src/plugin.ts",
                 "tests/setup/runner/prepare.ts",
                 "tests/setup/sandboxes/test-tools.ts",
                 "tests/setup/runner/integration.ts",
                 "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts",
                 "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts",
                 "packages/cli/src/bin.ts",
-                "packages/cli/src/reference.ts",
                 "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
                 "packages/cli/src/configurations/framework/site/files/purgecss.ts",
                 ".mise/release/changelog.ts",
@@ -86,16 +84,13 @@
                 "scripts/**",
                 "**/*.config.{js,mjs,cjs,ts}"
             ],
-            "ignoreDependencies": [
-                "satteri"
-            ]
+            "ignoreDependencies": []
         },
         "packages/cli": {
             "entry": [
                 "src/configurations/framework/site/checks/purgecss-process.ts",
                 "src/configurations/language/javascript/files/eslint-functions.ts",
                 "src/bin.ts",
-                "src/reference.ts",
                 "src/configurations/language/markdown/files/markdownlint-cli2.ts",
                 "src/configurations/framework/site/files/purgecss.ts",
                 "{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}",
@@ -113,7 +108,6 @@
         },
         "packages/eslint-plugin": {
             "entry": [
-                "src/plugin.ts",
                 "{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}",
                 "src/{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}",
                 "**/test/**",
