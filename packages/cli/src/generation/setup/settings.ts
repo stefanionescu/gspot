@@ -1,5 +1,4 @@
 import { LEADING_COMMENTS } from '#cli/config/generation.ts';
-import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
@@ -49,7 +48,7 @@ export function buildInitSettings(draft: SettingsDraft, repository: Repository):
     const document = buildSettingsTable(draft, repository);
     delete document['ci'];
     return `${[
-        `# Change these settings with ${formatSettingsCommands()}, and the configurations with \`gspot add\` or \`remove\`.`,
+        '# Change these settings with `gspot set`, `unset`, `ignore`, or `unignore`, and the configurations with `gspot add` or `remove`.',
         '# Run gspot list settings to see each setting. Records such as [[scope]] and [[command_check]] are written by hand.',
     ].join('\n')}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }

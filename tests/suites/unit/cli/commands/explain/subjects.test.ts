@@ -37,7 +37,7 @@ test('explain asks before it offers to ignore a check', async () => {
     const result = await runGspot(sandbox.path, ['explain', 'bash/shellcheck']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const lines = result.stdout.split('\n');
-    const question = lines.indexOf('Ask the user before you ignore a check.');
+    const question = lines.indexOf('Ignore it only with a reason your team accepts.');
     expect(question).toBeGreaterThan(-1);
     expect(lines[question + 1]).toStartWith('Ignore it for some paths: gspot ignore bash/shellcheck');
 });

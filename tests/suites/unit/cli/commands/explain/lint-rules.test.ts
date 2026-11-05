@@ -77,7 +77,7 @@ test('explain reads installed rule metadata without executing generated configur
         expect(described.stdout).toContain(label);
         expect(described.stdout.indexOf(label)).toBeLessThan(described.stdout.indexOf('Ignore it'));
     }
-    expect(described.stdout).toContain('Ask the user before you ignore a rule (SUPPRESSIONS.md).');
+    expect(described.stdout).toContain('Ignore it only with a reason your team accepts.');
     for (const [check, rule] of UNKNOWN_RULES) {
         const refused = await runGspot(sandbox.path, ['explain', check, rule, '--json']);
         expect(refused.code).toBe(2);
