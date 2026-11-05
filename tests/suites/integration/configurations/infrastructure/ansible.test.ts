@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test';
 
 import { ANSIBLE_CONFIG, ANSIBLE_PLAYBOOK, ANSIBLE_SANDBOX } from '#tests/config/integration/infrastructure.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';
-import { listFindingRows, listScopeFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -37,9 +37,10 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
             await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
         ).report;
         expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
-        expect(listScopeFindingRows(failed)).toStrictEqual([
-            { scope: '', file: 'site.yml', line: 5, rule: 'command-instead-of-module' },
-            { scope: 'app', file: 'app/site.yml', line: 5, rule: 'command-instead-of-module' },
+        expect(failed.checks.map(({ scope }) => scope)).toStrictEqual(['', 'app']);
+        expect(listFindingRows(failed)).toStrictEqual([
+            { file: 'site.yml', line: 5, rule: 'command-instead-of-module' },
+            { file: 'app/site.yml', line: 5, rule: 'command-instead-of-module' },
         ]);
         await writeFile(join(root, 'site.yml'), ANSIBLE_PLAYBOOK);
         await writeFile(join(root, 'app/site.yml'), ANSIBLE_PLAYBOOK);

@@ -20,18 +20,12 @@ import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
-import type { FindingRow, ProcessOutput, Sandbox, ScopeFindingRow, StdinOptions } from '#tests/types/setup.ts';
+import type { FindingRow, ProcessOutput, Sandbox, StdinOptions } from '#tests/types/setup.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
 
 export function listFindingRows(report: RunReport): FindingRow[] {
     return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
-}
-
-export function listScopeFindingRows(report: RunReport): ScopeFindingRow[] {
-    return report.checks.flatMap(({ scope, findings }) =>
-        findings.map(({ file, line, rule }) => ({ scope, file, line, rule })),
-    );
 }
 
 /**

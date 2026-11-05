@@ -106,8 +106,6 @@ export type CallRecord = {
 
 export type FindingRow = { file: string; line: number | undefined; rule: string | undefined };
 
-export type ScopeFindingRow = FindingRow & { scope: string };
-
 type SampleFinding = Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
 
 export type SampleFix = {
