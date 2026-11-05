@@ -5,6 +5,275 @@
 Each section lists the features, fixes, and performance changes of one gspot CLI release, breaking changes first. Its
 table names the settings that the release renamed or removed, from the settings reference of the previous release.
 
+## 0.3.9
+
+### Breaking changes
+
+- feat(cli)!: name the reason rule of a setting reason_for
+- feat(cli)!: report a check that a signal stops as canceled
+- feat(cli)!: give each JSON field of the commands one type and one name
+- feat(cli)!: name a check that does not run skipped, with its cause
+- feat(cli)!: cover JavaScript files with the naming.typescript settings
+- feat(cli)!: name the naming exemption record [[naming.exception]]
+- feat(cli)!: name the Semgrep rule setting security.semgrep_rules
+- feat(cli)!: install the tools at the end of gspot init
+- feat(cli)!: remove gspot apply
+- feat(cli)!: allow a concurrency group on a push-only workflow
+- feat(cli)!: support Node.js as the one runtime of gspot
+
+### Changes
+
+- feat(docs): show a caught vulnerable package in three home steps
+- feat(docs): list only tools in the home strip, three to a row on phones
+- fix(docs): wrap the home lead inside a phone screen
+- fix(docs): redirect the moved pages with Cloudflare redirects
+- fix(cli): describe detection conditions in readable sentences
+- fix(cli): describe allow_digits and allow_repeated_words of exceptions
+- fix(cli): show the default of removed_configurations as a table
+- fix(eslint-plugin): render four rule examples and a fix as written
+- fix(cli): list exit code 129 for a hangup in the help
+- feat(docs): lead llms.txt with what gspot does, and fix its steps
+- feat(docs): render Mermaid diagrams at build in light and dark
+- fix(cli): refuse options for every Markdown rule that the formatter owns
+- fix(cli): name the broken invariant where a lookup finds nothing
+- fix(cli): drop the void element style from the html-validate summary
+- feat(docs): render the changelog page from CHANGELOG.md
+- perf(cli): resolve and install the npm tool project in one npm run
+- perf(cli): compile each runtime glob of the ESLint configs once
+- fix(cli): tell agents to commit and fix what the hook reports
+- feat(cli): accept the findings of named checks with baseline --only
+- fix(cli): send gspot/generated-files findings to gspot install
+- fix(cli): compare the whole tree after gspot install in the generated CI
+- feat(cli): write every generated file in gspot install
+- fix(cli): drop the ignore field that trivial-functions help invents
+- feat(cli): run type-aware ESLint with the TypeScript of the project
+- fix(cli): describe the trivial-function and trivial-file rules
+- fix(cli): say No change when a uv-locked project matches its lockfile
+- perf(cli): download the grammars of an install in parallel
+- perf(cli): install the npm tool project beside the mise tools
+- perf(cli): read declarations only for the tsconfigs of checked folders
+- perf(cli): plan each check from the files of its scope
+- perf(cli): start the tools before the built-in checks
+- fix(cli): say No change when install finds every tool in place
+- fix(cli): name gspot install when a tool in .gspot fails to load
+- fix(eslint-plugin): report a checkServerIdentity that returns nothing
+- feat(cli): report a trivial Python, Swift, or Bash helper by its callers
+- fix(cli): count the gspot pin as a tool in a root package.json
+- fix(cli): give .sh and .bash files the indent their scripts use
+- feat(cli): add an mkdocs configuration for admonitions and tabs
+- fix(cli): leave out of tool configs what tracked .gitignore files ignore
+- fix(cli): name the gitleaks rule ID in the rule of a secret finding
+- fix(cli): skip pytest in a scope that holds no test file
+- feat(cli): replace the words of naming.terms in names and prose
+- fix(docs): start the version link's accessible name with its text
+- feat(docs): name the documented gspot version in llms.txt
+- feat(docs): leave the ESLint plugin reference out of llms-small.txt
+- feat(docs): send noindex on the 404 page and CORS on the schema
+- feat(docs): give each ESLint plugin rule topic its own page
+- feat(docs): add an SVG favicon and a web app manifest
+- feat(docs): give each docs section its own Open Graph image
+- feat(docs): add a Try tab to the home setup card
+- feat(docs): list what a reader gets on the home page
+- feat(docs): show a real catch from gspot's own code on the home page
+- feat(docs): show the tools that gspot runs in the home strip
+- fix(docs): give the 404 page its own design
+- feat(cli): assert structured values in tests, and text only as output
+- fix(cli): carry over only the lint rules that the user's file sets
+- fix(cli): name the line of a lint-staged entry, not of a script
+- fix(cli): read a tracked link with a missing target as present
+- fix(cli): accept a workspace package.json that starts with a BOM
+- fix(cli): give four install and workspace errors a next step
+- fix(cli): throw a plain error for a broken shipped manifest
+- fix(cli): lead a tool crash with its error output, without a guess
+- feat(cli): list configuration names and check IDs in the editor schema
+- fix(cli): set the command of a doctor suggestion off with a colon
+- fix(cli): name the real cause when a setting is unknown
+- fix(cli): let doctor report the missing program of a command check
+- fix(cli): say ignore for the ignore commands that explain prints
+- fix(cli): offer the setting that writes the options of a lint rule
+- feat(cli): put every next step of explain in its JSON
+- fix(cli): name a rule only for checks whose rules gspot can read
+- fix(cli): exit 2 when --skip or --stage leaves out every --only check
+- feat(cli): annotate the findings of a check run in GitHub Actions
+- feat(cli): leave the checks that no file selects out of the check JSON
+- feat(cli): print the time before the first check in verbose output
+- fix(cli): report the wall time of a check whose runs overlap
+- fix(cli): print progress outside a terminal only for slow checks
+- fix(cli): print the help of a failed check once, after its findings
+- fix(cli): leave the file list out of a fix line that covers every file
+- fix(cli): keep control sequences off dumb terminals, and fit the help
+- fix(cli): refuse two flags that overwrite each other
+- fix(cli): use one word for ignores and for each kind of config file
+- feat(cli): accept --verbose and --json on every command
+- fix(cli): hide the hook option of gspot check from the help
+- fix(cli): name add, remove, and every hand-written record in gspot.toml
+- fix(cli): list every exit code of the commands in the program help
+- fix(cli): name a table setting in the set help
+- fix(cli): name a working explain command in the shellcheck help
+- fix(cli): keep vitest out of the copies of other checks
+- fix(cli): drop findings in the files that gspot writes
+- fix(cli): keep the include of a tsconfig that checks JavaScript
+- fix(cli): ask for the dependencies before typed JavaScript checks
+- fix(cli): match the zustand useStore selector on zustand's own hook
+- fix(cli): run vulture at level all only
+- fix(eslint-plugin): accept an entry file that package.json names
+- fix(cli): keep a .ts import style that the code uses over React's
+- fix(cli): leave the member names of type declarations to their formats
+- fix(cli): leave out the markup rules that Starlight output breaks
+- feat(cli): report a top-level loop in a module that exports values
+- perf(cli): write only the changed limit rules of a scope
+- feat: report a trivial function only when one place uses it
+- feat(eslint-plugin): accept a split limit and a destructuring size
+- feat(cli): allow a number in a template literal
+- fix(cli): stop the multiple-projects warning of the TypeScript resolver
+- perf(cli): give the import-cycles run only what no-cycle reads
+- fix(cli): ignore disable comments in the import-cycles run
+- fix(cli): accept only is, has, and can as boolean prefixes
+- feat(cli): sort imports alphabetically in groups
+- feat(cli): stop requiring a @param line for every parameter
+- feat(cli): raise the default cognitive complexity limit to 15
+- fix(cli): count a switch once against the ESLint complexity limit
+- feat(cli): keep six unicorn style rules for level all
+- fix(cli): turn off three unicorn rules that only reorder code
+- fix(cli): drop the selector that repeats no-explicit-any
+- fix(eslint-plugin): report rejectUnauthorized: false in one rule
+- fix(eslint-plugin): show an http URL in the clear-text example
+- fix(cli): say what the Express rules check
+- fix(cli): name ESLint as the tool that checks next.config
+- fix(cli): scan every file for secrets in a full gspot check
+- fix(cli): send users to the detected-configurations check for add lines
+- fix(cli): report a tsconfig that fails to load in its scope
+- feat(cli): carry the include and exclude of a pyright config
+- feat(cli): carry the rules that a replaced config turns off as ignores
+- fix(cli): pin Node.js beside the mise pin of gspot
+- fix(cli): keep a shipped language limit over a general limit you write
+- fix(cli): ask for one gspot check at the root in place of a lint script
+- feat(cli): accept a private helper below the function that calls it
+- fix(cli): leave gspot.toml and gspot.baseline.json out of name checks
+- fix(cli): run check --fix before baseline, and keep fixes out of it
+- fix(cli): let baseline --prune run when a check cannot run
+- fix(cli): read the Python environment from VIRTUAL_ENV before .venv
+- fix(cli): read the project lock of a two-document pnpm-lock.yaml
+- fix(cli): install a changed npm tool lockfile into an empty folder
+- fix(cli): pass the release-age hold to the pnpm install in .gspot
+- fix(cli): stop turning on mise lockfiles for every config in .gspot
+- fix(cli): move a downloaded grammar into place from a staged file
+- fix(cli): leave gspot's own lockfile out of dependencies/lockfiles
+- fix(cli): read a documentation fragment in a code fence as a fragment
+- fix(cli): count ======= as a conflict marker only inside a conflict
+- fix(cli): let shfmt read its layout from .editorconfig
+- fix(cli): count a call to a shell function from any script in the scope
+- fix(cli): report the function keyword, &>, and echo at level all only
+- fix(cli): run ShellCheck's optional checks at level all only
+- fix(cli): name the signal that stops an install step
+- fix(cli): say when a base is missing because the clone is shallow
+- perf(cli): run only the push-stage checks in the pre-push hook
+- fix(cli): keep LF in every text file through the gitattributes block
+- fix(cli): copy the index bytes of a file that Git checks out converted
+- fix(cli): say why a staged check copies the index on a missing lockfile
+- fix(cli): unset core.hooksPath when the settings turn the hooks off
+- fix(cli): count a .husky folder as hooks only while Husky runs it
+- fix(cli): print no fix command for a file with conflict markers
+- fix(cli): name the conflicted paths when the index holds a conflict
+- fix(cli): report a missing or non-executable hook file as not ready
+- fix(cli): stop a package-manager hook when the project lacks gspot
+- fix(cli): run the push checks before the Git LFS upload
+- fix(cli): name the replacement command when --changed finds no branch
+- fix(cli): find the default branch one way for --changed and pre-push
+- fix(cli): treat a file as binary on -diff or LFS, not on -text
+- fix(cli): read the tree state once, with no lock on the index
+- fix(cli): install actionlint from its upstream aqua package
+- perf(cli): check commit messages with a Vale config of the gspot style
+- feat(cli): drop the cache steps from the generated GitHub workflow
+- perf(cli): parse gspot.toml once per session
+- fix(cli): parse manifests and the mise pin file through parseTomlFile
+- perf(cli): start the Vale batches together
+- feat(cli): let a command check run per scope or once
+- perf(cli): list the tracked folders once per init
+- perf(cli): build each generated-path matcher once per session
+- perf(cli): use the program that mise lists without a PATH search
+- perf(cli): check suppressions only in the files of the run
+- perf(cli): parse only the files that allowed names cover
+- perf(cli): run per-file checks on the files of the run
+- fix(cli): match the voice rule and two Vale messages to the checks
+- fix(cli): let get and read return nothing when the type says so
+- fix(cli): allow a nested @param for an inline object type
+- feat(cli): list COMMENTS.md and GIT.md as topic rules
+- feat(cli): tell agents to ask until no decision is open
+- feat(tests): pass test files and options through mise run test
+- fix(docs): keep double hyphens in the code of reference pages
+- fix(docs): format each cell of a rule table once
+- feat(cli): document the rules of the infrastructure checks
+- feat(cli): document the rules of the language checks
+- feat(cli): document the rules of the general and gspot checks
+- fix(cli): say how to ignore a check that refuses --rule
+- fix(cli): accept a file name in the heading-case style
+- fix(docs): show the setup card in the home hero
+- fix(cli): scan only the lockfiles that licenses/allowed covers
+- fix(cli): pass lockfiles over the size limit to osv-scanner
+- fix(cli): scan only the lockfiles that osv-scanner covers
+- feat(cli): ask for sentence case in every title
+- fix(cli): document the unused-asset rule of site/unused-assets
+- fix(cli): let gspot ignore and explain take Vale rules
+- fix(docs): drop the empty Starlight footer from splash pages
+- fix(docs): keep straight quotes in the code of reference pages
+- fix(tests): drop the Git variables that a hook passes to the tests
+- fix(cli): upgrade toml-patch so scopes can reuse a table name
+- fix(eslint-plugin): let module Map and Set tables name their numbers
+- fix(cli): turn off unicorn/prefer-await in the ESLint config
+- fix(cli): turn off unicorn/prefer-ternary in the ESLint config
+- fix(cli): ask for no JSDoc on the functions of an object literal
+- fix(cli): let a digit continue its word in the naming case test
+- fix(cli): stop two rules from reporting test text and verb names
+- fix(docs): load the hero styles wherever the hero renders
+- fix(cli): let a config file build its default export when it loads
+- fix(cli): report home folders only at the start of a path
+- fix(cli): count an asset that a package alias imports as used
+- fix(docs): insert the plugin README text without replacement patterns
+- fix(docs): size the home headings in rem
+- fix(cli): stop checking private packages for unpublished imports
+- fix(cli): bundle every package into the purgecss process
+
+### Renamed and removed settings
+
+| Setting | Change |
+| --- | --- |
+| `naming.override.paths` | Removed |
+| `naming.override.languages` | Renamed to `naming.exception.languages` |
+| `naming.override.categories` | Renamed to `naming.exception.categories` |
+| `naming.override.ignored_prefix` | Renamed to `naming.exception.ignored_prefix` |
+| `naming.override.ignored_names_pattern` | Renamed to `naming.exception.ignored_names_pattern` |
+| `naming.override.allow_digits` | Removed |
+| `naming.override.allow_repeated_words` | Removed |
+| `naming.override.allowed_names` | Renamed to `naming.exception.allowed_names` |
+| `naming.override.cases` | Renamed to `naming.exception.cases` |
+| `naming.override.reason` | Renamed to `naming.exception.reason` |
+| `naming.javascript.max_characters` | Removed |
+| `naming.javascript.max_words` | Removed |
+| `naming.javascript.cases` | Removed |
+| `naming.javascript.files.max_characters` | Removed |
+| `naming.javascript.files.max_words` | Removed |
+| `naming.javascript.files.cases` | Removed |
+| `naming.javascript.folders.max_characters` | Removed |
+| `naming.javascript.folders.max_words` | Removed |
+| `naming.javascript.folders.cases` | Removed |
+| `naming.javascript.types.max_characters` | Removed |
+| `naming.javascript.types.max_words` | Removed |
+| `naming.javascript.types.cases` | Removed |
+| `naming.javascript.functions.max_characters` | Removed |
+| `naming.javascript.functions.max_words` | Removed |
+| `naming.javascript.functions.cases` | Removed |
+| `naming.javascript.parameters.max_characters` | Removed |
+| `naming.javascript.parameters.max_words` | Removed |
+| `naming.javascript.parameters.cases` | Removed |
+| `naming.javascript.variables.max_characters` | Removed |
+| `naming.javascript.variables.max_words` | Removed |
+| `naming.javascript.variables.cases` | Removed |
+| `naming.javascript.properties.max_characters` | Removed |
+| `naming.javascript.properties.max_words` | Removed |
+| `naming.javascript.properties.cases` | Removed |
+| `security.rule_files` | Renamed to `security.semgrep_rules` |
+
 ## 0.3.8
 
 ### Breaking changes

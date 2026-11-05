@@ -97,7 +97,7 @@ version = "10.0.1"
 kind = "package"
 name = "@gspothq/eslint-plugin"
 npm = "@gspothq/eslint-plugin"
-version = "0.2.3"
+version = "0.2.4"
 rule_prefix = "gspot"
 
 [[tool]]
