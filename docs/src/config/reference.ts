@@ -23,6 +23,7 @@ export const CHECK_NEEDS_LABELS = {
     dependencies: 'the installed npm dependencies of the project',
     docker: 'Docker, running',
     network: 'network access',
+    'project-code': 'to run the code of the project',
     'python-environment': 'the Python environment of the project',
 } as const;
 
