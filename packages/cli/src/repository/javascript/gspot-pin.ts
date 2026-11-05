@@ -13,15 +13,17 @@ import {
     SETUP_NODE_VERSION,
 } from '#cli/config/repository/javascript.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
-import { miseToolsSchema } from '#cli/schemas/parsers.ts';
+import { miseToolsSchema, packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
 import type { Files } from '#cli/types/system.ts';
 
 const MISE_NODE_TOOL = 'node';
@@ -42,8 +44,16 @@ function readCliSpecifier(root: string): string | undefined {
 
 function addPackagePin(text: string): string {
     const indent = JSON_INDENT_PATTERN.exec(text)?.[0] ?? DEFAULT_JSON_INDENT;
+    const { devDependencies } = parseJsonFile(PACKAGE_JSON, text, packageJsonSchema);
+    const names = devDependencies === undefined ? [] : Object.keys(devDependencies);
+    const isSorted = names.every((name, index) => index === 0 || compareText(names[index - 1] as string, name) <= 0);
     const edits = modify(text, ['devDependencies', cliPackage.name], cliPackage.version, {
         formattingOptions: { insertSpaces: !indent.startsWith('\t'), tabSize: indent.length },
+        ...(names.length > 0 &&
+            isSorted && {
+                getInsertionIndex: (properties: string[]) =>
+                    properties.filter((name) => compareText(name, cliPackage.name) < 0).length,
+            }),
     });
     return applyEdits(text, edits);
 }

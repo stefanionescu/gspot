@@ -75,3 +75,22 @@ test('another pinned version stops the commands that run tools, and names the in
         expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: error.message });
     }
 });
+
+test('the pin keeps a sorted devDependencies block sorted, and goes last in an unsorted one', async () => {
+    await using sorted = await createGitSandbox({
+        'package.json': '{\n  "devDependencies": {\n    "@a/first": "1.0.0",\n    "zod": "1.0.0"\n  }\n}\n',
+    });
+    writeGspotPin(openFiles(sorted.path));
+    const { devDependencies: inOrder } = JSON.parse(await readFile(join(sorted.path, 'package.json'), 'utf8')) as {
+        devDependencies: Record<string, string>;
+    };
+    expect(Object.keys(inOrder)).toStrictEqual(['@a/first', '@gspothq/cli', 'zod']);
+    await using unsorted = await createGitSandbox({
+        'package.json': '{\n  "devDependencies": {\n    "zod": "1.0.0",\n    "@a/first": "1.0.0"\n  }\n}\n',
+    });
+    writeGspotPin(openFiles(unsorted.path));
+    const { devDependencies: outOfOrder } = JSON.parse(await readFile(join(unsorted.path, 'package.json'), 'utf8')) as {
+        devDependencies: Record<string, string>;
+    };
+    expect(Object.keys(outOfOrder)).toStrictEqual(['zod', '@a/first', '@gspothq/cli']);
+});
