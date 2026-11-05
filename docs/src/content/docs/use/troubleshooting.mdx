@@ -1,29 +1,37 @@
 ---
 title: Troubleshooting
-description: Fix gspot.toml errors, missing tools, failed installs, hooks that cannot start, and slow checks.
+description: Fix gspot.toml errors, old findings, missing tools, failed installs, hooks that cannot start, and slow checks.
 ---
 
 import { Code } from '@astrojs/starlight/components';
 import { hookProgramMissing } from '#docs/reference/setup.ts';
 
-Start with `gspot doctor`. It lists missing tools, problems with the Git hooks, and configurations that your repository
-needs. `gspot check --only gspot/generated-files --verbose` lists each generated file that does not match `gspot.toml`,
-with its diff. When you [report a problem](https://github.com/stefanionescu/gspot/issues), include the output, the
-check ID, and a command that shows the problem. Leave out credentials.
+Start with `gspot doctor`, which lists missing tools, problems with the Git hooks, and a gspot version other than the
+one that your repository pins. `gspot check --only gspot/generated-files --verbose` lists each generated file that does
+not match `gspot.toml`, with its diff. When you [report a problem](https://github.com/stefanionescu/gspot/issues),
+include the output, the check ID, and a command that shows the problem, and leave out credentials.
 
 ## A command reports an error in `gspot.toml`
 
-Fix the value or table that the error names, and run the command again. A setting that makes a check less strict needs
-a reason next to its value.
+A key that gspot cannot read stops every command that reads the file, `gspot explain` and `gspot list settings` too. The
+message names the key and what it accepts, so fix the line by hand. The [settings reference](/reference/gspot-toml/)
+lists every key.
+
+## A commit or push fails on findings from before gspot
+
+A commit checks the files that you stage, so it also reports the old findings of each file that it touches. The first
+push runs the checks that read the whole project, such as `typescript/tsc`, which report every old finding. Fix or
+ignore each finding, as [Clean up the first findings](/start/quickstart/#clean-up-the-first-findings) shows.
 
 ## A check reports `missing`
 
 Run `gspot install`. With mise, it installs the tools that mise provides. Without mise, install the tools that
-`gspot doctor` lists yourself, as [What you need](/start/install/#what-you-need) describes. While a tool is missing,
-the run cannot finish and exits with code 2. In a Git hook, that also stops the commit.
+`gspot doctor` lists yourself, as [What you need](/start/install/#what-you-need) describes. While a tool is missing, the
+run cannot finish and exits with code 2, and in a Git hook, that also stops the commit.
 
-To create the tool lockfiles again, delete the lockfiles in `.gspot/`, run `gspot install`, and commit the new
-lockfiles.
+## A lockfile in `.gspot/` has a merge conflict
+
+Delete the lockfiles in `.gspot/`, run `gspot install`, and commit the new lockfiles.
 
 ## `gspot install` or `gspot scan` hits the GitHub rate limit
 
@@ -34,30 +42,30 @@ GitHub limits the release lookups of mise without a token. Set GITHUB_TOKEN to a
 ```
 
 Set `GITHUB_TOKEN` to a GitHub token that can read public releases, then run the command again. `gspot scan` stops with
-exit code 2 when it hits the same limit. In CI, the job that gspot writes passes its own token.
+exit code 2 when it hits the same limit, and in CI, the job that gspot writes passes its own token.
 [mise: If something does not work](https://mise.jdx.dev/getting-started.html#if-something-doesn-t-work) has more help.
 
 ## A generated file has local edits
 
-`gspot install` overwrites the local edits in a generated file. Move each change into `gspot.toml` first, as
+`gspot install` overwrites the local edits in a generated file, so move each change into `gspot.toml` first, as
 [Do not edit generated files](/reference/generated-files/#do-not-edit-generated-files) describes.
 
 ## A check runs slowly
 
-Run `gspot check --verbose`. Each passed check then shows its number of files, its time, and the command that it ran.
-To time one check alone, run `gspot check --only <check>`. A tool command that runs longer than `tool_timeout_seconds`,
-600 seconds by default, stops with an error.
+Run `gspot check --verbose`, and each passed check shows its number of files, its time, and the command that it ran. To
+time one check alone, run `gspot check --only <check>`. A tool command that runs longer than `tool_timeout_seconds`, 600
+seconds by default, stops with an error.
 
-## `npm exec` cannot find gspot
+## Your package manager cannot find gspot
 
-`gspot init` adds gspot to `package.json`, but installs nothing. Run the install command of your package manager, then
-`gspot install`. Each new clone or Git worktree needs its own install, because it cannot use the packages of another
-worktree.
+Each new clone or Git worktree needs its own install, because it cannot use the packages of another worktree. Run the
+install command of your package manager, then `gspot install`. With mise, run `mise install`, then `gspot install`.
 
 ## A hook cannot find Node.js, Yarn, or mise
 
-The hook did not find the program that starts gspot, so it stopped the commit. The message names the program and the
-`PATH` that the Git client gave the hook:
+The hook did not find the program that starts gspot, so it stopped the commit. Hooks in npm, pnpm, and Bun repositories
+need `node`, and those in Yarn and mise repositories need `yarn` or `mise`. The message names the program and the `PATH`
+that the Git client gave the hook:
 
 <Code code={hookProgramMissing.replaceAll('<program>', 'node').replace('$PATH', '/usr/bin:/bin')} lang="text" />
 
@@ -65,5 +73,5 @@ A Git client in an editor can get a different `PATH` from your terminal. Start t
 folder of the program to the `PATH` of the client, then restart the client. If the program is not installed, install
 Node.js, Yarn, or mise first.
 
-When the hook says that gspot is not installed in the worktree, run the install command that the hook prints, in that
-worktree. Then run `gspot install`. With mise, run `mise install` in that worktree, then `gspot install`.
+When the hook says that gspot is not installed in the worktree, run the install command that the hook prints in that
+worktree, then `gspot install`. With mise, run `mise install` in that worktree, then `gspot install`.
