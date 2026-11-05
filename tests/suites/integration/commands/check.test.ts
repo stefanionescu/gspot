@@ -7,8 +7,9 @@ import { createFileTree, testdir } from 'testdirs';
 
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and names git fetch --unshallow', async () => {
@@ -19,7 +20,7 @@ test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and 
         'source.sh': 'echo base\n',
     });
     runGitStep(source, ['init', '-q']);
-    await runGspotStep({ root: source, run: spawnGspot }, ['install']);
+    await applyGeneratedFiles(source);
     runGitStep(source, ['add', '-A']);
     runGitStep(source, ['commit', '-qm', 'chore: initialize']);
     await writeFile(join(source, 'source.sh'), 'echo selected\n');
@@ -31,8 +32,9 @@ test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and 
     const remote = ['--', 'unseen', 'unused'];
     const input = { stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(selected.length)}\n` };
     runGitStep(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]);
-    await runGspotStep({ root: checkout, run: spawnGspot }, ['install']);
     const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('commits/commitlint-pushed');
+    const { message } = JSON.parse(refused.stdout) as CommandFailureJson;
+    expect(message).toContain('commits/commitlint-pushed');
+    expect(message).toContain('git fetch --unshallow');
 });
