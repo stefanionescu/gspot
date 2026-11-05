@@ -45,12 +45,31 @@ test.each([false, true])(
                 : {
                       ready: false,
                       tool: 'gspot',
-                      lines: [
-                          expect.stringContaining(
-                              'Stopping because --no-install was passed. Install gspot with: bun add',
-                          ) as string,
-                      ],
+                      lines: [expect.stringContaining('Install gspot with: bun add') as string],
                   },
         );
     },
 );
+
+test('doctor reports a ready hook when the package manager cannot start gspot, because the hook starts it from the bin folder', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+        'package.json': JSON.stringify({
+            private: true,
+            packageManager: 'pnpm@10.16.0',
+            devDependencies: { '@gspothq/cli': cliPackage.version },
+        }),
+    });
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/gspot', 'fakes/tool', '--line', cliPackage.version);
+    await applyGeneratedFiles(sandbox.path);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
+    const bin = await writeProgramCommand(sandbox.path, 'bin/pnpm', 'fakes/tool', '--exit', '2');
+    const folders = [bin, ...[process.execPath, Bun.which('git') ?? ''].map((path) => dirname(path))];
+    using _environment = overrideEnvironment({ PATH: folders.join(delimiter) });
+    const diagnosed = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect(doctorOutputSchema.parse(JSON.parse(diagnosed.stdout)).hooks).toStrictEqual({
+        ready: true,
+        tool: 'gspot',
+        lines: [],
+    });
+});

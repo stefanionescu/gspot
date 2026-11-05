@@ -15,7 +15,7 @@ import {
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
@@ -37,6 +37,8 @@ import type { CommandResult } from '#cli/types/system.ts';
 import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
 
 const LABEL_WIDTH = 9;
+
+const HOOK_PROGRAM = `${NODE_MODULES}/.bin/gspot`;
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';
@@ -137,9 +139,11 @@ async function readCiState(session: Session): Promise<CiState & { text: string }
 async function readHookRunnerStatus(session: Session): Promise<HookStatus> {
     const hooks = await readHookStatus(session, session.repository);
     if (!hooks.ready || !session.settings.hooks.enabled) return hooks;
-    const { command, installCommand } = session.startRunner;
-    const versionCommand = [...command.split(' '), VERSION_FLAG];
-    const result = await runProcess(versionCommand, {
+    const { command, hasBinFolder, installCommand } = session.startRunner;
+    // A hook starts gspot from the bin folder, so a package manager that puts another Node.js first changes nothing.
+    const versionCommand = hasBinFolder ? [HOOK_PROGRAM, VERSION_FLAG] : [...command.split(' '), VERSION_FLAG];
+    const started = hasBinFolder ? [join(session.root, HOOK_PROGRAM), VERSION_FLAG] : versionCommand;
+    const result = await runProcess(started, {
         cwd: session.root,
         timeoutSeconds: session.settings.tool_timeout_seconds,
     });
