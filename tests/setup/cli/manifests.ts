@@ -14,19 +14,16 @@ export function listAlwaysSelected(): string[] {
 /**
 Parse a manifest.toml for one test, with fields.tables appended as TOML.
 */
-export function buildConfiguration(
-    name: string,
-    fields: { requires?: string[]; tables?: string; group?: Configuration['group'] } = {},
-): Configuration {
+export function buildConfiguration(name: string, { tables }: { tables: string }): Configuration {
     const header = stringify({
         configuration: {
             title: name,
-            requires: fields.requires ?? [],
+            requires: [],
             description: 'A configuration for the tests, long enough.',
         },
     });
-    const folder = `src/configurations/${fields.group ?? 'language'}/${name}`;
-    return parseConfigurations([{ folder, text: `${header}${fields.tables ?? ''}` }]).get(name) as Configuration;
+    const folder = `src/configurations/language/${name}`;
+    return parseConfigurations([{ folder, text: `${header}${tables}` }]).get(name) as Configuration;
 }
 
 /**

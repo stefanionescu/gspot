@@ -58,7 +58,6 @@ export const FAKE_TOOL_OPTIONS = {
     'version-line': { type: 'string' },
     'require-cwd': { type: 'string' },
     'refuse-file': { type: 'string' },
-    'refuse-exit': { type: 'string' },
     write: { type: 'string', multiple: true },
     'write-hex': { type: 'string', multiple: true },
     delete: { type: 'string', multiple: true },

@@ -28,7 +28,7 @@ function findStopCode(): string | undefined {
     const [refusedFile] = option['refuse-file'];
     if (refusedFile === undefined || !existsSync(refusedFile)) return undefined;
     process.stderr.write(`${refusedFile} must not exist here.\n`);
-    return option['refuse-exit'][0] ?? '1';
+    return '1';
 }
 
 const steps: Partial<Record<keyof typeof FAKE_TOOL_OPTIONS, (value: string) => unknown>> = {
