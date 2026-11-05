@@ -1,9 +1,5 @@
 import { NEXT_MESSAGES } from '#tests/config/setup/configurations.ts';
-import {
-    NESTJS_CONTROLLER,
-    NESTJS_CONTROLLER_UNSUPPRESSED,
-    STRICT_COMPILER_OPTIONS,
-} from '#tests/config/setup/languages.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
 
 export const COMPONENT_TSCONFIG = { compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] } as const;
 
@@ -24,45 +20,6 @@ const title: string = 'Home';
 `;
 
 export const ASTRO_PAGE_PATH = 'src/pages/index.astro';
-
-const NESTJS_DIRECTIVE_FINDINGS = [
-    {
-        file: 'src/greeting.controller.ts',
-        line: 16,
-        column: 5,
-        message: "Unused eslint-disable directive (no problems were reported from 'gspot/no-trivial-functions').",
-    },
-    {
-        file: 'src/greeting.controller.ts',
-        line: 26,
-        column: 5,
-        message: "Unused eslint-disable directive (no problems were reported from 'gspot/no-trivial-functions').",
-    },
-] as const;
-
-export const NESTJS_CASES = [
-    {
-        name: 'a route parameter decorator names its route parameter',
-        check: 'javascript/eslint',
-        files: {
-            'src/greeting.controller.ts': NESTJS_CONTROLLER_UNSUPPRESSED.replace("@Param('name')", "@Param('other')"),
-        },
-        corrected: { files: { 'src/greeting.controller.ts': NESTJS_CONTROLLER_UNSUPPRESSED } },
-        expected: {
-            file: 'src/greeting.controller.ts',
-            rule: '@darraghor/nestjs-typed/param-decorator-name-matches-route-param',
-            line: 25,
-        },
-    },
-    {
-        name: 'class constructors and methods need no trivial-function suppression',
-        check: 'javascript/eslint',
-        files: { 'src/greeting.controller.ts': NESTJS_CONTROLLER },
-        corrected: { files: { 'src/greeting.controller.ts': NESTJS_CONTROLLER_UNSUPPRESSED } },
-        expected: NESTJS_DIRECTIVE_FINDINGS[0],
-        findings: NESTJS_DIRECTIVE_FINDINGS,
-    },
-] as const;
 
 export const NEXT_PACKAGE = {
     name: 'example',

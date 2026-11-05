@@ -19,7 +19,7 @@ main "$@"
 
 export const BROKEN_IF_SCRIPT = 'if then\n';
 
-export const NESTJS_CONTROLLER = `// The routes that greet.
+const NESTJS_CONTROLLER = `// The routes that greet.
 import { Controller, Get, Param } from '@nestjs/common';
 
 import { GreetingService } from './greeting.service.js';
@@ -51,7 +51,7 @@ export class GreetingController {
 }
 `;
 
-export const NESTJS_CONTROLLER_UNSUPPRESSED = NESTJS_CONTROLLER.replaceAll(
+const NESTJS_CONTROLLER_UNSUPPRESSED = NESTJS_CONTROLLER.replaceAll(
     /^ {4}\/\/ eslint-disable-next-line gspot\/no-trivial-functions -- reason: .*\n/gmu,
     '',
 );
