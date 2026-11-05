@@ -26,6 +26,17 @@ test('your banned headings and the shipped ones reach the heading style once', a
     expect(tokens.filter((token) => token === String.raw`(?:\b|^)project layout(?:\b|$)`)).toHaveLength(1);
 });
 
+test('the heading-case exceptions hold a product name of several words', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose', 'github-actions'], { level: 'all' }),
+        'guide.md': '# Guide\n',
+    });
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
+    const target = getManifestTarget('prose', 'styles/gspot/heading-case.yml');
+    const { exceptions } = parse(files.find(({ path }) => path === target)!.content) as { exceptions: string[] };
+    expect(exceptions).toContain('GitHub Actions');
+});
+
 test('the heading-case exceptions accept a file name and refuse a plain word, a sentence end, and a version', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),

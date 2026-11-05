@@ -89,6 +89,21 @@ test('secrets/gitleaks-staged reports a committed secret in a full check, and on
     ]);
 });
 
+test('a full secrets scan leaves out a file that Git ignores', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['secrets']),
+        '.gitignore': 'dist/\n',
+        'dist/bundle.js': `const token = "${API_TOKEN}";\n`,
+        'src/value.js': 'export const value = 1;\n',
+    });
+    commitAll(sandbox.path);
+    await applyGeneratedFiles(sandbox.path);
+    const { report } = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
+    );
+    expect(report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+});
+
 test('gitleaks reports both staged secrets, hides the tokens, and passes after the fix', async () => {
     await using sandbox = await testdir();
     await prepareSecrets(sandbox.path);

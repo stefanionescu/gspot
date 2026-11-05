@@ -41,5 +41,6 @@ test('vulture reads every Python file of the scope and reports unused definition
     const command = spawn.mock.calls
         .map(([commandArguments]) => commandArguments)
         .find((commandArguments) => commandArguments.some((argument) => argument.endsWith('vulture')))!;
-    expect(command.slice(1).toSorted(compareText)).toStrictEqual(['app/main.py', 'app/nodes.py']);
+    expect(command).toContain('--ignore-decorators');
+    expect(command.slice(-2).toSorted(compareText)).toStrictEqual(['app/main.py', 'app/nodes.py']);
 });

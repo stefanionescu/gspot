@@ -1,4 +1,4 @@
-allowed_words = ["GitHub"]
+allowed_words = ["GitHub", "GitHub Actions"]
 
 [configuration]
 description = "GitHub Actions workflows: valid syntax and expressions, security audits, and pinned actions."

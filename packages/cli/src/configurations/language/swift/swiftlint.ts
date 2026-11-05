@@ -35,7 +35,7 @@ function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
             warning: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
             error: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
         },
-        max_cyclomatic_complexity: {
+        cyclomatic_complexity: {
             warning: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
             error: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
         },
