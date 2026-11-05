@@ -231,13 +231,8 @@ Read the commits after the push base.
 @param cancelSignal stops the Git commands.
 */
 export async function readPushedCommits(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
-    if ((await readHead(root, cancelSignal)) === undefined) return [];
-    const base = await readPushBase(root, cancelSignal);
-    const listed = await runGit(root, [...GIT_REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
-        cancelSignal,
-    });
-    if (listed.code !== 0) throw new GspotError('git', `Cannot select commit messages: ${listed.stderr.trim()}`);
-    return listed.stdout.split('\n').filter(Boolean);
+    const range = await readPushedRange(root, cancelSignal);
+    return range.length === 0 ? [] : readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
 }
 
 /**
