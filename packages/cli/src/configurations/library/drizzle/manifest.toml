@@ -27,7 +27,7 @@ version_command = ["--version"]
 
 [[eslint.selectors]]
 level = "all"
-message = "Raw SQL skips the types of the schema. Use the query builder, or accept the path with `gspot ignore javascript/eslint --rule gspot/restricted-syntax --paths <glob> --reason \"<why>\"`."
+message = "Raw SQL skips the types of the schema. Use the query builder, or suppress this line with a reason."
 selector = "CallExpression[callee.property.name=/^(execute|run|all|get|values)$/] > TaggedTemplateExpression[tag.name='sql']"
 
 [eslint]
