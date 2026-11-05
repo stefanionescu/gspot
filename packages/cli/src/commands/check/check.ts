@@ -122,6 +122,19 @@ function assertReadableMessageFile(options: CheckOptions): void {
     }
 }
 
+function readOnlyStage({ only, hook }: CheckFlags): CheckOptions['stage'] {
+    const stage = CHECK_STAGES.find((name) => only?.includes(name) === true);
+    if (stage === undefined) return undefined;
+    if (only?.length !== 1)
+        throw new GspotError(
+            'arguments',
+            `--only ${stage} runs every check of that stage, so it takes no other name. Name the stage, or name the checks.`,
+        );
+    if (hook !== undefined)
+        throw new GspotError('arguments', `--only ${stage} cannot run with --hook. Choose a stage or a Git hook.`);
+    return stage;
+}
+
 function parseCheckFlags(
     paths: string[],
     flags: CheckFlags,
@@ -129,6 +142,7 @@ function parseCheckFlags(
 ): { root: string; options: CheckOptions } {
     const { cwd } = location;
     const { hook } = flags;
+    const onlyStage = readOnlyStage(flags);
     const options: CheckOptions = {
         cwd,
         staged: flags.staged === true,
@@ -137,11 +151,11 @@ function parseCheckFlags(
         paths: hook === 'commit-msg' ? [] : paths,
         hook,
         changed: flags.changed === true,
-        only: flags.only,
+        only: onlyStage === undefined ? flags.only : undefined,
         skip: flags.skip,
         base: flags.base,
         messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
-        stage: hook === undefined ? flags.stage : HOOK_CHECKS[hook].stages[0],
+        stage: hook === undefined ? (onlyStage ?? flags.stage) : HOOK_CHECKS[hook].stages[0],
         onProgress: printProgress,
     };
     assertCheckSelection(options, flags);

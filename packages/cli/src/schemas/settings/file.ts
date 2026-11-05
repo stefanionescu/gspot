@@ -86,9 +86,15 @@ export const ignoreSchema = z
     });
 
 export const commandCheckSchema = z.strictObject({
-    id: z.string().regex(COMMAND_CHECK_ID, 'Use a check ID without whitespace or commas.').meta({
-        description: 'The check ID that `--only` and `[[ignore]] check` use, which may not match a shipped check.',
-    }),
+    id: z
+        .string()
+        .regex(
+            COMMAND_CHECK_ID,
+            'Use a check ID without whitespace or commas, other than commit and push, which --only reads as stages.',
+        )
+        .meta({
+            description: 'The check ID that `--only` and `[[ignore]] check` use, which may not match a shipped check.',
+        }),
     command: commandCheckFields.command.unwrap().meta({
         description: 'The executable and arguments to run on selected files.',
     }),

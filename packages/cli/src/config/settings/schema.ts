@@ -184,7 +184,7 @@ export const SCOPE_PATH_MESSAGES = {
 
 export const NO_CHECK_RULE_MESSAGE = 'An ignore without check cannot name a rule. Add the check that owns the rule.';
 
-export const COMMAND_CHECK_ID = /^[^\s,]+$/u;
+export const COMMAND_CHECK_ID = /^(?!(?:commit|push)$)[^\s,]+$/u;
 
 export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 

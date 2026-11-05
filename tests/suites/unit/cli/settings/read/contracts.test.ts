@@ -82,7 +82,7 @@ test('an empty ignore path list is refused while an omitted list means every pat
     expect(readSettings(text.replace('paths = []\n', ''), sandbox.path).ignore[0]?.paths).toBeUndefined();
 });
 
-test.each(['bad id'])('a command check ID cannot contain whitespace or commas: %s', (id) => {
+test.each(['bad id', 'bad,id', 'commit', 'push'])('a command check cannot take the ID %s', (id) => {
     using sandbox = createTemporaryFolder();
     const text = `[[command_check]]\nid = "${id}"\ncommand = ["echo"]\npaths = ["**"]\nstage = "commit"\n`;
     expect(parseSettings(text, sandbox.path)).toStrictEqual([

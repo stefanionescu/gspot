@@ -139,7 +139,7 @@ test.each([false, true])('rerun resolves a scope from the calling folder (staged
     expect(repeated.report.checks[0]?.findings).toStrictEqual(result.report.checks[0]?.findings);
 });
 
-test('--staged keeps every stage while --stage commit selects only commit checks', async () => {
+test('--staged keeps every stage while --only commit selects only commit checks', async () => {
     const definitions = (['commit', 'push', 'manual'] as const).map((stage) => ({
         id: `sandbox/${stage}`,
         command: buildProgramCommand('fakes/tool'),
@@ -162,30 +162,17 @@ test('--staged keeps every stage while --stage commit selects only commit checks
         ['sandbox/commit', 'passed'],
         ['sandbox/push', 'passed'],
     ]);
-    const checked = parseCheckReport(
-        await runGspot(sandbox.path, [
-            'check',
-            '--only',
-            'sandbox/commit,sandbox/push',
-            '--staged',
-            '--stage',
-            'commit',
-            '--json',
-        ]),
-    );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(checked.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['sandbox/commit', 'passed'],
-    ]);
+    const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'commit', '--staged', '--json']));
+    const committed = checked.report.checks.map((check) => check.check);
+    expect(committed).toContain('sandbox/commit');
+    expect(committed).not.toContain('sandbox/push');
+    expect(committed).not.toContain('sandbox/manual');
     expect(checked.report.stages).toStrictEqual(['commit']);
-    const pushed = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/commit,sandbox/push', '--stage', 'push', '--json']),
-    );
-    expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
+    const pushed = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'push', '--json']));
+    const pushChecks = pushed.report.checks.map((check) => check.check);
+    expect(pushChecks).toContain('sandbox/push');
+    expect(pushChecks).not.toContain('sandbox/commit');
     expect(pushed.report.stages).toStrictEqual(['push']);
-    expect(pushed.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['sandbox/push', 'passed'],
-    ]);
 });
 
 test('a manual check runs only when --only names it', async () => {
@@ -259,6 +246,19 @@ test('a staged change to gspot.toml leaves other files to a full run', async () 
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);
+});
+
+test.each([
+    { flags: ['--only', 'commit,python/ruff'], message: '--only commit runs every check of that stage' },
+    { flags: ['--only', 'push', '--only', 'python/ruff'], message: '--only push runs every check of that stage' },
+    { flags: ['--only', 'commit', '--hook', 'pre-push'], message: '--only commit cannot run with --hook' },
+])('$flags is refused, because a stage takes no other selection', async ({ flags, message }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['check', ...flags, '--json']);
+    expect(result.code).toBe(2);
+    const failure = JSON.parse(result.stdout) as CommandFailureJson;
+    expect(failure.error).toBe('arguments');
+    expect(failure.message).toContain(message);
 });
 
 test.each(['all', 'message', 'manual'])('--stage refuses %s as a command-line stage', async (stage) => {
