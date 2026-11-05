@@ -26,6 +26,8 @@ import type { Session } from '#cli/types/tools.ts';
 
 const SCOPES_NAMED = 3;
 
+const REASON_CONDITIONS = { adding: 'you add items', lowering: 'you lower it', raising: 'you raise it' } as const;
+
 function formatScopeGroup(scopes: readonly string[]): string {
     const nested = scopes.filter((scopePath) => scopePath !== '');
     const named = nested.length === 1 ? formatScope(nested[0] as string) : formatCount(nested.length, 'scope');
@@ -51,7 +53,8 @@ function buildSettingsResult(session: Session): CommandResult {
             const [row] = rows as [(typeof settings)[number]];
             const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
             const where = session.scopes.length === 1 ? '' : `  in ${formatScopeGroup(rows.map(({ scope }) => scope))}`;
-            return `${row.setting.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${(row.reasonFor ?? '').padEnd(REASON_HEADER.length)}  ${formatSettingSource(row.source)}${where}`;
+            const condition = row.reasonFor === undefined ? '' : REASON_CONDITIONS[row.reasonFor];
+            return `${row.setting.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${condition.padEnd(REASON_HEADER.length)}  ${formatSettingSource(row.source)}${where}`;
         })
         .toArray();
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);

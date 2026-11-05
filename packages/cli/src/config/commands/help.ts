@@ -11,7 +11,7 @@ export const COMMAND_HELP = {
         summary: 'Try gspot on a copy of this repository, and change nothing',
         group: 'Set up a repository:',
         description:
-            'Copy the files that Git tracks, as you staged them, into .gspot-copies/. In the copy, gspot writes what init writes, installs the tools, and runs the checks at the default level with no fixes. It deletes the copy at the end. It runs no tests, no build, and no check that loads project code. It still loads your Prettier config, and it runs your installed ESLint, Stylelint, and TypeScript. Run it only on code that you trust.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, how long each tool took on this scan, the plan of init, and the next steps.\n\nscan keeps no cache of its own. npm, uv, and mise keep their download caches, so a second scan downloads no tool again. Each scan still asks GitHub for the pinned releases, so set GITHUB_TOKEN if you scan often. mise installs its tools for the whole machine. After init, run `gspot check` instead.',
+            'Try gspot on a temporary copy of your staged files. Your repository does not change. In the copy, gspot writes what init writes, installs the tools, and runs the checks at the default level with no fixes. It runs no tests, no build, and no check that loads project code. It still loads your Prettier config, and it runs your installed ESLint, Stylelint, and TypeScript. Run it only on code that you trust.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, how long each tool took on this scan, the plan of init, and the next steps.\n\nscan keeps no cache of its own. npm, uv, and mise keep their download caches, so a second scan downloads no tool again. Each scan still asks GitHub for the pinned releases, so set GITHUB_TOKEN if you scan often. Tools that mise installs stay on this computer. After init, run `gspot check` instead.',
         arguments: {},
         options: {
             '--json': 'Print the report as JSON, with every finding',
@@ -33,8 +33,7 @@ export const COMMAND_HELP = {
             '--from <file>': "Start from another repository's gspot.toml",
             '--configurations <names>':
                 'Use these configurations at the root; repeat the flag or separate names with commas',
-            '--level <level>':
-                'Start at this level. The plan then replaces your tool configs for the checks of this level',
+            '--level <level>': 'Start at this level: basic or all. Default: basic.',
         },
         exitCodes: [
             ['0', 'The plan was written, and the tools are installed.'],
@@ -48,7 +47,7 @@ export const COMMAND_HELP = {
         summary: 'Write the generated files, install the tools, and turn on the Git hooks in this clone',
         group: 'Set up a repository:',
         description:
-            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. install replaces the generated files that gspot owns, and does not change gspot.toml.\n\nThen install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\nOnly the mise commands of gspot read .gspot/mise.toml, and only while it holds what gspot wrote.\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\nBefore the install, install inspects each tool as doctor does. When no generated file changes, every tool passes, the lockfiles are current, the hooks run, and uv sync --check accepts the environment of each Python project with a uv lockfile, it changes nothing and prints No change. After an install, it inspects each tool again, and installs the ones that fail again in a forced form.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
+            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. install replaces the generated files that gspot owns, and does not change gspot.toml.\n\nThen install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\nBefore the install, install inspects each tool as doctor does. When everything is in place, install changes nothing. A tool that still fails after an install is installed once more from scratch.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
         arguments: {},
         options: {},
         exitCodes: [
@@ -63,7 +62,7 @@ export const COMMAND_HELP = {
         summary: 'Run the checks and print the findings',
         group: 'Run the checks:',
         description:
-            'Run the checks and print each finding with its file, line, lint rule, and help.\n\nWithout options, gspot runs the commit and push checks on the working tree. Commit message checks run in the commit-msg hook. Manual checks run only when --only names them.',
+            'Run the checks and print each finding with its file, line, lint rule, and help.\n\nWithout options, gspot runs the commit and push checks on the working tree. Checks of commit messages run in the commit-msg hook. Some slow checks run only when you name them with --only; gspot explain names their stage.',
         arguments: {
             '[paths...]': 'Files or folders to check, relative to the current folder (default: the whole repository)',
         },
@@ -71,9 +70,8 @@ export const COMMAND_HELP = {
             '--only <checks>':
                 'Run only these checks, including checks off at your level. Separate several with commas, or repeat the option. commit or push alone runs the checks of that stage at your level',
             '--skip <checks>': 'Run every check except these. Separate several with commas, or repeat the option',
-            '--staged': 'Check the files as you staged them, not the working tree',
-            '--base <ref>':
-                'Compare with this branch, tag, or commit; an empty, all-zero, or absent full hash checks every file',
+            '--staged': 'Check the files as you staged them. The pre-commit hook adds --only commit.',
+            '--base <ref>': 'Check the files changed since this branch, tag, or commit.',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
             '--verbose': 'Also print the passed and skipped checks, each command, and each ignore',
         },
@@ -89,12 +87,13 @@ export const COMMAND_HELP = {
         summary: 'Add configurations',
         group: 'Change gspot.toml:',
         description:
-            'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nTo find the configurations that new code needs, run `gspot check --only gspot/detected-configurations`. It prints the `gspot add` line to run for each scope.\n\nRun `gspot install` next when the configurations need new tools.',
+            'Select configurations in gspot.toml, then write the generated files again. gspot also turns on the configurations that these need. gspot.toml lists only the names you typed.\n\nTo find the configurations that new code needs, run `gspot check --only gspot/detected-configurations`. It prints the `gspot add` line to run for each scope.\n\nRun `gspot install` next when the configurations need new tools.',
         arguments: {
             '<configuration...>': 'Configuration names, such as pytest. Run `gspot list` to see them',
         },
         options: {
-            '--scope <path>': 'Select them in this scope, relative to the repository root (default: the root)',
+            '--scope <path>':
+                'Apply to one project folder, by its path from the repository root, such as services/api.',
         },
         exitCodes: [
             ['0', 'The configurations were added, or they were already selected.'],
@@ -106,12 +105,13 @@ export const COMMAND_HELP = {
         summary: 'Remove configurations, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Remove configurations, then write the generated files again. gspot.toml records the removal and your reason, so `gspot doctor` does not suggest them again. `gspot add` undoes it.\n\ngspot refuses to remove a configuration that another selected configuration needs.',
+            'Remove configurations, then write the generated files again. gspot.toml keeps your reason, so gspot does not suggest them again. `gspot add` undoes it.\n\ngspot refuses to remove a configuration that another selected configuration needs.',
         arguments: {
             '<configuration...>': 'Configuration names',
         },
         options: {
-            '--scope <path>': 'Remove them from this scope, relative to the repository root (default: the root)',
+            '--scope <path>':
+                'Apply to one project folder, by its path from the repository root, such as services/api.',
             '--reason <text>': 'Why you remove them (required)',
         },
         exitCodes: [
@@ -130,8 +130,9 @@ export const COMMAND_HELP = {
             '<values...>': 'The new value: every item of a list, or the table keys to add',
         },
         options: {
-            '--reason <text>': 'Why you change it. Needed when the change makes a check weaker',
-            '--scope <path>': 'Change it in this scope, relative to the repository root (default: the root)',
+            '--reason <text>': 'Why you change it. A value weaker than the shipped default needs one.',
+            '--scope <path>':
+                'Apply to one project folder, by its path from the repository root, such as services/api.',
         },
         exitCodes: [
             ['0', 'The setting was written, or it already had this value.'],
@@ -143,13 +144,14 @@ export const COMMAND_HELP = {
         summary: 'Remove your value, so the default applies again',
         group: 'Change gspot.toml:',
         description:
-            'Remove your value of a setting from gspot.toml, then write the generated files again. The root value or the default applies again.\n\nWith items, remove only those: equal items from a list, records by name from a record list, single paths from the records that hold them, and keys from a table.',
+            'Remove your value of a setting from gspot.toml, then write the generated files again. The root value or the default applies again.\n\nGive items to remove only those items from a list, or only those keys from a table.',
         arguments: {
             '<setting>': 'The setting name, such as naming.banned_words',
             '[items...]': 'List items or table keys to remove (default: the whole value)',
         },
         options: {
-            '--scope <path>': 'Change it in this scope, relative to the repository root (default: the root)',
+            '--scope <path>':
+                'Apply to one project folder, by its path from the repository root, such as services/api.',
         },
         exitCodes: [
             ['0', 'The value was removed, or there was no value to remove.'],
@@ -163,7 +165,7 @@ export const COMMAND_HELP = {
         description:
             'Ignore a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. `gspot check --verbose` prints them with their reasons.',
         arguments: {
-            '[check]': 'The check, such as python/ruff. Leave it out to keep --paths out of every check',
+            '[check]': 'The check, such as python/ruff. Leave it out to skip the --paths files in every check.',
         },
         options: {
             '--reason <text>': 'Why you ignore it (required)',

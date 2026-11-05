@@ -82,7 +82,7 @@ export const VALUE_WIDTH = 28;
 
 export const LIST_KINDS = ['configurations', 'settings'] as const;
 
-export const REASON_HEADER = 'reason for';
+export const REASON_HEADER = 'needs a reason when';
 
 export const LIST_ARGUMENT = '[configurations|settings]';
 

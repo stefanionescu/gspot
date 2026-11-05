@@ -95,6 +95,21 @@ test('the settings list leaves out a naming category that gspot set refuses', as
     expect(stdout).not.toContain('naming.typescript.classes.cases');
 });
 
+test.each([
+    { reasonFor: 'adding', condition: 'you add items' },
+    { reasonFor: 'lowering', condition: 'you lower it' },
+    { reasonFor: 'raising', condition: 'you raise it' },
+])('the settings list says that a setting for $reasonFor needs a reason when $condition', async (row) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
+    const { settings } = settingsListOutputSchema.parse(JSON.parse(listed.stdout));
+    const { setting } = settings.find(({ reasonFor }) => reasonFor === row.reasonFor)!;
+    const printed = await runGspot(sandbox.path, ['list', 'settings']);
+    const lines = printed.stdout.split('\n');
+    expect(lines[0]).toContain('needs a reason when');
+    expect(lines.find((line) => line.startsWith(`${setting} `))).toContain(` ${row.condition} `);
+});
+
 test('the text lists group equal scope states on one line', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
