@@ -100,7 +100,7 @@ export const commandCheckSchema = z.strictObject({
             'The files that the command writes. With outputs, the check runs the command in a copy and reports each output that differs from the committed file.',
     }),
     stage: commandCheckFields.stage.exclude(['message']).meta({
-        description: 'The earliest stage that runs this check.',
+        description: 'The hook that runs this check: commit or push. A manual check runs only when you name it.',
     }),
     runs: z.enum(CHECK_RUNS).exclude(['history']).default('files').meta({
         description:
