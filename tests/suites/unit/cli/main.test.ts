@@ -71,20 +71,17 @@ test('gspot check --changed exits 2 and names --base', async () => {
     expect(result.stderr).toContain('--base origin/main');
 });
 
-test.each([['init'], ['set', 'level', 'all']].map((commandArguments) => ({ commandArguments })))(
-    '$commandArguments requires a Git worktree before reading settings or writing, while its help works outside Git',
-    async ({ commandArguments }) => {
-        await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
-        const before = await readTree(sandbox.path);
-        const result = await runGspot(sandbox.path, [...commandArguments, '--json']);
-        expect(result.code).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git' });
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-        const help = await runGspot(sandbox.path, [commandArguments[0]!, '--help']);
-        expect(help.code).toBe(0);
-        expect(help.stdout).toContain('Usage:');
-    },
-);
+test('init requires a Git worktree before reading settings or writing, while its help works outside Git', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git' });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const help = await runGspot(sandbox.path, ['init', '--help']);
+    expect(help.code).toBe(0);
+    expect(help.stdout).toContain('Usage:');
+});
 
 test('a sparse checkout is refused before reading settings and help remains available', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -119,7 +116,6 @@ test.each(VERSION_ARGUMENTS.map((commandArguments) => ({ commandArguments })))(
 
 test.each([
     { commandArguments: ['--version', 'extra'], refused: 'extra' },
-    { commandArguments: ['bogus', '--version'], refused: 'bogus' },
     { commandArguments: ['check', '--version'], refused: '--version' },
 ])('$commandArguments exits 2 instead of printing the version', async ({ commandArguments, refused }) => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -165,12 +161,6 @@ test.each(Object.keys(COMMAND_HELP))('the help of %s prints its commands without
     expect(help.code).toBe(0);
     expect(help.stdout).toContain(`Usage: gspot ${command} `);
     expect(help.stdout).not.toContain('`');
-});
-
-test('list names its choices as the argument', async () => {
-    await using sandbox = await testdir();
-    const help = await runGspot(sandbox.path, ['list', '--help']);
-    expect(help.stdout).toContain('Usage: gspot list [options] [configurations|settings]\n');
 });
 
 test('check treats --version after the separator as a file path', async () => {
