@@ -17,7 +17,7 @@ import {
 gspot needs Git and {`Node.js ${runtimeMinimums.node} or newer`}. With an older Node.js, gspot stops with exit code 2
 and prints the version it found:
 
-<Code code={`gspot needs Node.js ${runtimeMinimums.node} or newer (found 22.11.0).`} lang="text" />
+<Code code={`gspot needs Node.js ${runtimeMinimums.node} or newer (found 22.11.0). If your terminal has a newer Node.js, this Git client gives hooks another PATH. Start it from a terminal, or add that folder to its PATH.`} lang="text" />
 
 Run gspot inside a Git working tree. Outside one, only `--help` and `--version` work. gspot does not support sparse
 checkouts, so run `git sparse-checkout disable` first.

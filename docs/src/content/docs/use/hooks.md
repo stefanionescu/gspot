@@ -33,7 +33,8 @@ pre-push hook does not run them again. CI runs both. Checks that read the whole 
 report findings in files that you did not change.
 
 When a hook cannot start gspot, the commit stops.
-[Troubleshooting](/use/troubleshooting/#a-hook-cannot-find-npm-pnpm-yarn-bun-or-mise) shows how to fix it.
+[Troubleshooting](/use/troubleshooting/#a-hook-cannot-find-npm-pnpm-yarn-bun-or-mise) shows how to fix it. A Git client
+can give hooks another `PATH` than your terminal, so a hook can find an older Node.js and stop on the Node.js minimum.
 
 When the dependency files in your working tree differ from the checked commit, gspot prints this note:
 
