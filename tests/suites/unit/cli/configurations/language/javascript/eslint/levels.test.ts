@@ -8,6 +8,7 @@ import { LEVELS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import {
     COALESCING_CORRECTED,
@@ -17,7 +18,7 @@ import {
 } from '#tests/config/configurations/javascript/overrides.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { EslintConfiguration } from '#tests/types/setup.ts';
 
@@ -89,7 +90,12 @@ test('install refuses options for a rule of level all at level basic, and ESLint
         'source.js': '',
     });
     const session = await openSession(sandbox.path);
-    expect(() => buildGeneratedFiles(session)).toThrow('n/no-process-exit');
+    expect(() => buildGeneratedFiles(session)).toThrow(
+        matchFields<GspotError>({
+            code: 'settings',
+            message: expect.stringContaining('n/no-process-exit') as string,
+        }),
+    );
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['javascript'], {

@@ -4,6 +4,7 @@ import { expect, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import {
     CONFLICTING_LOCAL_PLUGIN_FILES,
     CONFLICTING_LOCAL_PLUGIN_TABLES,
@@ -17,7 +18,7 @@ import {
 import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
@@ -103,6 +104,10 @@ test('tools.eslint.plugins loads your plugin by its path and refuses the gspot r
     );
     const session = await openSession(sandbox.path);
     expect(() => buildGeneratedFiles(session)).toThrow(
-        'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.',
+        matchFields<GspotError>({
+            code: 'settings',
+            message:
+                'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.',
+        }),
     );
 });
