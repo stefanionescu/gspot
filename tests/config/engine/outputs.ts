@@ -241,7 +241,7 @@ export const TYPOS_FINDING_CASES = [
             line: 1,
             column: 6,
             message: `\`${TYPO.the}\` should be \`the\``,
-            fixable: true,
+            fixable: false,
         },
     },
     {

@@ -9,7 +9,6 @@ import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { extractExtension } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { compareText, listConflictMarkerLines } from '#cli/system/text.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
@@ -89,17 +88,12 @@ async function runFixer(session: CheckSession, planned: PlannedCheck): Promise<F
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
-    const { fix_extensions: extensions } = planned.check;
-    const files =
-        extensions === undefined
-            ? planned.files
-            : planned.files.filter(({ path }) => extensions.includes(extractExtension(path)));
-    if (planned.skip !== undefined || files.length + planned.triggerPaths.length === 0)
+    if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
     const command = planned.check.fix as string[];
     const name = command[0] as string;
     const tool = planned.tool?.name === name ? planned.tool : getTool(readConfigurations().values(), name);
-    return runFixTool(session, { ...planned, files }, { command, tool });
+    return runFixTool(session, planned, { command, tool });
 }
 
 function readContents(sourceRoot: string, paths: string[]): PathBytes {

@@ -6,7 +6,7 @@ import type { findingSchema, reportedTypoSchema } from '#cli/schemas/engine.ts';
 import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckResult, CheckRunOptions, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
-import type { Check, Tool } from '#cli/types/manifests.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import type { GitFile, TrackedFile } from '#cli/types/repository.ts';
 import type { SpawnOptions, SpawnResult, TemporaryFolder } from '#cli/types/system.ts';
 import type { GeneratedFile, ProcessFailure } from '#cli/types/tools.ts';
@@ -43,7 +43,6 @@ export type RevisionDependencies = { dependencies: string[]; dependencyNote?: st
 export type ToolOutput = OutputPaths & {
     check: string;
     help: string;
-    fixExtensions?: string[] | undefined;
     stdout: string;
     text: string;
     output: CheckOutput;
@@ -53,7 +52,7 @@ export type CheckOutput = z.output<typeof outputSchema>;
 
 export type OutputPaths = { cwd: string; root: string };
 
-export type ParsingCheck = Partial<Pick<Check, 'fix_extensions'>> & {
+export type ParsingCheck = {
     id: string;
     help: string;
     runs: (typeof CHECK_RUNS)[number];

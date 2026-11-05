@@ -33,7 +33,7 @@ test('the typos format tells findings from fatal exits', async () => {
                 column: 1,
                 message: `\`${TYPO.the}\` should be \`the\``,
                 help: planned.check.help,
-                fixable: true,
+                fixable: false,
             },
         ],
     );
@@ -65,15 +65,6 @@ test.each([...TYPOS_REPORT_ERRORS])('typos refuses $name', async ({ output }) =>
             message: expect.stringContaining(output.path) as string,
         }),
     );
-});
-
-test('a typo in a code file asks for a rename, and the fixer leaves it alone', async () => {
-    const report = { ...TYPO_REPORT, path: 'sample.ts' };
-    await using sandbox = await testdir({ 'sample.ts': `${TYPO.the}\n` });
-    const check = getShippedCheck('spelling/typos');
-    expect(parseOutput(check, JSON.stringify(report), '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
-        { file: 'sample.ts', fixable: false, help: "Rename it with your editor's rename, and update its callers." },
-    ]);
 });
 
 test.each(TYPOS_FINDING_CASES)('typos reads $name', async ({ report, source, expected }) => {

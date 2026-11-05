@@ -68,7 +68,7 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
         ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `café ${TYPO.the}\n`])),
     };
     const checked = await runTyposCheck(sourceFiles);
-    const typoFinding = { line: 1, column: 6, fixable: true, message: `\`${TYPO.the}\` should be \`the\`` };
+    const typoFinding = { line: 1, column: 6, fixable: false, message: `\`${TYPO.the}\` should be \`the\`` };
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(
         checked.report.checks.flatMap(({ findings }) =>
