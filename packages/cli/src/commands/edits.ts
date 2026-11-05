@@ -1,3 +1,5 @@
+import { relative } from 'node:path';
+
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 
 import {
@@ -31,6 +33,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { formatNameList, quoteArgument } from '#cli/system/text.ts';
 import type {
+    CommandLocation,
     CommandOption,
     ConfigurationChange,
     ConfigurationsOptions,
@@ -132,10 +135,17 @@ export async function readIgnoreEditContext(root: string): Promise<IgnoreEditCon
 Read and validate the settings once before a command edits them, and find the table of the scope that the command
 writes into.
 
-@param root the validated repository root.
+@param location where the command starts.
+@param location.root the validated repository root.
+@param location.cwd the calling folder.
 @param scopePath the --scope path relative to the repository root, or absent for the top level.
 */
-export async function readSettingsEditContext(root: string, scopePath?: string): Promise<SettingsEditContext> {
+export async function readSettingsEditContext(
+    { root, cwd }: CommandLocation,
+    scopePath?: string,
+): Promise<SettingsEditContext> {
+    if (scopePath?.startsWith('.') === true && relative(root, cwd) !== '')
+        throw new GspotError('arguments', '--scope takes the path from the repository root, such as services/b.');
     const context = await readIgnoreEditContext(root);
     const { edit: input, settings, cache, listing } = context;
     const session = await openSession(root, { settings, cache, listing });
@@ -177,7 +187,7 @@ export async function readConfigurationEditContext(options: ConfigurationsOption
         selected: string[];
     }
 > {
-    const context = await readSettingsEditContext(options.root, options.scopePath);
+    const context = await readSettingsEditContext(options, options.scopePath);
     const { settings, scopePath } = context;
     assertConfigurationsExist(options.configurations);
     assertConfigurationsEditable(options.configurations);

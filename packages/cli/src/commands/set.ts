@@ -206,7 +206,7 @@ async function assertLintRules(edit: SettingsEditContext, key: string, change: P
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    const edit = await readSettingsEditContext(options.root, options.scopePath);
+    const edit = await readSettingsEditContext(options, options.scopePath);
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = buildSettingChange(edit, options);
     await assertLintRules(edit, options.key, change);

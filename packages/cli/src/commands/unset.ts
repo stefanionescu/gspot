@@ -36,7 +36,7 @@ function formatUnsetSummary(
 async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 
-    const edit = await readSettingsEditContext(options.root, options.scopePath);
+    const edit = await readSettingsEditContext(options, options.scopePath);
     const { root, edit: input, scopeTable, scopePath } = edit;
     const { match } = selectSettingToEdit(edit, key);
 
