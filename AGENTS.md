@@ -149,8 +149,8 @@ three shipped rules:
 - A tool's rule table that a settings schema reads sits in the `manifest.toml` of the configuration that owns the tool.
 - A file splits only when it passes the file length limit. It then becomes a folder `<layer>/` with one file per topic,
   such as `packages/cli/src/config/configurations/naming.ts`. A topic is a subfolder of the layer or one subject.
-- Merge a small topic into the closest topic file. No file in these folders takes the name of its folder, and only the
-  docs site's one schema holds a single export.
+- Merge a small topic into the closest topic file. No file in these folders holds a single export or takes the name of
+  its folder.
 - Infer each type that a schema describes from that schema: `z.infer<typeof schema>`, or `z.input` for the value before
   its defaults and transforms. `types/` may import the schema file of any layer. Write a type in plain TypeScript only
   when no schema describes it.

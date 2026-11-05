@@ -2,6 +2,7 @@ import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
 import { defineCollection } from 'astro:content';
 import type { Loader, LoaderContext } from 'astro/loaders';
+import { z } from 'astro/zod';
 
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
@@ -18,8 +19,15 @@ import { buildCommandPage } from '#docs/reference/commands.ts';
 import { buildConfigurationPages } from '#docs/reference/configurations.ts';
 import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
 import { buildSettingsPage } from '#docs/reference/settings.ts';
-import { guideSchema } from '#docs/schemas/content.ts';
 import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
+
+const configurationNameSchema = z.enum(CLI_REFERENCE.configurations.map(({ name }) => name));
+
+const guideSchema = z.object({
+    title: z.string(),
+    configurations: z.array(configurationNameSchema).default([]),
+    checksTable: z.string().optional(),
+});
 
 async function buildGuideIndex(context: LoaderContext): Promise<Map<string, ConfigurationGuide>> {
     const guides = new Map<string, ConfigurationGuide>();
