@@ -4,10 +4,21 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, test } from 'bun:test';
 
 import { ARCHITECTURE_SETTINGS, TYPESCRIPT_CASES, TYPESCRIPT_SANDBOX } from '#tests/config/integration/typescript.ts';
-import { spawnGspot } from '#tests/setup/cli/commands.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+
+const SAMPLE_CHECKS = [
+    'format/prettier',
+    'javascript/biome',
+    'javascript/eslint',
+    'javascript/import-cycles',
+    'javascript/knip',
+    'javascript/tsc',
+    'typescript/tsc',
+    'typescript/tsconfig',
+] as const;
 
 describe('after the shared TypeScript sandbox installs its tools', () => {
     const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SANDBOX);
@@ -23,7 +34,11 @@ describe('after the shared TypeScript sandbox installs its tools', () => {
 
     test('the sample TypeScript repository passes every check that init selects for it', async () => {
         const { root } = installedSandbox();
-        const checked = await spawnGspot(root, ['check', '--json']);
+        const checked = parseCheckReport(await spawnGspot(root, ['check', '--json']));
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        const passed = new Set(
+            checked.report.checks.filter(({ status }) => status === 'passed').map(({ check }) => check),
+        );
+        expect(SAMPLE_CHECKS.filter((check) => !passed.has(check))).toStrictEqual([]);
     });
 });
