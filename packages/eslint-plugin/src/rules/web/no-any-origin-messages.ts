@@ -120,6 +120,12 @@ function isOriginVerified(
     return identifiers.some((identifier) => isEventVerified(source, identifier, jqueryEvents));
 }
 
+function isDelegate(listener: TSESTree.FunctionLike, event: TSESTree.Identifier): boolean {
+    const { body } = listener;
+    if (body?.type !== AST_NODE_TYPES.CallExpression) return false;
+    return body.arguments.some((argument) => ASTUtils.isIdentifier(argument) && argument.name === event.name);
+}
+
 function isWindow(source: Readonly<TSESLint.SourceCode>, types: TypeReader, node: TSESTree.Node): boolean {
     const type = types.get(node);
     const members = type.isUnionOrIntersection() ? type.types : [type];
@@ -173,8 +179,8 @@ export const noAnyOriginMessages = createRule<[], 'anyTarget' | 'unverifiedOrigi
             const event = listener?.params[0];
             if (
                 listener !== undefined &&
-                listener.body.type !== AST_NODE_TYPES.CallExpression &&
                 ASTUtils.isIdentifier(event) &&
+                !isDelegate(listener, event) &&
                 !isOriginVerified(source, listener, event)
             )
                 context.report({ node: report, messageId: 'unverifiedOrigin' });
