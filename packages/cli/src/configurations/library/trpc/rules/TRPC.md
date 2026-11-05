@@ -16,9 +16,6 @@ Pass verified context to direct callers explicitly. Never store a session in a p
 caller into an HTTP request. When procedures share logic, call the same authorized domain operation rather than each
 other.
 
-See [authorization](https://trpc.io/docs/server/authorization) and
-[server callers](https://trpc.io/docs/server/server-side-calls).
-
 ## Client state and transport
 
 Use generated query options and keys. A mutation key identifies a write, not the queries to invalidate. Use the same
@@ -30,9 +27,6 @@ ends and preserve transformer metadata. Bound batch sizes and expensive work. Le
 
 When `trpc.server_files` lists the server files, import them only with `import type`.
 
-See [TanStack integration](https://trpc.io/docs/client/tanstack-react-query/setup) and
-[links](https://trpc.io/docs/client/links).
-
 ## Cancellation and events
 
 Forward cancellation to the code that does the work, and release listeners and streams. A disconnected client does not
@@ -40,5 +34,3 @@ prove that a write failed; recover its state by operation identity before retryi
 
 Reauthorize subscriptions after identity changes. Give resumable events stable identifiers, deduplicate replay, and
 restore a fresh snapshot when retention has expired.
-
-See [subscriptions](https://trpc.io/docs/server/subscriptions).
