@@ -6,11 +6,14 @@ import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type { CheckState, PlannedCheck, PlannedScope, PlanOptions, RunSelection } from '#cli/types/engine/plan.ts';
-import type { Check } from '#cli/types/manifests.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { ScopeCheck, Session } from '#cli/types/tools.ts';
+
+const CONFIG_BOUND_RUNNERS = new Set(['vitest', 'jest']);
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
@@ -26,6 +29,31 @@ function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCh
     if (!isRoot) return configuredChecks;
     const own = Object.values(settings.commandChecks).map((commandCheck) => ({ scope, check: commandCheck }));
     return [...configuredChecks, ...own];
+}
+
+function holdsTestConfig(session: Session, scopePath: string, configuration: Configuration): boolean {
+    const isConfig = buildPathMatcher(configuration.files.paths);
+    const prefix = scopePath === '' ? '' : `${scopePath}/`;
+    return session.repository.files.some(
+        ({ path }) => path.startsWith(prefix) && !path.slice(prefix.length).includes('/') && isConfig(path),
+    );
+}
+
+/**
+Vitest and Jest read the config in their working folder and none above it. So a nested scope with no test config
+leaves its tests to an enclosing scope that holds one, and a root with no config leaves them to the nested scopes that
+hold one.
+*/
+function isRunElsewhere(session: Session, scopePath: string, configuration: Configuration | undefined): boolean {
+    if (configuration === undefined || !CONFIG_BOUND_RUNNERS.has(configuration.name)) return false;
+    if (holdsTestConfig(session, scopePath, configuration)) return false;
+    return session.scopes.some(
+        ({ path, configurations }) =>
+            path !== scopePath &&
+            (scopePath === '' || path === '' || scopePath.startsWith(`${path}/`)) &&
+            configurations.some(({ name }) => name === configuration.name) &&
+            holdsTestConfig(session, path, configuration),
+    );
 }
 
 function isWanted(check: Check, options: PlanOptions): boolean {
@@ -107,7 +135,9 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     );
     const scopePaths = scopes.map(({ path }) => path);
     const enumerated = Map.groupBy(
-        listKeptScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)),
+        listKeptScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)).filter(
+            ({ scope, configuration }) => !isRunElsewhere(session, scope.path, configuration),
+        ),
         ({ scope }) => scope.path,
     );
     return scopes.map((scope) => {
@@ -120,7 +150,17 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             children: listNestedScopes(scopePaths, scope.path),
             inventory,
         };
-        const checks = (enumerated.get(scope.path) ?? []).map((configured) => planCheck(context, configured));
+        const checks = (enumerated.get(scope.path) ?? []).map((configured) =>
+            planCheck(
+                {
+                    ...context,
+                    children: context.children.filter(
+                        (child) => !isRunElsewhere(session, child, configured.configuration),
+                    ),
+                },
+                configured,
+            ),
+        );
         return options.keepLevelOff === true ? checks : checks.filter(({ skip }) => skip?.cause !== 'level');
     });
 }

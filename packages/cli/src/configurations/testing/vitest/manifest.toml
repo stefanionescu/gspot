@@ -10,7 +10,7 @@ filenames = ["vitest.config.*", "vitest.workspace.*"]
 dependencies = ["vitest"]
 
 [files]
-paths = ["**/vitest.config.*", "**/vitest.workspace.*"]
+paths = ["**/vitest.config.*", "**/vitest.workspace.*", "**/vite.config.*"]
 
 [shared_prefixes]
 prefixes = ["vitest"]
