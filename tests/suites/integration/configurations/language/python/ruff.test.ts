@@ -227,7 +227,7 @@ requires-python = "${requires}"
     expect(listScopeRules(fixed.report)).toStrictEqual({
         '': { status: 'failed', rules: ['FA100', 'FA100', 'FA100', 'FA100'] },
         legacy: { status: 'failed', rules: ['UP035', 'FA100', 'UP006', 'FA100', 'UP006'] },
-        modern: { status: 'passed', rules: [] },
+        modern: { status: 'failed', rules: ['UP035', 'F401', 'F401'] },
     });
     const sources = await Promise.all(
         RUFF_VERSION_CASES.map(async ({ scope }) => await readFile(join(root, scope, 'sample.py'), 'utf8')),

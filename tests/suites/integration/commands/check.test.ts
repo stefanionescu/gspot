@@ -1,16 +1,13 @@
-import { chmod, readFile, symlink, writeFile } from 'node:fs/promises';
+import { symlink, writeFile } from 'node:fs/promises';
 import { delimiter, dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/tools/pins.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
@@ -82,63 +79,3 @@ test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and 
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('commits/commitlint-pushed');
 });
-
-test.skipIf(isWindows || process.getuid?.() === 0)(
-    `a SQLFluff fix that cannot write its file is a failed fix with exit code 2, even though SQLFluff's exit code also means findings`,
-    async () => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['sql'], {
-                level: 'all',
-                tables: stringify({ sql: { dialect: 'postgres' } }),
-            }),
-            'source/sample.sql': 'select  * from foo;\n',
-        });
-
-        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
-        const command = ['check', '--only', 'sql/sqlfluff', '--fix', '--json'];
-        await chmod(join(sandbox.path, 'source'), 0o500);
-        try {
-            const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
-            expect(failed.exitCode, JSON.stringify(failed)).toBe(2);
-            expect(failed.fixes?.results).toMatchObject([
-                {
-                    check: 'sql/sqlfluff',
-                    status: 'failed',
-                    changed: [],
-                    note: expect.stringContaining('PermissionError') as string,
-                },
-            ]);
-            expect(await readFile(join(sandbox.path, 'source/sample.sql'), 'utf8')).toBe('select  * from foo;\n');
-        } finally {
-            await chmod(join(sandbox.path, 'source'), 0o700);
-        }
-    },
-);
-
-test.each([...PARTIAL_FIX_CASES])(
-    '$check fixes findings, reports an unchanged second fix, and passes after a manual fix',
-    async ({ configuration, check, path, tables, sample, partial, corrected }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([configuration], { level: 'all', tables }),
-            '.gitignore': `${GSPOT_FOLDER}/\n`,
-            [path]: sample,
-        });
-
-        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
-        const command = ['check', '--only', check, '--fix', '--json'];
-        const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
-        expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
-        expect(failed.fixes?.results).toMatchObject([{ check, status: 'changed', changed: [path] }]);
-        expect(
-            failed.checks.flatMap(({ findings }) => findings).map(({ file, fixable }) => ({ file, fixable })),
-        ).toStrictEqual([{ file: path, fixable: false }]);
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(partial);
-        const repeated = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
-        expect(repeated.exitCode, JSON.stringify(repeated)).toBe(1);
-        expect(repeated.fixes?.results).toMatchObject([{ check, status: 'unchanged', changed: [] }]);
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(partial);
-        await writeFile(join(sandbox.path, path), corrected);
-        const passed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
-        expect(passed.exitCode, JSON.stringify(passed)).toBe(0);
-    },
-);

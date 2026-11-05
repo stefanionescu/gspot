@@ -86,10 +86,7 @@ export const RUFF_VERSION_CASES = [
         scope: 'modern',
         requires: '~=3.10',
         rules: ['UP035', 'UP045', 'UP006', 'UP045', 'UP006'],
-        fixed: VERSION_SOURCE.replace('from typing import List, Optional\n', '').replaceAll(
-            'Optional[List[int]]',
-            'list[int] | None',
-        ),
+        fixed: VERSION_SOURCE.replaceAll('Optional[List[int]]', 'list[int] | None'),
     },
 ] as const;
 

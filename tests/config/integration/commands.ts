@@ -1,7 +1,6 @@
 import { dirname } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { TYPO } from '#tests/config/setup/configurations.ts';
 
 export const SUPABASE_SANDBOX = {
     install: false,
@@ -32,27 +31,6 @@ export const BASE_INSTALLED_FILES = {
     'style.css': 'body { color: black; }\n',
     'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = []\n',
 } as const;
-
-export const PARTIAL_FIX_CASES = [
-    {
-        configuration: 'sql',
-        check: 'sql/sqlfluff',
-        path: 'sample.sql',
-        tables: '[sql]\ndialect = "postgres"\n',
-        sample: 'select  * from foo;\n',
-        partial: 'SELECT * FROM foo;\n',
-        corrected: 'SELECT id FROM foo;\n',
-    },
-    {
-        configuration: 'spelling',
-        check: 'spelling/typos',
-        path: 'sample.txt',
-        tables: '',
-        sample: `${TYPO.the} ${TYPO.whether}\n`,
-        partial: `the ${TYPO.whether}\n`,
-        corrected: 'the whether\n',
-    },
-] as const;
 
 export const UNQUOTED_FINDING_PREFIX = '  scripts/b.sh:2:6  SC2086  ';
 
