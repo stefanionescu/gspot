@@ -48,7 +48,8 @@ Write tests when the user asks or a check requires them. Fix each test that your
 ## Rules and checks
 
 Run `gspot explain <check>` to see what a check looks for and how to fix its findings. When a rule and a check conflict,
-follow the check, and name both to the user.
+make the code pass the check, and name both to the user. A help line that loosens a setting still needs the user's
+agreement.
 
 ## No defensive logic
 
