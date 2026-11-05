@@ -1,18 +1,18 @@
 ---
 title: Command checks
-description: Run your own command as a gspot check, with its findings in the same report.
+description: Run a command of your own as a check, with its findings in the same report as every other check.
 ---
 
-A command check runs a command of your own on the files that you choose. gspot reads the output of the command as
-findings, and shows them in the same report as the findings of every other check.
+A command check runs a command of your own on the files that you choose, and gspot reads its output as findings in the
+same report as every other check.
 
 ## Example: find unfinished notes
 
-This check reports each line with `FIXME` in the files under `notes/`. It needs Node.js on your `PATH`. In a JavaScript
-or TypeScript project, it also needs `@types/node` in `devDependencies`, so that `javascript/tsc` knows the types of
+This check reports each line with `FIXME` in the files under `notes/`. It needs Node.js on your `PATH`, and in a
+JavaScript or TypeScript project, `@types/node` in `devDependencies`, so that `javascript/tsc` knows the types of
 `process` and `node:fs`.
 
-Save this script under the file name in its title:
+Save this script under the file name at the top of the block:
 
 ```javascript title="scripts/check-notes.mjs"
 import { readFile } from 'node:fs/promises';
@@ -40,7 +40,7 @@ help = "Replace each FIXME note with the finished instruction."
 output = { format = "regex", pattern = '^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$' }
 ```
 
-Save this note under the file name in its title:
+Save this note the same way:
 
 ```text title="notes/deploy.txt"
 FIXME: document the deployment command.
@@ -53,30 +53,28 @@ gspot install
 gspot check --only notes
 ```
 
-`gspot check` exits with `1` and reports a finding on line 1 of the note. Replace that line with the finished text:
+`gspot check` exits with `1` and reports a finding on line 1 of the note. Replace that line with the finished text, and
+the same command exits with `0`:
 
 ```text
 Run the deployment command documented in the release guide.
 ```
 
-Run the same check again. `gspot check` exits with `0` and reports no findings.
-
 ## How the command runs
 
 `command` is a list of arguments, and gspot runs it without a shell. gspot replaces `{files}` with the selected files,
-one argument for each file. File names with spaces need no extra quotes. To run the command once for each file, use
-`{file}` instead. With `{file}`, a regular expression match that has no `file` group belongs to the file of that run.
+one argument for each file, so file names with spaces need no extra quotes. To run the command once for each file, use
+`{file}` instead. With `{file}`, the pattern needs no `file` group, and each finding belongs to the file of that run.
 
-By default, any exit code other than 0 fails the check. When your tool exits with one code for findings, set
-`exit_codes = [1]`. Any other exit code except 0 then counts as a failed run, and gspot exits with code `2`, even when
-the tool printed findings first. With an empty list, every exit code other than 0 counts as a failed run.
+By default, any exit code other than 0 means that the command found something. If your tool uses one code for findings
+and others for crashes, set `exit_codes = [1]`. Any other non-zero code then stops the check with an error, and gspot
+exits with `2`, even when the tool printed findings first.
 
 ## Read the output
 
-`output.format` sets how gspot reads the output. [The format list](/reference/gspot-toml/#command_check.output.format)
-says what each format reads.
-
-With `format = "regex"`, the named groups of the pattern mean:
+`output.format` sets how gspot reads the output, and
+[the format list](/reference/gspot-toml/#command_check.output.format) says what each format reads. With
+`format = "regex"`, the named groups of the pattern mean:
 
 | Group     | Meaning                                                              |
 | --------- | -------------------------------------------------------------------- |
@@ -96,11 +94,11 @@ When gspot cannot parse the output, the run does not finish, and gspot exits wit
 
 ## Add a fix command
 
-To give the check a fixer for `gspot check --fix`, set `fix` to a list of arguments. `--fix` runs every fixer, and then
-runs them again on the files that changed, so that a formatter also formats what another fixer wrote. Then it runs the
-checks again. The fix commands change the files in your working tree, not the staged files.
+To give the check a fixer for `gspot check --fix`, set `fix` to a list of arguments. `--fix` runs every fixer, runs them
+again on the files that changed, so that a formatter also formats what another fixer wrote, and then runs the checks
+again. The fix commands change the files in your working tree, not the staged files.
 
-If the fix command exits with one of the `exit_codes`, gspot reports the findings that remain. Any other exit code
-except 0 counts as a failed run.
+If the fix command exits with one of the `exit_codes`, gspot reports the findings that remain, and any other non-zero
+code stops the run with an error.
 
 [Command check settings](/reference/gspot-toml/#command_check) lists the settings and the values that they accept.
