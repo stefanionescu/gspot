@@ -16,8 +16,23 @@ import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import type { TypeScriptProject } from '#cli/types/parsers.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+function readAuthoredTypes(authored: TypeScriptProject, folder: string): { files: string[]; types?: string[] } {
+    const ts = requireTypescript();
+    const { options } = authored.config;
+    if (options.types === undefined) return { files: [] };
+    const found = options.types.map((entry) => {
+        const lookup = ts.resolveTypeReferenceDirective(entry, authored.path, options, ts.sys);
+        return { entry, path: lookup.resolvedTypeReferenceDirective?.resolvedFileName };
+    });
+    return {
+        files: found.flatMap(({ path }) => (path === undefined ? [] : [convertToPosixPath(relative(folder, path))])),
+        types: found.filter(({ path }) => path === undefined).map(({ entry }) => entry),
+    };
+}
 
 /**
 Builds the scope compiler configuration, extending its authored project when present.
@@ -53,14 +68,17 @@ export function buildTsconfig(session: Session, scope: Scope, file: string): Rec
         ) ?? [];
     const folder = dirname(file);
     const typeRoots = projectRoots.map((path) => convertToPosixPath(relative(folder, path)));
-    if (authored !== undefined)
+    if (authored !== undefined) {
+        const { files, types } = readAuthoredTypes(authored, folder);
         return {
             extends: convertToPosixPath(relative(folder, authored.path)),
-            files: authored.config.fileNames.map((path) => convertToPosixPath(relative(folder, path))),
+            files: [...authored.config.fileNames.map((path) => convertToPosixPath(relative(folder, path))), ...files],
             compilerOptions: {
                 ...(authored.config.options.typeRoots === undefined && { typeRoots }),
+                ...(types !== undefined && { types }),
             },
         };
+    }
     const sources = scopeFiles.filter((scopeFile) => scopeFile.kind === 'source');
     const components = ownFiles.filter((ownFile) => ownFile.kind === 'source' && ownFile.tags.includes('svelte'));
     return {

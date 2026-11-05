@@ -26,6 +26,18 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
+test('typescript/tsc resolves a types entry from the folder of the tsconfig of a scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { scopes: [{ path: 'site' }] }),
+        '.gitignore': 'node_modules/\n',
+        'site/tsconfig.json': '{"compilerOptions":{"strict":true,"types":["local-types/client"]}}',
+        'site/node_modules/local-types/client.d.ts': 'declare const fromTypes: number;\n',
+        'site/entry.ts': 'export const copy = fromTypes;\n',
+    });
+    const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['typescript/tsc'] }));
+    expect(report.checks.find(({ scope }) => scope === 'site')).toMatchObject({ status: 'passed', findings: [] });
+});
+
 test('typescript/tsc adds a note when a missing module is a package of this repository', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
