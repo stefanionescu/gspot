@@ -23,6 +23,16 @@ test("shared-prefixes and file-folder-clashes leave gspot's own file names out",
     expect(await runSandboxCheck(sandbox.path, 'structure/file-folder-clashes')).toStrictEqual([]);
 });
 
+test('shared-prefixes leaves out the test_ prefix that pytest requires', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['pytest'], { level: 'all' }),
+        'tests/test_first.py': '',
+        'tests/test_second.py': '',
+        'tests/test_third.py': '',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'structure/shared-prefixes')).toStrictEqual([]);
+});
+
 test('shared-prefixes groups files and folders once, and honors an ignore and a raised limit', async () => {
     const settings = buildSandboxSettings(['typescript'], { level: 'all' });
     await using sandbox = await createGitSandbox({

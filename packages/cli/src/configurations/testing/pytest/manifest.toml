@@ -14,6 +14,9 @@ languages = ["python"]
 paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"]
 reason = "The test runner finds a test by this prefix."
 
+[shared_prefixes]
+prefixes = ["test"]
+
 [[tool]]
 install_help = "Run python -m pip install pytest."
 min_version = "7.0.0"
