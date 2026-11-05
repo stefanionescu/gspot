@@ -4,8 +4,6 @@ Read this rule when you change a Zustand store.
 
 ## Scope and initialize the store
 
-- Create a store only in a file that `zustand.store_files` matches, by default `store.*`, `*.store.*`, or a file in a
-  `store/` or `stores/` folder.
 - Create a store through a factory, with `createStore` from `zustand/vanilla` when a context provider owns the instance.
   Report an explicit error for a missing required provider.
 - Keep one store instance in the provider for its mounted lifetime, and expose it through React context. Consumers call
@@ -14,8 +12,6 @@ Read this rule when you change a Zustand store.
   Refresh keeps state.
 - Pass the intended store instance to an action called outside React; never use a hidden global one that bypasses
   request or provider scope.
-- In a Next.js App Router project, Server Components read authorized server data rather than passing it between requests
-  through the client store.
 - Place the provider where the state lives: a shared layout keeps state across navigation, and a page or keyed resource
   provider resets it.
 - New initial props do not reinitialize an existing store. Define a reconciliation action or remount at a changed
@@ -23,15 +19,11 @@ Read this rule when you change a Zustand store.
 
 ## Select narrowly and keep results stable
 
-- Components select the specific values and actions they read. Never subscribe a large layout or every list row to the
-  whole store through a hook without a selector.
 - Select a primitive, stored entity, or stable action directly when the consumer needs only that value. Wrap a selector
   that returns a tuple, array, or object of several values in `useShallow` from a supported entry point, such as
   `zustand/react/shallow`.
 - In Zustand 5, a selector that allocates a new result on every read can cause an update loop. Keep fallback arrays,
   objects, and functions stable too, and never turn an absent action into a fresh empty callback.
-- Use `zustand/traditional` and its peer dependency for custom equality; the standard `create` takes no equality
-  argument.
 - Subscribe rows by entity ID. The list component subscribes to ordering and paging instead of every record's content.
 - Derive values through selectors or computations over authoritative state, never synchronized counts, array copies, or
   flags that diverge after a deletion, rollback, or reset.
@@ -49,8 +41,6 @@ Read this rule when you change a Zustand store.
   stores and resets create fresh collections.
 - Use `replace: true` only for a complete replacement that keeps the store's shape, actions included. A reset changes
   the domain state and leaves a usable store.
-- In a store that already uses Immer, change only the draft it receives. It configures Map and Set support where the
-  installed Immer requires it and keeps non-draftable external objects out of drafts.
 - Use one update method in one store, and add an immutable-update library only when it saves real complexity.
 
 ## Actions and slices
@@ -76,15 +66,3 @@ Read this rule when you change a Zustand store.
 - On sign-out and on identity or tenant changes, reset live private state and clear or partition its persisted copy.
   Clearing storage alone leaves the in-memory store unchanged.
 - Never let a pending restoration reapply the data of the previous identity.
-
-## References
-
-| Topic             | Primary source                                                                                     |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| Next.js setup     | [Next.js guide](https://zustand.docs.pmnd.rs/learn/guides/nextjs)                                  |
-| Immutable updates | [Immutable state](https://zustand.docs.pmnd.rs/learn/guides/immutable-state-and-merging)           |
-| Maps and Sets     | [Maps and Sets](https://zustand.docs.pmnd.rs/learn/guides/maps-and-sets-usage)                     |
-| Immer             | [Immer middleware](https://zustand.docs.pmnd.rs/reference/integrations/immer-middleware)           |
-| Slices            | [Slices pattern](https://zustand.docs.pmnd.rs/learn/guides/slices-pattern)                         |
-| Zustand 5         | [Migrating to v5](https://zustand.docs.pmnd.rs/reference/migrations/migrating-to-v5)               |
-| Persistence       | [Persisting store data](https://zustand.docs.pmnd.rs/reference/integrations/persisting-store-data) |
