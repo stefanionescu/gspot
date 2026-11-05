@@ -8,10 +8,9 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX, UNQUOTED_SCRIPT } from '#tests/config/integration/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { HOOKS_SETTINGS, MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
+import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
@@ -21,18 +20,6 @@ import { runtimePinsSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-
-test('doctor reports hooks that this clone has not installed', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-    });
-
-    const missing = await spawnGspot(sandbox.path, ['doctor', '--json']);
-    expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect(doctorOutputSchema.parse(JSON.parse(missing.stdout)).hooks).toStrictEqual({
-        ready: false,
-    });
-});
 
 async function assertCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
     await using cloneRoot = await createGitSandbox({});

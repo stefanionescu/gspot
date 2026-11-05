@@ -28,6 +28,14 @@ test('a gspot.toml without hooks installs none', async () => {
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
 
+test('the hooks of a clone that has not installed them are not ready', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+    });
+    const session = await openSession(sandbox.path);
+    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
+});
+
 test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
