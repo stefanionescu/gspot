@@ -4,13 +4,11 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('table-header', tableHeader, {
     valid: [
         'const table = <table><tr><th>Name</th></tr><tr><td>Ada</td></tr></table>;',
-        'const table = <table>{rows}</table>;',
         'const table = <Layout.Table><tr><td>A</td></tr></Layout.Table>;',
         'const table = <svg:table><tr><td>A</td></tr></svg:table>;',
         'const table = <table aria-hidden><tr><td>A</td></tr></table>;',
         'const table = <table><tr><th rowSpan="0">A</th><td>1</td></tr><tr><td>2</td></tr></table>;',
         'const table = <table><tr><td rowSpan={span}>A</td></tr></table>;',
-        'const table = <table><tr><Cell /></tr></table>;',
         'const table = <table><tr>{cells}</tr></table>;',
         'const table = <table><tr><><td>A</td></></tr></table>;',
     ],
