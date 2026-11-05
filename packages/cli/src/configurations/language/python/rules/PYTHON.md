@@ -45,7 +45,7 @@ into a class. Never group static functions into a class.
 Keep `__init__` small: it takes the values the class needs rather than the external objects that carry them, and
 validates invariants. Keep it separate from database rows, object-relational mapping (ORM) objects, API payloads, CLI
 namespaces, or provider responses. An external representation enters through a classmethod named constructor such as
-`from_row` or `from_payload` when the class owns that conversion. Neither `ClassName(**external_attributes)` nor a
+`decode_row` or `parse_payload` when the class owns that conversion. Neither `ClassName(**external_attributes)` nor a
 constructor that only renames the initializer handles that conversion.
 
 Keep loading, serialization, and validation systems outside the business object. Keep a derived attribute cheap and
