@@ -7,7 +7,7 @@ Read this rule when you change Astro components, pages, or content collections.
 <!-- level: all -->
 
 - Keep the frontmatter to data: read the props, load what the page needs, and compute values. Move a helper of more than
-  `{setting:limits.min_function_statements}` statements into a module.
+  `{setting:limits.trivial_function_statements}` statements into a module.
 
 ## Frontmatter and props
 

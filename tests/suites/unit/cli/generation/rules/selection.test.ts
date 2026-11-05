@@ -1,8 +1,14 @@
+import { readFileSync } from 'node:fs';
+
 import { beforeAll, describe, expect, test } from 'bun:test';
 
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import type { Level } from '#cli/types/settings.ts';
 import { RUNTIME_RULE_CASES } from '#tests/config/generation/generate.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -100,4 +106,15 @@ test('a Supabase project selects Deno rules without a Deno settings file', async
     });
     const session = await openSession(sandbox.path);
     expect(selectRuleFiles(session).map(({ path }) => path)).toContain('DENO.md');
+});
+
+test('each setting that a shipped rule file names exists', () => {
+    const names = readConfigurations()
+        .values()
+        .flatMap((configuration) => listRuleFiles(configuration))
+        .flatMap(({ source }) => readFileSync(buildAssetPath(source), 'utf8').matchAll(SETTING_PLACEHOLDER))
+        .map((match) => match[1]!)
+        .toArray();
+    expect(names.length).toBeGreaterThan(0);
+    expect(names.filter((name) => findSettingSchema(name) === undefined)).toStrictEqual([]);
 });
