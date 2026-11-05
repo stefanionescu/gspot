@@ -121,7 +121,8 @@ test.each([
         notes: [],
         steps: [],
     });
-    if (row.settings !== false) await applyGeneratedFiles(sandbox.path);
+    if (row.settings === false) commitAll(sandbox.path);
+    else await applyGeneratedFiles(sandbox.path);
     const result = await runGspot(sandbox.path, row.commandArguments);
     expect(result.code, result.stdout + result.stderr).toBe(row.exitCode ?? 0);
     const keys = Object.keys(row.schema.parse(JSON.parse(result.stdout))).filter(
