@@ -43,7 +43,8 @@ export function planSandboxCheck(
 ): PlannedCheck {
     const path = options.scope ?? '';
     const planned = planChecks(session, { stage: 'any', only: [checkId], paths: options.paths, keepLevelOff: true });
-    const selected = planned.find(({ scope }) => scope.path === path) ?? planned[0];
+    const named = planned.find(({ scope }) => scope.path === path);
+    const selected = options.scope === undefined ? (named ?? planned[0]) : named;
     if (selected === undefined)
         throw new Error(`The sandbox selects no check called ${checkId} at ${path || ROOT_LABEL}.`);
     return selected;
