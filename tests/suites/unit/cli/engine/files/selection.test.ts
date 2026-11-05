@@ -128,6 +128,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
         'apps/web/value.test.js': 'test("value", () => expect(1).toBe(1));\n',
         'apps/web/image.bin': new Uint8Array([0, 255, 0]),
         'apps/web/jest.config.json': '{"testEnvironment":"node"}',
+        'apps/web/nested/jest.config.json': '{"testEnvironment":"node"}',
         'apps/web/nested/private.txt': 'Nested scope input\n',
         'unrelated/private.txt': 'Sibling input\n',
     });
