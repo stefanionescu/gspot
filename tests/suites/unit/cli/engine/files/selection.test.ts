@@ -183,6 +183,21 @@ test('a command check reads each matching file once across nested scopes', async
     );
 });
 
+test('deleting a file starts a check that any edit starts, and it reports the path that a doc still names', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docs']),
+        'README.md': '# Example\n\nRead `src/removed.ts`.\n',
+        'src/removed.ts': 'export const value = 1;\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['rm', '--quiet', 'src/removed.ts']);
+    const { report } = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--staged', '--only', 'docs/missing-paths', '--json']),
+    );
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual(['README.md']);
+});
+
 test('a deleted generated path is not a trigger for a configured project check', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['dependencies']),

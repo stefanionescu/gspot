@@ -118,7 +118,7 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
             isInScope(path, scopePath) &&
             (check.runs !== 'scope' || isOutsideChildScopes(path, children)),
     );
-    const owners = check.files ?? configuration?.files;
+    const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
     if (owners === undefined) return paths;
     const covered = listCoveredPaths(owners, paths, {
         configurations: scope.configurations,
