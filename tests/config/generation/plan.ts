@@ -136,14 +136,6 @@ let package = Package(name: "App")
     'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
 } as const;
 
-export const STYLE_SOURCE_FILES = {
-    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
-    'src/styles.css': `p {
-    color: #abc;
-}
-`,
-} as const;
-
 export const NEXTJS_LOCALE_CASES = [
     { dependency: true, named: false, isSelected: false },
     { dependency: false, named: true, isSelected: true },

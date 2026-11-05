@@ -175,6 +175,13 @@ test('a package.json with no dependency selects no JavaScript in a shell reposit
     expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('javascript');
 });
 
+test('a .vue file proposes vue and css', async () => {
+    await using sandbox = await createGitSandbox({ 'src/Greeting.vue': '<template><p>Hello</p></template>\n' });
+    const proposed = await detectSandboxConfigurations(sandbox.path);
+    expect(proposed).toContain('vue');
+    expect(proposed).toContain('css');
+});
+
 test('site is detected from a sitemap.xml in any folder', async () => {
     await using sandbox = await createGitSandbox({ 'docs/public/sitemap.xml': '<urlset/>' });
     expect(await detectSandboxConfigurations(sandbox.path)).toContain('site');

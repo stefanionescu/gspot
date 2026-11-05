@@ -17,7 +17,6 @@ import {
     CONFIGURATION_CHOICES,
     NEXTJS_LOCALE_CASES,
     PLATFORM_PROJECT_FILES,
-    STYLE_SOURCE_FILES,
     TOOL_ONLY_PACKAGE,
 } from '#tests/config/generation/plan.ts';
 import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
@@ -29,13 +28,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
-
-async function listPlannedConfigurations(root: string): Promise<string[]> {
-    const result = await runGspot(root, ['init', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const plan = initOutputSchema.parse(JSON.parse(result.stdout));
-    return plan.plan.configurations.map((each) => each.configuration);
-}
 
 test.each([...CONFIGURATION_CHOICES])(
     'init with --configurations %j keeps the always-selected configurations',
@@ -140,36 +132,6 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         const generated = join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs'));
         expect(existsSync(generated)).toBe(true);
     }
-});
-
-test('init selects a suggested language only when the repository holds its files', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    const files = {
-        'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"vue":"3.5.22"}}\n',
-        'src/Greeting.vue': `<script setup>
-const name = 1;
-</script>
-<template><p>{{ name }}</p></template>
-`,
-    };
-    await using sandbox = await testdir(files);
-    await using styled = await testdir({ ...files, ...STYLE_SOURCE_FILES });
-
-    commitAll(sandbox.path);
-    commitAll(styled.path);
-    const defaults = await listPlannedConfigurations(sandbox.path);
-    expect(defaults.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
-        'css',
-        'javascript',
-        'vue',
-    ]);
-    const typed = await listPlannedConfigurations(styled.path);
-    expect(typed.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
-        'css',
-        'javascript',
-        'typescript',
-        'vue',
-    ]);
 });
 
 test('init proposes a scope for a Swift package, not for a lint-only package, and says that its eslint pin moved to .gspot/package.json', async () => {
