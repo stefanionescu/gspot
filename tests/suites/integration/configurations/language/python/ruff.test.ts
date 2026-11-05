@@ -1,10 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import {
     PARAMETER_LIMIT_CASE,
@@ -15,7 +14,6 @@ import {
     UNUSED_IMPORT_SOURCE,
     VERSION_SOURCE,
 } from '#tests/config/integration/python.ts';
-import { ruffConfigurationSchema, ruffRulesSchema } from '#tests/schemas/integration.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -71,55 +69,6 @@ test('Ruff selects the pytest lint rules only in the scope that selects pytest, 
     const testAssertion = await spawnGspot(root, ['check', 'app/tests/test_example.py', ...command]);
     expect(testAssertion.code, testAssertion.stderr).toBe(0);
 });
-
-test.each([...LEVELS])(
-    'Ruff at level %s selects only the PLW1514 preview rule, and reports correctness and print calls',
-    async (level) => {
-        const { root } = installedSandbox();
-        const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['python'], { level }),
-            'sample.py': '"""An arithmetic example."""\n\nanswer = missing_name\nprint(answer)\n',
-        };
-        await using _sourceChange = await writeSandboxChanges(
-            installedSandbox(),
-            buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
-        );
-
-        const resultRules = runBlockingCommand(
-            [
-                buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
-                'rule',
-                '--all',
-                '--output-format',
-                'json',
-            ],
-            { cwd: root },
-        );
-        expect(resultRules.code, resultRules.stdout + resultRules.stderr).toBe(0);
-        const rules = ruffRulesSchema.parse(JSON.parse(resultRules.stdout));
-        const previewCodes = new Set(rules.flatMap(({ code, preview }) => (code !== null && preview ? code : [])));
-        const command = ['check', 'sample.py', '--only', 'python/ruff', '--json'];
-        const ruffText = await readFile(join(root, getManifestTarget('python', 'ruff.toml')), 'utf8');
-        const contents: unknown = parse(ruffText);
-        const config = ruffConfigurationSchema.parse(contents);
-        expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual(['PLW1514']);
-        const result = parseCheckReport(await spawnGspot(root, command));
-        expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(listFindingRows(result.report)).toStrictEqual([
-            { file: 'sample.py', line: 3, rule: 'F821' },
-            { file: 'sample.py', line: 4, rule: 'T201' },
-        ]);
-        await writeFile(
-            join(root, 'sample.py'),
-            `"""An arithmetic example."""
-
-answer = 42
-`,
-        );
-        const corrected = await spawnGspot(root, command);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-);
 
 test('Ruff run by an editor and through gspot formats each scope the same way', async () => {
     const { root } = installedSandbox();

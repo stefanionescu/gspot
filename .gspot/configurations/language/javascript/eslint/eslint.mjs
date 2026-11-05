@@ -921,8 +921,7 @@ export default setRuleOptions(defineConfig([
             {
                 "category": "import-rule:tests-setup",
                 "pattern": [
-                    "tests/setup/**",
-                    "tests/schemas/**"
+                    "tests/setup/**"
                 ],
                 "stopMatching": true
             },

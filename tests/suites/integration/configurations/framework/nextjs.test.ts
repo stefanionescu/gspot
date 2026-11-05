@@ -19,10 +19,10 @@ import {
     REFERENCED_PROJECT_FINDING,
 } from '#tests/config/integration/framework.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { tsconfigSchema } from '#tests/setup/schemas.ts';
 import type { Sandbox } from '#tests/types/setup.ts';
 
 async function readCheckReport(sandbox: Sandbox, checks: string[], code: number): Promise<RunReport> {

@@ -41,5 +41,5 @@ mise run test unit tests/suites/unit/cli/main.test.ts -t "version"
 A direct `bun test` run needs `TEST_RUN_FOLDER`, a `--preload` file from `tests/setup/runner/`, and the `--timeout` of
 its suite from `.mise/tasks/test`.
 
-When adding a test, follow the suite boundaries and file placement rules in [repository rules](../AGENTS.md). Shared setup lives
-in `tests/setup`; test values, types, and output schemas live in `tests/config`, `tests/types`, and `tests/schemas`.
+When adding a test, follow the suite boundaries and file placement rules in [repository rules](../AGENTS.md). Shared setup, with the
+output schemas, lives in `tests/setup`; test values and types live in `tests/config` and `tests/types`.

@@ -197,7 +197,7 @@ can_import = ["system", "parsers", "manifests", "repository", "settings", "tools
 
 [[import_rule]]
 name = "tests-setup"
-paths = ["tests/setup/**", "tests/schemas/**"]
+paths = ["tests/setup/**"]
 
 [[import_rule]]
 name = "tests"
