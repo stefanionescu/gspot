@@ -21,6 +21,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
+import { findGspotPinMismatch, readGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { runProcess } from '#cli/system/processes.ts';
@@ -168,6 +169,7 @@ function formatDoctorReport(
         broken: DoctorTool[];
         commandPrograms: ReadonlySet<string>;
         systemTools: ReadonlySet<string>;
+        pinNotes: string[];
     },
 ): string {
     const programs = states.broken.filter((tool) => tool.kind === 'program');
@@ -194,6 +196,7 @@ function formatDoctorReport(
         `ci: ${states.ci}`,
         `rule files: ${String(report.ruleFileCount)}`,
         `gspot      ${cliPackage.version}`,
+        ...states.pinNotes,
     ];
     return `${lines.join('\n')}\n`;
 }
@@ -209,9 +212,12 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         hooks,
         ci,
         ruleFileCount: selectRuleFiles(session).length,
+        pin: readGspotPin(root) ?? null,
     };
+    const mismatch = findGspotPinMismatch(root);
+    const notes = mismatch === undefined ? [] : [mismatch];
     const broken = report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
-    const hasFindings = !hooks.ready || report.environments.length > 0 || broken.length > 0;
+    const hasFindings = !hooks.ready || report.environments.length > 0 || broken.length > 0 || notes.length > 0;
     return {
         text: formatDoctorReport(report, {
             hooks: hooksText,
@@ -223,8 +229,9 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
                     tools.filter((tool) => tool.system === true).map((tool) => tool.name),
                 ),
             ),
+            pinNotes: notes,
         }),
-        json: report,
+        json: { ...report, notes },
         exitCode: hasFindings ? EXIT_FINDINGS : 0,
     };
 }

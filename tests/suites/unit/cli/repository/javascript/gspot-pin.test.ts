@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { assertGspotPin, readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
+import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -57,21 +57,28 @@ test('the pin of a repository without package.json is a mise tool beside the oth
     expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
 });
 
-test('another pinned version stops the commands that run tools, and names the install', async () => {
+test.each([
+    { commandArguments: ['add', 'bash'] },
+    { commandArguments: ['remove', 'bash', '--reason', 'The repository has no shell scripts.'] },
+    { commandArguments: ['set', 'level', 'all'] },
+    { commandArguments: ['unset', 'level'] },
+    { commandArguments: ['ignore', '--paths', 'README.md', '--reason', 'The readme is written by hand.'] },
+    { commandArguments: ['unignore', '--paths', 'README.md'] },
+    { commandArguments: ['install'] },
+    { commandArguments: ['check'] },
+])('another pinned version stops gspot $commandArguments.0, and names the install', async ({ commandArguments }) => {
+    const settings = buildSandboxSettings([]);
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
+        'gspot.toml': settings,
         'mise.toml': '[tools]\n"npm:@gspothq/cli" = "0.0.1"\n',
+        'README.md': '# Example\n',
     });
-    const error = await captureRejection(
-        Promise.try(() => {
-            assertGspotPin(sandbox.path);
-        }),
-    );
-    expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
-    expect(error.message).toContain('npm:@gspothq/cli@0.0.1');
-    const result = await runGspot(sandbox.path, ['check', '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: error.message });
+    const result = await runGspot(sandbox.path, [...commandArguments, '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    const failure = JSON.parse(result.stdout) as { error: string; message: string };
+    expect(failure.error).toBe('arguments');
+    expect(failure.message).toContain('npm:@gspothq/cli@0.0.1');
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('the pin keeps a sorted devDependencies block sorted, and goes last in an unsorted one', async () => {

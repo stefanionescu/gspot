@@ -287,6 +287,7 @@ hook needs you to act.
 | `ci`            | The state of the CI workflow.                                                                   |
 | `ruleFileCount` | The number of rule files for coding agents.                                                     |
 | `submodules`    | Submodule paths, whose contents gspot does not read.                                            |
+| `pin`           | The gspot version that the repository pins, or `null`.                                          |
 
 `hooks` has `ready`. When gspot knows them, it also has `tool`, the program that runs the hooks, and `lines`, what to
 do about them. `ci` has `enabled`, and when gspot knows them, `provider` and the workflow `file`.

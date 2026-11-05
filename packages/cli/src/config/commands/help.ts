@@ -236,7 +236,7 @@ export const COMMAND_HELP = {
         summary: 'Find setup problems and print the command that fixes each one',
         group: 'Look up:',
         description:
-            'Find setup problems: missing or wrong tool versions, Git hooks that do not run, and configurations that the repository needs but does not select.\n\nEach problem line says how to fix it: a command, or what to change. doctor changes nothing.',
+            'Find setup problems: missing or wrong tool versions, Git hooks that do not run, and a gspot version other than the pinned one.\n\nEach problem line says how to fix it: a command, or what to change. doctor changes nothing.',
         arguments: {},
         options: {},
         exitCodes: [

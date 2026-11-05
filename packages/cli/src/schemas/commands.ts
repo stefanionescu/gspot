@@ -47,6 +47,7 @@ export const doctorReportSchema = z.strictObject({
     hooks: hookStatusSchema.omit({ text: true }),
     ci: ciStateSchema,
     ruleFileCount: z.int(),
+    pin: z.string().nullable(),
 });
 
 const LISTED_CHECK_FIELDS = { check: z.string(), scope: z.string() };

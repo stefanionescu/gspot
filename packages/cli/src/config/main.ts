@@ -1,4 +1,13 @@
-export const PIN_COMMANDS: ReadonlySet<string> = new Set(['check', 'install']);
+export const PIN_COMMANDS: ReadonlySet<string> = new Set([
+    'add',
+    'check',
+    'ignore',
+    'install',
+    'remove',
+    'set',
+    'unignore',
+    'unset',
+]);
 
 export const REMOVED_COMMANDS = {
     apply: 'gspot install writes the generated files. Run gspot install.',

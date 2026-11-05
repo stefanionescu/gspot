@@ -93,18 +93,26 @@ export function readGspotPin(root: string): string | undefined {
 }
 
 /**
+Say that the repository pins another gspot version than this one, and name the install of the pinned one.
+
+@param root the repository root.
+@returns undefined without a pin, or when this gspot is the pinned version.
+*/
+export function findGspotPinMismatch(root: string): string | undefined {
+    const pin = readGspotPin(root);
+    if (pin === undefined || pin === cliPackage.version) return undefined;
+    const install = selectStartRunner(root).installCommand.replace('<version>', () => pin);
+    return `This repository pins gspot ${pin}; this is gspot ${cliPackage.version}. Run ${install}.`;
+}
+
+/**
 Refuse to run another version than the one that the repository pins.
 
 @param root the repository root.
 */
 export function assertGspotPin(root: string): void {
-    const pin = readGspotPin(root);
-    if (pin === undefined || pin === cliPackage.version) return;
-    const install = selectStartRunner(root).installCommand.replace('<version>', () => pin);
-    throw new GspotError(
-        'arguments',
-        `This repository pins gspot ${pin}; this is gspot ${cliPackage.version}. Run ${install}.`,
-    );
+    const mismatch = findGspotPinMismatch(root);
+    if (mismatch !== undefined) throw new GspotError('arguments', mismatch);
 }
 
 /**
