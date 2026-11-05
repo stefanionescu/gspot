@@ -176,5 +176,5 @@ test.each([
         ...files,
     });
     const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['vitest/tests'] });
-    expect(planned.map(({ scope }) => scope.path)).toStrictEqual(scopes);
+    expect(planned.map(({ scope }) => scope.path)).toStrictEqual([...scopes]);
 });
