@@ -51,6 +51,22 @@ describe.each(['bun', 'npm', 'pnpm'] as const)('%s tool lockfile', (packageManag
     });
 });
 
+test('a Bun package alias that names another package is refused', () => {
+    const dependencies = { 'is-number': '7.0.0' };
+    const buildLockfile = (identity: string): string =>
+        JSON.stringify({
+            workspaces: { '': { devDependencies: dependencies } },
+            packages: {
+                'is-number': ['is-number@7.0.0', '', {}, 'sha512-YQ=='],
+                other: [identity, '', {}, 'sha512-YQ=='],
+            },
+        });
+    expect(isLockfileFresh('bun', buildLockfile('other@1.0.0'), dependencies, LOCKFILE_REGISTRY)).toBe(true);
+    expect(isLockfileFresh('bun', buildLockfile('other@npm:crafted@1.0.0'), dependencies, LOCKFILE_REGISTRY)).toBe(
+        false,
+    );
+});
+
 test('Bun registry stripping preserves every byte outside the selected tarball address', () => {
     const source =
         '{\n  "workspaces": {},\n  "packages": {\n    "first": ["first@1.0.0", "https://registry.npmjs.org/first/-/first-1.0.0.tgz", {}, "sha512-YQ=="],\n    "other": ["other@1.0.0", "https://other.example/other/-/other-1.0.0.tgz", {}, "sha512-YQ=="]\n  }\n}\n';

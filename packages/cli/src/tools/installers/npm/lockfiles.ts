@@ -46,9 +46,7 @@ function isStandardTarball(tarball: LockedTarball, environment: Record<string, s
 
 function isStandardBunTarball(bunPackage: BunPackage, environment: Record<string, string>): boolean {
     const [identity, address, , integrity] = bunPackage;
-    const separator = identity.lastIndexOf('@');
-    const name = identity.slice(0, separator);
-    const version = identity.slice(separator + 1);
+    const [name, version] = splitIdentity(identity) ?? ['', ''];
     return isStandardTarball({ name, version, address, integrity }, environment);
 }
 
