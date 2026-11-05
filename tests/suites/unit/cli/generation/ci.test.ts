@@ -126,9 +126,9 @@ test.each([...SETUP_CASES])(
     'the %s job keeps setup exit %i and literal arguments before gspot',
     async (provider, setupExit) => {
         const pipeline = LINUX_PIPELINE;
-        await using sandbox = await createGitSandbox({ '.gspot/version': '1.2.3' });
+        await using sandbox = await createGitSandbox({ 'notes.txt': '1.2.3' });
         await using programs = await createGitSandbox({});
-        runGitStep(sandbox.path, ['add', '.gspot/version']);
+        runGitStep(sandbox.path, ['add', 'notes.txt']);
         const commands = join(programs.path, 'commands.log');
         const bin = await writeProgramCommand(programs.path, 'bin/mise', 'fakes/tool');
         await writeProgramCommand(programs.path, 'bin/gspot', 'fakes/tool', '--record', commands, '--');
