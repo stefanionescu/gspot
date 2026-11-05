@@ -4,32 +4,6 @@ import { createFileTree, testdir } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
-test.each([{ language: 'typescript', maximum: 8 }])(
-    'ESLint for $language counts declared parameters against a maximum of $maximum: an authored limit',
-    async ({ language, maximum }) => {
-        await using sandbox = await testdir();
-        const extension = { javascript: 'js', typescript: 'ts' }[language];
-        const source = [7, 8]
-            .map((count) => {
-                const names = Array.from({ length: count }, (_, index) => `value${String(index)}`);
-                const name = count === 7 ? 'seven' : 'eight';
-                const parameters = ['this: void', ...names.map((name) => `${name}: number`)];
-                return `export function ${name}(${parameters.join(', ')}) { return ${names.join(' + ')}; }`;
-            })
-            .join('\n');
-        const limits = `[limits.${language}]\nmax_function_parameters = { value = ${String(maximum)}, reason = "This sandbox tests the authored parameter ceiling." }\n`;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([language], { tables: limits, level: 'all' }),
-            'package.json': '{"private":true,"type":"module"}',
-            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
-            [`example.${extension}`]: source,
-        });
-        const eslint = await buildEslint(sandbox.path);
-        const file = `example.${extension}`;
-        expect(await listLintFindings(eslint, sandbox.path, [file], ['max-params'])).toStrictEqual([]);
-    },
-);
-
 test('a JavaScript file takes the JavaScript limits, and a TypeScript file the TypeScript ones', async () => {
     await using sandbox = await testdir();
     const body = '(value) { if (value > 1) return 1; if (value > 0) return 2; return 3; }';

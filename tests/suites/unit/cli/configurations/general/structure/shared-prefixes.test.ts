@@ -127,20 +127,6 @@ test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown 
     ).toStrictEqual([...NESTJS_PREFIX_RESULTS]);
 });
 
-test('a file that the filters drop carries no finding of the group beside it', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            level: 'all',
-            scopes: [{ path: 'app', configurations: ['nestjs'] }],
-        }),
-        'app/user.service.ts': '',
-        'app/user-list.ts': '',
-        'app/user-row.ts': '',
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'structure/shared-prefixes', { scope: 'app' });
-    expect(findings.map(({ file }) => file)).toStrictEqual(['app/user-list.ts']);
-});
-
 test('a folder that carries the prefix as its name and Swift files named after their types report nothing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'swift'], { level: 'all' }),

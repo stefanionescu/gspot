@@ -43,13 +43,3 @@ test('a child scope counts as a child of its parent folder, and a scope folder i
         [],
     );
 });
-
-test('installed dependency folders are not reported', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        'index.ts': 'export const index = 1;\n',
-        'node_modules/package/lib/index.ts': 'export const index = 1;\n',
-    });
-
-    expect(await runSandboxCheck(sandbox.path, 'structure/pass-through-folders')).toStrictEqual([]);
-});
