@@ -165,17 +165,20 @@ export async function runBuiltInCheck(
 }
 
 /**
-Replaces the paths of a copy in the reported command with repository paths.
+Replaces the paths of a copy in the reported command and note with repository paths.
 
-@param result the run, which may have no command.
+@param result the run, which may have no command or note.
 @param copyRoot the folder of the copy that the tool ran in.
 @param sourceRoot the repository folder that the finding paths point into.
 */
 export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
-    if (result.command === undefined) return result;
+    const { command, note } = result;
     return {
         ...result,
-        command: result.command.map((argument) => argument.replaceAll(copyRoot, () => sourceRoot)),
+        ...(command !== undefined && {
+            command: command.map((argument) => argument.replaceAll(copyRoot, () => sourceRoot)),
+        }),
+        ...(note !== undefined && { note: note.replaceAll(copyRoot, () => sourceRoot) }),
     };
 }
 
@@ -187,13 +190,8 @@ Replace temporary revision paths with the repository path in reported commands a
 */
 export function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
     if (session.root === session.toolsRoot) return result;
-    let { command, note } = result;
     const roots = new Set([session.root, realpathSync(session.root)]);
-    for (const root of roots) {
-        command = command?.map((argument) => argument.replaceAll(root, () => session.toolsRoot));
-        note = note?.replaceAll(root, () => session.toolsRoot);
-    }
-    return { ...result, ...(command !== undefined && { command }), ...(note !== undefined && { note }) };
+    return roots.values().reduce((restored, root) => restoreCommandPaths(restored, root, session.toolsRoot), result);
 }
 
 /**

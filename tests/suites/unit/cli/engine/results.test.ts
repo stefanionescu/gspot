@@ -1,8 +1,9 @@
 import { expect, test } from 'bun:test';
 
-import { mergeCheckResults, runBuiltInCheck } from '#cli/engine/results.ts';
+import { mergeCheckResults, restoreCommandPaths, runBuiltInCheck } from '#cli/engine/results.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -43,6 +44,28 @@ test('the built-in dispatcher attaches the check ID, fixability, and default hel
             help: 'Use the project vocabulary.',
         },
     ]);
+});
+
+test('a result from a copy names repository paths in its command and its note', () => {
+    const base: CheckResult = {
+        check: 'typescript/tsc',
+        scope: '',
+        status: 'error',
+        fileCount: 0,
+        duration: 0,
+        findings: [],
+    };
+    const restored = restoreCommandPaths(
+        { ...base, command: ['/copy/bin/tsc', '/copy/tsconfig.json'], note: 'Stopped at /copy/a.ts and /copy/b.ts.' },
+        '/copy',
+        '/repository',
+    );
+    expect(restored).toStrictEqual({
+        ...base,
+        command: ['/repository/bin/tsc', '/repository/tsconfig.json'],
+        note: 'Stopped at /repository/a.ts and /repository/b.ts.',
+    });
+    expect(restoreCommandPaths(base, '/copy', '/repository')).toStrictEqual(base);
 });
 
 test('merged runs that overlap report the wall time from the first start to the last end', () => {
