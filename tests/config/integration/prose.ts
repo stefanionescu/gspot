@@ -5,8 +5,8 @@ import { GUIDE } from '#tests/config/integration/language.ts';
 import { LICENSE, README, TYPO } from '#tests/config/setup/configurations.ts';
 
 export const PROSE_COMMENT_CASES = [
-    ['mts', '//', 'const text = "delve";'],
-    ['', '#', 'text = "delve"'],
+    { name: 'a .mts file', extension: 'mts', marker: '//', code: 'const text = "delve";' },
+    { name: 'an extensionless script', extension: '', marker: '#', code: 'text = "delve"' },
 ] as const;
 
 export const MARKDOWN_COMMENT_CASES = [

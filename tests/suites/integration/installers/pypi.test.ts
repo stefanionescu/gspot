@@ -11,7 +11,6 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import {
     PYTHON_INDEX_CREDENTIALS,
-    PYTHON_PROJECTS,
     UV_RELEASE_CUTOFF_LINE,
     ZIP_FILE_OPTIONS,
 } from '#tests/config/integration/commands.ts';
@@ -34,6 +33,8 @@ import type { IndexedPythonProject } from '#tests/types/integration.ts';
 
 const resources = new AsyncDisposableStack();
 
+const UV_CONFIGURATION = 'uv.toml';
+
 const pythonIndex = Promise.withResolvers<{ url: string }>();
 
 beforeAll(async () => {
@@ -43,60 +44,54 @@ beforeAll(async () => {
 
 afterAll(() => resources.disposeAsync());
 
-test.each([...PYTHON_PROJECTS])(
-    'Python tool project install keeps the authored and generated files with %s',
-    async (configuration) => {
-        await using sandbox = await createGitSandbox({});
-        await using artifacts = await createGitSandbox({});
-        await using project = await createIndexedPythonProject(sandbox.path, configuration);
-        const { projectFile, lockfilePath, lockfile } = project.files;
-        const { rootProject, rootConfiguration } = project;
-        expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
-        const brokenUv = await writeProgramCommand(artifacts.path, 'bin/uv', 'fakes/tool', '--exit', '87');
-        const installed = await spawnGspot(sandbox.path, ['install', '--json'], {
-            PATH: [brokenUv, readEnvironmentVariable('PATH') ?? ''].join(delimiter),
-            MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
-        });
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
-        expect(await readFile(join(sandbox.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');
-        expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject))).toStrictEqual(projectFile);
-        expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
-        expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
-    },
-);
+test('Python tool project install keeps the authored and generated files with uv.toml', async () => {
+    await using sandbox = await createGitSandbox({});
+    await using artifacts = await createGitSandbox({});
+    await using project = await createIndexedPythonProject(sandbox.path);
+    const { projectFile, lockfilePath, lockfile } = project.files;
+    const { rootProject, rootConfiguration } = project;
+    expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
+    const brokenUv = await writeProgramCommand(artifacts.path, 'bin/uv', 'fakes/tool', '--exit', '87');
+    const installed = await spawnGspot(sandbox.path, ['install', '--json'], {
+        PATH: [brokenUv, readEnvironmentVariable('PATH') ?? ''].join(delimiter),
+        MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
+    });
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
+    expect(await readFile(join(sandbox.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject))).toStrictEqual(projectFile);
+    expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
+    expect(await readFile(join(sandbox.path, UV_CONFIGURATION))).toStrictEqual(rootConfiguration);
+});
 
-test.each([...PYTHON_PROJECTS])(
-    'a fresh Python clone with %s installs the locked tools twice without changing tracked files, and its Python runs from .gspot/.venv',
-    async (configuration) => {
-        await using sandbox = await createGitSandbox({});
-        await using artifacts = await createGitSandbox({});
-        await using project = await createPythonProject(sandbox.path, { indexFile: configuration });
-        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
-        const { projectFile, lockfile } = await readToolProjectFiles(sandbox.path, 'uv');
-        const { rootConfiguration } = project;
-        const clone = join(artifacts.path, 'clone');
-        commitAll(sandbox.path);
-        runGitStep(sandbox.path, ['clone', '--quiet', '--no-local', sandbox.path, clone]);
-        expect(existsSync(join(clone, GSPOT_PATHS.pythonEnvironment))).toBe(false);
-        for (let round = 0; round < 2; round++) {
-            const installed = await spawnGspot(clone, ['install']);
-            expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-            expect(runGitStep(clone, ['status', '--porcelain'])).toBe('');
-            expect({
-                projectFile: await readFile(join(clone, GSPOT_PATHS.pythonProject)),
-                lockfile: await readFile(join(clone, GSPOT_PATHS.uvLockfile)),
-                configuration: await readFile(join(clone, configuration)),
-            }).toStrictEqual({ projectFile, lockfile, configuration: rootConfiguration });
-        }
-        expect(existsSync(join(clone, GSPOT_PATHS.pythonEnvironment, 'pyvenv.cfg'))).toBe(true);
-        const python = await runCommand(
-            [buildVenvExecutablePath(join(clone, GSPOT_PATHS.pythonEnvironment), 'python'), '--version'],
-            { cwd: clone },
-        );
-        expect(python.code, python.stdout + python.stderr).toBe(0);
-    },
-);
+test('a fresh Python clone with uv.toml installs the locked tools twice without changing tracked files, and its Python runs from .gspot/.venv', async () => {
+    await using sandbox = await createGitSandbox({});
+    await using artifacts = await createGitSandbox({});
+    await using project = await createPythonProject(sandbox.path, { indexFile: UV_CONFIGURATION });
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
+    const { projectFile, lockfile } = await readToolProjectFiles(sandbox.path, 'uv');
+    const { rootConfiguration } = project;
+    const clone = join(artifacts.path, 'clone');
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['clone', '--quiet', '--no-local', sandbox.path, clone]);
+    expect(existsSync(join(clone, GSPOT_PATHS.pythonEnvironment))).toBe(false);
+    for (let round = 0; round < 2; round++) {
+        const installed = await spawnGspot(clone, ['install']);
+        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+        expect(runGitStep(clone, ['status', '--porcelain'])).toBe('');
+        expect({
+            projectFile: await readFile(join(clone, GSPOT_PATHS.pythonProject)),
+            lockfile: await readFile(join(clone, GSPOT_PATHS.uvLockfile)),
+            configuration: await readFile(join(clone, UV_CONFIGURATION)),
+        }).toStrictEqual({ projectFile, lockfile, configuration: rootConfiguration });
+    }
+    expect(existsSync(join(clone, GSPOT_PATHS.pythonEnvironment, 'pyvenv.cfg'))).toBe(true);
+    const python = await runCommand(
+        [buildVenvExecutablePath(join(clone, GSPOT_PATHS.pythonEnvironment), 'python'), '--version'],
+        { cwd: clone },
+    );
+    expect(python.code, python.stdout + python.stderr).toBe(0);
+});
 
 test('gspot install keeps a package that the project installed from an extra', async () => {
     const metadata = 'local_extra-1.0.0.dist-info';
@@ -145,9 +140,8 @@ local-extra = { path = "wheels/local_extra-1.0.0-py3-none-any.whl" }
 });
 
 test('apply keeps a conflicted Python lockfile and install repairs it', async () => {
-    const configuration = 'uv.toml';
     await using sandbox = await createGitSandbox({});
-    await using project = await createIndexedPythonProject(sandbox.path, configuration);
+    await using project = await createIndexedPythonProject(sandbox.path);
     const { lockfilePath, lockfile } = project.files;
     const { rootConfiguration } = project;
     const conflict = '<<<<<<< interrupted lockfile\n';
@@ -161,11 +155,11 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     expect(repaired.replace(UV_RELEASE_CUTOFF_LINE, '')).toBe(
         lockfile.toString('utf8').replace(UV_RELEASE_CUTOFF_LINE, ''),
     );
-    expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
+    expect(await readFile(join(sandbox.path, UV_CONFIGURATION))).toStrictEqual(rootConfiguration);
 });
 
 async function createPythonIndex(workFolder: string): Promise<Disposable & { url: string }> {
-    await using _source = await createPythonProject(workFolder, { indexFile: 'uv.toml' });
+    await using _source = await createPythonProject(workFolder, { indexFile: UV_CONFIGURATION });
     await runGspotStep({ root: workFolder, run: spawnGspot }, ['install']);
     const binary = buildVenvExecutablePath(join(workFolder, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const inspected = await runCommand([binary, '--version'], { cwd: workFolder });
@@ -241,13 +235,12 @@ Tag: py3-none-any
     return files;
 }
 
-async function createIndexedPythonProject(
-    root: string,
-    indexFile: 'pyproject.toml' | 'uv.toml',
-): Promise<IndexedPythonProject> {
+async function createIndexedPythonProject(root: string): Promise<IndexedPythonProject> {
     await using resources = new AsyncDisposableStack();
     const index = await pythonIndex.promise;
-    const project = resources.use(await createPythonProject(root, { indexFile, indexUrl: index.url }));
+    const project = resources.use(
+        await createPythonProject(root, { indexFile: UV_CONFIGURATION, indexUrl: index.url }),
+    );
     await runGspotStep({ root, run: spawnGspot }, ['install']);
     const projectFiles = await readToolProjectFiles(root, 'uv');
     const owned = resources.move();

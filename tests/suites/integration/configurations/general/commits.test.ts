@@ -40,7 +40,7 @@ async function assertDraftCheck(root: string, draft: string, rules: string[] = [
     expect(checked.report.checks[0]!.findings.map(({ rule }) => rule)).toStrictEqual(rules);
 }
 
-test('commitlint accepts exact folder-name scopes or no scope, reports bad messages, and runs only at level all', async () => {
+test('commitlint accepts exact folder-name scopes or no scope and reports bad messages', async () => {
     const settings = buildSandboxSettings([], {
         level: 'all',
         scopes: [{ path: 'Packages/Core', configurations: [] }],

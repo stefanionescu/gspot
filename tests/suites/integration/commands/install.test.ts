@@ -14,7 +14,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 
 test.each([true, false])(
-    'init, install, and check keep the staged index, the unstaged edits, and HEAD (has commits: %s)',
+    'init, install, and check keep the staged index, the unstaged edits, and HEAD (has commits: %p)',
     async (hasCommits) => {
         await using sandbox = await createGitSandbox({ 'plans.txt': 'committed\n' });
 

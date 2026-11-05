@@ -66,8 +66,8 @@ test.each([...MARKDOWN_COMMENT_CASES])(
 );
 
 test.each([...PROSE_COMMENT_CASES])(
-    'prose/vale keeps the language and the scope path of a .%s file it sends on stdin',
-    async (extension, marker, code) => {
+    'prose/vale keeps the language and the scope path of $name, which it sends on stdin',
+    async ({ extension, marker, code }) => {
         const sandbox = installedSandbox();
         const path = extension === '' ? 'source' : `source.${extension}`;
         const prefix = extension === '' ? '#!/usr/bin/env bash\n' : '';

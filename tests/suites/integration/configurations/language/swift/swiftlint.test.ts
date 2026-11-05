@@ -150,7 +150,7 @@ test.skipIf(!hasToolBuild('swiftlint'))(
 );
 
 test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
-    'SwiftLint counts parameters with maximum %s',
+    'SwiftLint counts parameters with maximum %p',
     async (supplied) => {
         const scenario = PARAMETER_LIMIT_CASE;
         await using sandbox = await createGitSandbox({});
