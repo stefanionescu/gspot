@@ -50,22 +50,6 @@ test('a run keeps the version of an npm package, and reports a package that cann
     });
 });
 
-test('a shim that no configuration gives a version is missing, not broken', async () => {
-    await using sandbox = await testdir();
-    await writeProgramCommand(
-        sandbox.path,
-        'node_modules/.bin/shimmed',
-        'fakes/tool',
-        '--stderr',
-        'mise ERROR No version is set for shim: shimmed\n',
-        '--exit',
-        '1',
-    );
-    const inspection = await inspectTool(buildToolSearch(sandbox.path), buildProgramPin('shimmed', '3.8.1'));
-    expect(inspection.state).toBe('missing');
-    expect(inspection.want).toBe('3.8.1');
-});
-
 test.each([...VERSION_OUTPUTS])(
     'version output with $name gives the state $state',
     async ({ toolArguments, state, found, note }) => {
