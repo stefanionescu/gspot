@@ -4,11 +4,8 @@ Read this rule when you change a GitHub Actions workflow or action.
 
 ## Workflow shape
 
-- Every job has `timeout-minutes`.
-- A workflow that runs for pull requests has a `concurrency` group keyed by the ref that cancels a run in progress.
-  A workflow that runs only on the default branch or a tag has no `concurrency` group: its result records that commit.
-- Pin a runner image such as `ubuntu-24.04` for each job. Do not use `ubuntu-latest`.
-- Put a reason comment above each `continue-on-error`. Let a failing required step fail the job.
+- A workflow that runs only on the default branch or a tag has no `concurrency` group: its result records that commit.
+- Let a failing required step fail the job.
 - Upload diagnostics after failed checks with an explicit status condition. Deployments and release publication require
   successful prerequisites.
 - Before a release job publishes a package or creates a release, it runs the tests or needs the job that does.
@@ -23,13 +20,6 @@ Read this rule when you change a GitHub Actions workflow or action.
 
 - Pin every action from another repository to a full commit SHA, with its version in a comment:
   `uses: actions/checkout@<sha> # v5.0.0`.
-- Set `permissions:` at the top of each workflow to the least that its jobs need, such as `contents: read`. Widen it
-  only in the job that needs more.
-- Never check out pull request code in `pull_request_target` or `workflow_run`.
-- Give every `actions/checkout` step `persist-credentials: false`. A later step that pushes gets its token through
-  `env`.
-- Write no `${{ }}` expression inside `run:`. Pass the value through the step's `env`, and read it as a quoted shell
-  variable, such as `"${HEAD_REF}"`.
 
 ## Scripts
 
@@ -39,7 +29,7 @@ Read this rule when you change a GitHub Actions workflow or action.
 
 ## Outputs
 
-- Artifacts and summaries name the job and the ref. Set retention explicitly.
+- Artifacts and summaries name the job and the ref.
 - Each job leaves a result that a later one, a deployment, or a person uses. Do not upload an artifact that no job
   downloads. Do not build the same output in two workflows.
 - Deploy only from the default branch or a release tag. When the repository uses GitHub environments, run the job in a
