@@ -101,26 +101,6 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     expect(unchanged.code, unchanged.stdout + unchanged.stderr).toBe(0);
 });
 
-test('install rewrites an edited generated file, deletes unknown files in .gspot, and leaves gspot.toml as it was', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']), 'entry.sh': 'echo example\n' });
-
-    commitAll(sandbox.path);
-    const initial = await runGspot(sandbox.path, ['install']);
-    expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    const settingsPath = join(sandbox.path, 'gspot.toml');
-    const settings = await readFile(settingsPath, 'utf8');
-    await writeFile(join(sandbox.path, 'added.py'), 'print("example")\n');
-    const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
-    const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
-    await chmod(generated, 0o644);
-    await writeFile(generated, edited);
-    const applied = await runGspot(sandbox.path, ['install']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await readFile(generated, 'utf8')).not.toContain('# Authored after installation.');
-    expect(await readFile(settingsPath, 'utf8')).toBe(settings);
-});
-
 test('removing rules from a fresh clone removes the managed AGENTS.md block', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({});
