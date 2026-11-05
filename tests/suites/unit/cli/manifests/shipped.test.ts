@@ -162,7 +162,7 @@ test('each check waits for declared settings and runs at a stage that has the re
     const errors = configurations.flatMap((configuration) =>
         configuration.checks.flatMap((check) => [
             ...listCheckSettingErrors(check, defaults),
-            ...(!new Set(check.needs).isSubsetOf(new Set(['dependencies'])) && check.stage === 'commit'
+            ...(!new Set(check.needs).isSubsetOf(new Set(['dependencies', 'project-code'])) && check.stage === 'commit'
                 ? [`${check.id} needs resources unavailable at the commit stage.`]
                 : []),
         ]),
