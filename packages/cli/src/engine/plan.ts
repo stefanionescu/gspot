@@ -100,7 +100,11 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const { settings, scopes } = session;
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const narrowedPaths = buildNarrowedPaths(options);
-    const inventory = buildPlanInventory(session.repository.files, narrowedPaths);
+    const inventory = buildPlanInventory(
+        session.repository.files,
+        narrowedPaths,
+        options.selection?.content === 'index',
+    );
     const scopePaths = scopes.map(({ path }) => path);
     const enumerated = Map.groupBy(
         listKeptScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)),

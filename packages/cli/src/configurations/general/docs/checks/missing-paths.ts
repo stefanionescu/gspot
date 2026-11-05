@@ -43,9 +43,11 @@ import { escapeGlob, includeParentFolders, listEnclosingFolders, listExecutableN
 import { isTable } from '#cli/system/tables.ts';
 import type { PathIndex, ProseLine, TaskNames } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+const TASK_FILE = /(?:^|\/)(?:package\.json|\.?mise(?:\.local)?\.toml)$|(?:^|\/)\.?mise\//u;
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];
@@ -231,13 +233,24 @@ function extractPathTokens(line: string): string[] {
         );
 }
 
+function isCausedByChange(finding: CheckFinding, narrowed: string[], session: Session): boolean {
+    if (narrowed.includes(finding.file)) return true;
+    if (finding.rule === DOCS_RULES.missingTask) return narrowed.some((path) => TASK_FILE.test(path));
+    const tracked = new Set(session.repository.files.map(({ path }) => path));
+    const token = finding.message.split(' ', 1)[0]?.replace(LEADING_DOT_SLASH, '').replace(TRAILING_SLASH, '') ?? '';
+    const target = posix.normalize(posix.join(posix.dirname(finding.file), token));
+    return narrowed
+        .filter((path) => !tracked.has(path))
+        .some((path) => [token, target].some((name) => path === name || path.startsWith(`${name}/`)));
+}
+
 /**
 Reports each path that names no tracked file, and each run command that names no task.
 
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-function checkMissingPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkMissingPaths(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     const files = planned.files.filter(
         (file) => file.kind === 'source' && MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
@@ -247,13 +260,17 @@ function checkMissingPaths(session: Session, planned: PlannedCheck): CheckFindin
         session.repository.files.map((file) => file.path),
     );
     const projects = Map.groupBy(files, (file) => selectScopePath(file.path, session.repository.scopeFolders));
-    return [...projects].flatMap(([scopePath, sources]) => {
+    const findings = [...projects].flatMap(([scopePath, sources]) => {
         const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scopePath) };
         return sources.flatMap((file) => {
             const text = readText(session.cache, file.path);
             return extractProseLines(text).flatMap((prose) => validateProseLine(file.path, prose, index));
         });
     });
+    const narrowed = session.selection?.paths;
+    return narrowed === undefined
+        ? findings
+        : findings.filter((finding) => isCausedByChange(finding, narrowed, session));
 }
 
 export const DOCS_MISSING_PATHS_CHECKS: Readonly<Record<string, CheckCode>> = {

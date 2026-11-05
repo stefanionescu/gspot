@@ -31,6 +31,7 @@ selector = ':matches(Property[key.value="Access-Control-Allow-Origin"][value.val
 
 [[check]]
 example = "An indented `X-Frame-Options: DENY` at the top of `_headers` reports a header with no path. Put a path such as `/*` on an unindented line above it."
+files = { filenames = ["_headers"] }
 help = "Write each block as a path, then indented lines of a name, a colon, and a value. Add each missing security header to the block for `/*`."
 name = "headers"
 runs = "scope"
@@ -39,6 +40,7 @@ summary = "Checks that `_headers` holds only blocks of a path followed by indent
 why = "Cloudflare skips a line it cannot read, and a static site has no server code to set these protections, so a typo or a missing line silently drops a security header."
 [[check]]
 example = "The `_redirects` line `/old /new 999` reports an unsupported redirect status. For a permanent redirect, change it to `/old /new 301`."
+files = { filenames = ["_redirects"] }
 help = "Write the rule as source, destination, and status."
 name = "redirects"
 runs = "scope"

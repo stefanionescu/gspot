@@ -1,4 +1,5 @@
 import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
 import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -7,9 +8,8 @@ import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs,
@@ -18,7 +18,7 @@ and each lint command that calls a tool that gspot replaces.
 @param session the repository and the tools that the selected checks run.
 @param _planned the configured check and selected scope files.
 */
-function checkConflictingConfigs(session: Session, _planned: PlannedCheck): CheckFinding[] {
+function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck): CheckFinding[] {
     const tools = new Set(
         session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     );
@@ -43,7 +43,11 @@ function checkConflictingConfigs(session: Session, _planned: PlannedCheck): Chec
         rule: GSPOT_RULES.lintCommand,
         message: `${LINT_COMMAND_NAMES[source]} calls ${tool}: ${command}. ${fix}`,
     }));
-    return [...conflicts, ...commands];
+    const findings = [...conflicts, ...commands];
+    const narrowed = session.selection?.paths;
+    return narrowed === undefined || narrowed.includes(SETTINGS_FILE)
+        ? findings
+        : findings.filter(({ file }) => narrowed.includes(file));
 }
 
 export const GSPOT_CONFLICTING_CONFIGS_CHECKS: Readonly<Record<string, CheckCode>> = {

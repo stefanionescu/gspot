@@ -238,7 +238,7 @@ test('a scope path narrows to its checks and its rerun command finds the same fi
     );
 });
 
-test('a staged change to gspot.toml alone rechecks every file a configuration check covers', async () => {
+test('a staged change to gspot.toml leaves other files to a full run', async () => {
     const loose = buildSandboxSettings(['sql'], {
         tables: '[limits.sql]\nmax_file_lines = 100\n',
         level: 'all',
@@ -252,8 +252,10 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), loose.replace('max_file_lines = 100', 'max_file_lines = 5'));
     runGitStep(sandbox.path, ['add', 'gspot.toml']);
+    const staged = await runGspot(sandbox.path, ['check', '--staged', '--only', 'structure/long-files', '--json']);
+    expect(staged.code, staged.stdout + staged.stderr).toBe(0);
     const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--staged', '--only', 'structure/long-files', '--json']),
+        await runGspot(sandbox.path, ['check', '--only', 'structure/long-files', '--json']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);

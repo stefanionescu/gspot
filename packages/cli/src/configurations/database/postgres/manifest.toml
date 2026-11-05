@@ -41,6 +41,7 @@ why = "A migration that takes an exclusive lock on a large table stops the appli
 
 [[check]]
 example = "A new migration numbered below the latest committed one reports a finding. Give it a later version, and leave applied migrations unchanged."
+files = { extensions = [".sql"] }
 help = "Rename the new migration with a version later than the newest committed one."
 name = "migration-order"
 runs = "scope"
@@ -50,6 +51,7 @@ why = "A migration that sorts before an applied one never runs on databases alre
 
 [[check]]
 example = "An edit to a committed migration reports a finding. Restore the original file, and write the change as a new migration."
+files = { extensions = [".sql"] }
 help = "Restore the file with `git checkout`, and write the change as a new migration. Keep `IF NOT EXISTS` only on `CREATE INDEX CONCURRENTLY`."
 name = "edited-migrations"
 runs = "scope"
@@ -59,6 +61,7 @@ why = "An applied migration never runs again, so an edit reaches only new databa
 
 [[check]]
 example = "A new table without row-level security reports a finding. Add `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` for it."
+files = { extensions = [".sql"] }
 help = "Enable row-level security on the table, name the roles of each policy, wrap identity calls in `(select ...)`, say why a policy is `USING (true)`, and set `security_invoker = true` on client views."
 name = "row-level-security"
 when = { setting = "postgres.client_schemas" }
@@ -69,6 +72,7 @@ why = "A client that reaches the schema reads and writes every row of a table wi
 
 [[check]]
 example = "The statement `GRANT ALL ON TABLE public.items TO app_reader;` reports a broad grant. If the role only reads rows, use `GRANT SELECT ON TABLE public.items TO app_reader;`."
+files = { extensions = [".sql"] }
 help = "Name the privileges the role needs, such as `SELECT` alone."
 name = "grants"
 runs = "scope"
@@ -78,6 +82,7 @@ why = "A full grant includes truncating the table, adding triggers, and each pri
 
 [[check]]
 example = "A `SECURITY DEFINER` function without a safe search path reports a finding. Add `SET search_path = ''` to the definition, and schema-qualify the objects in its body."
+files = { extensions = [".sql"] }
 help = "Set an explicit `search_path` in the definition, such as `SET search_path = ''`, and qualify every name inside it."
 name = "definer-search-path"
 runs = "scope"
@@ -87,6 +92,7 @@ why = "A definer function runs with its owner's rights, and a caller who control
 
 [[check]]
 example = "A foreign key on `orders.customer_id` without an index starting with that column reports a missing index. Add `SET lock_timeout = '5s'; SET statement_timeout = '60s'; CREATE INDEX orders_customer_id_idx ON orders (customer_id);` in the migration set."
+files = { extensions = [".sql"] }
 help = "Create an index that starts with all columns of the foreign key."
 name = "foreign-key-indexes"
 runs = "scope"

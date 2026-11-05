@@ -49,8 +49,11 @@ function listProjectMatches(
 ): TrackedFile[] {
     const { scope } = planned;
     const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
+    const isEveryFileRead = isRepositoryRun(check) && check.files === undefined;
     const projectFiles =
-        configuration === undefined ? scopeFiles : scopeFiles.filter((file) => !isGspotPath(file.path));
+        configuration === undefined || isEveryFileRead
+            ? scopeFiles
+            : scopeFiles.filter((file) => !isGspotPath(file.path));
     return owners === undefined
         ? projectFiles
         : listCoveredFiles(owners, projectFiles, {
@@ -185,11 +188,11 @@ whole scope, because such a change can change what every check reads.
 export function buildPlanInventory(
     files: TrackedFile[],
     narrowedPaths: ReadonlySet<string> | undefined,
+    isStaged = false,
 ): PlanInventory {
     const isNarrowed =
         narrowedPaths !== undefined &&
-        !narrowedPaths.has(SETTINGS_FILE) &&
-        narrowedPaths.values().every((path) => !isGspotPath(path));
+        (isStaged || (!narrowedPaths.has(SETTINGS_FILE) && narrowedPaths.values().every((path) => !isGspotPath(path))));
     return {
         trackedPaths: new Set(files.map(({ path }) => path)),
         narrowedFiles: isNarrowed ? files.filter((file) => narrowedPaths.has(file.path)) : undefined,

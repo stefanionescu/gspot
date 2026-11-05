@@ -6,9 +6,10 @@ title = "Repository"
 [[check]]
 binary_files = true
 example = "A tracked `notes/big.txt` over `repository.max_file_kilobytes` reports `size`. Delete the file, or store it through Git LFS."
+files = { paths = ["**"], kinds = ["source", "generated", "vendored", "binary"] }
 help = "Track the file with Git LFS, classify it as generated or vendored in .gitattributes, or raise repository.max_file_kilobytes with a reason."
 name = "large-files"
-runs = "once"
+runs = "files"
 stage = "commit"
 summary = "Checks that each tracked file over the size limit goes through Git LFS or has a reason."
 why = "A large file in plain Git history stays in every clone forever."
@@ -25,9 +26,10 @@ why = "Machine-local values and installed packages belong outside shared Git his
 
 [[check]]
 example = "A line `<<<<<<< HEAD` left in a file reports `conflict-marker`. Resolve the conflict, and delete the markers."
+files = { paths = ["**"], kinds = ["source", "generated", "vendored", "binary"] }
 help = "Keep the side of the conflict that you want, and delete the marker lines."
 name = "conflict-markers"
-runs = "once"
+runs = "files"
 stage = "commit"
 summary = "Reports each line of a tracked text file that a Git merge conflict leaves behind."
 why = "A file with conflict markers holds both sides of a merge, and a fixer can turn the markers into content that passes."
@@ -35,9 +37,10 @@ why = "A file with conflict markers holds both sides of a merge, and a fixer can
 [[check]]
 binary_files = true
 example = "A tracked Latin-1 notes.md reports encoding. Save the file as UTF-8."
+files = { paths = ["**"], kinds = ["source", "generated", "vendored", "binary"] }
 help = "Save the reported file as UTF-8, then run the check again."
 name = "encoding"
-runs = "once"
+runs = "files"
 stage = "commit"
 summary = "Checks that tracked text files use UTF-8."
 why = "Every text check must read the same characters."

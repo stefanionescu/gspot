@@ -172,7 +172,7 @@ test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, {
             stage: 'commit',
-            selection: { content: 'index', paths: [path] },
+            selection: { content: 'working-tree', paths: [path] },
             only: ['docs/lychee'],
         });
         expect(
@@ -186,6 +186,19 @@ test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
         ]);
     },
 );
+
+test('a staged change to gspot.toml reads only the staged files', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docs']),
+        'README.md': '# Root\n',
+    });
+    const planned = planChecks(await openSession(sandbox.path), {
+        stage: 'commit',
+        selection: { content: 'index', paths: ['gspot.toml'] },
+        only: ['docs/lychee'],
+    });
+    expect(planned.flatMap(({ files }) => files.map(({ path }) => path))).toStrictEqual([]);
+});
 
 test('dependencies/osv-scanner reads every lockfile, and runs only when a trigger file changes', async () => {
     await using sandbox = await createGitSandbox({
@@ -235,8 +248,13 @@ test('dependencies/osv-scanner reads every lockfile, and runs only when a trigge
     expect(deleted!.files.map(({ path }) => path)).toStrictEqual(['bun.lock', 'uv.lock']);
     expect(isActive(deleted!)).toBe(true);
     expect(
-        isActive(planChecks(session, { ...options, selection: { content: 'index', paths: ['gspot.toml'] } })[0]!),
+        isActive(
+            planChecks(session, { ...options, selection: { content: 'working-tree', paths: ['gspot.toml'] } })[0]!,
+        ),
     ).toBe(true);
+    expect(
+        isActive(planChecks(session, { ...options, selection: { content: 'index', paths: ['gspot.toml'] } })[0]!),
+    ).toBe(false);
 });
 
 test.each([

@@ -53,6 +53,7 @@ selector = 'ObjectExpression:has(> Property[key.value="Access-Control-Allow-Orig
 
 [[check]]
 example = "A storage bucket with no policy on `storage.objects` reports a finding. Add a migration that defines access for that bucket."
+files = { filenames = ["config.toml"], extensions = [".sql"] }
 help = "Add a policy on storage.objects for the bucket in a migration."
 name = "storage-policies"
 runs = "scope"
@@ -62,6 +63,7 @@ why = "A bucket with no policy refuses every upload, and when public serves ever
 
 [[check]]
 example = "`verify_jwt = false` with no comment reports `verify-jwt`. Write `verify_jwt = false # A signed provider webhook.` on the line."
+files = { filenames = ["config.toml"] }
 help = "Give the reason in a comment on the same line, or set `verify_jwt = true`."
 name = "verify-jwt"
 runs = "scope"
@@ -71,15 +73,17 @@ why = "A function with `verify_jwt = false` takes requests from anyone, and the 
 
 [[check]]
 example = "Client code that reads a Supabase service-role key reports a finding. Move the key and the privileged work into an edge function."
+files = { tags = ["javascript", "typescript", "vue", "svelte", "astro", "swift", "python"], extensions = [".kt", ".dart"] }
 help = "Move code to edge functions or tests."
 name = "service-role-key"
-runs = "scope"
+runs = "files"
 stage = "commit"
 summary = "Checks that only edge functions and test files name a secret or service role key."
 why = "Secret and service role keys bypass row-level security, so a client bundle that holds either exposes privileged database access."
 
 [[check]]
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` instead."
+files = { extensions = [".ts"] }
 help = "Change the code the way the rule says; `deno lint --rules` explains each one."
 name = "deno-lint"
 runs = "scope"

@@ -80,13 +80,13 @@ test('Deno checks skip a scope with no edge functions', async () => {
     });
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
-    for (const name of ['supabase/deno-lint', 'supabase/deno-check']) {
-        const result = await runChecks(session, buildRunOptions({ only: [name] }));
-        expect(result.report.checks[0]).toMatchObject({
-            status: 'skipped',
-            note: expect.stringContaining('supabase/functions') as string,
-        });
-    }
+    const lint = await runChecks(session, buildRunOptions({ only: ['supabase/deno-lint'] }));
+    expect(lint.report.checks).toStrictEqual([]);
+    const typeCheck = await runChecks(session, buildRunOptions({ only: ['supabase/deno-check'] }));
+    expect(typeCheck.report.checks[0]).toMatchObject({
+        status: 'skipped',
+        note: expect.stringContaining('supabase/functions') as string,
+    });
 });
 
 async function prepareDenoSession(root: string) {

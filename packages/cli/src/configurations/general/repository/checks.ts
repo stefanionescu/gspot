@@ -14,7 +14,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder, isInside } from '#cli/system/paths.ts';
 import { listConflictMarkerLines } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -92,7 +92,7 @@ commit or a push reports only its staged or pushed links.
 @param session the repository and its tools.
 @param planned the configured check and the links of its run.
 */
-function checkLocalFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+function checkLocalFiles(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     const scopes = session.repository.scopeFolders;
     const matchers = new Map(
         session.scopes.map(({ path: scopePath, configurations, settings }): [string, (path: string) => boolean] => {
@@ -110,8 +110,10 @@ function checkLocalFiles(session: Session, planned: PlannedCheck): CheckFinding[
             ];
         }),
     );
+    const narrowed = session.selection?.paths;
     const tracked = [...new Set(session.repository.index.map(({ path }) => path))]
         .filter((path) => {
+            if (narrowed?.includes(path) === false) return false;
             const scopePath = selectScopePath(path, scopes);
             return matchers.get(scopePath)?.(posix.relative(scopePath, path)) === true;
         })

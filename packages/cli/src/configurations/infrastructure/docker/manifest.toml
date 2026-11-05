@@ -80,6 +80,7 @@ why = "A build that rewrites its lockfile or runs a downloaded script ships code
 
 [[check]]
 example = "A Dockerfile with no `.dockerignore` beside it reports a finding. Add one that excludes the paths the finding names, such as `.git` and installed dependencies."
+files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}", "**/.dockerignore", "**/*.dockerignore"] }
 help = "Add a .dockerignore beside the Dockerfile with the paths the message names."
 name = "dockerignore"
 runs = "once"
