@@ -10,7 +10,6 @@ Use the roles and schemas the application declares.
 - Create each migration file with the command the project uses, such as `supabase migration new`, then write its SQL.
 - Repair migration history only when the user asks.
 - Make every durable change through a migration. Never use a web console or SQL editor on a remote database.
-- Never change a migration that a commit holds. Write the change as a new migration with a later version.
 - Start every migration with `SET lock_timeout = '5s';` and `SET statement_timeout = '60s';`, or the limits that the
   project uses.
 - Run each migration in one transaction. With `postgres.assume_in_transaction = false`, wrap the migration in
@@ -34,9 +33,6 @@ Use the roles and schemas the application declares.
 
 ## Row-level security
 
-- Each policy names its roles with `TO`, unless all roles belong in it.
-- Wrap the identity function of an ownership check in a scalar subquery, so the planner evaluates it once per statement
-  instead of once per row.
 - `UPDATE` needs both a `SELECT` and an `UPDATE` policy.
 
 | Operation   | Policy expression                                                               |
