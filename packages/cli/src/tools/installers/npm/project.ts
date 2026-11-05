@@ -19,6 +19,7 @@ import {
     NPM_LOCKFILE_CREDENTIAL_MESSAGE,
     NPM_SETTING_PREFIX,
     NPM_TOOL_NOUN,
+    NPM_USER_CONFIG_VARIABLE,
     NPMRC_FILE,
     PACKAGE_MANAGER_ARGUMENTS,
     PACKAGE_MANAGER_SETTINGS_NAME,
@@ -79,6 +80,7 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
     using settings = createTemporaryFolder();
     writeNpmrc(settings.path, env);
     env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
+    env[NPM_USER_CONFIG_VARIABLE] = join(settings.path, NPMRC_FILE);
     env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
     const args =
         packageManager.name === 'bun'

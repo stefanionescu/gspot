@@ -175,6 +175,8 @@ export const PACKAGE_MANAGER_SETTINGS_NAME = /^(?:\.npmrc|\.yarnrc.*|pnpm-worksp
 
 export const NPM_CONFIG_FOLDER_VARIABLE = 'XDG_CONFIG_HOME';
 
+export const NPM_USER_CONFIG_VARIABLE = 'NPM_CONFIG_USERCONFIG';
+
 export const NPM_SETTING_PREFIX = 'npm_config_';
 
 export const NOT_FOUND_STATUS = 404;
