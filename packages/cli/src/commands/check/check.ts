@@ -22,8 +22,6 @@ import {
     PUSH_STDIN_MESSAGE,
     SETUP_PATHS,
     SKIP_OPTION,
-    STAGE_FLAG,
-    STAGE_OPTION,
     STAGE_SETUP_MESSAGE,
 } from '#cli/config/commands/reports.ts';
 import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
@@ -87,8 +85,7 @@ function assertComparisonFlags(options: CheckOptions, flags: CheckFlags): void {
 }
 
 function assertCheckSelection(options: CheckOptions, flags: CheckFlags): void {
-    if (flags.stage !== undefined && flags.hook !== undefined)
-        throw new GspotError('arguments', `${STAGE_FLAG} cannot run with --hook. Choose a stage or a Git hook.`);
+    const { only, skip } = options;
     if (flags.hook === 'pre-push') assertPushFlags(flags);
     if (options.staged && options.fix)
         throw new GspotError(
@@ -96,6 +93,11 @@ function assertCheckSelection(options: CheckOptions, flags: CheckFlags): void {
             `--fix cannot run with ${STAGED_FLAG}: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.`,
         );
     assertComparisonFlags(options, flags);
+    if (only?.every((id) => skip?.includes(id) === true) === true)
+        throw new GspotError(
+            'arguments',
+            `--skip leaves out every check that --only names: ${formatNameList(only)}. Change --only or --skip.`,
+        );
 }
 
 function assertMessageSelection(options: CheckOptions, paths: string[]): void {
@@ -155,7 +157,7 @@ function parseCheckFlags(
         skip: flags.skip,
         base: flags.base,
         messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
-        stage: hook === undefined ? (onlyStage ?? flags.stage) : HOOK_CHECKS[hook].stages[0],
+        stage: hook === undefined ? onlyStage : HOOK_CHECKS[hook].stages[0],
         onProgress: printProgress,
     };
     assertCheckSelection(options, flags);
@@ -255,7 +257,6 @@ export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {
         { flags: ONLY_OPTION, parse: parseCheckNames },
         { flags: SKIP_OPTION, parse: parseCheckNames },
         { flags: STAGED_FLAG },
-        { flags: STAGE_OPTION, choices: CHECK_STAGES },
         { flags: CHANGED_FLAG },
         { flags: BASE_OPTION },
         { flags: FIX_FLAG },

@@ -260,25 +260,3 @@ test.each([
     expect(failure.error).toBe('arguments');
     expect(failure.message).toContain(message);
 });
-
-test.each(['all', 'message', 'manual'])('--stage refuses %s as a command-line stage', async (stage) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['check', '--stage', stage, '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain(stage);
-});
-
-test('check refuses --stage without its value', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['check', '--stage', '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-});
-
-test.each(['pre-push', 'commit-msg'])('--stage and --hook %s are mutually exclusive', async (hook) => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['check', '--stage', 'commit', '--hook', hook, '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-});

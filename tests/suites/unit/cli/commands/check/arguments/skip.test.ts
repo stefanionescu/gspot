@@ -29,16 +29,7 @@ test('--skip repeats, takes commas, and leaves the paths after it as paths', asy
     expect(kept[0]?.findings.map(({ message }) => message)).toStrictEqual(['selected.ts']);
 });
 
-test.each([
-    {
-        flags: ['--only', 'sandbox/commit', '--skip', 'sandbox/commit'],
-        reason: '--skip leaves out sandbox/commit',
-    },
-    {
-        flags: ['--only', 'sandbox/push', '--stage', 'commit'],
-        reason: 'sandbox/push runs at the push stage, not at commit',
-    },
-])('a selection that starts no named check exits 2: $flags', async ({ flags, reason }) => {
+test('a selection that --skip empties exits 2', async () => {
     const checks = [
         buildReportingCheck({ id: 'sandbox/commit', paths: ['*.ts'], stage: 'commit' }),
         buildReportingCheck({ id: 'sandbox/push', paths: ['*.ts'], stage: 'push' }),
@@ -47,12 +38,13 @@ test.each([
         'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: checks }) }),
         'selected.ts': 'selected',
     });
+    const flags = ['--only', 'sandbox/commit', '--skip', 'sandbox/commit'];
     const refused = await runGspot(sandbox.path, ['check', ...flags]);
     expect(refused).toStrictEqual({
         code: 2,
         stdout: '',
-        stderr: `No check that --only names can run: ${reason}. Change --skip or --stage.\n`,
+        stderr: '--skip leaves out every check that --only names: sandbox/commit. Change --only or --skip.\n',
     });
-    const partial = await runGspot(sandbox.path, ['check', ...flags, '--only', 'sandbox/commit,sandbox/push']);
+    const partial = await runGspot(sandbox.path, ['check', ...flags, '--only', 'sandbox/push']);
     expect(partial.code, partial.stdout + partial.stderr).toBe(1);
 });

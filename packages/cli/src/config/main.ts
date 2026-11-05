@@ -2,6 +2,13 @@ export const PIN_COMMANDS: ReadonlySet<string> = new Set(['check', 'install', 'b
 
 export const REMOVED_COMMANDS = { apply: 'gspot install writes the generated files. Run gspot install.' } as const;
 
+export const REMOVED_OPTIONS: Readonly<Record<string, string>> = {
+    '--stage':
+        'gspot check --stage was removed. Run gspot check --only <commit|push>. If you did not type this, your hook script is out of date: run gspot install.',
+};
+
+export const UNKNOWN_OPTION_NAME = /unknown option '([^']+)'/u;
+
 export const PROCESS_ARGUMENTS_START = 2;
 
 export const UNKNOWN_COMMAND_NAME = /unknown command '([^']+)'/u;

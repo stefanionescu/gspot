@@ -74,7 +74,6 @@ export const COMMAND_HELP = {
                 'Run only these checks, including checks off at your level. Separate several with commas, or repeat the option. commit or push alone runs the checks of that stage at your level',
             '--skip <checks>': 'Run every check except these. Separate several with commas, or repeat the option',
             '--staged': 'Check the files as you staged them, not the working tree',
-            '--stage <commit|push>': 'Run only the checks assigned to this stage (default: commit and push)',
             '--changed': 'Check the files changed since the upstream branch, or origin/HEAD',
             '--base <ref>':
                 'Compare with this branch, tag, or commit; an empty, all-zero, or absent full hash checks every file',

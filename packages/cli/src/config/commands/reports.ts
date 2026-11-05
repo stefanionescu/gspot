@@ -11,10 +11,6 @@ export const CHECK_STAGES = ['commit', 'push'] as const;
 
 export const CHECK_INPUT_HOOKS = ['pre-push', 'commit-msg'] as const;
 
-export const STAGE_OPTION = '--stage <commit|push>';
-
-export const STAGE_FLAG = '--stage';
-
 export const COMMIT_FILE_MESSAGE = '--hook commit-msg needs one commit message file after --.';
 
 export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.';

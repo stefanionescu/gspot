@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { CHECK_INPUT_HOOKS, CHECK_STAGES } from '#cli/config/commands/reports.ts';
+import type { CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
 import type {
     baselineReportSchema,
     checkExplanationSchema,
@@ -64,10 +64,7 @@ export type RevisionSource = {
 
 type CheckHook = (typeof CHECK_INPUT_HOOKS)[number];
 
-type CheckStage = (typeof CHECK_STAGES)[number];
-
 export type CheckFlags = {
-    stage?: CheckStage;
     only?: string[];
     skip?: string[];
     staged?: boolean;

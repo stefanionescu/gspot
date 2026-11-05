@@ -63,7 +63,7 @@ test('--changed without an upstream names the replacement command, and uses orig
     await prepareChangedRepository(sandbox.path, { '.gitignore': `${GSPOT_FOLDER}/\n`, 'api/source.txt': 'before' });
     runGitStep(sandbox.path, ['init', '-b', 'topic']);
     commitAll(sandbox.path);
-    const absent = await runGspot(sandbox.path, ['check', '--changed', '--stage', 'commit', '--json']);
+    const absent = await runGspot(sandbox.path, ['check', '--changed', '--json']);
     expect(absent.code).toBe(2);
     expect(JSON.parse(absent.stdout)).toMatchObject({ error: 'git' });
     expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toContain('gspot check --base <branch>');

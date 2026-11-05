@@ -49,6 +49,14 @@ test('gspot apply exits 2 with one line that names gspot install', async () => {
     });
 });
 
+test('the hook line of 0.3.9 exits 2, and names --only and gspot install', async () => {
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, ['check', '--staged', '--stage', 'commit']);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('gspot check --only <commit|push>');
+    expect(result.stderr).toContain('run gspot install');
+});
+
 test.each([['init'], ['set', 'level', 'all']].map((commandArguments) => ({ commandArguments })))(
     '$commandArguments requires a Git worktree before reading settings or writing, while its help works outside Git',
     async ({ commandArguments }) => {

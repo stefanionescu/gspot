@@ -33,9 +33,11 @@ import {
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
     REMOVED_COMMANDS,
+    REMOVED_OPTIONS,
     UNKNOWN_COMMAND_ERROR_CODE,
     UNKNOWN_COMMAND_NAME,
     UNKNOWN_OPTION_ERROR_CODE,
+    UNKNOWN_OPTION_NAME,
     USAGE_LINE,
     VERBOSE_FLAG,
     VERSION_FLAG,
@@ -74,19 +76,26 @@ function formatCommanderSentence(error: CommanderError, command: string | undefi
     return command === 'set' && error.code === UNKNOWN_OPTION_ERROR_CODE ? `${sentence} ${DASH_VALUE_HELP}` : sentence;
 }
 
+function readCorrection(message: string): string {
+    const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
+    return suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
+}
+
+function formatUnknownCommand(message: string): string {
+    const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
+    if (Object.hasOwn(REMOVED_COMMANDS, name)) return REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS];
+    return `There is no command called ${name}.${readCorrection(message)} ${COMMANDS_HELP_MESSAGE}`;
+}
+
 function formatArgumentError(error: CommanderError, program: Command, command: string | undefined): string {
     const { message } = error;
     if (error.code === HELP_ERROR_CODE) return formatProgramHelp(program);
-    const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
-    const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
-    if (error.code === UNKNOWN_COMMAND_ERROR_CODE) {
-        const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
-        if (Object.hasOwn(REMOVED_COMMANDS, name)) return REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS];
-        return `There is no command called ${name}.${correction} ${COMMANDS_HELP_MESSAGE}`;
-    }
+    if (error.code === UNKNOWN_COMMAND_ERROR_CODE) return formatUnknownCommand(message);
+    const removed = REMOVED_OPTIONS[UNKNOWN_OPTION_NAME.exec(message)?.[1] ?? ''];
+    if (removed !== undefined) return removed;
     const helpLine =
         command === undefined ? COMMANDS_HELP_MESSAGE : `Run gspot ${command} --help to see its arguments and options.`;
-    return `${formatCommanderSentence(error, command)}${correction} ${helpLine}`;
+    return `${formatCommanderSentence(error, command)}${readCorrection(message)} ${helpLine}`;
 }
 
 function printFailure(error: unknown, program: Command, options: string[]): number {

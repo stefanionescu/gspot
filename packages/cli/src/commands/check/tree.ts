@@ -13,7 +13,6 @@ import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { printWarning } from '#cli/system/terminal.ts';
-import { formatNameList } from '#cli/system/text.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import type { CheckOptions, RevisionSource } from '#cli/types/commands/reports.ts';
 import type { RunSelection } from '#cli/types/engine/plan.ts';
@@ -91,33 +90,6 @@ function assertNamedChecks(session: Session, options: Pick<CheckOptions, 'only' 
     });
 }
 
-/**
-Refuse an --only selection whose every named check --skip or --stage leaves out, so that a run that starts nothing does
-not pass.
-
-@param session the selected checks and the command checks.
-@param options the named checks and the stage of the run.
-*/
-function assertSelectionRuns(session: Session, options: Pick<CheckOptions, 'only' | 'skip' | 'stage'>): void {
-    const { only = [], skip = [], stage } = options;
-    const checks = [
-        ...session.scopes.flatMap((scope) => scope.configurations.flatMap((configuration) => configuration.checks)),
-        ...Object.values(session.settings.commandChecks),
-    ];
-    const blocked = only.flatMap((id) => {
-        if (skip.includes(id)) return [`--skip leaves out ${id}`];
-        const named = checks.find((check) => check.id === id);
-        return stage === undefined || named === undefined || named.stage === stage
-            ? []
-            : [`${id} runs at the ${named.stage} stage, not at ${stage}`];
-    });
-    if (only.length === 0 || blocked.length < only.length) return;
-    throw new GspotError(
-        'arguments',
-        `No check that --only names can run: ${formatNameList(blocked)}. Change --skip or --stage.`,
-    );
-}
-
 async function warnMissingHooks(session: Session, revision: RevisionSource | undefined): Promise<void> {
     if (revision?.selection.content === 'commit') return;
     const hooks = await readHookStatus(session, { root: session.toolsRoot });
@@ -129,11 +101,10 @@ async function warnMissingHooks(session: Session, revision: RevisionSource | und
 async function readComparedRef(root: string, options: CheckOptions, cancelSignal: AbortSignal): Promise<string> {
     if (options.base !== undefined) return options.base;
     const compared = await readDefaultRef(root, cancelSignal);
-    const stage = options.stage === undefined ? '' : ` --stage ${options.stage}`;
     if (compared === '')
         throw new GspotError(
             'git',
-            `No upstream, origin/HEAD, origin/main, or origin/master names a branch to compare with. Run gspot check --base <branch>${stage} in place of --changed.`,
+            `No upstream, origin/HEAD, origin/main, or origin/master names a branch to compare with. Run gspot check --base <branch> in place of --changed.`,
         );
     return compared;
 }
@@ -181,7 +152,6 @@ export async function runTreeCheck(
             cancelSignal,
         });
         const onlyNotes = assertNamedChecks(session, options);
-        assertSelectionRuns(session, options);
         const { selection, note } =
             revision === undefined
                 ? await readSelection(session, options, cancelSignal)
