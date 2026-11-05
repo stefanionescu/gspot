@@ -33,9 +33,3 @@ Read this rule when you change Astro components, pages, or content collections.
 - Load content through a content collection with a schema, so a missing field fails the build.
 - Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor can read a `PUBLIC_`
   variable.
-
-## References
-
-- [Astro components](https://docs.astro.build/en/basics/astro-components/).
-- [Client directives](https://docs.astro.build/en/reference/directives-reference/#client-directives).
-- [Content collections](https://docs.astro.build/en/guides/content-collections/).
