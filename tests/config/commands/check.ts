@@ -87,6 +87,7 @@ export const FAILED_CHECK_REPORT = {
                     rule: 'SC2086',
                     message: 'Double quote to prevent globbing.',
                     help: 'Quote it.',
+                    explain: 'gspot explain bash/shellcheck SC2086',
                     fixable: false,
                 },
             ],

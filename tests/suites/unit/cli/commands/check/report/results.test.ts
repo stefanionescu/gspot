@@ -90,7 +90,7 @@ test.each([
     },
     {
         name: 'two rules',
-        extra: [{ line: 9 }, { line: 12, rule: 'SC2000' }],
+        extra: [{ line: 9 }, { line: 12, rule: 'SC2000', explain: 'gspot explain bash/shellcheck SC2000' }],
         help: ['  help: Quote it. Details: gspot explain bash/shellcheck <rule>'],
     },
     {
@@ -112,31 +112,6 @@ test.each([
     const last = lines.findLastIndex((line) => line.startsWith('  a.sh:'));
     expect(lines.slice(last + 1, last + 1 + help.length)).toStrictEqual([...help]);
     expect(text.match(/help:/gu)).toHaveLength(help.length);
-});
-
-test('a finding names its rule in the explain command only when the check has a rule catalog', () => {
-    const [check] = FAILED_CHECK_REPORT.checks;
-    const [finding] = check.findings;
-    const report: RunReport = {
-        ...FAILED_CHECK_REPORT,
-        checks: [
-            check,
-            ...(
-                [
-                    ['repository/encoding', 'path-encoding'],
-                    ['repository/encoding', 'unlisted'],
-                    ['typescript/tsc', 'TS2322'],
-                ] as const
-            ).map(([id, rule]) => ({ ...check, check: id, findings: [{ ...finding, check: id, rule }] })),
-        ],
-    };
-    const help = stripVTControlCharacters(formatRunReport(report, { verbose: false })).match(/^ {2}help: .*$/gmu);
-    expect(help).toStrictEqual([
-        '  help: Quote it. Details: gspot explain bash/shellcheck SC2086',
-        '  help: Quote it. Details: gspot explain repository/encoding path-encoding',
-        '  help: Quote it. Details: gspot explain repository/encoding',
-        '  help: Quote it. Details: gspot explain typescript/tsc',
-    ]);
 });
 
 test.each([true, false])('report colors follow stdout when its terminal state is %p', (stdoutIsTerminal) => {

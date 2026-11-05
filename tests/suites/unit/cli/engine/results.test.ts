@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 
-import { mergeCheckResults, restoreCommandPaths, runBuiltInCheck } from '#cli/engine/results.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { formatExplainCommand, mergeCheckResults, restoreCommandPaths, runBuiltInCheck } from '#cli/engine/results.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
@@ -45,6 +46,18 @@ test('the built-in dispatcher attaches the check ID, fixability, and default hel
         },
     ]);
 });
+
+test.each([
+    ['bash/shellcheck', 'SC2086', 'gspot explain bash/shellcheck SC2086'],
+    ['repository/encoding', 'path-encoding', 'gspot explain repository/encoding path-encoding'],
+    ['repository/encoding', 'unlisted', 'gspot explain repository/encoding'],
+    ['typescript/tsc', 'TS2322', 'gspot explain typescript/tsc'],
+] as const)(
+    'the explain command of %s for %s names the rule only when the check has it listed',
+    (check, rule, command) => {
+        expect(formatExplainCommand({ check, rule }, selectCheckCode)).toBe(command);
+    },
+);
 
 test('a result from a copy names repository paths in its command and its note', () => {
     const base: CheckResult = {

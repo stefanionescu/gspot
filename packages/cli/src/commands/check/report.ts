@@ -20,9 +20,7 @@ import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { formatCheckedContent } from '#cli/engine/report.ts';
-import { formatExplainCommand } from '#cli/engine/results.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { print, printWarning } from '#cli/system/terminal.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
@@ -92,9 +90,7 @@ function formatHelpLines(findings: readonly Finding[], result: Pick<CheckResult,
     return [...groups].map(([written, group]) => {
         const rest = written.replace(FIX_SENTENCE, '');
         const help = group.some(({ fixable }) => fixable) ? written : `${rest.charAt(0).toUpperCase()}${rest.slice(1)}`;
-        const [command, ...others] = new Set(
-            group.map((finding) => finding.explain ?? formatExplainCommand(finding, selectCheckCode)),
-        );
+        const [command, ...others] = new Set(group.map((finding) => finding.explain));
         const explain =
             command !== undefined && others.length === 0
                 ? command
