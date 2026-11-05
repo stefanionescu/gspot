@@ -15,8 +15,6 @@ A suppression turns a lint rule off for one place, and it carries a reason.
 - Never suppress a maximum, such as `complexity`, `max-lines`, or `max-statements`. Split the code by its steps, or ask
   the user to raise the limit in `gspot.toml`.
 - Widen an import boundary or an import rule only after the user agrees.
-- Treat a `gspot doctor` row "detected, not selected" as a suggestion. Do not run `gspot add` only to clear it; ask the
-  user whether the scope uses that configuration.
 - Never add filler statements to pass a check.
 
 Never remove a configuration or lower the level to stop a finding.
