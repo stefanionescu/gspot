@@ -137,7 +137,9 @@ test('a limit looser than the default needs a reason, and a tighter one does not
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'settings',
-            message: expect.stringContaining('gspot set limits.max_file_lines 1000 --reason') as string,
+            message: expect.stringContaining(
+                'Write limits.max_file_lines = { value = 1000, reason = "<why>" }.',
+            ) as string,
         }),
     );
     expect(validateSettingsText('configurations = ["bash"]\n[limits]\nmax_file_lines = 100\n')).toStrictEqual([]);

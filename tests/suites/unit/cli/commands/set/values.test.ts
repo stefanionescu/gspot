@@ -156,7 +156,7 @@ test.each([...WEAKENED_SETTINGS])(
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(JSON.parse(refused.stdout)).toMatchObject({
             error: 'arguments',
-            message: expect.stringContaining(`${key}.reason`) as string,
+            message: expect.stringContaining('Add --reason') as string,
         });
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         for (const commandArguments of [

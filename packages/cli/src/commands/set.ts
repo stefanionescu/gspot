@@ -96,18 +96,19 @@ function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: 
     setKey(scopeTable, options.key, { value, reason: options.reason });
 }
 
-function assertReason({ options, setting, change, joined, previous, shippedDefault }: SettingReasonContext): void {
+function formatMissingReason({ options, change, previous }: SettingReasonContext): string {
+    const { key } = options;
+    if (change.type === 'list' && previous?.reason !== undefined)
+        return `${key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`;
+    return `${JSON.stringify(change.value)} is looser than the shipped default of ${key}, so it needs a reason. Add --reason "<why>".`;
+}
+
+function assertReason(context: SettingReasonContext): void {
+    const { options, setting, joined, shippedDefault } = context;
     if (setting.reason_values === true) return;
     const isWeaker = isWeakening(setting, joined, shippedDefault);
-    if (options.reason === undefined) {
-        if (isWeaker && change.type === 'list' && previous?.reason !== undefined)
-            throw new GspotError(
-                'arguments',
-                `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
-            );
-        return;
-    }
-    if (!isWeaker)
+    if (options.reason === undefined && isWeaker) throw new GspotError('arguments', formatMissingReason(context));
+    if (options.reason !== undefined && !isWeaker)
         throw new GspotError(
             'arguments',
             `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,

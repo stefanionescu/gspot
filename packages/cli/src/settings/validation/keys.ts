@@ -13,16 +13,14 @@ import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { getRequired } from '#cli/system/tables.ts';
-import { formatCodeList, formatNameList, quoteArgument, selectSimilarNames } from '#cli/system/text.ts';
+import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { AvailableSettings, Settings, SettingsError, SettingsTable, WrittenSetting } from '#cli/types/settings.ts';
 
-function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown, scopePath: string): string {
+function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown): string {
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
-    const scopeFlag = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     const value = JSON.stringify(written.value);
-    const argument = typeof written.value === 'string' ? written.value : value;
-    return `${value} is looser than the shipped ${shown}, so it needs a reason. Run gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
+    return `${value} is looser than the shipped ${shown}, so it needs a reason. Write ${key} = { value = ${value}, reason = "<why>" }.`;
 }
 
 function validateWrittenReason(
@@ -45,12 +43,12 @@ function validateWrittenReason(
               ];
     if (!isLoose) return [];
     if (setting.type !== 'list')
-        return [{ path: key.split('.'), message: formatWeakeningError(key, written, shipped, scopePath) }];
+        return [{ path: key.split('.'), message: formatWeakeningError(key, written, shipped) }];
     return Array.isArray(written.value)
         ? [
               {
                   path: [...key.split('.'), 'reason'],
-                  message: `${key} needs a reason. Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".`,
+                  message: `${key} needs a reason. Write ${key} = { value = [...], reason = "<why>" }.`,
               },
           ]
         : [];
