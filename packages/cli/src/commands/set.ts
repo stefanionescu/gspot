@@ -3,6 +3,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
 import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
+import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
@@ -33,6 +34,14 @@ import type { CommandResult } from '#cli/types/system.ts';
 const PREVIOUS_VALUE_LENGTH = 80;
 
 const TOOL_RULES_KEY = /^tools\.(?<tool>[^.]+)\.rules$/u;
+
+// These keys hold no reason, so the record of why they changed is an ignore of the weakening that the change reports.
+const REASON_IGNORE_RULES: Readonly<Record<string, string>> = {
+    level: WEAKENING_RULES.level,
+    'hooks.enabled': WEAKENING_RULES.hooks,
+    'rule_files.enabled': WEAKENING_RULES.ruleFiles,
+    'rule_files.exclude': WEAKENING_RULES.ruleFiles,
+};
 
 function parseInlineValue(text: string): unknown {
     try {
@@ -113,13 +122,15 @@ function formatMissingReason({ options, change, previous }: SettingReasonContext
 function assertReason(context: SettingReasonContext): void {
     const { options, setting, joined, shippedDefault } = context;
     if (setting.reason_values === true) return;
-    const isWeaker = isWeakening(setting, joined, shippedDefault);
-    if (options.reason === undefined && isWeaker) throw new GspotError('arguments', formatMissingReason(context));
-    if (options.reason !== undefined && !isWeaker)
-        throw new GspotError(
-            'arguments',
-            `${options.key} takes no reason here: the value is not weaker than the shipped default. Run the command without --reason.`,
-        );
+    if (options.reason === undefined) {
+        if (isWeakening(setting, joined, shippedDefault))
+            throw new GspotError('arguments', formatMissingReason(context));
+        return;
+    }
+    if (setting.reasoned === true) return;
+    const rule = REASON_IGNORE_RULES[options.key];
+    const ignore = rule === undefined ? '' : `, then gspot ignore gspot/weakenings --rule ${rule} --reason "<why>"`;
+    throw new GspotError('arguments', `${options.key} holds no reason. Run the command without --reason${ignore}.`);
 }
 
 function formatPreviousValue(previous: InheritedSetting | undefined): string {

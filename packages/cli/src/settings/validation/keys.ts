@@ -31,17 +31,7 @@ function validateWrittenReason(
     shipped: unknown,
 ): SettingsError[] {
     const joined = joinSettingPaths(key, written.value, scopePath);
-    const isLoose = isWeakening(setting, joined, shipped);
-    if (written.reason !== undefined)
-        return isLoose
-            ? []
-            : [
-                  {
-                      path: key.split('.'),
-                      message: `${key} is not weaker than the default. Write it as a plain value, without a reason.`,
-                  },
-              ];
-    if (!isLoose) return [];
+    if (written.reason !== undefined || !isWeakening(setting, joined, shipped)) return [];
     if (setting.type !== 'list')
         return [{ path: key.split('.'), message: formatWeakeningError(key, written, shipped) }];
     return Array.isArray(written.value)

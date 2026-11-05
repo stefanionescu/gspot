@@ -7,7 +7,7 @@ import {
     SET_VALUE_REFUSALS,
     UNKNOWN_SETTING_KEYS,
 } from '#tests/config/commands/edits.ts';
-import { assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -45,4 +45,35 @@ test.each([...UNKNOWN_SETTING_KEYS])(
 test.each([...SET_VALUE_REFUSALS])('set refuses $name without writing', async ({ arguments: commandArguments }) => {
     await using sandbox = await createGitSandbox(REFUSAL_FILES);
     await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');
+});
+
+test.each([
+    { key: 'level', value: 'all', ignore: '--rule level' },
+    { key: 'hooks.enabled', value: 'false', ignore: '--rule hooks' },
+    { key: 'rule_files.enabled', value: 'false', ignore: '--rule rule-files' },
+])('set refuses --reason on $key, and names the ignore that records it', async ({ key, value, ignore }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const refusal = await assertRefusalWithoutWrites(
+        sandbox.path,
+        ['set', key, value, '--reason', 'the team chose this'],
+        'arguments',
+    );
+    expect(refusal.message).toContain(`gspot ignore gspot/weakenings ${ignore}`);
+});
+
+test('a reason on a value that is not weaker stays, and gspot.toml still reads', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'README.md': '# Example\n',
+    });
+    const result = await runGspot(sandbox.path, [
+        'set',
+        'limits.max_file_lines',
+        '100',
+        '--reason',
+        'the team keeps files short',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const read = await runGspot(sandbox.path, ['list', 'settings', '--json']);
+    expect(read.code, read.stdout + read.stderr).toBe(0);
 });
