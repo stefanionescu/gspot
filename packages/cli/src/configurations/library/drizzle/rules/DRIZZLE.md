@@ -14,14 +14,6 @@ run no migration in a schema module.
 Inferred types, `$type<T>()`, and `sql<T>` validate nothing at runtime. Drizzle-only defaults and update callbacks do
 not cover another writer. Choose database defaults or triggers when the contract must cover every write path.
 
-See [column types](https://orm.drizzle.team/docs/column-types) and [relations](https://orm.drizzle.team/docs/relations).
-
-### Query builder
-
-<!-- level: all -->
-
-Run no raw `sql` statement through `db.execute`; use `sql` only for a fragment inside the query builder.
-
 ## Authorized operations
 
 Select only the fields the caller may see. Apply resource and tenant restrictions in the query or an enforced policy. A
@@ -35,8 +27,6 @@ Scope writes to the authorized resource and verify affected rows. Bound growing 
 ordering with a unique tie-breaker. An absent filter differs from zero or false. Use a version predicate or an atomic
 expression for concurrent updates.
 
-See [queries](https://orm.drizzle.team/docs/select).
-
 ## Transactions and migrations
 
 Pass `tx` to every participating operation and await it before the transaction returns. Keep network calls and
@@ -47,6 +37,3 @@ After you change a schema, run `drizzle-kit generate`, and commit the migration 
 unintended drops, renames, constraints, grants, row-level security (RLS), and provider-owned
 objects. Keep one authoritative migration history; push schema changes only in disposable local experiments. Keep reads
 that must observe a write or current permissions on the primary.
-
-See [transactions](https://orm.drizzle.team/docs/transactions) and
-[migrations](https://orm.drizzle.team/docs/migrations).
