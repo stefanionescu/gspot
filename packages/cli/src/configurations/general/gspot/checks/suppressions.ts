@@ -46,13 +46,7 @@ function listSuppressionSyntaxes(scope: Scope, scopeFiles: TrackedFile[]): Suppr
         return {
             tool,
             covered: new Set(
-                readers.flatMap(({ files }) =>
-                    listCoveredFiles(files, scopeFiles, {
-                        configurations: scope.configurations,
-                        scopePath: scope.path,
-                        settings: scope.settings,
-                    }).map((file) => file.path),
-                ),
+                readers.flatMap(({ files }) => listCoveredFiles(files, scopeFiles, scope).map((file) => file.path)),
             ),
             marker: new RegExp(definition.marker, 'u'),
             inlineMarker: new RegExp(definition.inline_marker ?? definition.marker, 'u'),

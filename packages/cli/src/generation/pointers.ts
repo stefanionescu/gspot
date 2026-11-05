@@ -126,11 +126,9 @@ export function listPointerPaths(owner: ConfigOwner, config: Config): string[] {
         scopePath,
     );
     const isMatch = buildPathMatcher(pointer.folders);
-    const owned = listCoveredFiles(configuration.files, repository.files, {
-        configurations: scope.configurations,
-        scopePath: '',
-        settings: scope.settings,
-    }).filter((file) => isInScope(file.path, scopePath) && isOutsideChildScopes(file.path, children));
+    const owned = listCoveredFiles(configuration.files, repository.files, { ...scope, path: '' }).filter(
+        (file) => isInScope(file.path, scopePath) && isOutsideChildScopes(file.path, children),
+    );
     const folders = new Set(
         owned.flatMap(({ path }) => {
             const folder = findOutermostFolder(extractParentFolder(path), isMatch);

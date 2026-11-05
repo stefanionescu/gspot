@@ -101,9 +101,9 @@ export type ScopeFolder = {
 
 export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repository['attributes'] };
 
-export type CoveredFilesOptions = {
+export type CoverageScope = {
+    path: string;
     configurations: Configuration[];
-    scopePath: string;
     settings: { test_files: string[]; valuesByKey: Record<string, unknown> };
 };
 

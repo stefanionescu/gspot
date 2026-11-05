@@ -54,13 +54,7 @@ function listProjectMatches(
         configuration === undefined || isEveryFileRead
             ? scopeFiles
             : scopeFiles.filter((file) => !isGspotPath(file.path));
-    return owners === undefined
-        ? projectFiles
-        : listCoveredFiles(owners, projectFiles, {
-              configurations: scope.configurations,
-              scopePath,
-              settings: scope.settings,
-          });
+    return owners === undefined ? projectFiles : listCoveredFiles(owners, projectFiles, { ...scope, path: scopePath });
 }
 
 function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
@@ -124,11 +118,7 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
     if (check.reads_deleted_paths === true) return paths;
     const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
     if (owners === undefined) return paths;
-    const covered = listCoveredPaths(owners, paths, {
-        configurations: scope.configurations,
-        scopePath,
-        settings: scope.settings,
-    });
+    const covered = listCoveredPaths(owners, paths, { ...scope, path: scopePath });
     return stripIgnoredFiles(
         covered.map((path) => ({ path })),
         check,
@@ -235,11 +225,7 @@ export function listCheckedFiles(scopes: Scope[], planned: PlannedCheck): Tracke
             Array.isArray(values) ? values.length === 0 : !values,
         )
         ? files
-        : listCoveredFiles(owners, files, {
-              configurations: planned.scope.configurations,
-              scopePath: planned.scope.path,
-              settings: planned.scope.settings,
-          });
+        : listCoveredFiles(owners, files, planned.scope);
 }
 
 /**
@@ -310,12 +296,6 @@ export function listCheckFiles(planned: Pick<PlannedCheck, 'scope' | 'files'>, c
     return planned.scope.configurations.flatMap((configuration) =>
         configuration.checks
             .filter((check) => check.id === checkId)
-            .flatMap((check) =>
-                listCoveredFiles(check.files ?? configuration.files, planned.files, {
-                    configurations: planned.scope.configurations,
-                    scopePath: planned.scope.path,
-                    settings: planned.scope.settings,
-                }),
-            ),
+            .flatMap((check) => listCoveredFiles(check.files ?? configuration.files, planned.files, planned.scope)),
     );
 }

@@ -4,11 +4,11 @@ import { listPathTags } from '#cli/repository/files/classify.ts';
 import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts';
 import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { CoveredFilesOptions, TrackedFile } from '#cli/types/repository.ts';
+import type { CoverageScope, TrackedFile } from '#cli/types/repository.ts';
 
 function buildCoverageMatcher(
     table: Configuration['files'],
-    { configurations, scopePath, settings }: CoveredFilesOptions,
+    { configurations, path: scopePath, settings }: CoverageScope,
 ): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
     const isTestFile = buildPathMatcher(table.test_files ? settings.test_files : []);
     const defaults: Array<Configuration['files']> = [];
@@ -83,16 +83,16 @@ List the files that the patterns match in one scope, within its `kinds` and `lan
 
 @param table the file patterns.
 @param files the tracked inventory.
-@param options the scope to match in.
+@param scope the scope to match in.
 */
 export function listCoveredFiles(
     table: Configuration['files'],
     files: TrackedFile[],
-    options: CoveredFilesOptions,
+    scope: CoverageScope,
 ): TrackedFile[] {
-    const isCovered = buildCoverageMatcher(table, options);
+    const isCovered = buildCoverageMatcher(table, scope);
     return files.filter(
-        (file) => isInScope(file.path, options.scopePath) && table.kinds.includes(file.kind) && isCovered(file),
+        (file) => isInScope(file.path, scope.path) && table.kinds.includes(file.kind) && isCovered(file),
     );
 }
 
@@ -101,15 +101,11 @@ List the paths that the patterns match in one scope, for paths that have no file
 
 @param table the file patterns.
 @param paths the root-relative paths.
-@param options the scope to match in.
+@param scope the scope to match in.
 */
-export function listCoveredPaths(
-    table: Configuration['files'],
-    paths: string[],
-    options: CoveredFilesOptions,
-): string[] {
-    const isCovered = buildCoverageMatcher(table, options);
-    return paths.filter((path) => isInScope(path, options.scopePath) && isCovered({ path, tags: listPathTags(path) }));
+export function listCoveredPaths(table: Configuration['files'], paths: string[], scope: CoverageScope): string[] {
+    const isCovered = buildCoverageMatcher(table, scope);
+    return paths.filter((path) => isInScope(path, scope.path) && isCovered({ path, tags: listPathTags(path) }));
 }
 
 /**

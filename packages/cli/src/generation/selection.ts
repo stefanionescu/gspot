@@ -51,14 +51,7 @@ function listScopeConfigs(
                         configuration.files,
                         ...configuration.checks.flatMap((check) => check.files ?? []),
                         ...file.tool.flatMap((tool) => checkFiles.get(tool) ?? []).flatMap(({ files }) => files ?? []),
-                    ].some(
-                        (table) =>
-                            listCoveredFiles(table, ownFiles, {
-                                configurations: scope.configurations,
-                                scopePath: scope.path,
-                                settings: scope.settings,
-                            }).length > 0,
-                    ),
+                    ].some((table) => listCoveredFiles(table, ownFiles, scope).length > 0),
             )
             .map((config) => ({
                 config,

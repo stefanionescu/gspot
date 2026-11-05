@@ -36,11 +36,7 @@ async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise
     using workFolder = createTemporaryFolder();
     const owned = new Set(
         listSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>
-            listCoveredFiles(configuration.files, planned.files, {
-                configurations: planned.scope.configurations,
-                scopePath: planned.scope.path,
-                settings: planned.scope.settings,
-            })
+            listCoveredFiles(configuration.files, planned.files, planned.scope)
                 .filter((file) => file.kind === 'source')
                 .map((file) => file.path),
         ),
