@@ -38,6 +38,7 @@ function listCommandFindings(
     const kill = BROAD_KILL_COMMANDS.get(command.name);
     if (kill !== undefined)
         return [{ file: file.path, line: command.line, rule: SAFETY_RULES.broadKill, message: kill }];
+    if (file.functions.some(({ name }) => name === command.name)) return [];
     const form = findCommandForm(command, isAll);
     if (form !== undefined) return [{ file: file.path, line: command.line, ...form }];
     if (
@@ -45,7 +46,9 @@ function listCommandFindings(
         command.arguments.every((argument) => argument === undefined || !RECURSIVE_FLAG.test(argument))
     )
         return [];
-    const isCleanup = file.temporaryPaths.some((temporary) => temporary.cleanupLines.includes(command.line));
+    const isCleanup = file.temporaryPaths.some(
+        ({ cleanupLines, removalLines }) => cleanupLines.includes(command.line) || removalLines.includes(command.line),
+    );
     return isCleanup
         ? []
         : [

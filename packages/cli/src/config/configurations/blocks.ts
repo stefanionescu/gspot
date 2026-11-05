@@ -61,6 +61,12 @@ export const SCRIPT_NAMES_RULE = 'package-json/scripts-name-casing';
 
 export const PUBLISHED_PIN_OPTIONS = { forDependencyTypes: ['devDependencies'], rangeType: 'pin' } as const;
 
+export const PACKAGE_JSON_RULES = {
+    [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS],
+    [SCRIPT_NAMES_RULE]: 'error',
+    'package-json/valid-contributors': 'off',
+} as const;
+
 export const PRIVATE_PIN_OPTIONS = { rangeType: 'pin' } as const;
 
 export const GSPOT_RULE_PREFIX = 'gspot/';

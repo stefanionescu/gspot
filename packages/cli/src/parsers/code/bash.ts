@@ -161,7 +161,12 @@ function buildScriptTemporaryPaths(syntaxRoot: Node): ScriptTemporaryPaths {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined || !isTemporaryValue(assignment)) return [];
         const key = buildVariableKey(findFunctionNode(assignment)?.id, name);
-        const path: TemporaryPath = { name, line: assignment.startPosition.row + 1, cleanupLines: [] };
+        const path: TemporaryPath = {
+            name,
+            line: assignment.startPosition.row + 1,
+            cleanupLines: [],
+            removalLines: [],
+        };
         const isUnique = (locals.has(key) ? counts.get(key) : names.get(name)) === 1;
         if (isUnique) targets.set(key, path);
         return [path];
@@ -210,11 +215,20 @@ function listRemovedPaths(command: Node): Node[] {
     return targets;
 }
 
+function addDirectRemovals(commands: Node[], temporaryPaths: ScriptTemporaryPaths): void {
+    for (const command of commands) {
+        const owner = findFunctionNode(command)?.id;
+        const paths = listRemovedPaths(command).map((argument) => findTemporaryPath(argument, owner, temporaryPaths));
+        if (paths.length > 0 && paths.every((path) => path !== undefined))
+            for (const path of paths) path.removalLines.push(command.startPosition.row + 1);
+    }
+}
+
 function listTemporaryPaths(syntaxRoot: Node, commands: Node[], traps: TrapScript[]): TemporaryPath[] {
     const temporaryPaths = buildScriptTemporaryPaths(syntaxRoot);
-    const removedPaths: Removal[] = commands
-        .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND)
-        .map((command) => ({ line: command.startPosition.row + 1, paths: [] }));
+    const removers = commands.filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND);
+    const removedPaths: Removal[] = removers.map(({ startPosition }) => ({ line: startPosition.row + 1, paths: [] }));
+    addDirectRemovals(removers, temporaryPaths);
     for (const { trap, sourceRows, syntaxRoot: script } of traps) {
         const assigned = new Set(
             script

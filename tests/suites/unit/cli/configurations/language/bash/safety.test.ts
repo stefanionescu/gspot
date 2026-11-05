@@ -27,6 +27,16 @@ test('a recursive removal outside a mktemp cleanup trap is reported', async () =
     ]);
 });
 
+test('safety leaves a removal of a mktemp variable alone, and a function that shares a name with a command', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'source.sh':
+            '#!/usr/bin/env bash\nset -euo pipefail\ntimeout() {\n    echo "$1"\n}\nwork=$(mktemp -d)\nrm -rf "$work"\ntimeout 30\nrm -rf "$work/other"\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'bash/safety');
+    expect(findings.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([{ line: 9, rule: 'recursive-remove' }]);
+});
+
 test('a trap that removes another path is reported by script-layout as mktemp-trap and by safety as recursive-remove, and the right trap passes both', async () => {
     const options = buildRunOptions({ only: ['bash/script-layout', 'bash/safety'] });
     await using sandbox = await createGitSandbox({

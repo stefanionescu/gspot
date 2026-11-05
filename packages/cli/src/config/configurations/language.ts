@@ -75,7 +75,7 @@ export const MARKDOWNLINT_RULES = {
     MD020: true,
     MD033: false,
     MD024: { siblings_only: true },
-    MD026: { punctuation: '.,;:!?。，；：！？' },
+    MD026: { punctuation: '.,;:!。，；：！' },
     MD046: { style: 'fenced' },
     MD059: {
         prohibited_texts: [
@@ -137,6 +137,8 @@ export const TYPESCRIPT_RULES = {
     '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
     '@typescript-eslint/prefer-readonly': 'error',
     '@typescript-eslint/require-array-sort-compare': 'error',
+    'unicorn/require-array-sort-compare': 'off',
+    'unicorn/no-useless-coercion': 'off',
     '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
     '@typescript-eslint/no-unused-vars': [
         'error',

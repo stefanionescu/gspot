@@ -38,7 +38,7 @@ export type ScriptFunction = {
     assignments: number;
 };
 
-export type TemporaryPath = { name: string; line: number; cleanupLines: number[] };
+export type TemporaryPath = { name: string; line: number; cleanupLines: number[]; removalLines: number[] };
 
 export type ScriptTemporaryPaths = {
     paths: TemporaryPath[];

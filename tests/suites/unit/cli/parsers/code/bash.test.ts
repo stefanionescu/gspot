@@ -19,7 +19,8 @@ test.each([...MKTEMP_CLEANUP_CASES])(
     'only a trap that removes exactly the mktemp path counts as cleanup: $name',
     async ({ source, expected }) => {
         const parsed = await parseBashScript(source);
-        expect(parsed.temporaryPaths).toStrictEqual(expected);
+        const paths = parsed.temporaryPaths.map(({ name, line, cleanupLines }) => ({ name, line, cleanupLines }));
+        expect(paths).toStrictEqual(expected);
     },
 );
 
@@ -78,7 +79,7 @@ test.each([...FORWARDING_CALL_CASES])(
 
 test('continued trap commands and cleanup retain their original source rows', async () => {
     const parsed = await parseBashScript(CONTINUED_TRAP_SOURCE);
-    expect(parsed.temporaryPaths).toStrictEqual([{ name: 'tmp', line: 1, cleanupLines: [3] }]);
+    expect(parsed.temporaryPaths).toStrictEqual([{ name: 'tmp', line: 1, cleanupLines: [3], removalLines: [] }]);
     expect(parsed.commands.filter(({ name }) => name === 'rm')).toStrictEqual([
         { name: 'rm', arguments: ['-rf', '--', undefined], line: 3 },
     ]);

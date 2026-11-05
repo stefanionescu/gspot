@@ -10,15 +10,14 @@ import {
     NODE_RULES,
     NODE_RUNTIMES,
     PACKAGE_JSON_PATTERN,
+    PACKAGE_JSON_RULES,
     PIN_RANGES_RULE,
     PRESETS_AFTER_CONFIGURATIONS,
     PRESETS_BEFORE_CONFIGURATIONS,
     PRIVATE_PIN_OPTIONS,
-    PUBLISHED_PIN_OPTIONS,
     RESTRICTED_SYNTAX_RULE,
     ROOT_PACKAGE_JSON_RULES,
     RUNTIME_GLOBALS,
-    SCRIPT_NAMES_RULE,
     TEST_RULES,
 } from '#cli/config/configurations/blocks.ts';
 import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/eslint.ts';
@@ -266,7 +265,7 @@ export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlo
         {
             fields: {
                 files: [PACKAGE_JSON_PATTERN],
-                rules: { [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS], [SCRIPT_NAMES_RULE]: 'error' },
+                rules: PACKAGE_JSON_RULES,
             },
         },
         ...(privatePackages.length === 0
