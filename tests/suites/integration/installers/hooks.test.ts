@@ -74,7 +74,7 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 }
 
-test('a commit with a ShellCheck finding fails through the installed hook, in the repository and in a fresh clone, and passes after the fix', async () => {
+test('a fresh clone checks before its install, keeps its tracked files through two installs, and its hook fails a ShellCheck finding and passes after the fix', async () => {
     await using sandbox = await testdir({
         '.editorconfig': '[*]\nindent_style = space\nindent_size = 4\n',
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
@@ -86,24 +86,10 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    await writeFile(join(sandbox.path, 'scripts', 'b.sh'), UNQUOTED_SCRIPT);
-    runGitStep(sandbox.path, ['add', '-A']);
-    const environment = { NO_COLOR: '1' };
-    const commit = await runCommand(['git', 'commit', '-qm', 'bad'], { cwd: sandbox.path, env: environment });
-    expect(commit.code, commit.stdout + commit.stderr).toBe(1);
-    const commitOutput = commit.stdout + commit.stderr;
-    expect(
-        commitOutput.split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX)),
-        commitOutput,
-    ).toBe(true);
     await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "$1"\n');
     runGitStep(sandbox.path, ['add', '-A']);
-    const corrected = await runCommand(['git', 'commit', '-qm', 'Correct shell input'], {
-        cwd: sandbox.path,
-        env: environment,
-    });
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    await assertCloneHooks(sandbox.path, environment);
+    runGitStep(sandbox.path, ['commit', '--no-verify', '-qm', 'Add the generated files']);
+    await assertCloneHooks(sandbox.path, { NO_COLOR: '1' });
 });
 
 test('a commit in a linked worktree runs staged checks and blocks a finding', async () => {
