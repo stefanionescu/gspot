@@ -51,9 +51,9 @@ A finding is one problem that a check reports. To accept the findings that exist
 `gspot init`, and commit the `gspot.baseline.json` file that it writes. `gspot check` then fails only on new findings
 and on secrets.
 
-gspot starts at level `basic`, which turns on only the rules that rarely flag correct code. For stricter rules, add
-`--level all` to the init command. `gspot init` writes its files without asking, so run `gspot scan` first to see what
-init will change.
+gspot starts at level `basic`, which checks for bugs, security problems, code style, broken docs and config, formatting,
+and a reason on each suppression. For stricter rules, add `--level all` to the init command. `gspot init` writes its
+files without asking, so run `gspot scan` first to see what init will change.
 
 Commit `gspot.toml` and the files that `gspot init` wrote. In each new clone, install the dependencies first, then run
 `gspot install`.

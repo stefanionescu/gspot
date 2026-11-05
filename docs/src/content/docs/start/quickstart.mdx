@@ -60,9 +60,9 @@ installs the tools and turns on the Git hooks.
 From then on, the pre-commit hook checks the staged files before each commit, and the pre-push hook checks the pushed
 files before each push. CI stays off until you [turn it on](/use/ci/#turn-ci-on).
 
-gspot starts at level `basic`, which turns on only the rules that rarely flag correct code. For stricter checks, run
-`gspot init --level all`.
-[Levels](/start/concepts/#levels) compares the two levels.
+gspot starts at level `basic`, which checks for bugs, security problems, code style, broken docs and config, formatting,
+and a reason on each suppression. For stricter checks, run `gspot init --level all`. [Levels](/start/concepts/#levels)
+compares the two levels.
 
 ## Clean up the first findings
 
