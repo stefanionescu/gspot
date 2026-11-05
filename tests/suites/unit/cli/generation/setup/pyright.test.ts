@@ -19,13 +19,27 @@ test.each([
         'setup.py': 'VALUE = 5\n',
     });
     const { plan, settings } = await runInit(sandbox.path, ['--configurations', 'python']);
-    const unchecked = ['**/*.py', '**/*.pyi', '!src/app', '!src/app/**'];
+    const unchecked = ['**/*.py', '!src/app', '!src/app/**'];
     const reason = `Carried over from ${file}.`;
     expect(settings['ignore']).toContainEqual({ check: 'python/basedpyright', paths: unchecked, reason });
     expect(settings['ignore']).toContainEqual({ check: 'python/basedpyright', paths: ['src/app/legacy/**'], reason });
     expect(plan.carryover.find(({ path }) => path === file)).toMatchObject({
         tool: 'basedpyright',
         carried: [...unchecked, 'src/app/legacy/**'],
+    });
+});
+
+test('init carries a pyright include only for what the repository tracks, because gspot/unmatched-paths reports the rest', async () => {
+    await using sandbox = await createGitSandbox({
+        'pyrightconfig.json': '{"include": ["src/app", "typings"]}\n',
+        'src/app/main.py': 'VALUE = 1\n',
+        'stubs/app.pyi': 'VALUE: int\n',
+    });
+    const { settings } = await runInit(sandbox.path, ['--configurations', 'python']);
+    expect(settings['ignore']).toContainEqual({
+        check: 'python/basedpyright',
+        paths: ['**/*.py', '**/*.pyi', '!src/app', '!src/app/**'],
+        reason: 'Carried over from pyrightconfig.json.',
     });
 });
 

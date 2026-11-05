@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { NEGATED_PATTERN } from '#cli/config/configurations/structure.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { CARRYOVER_ROW_START, EMPTY_CARRYOVER, IGNORE_REASON_START } from '#cli/config/repository/setup.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
@@ -65,8 +66,9 @@ only its package keeps its tests out of the check.
 @param input the repository and the tools in use.
 @param input.repository the tracked files and the root.
 @param input.tools the tools that the configurations run.
+@param input.trackedPaths the tracked files and every folder above them.
 */
-export function readPyrightCarryover({ repository, tools }: CarryoverInput): CarryoverSection {
+export function readPyrightCarryover({ repository, tools, trackedPaths }: CarryoverInput): CarryoverSection {
     const found = tools.has('basedpyright') ? readPyrightOptions(repository.root) : undefined;
     if (found === undefined) return EMPTY_CARRYOVER;
     const tracked = repository.files.map((file) => file.path);
@@ -80,7 +82,7 @@ export function readPyrightCarryover({ repository, tools }: CarryoverInput): Car
                       const base = path.replace(TRAILING_SLASH, '');
                       return [`!${base}`, `!${base}/**`];
                   }),
-              ];
+              ].filter((selector) => trackedPaths.some(buildPathMatcher([selector.replace(NEGATED_PATTERN, '')])));
     const excluded = listExcludedPaths(found.exclude, tracked);
     const paths = [...unchecked, ...excluded];
     return {
