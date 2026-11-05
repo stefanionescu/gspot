@@ -94,6 +94,8 @@ test('a doc comment leaves out the parameters that say enough, and a @param line
             "export function count(value: string): number {\n    return value.split(' ').length;\n}\n",
             '/**\nWait for the host.\n\n@param timeout the limit, in seconds.\n*/',
             'export function wait(host: string, timeout: number): string {\n    return `${host}:${timeout}`;\n}\n',
+            '/**\nFetch a page.\n\n@param options what to fetch.\n@param options.timeout the limit, in seconds.\n*/',
+            'export function fetchPage({ url, timeout }: { url: string; timeout: number }): string {\n    return `${url}:${timeout}`;\n}\n',
         ].join('\n'),
     });
     const eslint = await buildEslint(sandbox.path);

@@ -133,7 +133,7 @@ const SECURITY_RULES = {
 
 const JSDOC_RULES = {
     'jsdoc/require-param-name': 'error',
-    'jsdoc/check-param-names': ['error', { disableMissingParamChecks: true }],
+    'jsdoc/check-param-names': ['error', { checkDestructured: false, disableMissingParamChecks: true }],
     'jsdoc/check-tag-names': 'error',
     'jsdoc/no-types': 'off',
     'jsdoc/match-name': [
