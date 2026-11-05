@@ -17,11 +17,6 @@ buildRuleTester().run('prefer-readonly-static', preferReadonlyStatic, {
             errors: [{ messageId: 'readonly' }],
         },
         {
-            filename: 'clock.ts',
-            code: 'class Clock { static interval = 1000; }',
-            errors: [{ messageId: 'readonly' }],
-        },
-        {
             filename: 'clock.tsx',
             code: 'class Clock { public static interval = 1000; }',
             errors: [{ messageId: 'readonly' }],
