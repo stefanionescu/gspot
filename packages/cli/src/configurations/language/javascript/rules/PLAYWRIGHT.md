@@ -4,16 +4,14 @@ Read this rule when you write or change a Playwright test.
 
 ## Tests
 
-- Give each test a coherent user journey with independent setup and observable assertions.
 - Query by role and accessible name such as `getByRole('button', { name: 'Submit' })`, then by label, placeholder, or
   text.
 - Assertions use the auto-retrying `expect(locator)` matchers. No manual polling loops.
 - A test never reads or writes production data. The base URL and credentials come from the project configuration for
   each environment.
 
-## Test data and page objects
+## Test data
 
-- Introduce page objects only when several tests repeat the same interactions.
 - Reuse isolated authentication state for tests that do not exercise login. Login tests verify the full authentication
   journey. Keep account state isolated between concurrent workers.
 
