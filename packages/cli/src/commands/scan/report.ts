@@ -19,6 +19,8 @@ import {
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { canIgnoreRule } from '#cli/engine/results.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { listPinPrerequisites } from '#cli/repository/javascript/gspot-pin.ts';
@@ -108,9 +110,12 @@ function formatRuleRows(rules: ScanCategory['rules']): string[] {
     const [largest] = rules;
     if (largest === undefined) return [];
     const { check, rule } = largest;
+    const found = listChecksById(readConfigurations().values()).get(check)?.check;
     return [
         ...rules.map((each) => `${each.check} ${each.rule}  ${formatCount(each.count, 'finding')}`),
-        `To leave a rule out: gspot ignore ${check} --rule ${rule} --reason "<why>"`,
+        found !== undefined && canIgnoreRule(found, selectCheckCode(found))
+            ? `To leave a rule out: gspot ignore ${check} --rule ${rule} --reason "<why>"`
+            : `To leave files out: gspot ignore ${check} --paths <path> --reason "<why>"`,
     ];
 }
 

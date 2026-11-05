@@ -39,6 +39,16 @@ function listSelectionArguments(selection: RunSelection): string[] {
 }
 
 /**
+Tell whether gspot ignore takes one rule of a check: its tool names rules in its output, or its code explains them.
+
+@param check the check that reports the rules.
+@param code the implementation of the check, if it has one.
+*/
+export function canIgnoreRule(check: Check, code: CheckCode | undefined): boolean {
+    return OUTPUT_FORMATS[check.output.format].namesRules(check.output) || code?.explanations !== undefined;
+}
+
+/**
 Tell whether a check has a rule catalog: rule explanations in its code, or a tool whose rules gspot reads. Only then
 can gspot explain one of its rules, or check a rule of an ignore against the rules that exist.
 

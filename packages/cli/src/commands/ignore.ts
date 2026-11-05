@@ -5,8 +5,7 @@ import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { hasRuleExplanations } from '#cli/engine/results.ts';
+import { canIgnoreRule, hasRuleExplanations } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { assertCheckExists, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
@@ -31,11 +30,7 @@ function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined
 function findRuleCheck({ settings }: Session, checkId: string): Check {
     const shippedCheck = listChecksById(readConfigurations().values()).get(checkId)?.check;
     const check = settings.commandChecks[checkId] ?? shippedCheck;
-    if (
-        check === undefined ||
-        (!OUTPUT_FORMATS[check.output.format].namesRules(check.output) &&
-            selectCheckCode(check)?.explanations === undefined)
-    )
+    if (check === undefined || !canIgnoreRule(check, selectCheckCode(check)))
         throw new GspotError(
             'arguments',
             `gspot cannot ignore one lint rule of ${checkId}. Leave out --rule, and give --paths to ignore the check for those files.`,

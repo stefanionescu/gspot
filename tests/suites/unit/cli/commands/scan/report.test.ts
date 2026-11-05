@@ -107,6 +107,43 @@ test('scan names the largest rules, takes examples from the largest, and groups 
     );
 });
 
+test('scan names paths in the ignore line of a check whose one rule gspot ignore refuses', async () => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const finding = {
+        check: 'gspot/suppressions',
+        file: 'a.py',
+        line: 1,
+        rule: 'ruff-no-reason',
+        message: 'This ruff suppression has no reason of two or more words.',
+        fixable: false,
+    };
+    const text = formatScanText(
+        buildScanReport({
+            planning,
+            session: planning.session,
+            report: {
+                ...SCAN_RUN_REPORT,
+                checks: [
+                    {
+                        check: finding.check,
+                        scope: '',
+                        status: 'failed' as const,
+                        fileCount: 1,
+                        duration: 1,
+                        findings: [finding],
+                    },
+                ],
+            },
+            toolBytes: 0,
+            ruleRows: [],
+            leftOut: [],
+        }),
+    );
+    expect(text).toContain('gspot ignore gspot/suppressions --paths <path> --reason "<why>"');
+    expect(text).not.toContain('gspot ignore gspot/suppressions --rule');
+});
+
 test.each(['data-files/taplo-format', 'bash/shfmt'])('scan counts a file of %s as formatting', async (check) => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
     const planning = await planInit(sandbox.path, { cwd: sandbox.path });
