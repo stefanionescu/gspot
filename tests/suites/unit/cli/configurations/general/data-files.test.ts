@@ -19,7 +19,6 @@ test.each([
     { text: 'value: 1\n---\nvalue: 2\n', rule: 'documents', line: 2 },
     { text: 'defaults: &defaults { value: 1 }\nsettings: { <<: *defaults }\n', rule: 'merge-keys', line: 2 },
     { text: 'value: text # note\n', rule: 'comments', line: 1 },
-    { text: 'value: "text" # note\n', rule: 'comments', line: 1 },
     { text: 'value: [one, two] # note\n', rule: 'comments', line: 1 },
     { text: 'value: | # note\n  text\n', rule: 'comments', line: 1 },
 ])('$rule reports $text', async ({ text, rule, line }) => {

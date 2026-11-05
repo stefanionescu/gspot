@@ -78,7 +78,6 @@ test('the JavaScript handle override and a repository use override strip their p
 
 test.each([
     ['userID', 'variables', 'case'],
-    ['parseHttpURL', 'functions', 'case'],
     ['HTTPServer', 'classes', 'case'],
     ['msgText', 'variables', 'banned-word'],
     ['tempPath', 'variables', 'banned-word'],

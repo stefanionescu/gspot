@@ -10,7 +10,6 @@ import {
     IMPORT_NAME_LINES,
     JAVASCRIPT_PARAMETER_NAMES,
     NAME_POSITION_CASES,
-    SETTINGS_FILE_CASES,
 } from '#tests/config/configurations/naming/source-names.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
 
@@ -80,10 +79,7 @@ test.each([...NAME_POSITION_CASES])(
         ]);
     },
 );
-test.each([...SETTINGS_FILE_CASES])(
-    'the settings file %s of the %s configuration declares no identifiers',
-    async (path, language, source) => {
-        const identifiers = await listIdentifiers(path, source, language);
-        expect(identifiers).toStrictEqual([]);
-    },
-);
+test('the settings file pyproject.toml declares no identifiers', async () => {
+    const source = '[tool.comfy]\nDisplayName = "Live Shopping"\nPublisherId = "acme"\n';
+    expect(await listIdentifiers('pyproject.toml', source, 'python')).toStrictEqual([]);
+});

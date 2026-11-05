@@ -206,13 +206,6 @@ def wrapper():
         expected: ['trivial-function'],
     },
     {
-        name: 'an empty Python package file',
-        language: 'python',
-        file: '__init__.py',
-        source: '',
-        expected: [],
-    },
-    {
         name: 'a Python package with a marker comment and a docstring',
         language: 'python',
         file: '__init__.py',

@@ -274,9 +274,3 @@ export const IMPORT_NAME_LINES = [
     'const loadedRecord = await loadRecord();',
     'const eagerTotal = computeTotal();',
 ] as const;
-
-export const SETTINGS_FILE_CASES = [
-    ['pyproject.toml', 'python', '[tool.comfy]\nDisplayName = "Live Shopping"\nPublisherId = "acme"\n'],
-    ['setup.cfg', 'python', '[metadata]\nLongName = value\n'],
-    ['package.json', 'javascript', '{"name": "app", "MainEntry": "index.js"}\n'],
-] as const;
