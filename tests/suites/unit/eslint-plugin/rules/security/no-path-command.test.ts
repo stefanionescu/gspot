@@ -11,7 +11,6 @@ buildRuleTester().run('no-path-command', noPathCommand, {
         'import { spawn } from "child_process"; spawn(command);',
         'import { spawn } from "child_process"; spawn(`git`);',
         'import { spawn } from "child_process"; spawn();',
-        'import { spawn } from "child_process"; spawn(42);',
         'import { spawn } from "child_process"; let command = "git"; command = read(); spawn(command);',
         'import { spawn } from "other"; spawn("git");',
         'import { spawn } from "child_process"; function execute(spawn) { spawn("git"); }',

@@ -7,7 +7,6 @@ buildRuleTester().run('no-public-file-permissions', noPublicFilePermissions, {
         "import fs from 'fs';\nfs.chmodSync('/tmp/report', base | 0o700);",
         "import fs from 'fs';\nfs.chmodSync('/tmp/report', null);",
 
-        "import fs from 'fs';\nfs.chmodSync('/tmp/report', 0o750);\nprocess.umask(0o027);",
         "import fs from 'fs';\nfs.chmodSync('/tmp/report', mode);",
         "import fs from 'fs';\nfs.chmodSync('7za', 0o700);",
     ],

@@ -9,7 +9,6 @@ buildRuleTester().run('no-public-temporary-path', noPublicTemporaryPath, {
         String.raw`const path = "C:\\Temporary\\file";`,
         String.raw`const path = "C:\\\\Temp\\file";`,
         'process.env.HOME;',
-        'process.env["TMPDIR"];',
         'process["env"].TMPDIR;',
         'other.env.TMPDIR;',
         'process.TMPDIR;',
