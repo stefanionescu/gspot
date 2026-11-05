@@ -3,7 +3,6 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -20,38 +19,10 @@ import {
 } from '#tests/config/configurations/language.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-test('typescript/tsc resolves a types entry from the folder of the tsconfig of a scope', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], { scopes: [{ path: 'site' }] }),
-        '.gitignore': 'node_modules/\n',
-        'site/tsconfig.json': '{"compilerOptions":{"strict":true,"types":["local-types/client"]}}',
-        'site/node_modules/local-types/client.d.ts': 'declare const fromTypes: number;\n',
-        'site/entry.ts': 'export const copy = fromTypes;\n',
-    });
-    const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['typescript/tsc'] }));
-    expect(report.checks.find(({ scope }) => scope === 'site')).toMatchObject({ status: 'passed', findings: [] });
-});
-
-test('typescript/tsc adds a note when a missing module is a package of this repository', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript']),
-        'package.json': '{"name":"root","private":true,"workspaces":["packages/*"]}',
-        'tsconfig.json': STRICT_TSCONFIG_TEXT,
-        'packages/shared/package.json': '{"name":"@example/shared","exports":"./dist/index.js"}',
-        'entry.ts': 'import { value } from "@example/shared/values";\n\nexport const copy: number = value;\n',
-    });
-    const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['typescript/tsc'] }));
-    expect(report.checks[0]).toMatchObject({
-        status: 'failed',
-        note: expect.stringContaining('@example/shared is a package of this repository') as string,
-    });
-});
 
 test.each([...TSCONFIG_READ_ERRORS])(
     '$name is an unreadable finding that names the file, not missing options',

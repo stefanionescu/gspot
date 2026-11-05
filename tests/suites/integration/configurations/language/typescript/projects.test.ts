@@ -139,3 +139,41 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     const files = await readdir(join(sandbox.path, 'app'));
     expect(files.toSorted(compareText)).toStrictEqual(['tsconfig.json', 'value.ts']);
 });
+
+test('typescript/tsc adds a note when a missing module is a package of this repository', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        '.gitignore': 'node_modules/\n',
+        'package.json': '{"name":"root","private":true,"workspaces":["packages/*"]}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"module":"esnext","moduleResolution":"bundler"}}',
+        'packages/shared/package.json': '{"name":"@example/shared","exports":"./dist/index.js"}',
+        'entry.ts': 'import { value } from "@example/shared/values";\n\nexport const copy: number = value;\n',
+    });
+    await linkTypescript(join(sandbox.path, 'node_modules'));
+    commitAll(sandbox.path);
+    await applyGeneratedFiles(sandbox.path);
+    const { report } = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']),
+    );
+    expect(report.checks[0]).toMatchObject({
+        status: 'failed',
+        note: expect.stringContaining('@example/shared is a package of this repository') as string,
+    });
+});
+
+test('typescript/tsc resolves a types entry from the folder of the tsconfig of a scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { scopes: [{ path: 'site' }] }),
+        '.gitignore': 'node_modules/\n',
+        'site/tsconfig.json': '{"compilerOptions":{"strict":true,"types":["local-types/client"]}}',
+        'site/node_modules/local-types/client.d.ts': 'declare const fromTypes: number;\n',
+        'site/entry.ts': 'export const copy = fromTypes;\n',
+    });
+    await linkTypescript(join(sandbox.path, 'node_modules'));
+    commitAll(sandbox.path);
+    await applyGeneratedFiles(sandbox.path);
+    const { report } = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']),
+    );
+    expect(report.checks.find(({ scope }) => scope === 'site')).toMatchObject({ status: 'passed', findings: [] });
+});
