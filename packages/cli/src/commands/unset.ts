@@ -52,6 +52,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
         cache: edit.cache,
         listing: edit.listing,
         edit: input,
+        previous: edit.session,
         ...formatUnsetSummary(key, keys, scopePath),
     });
 }

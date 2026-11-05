@@ -78,15 +78,6 @@ function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
         : { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
 }
 
-function findEmptySetting(settings: Settings, scope: Scope, check: Check): string | undefined {
-    const setting = check.when?.setting;
-    if (setting === undefined || !isSettingEmpty(scope.settings.valuesByKey[setting])) return undefined;
-    const isSetInScope =
-        isRepositoryRun(check) &&
-        settings.scopes.values().some(({ written }) => !isSettingEmpty(findValueAt(written, setting.split('.'))));
-    return isSetInScope ? undefined : setting;
-}
-
 function findConfigSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     const tool = check.when?.config_file;
     if (tool === undefined) return undefined;
@@ -170,6 +161,37 @@ export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip 
         findConditionSkip(check, session.repository) ??
         findSystemSkip(check.check, check.tool, host)
     );
+}
+
+/**
+Find the setting whose empty value turns a check off.
+
+@param settings the repository settings.
+@param scope the scope that runs the check.
+@param check the check to read.
+@returns undefined when the check has no such setting, or the setting holds a value.
+*/
+export function findEmptySetting(settings: Settings, scope: Scope, check: Check): string | undefined {
+    const setting = check.when?.setting;
+    if (setting === undefined || !isSettingEmpty(scope.settings.valuesByKey[setting])) return undefined;
+    const isSetInScope =
+        isRepositoryRun(check) &&
+        settings.scopes.values().some(({ written }) => !isSettingEmpty(findValueAt(written, setting.split('.'))));
+    return isSetInScope ? undefined : setting;
+}
+
+/**
+Tell whether a setting changes nothing at this level: every check that reads it is off, and at least one exists.
+
+@param settings the repository level and ignores.
+@param scope the selected configurations and settings of one folder.
+@param key the setting to look up.
+*/
+export function isSettingUnread(settings: Settings, scope: Scope, key: string): boolean {
+    if (key.startsWith('limits.')) return listSettingReaders(settings, scope, key).every(({ enabled }) => !enabled);
+    const owner = scope.configurations.find((configuration) => key.startsWith(`${configuration.name}.`));
+    const checks = owner?.checks ?? [];
+    return checks.length > 0 && settings.level !== 'all' && checks.every((check) => check.level === 'all');
 }
 
 /**

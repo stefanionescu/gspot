@@ -263,3 +263,14 @@ test('set replaces the written values of an ordinary list', async () => {
     const contents = findValueAt(written, ['naming', 'banned_words']);
     expect(contents).toStrictEqual(['secondword']);
 });
+
+test('unset says when an empty list turns a check off, and unset of a shipped value says nothing', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }),
+    });
+    const unset = await runGspot(sandbox.path, ['unset', 'licenses.allowed']);
+    expect(unset.code, unset.stdout + unset.stderr).toBe(0);
+    expect(unset.stdout).toContain('This turns off licenses/allowed.');
+    const again = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
+    expect(again.stdout).not.toContain('This turns off');
+});

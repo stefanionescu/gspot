@@ -124,7 +124,8 @@ const configurationTables = {
             client_schemas: nonemptyStringsSchema.default([]).meta({
                 leftOut: 'repository',
                 configurations: ['postgres'],
-                description: 'The schemas clients reach, where every table needs row level security.',
+                description:
+                    'The schemas clients reach, where every table needs row level security. Empty turns the check off.',
             }),
             frozen_through: z
                 .union([z.enum([FROZEN_NONE, FROZEN_ALL]), z.string().regex(FROZEN_VERSION)])

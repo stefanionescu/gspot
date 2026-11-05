@@ -11,6 +11,7 @@ import { CHECK_LIST_SEPARATOR, EMPTY_CHECKS_MESSAGE } from '#cli/config/commands
 import { BASELINE_EXEMPT_CHECK, BASELINE_STAGES } from '#cli/config/engine.ts';
 import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { findEmptySetting } from '#cli/engine/skips.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatApplyReport, listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listCheckIds } from '#cli/manifests/read.ts';
@@ -43,6 +44,15 @@ import type { ApplyReport } from '#cli/types/generation.ts';
 import type { AvailableSettings, Scope, SettingMatch, Settings, SettingsEdit, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult, Files } from '#cli/types/system.ts';
 import type { Generation, Session } from '#cli/types/tools.ts';
+
+function listTurnedOffNotes(previous: Session | undefined, session: Session): string[] {
+    if (previous === undefined) return [];
+    const turnedOff = previous.configuredChecks.filter(({ check, scope }) => {
+        const next = session.scopes.find(({ path }) => path === scope.path);
+        return next !== undefined && findEmptySetting(session.settings, next, check) !== undefined;
+    });
+    return [...new Set(turnedOff.map(({ check }) => `This turns off ${check.id}.`))];
+}
 
 async function writeEditedFiles(
     session: Session,
@@ -303,6 +313,7 @@ export async function writeSettingsEdit(
         ...(await listInstallNotes(session, generated, report)),
         ...(options.notes ?? []),
         ...listBaselineNotes(root, { previous: options.previous, session }),
+        ...listTurnedOffNotes(options.previous, session),
     );
     const written = report.written.length + report.updated.length + report.deleted.length;
     if (written === 0 && !result.changed)

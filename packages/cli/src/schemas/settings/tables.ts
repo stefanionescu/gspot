@@ -190,7 +190,7 @@ export const licensesSchema = z.strictObject({
         .default([])
         .meta({
             configurations: ['licenses'],
-            description: 'The SPDX license IDs a dependency may report.',
+            description: 'The SPDX license IDs a dependency may report. Empty turns the check off.',
         }),
     allowed_package: allowedPackageSchema
         .array()
