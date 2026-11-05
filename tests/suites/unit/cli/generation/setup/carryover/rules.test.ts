@@ -144,6 +144,7 @@ test('init compares the rules that the commitlint of the repository prints', asy
             'header-max-length': [2, 'always', 100],
             'subject-case': [2, 'always', 'lower-case'],
             'body-max-length': [2, 'always', 900],
+            'type-enum': [2, 'always', ['special']],
         },
     };
     await mkdir(join(sandbox.path, 'node_modules/.bin'), { recursive: true });
@@ -158,7 +159,7 @@ test('init compares the rules that the commitlint of the repository prints', asy
         covered: 1,
         carried: ['subject-case', 'ignore body-leading-blank', 'ignore header-max-length'],
         reasons: [],
-        dropped: ['body-max-length'],
+        dropped: ['body-max-length', 'type-enum'],
     });
 });
 

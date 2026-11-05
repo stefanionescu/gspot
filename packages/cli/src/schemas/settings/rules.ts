@@ -15,10 +15,20 @@ import { allowReasonedValue, nonemptyStringsSchema, relativePathSchema } from '#
 import { getRequired, isTable } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 
+const COMMITLINT_ENUM_SETTINGS = new Map([
+    ['type-enum', 'commits.types'],
+    ['scope-enum', 'commits.scopes'],
+]);
+
 const commitlintValuesSchema = z.record(
     z.string().superRefine((name, context) => {
+        const setting = COMMITLINT_ENUM_SETTINGS.get(name);
+        if (setting !== undefined) {
+            context.addIssue({ code: 'custom', message: `Set ${setting} instead.` });
+            return;
+        }
         const { commitlint } = getRequired(readConfigurations(), 'commits', 'configuration');
-        const names = [...Object.keys(commitlint.rules), 'type-enum', 'scope-enum'];
+        const names = Object.keys(commitlint.rules);
         if (names.includes(name)) return;
         context.addIssue({
             code: 'custom',

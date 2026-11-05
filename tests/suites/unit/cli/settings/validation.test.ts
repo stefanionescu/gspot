@@ -92,6 +92,16 @@ test.each(['ordinary', 'constructor'])(
     },
 );
 
+test.each([
+    { rule: 'type-enum', setting: 'commits.types' },
+    { rule: 'scope-enum', setting: 'commits.scopes' },
+])('tools.commitlint.rules refuses $rule and names $setting', ({ rule, setting }) => {
+    using sandbox = createTemporaryFolder();
+    const text = `configurations = ["commits"]\n[tools.commitlint.rules]\n${rule} = ["always", ["feat"]]\n`;
+    expect(validateSettingsText(text)).toStrictEqual([`gspot.toml:3: tools.commitlint.rules.${rule}`]);
+    expect(() => readSettings(text, sandbox.path)).toThrow(`Set ${setting} instead.`);
+});
+
 test.each([...REFUSED_RULE_OPTIONS])(
     '$tool rule settings refuse a severity with one line that names gspot ignore: $toml',
     ({ configuration, toml, where, command }) => {
