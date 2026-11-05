@@ -125,16 +125,26 @@ test.each([...LINKED_HOOK_FILES])('a linked $path counts as $kind configuration'
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '-q']);
     await symlink('../outside/configuration', join(root, path));
+    await writeFile(join(root, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
+    await chmod(join(root, '.git/hooks/pre-commit'), 0o755);
     const { hooks } = await readHooks({ root: root });
-    expect(hooks).toStrictEqual([{ kind, path, files: [] }]);
+    expect(hooks).toStrictEqual([
+        { kind, path, files: [] },
+        { kind: 'hooksPath', path: '.git/hooks', files: ['pre-commit'] },
+    ]);
 });
 
 test.each([...SIMPLE_GIT_HOOKS_PACKAGES])(
     'hook discovery reads simple-git-hooks from the package.json key: $text',
     async ({ text, hooks }) => {
         await using sandbox = await createGitSandbox({ 'package.json': text });
+        await writeFile(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
+        await chmod(join(sandbox.path, '.git/hooks/pre-commit'), 0o755);
         const discovered = await readHooks({ root: sandbox.path });
-        expect(discovered.hooks).toStrictEqual([...hooks]);
+        expect(discovered.hooks).toStrictEqual([
+            ...hooks,
+            { kind: 'hooksPath', path: '.git/hooks', files: ['pre-commit'] },
+        ]);
     },
 );
 

@@ -55,9 +55,13 @@ To turn them off, run `gspot set hooks.enabled false`. gspot then deletes `.gspo
 
 ## Existing hook managers
 
-If Husky, Lefthook, or a hooks folder of your own already runs your Git hooks, gspot keeps those hooks. gspot counts a
-`.husky` folder only while `core.hooksPath` points into it, as Husky sets it. gspot then does not set
-`core.hooksPath`. Instead, it prints one line for each hook. Add each line to the hook of the same name:
+If Husky, Lefthook, pre-commit, `simple-git-hooks`, or a hooks folder of your own already runs your Git hooks, gspot
+keeps those hooks and does not set `core.hooksPath`. A config file alone runs nothing, so Lefthook, pre-commit, and
+`simple-git-hooks` count only when `.git/hooks` holds an executable hook, and a `.husky` folder counts only while
+`core.hooksPath` points into it. Otherwise, `gspot install` turns the gspot hooks on.
+
+`gspot install` prints what to add, and a hook without it runs no gspot checks. For a hook folder or `simple-git-hooks`,
+add each line to the hook of the same name:
 
 ```shell
 # pre-commit
@@ -68,7 +72,52 @@ If Husky, Lefthook, or a hooks folder of your own already runs your Git hooks, g
 .gspot/hooks/commit-msg "$@"
 ```
 
-Use the exact lines that gspot prints. A hook without its line runs no gspot checks.
+Lefthook passes no push input to a command without `use_stdin`, so add this to `lefthook.yml`:
+
+```yaml
+pre-commit:
+  commands:
+    gspot:
+      run: .gspot/hooks/pre-commit
+pre-push:
+  commands:
+    gspot:
+      run: .gspot/hooks/pre-push {0}
+      use_stdin: true
+commit-msg:
+  commands:
+    gspot:
+      run: .gspot/hooks/commit-msg {1}
+```
+
+pre-commit passes no push input to any hook, so the push checks run from `.git/hooks/pre-push`. Add this to the `repos`
+of `.pre-commit-config.yaml`:
+
+```yaml
+- repo: local
+  hooks:
+    - id: gspot-pre-commit
+      name: gspot pre-commit
+      entry: .gspot/hooks/pre-commit
+      language: system
+      always_run: true
+      pass_filenames: false
+      stages: [pre-commit]
+    - id: gspot-commit-msg
+      name: gspot commit-msg
+      entry: .gspot/hooks/commit-msg
+      language: system
+      always_run: true
+      stages: [commit-msg]
+```
+
+Then run these commands. Each clone needs them, because `.git/hooks` is not tracked:
+
+```shell
+pre-commit install --hook-type pre-commit --hook-type commit-msg
+printf '#!/bin/sh\n.gspot/hooks/pre-push "$@"\n' > .git/hooks/pre-push
+chmod +x .git/hooks/pre-push
+```
 
 ## Test a hook
 

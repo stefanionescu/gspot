@@ -76,7 +76,16 @@ async function readHooksPathSetup(root: string, hooksPath: string): Promise<Repo
     ];
 }
 
-async function listHookSetups(root: string, hooksPath: string): Promise<RepositorySetup['hooks']> {
+async function listHookFolders(root: string, hooksPath: string): Promise<RepositorySetup['hooks']> {
+    return [
+        ...(await readHooksPathSetup(root, hooksPath)),
+        ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(root, folder, hooksPath)).filter(
+            (hook) => hook !== undefined,
+        ),
+    ];
+}
+
+function listHookTools(root: string): RepositorySetup['hooks'] {
     const packageJson = readPackageJson(root, PACKAGE_JSON);
     const isPackageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const hookNames = [
@@ -90,10 +99,6 @@ async function listHookSetups(root: string, hooksPath: string): Promise<Reposito
     const present = hookNames.filter((name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
-        ...(await readHooksPathSetup(root, hooksPath)),
-        ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(root, folder, hooksPath)).filter(
-            (hook) => hook !== undefined,
-        ),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes(PRE_COMMIT_FILE)
             ? [{ kind: 'pre-commit' as const, path: PRE_COMMIT_FILE, files: [] }]
@@ -127,8 +132,8 @@ async function listGitFolderHooks(root: string): Promise<RepositorySetup['hooks'
 
 /**
 Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings. A
-`.husky` folder runs only while core.hooksPath points into it, as Husky sets it, so a clone that never installed
-Husky gets the gspot hooks.
+`.husky` folder runs only while core.hooksPath points into it, as Husky sets it, and a hook manager runs only after its
+own install wrote a hook for Git, so a clone that never installed one gets the gspot hooks.
 
 @param repository the repository to read
 */
@@ -138,9 +143,13 @@ export async function readHooks(repository: Pick<Repository, 'root'>): Promise<R
     const hooksPath = convertToPosixPath(relative(root, resolve(root, written ?? '')));
     const isHusky = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
     const isOwn = hooksPath === GSPOT_PATHS.hooks || isHusky;
-    const setups = await listHookSetups(root, isOwn ? '' : hooksPath);
-    const hooks = setups.filter((hook) => isHusky || hook.kind !== 'husky');
-    if (written === undefined) hooks.push(...(await listGitFolderHooks(root)));
+    const folders = await listHookFolders(root, isOwn ? '' : hooksPath);
+    const gitHooks = await listGitFolderHooks(root);
+    const hooks = [
+        ...folders.filter((hook) => isHusky || hook.kind !== 'husky'),
+        ...(gitHooks.length === 0 ? [] : listHookTools(root)),
+        ...(written === undefined ? gitHooks : []),
+    ];
     return { hooksPath, hooks };
 }
 

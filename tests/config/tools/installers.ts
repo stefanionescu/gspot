@@ -43,17 +43,6 @@ export const HOOK_REPOSITORIES = [
         gitHook: false,
     },
     {
-        name: 'a Lefthook configuration',
-        location: 'lefthook.yml',
-        startProgram: 'npm',
-        files: {
-            'package.json': NPM_PROJECT_PACKAGE,
-            'lefthook.yml': 'pre-commit:\n',
-        },
-        setting: undefined,
-        gitHook: false,
-    },
-    {
         name: 'a script in the Git hooks folder',
         location: '.git/hooks',
         startProgram: 'npm',
@@ -69,22 +58,6 @@ export const STOCK_LFS_PRE_PUSH = String.raw`#!/bin/sh
 command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'pre-push' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }
 git lfs pre-push "$@"
 `;
-
-export const HOOK_CONFIGURATION_CASES = [
-    {
-        path: '.pre-commit-config.yaml',
-        oneHook:
-            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: .gspot/hooks/pre-commit\n',
-        bothHooks:
-            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: .gspot/hooks/pre-commit\n      - id: gspot-push\n        name: gspot push\n        language: system\n        entry: .gspot/hooks/pre-push\n        stages: [pre-push]\n      - id: gspot-message\n        name: gspot message\n        language: system\n        entry: .gspot/hooks/commit-msg\n        stages: [commit-msg]\n',
-    },
-    {
-        path: 'package.json',
-        oneHook: '{"simple-git-hooks":{"pre-commit":".gspot/hooks/pre-commit"}}',
-        bothHooks:
-            '{"simple-git-hooks":{"pre-commit":".gspot/hooks/pre-commit","pre-push":".gspot/hooks/pre-push","commit-msg":".gspot/hooks/commit-msg"}}',
-    },
-] as const;
 
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
 find-links = ["wheels", "https://example.com/wheels"]

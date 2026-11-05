@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
+import { PRE_COMMIT_FILE } from '#cli/config/repository/setup.ts';
 import {
     CHECK_HOOKS,
     HOOK_CHECKS,
@@ -20,16 +21,61 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
 import type { HookName, HookPlan, HookStatus, ScopeCheck, Session } from '#cli/types/tools.ts';
 
+const PRE_PUSH_HOOK = 'pre-push';
+
+function describePreCommitLines(names: HookName[]): string {
+    const entries = names.filter((name) => name !== PRE_PUSH_HOOK);
+    const hookTypes = entries.map((name) => `--hook-type ${name}`).join(' ');
+    const pushLines = names.includes(PRE_PUSH_HOOK)
+        ? [
+              'pre-commit keeps the push input from its hooks, so add this line to .git/hooks/pre-push instead:',
+              `  ${GSPOT_PATHS.hooks}/${PRE_PUSH_HOOK} "$@"`,
+          ]
+        : [];
+    return [
+        `add this to the repos of ${PRE_COMMIT_FILE}:`,
+        '  - repo: local',
+        '    hooks:',
+        ...entries.flatMap((name) => [
+            `      - id: gspot-${name}`,
+            `        name: gspot ${name}`,
+            `        entry: ${GSPOT_PATHS.hooks}/${name}`,
+            '        language: system',
+            '        always_run: true',
+            ...(name === 'commit-msg' ? [] : ['        pass_filenames: false']),
+            `        stages: [${name}]`,
+        ]),
+        `Then run pre-commit install ${hookTypes}.`,
+        ...pushLines,
+    ].join('\n');
+}
+
+function formatLefthookEntry(name: HookName): string[] {
+    const command = `${GSPOT_PATHS.hooks}/${name}`;
+    const runLines = {
+        'pre-commit': [`      run: ${command}`],
+        'pre-push': [`      run: ${command} {0}`, '      use_stdin: true'],
+        'commit-msg': [`      run: ${command} {1}`],
+    }[name];
+    return [`  ${name}:`, '    commands:', '      gspot:', ...runLines.map((line) => `  ${line}`)];
+}
+
+function describeHookLines(hooks: RepositorySetup['hooks'], names: HookName[]): string {
+    if (hooks.some((hook) => hook.kind === 'pre-commit')) return describePreCommitLines(names);
+    const lefthook = hooks.find((hook) => hook.kind === 'lefthook');
+    if (lefthook !== undefined)
+        return [`add this to ${lefthook.path}:`, ...names.flatMap((name) => formatLefthookEntry(name))].join('\n');
+    const lines = names.map((name) => `  ${name}: ${GSPOT_PATHS.hooks}/${name} "$@"`);
+    return ['add these gspot lines to them:', ...lines].join('\n');
+}
+
 function describeForeignHooks(
     hooks: RepositorySetup['hooks'],
     session: Session,
 ): Required<Pick<HookStatus, 'lines' | 'text'>> {
-    const lines = listHookNames(session.configuredChecks).map((name) => `${name}: ${GSPOT_PATHS.hooks}/${name} "$@"`);
-    const indented = lines.map((line) => `  ${line}`).join('\n');
-    return {
-        lines,
-        text: `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${indented}`,
-    };
+    const instructions = describeHookLines(hooks, listHookNames(session.configuredChecks));
+    const text = `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; ${instructions}`;
+    return { lines: [text], text };
 }
 
 async function planHooks(session: Session): Promise<HookPlan> {
@@ -58,6 +104,7 @@ function listBrokenHooks(root: string, names: HookName[]): string[] {
 }
 
 function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], name: HookName): boolean {
+    if (hook.kind === 'pre-commit' && name === PRE_PUSH_HOOK) return false;
     const paths = HOOK_FOLDER_KINDS.has(hook.kind)
         ? hook.files.filter((file) => file === name).map((file) => resolve(root, hook.path, file))
         : [resolve(root, hook.path)];
@@ -101,8 +148,13 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
             : { ready: false, tool: 'gspot', lines: broken, text: `not ready; ${broken.join(' ')}` };
     }
     if (foreign.length > 0) {
+        const installed = new Set(foreign.filter((hook) => hook.kind === 'hooksPath').flatMap((hook) => hook.files));
         const isReady = listHookNames(session.configuredChecks).every((name) =>
-            foreign.some((hook) => hasHookCommand(repository.root, hook, name)),
+            foreign.some(
+                (hook) =>
+                    hasHookCommand(repository.root, hook, name) &&
+                    (HOOK_FOLDER_KINDS.has(hook.kind) || installed.has(name)),
+            ),
         );
         const tool = foreign.map((hook) => hook.kind).join(', ');
         if (isReady) return { ready: isReady, tool, text: `run from ${foreign.map((hook) => hook.path).join(', ')}` };

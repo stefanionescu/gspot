@@ -117,10 +117,7 @@ async function warnMissingHooks(session: Session, revision: RevisionSource | und
     if (revision?.selection.content === 'commit') return;
     const hooks = await readHookStatus(session, { root: session.toolsRoot });
     if (hooks.ready) return;
-    const lines =
-        hooks.tool === 'gspot'
-            ? (hooks.lines ?? [])
-            : ['The Git hooks are not installed in this clone. Run gspot install.'];
+    const lines = hooks.lines ?? ['The Git hooks are not installed in this clone. Run gspot install.'];
     for (const line of lines) printWarning(line);
 }
 

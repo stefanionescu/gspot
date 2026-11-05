@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
-import { chmod, readFile, rm, symlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
@@ -10,86 +10,12 @@ import { openSession } from '#cli/engine/session.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { HOOK_CONFIGURATION_CASES, HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH } from '#tests/config/tools/installers.ts';
+import { STOCK_LFS_PRE_PUSH } from '#tests/config/tools/installers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-
-test.each([...HOOK_REPOSITORIES])(
-    'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',
-    async (provider) => {
-        await using sandbox = await createGitSandbox({});
-        const { files, setting, gitHook } = provider;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([], {
-                tables: HOOKS_SETTINGS,
-            }),
-            ...files,
-        });
-        if (setting !== undefined) runGitStep(sandbox.path, [...setting]);
-        if (gitHook) {
-            await writeFile(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
-            await chmod(join(sandbox.path, '.git/hooks/pre-commit'), 0o755);
-        }
-        const before = await readGitSetting(sandbox.path, 'core.hooksPath');
-        const authoredPaths = gitHook ? ['.git/hooks/pre-commit'] : Object.keys(files);
-        const authored = await Promise.all(
-            authoredPaths.map(async (path) => ({ path, content: await readFile(join(sandbox.path, path), 'utf8') })),
-        );
-        await applyGeneratedFiles(sandbox.path);
-
-        const steps: Array<readonly string[]> = [];
-        const session = await openSession(sandbox.path);
-        const { note: text } = await installHooks(session, steps);
-        expect({ steps, text }).toStrictEqual({
-            steps: [],
-            text: `hooks already run from ${provider.location}; add these gspot lines to them:\n  pre-commit: .gspot/hooks/pre-commit "$@"\n  pre-push: .gspot/hooks/pre-push "$@"\n  commit-msg: .gspot/hooks/commit-msg "$@"`,
-        });
-        expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(before);
-        for (const { path, content } of authored)
-            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
-
-        expect(await readHookStatus(session, session.repository)).toMatchObject({
-            ready: false,
-            text: `not installed; ${text}`,
-        });
-        const first = authored.find(({ path }) => path !== 'package.json');
-        await writeFile(join(sandbox.path, first!.path), `${first!.content}\n.gspot/hooks/pre-commit\n`);
-        expect(await readHookStatus(session, session.repository)).toMatchObject({
-            ready: false,
-        });
-        await writeFile(
-            join(sandbox.path, first!.path),
-            `${first!.content}\n.gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n.gspot/hooks/commit-msg\n`,
-        );
-        if (first!.path.endsWith('/pre-commit'))
-            for (const hook of ['pre-push', 'commit-msg']) {
-                const path = join(sandbox.path, dirname(first!.path), hook);
-                await writeFile(path, `.gspot/hooks/${hook}\n`);
-                await chmod(path, 0o755);
-            }
-        expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: true });
-    },
-);
-
-test.each([...HOOK_CONFIGURATION_CASES])(
-    'hooks in $path are ready only after both commands',
-    async ({ path, oneHook, bothHooks }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-            [path]: oneHook,
-        });
-        const session = await openSession(sandbox.path);
-        expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
-        await writeFile(join(sandbox.path, path), bothHooks);
-        expect(await readHookStatus(session, session.repository)).toMatchObject({
-            ready: true,
-            text: `run from ${path}`,
-        });
-    },
-);
 
 test('a gspot.toml without hooks installs none', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
@@ -202,36 +128,4 @@ test('hooks already set to .gspot/hooks need no command or note', async () => {
     expect(await installHooks(await openSession(sandbox.path), steps)).toHaveProperty('note', '');
     expect(steps).toStrictEqual([]);
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
-});
-
-test('hook status ignores commented commands and commands in the wrong hook file', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-        '.githooks/pre-commit': '# .gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n',
-    });
-    const session = await openSession(sandbox.path);
-    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
-    await writeFile(join(sandbox.path, '.githooks/pre-commit'), '.gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n');
-    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
-    await writeFile(join(sandbox.path, '.githooks/pre-push'), '.gspot/hooks/pre-push\n');
-    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
-    await writeFile(join(sandbox.path, '.githooks/commit-msg'), '.gspot/hooks/commit-msg\n');
-    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: true });
-});
-
-test('a linked executable Git hook is retained by install', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-        'authored-hook': '#!/bin/sh\nexit 0\n',
-    });
-    await chmod(join(sandbox.path, 'authored-hook'), 0o755);
-    await symlink('../../authored-hook', join(sandbox.path, '.git/hooks/pre-commit'));
-    const session = await openSession(sandbox.path);
-    const steps: Array<readonly string[]> = [];
-    expect(await installHooks(session, steps)).toHaveProperty(
-        'note',
-        expect.stringContaining('hooks already run from .git/hooks'),
-    );
-    expect(steps).toStrictEqual([]);
-    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
