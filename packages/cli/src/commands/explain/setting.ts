@@ -35,6 +35,11 @@ function formatReasonLines(setting: Setting, { shipped, inherited }: SettingScop
     ];
 }
 
+function formatReasonOption(setting: Setting): string {
+    if (setting.reason_values === true) return ' --reason "<why>"';
+    return setting.reason_for === undefined ? '' : REASON_OPTION_TEXT;
+}
+
 function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     if (Object.hasOwn(RECORD_FIELDS, key))
         return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot install.`];
@@ -42,7 +47,7 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
     const target = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     return [
         ...formatReasonLines(setting, scopeSetting),
-        `Change it: gspot set ${quoteArgument(key)} <value>${target}${setting.reason_for === undefined ? '' : REASON_OPTION_TEXT}`,
+        `Change it: gspot set ${quoteArgument(key)} <value>${target}${formatReasonOption(setting)}`,
         `Back to the default: gspot unset ${quoteArgument(key)}${target}`,
     ];
 }

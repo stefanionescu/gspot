@@ -151,6 +151,13 @@ test.each([
     expect(result.stdout).toContain(`Change it: gspot set ${key} <value>${flag}\n`);
 });
 
+test('explain prints the required --reason of a setting whose words each take one', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
+    const result = await runGspot(sandbox.path, ['explain', 'spelling.allowed_words']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('Change it: gspot set spelling.allowed_words <value> --reason "<why>"\n');
+});
+
 test('explain shows the default of a path setting joined with the scope, as gspot uses it', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, scopes: [{ path: 'web', configurations: ['site'] }] }),
