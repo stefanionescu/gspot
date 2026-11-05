@@ -12,6 +12,7 @@ import {
     PASSED_BASH_RESULTS,
 } from '#tests/config/configurations/bash.ts';
 import { BASH_HEADER } from '#tests/config/setup/languages.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -138,3 +139,18 @@ function buildSizeCases(): SizeCase[] {
         };
     });
 }
+
+test('bash/function-size counts every line of a function on the first line of a script', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            level: 'all',
+            tables: '[limits.bash]\nmax_function_lines = 3\n',
+        }),
+        'source.sh': 'perform() {\n    first\n    second\n}\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'bash/function-size');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toContainEqual({
+        file: 'source.sh',
+        rule: 'function-lines',
+    });
+});
