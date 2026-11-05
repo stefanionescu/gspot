@@ -53,27 +53,11 @@ tool. See [migration history](https://supabase.com/docs/guides/local-development
 - Define buckets in migrations and mirror them in `config.toml`. A change to `public`, `file_size_limit`, or
   `allowed_mime_types` updates both at once.
 - Bucket restrictions enforce file size and MIME type, not only application validation.
-- Give every bucket of `config.toml` a migration policy on `storage.objects` that names it in `USING` or `WITH CHECK`,
-  such as `bucket_id = 'avatars'`.
 - RLS policies on `storage.objects` and `storage.buckets` control access. The service controls metadata in the `storage`
   schema: migrations add only policies, indexes for RLS or validation, triggers, and bucket configuration. Object rows
   change only through the Storage API.
 - Validate user-controlled key segments and limit their length before use.
 - Do not embed secrets, provider tokens, raw user text, or private identifiers in object keys.
-
-### Storage names
-
-<!-- level: all -->
-
-- Storage buckets use `snake_case`.
-- Use stable, explicit storage object keys.
-- Do not use display text as storage identity.
-
-| Avoid                                       | Prefer                                 | Meaning                              |
-| ------------------------------------------- | -------------------------------------- | ------------------------------------ |
-| `Avatar Pictures`                           | `avatar_images`                        | A bucket.                            |
-| `avatars/john@example.com/avatar image.png` | `avatars/user_01hxx8j2r6/avatar.png`   | Object key without personal content. |
-| `uploads/latest`                            | `reports/report_01hxx8j2r6/export.pdf` | A key tied to a specific report.     |
 
 ## Edge functions
 
@@ -107,18 +91,6 @@ Ask the user before changing signup, anonymous sign-in, providers, hooks, JWT ex
 before weakening auth settings, row-level security, grants, or `verify_jwt`. Proceed when the task already authorizes
 the change. When the user authorizes a commit, write the reason in it.
 
-- Service keys, Edge secrets, Vault values, database URLs, and provider API keys stay backend-only. They never appear in
-  app code, checked-in files, logs, migration comments, tests, or test data.
 - `pg_cron` and `pg_net` change only through migrations and deploy scripts. Cron reads its bearer tokens from
   `vault.decrypted_secrets` at call time, never from its SQL.
 - A change to a cron target's auth updates the Vault secret, the function's check, and the cron SQL together.
-
-## References
-
-[Database migrations](https://supabase.com/docs/guides/deployment/database-migrations),
-[row-level security](https://supabase.com/docs/guides/database/postgres/row-level-security),
-[Edge Functions](https://supabase.com/docs/guides/functions) and their
-[auth](https://supabase.com/docs/guides/functions/auth) and
-[configuration](https://supabase.com/docs/guides/functions/function-configuration),
-[storage access control](https://supabase.com/docs/guides/storage/security/access-control), and
-[scheduling functions](https://supabase.com/docs/guides/functions/schedule-functions).
