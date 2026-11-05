@@ -40,7 +40,7 @@ import type {
     SettingsEditReport,
 } from '#cli/types/commands/edits.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import type { AvailableSettings, Scope, SettingMatch, Settings, SettingsEdit, TomlTable } from '#cli/types/settings.ts';
+import type { AvailableSettings, Scope, SettingMatch, Settings } from '#cli/types/settings.ts';
 import type { CommandResult, Files } from '#cli/types/system.ts';
 import type { Generation, Session } from '#cli/types/tools.ts';
 
@@ -171,17 +171,14 @@ Validate the configuration names and the scope for add and remove before either 
 
 @param options where the command starts, the configurations, and the scope.
 */
-export async function readConfigurationEditContext(options: ConfigurationsOptions): Promise<{
-    root: string;
-    input: SettingsEdit;
-    scopePath: string;
-    scopeTable: TomlTable;
-    scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
-    selected: string[];
-    context: SettingsEditContext;
-}> {
+export async function readConfigurationEditContext(options: ConfigurationsOptions): Promise<
+    SettingsEditContext & {
+        scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
+        selected: string[];
+    }
+> {
     const context = await readSettingsEditContext(options.root, options.scopePath);
-    const { root, edit: input, settings, scopePath, scopeTable } = context;
+    const { settings, scopePath } = context;
     assertConfigurationsExist(options.configurations);
     assertConfigurationsEditable(options.configurations);
     const scopeSettings =
@@ -191,7 +188,7 @@ export async function readConfigurationEditContext(options: ConfigurationsOption
     const selected = selectScope(scopePath, context.session.scopes).configurations.map(
         (configuration) => configuration.name,
     );
-    return { root, input, scopePath, scopeTable, scopeSettings, selected, context };
+    return { ...context, scopeSettings, selected };
 }
 
 /**

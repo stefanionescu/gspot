@@ -24,8 +24,8 @@ function restoreConfigurations(table: TomlTable, added: string[]): void {
 }
 
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    const { root, input, scopePath, scopeTable, scopeSettings, selected, context } =
-        await readConfigurationEditContext(options);
+    const context = await readConfigurationEditContext(options);
+    const { root, edit: input, scopePath, scopeTable, scopeSettings, selected } = context;
     if (options.configurations.every((name) => selected.includes(name))) {
         const verb = options.configurations.length === 1 ? 'is' : 'are';
         return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} already selected.`);

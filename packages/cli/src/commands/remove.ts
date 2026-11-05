@@ -58,15 +58,8 @@ function removeUnusedSettings(table: TomlTable, scopePath: string): string {
 }
 
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
-    const {
-        root,
-        input,
-        scopePath,
-        scopeTable,
-        scopeSettings,
-        selected: selectedNames,
-        context,
-    } = await readConfigurationEditContext(options);
+    const context = await readConfigurationEditContext(options);
+    const { root, edit: input, scopePath, scopeTable, scopeSettings, selected: selectedNames } = context;
     const detected = listDetectedAdditions(context.session)
         .filter((addition) => addition.scopePath === scopePath)
         .flatMap((addition) => addition.configurations);
