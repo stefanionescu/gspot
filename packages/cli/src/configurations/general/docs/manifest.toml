@@ -39,8 +39,10 @@ why = "External links break over time; this check reports which ones did."
 
 [[check]]
 example = "A path in the docs that points to a deleted file reports a stale reference. Update the path and any command that uses it."
+files = { extensions = [".md", ".mdx"], filenames = ["package.json"], paths = ["**/{mise,.mise,.config/mise,mise-tasks,.mise-tasks}/**", "**/{mise,.mise}{,.local}.toml", "**/.config/mise.toml"] }
 help = "Fix the path or the task name. To keep an example out, write it in a fence with `title=`."
 name = "missing-paths"
+reads_deleted_paths = true
 runs = "once"
 stage = "commit"
 summary = "Checks that documented paths point to tracked files, and that each `mise run`, `npm run`, `pnpm run`, `yarn run`, and `bun run` command names a task or script of its project. It leaves the targets of inline Markdown links to lychee."

@@ -132,6 +132,7 @@ export const checkFieldsSchema = z.strictObject({
     coverage_arguments: z.string().min(1).array().optional(),
     limits: z.union([nonemptyStringSchema.array(), z.record(nonemptyStringSchema, nonemptyStringSchema)]).optional(),
     limit_languages: z.enum(SETTING_LANGUAGES).array().optional(),
+    reads_deleted_paths: z.boolean().optional(),
     run_in_copy: z.boolean().optional(),
     binary_files: z.boolean().optional(),
     large_files: z.boolean().optional().meta({
