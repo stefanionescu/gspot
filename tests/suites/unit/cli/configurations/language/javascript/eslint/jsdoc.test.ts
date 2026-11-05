@@ -10,7 +10,6 @@ import {
     JSDOC_FILES,
     JSDOC_FINDINGS,
     JSDOC_RULES,
-    MEMBER_FUNCTIONS,
     ROOT_PARAMETERS,
 } from '#tests/config/configurations/javascript/plugins.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -83,7 +82,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
     expect(compiled.code, compiled.stdout + compiled.stderr).toBe(0);
 });
 
-test('a doc comment needs no @param line, and a @param line names a parameter', async () => {
+test('a doc comment leaves out the parameters that say enough, and a @param line names a parameter', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',
@@ -93,6 +92,8 @@ test('a doc comment needs no @param line, and a @param line names a parameter', 
             'export function measure(value: string): number {\n    return value.length;\n}\n',
             '/**\nCount the words of the input text.\n\n@param text the input, split at each space.\n*/',
             "export function count(value: string): number {\n    return value.split(' ').length;\n}\n",
+            '/**\nWait for the host.\n\n@param timeout the limit, in seconds.\n*/',
+            'export function wait(host: string, timeout: number): string {\n    return `${host}:${timeout}`;\n}\n',
         ].join('\n'),
     });
     const eslint = await buildEslint(sandbox.path);
@@ -113,36 +114,4 @@ test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/match-name'])).toStrictEqual([
         { file: 'source.js', rule: 'jsdoc/match-name', line: 11 },
     ]);
-});
-
-test('jsdoc/require-jsdoc skips the functions of an exported object literal', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'source.js': MEMBER_FUNCTIONS,
-    });
-
-    const eslint = await buildEslint(sandbox.path);
-    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/require-jsdoc'])).toStrictEqual([
-        { file: 'source.js', rule: 'jsdoc/require-jsdoc', line: 7 },
-        { file: 'source.js', rule: 'jsdoc/require-jsdoc', line: 9 },
-    ]);
-});
-
-test('a missing doc block is reported, and the fixer adds no empty block', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'client.js': '',
-    });
-
-    const eslint = await buildEslint(sandbox.path, { fix: true });
-    const source = 'export function measure(value) {\n    return value.length;\n}\n';
-    const [result] = await eslint.lintText(source, { filePath: 'client.js' });
-    expect(result?.output ?? source).not.toContain('/**');
-    expect(
-        result?.messages
-            .filter(({ ruleId }) => ruleId?.startsWith('jsdoc/') === true)
-            .map(({ ruleId, line, column }) => ({ ruleId, line, column })),
-    ).toStrictEqual([{ ruleId: 'jsdoc/require-jsdoc', line: 1, column: 8 }]);
 });

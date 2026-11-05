@@ -13,8 +13,6 @@ export const RUNTIME_GLOBALS: Readonly<Record<string, string>> = { node: 'nodeBu
 export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonjs'];
 
 export const TEST_RULES = {
-    'jsdoc/require-jsdoc': 'off',
-    'jsdoc/require-description': 'off',
     'n/no-unpublished-import': 'off',
     'n/no-unpublished-require': 'off',
     'no-template-curly-in-string': 'off',

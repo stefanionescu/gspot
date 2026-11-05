@@ -63,7 +63,7 @@ test('all applies your rule options except in script and test files', async () =
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n',
+            tables: '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"n/no-unpublished-import" = []\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
@@ -77,7 +77,7 @@ test('all applies your rule options except in script and test files', async () =
     const testFile = (await eslint.calculateConfigForFile('tests/example.test.js')) as EslintConfiguration;
     expect(source.rules['n/no-process-exit']![0]).toBe(2);
     expect(script.rules['n/no-process-exit']![0]).toBe(0);
-    expect(testFile.rules['jsdoc/require-description']![0]).toBe(0);
+    expect(testFile.rules['n/no-unpublished-import']![0]).toBe(0);
 });
 
 test('install refuses options for a rule of level all at level basic, and ESLint refuses options for a rule that no block turns on', async () => {

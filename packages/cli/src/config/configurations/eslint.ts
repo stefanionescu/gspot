@@ -133,25 +133,9 @@ const SECURITY_RULES = {
 
 const JSDOC_RULES = {
     'jsdoc/require-param-name': 'error',
-    'jsdoc/check-param-names': 'error',
+    'jsdoc/check-param-names': ['error', { disableMissingParamChecks: true }],
     'jsdoc/check-tag-names': 'error',
     'jsdoc/no-types': 'off',
-
-    'jsdoc/require-jsdoc': [
-        'error',
-        {
-            enableFixer: false,
-            publicOnly: true,
-            require: {
-                FunctionDeclaration: true,
-                MethodDefinition: true,
-            },
-            contexts: [
-                ':matches(VariableDeclarator, AssignmentExpression, ExportDefaultDeclaration, PropertyDefinition) > :matches(ArrowFunctionExpression, FunctionExpression)',
-            ],
-        },
-    ],
-    'jsdoc/require-description': 'error',
     'jsdoc/match-name': [
         'error',
         {

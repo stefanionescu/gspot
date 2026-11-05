@@ -180,17 +180,6 @@ export function joinPath(root, path) { return \`\${root}/\${path}\`; }
 export function readName({ name }) { return name; }
 `;
 
-export const MEMBER_FUNCTIONS = `export const command = {
-    run: (value) => value.length,
-    trim(value) { return value.trim(); },
-    check: function (value) { return value === ''; },
-};
-
-export const measure = (value) => value.length;
-
-export const check = function (value) { return value === ''; };
-`;
-
 export const IMPORT_FILES = {
     'package.json': '{"private":true,"type":"module","imports":{"#owner":"./src/owner.ts","#lib/*":"./src/*"}}\n',
     'tsconfig.json':
