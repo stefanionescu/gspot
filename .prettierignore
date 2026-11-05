@@ -15,7 +15,6 @@ build/
 gspot.baseline.json
 
 # Generator outputs
-**/CHANGELOG.md
 docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
 packages/cli/README.md

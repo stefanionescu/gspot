@@ -1,9 +1,7 @@
-<!-- mise run changelog <version> writes each section of this file. Do not edit it by hand. -->
-
 # Changelog
 
-Each section lists the features, fixes, and performance changes of one gspot CLI release, breaking changes first. Its
-table names the settings that the release renamed or removed, from the settings reference of the previous release.
+Each section says what changed in one gspot CLI release, what you see now compared with before, and what to do when you
+upgrade. Sections up to 0.3.9 list commit subjects.
 
 ## 0.3.9
 
@@ -236,43 +234,43 @@ table names the settings that the release renamed or removed, from the settings 
 
 ### Renamed and removed settings
 
-| Setting | Change |
-| --- | --- |
-| `naming.override.paths` | Removed |
-| `naming.override.languages` | Renamed to `naming.exception.languages` |
-| `naming.override.categories` | Renamed to `naming.exception.categories` |
-| `naming.override.ignored_prefix` | Renamed to `naming.exception.ignored_prefix` |
-| `naming.override.ignored_names_pattern` | Renamed to `naming.exception.ignored_names_pattern` |
-| `naming.override.allow_digits` | Removed |
-| `naming.override.allow_repeated_words` | Removed |
-| `naming.override.allowed_names` | Renamed to `naming.exception.allowed_names` |
-| `naming.override.cases` | Renamed to `naming.exception.cases` |
-| `naming.override.reason` | Renamed to `naming.exception.reason` |
-| `naming.javascript.max_characters` | Removed |
-| `naming.javascript.max_words` | Removed |
-| `naming.javascript.cases` | Removed |
-| `naming.javascript.files.max_characters` | Removed |
-| `naming.javascript.files.max_words` | Removed |
-| `naming.javascript.files.cases` | Removed |
-| `naming.javascript.folders.max_characters` | Removed |
-| `naming.javascript.folders.max_words` | Removed |
-| `naming.javascript.folders.cases` | Removed |
-| `naming.javascript.types.max_characters` | Removed |
-| `naming.javascript.types.max_words` | Removed |
-| `naming.javascript.types.cases` | Removed |
-| `naming.javascript.functions.max_characters` | Removed |
-| `naming.javascript.functions.max_words` | Removed |
-| `naming.javascript.functions.cases` | Removed |
-| `naming.javascript.parameters.max_characters` | Removed |
-| `naming.javascript.parameters.max_words` | Removed |
-| `naming.javascript.parameters.cases` | Removed |
-| `naming.javascript.variables.max_characters` | Removed |
-| `naming.javascript.variables.max_words` | Removed |
-| `naming.javascript.variables.cases` | Removed |
-| `naming.javascript.properties.max_characters` | Removed |
-| `naming.javascript.properties.max_words` | Removed |
-| `naming.javascript.properties.cases` | Removed |
-| `security.rule_files` | Renamed to `security.semgrep_rules` |
+| Setting                                       | Change                                              |
+| --------------------------------------------- | --------------------------------------------------- |
+| `naming.override.paths`                       | Removed                                             |
+| `naming.override.languages`                   | Renamed to `naming.exception.languages`             |
+| `naming.override.categories`                  | Renamed to `naming.exception.categories`            |
+| `naming.override.ignored_prefix`              | Renamed to `naming.exception.ignored_prefix`        |
+| `naming.override.ignored_names_pattern`       | Renamed to `naming.exception.ignored_names_pattern` |
+| `naming.override.allow_digits`                | Removed                                             |
+| `naming.override.allow_repeated_words`        | Removed                                             |
+| `naming.override.allowed_names`               | Renamed to `naming.exception.allowed_names`         |
+| `naming.override.cases`                       | Renamed to `naming.exception.cases`                 |
+| `naming.override.reason`                      | Renamed to `naming.exception.reason`                |
+| `naming.javascript.max_characters`            | Removed                                             |
+| `naming.javascript.max_words`                 | Removed                                             |
+| `naming.javascript.cases`                     | Removed                                             |
+| `naming.javascript.files.max_characters`      | Removed                                             |
+| `naming.javascript.files.max_words`           | Removed                                             |
+| `naming.javascript.files.cases`               | Removed                                             |
+| `naming.javascript.folders.max_characters`    | Removed                                             |
+| `naming.javascript.folders.max_words`         | Removed                                             |
+| `naming.javascript.folders.cases`             | Removed                                             |
+| `naming.javascript.types.max_characters`      | Removed                                             |
+| `naming.javascript.types.max_words`           | Removed                                             |
+| `naming.javascript.types.cases`               | Removed                                             |
+| `naming.javascript.functions.max_characters`  | Removed                                             |
+| `naming.javascript.functions.max_words`       | Removed                                             |
+| `naming.javascript.functions.cases`           | Removed                                             |
+| `naming.javascript.parameters.max_characters` | Removed                                             |
+| `naming.javascript.parameters.max_words`      | Removed                                             |
+| `naming.javascript.parameters.cases`          | Removed                                             |
+| `naming.javascript.variables.max_characters`  | Removed                                             |
+| `naming.javascript.variables.max_words`       | Removed                                             |
+| `naming.javascript.variables.cases`           | Removed                                             |
+| `naming.javascript.properties.max_characters` | Removed                                             |
+| `naming.javascript.properties.max_words`      | Removed                                             |
+| `naming.javascript.properties.cases`          | Removed                                             |
+| `security.rule_files`                         | Renamed to `security.semgrep_rules`                 |
 
 ## 0.3.8
 
@@ -492,7 +490,7 @@ table names the settings that the release renamed or removed, from the settings 
 - fix(eslint-plugin): stop at a middleware array that holds itself
 - fix(eslint-plugin): read the imports of a Svelte script
 - fix(eslint-plugin): lint JavaScript classes without decorators
-- feat(cli): name every numeric bound with max_ or min_ and its unit
+- feat(cli): name every numeric bound with `max_` or `min_` and its unit
 - feat(cli): put each setting in its configuration's table
 - feat(cli): delete format.final_newline and format.line_ending
 - fix(cli): give every path setting one base
@@ -1277,7 +1275,7 @@ This release holds no feature, fix, or performance commit.
 - fix(cli): Stop excluding the removed baselines folder from typos
 - fix(eslint-plugin): Build without emptying dist first
 - fix(cli): Keep .gspot to what a developer needs
-- fix(cli): Stop sorting __slots__ alphabetically
+- fix(cli): Stop sorting **slots** alphabetically
 - fix(cli): Keep private installs whole and delete finished backups
 - feat(cli): Add the Astro kit
 - fix(cli): Lint every package.json with the package-json rules

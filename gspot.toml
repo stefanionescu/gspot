@@ -316,3 +316,13 @@ check = "javascript/eslint"
 rule = "unicorn/no-top-level-side-effects"
 paths = ["docs/astro.config.ts"]
 reason = "A tool reads the default export of its config file, which the file builds when it loads."
+
+[[ignore]]
+check = "prose/vale"
+paths = ["CHANGELOG.md"]
+reason = "Release notes name removed files and cite commits."
+
+[[ignore]]
+check = "docs/missing-paths"
+paths = ["CHANGELOG.md"]
+reason = "Release notes name removed files and cite commits."
