@@ -123,6 +123,8 @@ ${body}
     await applyGeneratedFiles(sandbox.path);
     const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
     expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    expect(result.report.checks.map(({ status }) => status)).toStrictEqual(['passed']);
+    expect(result.report.checks[0]!.fileCount).toBeGreaterThan(0);
 });
 
 test('partial ShellCheck output beside an unreadable file is an execution error', async () => {
