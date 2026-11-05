@@ -75,6 +75,8 @@ export function buildEmptyRunReport(stage: RunOptions['stage'], started: Date, n
     return {
         version: cliPackage.version,
         notes,
+        comparison: null,
+        fixes: null,
         stages,
         started: started.toISOString(),
         duration,
@@ -122,8 +124,9 @@ export function buildRunReport(run: FinishedRun): RunReport {
         ...checks.flatMap(({ reportNotes }) => reportNotes ?? []),
     ];
     return {
-        ...(comparison !== undefined && { comparison }),
         ...buildEmptyRunReport(options.stage, started, notes),
+        comparison,
+        fixes: fixes ?? null,
         checks: checks
             .filter(({ cause }) => options.verbose === true || cause !== 'no-files')
             .map(({ reportNotes: _notes, span: _span, ...check }) => check),

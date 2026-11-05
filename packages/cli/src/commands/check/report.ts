@@ -191,7 +191,7 @@ function formatSummary(report: RunReport): string {
 }
 
 function formatComparison(comparison: RunReport['comparison']): string {
-    if (comparison === undefined) return '';
+    if (comparison === null) return '';
     return comparison.content === 'working-tree'
         ? `Checked the files changed since ${comparison.reference}.\n`
         : `Checked ${formatCheckedContent(comparison)}.\n`;

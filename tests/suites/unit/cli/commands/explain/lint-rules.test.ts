@@ -122,8 +122,7 @@ test('explain gives Ruff summaries and reserves its full explanation for verbose
     );
     const root = await runGspot(sandbox.path, ['explain', 'python/ruff', 'F401', '--json']);
     expect(root.code, root.stderr).toBe(0);
-    expect(JSON.parse(root.stdout)).toMatchObject({ description: 'Unused import', rule: 'F401' });
-    expect(JSON.parse(root.stdout)).not.toHaveProperty('explanation');
+    expect(JSON.parse(root.stdout)).toMatchObject({ description: 'Unused import', rule: 'F401', explanation: null });
     const child = await runGspot(join(sandbox.path, 'app'), ['explain', 'python/ruff', 'F401', '--verbose']);
     expect(child.code, child.stderr).toBe(0);
     expect(child.stdout).toContain('Delete the import that no expression reads.');

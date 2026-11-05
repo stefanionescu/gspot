@@ -65,6 +65,8 @@ export const ARGUMENT_REFUSALS = [
 const TEST_VERSION = '0.0.0-test';
 
 export const FAILED_CHECK_REPORT = {
+    comparison: null,
+    fixes: null,
     version: TEST_VERSION,
     notes: Array.of<string>(),
     stages: ['commit', 'push'] as const,
@@ -139,6 +141,8 @@ export const UPPERCASE_NOTES_MARKDOWN = '# NOTES\n';
 export const SCRIPT_SPACES = 'script with spaces.sh';
 
 export const SCAN_RUN_REPORT: RunReport = {
+    comparison: null,
+    fixes: null,
     notes: [],
     version: '0.0.0-test',
     stages: ['commit', 'push'],

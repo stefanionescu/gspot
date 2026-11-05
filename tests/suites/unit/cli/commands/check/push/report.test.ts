@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { checkReportSchema, pushOutputSchema } from '#cli/schemas/commands.ts';
+import { pushOutputSchema } from '#cli/schemas/commands.ts';
+import { runReportSchema } from '#cli/schemas/engine.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
@@ -48,7 +49,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
         { cwd: checkout.path },
     );
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-    const repeatedReport = checkReportSchema.parse(JSON.parse(repeated.stdout));
+    const repeatedReport = runReportSchema.parse(JSON.parse(repeated.stdout));
     expect(repeatedReport.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
     runGitStep(sandbox.path, ['worktree', 'remove', '--force', checkout.path]);
     await assertWorkingTreeKept(sandbox.path, broken);

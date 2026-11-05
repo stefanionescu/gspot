@@ -41,7 +41,7 @@ test.each([false, true])(
         expect(diagnosed.stderr).toBe('');
         expect(doctorOutputSchema.parse(JSON.parse(diagnosed.stdout)).hooks).toStrictEqual(
             installed
-                ? { ready: true, tool: 'gspot' }
+                ? { ready: true, tool: 'gspot', lines: [] }
                 : {
                       ready: false,
                       tool: 'gspot',

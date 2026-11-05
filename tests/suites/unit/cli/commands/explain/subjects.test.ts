@@ -73,7 +73,7 @@ test('a path explanation lists the command checks and the ignores that apply', a
         stage: 'manual',
         state: 'on',
     });
-    expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
+    expect(explanation.unchecked).toBeNull();
     expect(pathOutputSchema.parse(JSON.parse(ignored.stdout)).checks.map(({ check }) => check)).toStrictEqual(
         explanation.checks.map(({ check }) => check),
     );

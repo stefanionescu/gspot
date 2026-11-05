@@ -258,12 +258,13 @@ Build the result of an edit that leaves gspot.toml and the generated files uncha
 @param summary the sentence that says why nothing changed.
 @param notes the notes of the edit.
 */
-export function buildUnchangedResult(
-    summary: string,
-    notes: string[] = [],
-): CommandResult<{ changed: false; summary: string; notes: string[] }> {
+export function buildUnchangedResult(summary: string, notes: string[] = []): CommandResult<SettingsEditReport> {
     const noteLines = notes.map((note) => `note     ${note}\n`);
-    return { text: `${summary}\n${noteLines.join('')}`, json: { changed: false, summary, notes }, exitCode: 0 };
+    return {
+        text: `${summary}\n${noteLines.join('')}`,
+        json: { written: [], unchanged: [], deleted: [], updated: [], changed: false, summary, notes },
+        exitCode: 0,
+    };
 }
 
 /**

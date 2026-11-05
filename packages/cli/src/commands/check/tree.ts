@@ -13,7 +13,7 @@ import { printWarning } from '#cli/system/terminal.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import type { CheckOptions, RevisionSource } from '#cli/types/commands/reports.ts';
 import type { RunSelection } from '#cli/types/engine/plan.ts';
-import type { FixReport, RunOptions, RunReport } from '#cli/types/engine/run.ts';
+import type { RunOptions, RunReport } from '#cli/types/engine/run.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -125,7 +125,7 @@ export async function runTreeCheck(
     options: CheckOptions,
     cancelSignal: AbortSignal,
     revision?: RevisionSource,
-): Promise<CommandResult<RunReport & { fixes?: FixReport | undefined }>> {
+): Promise<CommandResult<RunReport>> {
     const resources: Disposable[] = [];
     const started = revision?.selection.content === 'index' ? revision.started : new Date();
     try {
@@ -150,11 +150,7 @@ export async function runTreeCheck(
         result.report.notes.push(...onlyNotes.map((id) => formatLevelNote(id, result.report, session)));
         const reportText = formatRunReport(result.report, { verbose: options.verbose, canceled: cancelSignal.aborted });
         const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
-        return {
-            text,
-            json: { ...result.report, fixes: result.fixes },
-            exitCode: result.report.exitCode,
-        };
+        return { text, json: result.report, exitCode: result.report.exitCode };
     } finally {
         for (const resource of resources.toReversed()) resource[Symbol.dispose]();
     }

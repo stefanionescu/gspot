@@ -25,6 +25,7 @@ import { findGspotPinMismatch, readGspotPin } from '#cli/repository/javascript/g
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { runProcess } from '#cli/system/processes.ts';
+import { fillNull } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
@@ -113,8 +114,9 @@ async function detectCiProvider(root: string, paths: string[]): Promise<CiState[
     if (paths.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
     const remote = (await readGitSetting(root, ORIGIN_URL_SETTING)) ?? '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
-    return (Object.keys(CI_OFF_NOTES) as Array<keyof typeof CI_OFF_NOTES>).find(
-        (provider) => host.startsWith(`${provider}.com:`) || host.startsWith(`${provider}.com/`),
+    const providers = Object.keys(CI_OFF_NOTES) as Array<keyof typeof CI_OFF_NOTES>;
+    return (
+        providers.find((provider) => host.startsWith(`${provider}.com:`) || host.startsWith(`${provider}.com/`)) ?? null
     );
 }
 
@@ -129,9 +131,7 @@ async function readCiState(session: Session): Promise<CiState & { text: string }
         session.root,
         session.repository.files.map((file) => file.path),
     );
-    return provider === undefined
-        ? { enabled: false, text: 'none' }
-        : { enabled: false, provider, text: CI_OFF_NOTES[provider] };
+    return { enabled: false, provider, file: null, text: provider === null ? 'none' : CI_OFF_NOTES[provider] };
 }
 
 async function readHookRunnerStatus(session: Session): Promise<HookStatus> {
@@ -209,10 +209,10 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         submodules: listSubmodulePaths(session.repository.index),
         tools: await inspectScopeTools(session),
         environments: listMissingEnvironments(session),
-        hooks,
+        hooks: { ready: hooks.ready, tool: fillNull(hooks.tool), lines: hooks.lines ?? [] },
         ci,
         ruleFileCount: selectRuleFiles(session).length,
-        pin: readGspotPin(root) ?? null,
+        pin: fillNull(readGspotPin(root)),
     };
     const mismatch = findGspotPinMismatch(root);
     const notes = mismatch === undefined ? [] : [mismatch];

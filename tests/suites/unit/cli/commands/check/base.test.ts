@@ -71,7 +71,7 @@ test.each([...ALL_FILES_BASES])(
             await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', reference, '--json']),
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(result.report.comparison).toBeUndefined();
+        expect(result.report.comparison).toBeNull();
         expect(
             result.report.checks
                 .flatMap((check) => check.findings.map((finding) => finding.message))

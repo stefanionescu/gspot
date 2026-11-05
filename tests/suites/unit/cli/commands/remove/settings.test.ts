@@ -9,7 +9,7 @@ import { createFileTree } from 'testdirs';
 import { MANAGED_KEYS_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { changedEditOutputSchema } from '#cli/schemas/commands.ts';
+import { settingsEditOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -86,10 +86,10 @@ test('remove notes the package.json keys that stay after css goes, and bash adds
     const reason = 'The front end moved to another repository.';
     const css = await runGspot(sandbox.path, ['remove', 'css', '--reason', reason, '--json']);
     expect(css.code, css.stdout + css.stderr).toBe(0);
-    expect(changedEditOutputSchema.parse(JSON.parse(css.stdout)).notes).toContain(MANAGED_KEYS_NOTE);
+    expect(settingsEditOutputSchema.parse(JSON.parse(css.stdout)).notes).toContain(MANAGED_KEYS_NOTE);
     const bash = await runGspot(sandbox.path, ['remove', 'bash', '--reason', reason, '--json']);
     expect(bash.code, bash.stdout + bash.stderr).toBe(0);
-    expect(changedEditOutputSchema.parse(JSON.parse(bash.stdout)).notes).not.toContain(MANAGED_KEYS_NOTE);
+    expect(settingsEditOutputSchema.parse(JSON.parse(bash.stdout)).notes).not.toContain(MANAGED_KEYS_NOTE);
 });
 
 test('remove after add says nothing about tools once the tool lockfiles match again', async () => {
@@ -102,7 +102,7 @@ test('remove after add says nothing about tools once the tool lockfiles match ag
     await createFileTree(sandbox.path, buildToolLockfiles(session.toolConfigurations));
     const added = await runGspot(sandbox.path, ['add', 'bash', '--json']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    expect(changedEditOutputSchema.parse(JSON.parse(added.stdout)).notes).toStrictEqual([TOOLS_CHANGED_NOTE]);
+    expect(settingsEditOutputSchema.parse(JSON.parse(added.stdout)).notes).toStrictEqual([TOOLS_CHANGED_NOTE]);
     const removed = await runGspot(sandbox.path, [
         'remove',
         'bash',
@@ -111,5 +111,5 @@ test('remove after add says nothing about tools once the tool lockfiles match ag
         '--json',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(changedEditOutputSchema.parse(JSON.parse(removed.stdout)).notes).toStrictEqual([]);
+    expect(settingsEditOutputSchema.parse(JSON.parse(removed.stdout)).notes).toStrictEqual([]);
 });

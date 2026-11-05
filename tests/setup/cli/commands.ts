@@ -8,7 +8,7 @@ import type { z } from 'zod';
 
 import { planInit } from '#cli/generation/setup/planner.ts';
 import { runProgram } from '#cli/main.ts';
-import { checkReportSchema } from '#cli/schemas/commands.ts';
+import { runReportSchema } from '#cli/schemas/engine.ts';
 import type { CheckResult, RunReport } from '#cli/types/engine/run.ts';
 import type { InitPlanning } from '#cli/types/generation.ts';
 import type { Level, TomlTable } from '#cli/types/settings.ts';
@@ -77,8 +77,8 @@ export async function runInit(
     return { plan, settings: parse(settingsText) as TomlTable };
 }
 
-export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: z.infer<typeof checkReportSchema> } {
-    return { ...output, report: checkReportSchema.parse(JSON.parse(output.stdout)) };
+export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: z.infer<typeof runReportSchema> } {
+    return { ...output, report: runReportSchema.parse(JSON.parse(output.stdout)) };
 }
 
 /**

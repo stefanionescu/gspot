@@ -1,12 +1,11 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 
 import {
-    changedEditOutputSchema,
     checkOutputSchema,
-    checkReportSchema,
     configurationOutputSchema,
     configurationsListOutputSchema,
     doctorOutputSchema,
@@ -16,15 +15,19 @@ import {
     pathOutputSchema,
     scanOutputSchema,
     settingOutputSchema,
+    settingsEditOutputSchema,
     settingsListOutputSchema,
-    unchangedEditOutputSchema,
 } from '#cli/schemas/commands.ts';
+import { runReportSchema } from '#cli/schemas/engine.ts';
+import { compareText } from '#cli/system/text.ts';
 import * as installers from '#cli/tools/installers/install.ts';
+import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const PAGE = await readFile(join(REPOSITORY_ROOT, 'docs/src/content/docs/reference/json-output.mdx'), 'utf8');
 
@@ -59,16 +62,11 @@ test.each([
         headings: ['## `gspot install`', '## Generated files'],
         schema: installOutputSchema,
     },
-    { commandArguments: ['check', '--json'], headings: ['## `gspot check`'], exitCode: 2, schema: checkReportSchema },
+    { commandArguments: ['check', '--json'], headings: ['## `gspot check`'], exitCode: 2, schema: runReportSchema },
     {
         commandArguments: ['add', 'bash', '--json'],
         headings: ['## Commands that change settings', '## Generated files'],
-        schema: changedEditOutputSchema,
-    },
-    {
-        commandArguments: ['add', 'markdown', '--json'],
-        headings: ['## Commands that change settings'],
-        schema: unchangedEditOutputSchema,
+        schema: settingsEditOutputSchema,
     },
     { commandArguments: ['list', '--json'], headings: ['## `gspot list`'], schema: configurationsListOutputSchema },
     {
@@ -134,4 +132,101 @@ test.each([
     const required = fields.flatMap((field) => field.required);
     expect(keys.filter((key) => !every.has(key))).toStrictEqual([]);
     expect(required.filter((field) => !keys.includes(field))).toStrictEqual([]);
+});
+
+function readKeys(stdout: string): string[] {
+    return Object.keys(JSON.parse(stdout) as object).toSorted(compareText);
+}
+
+test.each([
+    { first: ['add', 'bash'], second: ['add', 'bash'] },
+    {
+        first: ['remove', 'markdown', '--reason', 'The repository keeps no prose in Markdown.'],
+        second: ['remove', 'markdown', '--reason', 'The repository keeps no prose in Markdown.'],
+    },
+    { first: ['set', 'limits.max_function_lines', '30'], second: ['set', 'limits.max_function_lines', '30'] },
+    { first: ['unset', 'limits.max_function_lines'], second: ['unset', 'limits.max_function_lines'] },
+    {
+        first: ['ignore', '--paths', 'README.md', '--reason', 'The readme is written by hand.'],
+        second: ['unignore', 'bash/shellcheck', '--rule', 'SC2086'],
+    },
+])('$first.0 prints the same keys after a change and after no change', async ({ first, second }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown'], { tables: '[limits]\nmax_function_lines = 20\n' }),
+        'README.md': '# Example\n',
+    });
+    const changed = await runGspot(sandbox.path, [...first, '--json']);
+    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+    expect(settingsEditOutputSchema.parse(JSON.parse(changed.stdout)).changed).toBe(true);
+    const unchanged = await runGspot(sandbox.path, [...second, '--json']);
+    expect(unchanged.code, unchanged.stdout + unchanged.stderr).toBe(0);
+    expect(settingsEditOutputSchema.parse(JSON.parse(unchanged.stdout))).toMatchObject({
+        changed: false,
+        written: [],
+        updated: [],
+        deleted: [],
+        unchanged: [],
+    });
+    expect(readKeys(unchanged.stdout)).toStrictEqual(readKeys(changed.stdout));
+});
+
+test('check --staged prints the same keys with nothing staged, with a staged file, and in a plain run', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'README.md': '# Example\n',
+    });
+    commitAll(sandbox.path);
+    const empty = await runGspot(sandbox.path, ['check', '--staged', '--only', 'gspot/generated-files', '--json']);
+    expect(runReportSchema.parse(JSON.parse(empty.stdout))).toMatchObject({ comparison: null, fixes: null });
+    await writeFile(join(sandbox.path, 'README.md'), '# Changed\n');
+    runGitStep(sandbox.path, ['add', 'README.md']);
+    const staged = await runGspot(sandbox.path, ['check', '--staged', '--only', 'gspot/generated-files', '--json']);
+    expect(runReportSchema.parse(JSON.parse(staged.stdout)).comparison?.content).toBe('index');
+    const working = await runGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']);
+    expect(readKeys(staged.stdout)).toStrictEqual(readKeys(empty.stdout));
+    expect(readKeys(working.stdout)).toStrictEqual(readKeys(empty.stdout));
+});
+
+test('doctor prints the same keys of hooks and ci with and without them', async () => {
+    await using off = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = false\n' }),
+    });
+    await using on = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: `${HOOKS_SETTINGS}[ci]\nenabled = true\nprovider = "github"\n`,
+        }),
+    });
+    await applyGeneratedFiles(on.path);
+    runGitStep(on.path, ['config', 'core.hooksPath', '.gspot/hooks']);
+    const hooksOff = await runGspot(off.path, ['doctor', '--json']);
+    expect(doctorOutputSchema.parse(JSON.parse(hooksOff.stdout))).toMatchObject({
+        ci: { enabled: false, provider: null, file: null },
+        hooks: { ready: true, tool: null, lines: [] },
+    });
+    const hooksOn = await runGspot(on.path, ['doctor', '--json']);
+    expect(doctorOutputSchema.parse(JSON.parse(hooksOn.stdout))).toMatchObject({
+        ci: { enabled: true, provider: 'github' },
+        hooks: { tool: 'gspot' },
+    });
+});
+
+test.each([
+    { first: ['explain', 'bash/shellcheck'], second: ['explain', 'sandbox/own'] },
+    { first: ['explain', 'limits.max_file_lines'], second: ['explain', 'format.quotes'] },
+    { first: ['explain', './README.md'], second: ['explain', './image.png'] },
+    { first: ['explain', 'data-files/yaml', 'documents'], second: ['explain', 'bash/shellcheck', 'SC2086'] },
+])('$first and $second print the same keys', async ({ first, second }) => {
+    const tables = stringify({
+        command_check: [buildReportingCheck({ id: 'sandbox/own', paths: ['*'], stage: 'commit' })],
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash', 'data-files'], { tables }),
+        'README.md': '# Example\n',
+        'image.png': '\0binary\n',
+    });
+    const left = await runGspot(sandbox.path, [...first, '--json']);
+    expect(left.code, left.stdout + left.stderr).toBe(0);
+    const right = await runGspot(sandbox.path, [...second, '--json']);
+    expect(right.code, right.stdout + right.stderr).toBe(0);
+    expect(readKeys(left.stdout)).toStrictEqual(readKeys(right.stdout));
 });

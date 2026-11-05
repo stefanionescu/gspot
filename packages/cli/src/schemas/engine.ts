@@ -142,7 +142,8 @@ export const fixReportSchema = z.strictObject({
 
 export const runReportSchema = z.strictObject({
     notes: z.string().array(),
-    comparison: z.strictObject({ content: z.enum(COMPARED_CONTENTS), reference: z.string() }).optional(),
+    comparison: z.strictObject({ content: z.enum(COMPARED_CONTENTS), reference: z.string() }).nullable(),
+    fixes: fixReportSchema.nullable(),
     version: z.string(),
     stages: z.enum(STAGES).array().readonly(),
     started: z.string(),

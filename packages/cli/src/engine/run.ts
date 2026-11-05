@@ -260,7 +260,7 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
     const { selection } = options;
     const comparison =
         selection?.reference === undefined || selection.content === 'message'
-            ? undefined
+            ? null
             : { content: selection.content, reference: selection.reference };
     const {
         session: checked,

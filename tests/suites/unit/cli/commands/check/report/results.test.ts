@@ -159,7 +159,7 @@ test('terminal progress rewrites one status line, and a log prints only what run
             lines.push(String(chunk));
             return true;
         });
-        const place = { total: 3, comparison: undefined };
+        const place = { total: 3, comparison: null };
         printProgress({ ...place, kind: 'finished', check: 'bash/shfmt', scope: '', duration: 1200, finished: 1 });
         printProgress({
             ...place,
@@ -208,7 +208,7 @@ test.each([{ TERM: 'dumb' }, { NO_COLOR: '1' }])(
             duration: 12_300,
             finished: 1,
             total: 1,
-            comparison: undefined,
+            comparison: null,
         });
         expect(lines).toStrictEqual(['done  python/ruff  12.3s\n']);
     },

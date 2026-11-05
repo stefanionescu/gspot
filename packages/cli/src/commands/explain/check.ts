@@ -17,6 +17,7 @@ import { listChecksById, listRuleFiles, readConfigurations } from '#cli/manifest
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { fillNull } from '#cli/system/tables.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
 import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type {
@@ -85,9 +86,9 @@ function formatCheckIgnore(ignore: CheckIgnore): string {
 
 function formatRepositoryUse(facts: CheckExplanation): string[] {
     const lines: string[] = [];
-    if (facts.command !== undefined)
+    if (facts.command !== null)
         lines.push(`Command: ${quoteCommand(facts.command)}`, `Paths: ${(facts.paths ?? []).join(', ')}`);
-    if (facts.selected !== undefined)
+    if (facts.selected !== null)
         lines.push(
             facts.selected
                 ? SELECTED_YES_MESSAGE
@@ -100,7 +101,7 @@ function formatRepositoryUse(facts: CheckExplanation): string[] {
 
 function formatCheckExplanation(facts: CheckExplanation): string {
     const { settingNames: settings, ruleFiles, minVersions } = facts;
-    const source = facts.configuration === undefined ? REPOSITORY_COMMAND : `${facts.configuration} configuration`;
+    const source = facts.configuration === null ? REPOSITORY_COMMAND : `${facts.configuration} configuration`;
     const lines = [
         `${facts.check}  (${source}, ${facts.stage} stage, ${facts.level} level)`,
         '',
@@ -112,7 +113,7 @@ function formatCheckExplanation(facts: CheckExplanation): string {
         '',
         'Ignore it only with a reason your team accepts.',
         `Ignore it for some paths: ${facts.turnOff.paths}`,
-        ...(facts.turnOff.rule === undefined ? [] : [`Ignore one of its lint rules: ${facts.turnOff.rule}`]),
+        ...(facts.turnOff.rule === null ? [] : [`Ignore one of its lint rules: ${facts.turnOff.rule}`]),
         ...(facts.runInCopy === true ? [RUN_IN_COPY_MESSAGE] : []),
         ...(settings.length === 0
             ? []
@@ -141,19 +142,18 @@ function formatRuleOptions(
 function formatLintRuleLines(facts: LintRuleExplanation): string[] {
     const { tool, rule, page } = facts;
     const pageLines = page === null ? [] : [`The tool's page: ${page}`];
-    if (page === null && tool !== undefined) pageLines.push(`Read the ${tool} documentation for ${rule}.`);
-    const docs = { ...facts, description: facts.description ?? undefined };
+    if (page === null && tool !== null) pageLines.push(`Read the ${tool} documentation for ${rule}.`);
     return [
         `${facts.check} ${rule}`,
         '',
-        ...LINT_RULE_LABELS.flatMap(([key, label]) => (docs[key] === undefined ? [] : [`${label}: ${docs[key]}`])),
-        ...(facts.explanation === undefined ? [] : ['', facts.explanation]),
+        ...LINT_RULE_LABELS.flatMap(([key, label]) => (facts[key] === null ? [] : [`${label}: ${facts[key]}`])),
+        ...(facts.explanation === null ? [] : ['', facts.explanation]),
         ...pageLines,
         '',
         'Ignore it only with a reason your team accepts.',
         `Ignore it everywhere: ${facts.turnOff.everywhere}`,
         `Ignore it for some paths: ${facts.turnOff.paths}`,
-        ...(facts.changeOptions === undefined ? [] : [`Change its options: ${facts.changeOptions}`]),
+        ...(facts.changeOptions === null ? [] : [`Change its options: ${facts.changeOptions}`]),
     ];
 }
 
@@ -190,26 +190,26 @@ function buildCheckExplanation(
     const described = buildCheckFacts(check, configuration, session);
     const selected =
         session === undefined || configuration === undefined
-            ? undefined
+            ? null
             : isConfigurationSelected(session.scopes, configuration.name);
     return {
         check: check.id,
         ...(configuration === undefined
-            ? { command: check.command, paths: check.files?.paths }
-            : { configuration: configuration.name }),
+            ? { configuration: null, command: fillNull(check.command), paths: fillNull(check.files?.paths) }
+            : { configuration: configuration.name, command: null, paths: null }),
         stage: check.stage,
         level: check.level,
         summary: check.summary,
         why: check.why,
         help: check.help,
-        condition: check.when,
-        crashPattern: described.crashPattern,
-        runInCopy: check.run_in_copy,
+        condition: fillNull(check.when),
+        crashPattern: fillNull(described.crashPattern),
+        runInCopy: fillNull(check.run_in_copy),
         minVersions: described.minVersions,
-        turnOff: described.turnOff,
+        turnOff: { ...described.turnOff, rule: fillNull(described.turnOff.rule) },
         settingNames: described.settings,
         ruleFiles: described.ruleFiles,
-        ...(selected !== undefined && { selected }),
+        selected,
         ignores: described.ignores,
     };
 }
@@ -260,20 +260,20 @@ export async function explainLintRule(
     if (docs === undefined) return undefined;
     const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;
     const facts: LintRuleExplanation = {
-        tool,
+        tool: fillNull(tool),
         rule: identifier,
         check: found.check.id,
-        page: docs.url ?? null,
-        description: docs.description ?? null,
-        why: docs.why,
-        fix: docs.fix,
-        example: docs.example,
-        explanation: verbose === true ? docs.explanation : undefined,
+        page: fillNull(docs.url),
+        description: fillNull(docs.description),
+        why: fillNull(docs.why),
+        fix: fillNull(docs.fix),
+        example: fillNull(docs.example),
+        explanation: verbose === true ? fillNull(docs.explanation) : null,
         turnOff: {
             everywhere: `${ignore} --reason "<why>"`,
             paths: `${ignore} --paths "<path>" --reason "<why>"`,
         },
-        changeOptions: formatRuleOptions(tool, identifier, found.configuration),
+        changeOptions: fillNull(formatRuleOptions(tool, identifier, found.configuration)),
     };
     return {
         kind: 'lint-rule',

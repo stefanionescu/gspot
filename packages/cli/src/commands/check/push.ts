@@ -78,13 +78,13 @@ function buildPushReport(
         revisions,
         skipped: pushed.skipped,
         exitCode: Math.max(0, ...revisions.map((revision) => revision.report.exitCode)),
-        ...(cancelSignal.aborted && { canceled: { pendingRefs } }),
+        canceled: cancelSignal.aborted ? { pendingRefs } : null,
     };
 }
 
 function formatUncheckedRefs(pushed: PushedRevisions, report: PushReport): string[] {
     const canceled =
-        report.canceled === undefined
+        report.canceled === null
             ? []
             : [
                   `Push checks canceled. Branches and tags not checked: ${report.canceled.pendingRefs.join(', ') || NO_PENDING_REFS}.\n`,

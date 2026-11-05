@@ -17,10 +17,10 @@ import type { Explanation, PathExplanation } from '#cli/types/commands/reports.t
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-function formatUncheckedKind(file: TrackedFile): string | undefined {
+function formatUncheckedKind(file: TrackedFile): string | null {
     if (file.kind === 'binary') return BINARY_ELIGIBLE_MESSAGE;
     if (file.kind === 'generated') return GENERATED_ELIGIBLE_MESSAGE;
-    return file.kind === 'vendored' ? VENDORED_ELIGIBLE_MESSAGE : undefined;
+    return file.kind === 'vendored' ? VENDORED_ELIGIBLE_MESSAGE : null;
 }
 
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
@@ -56,9 +56,9 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
                 reason: ignore.reason,
             })),
         fileKindOrigin: file.kindOrigin,
+        unchecked: formatUncheckedKind(file),
+        remedy: null,
     };
-    const unchecked = formatUncheckedKind(file);
-    if (unchecked !== undefined) report.unchecked = unchecked;
     if (running.length === 0 && file.kind === 'source') {
         report.unchecked = UNCHECKED_REASON;
         report.remedy = report.ignores.length > 0 ? IGNORED_FILE_MESSAGE : MARK_GENERATED_MESSAGE;
@@ -67,7 +67,6 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
 }
 
 function formatPathExplanation(explanation: PathExplanation): string {
-    const by = explanation.fileKindOrigin === undefined ? '' : ` by ${explanation.fileKindOrigin}`;
     const checks = explanation.checks.map((check) => `  ${check.check}  ${check.stage}  ${check.state}`);
     const ignores = explanation.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
@@ -75,13 +74,13 @@ function formatPathExplanation(explanation: PathExplanation): string {
         return `  ${ignore.check ?? EVERY_CHECK}${rule}${reason}`;
     });
     const lines = [
-        `${explanation.path}  (scope ${formatScope(explanation.scope)}, kind ${explanation.fileKind}${by})`,
+        `${explanation.path}  (scope ${formatScope(explanation.scope)}, kind ${explanation.fileKind} by ${explanation.fileKindOrigin})`,
         '',
-        ...(explanation.unchecked === undefined ? [] : [explanation.unchecked]),
+        ...(explanation.unchecked === null ? [] : [explanation.unchecked]),
         ...(explanation.configurations.length === 0 ? [] : [`Checked by: ${explanation.configurations.join(', ')}`]),
         ...(checks.length === 0 ? [] : ['Checks:', ...checks]),
         ...(ignores.length === 0 ? [] : ['Ignores:', ...ignores]),
-        ...(explanation.remedy === undefined ? [] : ['', `To change this: ${explanation.remedy}`]),
+        ...(explanation.remedy === null ? [] : ['', `To change this: ${explanation.remedy}`]),
     ];
     return `${lines.join('\n')}\n`;
 }
