@@ -1,6 +1,17 @@
+import { relative } from 'node:path';
+
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
+import { isInside } from '#cli/system/paths.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+
+const FILE_LINK = /^file:\/\/(?<path>[^\s#?]+)/u;
+
+function isLinkInRoot(message: string, root: string): boolean {
+    const path = FILE_LINK.exec(message)?.groups?.['path'];
+    if (path === undefined) return true;
+    return isInside(relative(root, decodeURIComponent(path)));
+}
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
     const line = groups['line'];
@@ -37,7 +48,8 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
 }
 
 /**
-Read findings grouped under output file headings.
+Read findings grouped under output file headings. A file link that leaves the repository root works on a Git host and
+not in a clone, so it reports nothing.
 
 @param output the tool output to read.
 */
@@ -58,5 +70,5 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
         const message = (groups['message'] ?? line).trim();
         findings.push(setMatchedFields({ check, file, message, help, fixable: false }, groups));
     }
-    return findings;
+    return findings.filter(({ message }) => isLinkInRoot(message, output.root));
 }

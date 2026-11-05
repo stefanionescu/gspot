@@ -303,3 +303,17 @@ test('an unexplained failure of a tool that fails to load ends with gspot instal
         `${stderr.trim()}\nA tool in .gspot/node_modules failed to load. Run gspot install.`,
     ]);
 });
+
+test('an ESLint comment for a rule that no plugin holds says to delete the comment', () => {
+    const output = outputSchema.parse({
+        format: 'json',
+        fields: { file: 'file', message: 'message', rule: 'rule' },
+    });
+    const stdout = JSON.stringify([
+        { file: '/repo/a.ts', rule: 'removed/rule', message: "Definition for rule 'removed/rule' was not found." },
+    ]);
+    const check = { runs: 'files' as const, id: 'javascript/eslint', help: 'Fix it.', output };
+    expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([
+        { help: expect.stringContaining('Delete the comment.') as string, explain: '' },
+    ]);
+});

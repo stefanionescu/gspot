@@ -241,3 +241,7 @@ export const CHECK_STATUSES = ['passed', 'failed', 'missing', 'skipped', 'error'
 export const COMPARED_CONTENTS = ['working-tree', 'index', 'commit'] as const;
 
 export const BASELINE_STAGES: ReadonlySet<string> = new Set(['commit', 'push']);
+
+export const MISSING_RULE_MESSAGE = /^Definition for rule '.+' was not found\.$/u;
+
+export const MISSING_RULE_HELP = 'This comment names a rule of a plugin that gspot does not run. Delete the comment.';

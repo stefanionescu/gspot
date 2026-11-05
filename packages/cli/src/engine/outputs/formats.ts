@@ -2,7 +2,14 @@ import { realpathSync } from 'node:fs';
 import { isAbsolute, posix, sep } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-import { FILE_GROUP, MISSING_PATH_CODES, RULE_GROUP, TAPLO_OUTPUTS } from '#cli/config/engine.ts';
+import {
+    FILE_GROUP,
+    MISSING_PATH_CODES,
+    MISSING_RULE_HELP,
+    MISSING_RULE_MESSAGE,
+    RULE_GROUP,
+    TAPLO_OUTPUTS,
+} from '#cli/config/engine.ts';
 import { DRIVE_LETTER } from '#cli/config/system.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
@@ -99,7 +106,12 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     return findings.map((finding) => {
         let message = finding.message;
         for (const prefix of prefixes) message = message.replaceAll(prefix, '');
-        const formatted = { ...finding, message, fixable: check.fix !== undefined && finding.fixable };
+        const formatted = {
+            ...finding,
+            message,
+            fixable: check.fix !== undefined && finding.fixable,
+            ...(MISSING_RULE_MESSAGE.test(message) && { help: MISSING_RULE_HELP, explain: '' }),
+        };
         if (check.runs === 'history' || finding.file === '') return formatted;
         formatted.file = buildRootRelativePath(finding.file, cwd, posixRoot);
         return formatted;
