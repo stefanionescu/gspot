@@ -8,8 +8,8 @@ Supabase rule holds the connection and identity decisions.
 ## Connections and schema ownership
 
 Construct one bounded server-side pool with a clear lifetime. Close a script's connection in cleanup, not a shared pool
-after each query. Budget across instances and keep request identity out of shared client state. Create no connection and
-run no migration in a schema module.
+after each query. Keep request identity out of shared client state. Create no connection and run no migration in a
+schema module.
 
 Inferred types, `$type<T>()`, and `sql<T>` validate nothing at runtime. Drizzle-only defaults and update callbacks do
 not cover another writer. Choose database defaults or triggers when the contract must cover every write path.
