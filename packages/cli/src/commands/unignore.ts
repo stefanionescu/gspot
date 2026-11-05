@@ -6,6 +6,7 @@ import {
     writeSettingsEdit,
 } from '#cli/commands/edits.ts';
 import {
+    BARE_UNIGNORE_MESSAGE,
     ESCAPED_GLOB_CHARACTERS,
     NO_CHECK_IGNORE_TEXTS,
     RULE_WITHOUT_CHECK_MESSAGE,
@@ -67,15 +68,6 @@ function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'pat
     return { unmatched: `${subject} has no matching ignore`, removed: `for ${subject}${paths}` };
 }
 
-function formatEverywhereNote(everywhere: number, check: string | undefined): string[] {
-    if (everywhere === 0) return [];
-    const subject = check ?? 'every check';
-    const command = check === undefined ? 'gspot unignore' : 'gspot unignore ' + check;
-    return [
-        `The ignore of ${subject} covers every path, so --paths removes nothing from it. Run ${command} to remove it.`,
-    ];
-}
-
 async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'root' | 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
@@ -86,7 +78,12 @@ async function runUnignoreCommand(
         ...options,
         paths: buildIgnorePaths(context, options.cwd, options.paths),
     });
-    const notes = formatEverywhereNote(everywhere, options.check);
+    const notes =
+        everywhere > 0 && options.check !== undefined
+            ? [
+                  `The ignore of ${options.check} covers every path, so --paths removes nothing from it. Run gspot unignore ${options.check} to remove it.`,
+              ]
+            : [];
     const target = formatIgnoreTarget(options);
     if (deleted + changedIgnores === 0)
         return buildUnchangedResult(
@@ -123,6 +120,7 @@ export const UNIGNORE_COMMAND: CommandDefinition<[string | undefined], Partial<I
     run: async ({ arguments: commandArguments, flags: { rule, paths }, root, cwd }) => {
         const [check] = commandArguments;
         if (check === undefined && rule !== undefined) throw new GspotError('arguments', RULE_WITHOUT_CHECK_MESSAGE);
+        if (check === undefined && paths === undefined) throw new GspotError('arguments', BARE_UNIGNORE_MESSAGE);
         return await runUnignoreCommand({ root, cwd, check, rule, paths });
     },
 };

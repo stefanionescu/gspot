@@ -4,6 +4,9 @@ export const UNCHANGED_SETTINGS_MESSAGE = 'No change: gspot.toml already says th
 
 export const REPAIRED_FILES_MESSAGE = 'gspot.toml already says this.';
 
+export const BARE_UNIGNORE_MESSAGE =
+    'Name what to remove: run gspot unignore <check>, or gspot unignore --paths <path>.';
+
 export const RULE_WITHOUT_CHECK_MESSAGE =
     'An ignore without a check cannot take --rule. Name the check that owns the rule.';
 

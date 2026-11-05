@@ -184,7 +184,8 @@ export const COMMAND_HELP = {
         description:
             'Remove the ignores of a check from gspot.toml, then write the generated files again.\n\nWith --rule, remove only the ignores of that lint rule. With --paths, take those paths out of the ignores. An ignore without paths covers every path, so --paths cannot narrow it. unignore keeps that ignore and says so.',
         arguments: {
-            '[check]': 'The check, such as python/ruff. Leave it out to change the ignores that cover every check',
+            '[check]':
+                'The check, such as python/ruff. Leave it out and pass --paths to change the ignores that cover every check',
         },
         options: {
             '--rule <rule>': 'Remove only the ignores of this lint rule',

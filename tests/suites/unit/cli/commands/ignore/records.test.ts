@@ -116,3 +116,14 @@ test.each([...IGNORE_REFUSALS])('ignore refuses $name without writing', async ({
     await using sandbox = await createGitSandbox(REFUSAL_FILES);
     await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');
 });
+
+test('a bare unignore exits 2, names --paths, and keeps every ignore', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: '[[ignore]]\npaths = ["data/**"]\nreason = "Product facts copy the packaging."\n',
+        }),
+        'data/facts.txt': 'facts\n',
+    });
+    const refusal = await assertRefusalWithoutWrites(sandbox.path, ['unignore'], 'arguments');
+    expect(refusal.message).toContain('gspot unignore --paths <path>');
+});
