@@ -22,7 +22,7 @@ import { hasToolBuild } from '#tests/setup/system/platform.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);
-    test('the FastAPI rules report exception text in a response and accept a fixed detail', async () => {
+    test('the FastAPI rules report exception text, a CORS wildcard with credentials, and debug mode, and accept their fixes', async () => {
         const sourceFiles = {
             'gspot.toml': buildSandboxSettings(['fastapi', 'security']),
             'pyproject.toml': FASTAPI_PROJECT,
@@ -30,39 +30,35 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
             'neighbor.py':
                 'from fastapi import HTTPException\nraise HTTPException(status_code=404, detail="User not found")\n',
         };
+        const unsafe = FASTAPI_CONFIGURATION_CASES.map(({ rule, source }): [string, string] => [`${rule}.py`, source]);
+        const fixed = FASTAPI_CONFIGURATION_CASES.map(({ rule, fixed: source }): [string, string] => [
+            `${rule}.py`,
+            source,
+        ]);
+        const files = { ...sourceFiles, ...Object.fromEntries(unsafe) };
+        const findings = [
+            ...FASTAPI_CONFIGURATION_CASES.map(({ rule }) => ({
+                file: `${rule}.py`,
+                line: 1,
+                rule: `gspot.fastapi.${rule}`,
+            })),
+            { file: 'service.py', line: 7, rule: 'gspot.fastapi.exception-text-in-response' },
+        ];
         await assertCheckSample(installedSandbox(), {
-            ...buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
+            ...buildSandboxChanges(SEMGREP_SANDBOX.files, files),
             check: SEMGREP_CHECK_ID,
             apply: true,
-            expected: { file: 'service.py', line: 7, rule: 'gspot.fastapi.exception-text-in-response' },
+            expected: findings[0]!,
+            findings,
             corrected: {
                 files: {
-                    ...sourceFiles,
+                    ...files,
+                    ...Object.fromEntries(fixed),
                     'service.py': FASTAPI_SOURCE.replace('detail=str(error)', 'detail="Unable to load user"'),
                 },
             },
         });
     });
-    test.each([...FASTAPI_CONFIGURATION_CASES])(
-        'fastapi $rule reports unsafe input and accepts its fix',
-        async ({ rule, source, fixed }) => {
-            const files = {
-                'gspot.toml': buildSandboxSettings(['fastapi', 'security']),
-                'source.py': source,
-            };
-            await assertCheckSample(installedSandbox(), {
-                ...buildSandboxChanges(SEMGREP_SANDBOX.files, files),
-                check: SEMGREP_CHECK_ID,
-                apply: true,
-                expected: { file: 'source.py', line: 1, rule: `gspot.fastapi.${rule}` },
-                corrected: { files: { ...files, 'source.py': fixed } },
-            });
-        },
-    );
-});
-
-describe.skipIf(!hasToolBuild('semgrep'))('semgrep rule files', () => {
-    const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);
 
     test('a broken rule file is an error in the scopes that read it', async () => {
         const { root } = installedSandbox();
