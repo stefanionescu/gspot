@@ -60,6 +60,7 @@ resources.use(
         ...MISE_LOCK_ENVIRONMENT,
         GITHUB_ACTIONS: undefined,
         MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
+        MISE_CACHE_DIR: join(TEST_RUN_FOLDER, 'mise-cache'),
         BUN_INSTALL_CACHE_DIR: join(TEST_RUN_FOLDER, 'bun-cache'),
         GSPOT_TEST_NPM_REGISTRY: registry.url,
         NPM_CONFIG_USERCONFIG: registry.npmrc,
