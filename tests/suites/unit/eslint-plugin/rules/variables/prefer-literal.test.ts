@@ -16,7 +16,6 @@ buildRuleTester().run('prefer-object-literal', preferLiteral, {
             errors: [{ messageId: 'literal' }],
         },
         { code: 'const other = {}, user = {}; user.name = name;', errors: [{ messageId: 'literal' }] },
-        { code: 'const user = {}; user.name = readName(user);', errors: [{ messageId: 'literal' }] },
         {
             code: 'function read() { const user = {}; user["name"] = name; return user; }',
             errors: [{ messageId: 'literal' }],

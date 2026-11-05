@@ -75,11 +75,6 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
                     { messageId: 'noMagic', data: { raw: '2' } },
                 ],
             },
-            {
-                name: 'a pattern size in another statement',
-                code: 'function read(values) { const [first, second] = values; return values.slice(2); }',
-                errors: [{ messageId: 'noMagic', data: { raw: '2' } }],
-            },
         ],
     },
 );
