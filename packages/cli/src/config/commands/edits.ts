@@ -22,8 +22,6 @@ export const INSTALLATION_STOPPED_MESSAGE = 'Installation stopped before every t
 
 export const GSPOT_REMOVE = 'gspot remove';
 
-export const REMOVE_CONFIGURATION_MESSAGE = 'Run gspot remove <configuration> --reason "<why>".';
-
 export const NUMBER_TEXT = /^-?\d+(?:\.\d+)?$/u;
 
 export const TOML_COMPOUND_START = /^[[{]/u;

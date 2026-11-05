@@ -4,9 +4,10 @@ import {
     readConfigurationEditContext,
     writeSettingsEdit,
 } from '#cli/commands/edits.ts';
-import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
+import { GSPOT_REMOVE } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
+import { REMOVAL_REASON_SUGGESTION } from '#cli/config/settings/validation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -119,7 +120,7 @@ export const REMOVE_COMMAND: CommandDefinition<[string[]], ScopeFlags & { reason
     ],
     run: async ({ arguments: commandArguments, flags: { reason, scope: scopePath }, root, cwd }) => {
         const [configurations] = commandArguments;
-        const invalid = validateReason(GSPOT_REMOVE, reason, REMOVE_CONFIGURATION_MESSAGE);
+        const invalid = validateReason(GSPOT_REMOVE, reason, REMOVAL_REASON_SUGGESTION);
         if (invalid !== undefined) throw new GspotError('arguments', invalid);
         return await runRemoveCommand({ root, cwd, configurations: [...new Set(configurations)], reason, scopePath });
     },
