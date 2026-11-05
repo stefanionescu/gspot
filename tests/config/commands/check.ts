@@ -110,13 +110,6 @@ export const FAILED_CHECK_REPORT = {
     exitCode: 1,
 } as const;
 
-export const NO_COLOR_SETTINGS = `configurations = []
-[[ignore]]
-check = "gspot/generated-files"
-paths = ["absent/**"]
-reason = "This path belongs to an external generated project."
-`;
-
 export const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings,example/passing', '--base', 'HEAD'] as const;
 
 const FINDING_LINES = Array.from({ length: 201 }, (_, index) => `finding ${String(index + 1)}.`);

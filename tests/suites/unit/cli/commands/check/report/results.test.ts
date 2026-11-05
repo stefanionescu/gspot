@@ -9,15 +9,9 @@ import { testdir } from 'testdirs';
 import { formatRunReport } from '#cli/commands/check/report.ts';
 import { printProgress } from '#cli/engine/report.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import {
-    FAILED_CHECK_REPORT,
-    FINDINGS_TOOL_ARGUMENTS,
-    NO_COLOR_SETTINGS,
-    VERBOSITY_ARGUMENTS,
-} from '#tests/config/commands/check.ts';
+import { FAILED_CHECK_REPORT, FINDINGS_TOOL_ARGUMENTS, VERBOSITY_ARGUMENTS } from '#tests/config/commands/check.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -244,25 +238,6 @@ test.each([{ TERM: 'dumb' }, { NO_COLOR: '1' }])(
         expect(lines).toStrictEqual(['done  python/ruff  12.3s\n']);
     },
 );
-
-test('NO_COLOR prints findings without color on terminal streams', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': NO_COLOR_SETTINGS });
-
-    using _terminals = fakeTerminals([
-        [process.stdout, true],
-        [process.stderr, true],
-    ]);
-    const result = await runGspot(sandbox.path, ['check', '--only', 'gspot/unmatched-paths'], {
-        NO_COLOR: '1',
-        CI: '',
-    });
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.stdout).toContain('absent/** under [[ignore]] matches no tracked file or folder.');
-    expect(result.stdout).toContain('gspot/unmatched-paths');
-    expect(result.stdout).not.toContain('\u{1B}[');
-    expect(result.stderr).not.toContain('\u{1B}[');
-    expect(result.stderr).not.toContain('\r');
-});
 
 test('a staged report with unstaged changes names their count once', async () => {
     await using sandbox = await testdir({

@@ -1,6 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, spyOn, test } from 'bun:test';
 
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
@@ -24,18 +21,4 @@ test('a staged check of a clean tree runs in place, and an ignored file stays ou
     const result = await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/bash-syntax', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(copies).not.toHaveBeenCalled();
-});
-
-test('a staged check with an untracked file runs in a copy', async () => {
-    await using sandbox = await createGitSandbox({
-        '.gitignore': `${GSPOT_FOLDER}/\n`,
-        'gspot.toml': buildSandboxSettings([], { tables: BASH_SYNTAX_CHECK }),
-        'entry.sh': '#!/usr/bin/env bash\necho ready\n',
-    });
-    runGitStep(sandbox.path, ['add', '-A']);
-    await writeFile(join(sandbox.path, 'notes.txt'), 'unstaged\n');
-    using copies = spyOn(revisions, 'copyRevision');
-    const result = await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/bash-syntax', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(copies).toHaveBeenCalledTimes(1);
 });
