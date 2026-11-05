@@ -4,13 +4,16 @@ Read this rule before you write text that people read: messages to the user, doc
 pull requests, issues, and reviews.
 
 Write short sentences in common words, state the action or result early, and explain a technical term when the reader
-needs it. Say what happens, and name the thing you mean. Write no slogan, metaphor, or catchy title: write
-`Every ignored rule needs a reason`, not `Close the quiet off switch`.
+needs it. Say what happens, and name the thing you mean. State the fact. Write no hedge, marketing word, or promise.
+Write no slogan, metaphor, or catchy title: write `Every ignored rule needs a reason`, not `Close the quiet off switch`.
 
 Write so that each sentence follows from the one before. Join related facts in one sentence. Say what a thing is for
 before you list what it holds.
 
 Do not explain what the reader already knows. Delete a sentence that only restates a title, a name, or what a page is.
+
+A comment says why, not what. Write no comment that repeats the code or narrates the change. A commit message says what
+changed and why.
 
 ## Evidence
 
@@ -34,23 +37,13 @@ Times shown to people include their time zone; machine values retain their requi
 
 <!-- level: all -->
 
-- State the rule or the fact. Write no `should`, `could`, `would`, or `might`, and no hedge such as `usually`, `very`,
-  or `where possible`.
-- Write no marketing word such as `simply`, `easily`, `robust`, or `powerful`.
-- Describe what exists now. Write no promise such as `coming soon` or `in the future`, and no history such as
-  `previously`, `no longer`, or `renamed from`.
-- Do not mention a feature, option, or setting that the project removed or decided against.
-- Write `do not`, `it is`, `for example`, and `you`, not `don't`, `it's`, `e.g.`, and `we`.
-- Name the thing, not its place on the page: no `see above`, `the following section`, or `this guide explains`.
-- Write `because` or `after` instead of `since`.
-- Use a comma, a colon, or a period instead of an em dash or a double hyphen. Write `to` instead of a dash in a range.
+Write no `should`, `could`, `would`, or `might`, no marketing word, no history, no contraction, no `since`, no dash, no
+first person, and no emoji. Vale reports each one. A commit message and release notes may say what changed.
+
+- In documentation and comments, do not mention a feature, option, or setting that the project removed or decided
+  against.
 - Avoid parenthetical asides. Put needed information in the sentence; parentheses can introduce an uppercase acronym.
-- Put commas and periods inside quotation marks.
-- Address the reader as you. Write no first-person pronouns or exclamation marks.
-- Use words instead of an emoji or an arrow.
-- Put a file path in code formatting, and write a placeholder as `<kebab-case>`.
-- Write every title and heading in sentence case, with no end punctuation. Keep a title to a few words that name its
-  topic.
+- Keep a title to a few words that name its topic.
 - Keep a sentence within {setting:prose.max_sentence_words} words, a list item within
   {setting:prose.max_list_item_words} words, and a paragraph within {setting:prose.max_paragraph_sentences} sentences.
 
