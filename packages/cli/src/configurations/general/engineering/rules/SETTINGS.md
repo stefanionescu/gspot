@@ -14,8 +14,7 @@ Read this rule when you change how a program reads its settings or environment.
 
 <!-- level: all -->
 
-- Each process reads the environment in one module and passes the values in. When `structure.environment_readers`
-  lists files, read the environment only in them.
+- Each process reads the environment in one module and passes the values in.
 - Parse each value once at startup and expose a typed, immutable settings object.
 - Do not add a hierarchy or a generic settings module for one value.
 
