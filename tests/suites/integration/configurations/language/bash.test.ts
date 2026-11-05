@@ -19,7 +19,7 @@ import {
     SYNTAX_FILES,
 } from '#tests/config/integration/language.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -219,7 +219,7 @@ test.each([
         [path]: source,
     });
 
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
+    await applyGeneratedFiles(sandbox.path);
     const command = ['check', '--only', 'bash/shfmt', '--json'];
     const broken = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(broken.exitCode, JSON.stringify(broken)).toBe(1);
