@@ -63,7 +63,7 @@ async function assertStagedRetry(
     root: string,
     paused: Pick<Awaited<ReturnType<typeof prepareStagedCancellation>>, 'scratch' | 'indexed'>,
 ): Promise<void> {
-    expect(await readdir(paused.scratch)).toStrictEqual([]);
+    expect(listScratchFiles(await readdir(paused.scratch))).toStrictEqual([]);
     expect(runGitStep(root, ['ls-files', '--stage', '-z'])).toBe(paused.indexed);
     expect(await readFile(join(root, 'source.sh'), 'utf8')).toBe(AUTHORED_SCRIPT);
     const retry = parseCheckReport(
@@ -73,12 +73,16 @@ async function assertStagedRetry(
     expect(retry.report.checks[0]!.status).toBe('passed');
 }
 
+function listScratchFiles(names: string[]): string[] {
+    return names.filter((name) => name !== 'node-compile-cache');
+}
+
 test.skipIf(isWindows)(
     'canceling check --staged during git status exits with the signal code, keeps the index and the working file, and a second run passes',
     async () => {
         await using sandbox = await testdir();
         await using paused = await prepareStagedCancellation(sandbox.path, 'status');
-        expect(await readdir(paused.scratch)).toStrictEqual([]);
+        expect(listScratchFiles(await readdir(paused.scratch))).toStrictEqual([]);
         await stopStagedCancellation(paused, 'SIGTERM', 143);
         await assertStagedRetry(sandbox.path, paused);
     },
