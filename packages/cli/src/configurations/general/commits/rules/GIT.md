@@ -30,6 +30,7 @@ overwrite them. Keep working beside them, and ask the user only when your change
 - Take the type from `type-enum` and the scope from `scope-enum` in
   `.gspot/configurations/general/commits/commitlint.json`. Leave out the scope when none fits. Without a `scope-enum`, any kebab-case word works as a scope.
 - Start the subject in lowercase, and end it without a period.
+- A `feat` or `fix` subject says what changes for a user.
 - Keep the first line and each body line at 72 characters or fewer. Leave a blank line after the first line and before
   the footers.
 
