@@ -88,8 +88,11 @@ files before each push. CI stays off until you [turn it on](/use/ci/#turn-ci-on)
 
 Commit the setup files, then fix each file as you touch it. The setup commit passes once you delete what
 `gspot/conflicting-configs` reports: old tool settings, and scripts, hook lines, and CI steps that still call the old
-tools. After you edit `package.json`, run the install command of your package manager and `gspot install`, then stage
-the result. The hook reports anything else in the files that the setup changed, such as the format of `package.json`.
+tools.
+
+After you edit `package.json`, run the install command of your package manager and `gspot install`, then stage the
+result. The hook still reports the findings of each file that the setup stages, such as a version range in
+`package.json`. A CI file that you edit also fails on its old findings. Fix them, or ignore the rule.
 [Files to commit](/reference/generated-files/#files-to-commit) lists the setup files.
 
 A later commit checks what you stage, and what your staged change breaks in other files, so touching an old file fails
