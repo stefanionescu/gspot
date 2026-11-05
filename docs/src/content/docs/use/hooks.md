@@ -1,18 +1,16 @@
 ---
 title: Git hooks
-description: Run the checks before each commit and push, and check each commit message.
+description: What each hook checks, what a first commit and push run into, and how to run gspot beside another hook manager.
 ---
 
-A Git hook is a script that Git runs at a set point, such as before a commit. `gspot init` writes the gspot hooks and
-turns them on. While `hooks.enabled` is `true`, gspot writes each hook in this table that runs at least one check, and
-`gspot install` turns the hooks on. The hooks run code from your repository, as [Trust](/start/concepts/#trust)
-describes.
+`gspot init` installs these hooks and turns them on, and in a new clone, `gspot install` turns them on. The hooks run
+code from your repository, as [Trust](/start/concepts/#trust) describes.
 
-| Hook         | Checks                                                                                                                                                                                             |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pre-commit` | The `commit` checks, on the staged files.                                                                                                                                                          |
-| `pre-push`   | The `push` checks, on the files that the push changes, as they are in the newest commit of each pushed branch. At level `all`, `commits/commitlint-pushed` also checks each pushed commit message. |
-| `commit-msg` | The `message` checks, on the new commit message: `commits/references`, and at level `all` also `commits/commitlint` and `prose/commit-message`.                                                    |
+| Hook         | Checks                                                                                                                                          |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | The `commit` checks, on the files as you staged them.                                                                                           |
+| `pre-push`   | The `push` checks, on the files that the push changes. At level `all`, `commits/commitlint-pushed` also checks each pushed commit message.      |
+| `commit-msg` | The `message` checks, on the new commit message: `commits/references`, and at level `all` also `commits/commitlint` and `prose/commit-message`. |
 
 ```mermaid
 flowchart LR
@@ -22,25 +20,34 @@ flowchart LR
     precommit -- passed --> message["commit-msg hook: message checks"] -- passed --> committed["commit"]
     precommit -- failed --> stopped["no commit"]
     message -- failed --> stopped
-    push["git push"] --> prepush["pre-push hook: push checks on the pushed tips"]
+    push["git push"] --> prepush["pre-push hook: push checks on the pushed files"]
     prepush -- passed --> pushed["push"]
     prepush -- failed --> refused["no push"]
 ```
 
-The pre-push hook checks only the newest commit of each pushed branch. A mistake in an older commit of the push does
-not fail the hook when a newer commit fixes it. The pre-commit hook already ran the commit checks on each commit, so the
-pre-push hook does not run them again. CI runs both. Checks that read the whole project, such as the type checker, can
-report findings in files that you did not change.
+A commit checks what you stage, and what your staged change breaks in other files, so a commit that touches an old file
+fails on that file's old findings. A change to `gspot.toml` does not run the commit checks on other files, so the setup
+commit passes once you delete the old tool settings that gspot reports as conflicts.
 
-When a hook cannot start gspot, the commit stops.
-[Troubleshooting](/use/troubleshooting/#a-hook-cannot-find-nodejs-yarn-or-mise) shows how to fix it. A Git client
-can give hooks another `PATH` than your terminal, so a hook can find an older Node.js and stop on the Node.js minimum.
+The pre-push hook checks only the newest commit of each pushed branch. A mistake in an older commit of the push does not
+fail the hook when a newer commit fixes it. It does not run the commit checks again, because the pre-commit hook ran
+them on each commit, and CI runs both. Checks that read the whole project, such as the type checker, report findings in
+files that you did not change. The first push fails until you fix or ignore those old findings, as
+[Clean up the first findings](/start/quickstart/#clean-up-the-first-findings) shows.
 
-When the dependency files in your working tree differ from the checked commit, gspot prints this note:
+Hooks in npm, pnpm, and Bun repositories start gspot from `node_modules/.bin`, so they need `node` on the `PATH` that
+the Git client gives hooks. Yarn and mise keep their launchers, so those repositories need `yarn` or `mise` on that
+`PATH` instead. A Git client can give hooks another `PATH` than your terminal, so a hook can find an older Node.js and
+stop on the Node.js minimum. When a hook cannot start gspot, the commit stops, and
+[Troubleshooting](/use/troubleshooting/#a-hook-cannot-find-nodejs-yarn-or-mise) shows how to fix it.
 
-```text
-The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.
-```
+## When a hook fails
+
+Fix each finding, then commit or push again. If a finding does not apply to your code, add an ignore with a reason, as
+[Ignore findings](/use/ignore/) describes, and stage it with your change.
+
+`git commit --no-verify` skips one hook run. The next run of the check reports the same findings, so it is not a way to
+adopt gspot.
 
 ## Turn hooks on or off
 
@@ -51,18 +58,15 @@ gspot set hooks.enabled true
 gspot install
 ```
 
-To turn them off, run `gspot set hooks.enabled false`. gspot then deletes `.gspot/hooks` and unsets the Git setting
-`core.hooksPath`.
+To turn them off, run `gspot set hooks.enabled false`, and gspot deletes `.gspot/hooks` and unsets the Git setting
+`core.hooksPath`. `gspot/weakenings` then fails in CI until you
+[give a reason](/configure/gspot-toml/#changes-that-need-a-reason).
 
 ## Existing hook managers
 
 If Husky, Lefthook, pre-commit, `simple-git-hooks`, or a hooks folder of your own already runs your Git hooks, gspot
-keeps those hooks and does not set `core.hooksPath`. A config file alone runs nothing, so Lefthook, pre-commit, and
-`simple-git-hooks` count only when `.git/hooks` holds an executable hook, and a `.husky` folder counts only while
-`core.hooksPath` points into it. Otherwise, `gspot install` turns the gspot hooks on.
-
-`gspot install` prints what to add, and a hook without it runs no gspot checks. For a hook folder or `simple-git-hooks`,
-add each line to the hook of the same name:
+leaves it in charge, and `gspot install` prints what to add. A hook without those lines runs no gspot checks. For a hook
+folder or `simple-git-hooks`, add each line to the hook of the same name:
 
 ```shell
 # pre-commit
@@ -112,7 +116,7 @@ of `.pre-commit-config.yaml`:
       stages: [commit-msg]
 ```
 
-Then run these commands. Each clone needs them, because `.git/hooks` is not tracked:
+Then run these commands in each clone, because `.git/hooks` is not tracked:
 
 ```shell
 pre-commit install --hook-type pre-commit --hook-type commit-msg
@@ -125,28 +129,18 @@ chmod +x .git/hooks/pre-push
 To run the checks of the pre-commit and commit-msg hooks without committing:
 
 ```shell
-gspot check --staged --stage commit
+gspot check --staged --only commit
 gspot check --hook commit-msg -- .git/COMMIT_EDITMSG
 ```
 
-The pre-push hook needs the remote arguments and the list of pushed commits that Git passes to it, so test it with a
-real `git push`. After a failed push, the `rerun:` line of the report is `gspot check --only <check> --base <hash>`.
-`<hash>` is the commit that the remote had, and the command checks the files that changed after it. To compare with a
-branch without pushing:
-
-```shell
-gspot check --base origin/main
-```
+The pre-push hook reads the remote and the list of pushed commits from Git, so test it with a real `git push`. After a
+failed push, the `rerun:` line of the report is `gspot check --only <check> --base <hash>`, where `<hash>` is the commit
+that the remote had. To see the result without pushing, run `gspot check --base origin/HEAD`.
 
 ## Large files
 
-When a tracked file has the Git attribute `filter=lfs`, gspot writes the `pre-push`, `post-checkout`, `post-commit`,
-and `post-merge` hooks that Git Large File Storage (LFS) needs. A `filter=lfs` pattern that matches no tracked file does
-not add these hooks. The `pre-push` hook runs the gspot checks before `git lfs pre-push`, so a push that the checks stop
-uploads no LFS file. If `git-lfs` is not on `PATH`, the hook exits with code 2 before any check runs, and asks you to
-install it. These hooks replace the default hooks that `git lfs install` writes, so LFS needs no other hook manager.
-
-## When a hook fails
-
-Fix each finding, then commit or push again. If a finding does not apply to your code, add an ignore with a reason, as
-[Ignore findings](/use/ignore/) describes. The ignore then stops that finding on every run.
+When a tracked file has the Git attribute `filter=lfs`, gspot writes the `pre-push`, `post-checkout`, `post-commit`, and
+`post-merge` hooks that Git Large File Storage (LFS) needs, so LFS needs no other hook manager. A `filter=lfs` pattern
+that matches no tracked file adds none of them. The `pre-push` hook runs the gspot checks before `git lfs pre-push`, so
+a push that the checks stop uploads no LFS file. If `git-lfs` is not on `PATH`, the hook exits with code 2 before any
+check runs, and asks you to install it.
