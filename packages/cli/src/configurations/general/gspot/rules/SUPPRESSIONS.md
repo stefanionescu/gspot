@@ -19,6 +19,4 @@ A suppression turns a lint rule off for one place, and it carries a reason.
   user whether the scope uses that configuration.
 - Never add filler statements to pass a check.
 
-Ask the user before you run `gspot baseline`, which accepts every current finding. When `gspot/baseline` reports a stale
-count, run `gspot baseline --prune` and commit `gspot.baseline.json`. Never remove a configuration or lower the level to
-stop a finding.
+Never remove a configuration or lower the level to stop a finding.
