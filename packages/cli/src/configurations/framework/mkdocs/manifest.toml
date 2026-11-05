@@ -1,7 +1,7 @@
 allowed_words = ["MkDocs"]
 
 [configuration]
-description = "MkDocs sites: the Markdown rules that the indented bodies of admonitions, details blocks, and content tabs break stay off."
+description = "MkDocs sites: turns off the Markdown rules that break on indented admonitions, details blocks, and content tabs."
 requires = ["markdown"]
 title = "MkDocs"
 

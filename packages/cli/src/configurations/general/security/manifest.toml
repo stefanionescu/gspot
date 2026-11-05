@@ -2,7 +2,7 @@ allowed_words = ["Semgrep", "CSRF"]
 
 [configuration]
 always_selected = true
-description = "Code in every language a configuration claims: unsafe patterns that Semgrep finds."
+description = "Semgrep rules for unsafe code, from the FastAPI configuration and your own rule files."
 title = "Security"
 
 [files]

@@ -1,7 +1,7 @@
 allowed_words = ["CSS"]
 
 [configuration]
-description = "Style sheets and the style blocks of components: the standard stylelint rules and one layout. SCSS gets formatting only."
+description = "Style sheets and the style blocks of components: the standard stylelint rules, no left or right properties, a visible focus outline, and relative font sizes. SCSS gets formatting only."
 title = "CSS"
 
 [detect]

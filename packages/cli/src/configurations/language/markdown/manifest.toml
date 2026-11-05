@@ -1,7 +1,7 @@
 allowed_words = ["Markdown"]
 
 [configuration]
-description = "Markdown files: one style and layout, and code blocks that parse."
+description = "Markdown files: the markdownlint rules, and code blocks that parse."
 title = "Markdown"
 
 [files]
