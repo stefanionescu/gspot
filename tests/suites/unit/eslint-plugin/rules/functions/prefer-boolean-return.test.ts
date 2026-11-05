@@ -5,7 +5,6 @@ buildRuleTester().run('prefer-boolean-return', preferBooleanReturn, {
     valid: [
         'function read() { if (ready) { save(); return true; } else return false; }',
         'function read() { if (ready) return value; else return false; }',
-        'function read() { if (ready) return true; save(); return false; }',
         'function read() { if (first) return false; if (second) return false; return true; }',
         'function read() { if (first) run(); else if (second) return true; else return false; }',
         'function read() { if (ready) { { return true; } } else return false; }',

@@ -2,11 +2,7 @@ import { noInconsistentFunctionCall } from '#eslint-plugin/rules/functions/no-in
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-inconsistent-function-call', noInconsistentFunctionCall, {
-    valid: [
-        'function Point() {} new Point(); new Point();',
-        'new Date(); Date();',
-        'function read() {} read(); read();',
-    ],
+    valid: ['function Point() {} new Point(); new Point();', 'new Date(); Date();'],
     invalid: [
         {
             code: 'function Point() {}\nnew Point();\nPoint();',

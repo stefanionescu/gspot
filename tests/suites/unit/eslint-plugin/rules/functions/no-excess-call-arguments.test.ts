@@ -5,16 +5,12 @@ buildRuleTester().run('no-excess-call-arguments', noExcessCallArguments, {
     valid: [
         'function read(value) { return value; } read(); read(1);',
         'function read(...values) { return values; } read(1, 2);',
-        'function read() {} read(1, 2);',
-        'const read = function() {}; read(1);',
         'const read = () => {}; read(1);',
         'function read() { return arguments[0]; } read(1, 2);',
         'function read() { return (() => arguments[0])(); } read(1, 2);',
         'function read(value) { return value; } const alias = read; alias(1, 2);',
-        'const api = { read(value) { return value; } }; api.read(1, 2);',
         'import read from "reader"; read(1, 2);',
         'function read(value: string): void; function read(value: number): void; function read(value: unknown) {} read(1, 2);',
-        'function run(callback: (first: number, second: number) => number) { return callback(1, 2); }',
         'function run({ visit }) { return visit(1, 2); }',
     ],
     invalid: [

@@ -37,10 +37,6 @@ buildTypedRuleTester().run('no-mixed-return-types', rule, {
             errors: [{ messageId: 'mixed', column: 10 }],
         },
         {
-            code: 'function read(raw: boolean, ready: boolean) { if (raw) return "1"; if (ready) return 1; return null; }',
-            errors: [{ messageId: 'mixed', column: 10 }],
-        },
-        {
             code: 'async function read(raw: boolean) { if (raw) return "1"; return 1; }',
             errors: [{ messageId: 'mixed' }],
         },

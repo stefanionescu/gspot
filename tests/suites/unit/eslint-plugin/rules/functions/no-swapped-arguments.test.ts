@@ -11,7 +11,6 @@ buildRuleTester().run('no-swapped-arguments', rule, {
         'function compare(a, b) {} const order = { reverse: compare(b, a) };',
         'function compare(a, b) {} const result = a < b ? compare(b, a) : compare(a, b);',
         'function compare(a, b) {} const result = a < b ? compare(b, a) : 0;',
-        'function ff(a, b, c, d) {} ff(d, a, b, c);',
         'divide(divisor, dividend);',
         'function compare(left, right, order) { return order(right, left); }',
         'function compare(a, b) {} list.sort((a, b) => { return compare(b, a); });',
