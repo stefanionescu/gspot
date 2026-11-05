@@ -57,9 +57,9 @@ export const PACKAGE_JSON_PATTERN = '**/package.json';
 
 export const PIN_RANGES_RULE = 'package-json/restrict-dependency-ranges';
 
-export const SCRIPT_NAMES_RULE = 'package-json/scripts-name-casing';
+const SCRIPT_NAMES_RULE = 'package-json/scripts-name-casing';
 
-export const PUBLISHED_PIN_OPTIONS = { forDependencyTypes: ['devDependencies'], rangeType: 'pin' } as const;
+const PUBLISHED_PIN_OPTIONS = { forDependencyTypes: ['devDependencies'], rangeType: 'pin' } as const;
 
 export const PACKAGE_JSON_RULES = {
     [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS],

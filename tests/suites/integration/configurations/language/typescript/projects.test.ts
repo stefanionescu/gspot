@@ -28,6 +28,13 @@ async function runTscCheck(root: string): Promise<TypecheckResult> {
     return { code: result.code, output, findings };
 }
 
+async function runInstalledTsc(root: string): Promise<ReturnType<typeof parseCheckReport>['report']> {
+    await linkTypescript(join(root, 'node_modules'));
+    commitAll(root);
+    await applyGeneratedFiles(root);
+    return parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json'])).report;
+}
+
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_PROJECTS_SANDBOX);
 
 test('typescript/tsc reports a type error in a tsconfig.json project without files or include, and leaves tsconfig.json unchanged', async () => {
@@ -149,12 +156,7 @@ test('typescript/tsc adds a note when a missing module is a package of this repo
         'packages/shared/package.json': '{"name":"@example/shared","exports":"./dist/index.js"}',
         'entry.ts': 'import { value } from "@example/shared/values";\n\nexport const copy: number = value;\n',
     });
-    await linkTypescript(join(sandbox.path, 'node_modules'));
-    commitAll(sandbox.path);
-    await applyGeneratedFiles(sandbox.path);
-    const { report } = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']),
-    );
+    const report = await runInstalledTsc(sandbox.path);
     expect(report.checks[0]).toMatchObject({
         status: 'failed',
         note: expect.stringContaining('@example/shared is a package of this repository') as string,
@@ -169,11 +171,6 @@ test('typescript/tsc resolves a types entry from the folder of the tsconfig of a
         'site/node_modules/local-types/client.d.ts': 'declare const fromTypes: number;\n',
         'site/entry.ts': 'export const copy = fromTypes;\n',
     });
-    await linkTypescript(join(sandbox.path, 'node_modules'));
-    commitAll(sandbox.path);
-    await applyGeneratedFiles(sandbox.path);
-    const { report } = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']),
-    );
+    const report = await runInstalledTsc(sandbox.path);
     expect(report.checks.find(({ scope }) => scope === 'site')).toMatchObject({ status: 'passed', findings: [] });
 });
