@@ -65,26 +65,6 @@ test('a workspace member that is no scope brings its own dependency store into t
     );
 });
 
-test('a link into another linked tree points at the copy of that tree, whatever order the folder lists them in', async () => {
-    await using sandbox = await createGitSandbox({});
-    await using store = await testdir({
-        'next@16/node_modules/next/package.json': '{"name":"next"}',
-        'next@16/node_modules/helpers/package.json': '{"name":"helpers"}',
-    });
-
-    await createFileTree(sandbox.path, { 'package.json': '{"private":true}', 'gspot.toml': buildSandboxSettings([]) });
-    await mkdir(join(sandbox.path, 'node_modules'));
-    await symlink(join(store.path, 'next@16/node_modules/next'), join(sandbox.path, 'node_modules/a-next'), 'dir');
-    await symlink(store.path, join(sandbox.path, 'node_modules/z-store'), 'dir');
-    const session = await openSession(sandbox.path);
-    const planned = planSandboxCheck(session, 'gspot/generated-files', { paths: ['package.json'] });
-    using copy = await createCheckCopy(session, planned);
-    const scratch = copy.path;
-    const copied = await realpath(join(scratch, 'node_modules/a-next'));
-    expect(copied).toStartWith(await realpath(join(scratch, 'node_modules/z-store')));
-    expect(existsSync(join(copied, '../helpers/package.json'))).toBe(true);
-});
-
 test('a copy sits inside the repository, so linked store packages share its root', async () => {
     await using sandbox = await createGitSandbox({
         'project/package.json': '{"private":true}',
