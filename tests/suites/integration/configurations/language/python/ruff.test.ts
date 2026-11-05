@@ -1,10 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
+import { RUFF_SUPPRESSIONS } from '#tests/config/integration/general.ts';
 import {
     PARAMETER_LIMIT_CASE,
     PYTEST_SAMPLE,
@@ -14,7 +15,7 @@ import {
     UNUSED_IMPORT_SOURCE,
     VERSION_SOURCE,
 } from '#tests/config/integration/python.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { listFindingRows, parseCheckReport, readSuppressionResults, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -23,7 +24,7 @@ import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
@@ -247,6 +248,35 @@ test('Ruff reports a function past the default parameter limit', async () => {
     const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
     expect(result.code, result.stdout + result.stderr).toBe(scenario.failureStatus);
     expect(findings.filter((finding) => finding.code === 'PLR0913')).toMatchObject([scenario.finding]);
+});
+
+test('suppression detection agrees with Ruff on every noqa comment form and place', async () => {
+    const { root } = installedSandbox();
+    const paths = RUFF_SUPPRESSIONS.map((_, index) => `source_${String(index)}.py`);
+    const sources = Object.fromEntries(RUFF_SUPPRESSIONS.map(({ source }, index) => [paths[index]!, source]));
+    await using _sourceChange = await writeSandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(RUFF_SANDBOX.files, {
+            'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
+            ...sources,
+        }),
+    );
+    const ruff = buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff');
+    const toolResult = await runCommand(
+        [ruff, 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],
+        { cwd: root, env: {} },
+    );
+    expect(toolResult.code, toolResult.stdout + toolResult.stderr).toBe(1);
+    const reported = new Set(
+        (JSON.parse(toolResult.stdout) as Array<Record<'filename', string>>).map(({ filename }) => basename(filename)),
+    );
+    expect(await readSuppressionResults(root, paths, reported)).toStrictEqual(
+        RUFF_SUPPRESSIONS.map(({ source, suppressed, directive }, index) => ({
+            path: paths[index]!,
+            suppressed,
+            directives: directive && !source.includes('# reason:') ? [{ line: 1, rule: 'ruff-no-reason' }] : [],
+        })),
+    );
 });
 
 test('--fix keeps a side-effect import, and a suppression at level basic', async () => {

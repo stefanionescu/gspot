@@ -105,6 +105,23 @@ export async function spawnRootCheck(root: string, checkId: string): Promise<Che
 }
 
 /**
+List, for each path, whether the tool left it unreported and the directives that gspot/suppressions finds in it.
+*/
+export async function readSuppressionResults(
+    root: string,
+    paths: readonly string[],
+    reported: ReadonlySet<string>,
+): Promise<Array<{ path: string; suppressed: boolean; directives: Array<Pick<FindingRow, 'line' | 'rule'>> }>> {
+    const { report } = parseCheckReport(await spawnGspot(root, ['check', '--only', 'gspot/suppressions', '--json']));
+    const findings = report.checks.flatMap((check) => check.findings);
+    return paths.map((path) => ({
+        path,
+        suppressed: !reported.has(path),
+        directives: findings.filter((finding) => finding.file === path).map(({ line, rule }) => ({ line, rule })),
+    }));
+}
+
+/**
 Run one gspot command in a sandbox and throw with its output when it fails.
 */
 export async function runGspotStep(sandbox: Sandbox, commandArguments: readonly string[]): Promise<ProcessOutput> {
