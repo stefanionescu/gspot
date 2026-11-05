@@ -14,30 +14,26 @@ import {
 
 ## What you need
 
-gspot needs Git and {`Node.js ${runtimeMinimums.node} or newer`}. With an older Node.js, gspot stops with exit code 2
-and prints the version it found:
+gspot runs on macOS, Linux, and Windows. It needs Git, {`Node.js ${runtimeMinimums.node} or newer`},
+{`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`},
+and [mise](https://mise.jdx.dev/). With an older Node.js, gspot stops with exit code 2 and prints the version it found,
+and with an older package manager, `gspot init` and `gspot install` stop. Node.js 22 comes with an older npm, so run
+`npm install --global npm@latest` there. Without mise, install each tool at its pinned version yourself, because a
+missing tool stops every commit.
 
-<Code code={`gspot needs Node.js ${runtimeMinimums.node} or newer (found 22.11.0). If your terminal has a newer Node.js, this Git client gives hooks another PATH. Start it from a terminal, or add that folder to its PATH.`} lang="text" />
+Run gspot inside a Git working tree, because outside one only `--help` and `--version` work. gspot does not support
+sparse checkouts, so run `git sparse-checkout disable` first. gspot runs your tests, your tool configs, and other code
+from your repository as your user, and [Trust](/start/concepts/#trust) lists that code.
 
-Run gspot inside a Git working tree. Outside one, only `--help` and `--version` work. gspot does not support sparse
-checkouts, so run `git sparse-checkout disable` first.
+Each kind of tool needs its own programs:
 
-gspot runs your tests, your tool configs, and other code from your repository as your user.
-[Trust](/start/concepts/#trust) lists the code that gspot runs.
-
-The tools that the checks run need these programs:
-
-| Tools                                                    | What you need                                                                                                                                                                                                                                          |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Tools from npm                                           | Node.js, and npm, pnpm, or Bun. gspot uses the package manager that `package.json` names in `packageManager` or `devEngines.packageManager`. Otherwise, it uses the one whose lockfile it finds, and otherwise npm. In a Yarn project, gspot uses npm. |
-| Tools from PyPI                                          | uv. When a tool needs Python, gspot installs the Python version that it pins.                                                                                                                                                                          |
-| Other tools                                              | mise, or each tool at its pinned version on `PATH`. `gspot doctor` lists the tools that are missing.                                                                                                                                                   |
-| Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                                                                                                                                                                 |
-
-`gspot install` waits `dependencies.min_release_age_days` days, 7 by default, before it installs a new release of a
-tool. [Release age of the gspot tools](/topics/dependencies/#release-age-of-the-gspot-tools) explains this wait. Only
-{`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, and Bun ${packageManagerMinimums.bun} or newer`}
-support it. Node.js 22 comes with an older npm, so run `npm install --global npm@latest` there.
+| Tools                                                    | What you need                                                                                                                                                                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tools from npm                                           | Node.js and a package manager. gspot uses the one that `package.json` names in `packageManager` or `devEngines.packageManager`, then the one whose lockfile it finds, and otherwise npm. A Yarn project installs them with npm. |
+| Tools from PyPI                                          | uv, which mise installs. When a tool needs Python, gspot installs the Python version that it pins.                                                                                                                              |
+| Other tools                                              | mise, or each tool at its pinned version on `PATH`. `gspot doctor` lists the tools that are missing.                                                                                                                            |
+| Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                                                                                                                                          |
+| Some checks                                              | The Swift toolchain, a running Docker daemon, or network access. The [configuration reference](/reference/configurations/) says what each check needs.                                                                          |
 
 `gspot install` downloads from these hosts:
 
@@ -45,16 +41,10 @@ support it. Node.js 22 comes with an older npm, so run `npm install --global npm
 - `github.com` and `api.github.com`, for the mise tools, the tree-sitter grammars, and the Vale packages
 - `pypi.org` and `files.pythonhosted.org`, for the Python tools
 
-### Systems
-
-gspot runs on macOS, Linux, and Windows. Some checks also need macOS or Linux, the Swift toolchain, a running Docker
-daemon, or network access. Each check has a section in the [configuration reference](/reference/configurations/) that
-says what it needs.
-
 ## Add gspot
 
 These docs write each command as `gspot <command>`. To run one, start it the way the last column shows, such as
-`pnpm exec gspot check`. A repository without a `package.json`, such as a Python or Swift project, uses mise. mise
+`pnpm exec gspot check`. A repository without a `package.json`, such as a Python or Swift project, uses mise, which
 records the gspot version in `mise.toml`.
 
 <table>
@@ -80,15 +70,14 @@ records the gspot version in `mise.toml`.
     </tbody>
 </table>
 
-Then run `gspot init`, as the [Quickstart](/start/quickstart/#set-up-gspot) shows. With mise, `--pin` writes the exact
-gspot version to `mise.toml`. mise asks you to approve a package that is new on npm or has few downloads.
-`allow_low_downloads=true` gives that approval for gspot.
+Then run `gspot init`, as the [Quickstart](/start/quickstart/#set-up-gspot) shows. The mise command pins the exact gspot
+version in `mise.toml`, and `allow_low_downloads=true` skips the mise prompt for a package with few downloads.
 
 ## Set up a clone
 
-In a new clone, first install the dependencies from the committed lockfile. The lockfile sets which gspot version the
-clone uses; without a `package.json`, `mise.toml` sets it. Then run `gspot install`, not `gspot init`: `gspot init`
-refuses to run when `gspot.toml` exists.
+In a new clone, first install the dependencies from the committed lockfile, which sets the gspot version of the clone.
+Without a `package.json`, `mise.toml` sets it. Then run `gspot install`, because `gspot init` refuses to run when
+`gspot.toml` exists.
 
 <Tabs syncKey="package-manager">
     {setup.map(({ label, clone }) => (
@@ -104,13 +93,12 @@ refuses to run when `gspot.toml` exists.
 </Tabs>
 
 `gspot install` installs the tools and turns on the Git hooks in the clone. If it changes a lockfile under `.gspot/`,
-commit that file. A second run installs only what changed. Each package manager skips the packages that it installed
-before, and gspot downloads the Vale packages only when `.gspot/vale/` lacks one or holds other releases.
+commit that file.
 
-## Install a release on the day it ships
+## If your package manager refuses a new gspot release
 
-Some package managers refuse to install a version until it is a set age. For example, pnpm 11 waits one day by default.
-To install a gspot release on the day it comes out, exclude the gspot packages from that wait:
+Some package managers refuse a version until it is a set age, as pnpm 11 does for one day by default. To install a gspot
+release on the day it comes out, exclude the gspot packages from that wait:
 
 <table>
     <thead>
@@ -140,17 +128,17 @@ minimumReleaseAgeExclude:
 ## Private registries
 
 When gspot installs its tools with npm, pnpm, or Bun, it reads the registry settings from `.npmrc` and from your
-environment. In a Yarn project, gspot installs its tools with npm, so it reads `.npmrc`, not `.yarnrc.yml`. uv reads the
-Python package indexes from `uv.toml` or from `[tool.uv]` in `pyproject.toml`.
+environment. A Yarn project installs them with npm, so gspot reads `.npmrc`, not `.yarnrc.yml`. uv reads the Python
+package indexes from `uv.toml` or from `[tool.uv]` in `pyproject.toml`.
 
 Keep credentials in environment variables or in your user settings. Never put them in `gspot.toml` or in a lockfile.
 
 ## Uninstall
 
-To keep gspot and stop checking one language or framework, remove its configuration instead.
+To keep gspot and stop checking one language or framework, remove its configuration instead:
 [Add or remove a configuration](/configure/gspot-toml/#add-or-remove-a-configuration) shows how.
 
-Commit first, so that you can go back.
+Otherwise, commit first, so that you can go back.
 
 1. Turn off the rules for coding agents and the CI job. gspot then deletes the rule files, its block in `AGENTS.md`,
    and the CI workflow:
@@ -163,8 +151,8 @@ Commit first, so that you can go back.
 2. Turn off the Git hooks with `git config --unset core.hooksPath`. If Husky, Lefthook, or your own hooks call gspot,
    delete those lines.
 3. Write down the paths in the gspot block of `.gitattributes`. They are the generated files outside `.gspot/`.
-4. Delete those files, the gspot block of `.gitattributes`, `gspot.toml`, `gspot.baseline.json`, and `.gspot/`. If
-   the gspot block was all that `.gitattributes` held, delete the file.
+4. Delete those files, the gspot block of `.gitattributes`, `gspot.toml`, and `.gspot/`. If the gspot block was all that
+   `.gitattributes` held, delete the file.
 5. Remove the gspot package with your package manager, or run `mise unuse npm:@gspothq/cli`.
 6. Restore the tool configs that you want back from Git, for example with `git show <commit>:.eslintrc.json`.
 
