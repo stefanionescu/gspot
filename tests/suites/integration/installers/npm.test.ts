@@ -26,6 +26,7 @@ import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
+import type { NpmProject, ToolProjectFiles } from '#tests/types/setup.ts';
 
 async function assertReinstallKeepsModules(root: string): Promise<void> {
     const readmePath = join(root, `${GSPOT_PATHS.nodeModules}/prettier/README.md`);
@@ -34,6 +35,30 @@ async function assertReinstallKeepsModules(root: string): Promise<void> {
     const reinstalled = await spawnGspot(root, ['install']);
     expect(reinstalled.code, reinstalled.stdout + reinstalled.stderr).toBe(0);
     expect(await readFile(readmePath, 'utf8')).toBe('authored later');
+}
+
+async function assertFreshClone(
+    { root, artifacts }: Pick<NpmProject, 'root' | 'artifacts'>,
+    { projectFile, lockfile, lockfilePath }: ToolProjectFiles,
+): Promise<void> {
+    const clone = join(artifacts, 'clone');
+    await appendFile(join(root, '.gitattributes'), '\n.gspot/* -text\n');
+    commitAll(root);
+    runGitStep(root, ['clone', '--quiet', '--no-local', root, clone]);
+    expect(existsSync(join(clone, GSPOT_PATHS.nodeModules))).toBe(false);
+    for (let round = 0; round < 2; round++) {
+        const cloneInstall = await spawnGspot(clone, ['install']);
+        expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
+        const status = runBlockingCommand(['git', 'status', '--porcelain'], { cwd: clone, env: {} });
+        expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
+        const contents = await readFile(join(clone, GSPOT_FOLDER, basename(lockfilePath)));
+        expect(contents).toStrictEqual(Buffer.from(lockfile));
+        expect(await readFile(join(clone, GSPOT_PATHS.npmProject))).toStrictEqual(Buffer.from(projectFile));
+    }
+    const diagnosed = await spawnGspot(clone, ['doctor', '--json']);
+    expect(
+        doctorOutputSchema.parse(JSON.parse(diagnosed.stdout)).tools.find((tool) => tool.name === 'prettier')?.state,
+    ).toBe('ok');
 }
 
 test.concurrent('a write of the generated files keeps a stale npm lockfile and install repairs it', async () => {
@@ -67,7 +92,7 @@ test.concurrent('a write of the generated files keeps a stale npm lockfile and i
 });
 
 test.concurrent.each([...PACKAGE_MANAGER_CASES])(
-    '%s from %s keeps the authored package files and the lockfile, and a reinstall follows the tool manager',
+    '%s from %s keeps the authored package files and the lockfile, a reinstall follows the tool manager, and a fresh clone installs the committed lockfile twice',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
         const { root, rootPackage, registry } = sandbox;
@@ -77,7 +102,8 @@ test.concurrent.each([...PACKAGE_MANAGER_CASES])(
         expect(installOutputSchema.parse(JSON.parse(installed.stdout)).installed).toContain(
             `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${packageManager} ${version.stdout.trim()})`,
         );
-        const { projectFile, lockfilePath, lockfile, mode } = await readToolProjectFiles(root, packageManager);
+        const toolProject = await readToolProjectFiles(root, packageManager);
+        const { projectFile, lockfilePath, lockfile, mode } = toolProject;
         const lockfileText = Buffer.from(lockfile).toString('utf8');
         expect(lockfileText).not.toContain(NPM_REGISTRY_TOKEN);
         expect(lockfileText).not.toContain(registry.url);
@@ -119,35 +145,7 @@ test.concurrent.each([...PACKAGE_MANAGER_CASES])(
         const second = await applyGeneratedFiles(root);
         expect(second.written).toStrictEqual([]);
         expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
-    },
-);
-
-test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
-    'a fresh clone of a %s project from %s installs the committed lockfile twice and leaves tracked files unchanged',
-    async (packageManager, projectPath) => {
-        await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, artifacts } = sandbox;
-        await runGspotStep({ root, run: spawnGspot }, ['install']);
-        const { projectFile, lockfile, lockfilePath } = await readToolProjectFiles(root, packageManager);
-        const clone = join(artifacts, 'clone');
-        await appendFile(join(root, '.gitattributes'), '\n.gspot/* -text\n');
-        commitAll(root);
-        runGitStep(root, ['clone', '--quiet', '--no-local', root, clone]);
-        expect(existsSync(join(clone, GSPOT_PATHS.nodeModules))).toBe(false);
-        for (let round = 0; round < 2; round++) {
-            const cloneInstall = await spawnGspot(clone, ['install']);
-            expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
-            const status = runBlockingCommand(['git', 'status', '--porcelain'], { cwd: clone, env: {} });
-            expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
-            const contents = await readFile(join(clone, GSPOT_FOLDER, basename(lockfilePath)));
-            expect(contents).toStrictEqual(Buffer.from(lockfile));
-            expect(await readFile(join(clone, GSPOT_PATHS.npmProject))).toStrictEqual(Buffer.from(projectFile));
-        }
-        const diagnosed = await spawnGspot(clone, ['doctor', '--json']);
-        expect(
-            doctorOutputSchema.parse(JSON.parse(diagnosed.stdout)).tools.find((tool) => tool.name === 'prettier')
-                ?.state,
-        ).toBe('ok');
+        await assertFreshClone(sandbox, toolProject);
     },
 );
 
