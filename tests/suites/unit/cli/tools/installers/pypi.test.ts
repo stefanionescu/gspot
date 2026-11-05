@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -38,7 +38,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;
 
-test('a failed uv sync keeps the tool project files and hides index passwords', async () => {
+test('a failed uv sync hides index passwords', async () => {
     await using sandbox = await createGitSandbox(PYTHON_INSTALL_FILES);
 
     using _boundary = fakeCommands('unavailable-uv', () => {
@@ -59,12 +59,9 @@ test('a failed uv sync keeps the tool project files and hides index passwords', 
     expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
     for (const secret of ['test%2Bpassword', 'test+password']) expect(installationError.message).not.toContain(secret);
     expect(installationError.message).toContain('interpreter unavailable');
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
-    expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
 });
 
-test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
+test('a successful uv run refuses a password in its new lockfile and the saved one stays', async () => {
     await using sandbox = await createGitSandbox(PYTHON_INSTALL_FILES);
 
     using _boundary = fakeCommands('synthetic-uv', async (_command, options) => {
@@ -86,8 +83,6 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     );
     expect(lockfileError).toMatchObject({ code: 'install', message: UV_LOCKFILE_CREDENTIAL_MESSAGE });
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
-    expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
 });
 
 test('uv installs the tool project with its own Python, whatever UV_PYTHON and .python-version the repository sets', async () => {

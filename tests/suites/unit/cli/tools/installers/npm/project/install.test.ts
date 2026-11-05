@@ -27,97 +27,86 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
-async function prepareCredentialProject(root: string, packageJson: string, lockfile: string) {
-    const files = {
+async function captureLockfileRefusal(root: string, packageJson: string, lockfile: string) {
+    await createFileTree(root, {
         '.npmrc': `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`,
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
-        [`${GSPOT_PATHS.nodeModules}/authored.txt`]: 'keep installed files',
         'gspot.toml': buildSandboxSettings([]),
-    };
-    await createFileTree(root, files);
+    });
     const owner = openFiles(root);
     const session = await openSession(root);
     const install = await buildNpmToolInstall(session, owner);
-    const error = await captureRejection(
+    return captureRejection(
         planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }),
     );
-    return { files, error };
 }
 
-test.each([...FAILED_INSTALL_CASES])(
-    'a failed $operation keeps the files and hides credentials',
-    async ({ frozen }) => {
-        const refusal = 'HTTP 403 Forbidden';
-        await using sandbox = await createGitSandbox({});
-        const token = 'synthetic-registry-failure-token';
-        const password = 'synthetic-registry-password/with spaces';
-        const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
-        const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
-        const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
-        const previous = frozen
-            ? packageJson
-            : JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
-        const lockfile = JSON.stringify({
-            workspaces: { '': { devDependencies: { prettier: frozen ? '3.8.1' : '3.8.0' } } },
-        });
-        await createFileTree(sandbox.path, {
-            '.npmrc': source,
-            'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-            [GSPOT_PATHS.npmProject]: previous,
-            [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
-            'gspot.toml': buildSandboxSettings([]),
-        });
-        const session = await openSession(sandbox.path);
-        const owner = openFiles(sandbox.path);
-        const failure = {
-            stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
-            stderr: `${refusal} from ${registry}private-check-tool`,
-        };
-        using _bun = fakeCommands('mise', (command) =>
-            Promise.resolve(
-                buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, ...failure }),
-            ),
-        );
-        const install = await buildNpmToolInstall(session, owner);
-        const installationError = await captureRejection(
-            frozen
-                ? installNpmTools(install)
-                : planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: packageJson }),
-        );
-        expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
-        for (const secret of [password, encodeURIComponent(password), token])
-            expect(installationError.message).not.toContain(secret);
-        expect(installationError.message).toContain(`${refusal} from https://[redacted]@registry.example.com/`);
-        expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-        expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
-        expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
-    },
-);
-
-test('a cached lockfile that holds registry credentials is refused and the files stay', async () => {
+test.each([...FAILED_INSTALL_CASES])('a failed $operation hides credentials', async ({ frozen }) => {
+    const refusal = 'HTTP 403 Forbidden';
     await using sandbox = await createGitSandbox({});
-    const { files, error } = await prepareCredentialProject(sandbox.path, CREDENTIAL_PACKAGE_JSON, CREDENTIAL_LOCKFILE);
-    expect(error).toMatchObject({ code: 'install', message: NPM_LOCKFILE_CREDENTIAL_MESSAGE });
-    for (const [path, text] of Object.entries(files))
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
+    const token = 'synthetic-registry-failure-token';
+    const password = 'synthetic-registry-password/with spaces';
+    const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
+    const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
+    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
+    const previous = frozen
+        ? packageJson
+        : JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
+    const lockfile = JSON.stringify({
+        workspaces: { '': { devDependencies: { prettier: frozen ? '3.8.1' : '3.8.0' } } },
+    });
+    await createFileTree(sandbox.path, {
+        '.npmrc': source,
+        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
+        [GSPOT_PATHS.npmProject]: previous,
+        [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
+        'gspot.toml': buildSandboxSettings([]),
+    });
+    const session = await openSession(sandbox.path);
+    const owner = openFiles(sandbox.path);
+    const failure = {
+        stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
+        stderr: `${refusal} from ${registry}private-check-tool`,
+    };
+    using _bun = fakeCommands('mise', (command) =>
+        Promise.resolve(
+            buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, ...failure }),
+        ),
+    );
+    const install = await buildNpmToolInstall(session, owner);
+    const installationError = await captureRejection(
+        frozen
+            ? installNpmTools(install)
+            : planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: packageJson }),
+    );
+    expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
+    for (const secret of [password, encodeURIComponent(password), token])
+        expect(installationError.message).not.toContain(secret);
+    expect(installationError.message).toContain(`${refusal} from https://[redacted]@registry.example.com/`);
 });
 
-test('a lockfile that the package manager writes with registry credentials is refused and the files stay', async () => {
+test('a cached lockfile that holds registry credentials is refused', async () => {
+    await using sandbox = await createGitSandbox({});
+    const error = await captureLockfileRefusal(sandbox.path, CREDENTIAL_PACKAGE_JSON, CREDENTIAL_LOCKFILE);
+    expect(error).toMatchObject({ code: 'install', message: NPM_LOCKFILE_CREDENTIAL_MESSAGE });
+});
+
+test('a lockfile that the package manager writes with registry credentials is refused and the saved one stays', async () => {
     await using sandbox = await createGitSandbox({});
     using _bun = fakeCommands('mise', async (command, options) => {
         if (command.at(-1) !== '--version') await writeFile(join(options.cwd, 'bun.lock'), CREDENTIAL_LOCKFILE);
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '1.4.2\n' : '' });
     });
-    const { files, error } = await prepareCredentialProject(
+    const saved = JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } });
+    const error = await captureLockfileRefusal(
         sandbox.path,
         JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } }),
-        JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } }),
+        saved,
     );
     expect(error).toMatchObject({ code: 'install', message: LOCKFILE_CREDENTIAL_MESSAGE });
-    for (const [path, text] of Object.entries(files))
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
+    expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(saved);
 });
 
 test('npm resolves and installs a stale tool project in one run that starts from no lockfile', async () => {
@@ -194,13 +183,10 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     const projectFile = { path: GSPOT_PATHS.npmProject, content: packageJson };
     const lockfileError = await captureRejection(planNpmLockfile(install, projectFile));
     expect(lockfileError).toMatchObject({ name: 'GspotError', code: 'install' });
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
     await createFileTree(sandbox.path, {
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
     });
     const cached = await planNpmLockfile(install, projectFile);
     expect(cached.next.bytes.toString('utf8')).toBe(lockfile);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
-    expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
 });

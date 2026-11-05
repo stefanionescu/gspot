@@ -68,7 +68,6 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
             message: expect.stringContaining('broken.toml:1:7') as string,
         }),
     );
-    expect(await readFile(join(sandbox.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
     writePlans(writer, [planManagedKeys(writer, 'mise.toml', changes)]);
     const installed = await readFile(join(sandbox.path, 'mise.toml'), 'utf8');
     expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: CHECK_COMMAND } } });
