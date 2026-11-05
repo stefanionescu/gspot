@@ -178,8 +178,6 @@ export const NPM_PROJECT_ROOT_PACKAGE = {
     workspaces: ['**'],
 } as const;
 
-export const YARN_VERSION_THRESHOLD = 2;
-
 export const PYTHON_PROJECT_FILES = {
     'pyproject.toml': `[project]
 name = "authored"

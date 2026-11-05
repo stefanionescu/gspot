@@ -6,7 +6,6 @@ import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';
 import type { Level } from '#cli/types/settings.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import type { ToolPackageManager } from '#cli/types/tools.ts';
 import type { PROGRAM_NAMES } from '#tests/config/setup/programs.ts';
 
 export type SandboxWrite = {
@@ -60,8 +59,6 @@ export type NpmProject = {
     artifacts: string;
     registry: NpmRegistry;
     rootPackage: string;
-    yarnConfiguration: string | undefined;
-    toolPackageManager: ToolPackageManager['name'];
     [Symbol.asyncDispose](): Promise<void>;
 };
 
