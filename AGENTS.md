@@ -119,17 +119,21 @@ You can edit the other keys of that file.
   types alone.
 - Write a JavaScript module that a generated config loads as a TypeScript source in the `files/` folder of its
   configuration. The manifest names it as the `source` of its config file, and gspot transpiles it.
+- Write `the user's repository`, not `this repository` or `a repository`, whenever more than one repository fits the
+  sentence.
 - Keep the owner's descriptions word for word: the first sentence of `README.md`, and the `description` in
   `packages/cli/package.json`.
 
 ## Folders
 
 These rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/`. Here they override
-three shipped rules:
+four shipped rules:
 
 - NAMING.md says "Prefer feature folders to top-level type buckets."
 - ZOD.md says "Put a runtime schema with the feature that owns the contract."
 - TYPESCRIPT.md asks for a module-level constant per number.
+- TESTING.md says "Put builders, fakes, servers, and database code in one folder beside the tests." Here they sit in
+  `tests/setup/`, one subfolder per job.
 
 ### Values, types, and schemas
 
@@ -153,7 +157,7 @@ three shipped rules:
 - Infer each type that a schema describes from that schema: `z.infer<typeof schema>`, or `z.input` for the value before
   its defaults and transforms. `types/` may import the schema file of any layer. Write a type in plain TypeScript only
   when no schema describes it.
-- When runtime code reads a list of allowed names, declare it as an `as const` array in `config/`, its type as
+- When two or more modules read a list of allowed names, declare it as an `as const` array in `config/`, its type as
   `(typeof LIST)[number]` in `types/`, and its schema as `z.enum(LIST)` in `schemas/`. A list whose values each carry a
   description keeps its schema literals as the one list.
 - When only types read a list of names, write it as a union type in `types/`, with no array.
