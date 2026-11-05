@@ -199,7 +199,7 @@ export const scopeSchema = z.strictObject({
 
 export const rootSettingSchemas = {
     level: levelSchema.default('basic').meta({
-        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} Ruff PLW1514 is the one preview lint rule that a level turns on.`,
+        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY}`,
     }),
     tool_timeout_seconds: z.int().positive().default(TOOL_TIMEOUT_SECONDS_DEFAULT).meta({
         description:

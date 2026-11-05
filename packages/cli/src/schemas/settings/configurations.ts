@@ -50,12 +50,14 @@ const configurationTables = {
         .strictObject({
             types_file: destinationPathSchema.default('worker-configuration.d.ts').meta({
                 configurations: ['cloudflare'],
-                description: 'Tracked Worker types file; OpenNext defaults to cloudflare-env.d.ts.',
+                description:
+                    'The committed file that holds the Worker types. gspot sets it to `cloudflare-env.d.ts` in an OpenNext project.',
             }),
             types_interface: nonemptyStringSchema.default('Env').meta({
                 leftOut: 'repository',
                 configurations: ['cloudflare'],
-                description: 'Environment interface name passed to wrangler types; OpenNext defaults to CloudflareEnv.',
+                description:
+                    'The environment interface name that `wrangler types` writes. gspot sets it to `CloudflareEnv` in an OpenNext project.',
             }),
         })
         .optional(),

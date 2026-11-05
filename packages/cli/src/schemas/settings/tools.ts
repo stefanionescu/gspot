@@ -97,7 +97,7 @@ const eslintTableSchema = z.strictObject({
     rules: eslintRulesSchema.default({}).meta({
         configurations: ['javascript'],
         description:
-            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs. gspot refuses options for a rule of level all at a lower level, and ESLint refuses options for a rule that no block turns on. Ignore a finding with `gspot ignore javascript/eslint --rule <rule> --reason "<why>"`.',
+            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs. gspot refuses options for any other rule. Ignore a finding with `gspot ignore javascript/eslint --rule <rule> --reason "<why>"`.',
     }),
     override: z
         .strictObject({
@@ -199,7 +199,8 @@ export const toolConfigurationSchemas = {
                 .default([])
                 .meta({
                     configurations: ['security'],
-                    description: 'Rule files or folders of the repository that Semgrep runs beside the shipped packs.',
+                    description:
+                        'Rule files or folders of the repository that Semgrep runs, along with the rules of the FastAPI configuration.',
                 }),
         })
         .optional(),

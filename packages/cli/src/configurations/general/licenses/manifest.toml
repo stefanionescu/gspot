@@ -10,7 +10,7 @@ kinds = ["source", "generated"]
 
 [[check]]
 example = "A dependency with a license outside `licenses.allowed` reports a finding for that version. Replace it, or write a `[[licenses.allowed_package]]` record with its name, version, and the license in a reason."
-help = "Replace the package, or write a [[licenses.allowed_package]] record by hand with its name, exact version, and a reason naming the license."
+help = "Replace the package, or write a [[licenses.allowed_package]] record by hand with its name, version, and a reason naming the license."
 large_files = true
 name = "allowed"
 needs = ["network"]

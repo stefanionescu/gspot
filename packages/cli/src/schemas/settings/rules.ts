@@ -86,7 +86,7 @@ export const commitsSchema = z
             leftOut: 'repository',
             configurations: ['commits'],
             description:
-                'Commit scopes that the scope-enum rule accepts, and a message may leave out its scope. When empty, gspot uses the last segment of each scope path, or no list without scopes.',
+                'The commit scopes that a message may use. A message may also leave out its scope. When empty, gspot allows the last folder name of each `[[scope]]` path, or any commit scope when `gspot.toml` has no `[[scope]]`.',
         }),
     })
     .optional();

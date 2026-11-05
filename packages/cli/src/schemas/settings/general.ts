@@ -94,8 +94,7 @@ export const generalTableSchemas = {
         .strictObject({
             min_release_age_days: allowReasonedValue(nonnegativeIntegerSchema, {
                 configurations: ['dependencies'],
-                description:
-                    'How many days a package waits after its release before gspot installs it in .gspot. The hold covers the pinned tools and the packages they pull in; only the gspot packages install at the version of the CLI. A pinned tool that came out later stops the install. Bun does not hold back a package pinned to one version. gspot applies the hold when it writes a tool lockfile: a committed tool lockfile that matches the pins installs as it is, without the hold.',
+                description: 'How many days a package waits after its release before gspot installs it.',
                 default: 7,
             }),
             allowed_registries: allowReasonedValue(nonemptyStringsSchema, {

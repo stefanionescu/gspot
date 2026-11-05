@@ -198,7 +198,7 @@ export const licensesSchema = z.strictObject({
         .meta({
             leftOut: 'repository',
             configurations: ['licenses'],
-            description: 'Packages accepted under a license outside the list: name, exact version, and reason.',
+            description: 'Packages accepted under a license outside the list: name, version, and reason.',
         }),
 });
 
