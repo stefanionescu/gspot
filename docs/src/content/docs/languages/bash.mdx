@@ -85,8 +85,7 @@ To allow one line only, add a ShellCheck comment with a reason, such as
 - ShellCheck finds the file of a `source` command from the folder of the script, and reads that file.
 - The naming checks accept the variables that the shell defines, such as `IFS`, `OPTARG`, `BASH_SOURCE`, and
   `PIPESTATUS`.
-- A name that starts with an underscore marks a private function or variable. The naming checks ignore the underscore,
-  and `bash/doc-comments` does not ask a private function for an `Arguments` section.
+- A name that starts with an underscore marks a private function or variable. The naming checks ignore the underscore.
 - `bash/safety` accepts `rm -r` on a path from `mktemp` inside a trap.
 
 ## Rules for coding agents

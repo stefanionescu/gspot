@@ -1,46 +1,11 @@
 import {
     BASH_FORM_MESSAGES,
     type COUNT_LIMITS,
-    DOC_COMMENT_RULES,
     SAFETY_RULES,
     SCRIPT_LAYOUT_RULES,
 } from '#cli/config/configurations/bash.ts';
 import type { BashForm } from '#cli/types/parsers.ts';
 import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
-
-export const DOC_COMMENT_EXPLANATIONS = {
-    [DOC_COMMENT_RULES.missingComment]: {
-        description: 'A comment sits above each function.',
-        why: 'A reader of a script cannot see what a function does without reading its body.',
-        fix: 'Add a comment line `# <name>: <summary>` above the function.',
-        example: 'A `cleanup()` function with no comment above it reports `missing-comment`.',
-    },
-    [DOC_COMMENT_RULES.summaryLine]: {
-        description: 'The comment above a function opens with the function name and a colon.',
-        why: 'One summary form lets a reader find the summary of each function at a glance.',
-        fix: 'Start the comment with `# <name>: ` and a summary.',
-        example: '`# Removes the temporary folder.` above `cleanup()` reports `summary-line`.',
-    },
-    [DOC_COMMENT_RULES.vagueSummary]: {
-        description: 'A summary adds facts that the function name does not give.',
-        why: 'A summary that repeats the name tells the reader nothing new.',
-        fix: 'Say what the function does that its name does not, such as what it reads or changes.',
-        example:
-            '`# cleanup: runs the cleanup` reports `vague-summary`; `# cleanup: deletes the build folder` does not.',
-    },
-    [DOC_COMMENT_RULES.sectionOrder]: {
-        description: 'The doc sections of a function run in the order Globals, Arguments, Outputs, Returns.',
-        why: 'One order lets a reader find each section in the same place.',
-        fix: 'Move the sections into that order.',
-        example: 'A `# Returns:` section above `# Arguments:` reports `section-order`.',
-    },
-    [DOC_COMMENT_RULES.missingArguments]: {
-        description: 'A public function that reads its arguments has an `# Arguments:` section.',
-        why: 'A caller needs to know which arguments to pass.',
-        fix: 'Add an `# Arguments:` section that lists each argument, or start the name with `_` when it is private.',
-        example: 'A `copy_file()` that reads `$1` and `$2` with no `# Arguments:` section reports `missing-arguments`.',
-    },
-} as const satisfies RuleExplanations;
 
 export const FUNCTION_SIZE_EXPLANATIONS = {
     'function-lines': {

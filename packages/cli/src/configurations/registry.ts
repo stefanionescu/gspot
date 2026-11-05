@@ -53,7 +53,6 @@ import { DOCKER_TRIVY_IMAGE_CHECKS } from '#cli/configurations/infrastructure/do
 import { GITHUB_ACTIONS_CHECKS } from '#cli/configurations/infrastructure/github-actions/checks.ts';
 import { NGINX_CHECKS } from '#cli/configurations/infrastructure/nginx/checks.ts';
 import { XCODE_CHECKS } from '#cli/configurations/infrastructure/xcode/checks.ts';
-import { BASH_DOC_COMMENTS_CHECKS } from '#cli/configurations/language/bash/checks/doc-comments.ts';
 import { BASH_FUNCTION_SIZE_CHECKS } from '#cli/configurations/language/bash/checks/function-size.ts';
 import { BASH_INLINE_SCRIPTS_CHECKS } from '#cli/configurations/language/bash/checks/inline-scripts.ts';
 import { BASH_SAFETY_CHECKS } from '#cli/configurations/language/bash/checks/safety.ts';
@@ -72,7 +71,6 @@ import { PYTHON_PYDOCLINT_CHECKS } from '#cli/configurations/language/python/che
 import { PYTHON_VULTURE_CHECKS } from '#cli/configurations/language/python/checks/vulture.ts';
 import { SWIFT_BUILD_CHECKS } from '#cli/configurations/language/swift/checks/build.ts';
 import { SWIFT_COVERAGE_CHECKS } from '#cli/configurations/language/swift/checks/coverage.ts';
-import { SWIFT_DOC_COMMENTS_CHECKS } from '#cli/configurations/language/swift/checks/doc-comments.ts';
 import { SWIFT_PERIPHERY_CHECKS } from '#cli/configurations/language/swift/checks/periphery.ts';
 import { SWIFT_SECURITY_CHECKS } from '#cli/configurations/language/swift/checks/security.ts';
 import { SWIFT_SKIP_REASONS_CHECKS } from '#cli/configurations/language/swift/checks/skip-reasons.ts';
@@ -88,7 +86,6 @@ import type { Check } from '#cli/types/manifests.ts';
 
 export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...ANSIBLE_CHECKS,
-    ...BASH_DOC_COMMENTS_CHECKS,
     ...BASH_FUNCTION_SIZE_CHECKS,
     ...BASH_INLINE_SCRIPTS_CHECKS,
     ...BASH_SAFETY_CHECKS,
@@ -161,7 +158,6 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...SVELTE_CHECKS,
     ...SWIFT_BUILD_CHECKS,
     ...SWIFT_COVERAGE_CHECKS,
-    ...SWIFT_DOC_COMMENTS_CHECKS,
     ...SWIFT_PERIPHERY_CHECKS,
     ...SWIFT_SECURITY_CHECKS,
     ...SWIFT_SKIP_REASONS_CHECKS,
