@@ -149,9 +149,13 @@ async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], pat
     for (let round = 0; round < FIX_ROUNDS && pending.length > 0; round += 1) {
         const before = readContents(session.root, paths);
         firstBefore ??= before;
-        for (const { check, index } of pending) {
-            results.set(index, mergeFixResults(results.get(index), await runFixer(session, check)));
-            fixedContents.set(index, readContents(session.root, listPlannedPaths(checks[index] as PlannedCheck)));
+        const groups = Map.groupBy(pending, ({ check }) => check.check.id).values();
+        for (const group of groups) {
+            const fixed = await Promise.all(group.map(({ check }) => runFixer(session, check)));
+            for (const [position, { index }] of group.entries()) {
+                results.set(index, mergeFixResults(results.get(index), fixed[position] as FixResult));
+                fixedContents.set(index, readContents(session.root, listPlannedPaths(checks[index] as PlannedCheck)));
+            }
         }
         after = readContents(session.root, paths);
         pending = listPendingFixes({ checks, results, fixedContents, after });
