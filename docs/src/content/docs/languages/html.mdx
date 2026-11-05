@@ -1,18 +1,17 @@
 ---
 title: HTML
-description: Validate HTML files and keep scripts out of the markup.
+description: Validate HTML files, and keep inline scripts and event handlers out of the markup.
 configurations: [html]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot validates HTML files with html-validate. Its own check reports inline scripts and event handler attributes.
-Prettier formats the files through the `format` configuration, which is on in every repository. The `html`
-configuration runs these checks:
+gspot validates HTML files with html-validate, and its own check reports inline scripts and event handler attributes.
+Prettier formats `.html` files. The `html` configuration runs these checks:
 
 <ChecksTable guide="languages/html" />
 
-## What gspot detects
+## When gspot turns it on
 
 gspot turns on `html` in a scope that has a file ending in `.html` or `.htm`. The `site` configuration also turns on
 `html`, and checks the pages that your build writes, as [Static sites](/topics/site/) describes.
@@ -28,15 +27,13 @@ failed   html/html-validate  2 findings
   index.html:10:14  no-implicit-button-type  <button> is missing recommended "type" attribute
 ```
 
-gspot turns off six style rules of the preset: `doctype-style`, `void-style`, `attr-quotes`, `attr-case`,
-`element-case`, and `no-trailing-whitespace`.
-
-At level `basic`, gspot also turns off `no-inline-style`, `prefer-button`, and `prefer-native-element`. Level `all`
-runs them, so a `style` attribute or a `div` with `role="button"` gets a finding.
+gspot turns off the style rules that Prettier decides, such as `attr-quotes` and `void-style`. At level `basic`, it also
+turns off `no-inline-style`, `prefer-button`, and `prefer-native-element`. Level `all` runs them, so a `style` attribute
+or a `div` with `role="button"` gets a finding.
 
 ## Inline scripts
 
-A content security policy can block injected code only when the pages hold no inline scripts. `html/inline-scripts`
+A content security policy can block injected code only when the pages hold no inline scripts, so `html/inline-scripts`
 reports three kinds of code in the HTML:
 
 - `inline-script`: a `<script>` element whose body holds code that runs. A script with a `src` attribute, and a data
@@ -46,9 +43,9 @@ reports three kinds of code in the HTML:
 
 Move the code into a script file, and attach each handler with `addEventListener`.
 
-## Settings
+## Turn off a rule
 
-The `html` configuration has no settings of its own. To turn off one html-validate rule, ignore it with a reason:
+To turn off one html-validate rule, ignore it with a reason:
 
 ```shell
 gspot ignore html/html-validate --rule no-inline-style --reason "The email template needs inline styles."
@@ -56,8 +53,3 @@ gspot ignore html/html-validate --rule no-inline-style --reason "The email templ
 
 To allow one element, write a comment with a reason above it, such as
 `<!-- [html-validate-disable-next no-inline-style -- reason: the email client strips classes] -->`.
-
-## Rules for coding agents
-
-The `html` configuration writes the rule file `HTML.md` for coding agents. The
-[`html` configuration reference](/reference/configurations/html/) lists the rules of `html/inline-scripts`.

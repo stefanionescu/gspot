@@ -7,34 +7,35 @@ configurations: [python]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 gspot checks Python code with Ruff, which lints and formats it, with basedpyright for types, with pydoclint for
-docstrings, and with deptry for dependencies. It also runs checks of its own. The `python` configuration runs these
-checks:
+docstrings, and with deptry for dependencies. The `python` configuration runs these checks:
 
 <ChecksTable guide="languages/python" />
 
-Import rules and pytest also work for Python. [Import rules](/configure/import-rules/#python) and
-[Tests and coverage](/topics/testing/) describe them.
+To limit which module may import which, see [Import rules](/configure/import-rules/#python). For pytest, see
+[Tests and coverage](/topics/testing/).
+
+## When gspot turns it on
+
+gspot turns on `python` in a scope that has a `.py` file, a `pyproject.toml`, a `requirements*.txt`, or a `Pipfile`, or a
+script with a Python shebang.
 
 ## Before you start
 
 In a repository without a `package.json`, install gspot with mise, as the [Quickstart](/start/quickstart/) shows.
-Manage your project with uv. basedpyright and pytest read the `.venv` of the project, so create it before you run
-`gspot init`. In a new clone, create it before you run `gspot install`:
+basedpyright and pytest read the `.venv` of the project, so manage the project with uv, and run `uv sync` before
+`gspot init` and again after each new clone:
 
 ```shell
 uv sync
 ```
 
-`gspot init` writes the basedpyright settings for the `.venv` only when `uv.lock` exists. If you run `uv sync` after
-init, run `gspot install` to write those settings.
-
-gspot runs its Python tools with a Python version that it pins. Your `.python-version` file and your `UV_PYTHON`
-variable change only the Python of your project.
+If you add `uv.lock` after `gspot init`, run `gspot install` so that basedpyright finds `.venv`. gspot runs Ruff and its
+other Python tools on its own Python, so they work whatever Python version your project uses.
 
 ## Quotes
 
-Ruff formats Python strings with double quotes. To keep single quotes in Python, set `format.quotes`. This setting
-applies to every language:
+Ruff formats Python strings with double quotes. To keep single quotes in Python, set `format.quotes`, which applies to
+every language:
 
 ```shell
 gspot set format.quotes single
@@ -43,12 +44,11 @@ gspot set format.quotes single
 ## Modules from outside the project
 
 List the modules that a host application provides in `python.externals`, as
-[Modules that the host provides](/configure/import-rules/#modules-that-the-host-provides) shows.
+[Modules that the host provides](/configure/import-rules/#modules-that-the-host-provides) shows. List extra source
+folders in `python.import_folders`, and basedpyright and `structure/import-rules` then find the modules in them.
 
-`python.import_folders` adds folders inside the scope where basedpyright and the import rules check look for imported
-modules. When the host application is outside the repository, add a `.pth` file that names the host folder to the
-`site-packages` folder of `.venv`. Python and basedpyright read the folder paths in a `.pth` file, as they do for an
-editable install:
+When the host application is outside the repository, add a `.pth` file that names the host folder to the `site-packages`
+folder of `.venv`. Python and basedpyright read the folder paths in a `.pth` file, as they do for an editable install:
 
 ```shell title="example"
 echo "<host-folder>" > .venv/lib/<python-folder>/site-packages/host.pth
@@ -61,22 +61,21 @@ environment, such as `python3.12`.
 
 At level `all`, `python/vulture` finds functions, classes, and attributes that no file of the scope uses, and code that
 never runs. It cannot tell the public API of a library from unused code, so level `basic` does not run it. A framework
-can call a definition by its name, which vulture does not see. In that case, ignore the file that holds the definition,
-with a reason:
+can call a definition by its name, which vulture does not see, so ignore the file that holds such a definition, with a
+reason:
 
 ```shell
 gspot ignore python/vulture --paths nodes.py --reason "ComfyUI calls the execute method of each node."
 ```
 
-`python/function-size` checks each function against `limits.max_function_lines`.
+At level `all`, `python/function-size` allows each function 60 lines. To change the limit, set
+`limits.python.max_function_lines` with a reason.
 
 ## Docstring style
 
-pydoclint takes its docstring style from the first source that sets one:
+pydoclint takes its docstring style from the first source that sets one, and otherwise uses the NumPy style:
 
 1. A `[tool.pydoclint]` style in `pyproject.toml`.
 2. The pydocstyle convention in the Ruff options of the project.
 3. `python.docstring_convention`, when it equals `google` or `numpy`.
 4. Google or NumPy sections that gspot finds in your docstrings.
-
-Otherwise, pydoclint uses its default.

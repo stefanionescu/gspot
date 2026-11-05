@@ -1,6 +1,6 @@
 ---
 title: CSS
-description: Check style sheets and the style blocks inside components.
+description: What Stylelint refuses in style sheets and component style blocks, and what to write instead.
 configurations: [css]
 ---
 
@@ -11,16 +11,33 @@ the Stylelint options from `gspot.toml`, and [Lint rules](/configure/lint-rules/
 
 <ChecksTable guide="languages/css" />
 
+## When gspot turns it on
+
+gspot turns on `css` in a scope that has a `.css` file, or a Vue, Svelte, or Astro component. Prettier formats `.scss`
+files, and Stylelint does not lint them.
+
+## What gspot adds to Stylelint
+
+gspot adds these rules to the standard Stylelint rules, so a first commit can fail on code that Stylelint alone accepts:
+
+| Refused                                                                                      | Write instead                                         | Level |
+| -------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----- |
+| Left and right properties, such as `margin-left` and `padding-right`, and `left` and `right` | `margin-inline-start`, `inset-inline-start`           | Both  |
+| `float`, `clear`, or `text-align` with `left` or `right`                                     | `inline-start`, `start`                               | Both  |
+| `outline: none` or `outline: 0`                                                              | A visible focus style                                 | Both  |
+| `font-size` outside `rem`, `em`, and `%`                                                     | `rem`                                                 | Both  |
+| An ID in a selector, specificity above `0,3,0`, or a `.is-*` or `.has-*` class alone         | A class, with a state class on it, as `.card.is-open` | `all` |
+
 ## Component styles
 
-Stylelint reads the style blocks of Vue, Svelte, and Astro components with the `postcss-html` parser, which the `css`
-configuration installs. Stylelint accepts the special selectors of each kind of component, such as `:deep` and
-`:slotted` in Vue, and `:global` in Svelte and Astro.
+Stylelint accepts the special selectors of each kind of component: `:deep`, `:slotted`, and `:global` in Vue, and
+`:global` in Svelte and Astro. In a Vue component, it also accepts `v-bind()` in a value, such as
+`color: v-bind(themeColor)`. Other CSS keywords must be lowercase.
 
-Tailwind directives and `theme()` need a `tailwindcss` dependency in the nearest npm project.
+## Tailwind
 
-The checks of CSS values skip declarations that contain `theme()` or the Vue `v-bind()`. Variable names inside
-`v-bind()` can use any case, but CSS keywords must be lowercase.
+When the scope depends on `tailwindcss`, Stylelint accepts the Tailwind at-rules, such as `@apply` and `@theme`, and the
+`theme()` function. Without that dependency, each one gets an unknown at-rule or unknown function finding.
 
 ## CSS module files
 

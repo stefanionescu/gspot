@@ -1,6 +1,6 @@
 ---
 title: JavaScript and TypeScript
-description: Choose runtimes, type checking, and framework rules for JavaScript and TypeScript.
+description: Lint, type-check, and find unused code in JavaScript and TypeScript.
 configurations: [javascript, typescript]
 ---
 
@@ -11,22 +11,28 @@ that nothing uses. The `javascript` and `typescript` configurations run these ch
 
 <ChecksTable guide="languages/javascript-typescript" />
 
-Framework configurations, such as `react`, `nextjs`, and `react-native`, add their own lint rules. A React project that
-depends on `react-dom` also gets the `react-dom` configuration and its lint rules for accessible HTML. The
-[configuration reference](/reference/configurations/) lists every framework.
+`javascript/eslint` runs rules from ESLint, unicorn, security, import-x, regexp, n, jsdoc, and the gspot plugin. Level
+`all` adds sorted imports, size limits, and no default exports. `gspot explain javascript/eslint <rule>` explains one
+rule. Framework configurations add their own lint rules, and the pages under Frameworks describe them.
+
+## When gspot turns it on
+
+gspot turns on `javascript` in a scope that has a `.js`, `.jsx`, `.mjs`, or `.cjs` file, a Node.js shebang, or a
+`package.json`. It turns on `typescript` in a scope that has a `.ts`, `.tsx`, `.mts`, or `.cts` file, or a
+`tsconfig.json`. Declaration files alone do not count.
 
 ## JavaScript runtimes
 
 ESLint gives each file one runtime: the set of global names, such as `window` or `process`, that the file can use
 without an import.
 
-| Files                                      | Runtime                                                   |
-| ------------------------------------------ | --------------------------------------------------------- |
-| Ordinary modules and build scripts         | Node.js built-ins                                         |
-| `.cjs` and `.cts` files                    | Node.js built-ins and CommonJS globals                    |
-| React, Vue, and Svelte application sources | Browser globals                                           |
-| React Native sources                       | Native globals                                            |
-| Next.js sources                            | Node.js built-ins, because server components can use them |
+| Files                                                                                | Runtime                                                   |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Ordinary modules and build scripts                                                   | Node.js built-ins                                         |
+| `.cjs` and `.cts` files, and the `.js` files of a package without `"type": "module"` | Node.js built-ins and CommonJS globals                    |
+| React, Vue, and Svelte application sources                                           | Browser globals                                           |
+| React Native sources                                                                 | Native globals                                            |
+| Next.js sources                                                                      | Node.js built-ins, because server components can use them |
 
 To give some files another runtime, add a `[[tools.eslint.override]]` record. Write the paths from the root folder of
 the repository. When two records match a file, the later record wins.
@@ -45,54 +51,36 @@ paths = ["src/serviceworker.js"]
 runtime = "serviceworker"
 ```
 
-For server code inside a browser or React Native project, set the runtime `node`. The runtime names come from the
-pinned [globals package](https://github.com/sindresorhus/globals). Use `serviceworker` for service workers, which have
-other APIs than Web Workers. An unknown runtime name stops ESLint when it loads the config, and the error lists the
-names that the globals package knows.
-
-Browser and native files get no Node.js lint rules. React Native files keep the `process` and `require` globals, but
-get no other Node.js globals, such as `Buffer` and `__dirname`.
+Use a name from the [globals package](https://github.com/sindresorhus/globals), such as `browser`, `node`, `worker`, or
+`serviceworker`. With an unknown name, `javascript/eslint` stops and lists the valid names. For server code inside a
+browser or React Native project, set the runtime `node`. Browser and native files get no Node.js lint rules.
 
 ## TypeScript compiler
 
-gspot runs the TypeScript checks when the project has TypeScript source files or its own `tsconfig.json`. A dependency
-on a TypeScript tool, or declaration files alone, do not count.
-
 - With your own `tsconfig.json`, gspot keeps your compiler options and adds the strict options that the level needs.
-- Without one, gspot writes a TypeScript project for the source files of each scope. That project leaves out generated
-  files, vendored files, and nested scopes.
+- Without one, gspot writes a TypeScript project for the source files of each scope.
 - gspot uses the TypeScript compiler of your project for the type checks and for the lint rules that read types. When
   your project has no compiler, gspot uses the one that `gspot install` pins.
 
-JavaScript files get the same check through your `jsconfig.json`, or through your `tsconfig.json` when no
-`jsconfig.json` exists.
+`javascript/tsc` checks the JSDoc types of JavaScript files. It reads your `jsconfig.json`, or your `tsconfig.json` when
+no `jsconfig.json` exists. With neither file, gspot writes a jsconfig for the check.
 
 ## Import extensions
 
 `javascript.import_extension` sets how a relative import of a code file ends: `js`, `ts`, or `extensionless`, which
 means no extension. `gspot init` picks the value from the project:
 
-| Project                                                                                  | Style           |
-| ---------------------------------------------------------------------------------------- | --------------- |
-| The tsconfig sets `allowImportingTsExtensions` or `rewriteRelativeImportExtensions`      | `ts`            |
-| The tsconfig uses `Bundler` resolution, or the project depends on a bundler such as Vite | `extensionless` |
-| Any other project                                                                        | `js`            |
+| Project                                                                                                             | Style           |
+| ------------------------------------------------------------------------------------------------------------------- | --------------- |
+| The tsconfig sets `allowImportingTsExtensions` or `rewriteRelativeImportExtensions`                                 | `ts`            |
+| The tsconfig uses `NodeNext`                                                                                        | `js`            |
+| The tsconfig uses `Bundler`, the project depends on a bundler such as Vite, or it uses Astro, React, Svelte, or Vue | `extensionless` |
+| Any other project                                                                                                   | `js`            |
 
-When a framework configuration sets a style, its style wins. An import of a style sheet or a JSON file keeps its
-extension. `.mjs` files, `.cjs` files, and Node.js scripts with a shebang always import the full file name, because
-Node.js needs it. They take import aliases only from the `imports` field of `package.json`.
+With Astro, React, Svelte, or Vue, `ts` applies only when the code already imports `.ts` files. An import of a style
+sheet or a JSON file keeps its extension. `.mjs` files, `.cjs` files, and Node.js scripts with a shebang always import
+the full file name, because Node.js needs it. In these files, an import alias such as `#lib/log` must come from the
+`imports` field of `package.json`, because Node.js does not read tsconfig paths.
 
 For modules that a host application provides at run time, follow
 [Modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
-
-## Next.js
-
-The `nextjs` configuration runs `nextjs/tsc` in place of `typescript/tsc`, at level `basic` and at the `push` stage.
-The check first has Next.js write its types, then checks the types of the app with the strict compiler options. The
-project must depend on Next.js 15.5 or later. The Next.js security rules run in `javascript/eslint`.
-
-## React Native
-
-`gspot init` turns on `react-native` and `expo` when the project depends on them. The `expo` configuration needs
-`react-native`, and adds the Expo lint rules and the check `expo/expo-doctor`. A React Native project without Expo
-needs no Expo tool. React Native sources still get the lint rules for React hooks and components.

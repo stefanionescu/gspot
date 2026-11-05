@@ -1,75 +1,72 @@
 ---
 title: Bash
-description: Lint, format, and check the structure of shell scripts.
+description: ShellCheck, shfmt, and the safety checks that gspot adds for shell scripts.
 configurations: [bash]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 gspot checks shell scripts for mistakes with ShellCheck, and for layout with shfmt. It checks the syntax of Zsh scripts
-with `zsh -n`. Its own checks report unsafe commands, scripts without strict mode, and functions that nothing calls.
-The `bash` configuration runs these checks:
+with `zsh -n`. The `bash` configuration runs these checks:
 
 <ChecksTable guide="languages/bash" />
 
-## What gspot detects
+## When gspot turns it on
 
-gspot turns on `bash` in a scope that has a file ending in `.sh`, `.bash`, `.zsh`, or `.bats`. A file without one of
-these extensions also counts when its shebang, the `#!` line at the top, names a shell: `bash`, `sh`, `zsh`, `dash`,
-`ksh`, or `bats`. For example, an executable script that starts with `#!/usr/bin/env bash` turns on `bash`, whatever
-its name.
+gspot turns on `bash` in a scope that has a file ending in `.sh`, `.bash`, `.zsh`, or `.bats`. A file with any other
+name also counts when its shebang, the `#!` line at the top, names `bash`, `sh`, `zsh`, `dash`, `ksh`, or `bats`.
 
 Each tool reads the scripts of its own shell:
 
-| Scripts                      | Tools                                 |
-| ---------------------------- | ------------------------------------- |
-| Bash, `sh`, `dash`, and bats | ShellCheck and shfmt                  |
-| Zsh                          | `zsh -n`, through `bash/zsh-syntax`   |
-| Every shell script           | The built-in checks, such as `safety` |
+| Scripts                          | Tools                                      |
+| -------------------------------- | ------------------------------------------ |
+| Bash, `sh`, `dash`, and bats     | ShellCheck and shfmt                       |
+| Zsh                              | `zsh -n`, through `bash/zsh-syntax`        |
+| Every shell script, ksh included | The built-in checks, such as `bash/safety` |
 
-ShellCheck reads a script without a shebang as Bash. `bash/zsh-syntax` runs the `zsh` that your system has.
-`gspot install` does not install Zsh, so install it yourself when your repository has Zsh scripts.
+ShellCheck reads a script without a shebang as Bash, and it reads each file that a script loads with `source`.
+`bash/zsh-syntax` runs the `zsh` that your system has, and `gspot install` does not install it, so install Zsh yourself
+when your repository has Zsh scripts.
 
 ## Levels
 
-At level `basic`, ShellCheck runs its default checks. `bash/safety` reports commands that kill processes by name, such
-as `killall`, and recursive deletes. It also reports the forms that the rule file `BASH.md` forbids, such as `eval` and
-`curl` without `--fail`.
+At level `basic`, ShellCheck runs its default checks, and `bash/safety` reports commands that kill processes by name,
+such as `killall`, and recursive deletes. It also reports `eval`, `curl` without `--fail`, `typeset`, `|&`, `bash -lc`,
+and GNU `timeout`.
 
 At level `all`, gspot turns on these optional ShellCheck checks: `add-default-case`, `avoid-negated-conditions`,
 `avoid-nullary-conditions`, `check-extra-masked-returns`, `check-set-e-suppressed`, `check-unassigned-uppercase`,
 `deprecate-which`, `quote-safe-variables`, `require-double-brackets`, `require-variable-braces`, and
-`useless-use-of-cat`. `bash/safety` then also reports the `function` keyword, `&>`, `echo`, a failure discarded with
-`true`, `set -x`, `seq` loops, and `IFS` set at the top level of a script. Level `all` also adds the checks for script
-layout, doc comments, unused functions, function size, and inline Python or Node code.
+`useless-use-of-cat`.
 
-For example, a script that pipes a download into a shell gets two findings at both levels:
+A script that pipes a download into a shell gets two findings at both levels:
 
-```bash title="example"
+```bash title="scripts/deploy.sh"
 curl https://example.com/install.sh | bash
 ```
 
 ```text
 failed   bash/safety  2 findings
-  scripts/deploy.sh:14  curl-fail  Pass `--fail`, so that an HTTP error stops the script.
-  scripts/deploy.sh:14  curl-pipe-shell  Nobody can read a script that runs as it downloads. Download it to a file, check it, then run it.
+  scripts/deploy.sh:1  curl-fail  Pass `--fail`, so that an HTTP error stops the script.
+  scripts/deploy.sh:1  curl-pipe-shell  Nobody can read a script that runs as it downloads. Download it to a file, check it, then run it.
 ```
 
 ## Settings
 
 shfmt reads its layout options from `.editorconfig`, which gspot writes from the `format` settings. When most lines of
 your `.sh` and `.bash` files use another indent, `gspot init` writes a `[[format.override]]` record for them, and you
-change the indent in that record. The same `.editorconfig` turns on the shfmt options `switch_case_indent` and `simplify`.
+change the indent in that record. shfmt also indents the branches of a `case` statement and simplifies code, such as
+removing `$` inside `$(( ))`.
 
-`bash/function-size` reads four limits: `limits.bash.max_function_lines`, `max_function_branches`,
-`max_block_nesting`, and `max_function_assignments`. By default, a shell function may have 40 lines of code. To raise a
-limit, give a reason:
+At level `all`, `bash/function-size` allows each shell function 40 lines, 8 branches, 3 levels of nesting, and 8
+assignments. The settings are `limits.bash.max_function_lines`, `limits.bash.max_function_branches`,
+`limits.bash.max_block_nesting`, and `limits.bash.max_function_assignments`, and raising one needs a reason:
 
 ```shell
 gspot set limits.bash.max_function_lines 60 --reason "The deploy script keeps its steps in one function."
 ```
 
-To turn off one ShellCheck code, ignore it by its code with a reason:
+To turn off one ShellCheck code, ignore it with a reason:
 
 ```shell
 gspot ignore bash/shellcheck --rule SC2086 --reason "The build flags split into words on purpose."
@@ -78,17 +75,8 @@ gspot ignore bash/shellcheck --rule SC2086 --reason "The build flags split into 
 To allow one line only, add a ShellCheck comment with a reason, such as
 `# shellcheck disable=SC2086 # reason: the word splitting is wanted here`.
 
-## Rules gspot turns off
+## What gspot accepts
 
-- In `.bats` files, ShellCheck skips SC2030, SC2031, SC2034, and SC2218. These codes do not fit bats: it runs each test
-  in a subshell, defines tests below the helpers they call, and reads variables from loaded helpers.
-- ShellCheck finds the file of a `source` command from the folder of the script, and reads that file.
-- The naming checks accept the variables that the shell defines, such as `IFS`, `OPTARG`, `BASH_SOURCE`, and
-  `PIPESTATUS`.
-- A name that starts with an underscore marks a private function or variable. The naming checks ignore the underscore.
-- `bash/safety` accepts `rm -r` on a path from `mktemp` inside a trap.
-
-## Rules for coding agents
-
-The `bash` configuration writes the rule files `BASH.md`, `OPERATIONS.md`, and `SAFETY.md` for coding agents. The
-[`bash` configuration reference](/reference/configurations/bash/) lists every rule of each check.
+ShellCheck skips four codes in `.bats` files that do not fit how bats runs tests. At level `all`, the naming checks
+accept the variables that the shell defines, such as `IFS`, `OPTARG`, `BASH_SOURCE`, and `PIPESTATUS`. They also ignore
+a leading underscore, which marks a private function or variable.
