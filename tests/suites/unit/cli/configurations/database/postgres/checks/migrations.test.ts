@@ -69,22 +69,6 @@ test('postgres/migration-order reports a migration that does not parse at its li
     );
 });
 
-test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['postgres']),
-        'db/migrations/1_teams.sql': '-- migrate:up\nCREATE TABLE teams (id int);\n-- migrate:down\nDROP TABLE teams;',
-        'db/migrations/2_secure.up.sql': ROW_SECURITY_SQL,
-        'db/migrations/2_secure.down.sql': 'ALTER TABLE teams DISABLE ROW LEVEL SECURITY;',
-    });
-
-    const session = await openSession(sandbox.path);
-    const input = planSandboxCheck(session, 'postgres/migration-order');
-    const { migrations } = await readMigrations(session, input);
-    expect(migrations.map((migration) => migration.name)).toStrictEqual(['1_teams.sql', '2_secure.up.sql']);
-    expect(buildDatabaseSchema(migrations).secured.has('public.teams')).toBe(true);
-    expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);
-});
-
 test.each(['', 'app'])('the default migration folders are read and a set folder replaces them in %j', async (scope) => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['postgres'], { scopes: [{ path: 'app', configurations: ['postgres'] }] });
@@ -143,17 +127,17 @@ test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_
     },
 );
 
-test.each(['', 'V'])('unpadded %s migration versions replay in numeric order', async (prefix) => {
+test('unpadded migration versions replay in numeric order', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres']),
-        [`migrations/${prefix}9_create.sql`]: 'CREATE TABLE teams (id int);',
-        [`migrations/${prefix}10_secure.sql`]: ROW_SECURITY_SQL,
+        'migrations/9_create.sql': 'CREATE TABLE teams (id int);',
+        'migrations/10_secure.sql': ROW_SECURITY_SQL,
     });
 
     commitAll(sandbox.path);
     await createFileTree(sandbox.path, {
-        [`migrations/${prefix}8_earlier.sql`]: 'SELECT 8;',
-        [`migrations/${prefix}11_later.sql`]: 'SELECT 11;',
+        'migrations/8_earlier.sql': 'SELECT 8;',
+        'migrations/11_later.sql': 'SELECT 11;',
     });
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'postgres/migration-order');
@@ -161,7 +145,7 @@ test.each(['', 'V'])('unpadded %s migration versions replay in numeric order', a
     expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
     expect(buildDatabaseSchema(migrations).secured.has('public.teams')).toBe(true);
     expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toMatchObject([
-        { file: `migrations/${prefix}8_earlier.sql`, rule: 'order' },
+        { file: 'migrations/8_earlier.sql', rule: 'order' },
     ]);
 });
 

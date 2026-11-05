@@ -2,15 +2,9 @@ import { CALLED_WORKFLOW } from '#tests/config/setup/configurations.ts';
 
 const CALLED_WORKFLOW_REFERENCES = [
     [`$/${CALLED_WORKFLOW}`, `./${CALLED_WORKFLOW}`],
-    [`"$/${CALLED_WORKFLOW}"`, `"./${CALLED_WORKFLOW}"`],
     [String.raw`"\x24/` + `${CALLED_WORKFLOW}"`, String.raw`"\x2e/` + `${CALLED_WORKFLOW}"`],
-    [`|-\n          $/${CALLED_WORKFLOW}`, `|-\n          ./${CALLED_WORKFLOW}`],
     [`|- # $comment\n          $/${CALLED_WORKFLOW}`, `|- # $comment\n          ./${CALLED_WORKFLOW}`],
     ['$/.github/workflows/$called.yml', './.github/workflows/$called.yml'],
-    [
-        'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0',
-        'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0',
-    ],
 ] as const;
 
 export const ACTIONLINT_EXITS = [

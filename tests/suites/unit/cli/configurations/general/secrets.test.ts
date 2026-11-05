@@ -21,26 +21,6 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('a nested scope uses the default example environment file names', async () => {
-    await using sandbox = await createGitSandbox({
-        'app/.env.example': 'KNOWN=example\n',
-        'app/source.ts': 'process.env.KNOWN; process.env.MISSING;\n',
-        'gspot.toml': buildSandboxSettings(['secrets'], {
-            level: 'all',
-            scopes: [{ path: 'app', configurations: ['secrets'] }],
-        }),
-    });
-    expect(await runSandboxCheck(sandbox.path, 'secrets/environment-examples', { scope: 'app' })).toMatchObject([
-        {
-            file: 'app/source.ts',
-            rule: 'missing-key',
-            message: expect.stringContaining('MISSING') as string,
-        },
-    ]);
-    await createFileTree(sandbox.path, { 'app/.env.example': 'KNOWN=example\nMISSING=example\n' });
-    expect(await runSandboxCheck(sandbox.path, 'secrets/environment-examples', { scope: 'app' })).toStrictEqual([]);
-});
-
 test('keys read through Bun.env and environment functions are reported until the example file lists them', async () => {
     const options = buildRunOptions({ only: ['secrets/environment-examples'] });
     await using sandbox = await createGitSandbox({

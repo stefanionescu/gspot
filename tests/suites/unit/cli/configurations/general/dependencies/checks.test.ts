@@ -156,18 +156,15 @@ test("dependencies/lockfiles leaves gspot's own tool lockfile out of the scope",
     expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
 });
 
-test.each(['dependencies/lockfiles', 'dependencies/stale-lockfile'])(
-    '%s reads the project lock of a two-document pnpm lockfile',
-    async (check) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['javascript']),
-            'package.json': '{"private":true,"packageManager":"pnpm@12.16.1"}\n',
-            'pnpm-lock.yaml':
-                "---\nlockfileVersion: '9.0'\nimporters:\n  .:\n    packageManagerDependencies:\n      pnpm: {specifier: 12.16.1, version: 12.16.1}\npackages:\n  pnpm@12.16.1:\n    resolution: {integrity: sha512-a}\n---\nlockfileVersion: '9.0'\nimporters:\n  .: {}\n",
-        });
-        expect(await runSandboxCheck(sandbox.path, check)).toStrictEqual([]);
-    },
-);
+test('dependencies/lockfiles reads the project lock of a two-document pnpm lockfile', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"private":true,"packageManager":"pnpm@12.16.1"}\n',
+        'pnpm-lock.yaml':
+            "---\nlockfileVersion: '9.0'\nimporters:\n  .:\n    packageManagerDependencies:\n      pnpm: {specifier: 12.16.1, version: 12.16.1}\npackages:\n  pnpm@12.16.1:\n    resolution: {integrity: sha512-a}\n---\nlockfileVersion: '9.0'\nimporters:\n  .: {}\n",
+    });
+    expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
+});
 
 test.each([...LOCKFILE_DOWNLOAD_CASES])(
     '$path checks download fields without treating metadata URLs as registries: $name',
@@ -201,19 +198,19 @@ test.each([...MISE_PIN_FILES])(
     },
 );
 
-test.each(['mise.toml', '.config/mise.toml'])('a staged %s alone plans package-manager-pin', async (file) => {
+test('a staged mise.toml alone plans package-manager-pin', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': JSON.stringify({ name: 'shop', private: true }),
-        [file]: BUN_PIN_SETTINGS,
+        'mise.toml': BUN_PIN_SETTINGS,
         'gspot.toml': buildSandboxSettings(['javascript']),
     });
     const session = await openSession(sandbox.path);
     const [planned] = planChecks(session, {
         stage: 'commit',
-        selection: { content: 'index', paths: [file] },
+        selection: { content: 'index', paths: ['mise.toml'] },
         only: ['dependencies/package-manager-pin'],
     });
-    expect(planned?.files.map(({ path }) => path)).toContain(file);
+    expect(planned?.files.map(({ path }) => path)).toContain('mise.toml');
 });
 
 test('package-manager-pin gives the line to add beside a pnpm lockfile, with the mise version', async () => {

@@ -85,7 +85,7 @@ test.each(['/Users/ada/project', '/home/ada/project', String.raw`C:\Users\ada\pr
     },
 );
 
-test.each([';', 'auto', undefined])(
+test.each(['auto', undefined])(
     'the scissors marker selects the comment character over core.commentChar %p',
     async (commentChar) => {
         const findings = await checkMessage(

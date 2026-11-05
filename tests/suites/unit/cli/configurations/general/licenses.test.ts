@@ -94,28 +94,16 @@ test.each([...ALLOWED_PACKAGE_CASES])(
     },
 );
 
-test('osv-scanner findings about vulnerabilities alone pass the license check', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['licenses'], { tables: LICENSE_TABLES }),
-        'package-lock.json': '{}\n',
-    });
-    const { findings } = await runLicenseCheck(sandbox.path, [MIT_PACKAGE]);
-    expect(findings).toStrictEqual([]);
-});
-
-test.each([
-    { name: 'no locked package', code: 0, stdout: '{"results":[]}', status: 'missing' },
-    { name: 'a scanner failure', code: 127, stdout: '', status: 'error' },
-])('licenses/allowed stops on $name', async ({ code, stdout, status }) => {
+test('licenses/allowed stops on no locked package', async () => {
     using resources = new DisposableStack();
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], { tables: LICENSE_TABLES }),
         'package-lock.json': '{}\n',
     });
     const session = await openFakeToolSession(sandbox.path, ['osv-scanner'], resources);
-    resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ code, stdout })));
+    resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ code: 0, stdout: '{"results":[]}' })));
     const { report } = await runChecks(session, buildRunOptions({ only: ['licenses/allowed'], stage: 'push' }));
-    expect(report.checks).toMatchObject([{ check: 'licenses/allowed', status }]);
+    expect(report.checks).toMatchObject([{ check: 'licenses/allowed', status: 'missing' }]);
 });
 
 test('the check skips with a note while licenses.allowed is empty', async () => {

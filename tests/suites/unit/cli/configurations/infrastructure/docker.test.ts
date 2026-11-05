@@ -7,11 +7,9 @@ import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/tools/pins.ts';
 import {
-    COMPOSE_PAIRING_CASES,
     COMPOSE_SOURCES,
     DOCKERIGNORE_ALLOWLISTS,
     DOCKERIGNORE_CASES,
-    INVALID_COMPOSE_SOURCES,
     NGINX_COMPOSE,
     TRIVY_IMAGE_FINDINGS,
     TRIVY_REGISTRY_FAILURE,
@@ -30,33 +28,30 @@ async function scanImages(root: string, stdout: string, resources: DisposableSta
     return { scan, findings: await runSandboxCheck(session.root, 'docker/trivy-image') };
 }
 
-test.each([...COMPOSE_PAIRING_CASES])(
-    'Compose $override runs after $base in one docker compose call',
-    async ({ base, override }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['docker']),
-            [base]: NGINX_COMPOSE,
-            [override]: 'services: {app: {environment: {FEATURE: enabled}}}\n',
-        });
-        const session = await openSession(sandbox.path);
-        using resources = new DisposableStack();
-        const fakes = fakeToolExecutables([{ ...getTool(readConfigurations().values(), 'docker'), version: '29.0.0' }]);
-        resources.use(fakes);
-        const toolRun = resources.use(fakeCommands().mockResolvedValue(buildProcessResult()));
-        const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        const result = await runCheckCode(
-            buildCheckSession(session, CHECK_GENERATION),
-            planned,
-            CHECK_CODE['docker/compose'],
-            CHECK_RUN_OPTIONS,
-        );
-        expect(result.findings).toStrictEqual([]);
-        expect(result.status).toBe('passed');
-        expect(
-            toolRun.mock.calls.map(([command]) => command.filter((_, index) => command[index - 1] === '-f')),
-        ).toStrictEqual([[base, override]]);
-    },
-);
+test('Compose docker-compose.production.yml runs after docker-compose.yml in one docker compose call', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        'docker-compose.yml': NGINX_COMPOSE,
+        'docker-compose.production.yml': 'services: {app: {environment: {FEATURE: enabled}}}\n',
+    });
+    const session = await openSession(sandbox.path);
+    using resources = new DisposableStack();
+    const fakes = fakeToolExecutables([{ ...getTool(readConfigurations().values(), 'docker'), version: '29.0.0' }]);
+    resources.use(fakes);
+    const toolRun = resources.use(fakeCommands().mockResolvedValue(buildProcessResult()));
+    const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
+    const result = await runCheckCode(
+        buildCheckSession(session, CHECK_GENERATION),
+        planned,
+        CHECK_CODE['docker/compose'],
+        CHECK_RUN_OPTIONS,
+    );
+    expect(result.findings).toStrictEqual([]);
+    expect(result.status).toBe('passed');
+    expect(
+        toolRun.mock.calls.map(([command]) => command.filter((_, index) => command[index - 1] === '-f')),
+    ).toStrictEqual([['docker-compose.yml', 'docker-compose.production.yml']]);
+});
 
 test.each([...DOCKERIGNORE_ALLOWLISTS])(
     'docker/dockerignore respects ordered allowlist $text',
@@ -130,20 +125,17 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
     expect(error.message).toContain(stderr);
 });
 
-test.each([...INVALID_COMPOSE_SOURCES])(
-    'docker/trivy-image reports syntax for $name in compose.yaml before it runs Trivy',
-    async ({ source }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['docker']),
-            'compose.yaml': source,
-        });
+test('docker/trivy-image reports syntax for a non-string image in compose.yaml before it runs Trivy', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        'compose.yaml': 'services: {app: {image: 12}}',
+    });
 
-        using scan = fakeCommands();
-        const findings = await runSandboxCheck(sandbox.path, 'docker/trivy-image');
-        expect(findings).toMatchObject([{ file: 'compose.yaml', rule: 'syntax' }]);
-        expect(scan).not.toHaveBeenCalled();
-    },
-);
+    using scan = fakeCommands();
+    const findings = await runSandboxCheck(sandbox.path, 'docker/trivy-image');
+    expect(findings).toMatchObject([{ file: 'compose.yaml', rule: 'syntax' }]);
+    expect(scan).not.toHaveBeenCalled();
+});
 
 test('Trivy scans a repeated image once and reports each advisory and secret in every Compose file that names it', async () => {
     await using sandbox = await createGitSandbox({

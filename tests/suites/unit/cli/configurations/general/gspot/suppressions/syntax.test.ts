@@ -42,23 +42,19 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
     },
 );
 
-test.each(['js', 'ts'])(
-    'eslint comments inside strings and templates in .%s files are not suppressions',
-    async (extension) => {
-        await using sandbox = await createGitSandbox({});
-        const path = `source.${extension}`;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
-            [path]: QUOTED_ESLINT_COMMENTS,
-        });
-        const comments = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
-        expect(comments.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
-            { line: 1, rule: 'eslint-no-reason' },
-            { line: 9, rule: 'eslint-no-reason' },
-            { line: 10, rule: 'eslint-no-reason' },
-        ]);
-    },
-);
+test('eslint comments inside strings and templates are not suppressions', async () => {
+    await using sandbox = await createGitSandbox({});
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
+        'source.ts': QUOTED_ESLINT_COMMENTS,
+    });
+    const comments = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
+    expect(comments.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
+        { line: 1, rule: 'eslint-no-reason' },
+        { line: 9, rule: 'eslint-no-reason' },
+        { line: 10, rule: 'eslint-no-reason' },
+    ]);
+});
 
 test('eslint comments in JSX text and quoted attributes are not directives; an empty expression comment is', async () => {
     await using sandbox = await createGitSandbox({

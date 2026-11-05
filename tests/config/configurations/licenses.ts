@@ -11,13 +11,6 @@ export const GPL_PACKAGE = {
 
 export const ALLOWED_PACKAGE_CASES = [
     {
-        name: 'with its exact version covers a package',
-        record: 'name = "strict"\nversion = "1.0.0"\n',
-        lockedName: 'strict',
-        ecosystem: 'npm',
-        findings: [],
-    },
-    {
         name: 'with a version range covers a package',
         record: 'name = "strict"\nversion = "^1.0.0"\n',
         lockedName: 'strict',

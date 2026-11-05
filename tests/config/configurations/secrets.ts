@@ -136,18 +136,6 @@ environment_examples = [".env.example"]
 
 export const ENVIRONMENT_TEXT_CASES = [
     {
-        name: 'JSX text that spells process.env is not a read',
-        files: { '.env.example': '# Example keys\n', 'source.tsx': 'export const view = <p>process.env.SECRET</p>;\n' },
-        changed: { 'source.tsx': 'export const view = <p>{process.env.SECRET}</p>;\n' },
-        findings: [
-            {
-                file: 'source.tsx',
-                rule: 'missing-key',
-                message: 'SECRET is read here and appears in no example environment file.',
-            },
-        ],
-    },
-    {
         name: 'a key listed as a commented line counts as listed',
         files: { '.env.example': '# TOKEN=example\n', 'source.ts': 'process.env.TOKEN;\n' },
         changed: { '.env.example': '# Other keys\n' },

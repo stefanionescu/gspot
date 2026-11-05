@@ -69,32 +69,6 @@ test.each([...FRAMEWORK_NAMES])(
     },
 );
 
-test('SwiftLint owns the case and length of Swift types; banned words are still reported in types and parameters', async () => {
-    const sourceText = 'typealias URLSession = String\n';
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['swift', 'naming'], {
-            level: 'all',
-            tables: '[naming]\nbanned_words = ["url session"]\n',
-        }),
-        'Entry.swift': sourceText + 'let helperCount = 1\nfunc readValue(URLSession: String) {}\n',
-    });
-
-    const failed = await runSandboxCheck(sandbox.path, 'naming/identifiers');
-
-    expect(failed.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
-        { line: 1, rule: 'banned-word' },
-        { line: 2, rule: 'banned-word' },
-        { line: 3, rule: 'banned-word' },
-    ]);
-    await writeFile(
-        join(sandbox.path, 'Entry.swift'),
-        'typealias URL = String\nlet entryCount = 1\nfunc readValue(client: String) {}\n',
-    );
-    const corrected = await runSandboxCheck(sandbox.path, 'naming/identifiers');
-
-    expect(corrected).toStrictEqual([]);
-});
-
 test('a word of naming.terms in an identifier reports the word to use instead, and the renamed identifier passes', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {

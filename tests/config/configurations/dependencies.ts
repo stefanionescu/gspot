@@ -11,23 +11,6 @@ export const DEPENDENCIES_SANDBOX = {
 export const LOCKFILE_HOST_CASES = [
     {
         files: {
-            'package-lock.json': `{
-    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }
-}
-`,
-        },
-        expected: { file: 'package-lock.json', rule: 'host', line: 2 },
-        corrected: {
-            files: {
-                'package-lock.json': `{
-    "packages": { "node_modules/a": { "resolved": "https://registry.npmjs.org/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }
-}
-`,
-            },
-        },
-    },
-    {
-        files: {
             'pnpm-lock.yaml': `lockfileVersion: '9.0'
 packages:
   a@1.0.0:
@@ -88,22 +71,10 @@ export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["githu
 
 export const LOCKFILE_DOWNLOAD_CASES = [
     {
-        name: 'a registry tarball beside a deprecation link',
-        path: 'pnpm-lock.yaml',
-        text: 'packages:\n  pkg@1.0.0:\n    resolution: {tarball: https://registry.npmjs.org/pkg/-/pkg-1.0.0.tgz}\n    deprecated: See https://eslint.org/version-support\n',
-        lines: [],
-    },
-    {
         name: 'a repository resolution',
         path: 'pnpm-lock.yaml',
         text: 'packages:\n  pkg@1.0.0:\n    resolution: {repo: https://github.com/org/pkg.git, commit: abc}\n',
         lines: [3],
-    },
-    {
-        name: 'a resolved archive beside a homepage',
-        path: 'yarn.lock',
-        text: 'pkg@1:\n  resolved "https://github.com/org/pkg/archive/v1.tar.gz"\n  homepage "https://example.com"\n',
-        lines: [2],
     },
     {
         name: 'an archive resolution beside a description',

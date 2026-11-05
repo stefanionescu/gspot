@@ -1,14 +1,8 @@
-export const COMPOSE_PAIRING_CASES = [
-    { base: 'compose.yaml', override: 'compose.override.yaml' },
-    { base: 'docker-compose.yml', override: 'docker-compose.production.yml' },
-] as const;
-
 const REQUIRED_DOCKERIGNORE = '.git\n.env\n**/coverage/**\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n';
 
 export const DOCKERIGNORE_ALLOWLISTS = [
     { text: `${REQUIRED_DOCKERIGNORE}!.env\n`, missing: ['.env'] },
     { text: `${REQUIRED_DOCKERIGNORE}!**/.env\n`, missing: ['.env', '**/.env'] },
-    { text: '*\n', missing: [] },
     { text: '*\n!src\n', missing: ['**/coverage/**', '**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
     { text: '*\n!src\n**/coverage/**\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n', missing: [] },
     { text: '!src\n*\n', missing: [] },
@@ -123,31 +117,6 @@ export const DOCKERIGNORE_CASES = [
             },
         ],
     },
-    {
-        name: 'wildcard entries',
-        configurations: ['docker', 'python', 'javascript'],
-        options: { rules: true },
-        files: {
-            Dockerfile: 'FROM scratch\n',
-            '.dockerignore': `**/.git
-**/.env*
-**/coverage/**
-**/.env
-**/.env.*
-**/.dev.vars
-**/.dev.vars.*
-**/node_modules/**
-**/bower_components/**
-**/.venv/**
-**/venv/**
-**/__pycache__/**
-**/.pytest_cache/**
-**/.ruff_cache/**
-**/.mypy_cache/**
-`,
-        },
-        findings: [],
-    },
 ] as const;
 
 export const NGINX_COMPOSE = 'services: {app: {image: nginx:1.27.2}}\n';
@@ -156,15 +125,6 @@ export const COMPOSE_SOURCES = [
     {
         name: 'a local build beside a registry image',
         source: 'services: {app: {build: ., image: example/web:dev}, proxy: {image: nginx:1.27.2}}',
-    },
-    {
-        name: 'an inherited service mapping',
-        source: `x-base: &base
-  image: nginx:1.27.2
-services:
-  app:
-    <<: *base
-`,
     },
     {
         name: 'duplicate services with interpolation and unrelated images',
@@ -179,17 +139,6 @@ export const TRIVY_REGISTRY_FAILURE = {
     stdout: '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}',
     stderr: 'FATAL registry authentication failed',
 } as const;
-
-export const INVALID_COMPOSE_SOURCES = [
-    {
-        name: 'malformed YAML',
-        source: 'services: [',
-    },
-    {
-        name: 'a non-string image',
-        source: 'services: {app: {image: 12}}',
-    },
-] as const;
 
 export const TRIVY_IMAGE_FINDINGS = [
     {

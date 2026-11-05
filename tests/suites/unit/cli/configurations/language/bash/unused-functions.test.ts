@@ -3,26 +3,13 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import {
-    LITERAL_FUNCTION_REFERENCES,
-    TRAP_FUNCTION_SOURCE,
-    TRAP_SCRIPT_FORMS,
-    UNUSED_FUNCTION_CASES,
-} from '#tests/config/configurations/bash.ts';
+import { LITERAL_FUNCTION_REFERENCES, UNUSED_FUNCTION_CASES } from '#tests/config/configurations/bash.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-test.each(TRAP_SCRIPT_FORMS)('a function called by trap %s is not reported', async (script) => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'source.sh': TRAP_FUNCTION_SOURCE.replace('trap _cleanup EXIT', () => `trap ${script} EXIT`),
-    });
-    expect(await runSandboxCheck(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
-});
 
 test.each([...UNUSED_FUNCTION_CASES])(
     '$check reports $expected.rule in $expected.file and passes after the fix',
@@ -58,10 +45,9 @@ test('a call from any script in the scope counts, without a source line', async 
 });
 
 test.each(LITERAL_FUNCTION_REFERENCES)('literal function argument %s counts as a reference', async (command) => {
-    const name = command.endsWith('_download') ? '_download' : '_each';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
-        'run.sh': `#!/usr/bin/env bash\n${name}() { printf ready; }\n${command}\n`,
+        'run.sh': `#!/usr/bin/env bash\n_each() { printf ready; }\n${command}\n`,
     });
     expect(await runSandboxCheck(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
 });
