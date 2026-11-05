@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -31,7 +31,7 @@ test('licenses/allowed reads the license of a locked package, and an allowed_pac
         'package-lock.json': lockfile,
     });
     const root = sandbox.path;
-    await runGspotStep({ root, run: spawnGspot }, ['install']);
+    await applyGeneratedFiles(root);
     const command = ['check', '--only', 'licenses/allowed', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
