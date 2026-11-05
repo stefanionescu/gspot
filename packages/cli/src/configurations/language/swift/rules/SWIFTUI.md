@@ -4,10 +4,8 @@ Read this rule when you change SwiftUI views or state.
 
 ## SwiftUI views
 
-- Keep state local when its lifetime matches the identity of the view. Use `@State`, `@FocusState`, `@GestureState`, and
-  bindings according to their ownership and read contracts.
+- Keep state local when its lifetime matches the identity of the view.
 - Keep view-owned state properties private. Inject values owned by a parent through the appropriate input or binding.
-- Preserve read and actor isolation when state changes.
 - Do not store derived values in `@State` when you can compute them from the source state.
 - Avoid heavy computation in `body`; SwiftUI can evaluate it repeatedly.
 - Preserve cancellation and stale-result handling for lifecycle work started with `.task`, `.onAppear`, or refresh
