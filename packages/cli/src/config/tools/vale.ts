@@ -140,8 +140,6 @@ export const VALE_MESSAGE_RULES = [
     'gspot.since',
     'gspot.symbols',
     'gspot.em-dashes',
-    'gspot.session-identifiers',
-    'gspot.home-paths',
     'gspot.terms',
 ] as const;
 

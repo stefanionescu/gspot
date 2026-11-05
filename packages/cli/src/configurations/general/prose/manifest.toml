@@ -272,6 +272,6 @@ level = "all"
 name = "commit-message"
 output = { format = "vale" }
 stage = "message"
-summary = "Runs the word rules of WRITING.md on a new commit message, with session identifiers and home paths."
+summary = "Runs the word rules of WRITING.md on a new commit message."
 tool = "vale"
 why = "A commit message stays in the history, and a hedge or a private path stays with it."
