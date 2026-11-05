@@ -20,6 +20,9 @@ guarantee, a fixed bug, or a platform difference. One behavior gets one test, at
 - No test pins a constant, a default, a message, a table, help text, or generated text that no behavior depends on. A
   test runs code and checks its result.
 - No test checks a library, the language, a wrapper, or the test setup.
+- Before you keep a new test, break the code it covers and see the test fail. A test that expects no finding needs a
+  break that makes the check report.
+- Add a table row only when you can name a bug that fails it and no other row. A table with one case is a plain test.
 - Do not export a function only so that a test can call it. Test it through the public function that uses it.
 - Test the behavior that exists. Never write a test that proves the absence of a feature, option, setting, export, or
   file that the project removed or decided against. When you remove a feature, delete its tests.
