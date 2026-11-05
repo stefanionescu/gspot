@@ -135,6 +135,9 @@ A Swift import names a module, not a file, so gspot finds the folder of each mod
 `Package.swift`, with their `path:` or the default folders `Sources/<name>` and `Tests/<name>`. It reads the Xcode
 targets from the project file. The check skips a module from outside the repository, such as `Foundation`.
 
+A Swift rule reads `import` lines only, so it catches a crossing between modules and not one inside a target, where
+files use each other with no `import`. Separate Swift packages are the only enforcement inside an app today.
+
 ```toml
 [[import_rule]]
 name = "models"
