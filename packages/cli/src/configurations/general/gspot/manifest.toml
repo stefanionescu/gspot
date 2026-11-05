@@ -14,13 +14,13 @@ system = true
 version_command = ["--version"]
 
 [[check]]
-example = "A `.commitlintrc.json` while gspot runs commitlint reports a conflicting config file. Delete it, and write the rule you need in `gspot.toml`, such as `commits.types`. A script `eslint .` in `package.json` reports an lint command. Replace it with `gspot check`."
+example = "A `.commitlintrc.json` while gspot runs commitlint reports a conflicting config file. Delete it, and write the rule you need in `gspot.toml`, such as `commits.types`. A script `eslint .` in `package.json` reports a lint command. Replace it with `gspot check`."
 help = "Delete the file or the line that the message names, or replace the line with `gspot check`. gspot writes the settings of this tool; move a rule you need into gspot.toml."
 name = "conflicting-configs"
 runs = "once"
 stage = "commit"
 summary = "Finds a tool config that a generated config file replaces, and the scripts, hooks, CI steps, and devDependencies that still call or repeat such a tool."
-why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing, and an lint command fails or runs a second lint stack beside gspot."
+why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing, and a lint command fails or runs a second lint stack beside gspot."
 
 [[check]]
 example = "An edit by hand to a generated config file reports `changed`. Move the change into gspot.toml, then run `gspot install`."

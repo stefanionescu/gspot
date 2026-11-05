@@ -57,11 +57,11 @@ all_level_rules = ["@eslint-react/naming-convention-context-name", "@eslint-reac
 
 [[eslint.forwarding_files]]
 files = ["**/*.tsx", "**/*.jsx"]
-reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
+reason = "A short component is normal React code, even alone in its file."
 
 [[eslint.rules_off]]
 files = ["**/*.tsx", "**/*.jsx"]
-reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
+reason = "A short component is normal React code, even alone in its file."
 rules = ["gspot/no-trivial-functions"]
 
 [[eslint.rules_off]]
