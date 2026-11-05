@@ -231,4 +231,5 @@ test('editorconfig-checker leaves out the extensions of the selected formatters'
     );
     expect(excluded.split(/[.(|)$]+/u)).toContain('py');
     expect(excluded.split(/[.(|)$]+/u)).not.toContain('swift');
+    expect(excluded.split(/[.(|)$]+/u)).toContain('toml');
 });

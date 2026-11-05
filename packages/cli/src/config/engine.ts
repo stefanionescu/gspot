@@ -200,7 +200,7 @@ export const FORMATTER_CHECKS: ReadonlySet<string> = new Set([
     'python/ruff-format',
     'swift/swiftformat',
     'bash/shfmt',
-    'data-files/taplo',
+    'data-files/taplo-format',
     'sql/sqlfluff',
 ]);
 
