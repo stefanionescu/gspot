@@ -78,7 +78,7 @@ gspot ignore bash/shellcheck --rule SC2086 --reason "The build flags split into 
 To allow one line only, add a ShellCheck comment with a reason, such as
 `# shellcheck disable=SC2086 # reason: the word splitting is wanted here`.
 
-## Exemptions gspot writes
+## Rules gspot turns off
 
 - In `.bats` files, ShellCheck skips SC2030, SC2031, SC2034, and SC2218. These codes do not fit bats: it runs each test
   in a subshell, defines tests below the helpers they call, and reads variables from loaded helpers.

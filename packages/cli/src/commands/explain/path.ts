@@ -1,6 +1,7 @@
 import {
     BINARY_ELIGIBLE_MESSAGE,
     GENERATED_ELIGIBLE_MESSAGE,
+    IGNORED_FILE_MESSAGE,
     MARK_GENERATED_MESSAGE,
     UNCHECKED_REASON,
     VENDORED_ELIGIBLE_MESSAGE,
@@ -60,7 +61,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (running.length === 0 && file.kind === 'source') {
         report.unchecked = UNCHECKED_REASON;
-        report.remedy = MARK_GENERATED_MESSAGE;
+        report.remedy = report.ignores.length > 0 ? IGNORED_FILE_MESSAGE : MARK_GENERATED_MESSAGE;
     }
     return report;
 }

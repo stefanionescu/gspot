@@ -5,7 +5,7 @@ description: Ignore a check or a lint rule for some files, with a reason that gs
 
 An ignore turns off a check, or one lint rule of a check. It covers every file or only some paths. gspot saves the
 ignore in `gspot.toml` with the reason that you give. Fix the code first. Add an ignore only when you can say why the rule does
-not fit your code.
+not fit your code. A suppression is an inline comment that turns off a lint rule, such as `// eslint-disable-next-line`.
 
 ## Ignore a lint rule
 
@@ -85,7 +85,7 @@ lists each change that makes the checks less strict:
 - a new ignore, or an ignore that covers more
 - a removed configuration
 - a lower level
-- a looser setting, such as a raised limit
+- a weaker setting, such as a raised limit
 - the Git hooks or the rule files turned off
 - a baseline count that goes up
 

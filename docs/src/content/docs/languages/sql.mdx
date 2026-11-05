@@ -52,7 +52,7 @@ files by four spaces. To change the SQL indent, change that record.
 At level `basic`, gspot turns off six SQLFluff rules about joins, casts, subqueries, and `LIMIT`: `AM05`, `AM09`,
 `CV11`, `ST05`, `ST07`, and `ST09`. Level `all` runs them.
 
-## Exemptions and ignores
+## Rules gspot turns off
 
 SQLFluff runs with `--ignore-local-config`, so it reads only the config file that gspot writes. `gspot init` deletes a
 `.sqlfluff` or `.sqlfluffignore` file, and Git keeps its committed version. `gspot init` leaves a SQLFluff table in

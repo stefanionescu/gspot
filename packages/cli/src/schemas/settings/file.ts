@@ -104,7 +104,7 @@ export const commandCheckSchema = z.strictObject({
     }),
     runs: z.enum(CHECK_RUNS).exclude(['history']).default('files').meta({
         description:
-            'Which files the check reads: `files` reads the files of the run, `scope` reads every file of the root scope once one of them changes, and `once` reads every file of the repository. With `scope` or `once`, a deleted file that `paths` covers also runs the check.',
+            'Which files the check reads: `files` reads the files of the run, `scope` reads every file of the root once one of them changes, and `once` reads every file of the repository. With `scope` or `once`, a deleted file that `paths` covers also runs the check.',
     }),
     summary: commandCheckFields.summary.meta({
         description: 'A short description shown in check listings.',

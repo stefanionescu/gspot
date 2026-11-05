@@ -3,7 +3,9 @@ import { parse } from '@decimalturn/toml-patch';
 import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
 import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import { isSettingUnread } from '#cli/engine/skips.ts';
+import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
+import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
+import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
@@ -15,6 +17,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
+import { findToolName } from '#cli/tools/pins.ts';
 import type {
     CommandDefinition,
     ParsedSettingValue,
@@ -23,11 +26,13 @@ import type {
     SettingReasonContext,
     SettingsEditContext,
 } from '#cli/types/commands/edits.ts';
-import type { Setting } from '#cli/types/manifests.ts';
+import type { Check, Setting } from '#cli/types/manifests.ts';
 import type { InheritedSetting, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
 const PREVIOUS_VALUE_LENGTH = 80;
+
+const TOOL_RULES_KEY = /^tools\.(?<tool>[^.]+)\.rules$/u;
 
 function parseInlineValue(text: string): unknown {
     try {
@@ -102,7 +107,7 @@ function formatMissingReason({ options, change, previous }: SettingReasonContext
     const { key } = options;
     if (change.type === 'list' && previous?.reason !== undefined)
         return `${key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`;
-    return `${JSON.stringify(change.value)} is looser than the shipped default of ${key}, so it needs a reason. Add --reason "<why>".`;
+    return `${JSON.stringify(change.value)} is weaker than the shipped default of ${key}, so it needs a reason. Add --reason "<why>".`;
 }
 
 function assertReason(context: SettingReasonContext): void {
@@ -113,7 +118,7 @@ function assertReason(context: SettingReasonContext): void {
     if (options.reason !== undefined && !isWeaker)
         throw new GspotError(
             'arguments',
-            `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,
+            `${options.key} takes no reason here: the value is not weaker than the shipped default. Run the command without --reason.`,
         );
 }
 
@@ -168,10 +173,33 @@ function buildSettingChange(
     return { setting, change, summary, notes };
 }
 
+function findRulesCheck(edit: SettingsEditContext, key: string, change: ParsedSettingValue): Check | undefined {
+    const tool = TOOL_RULES_KEY.exec(key)?.groups?.['tool'];
+    if (tool === undefined || !isTable(change.value)) return undefined;
+    const plugins = `tools.${tool}.plugins`;
+    if (edit.session.scopes.some(({ settings }) => !isSettingEmpty(settings.valuesByKey[plugins]))) return undefined;
+    const owners = listChecksById(readConfigurations().values()).values();
+    return owners.find(({ check }) => findToolName(check)?.startsWith(tool))?.check;
+}
+
+async function assertLintRules(edit: SettingsEditContext, key: string, change: ParsedSettingValue): Promise<void> {
+    const check = findRulesCheck(edit, key, change);
+    if (check === undefined) return;
+    const { session } = edit;
+    for (const rule of Object.keys(change.value as TomlTable)) {
+        const docs = await readCheckRuleExplanation(session.root, check, rule, session).catch((error: unknown) => {
+            if (error instanceof GspotError) return { unread: true };
+            throw error;
+        });
+        if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${check.id}.`);
+    }
+}
+
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     const edit = await readSettingsEditContext(options.root, options.scopePath);
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = buildSettingChange(edit, options);
+    await assertLintRules(edit, options.key, change);
     setSetting(scopeTable, change, setting, options);
     return await writeSettingsEdit(root, {
         edit: input,

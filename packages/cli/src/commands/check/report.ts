@@ -45,6 +45,8 @@ const ANNOTATION_MESSAGE_CHARACTERS = /[%\r\n]/gu;
 
 const ANNOTATION_PROPERTY_CHARACTERS = /[%\r\n:,]/gu;
 
+const FIX_SENTENCE = /^Run the fix: command that the report prints[^.,;]*(?:\.|, then |; )\s*/u;
+
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
     const verb = report.unstagedChanges === 1 ? 'has' : 'have';
@@ -88,7 +90,9 @@ that help shares one, and a rule placeholder when they name several.
 */
 function formatHelpLines(findings: readonly Finding[], result: Pick<CheckResult, 'check' | 'help'>): string[] {
     const groups = Map.groupBy(findings, (finding) => (finding.help ?? result.help ?? '').replaceAll(CODE_MARK, ''));
-    return [...groups].map(([help, group]) => {
+    return [...groups].map(([written, group]) => {
+        const rest = written.replace(FIX_SENTENCE, '');
+        const help = group.some(({ fixable }) => fixable) ? written : `${rest.charAt(0).toUpperCase()}${rest.slice(1)}`;
         const [command, ...others] = new Set(
             group.map((finding) => finding.explain ?? formatExplainCommand(finding, selectCheckCode)),
         );
@@ -96,7 +100,8 @@ function formatHelpLines(findings: readonly Finding[], result: Pick<CheckResult,
             command !== undefined && others.length === 0
                 ? command
                 : `gspot explain ${quoteArgument(result.check)} <rule>`;
-        const text = help === '' ? explain : `${help} ${explain}`.trimEnd();
+        const explainText = explain === '' ? '' : `Details: ${explain}`;
+        const text = `${help} ${explainText}`.trim();
         return `  ${styleText('dim', 'help:', { stream: process.stdout })} ${text}`;
     });
 }

@@ -20,7 +20,7 @@ import type { AvailableSettings, Settings, SettingsError, SettingsTable, Written
 function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown): string {
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
     const value = JSON.stringify(written.value);
-    return `${value} is looser than the shipped ${shown}, so it needs a reason. Write ${key} = { value = ${value}, reason = "<why>" }.`;
+    return `${value} is weaker than the shipped ${shown}, so it needs a reason. Write ${key} = { value = ${value}, reason = "<why>" }.`;
 }
 
 function validateWrittenReason(
@@ -38,7 +38,7 @@ function validateWrittenReason(
             : [
                   {
                       path: key.split('.'),
-                      message: `${key} does not loosen the default. Write it as a plain value, without a reason.`,
+                      message: `${key} is not weaker than the default. Write it as a plain value, without a reason.`,
                   },
               ];
     if (!isLoose) return [];

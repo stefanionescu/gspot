@@ -168,10 +168,8 @@ async function readHookRunnerStatus(session: Session): Promise<HookStatus> {
         .map((line) => line.trim())
         .find((line) => line !== '');
     const install = installCommand.replace('<version>', () => cliPackage.version);
-    const failure =
-        cause === undefined
-            ? `${versionCommand.join(' ')} fails. Install gspot with: ${install}`
-            : `${versionCommand.join(' ')} fails: ${cause}`;
+    const reason = cause === undefined ? '' : `: ${cause.replace(/\.$/u, '')}`;
+    const failure = `${versionCommand.join(' ')} fails${reason}. Install gspot with: ${install}`;
     return { ...hooks, ready: false, lines: [failure], text: `${hooks.text}, but ${failure}` };
 }
 

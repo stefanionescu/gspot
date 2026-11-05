@@ -103,4 +103,4 @@ checks again. The fix commands change the files in your working tree, not the st
 If the fix command exits with one of the `exit_codes`, gspot reports the findings that remain. Any other exit code
 except 0 counts as a failed run.
 
-[Command check settings](/reference/gspot-toml/#command_check) lists the keys and the values that they accept.
+[Command check settings](/reference/gspot-toml/#command_check) lists the settings and the values that they accept.

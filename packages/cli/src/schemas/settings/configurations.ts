@@ -115,7 +115,7 @@ const configurationTables = {
                 leftOut: 'code',
                 configurations: ['openapi'],
                 description:
-                    'The command that writes the OpenAPI document from the code, run in the project scope folder.',
+                    'The command that writes the OpenAPI document from the code, run in the folder of the scope.',
             }),
         })
         .optional(),

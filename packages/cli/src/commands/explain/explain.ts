@@ -5,7 +5,9 @@ import { explainSetting } from '#cli/commands/explain/setting.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
+import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
@@ -15,6 +17,8 @@ import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
+    if (SETTINGS_BY_CONFIGURATION.values().some((settings) => settings.some(({ name }) => name === subject)))
+        return formatUnknownSetting(subject, { available: [], offered: new Set() });
     const subjects = [
         ...listCheckIds(session === undefined ? [] : Object.values(session.settings.commandChecks)),
         ...readConfigurations().keys(),

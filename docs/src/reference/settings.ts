@@ -160,7 +160,7 @@ function formatScopeSection(node: SettingReference): string {
                 node.children.filter((child) => child.kind === 'value'),
                 TABLE_HEADING_LEVEL + 1,
             ) +
-            `\n\nOnly the root takes these keys: ${rootOnlyNames}.\n`,
+            `\n\nOnly the root takes these settings: ${rootOnlyNames}.\n`,
         TABLE_HEADING_LEVEL,
         buildSettingAnchor(node.key, node.kind),
     );
@@ -212,12 +212,12 @@ export function buildSettingsPage(): ReferencePage {
                 TOP_LEVEL_HEADING,
                 formatSettingKeys(topLevelKeys, TABLE_HEADING_LEVEL + 1),
                 TABLE_HEADING_LEVEL,
-                'top-level-keys',
+                'top-level-settings',
             ) +
             sections.join(''),
     );
     page.headings = [
-        { depth: TABLE_HEADING_LEVEL, slug: 'top-level-keys', text: TOP_LEVEL_HEADING },
+        { depth: TABLE_HEADING_LEVEL, slug: 'top-level-settings', text: TOP_LEVEL_HEADING },
         ...roots
             .filter((node) => node.kind !== 'value')
             .map((node) => ({

@@ -243,9 +243,7 @@ export const COMMAND_HELP = {
                 'A check (python/ruff), a configuration (python), a setting (limits.max_file_lines), or a file (./src/app.ts)',
             '[rule]': 'A lint rule of the named check, such as E501 for python/ruff',
         },
-        options: {
-            '--verbose': 'Print the full rule explanation',
-        },
+        options: {},
         exitCodes: [
             ['0', 'The explanation was printed.'],
             [

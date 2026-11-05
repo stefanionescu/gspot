@@ -195,7 +195,7 @@ export const LLMS_PAGES = {
         {
             label: 'gspot.toml settings',
             url: `${REFERENCE_URL}${REFERENCE_FOLDERS.settings}/`,
-            description: 'every key of gspot.toml, its accepted values, and its default',
+            description: 'every setting of gspot.toml, its accepted values, and its default',
         },
         {
             label: 'JSON output',

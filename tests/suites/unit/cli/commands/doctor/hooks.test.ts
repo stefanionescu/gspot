@@ -46,7 +46,9 @@ test.each([false, true])(
                       ready: false,
                       tool: 'gspot',
                       lines: [
-                          "bunx --no-install gspot --version fails: error: Could not find an existing 'gspot' binary to run. Stopping because --no-install was passed.",
+                          expect.stringContaining(
+                              'Stopping because --no-install was passed. Install gspot with: bun add',
+                          ) as string,
                       ],
                   },
         );

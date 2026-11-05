@@ -29,7 +29,7 @@ attributed source text.
 Keep required instructions outside collapsed panels. Delete obsolete content. A badge belongs only where its accurate
 state affects a reader's decision.
 
-Give every project scope a `README.md` that says what it does and how to start, and the repository root a `LICENSE`
+Give every scope a `README.md` that says what it does and how to start, and the repository root a `LICENSE`
 file.
 
 ## Examples and procedures

@@ -27,9 +27,10 @@ function formatUnsetSummary(
     const names = formatNameList(keys);
     return {
         summary: keys.length === 0 ? `Removed your value for ${key}${where}.` : `Removed ${names} from ${key}${where}.`,
-        ...(keys.length > 0 && {
-            unchangedSummary: `${names} ${keys.length === 1 ? 'is' : 'are'} not in ${key}${where}.`,
-        }),
+        unchangedSummary:
+            keys.length === 0
+                ? `No change: gspot.toml has no value for ${key}${where}.`
+                : `No change: ${names} ${keys.length === 1 ? 'is' : 'are'} not in ${key}${where}.`,
     };
 }
 

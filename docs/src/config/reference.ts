@@ -178,7 +178,7 @@ export const SETTINGS_DESCRIPTION = 'Every key, accepted value, and default of g
 export const SETTINGS_OPENING =
     'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n';
 
-export const TOP_LEVEL_HEADING = 'Top-level keys';
+export const TOP_LEVEL_HEADING = 'Top-level settings';
 
 export const SENTENCE_END = /[.\n]$/u;
 

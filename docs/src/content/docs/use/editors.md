@@ -58,7 +58,7 @@ and format on save then writes text that the check rejects. Give the extension t
 | SQLFluff             | `sqlfluff.cfg` in `language/sql/`       | `sqlfluff.config` of [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                                       |
 | SwiftFormat          | `swiftformat` in `language/swift/`      | `swiftformat.configSearchPaths` of [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)                    |
 
-These paths are the files of the root scope.
+These paths are the files of the root.
 
 Do not add a config file of your own for these tools, such as `.taplo.toml` in the root folder. gspot writes the
 settings of these tools, so `gspot/conflicting-configs` reports such a file.

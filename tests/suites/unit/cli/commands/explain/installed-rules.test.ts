@@ -19,6 +19,33 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
+test('set refuses a rule that the installed catalog does not hold, and takes one that it holds', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'guide.md': '# Guide\n',
+    });
+    await createFileTree(sandbox.path, {
+        '.gspot/node_modules/markdownlint/package.json': '{"exports":"./lib/exports.mjs"}',
+        '.gspot/node_modules/markdownlint/lib/exports.mjs': 'throw new Error("Package code must not run");',
+        '.gspot/node_modules/markdownlint/schema/markdownlint-config-schema.json': JSON.stringify({
+            properties: { MD026: { description: 'MD026/no-trailing-punctuation : Punctuation : https://example.com' } },
+        }),
+    });
+    const refused = await runGspot(sandbox.path, [
+        'set',
+        'tools.markdownlint.rules',
+        '{ MD999 = { punctuation = "." } }',
+    ]);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toContain('gspot does not know rule MD999 of markdown/markdownlint.');
+    const taken = await runGspot(sandbox.path, [
+        'set',
+        'tools.markdownlint.rules',
+        '{ MD026 = { punctuation = "." } }',
+    ]);
+    expect(taken.code, taken.stdout + taken.stderr).toBe(0);
+});
+
 test('Markdownlint validates a rule against its installed catalog without evaluating package code', async () => {
     const settings = buildSandboxSettings(['markdown']);
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings, 'guide.md': '# Guide\n' });

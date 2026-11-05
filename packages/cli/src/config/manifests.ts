@@ -166,7 +166,7 @@ export const REASON_DESCRIPTIONS = {
 } as const;
 
 export const BOUND_REASON_DESCRIPTION =
-    'Why this code needs a looser bound than the default; required when you loosen it.';
+    'Why this code needs a weaker bound than the default; required when you weaken it.';
 
 export const BOUND_PREFIXES = { max_: 'raising', min_: 'lowering' } as const;
 

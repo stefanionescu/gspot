@@ -61,6 +61,13 @@ function buildRunOptions(
     };
 }
 
+function formatLevelNote(id: string, report: RunReport, session: Session): string {
+    const { level } = session.settings;
+    return report.checks.some(({ check, status }) => check === id && (status === 'missing' || status === 'error'))
+        ? `${id} is off at level ${level}, so gspot install leaves out its files. To run it, run gspot set level all.`
+        : `${id}: --only allows this check to run here; it stays off in hooks at level ${level}.`;
+}
+
 function assertNamedChecks(session: Session, options: Pick<CheckOptions, 'only' | 'skip'>): string[] {
     const selected = session.scopes.flatMap((scope) =>
         scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
@@ -74,9 +81,7 @@ function assertNamedChecks(session: Session, options: Pick<CheckOptions, 'only' 
         assertCheckExists(id, commandChecks);
         const match = selected.find(({ check }) => check.id === id);
         if (match !== undefined)
-            return findSettingsSkip(settings, match.scope, match.check)?.cause === 'level'
-                ? [`${id}: --only allows this check to run here; it stays off in hooks at level basic.`]
-                : [];
+            return findSettingsSkip(settings, match.scope, match.check)?.cause === 'level' ? [id] : [];
         const owner = shipped.get(id);
         if (owner === undefined) return [];
         throw new GspotError(
@@ -188,7 +193,7 @@ export async function runTreeCheck(
         });
         if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
         if (note !== undefined) result.report.notes.push(note);
-        result.report.notes.push(...onlyNotes);
+        result.report.notes.push(...onlyNotes.map((id) => formatLevelNote(id, result.report, session)));
         const reportText = formatRunReport(result.report, { verbose: options.verbose, canceled: cancelSignal.aborted });
         const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
         return {

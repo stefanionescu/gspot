@@ -89,18 +89,22 @@ test('check --verbose prints every finding and the command', async () => {
 });
 
 test.each([
-    { name: 'one rule', extra: [{ line: 9 }], help: ['  help: Quote it. gspot explain bash/shellcheck SC2086'] },
+    {
+        name: 'one rule',
+        extra: [{ line: 9 }],
+        help: ['  help: Quote it. Details: gspot explain bash/shellcheck SC2086'],
+    },
     {
         name: 'two rules',
         extra: [{ line: 9 }, { line: 12, rule: 'SC2000' }],
-        help: ['  help: Quote it. gspot explain bash/shellcheck <rule>'],
+        help: ['  help: Quote it. Details: gspot explain bash/shellcheck <rule>'],
     },
     {
         name: 'a finding with its own help',
         extra: [{ line: 12, help: 'Split it.' }],
         help: [
-            '  help: Quote it. gspot explain bash/shellcheck SC2086',
-            '  help: Split it. gspot explain bash/shellcheck SC2086',
+            '  help: Quote it. Details: gspot explain bash/shellcheck SC2086',
+            '  help: Split it. Details: gspot explain bash/shellcheck SC2086',
         ],
     },
 ])('a failed check prints each help once, after its findings: $name', ({ extra, help }) => {
@@ -134,10 +138,10 @@ test('a finding names its rule in the explain command only when the check has a 
     };
     const help = stripVTControlCharacters(formatRunReport(report, { verbose: false })).match(/^ {2}help: .*$/gmu);
     expect(help).toStrictEqual([
-        '  help: Quote it. gspot explain bash/shellcheck SC2086',
-        '  help: Quote it. gspot explain repository/encoding path-encoding',
-        '  help: Quote it. gspot explain repository/encoding',
-        '  help: Quote it. gspot explain typescript/tsc',
+        '  help: Quote it. Details: gspot explain bash/shellcheck SC2086',
+        '  help: Quote it. Details: gspot explain repository/encoding path-encoding',
+        '  help: Quote it. Details: gspot explain repository/encoding',
+        '  help: Quote it. Details: gspot explain typescript/tsc',
     ]);
 });
 

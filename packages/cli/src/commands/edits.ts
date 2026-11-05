@@ -18,10 +18,11 @@ import { listCheckIds } from '#cli/manifests/read.ts';
 import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/manifests/select.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { buildArgumentPath, selectScope } from '#cli/repository/scopes.ts';
+import { scopeSchema } from '#cli/schemas/settings/file.ts';
 import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
-import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
@@ -44,6 +45,20 @@ import type { ApplyReport } from '#cli/types/generation.ts';
 import type { AvailableSettings, Scope, SettingMatch, Settings, SettingsEdit, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult, Files } from '#cli/types/system.ts';
 import type { Generation, Session } from '#cli/types/tools.ts';
+
+function assertSettingEditable(key: string, scopePath: string): void {
+    if (Object.hasOwn(RECORD_FIELDS, key))
+        throw new GspotError(
+            'arguments',
+            key === 'ignore'
+                ? 'Use gspot ignore to add an ignore, or gspot unignore to remove one.'
+                : `Write [[${key}]] by hand in gspot.toml. Record lists have their own fields.`,
+        );
+    if (['configurations', 'removed_configurations'].includes(key))
+        throw new GspotError('arguments', ADD_REMOVE_MESSAGE);
+    if (scopePath !== '' && findSettingSchema(key) !== undefined && findSettingSchema(key, scopeSchema) === undefined)
+        throw new GspotError('arguments', `${key} applies to the whole repository. Leave out --scope.`);
+}
 
 function listTurnedOffNotes(previous: Session | undefined, session: Session): string[] {
     if (previous === undefined) return [];
@@ -163,7 +178,7 @@ export async function readSettingsEditContext(root: string, scopePath?: string):
     if (session.scopes.every((scope) => scope.path !== path))
         throw new GspotError(
             'arguments',
-            `There is no scope called ${path}. Name a project folder or a written scope.`,
+            `There is no scope called ${path}. Name a folder that has a [[scope]] record or holds a project file.`,
         );
     return { ...context, session, scopePath: path, scopeTable: addScopeTable(input.table, path) };
 }
@@ -241,15 +256,7 @@ export function selectSettingToEdit(
     context: SettingsEditContext,
     key: string,
 ): { availableSettings: AvailableSettings; match: SettingMatch; scope: Scope } {
-    if (Object.hasOwn(RECORD_FIELDS, key))
-        throw new GspotError(
-            'arguments',
-            key === 'ignore'
-                ? 'Use gspot ignore to add an ignore, or gspot unignore to remove one.'
-                : `Write [[${key}]] by hand in gspot.toml. Record lists have their own fields.`,
-        );
-    if (['configurations', 'removed_configurations'].includes(key))
-        throw new GspotError('arguments', ADD_REMOVE_MESSAGE);
+    assertSettingEditable(key, context.scopePath);
     const { settings } = context;
     const session = context.session;
     const selected = selectScope(context.scopePath, session.scopes);

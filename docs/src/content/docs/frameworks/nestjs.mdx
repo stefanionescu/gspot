@@ -37,7 +37,7 @@ The `gspot/restricted-syntax` rule reports two patterns:
 | `@Res()` or `@Response()` without `passthrough` | Both  | Taking the response object turns off interceptors and the return value. Return the value, or pass `{ passthrough: true }`. |
 | A `forwardRef()` call                           | `all` | `forwardRef` hides a cycle between two modules that import each other. Move what both need into a third module.            |
 
-## Exemptions
+## Rules gspot turns off
 
 - A Nest module is an empty decorated class that registers providers and controllers. At level `all`,
   `gspot/no-trivial-functions` is off in `*.module.ts` files, and `gspot/no-trivial-files` accepts them.

@@ -38,7 +38,7 @@ component file.
 The `<script>` blocks of a component run in the browser. In them, `gspot/no-client-environment` allows only the
 environment variables that start with `PUBLIC_`, and `NODE_ENV`, `SITE`, and `ASSETS_PREFIX`.
 
-## Exemptions
+## Rules gspot turns off
 
 - `import-x/no-default-export` is off in `.astro` files, because Astro compiles each component to a default export.
 - At level `all`, `gspot/no-trivial-files` accepts a component, and a script block that only imports a module. Astro

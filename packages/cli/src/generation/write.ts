@@ -91,12 +91,7 @@ Format generated file changes and notes for command output.
 */
 export function formatApplyReport(report: ApplyReport): string {
     const lines = listGeneratedChangeLines(report);
-    if (lines.length === 0) {
-        const count = report.unchanged.length;
-        lines.push(
-            `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`,
-        );
-    }
+    if (lines.length === 0) lines.push('Generated files: none changed.');
     lines.push(...report.notes.map((note) => `note     ${note}`));
     return `${lines.join('\n')}\n`;
 }

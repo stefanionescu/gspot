@@ -44,7 +44,7 @@ In `next.config.*` files, the `gspot/restricted-syntax` rule reports two pattern
 | `ignoreBuildErrors: true` or `ignoreDuringBuilds: true`                                       | This option lets next build pass with errors. Remove it.                           |
 | A key under `env` whose name holds `SECRET`, `TOKEN`, `PASSWORD`, `PRIVATE_KEY`, or `API_KEY` | A key under env is written into the client bundle. Read this secret on the server. |
 
-## Exemptions
+## Rules gspot turns off
 
 - `import-x/no-default-export` is off in the route files of `app`, such as `page.tsx` and `layout.tsx`, and in every
   file under `pages`, because Next.js reads their default export.

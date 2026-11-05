@@ -73,12 +73,12 @@ When several configurations give defaults for one list, gspot joins the lists. W
 give different defaults for a single value, the configuration of a framework, platform, library, or database wins.
 When neither configuration is of one of those kinds, gspot stops and names both. Set the value yourself to choose.
 
-[Scope settings](/reference/gspot-toml/#scope) lists the keys and the values that they accept.
+[Scope settings](/reference/gspot-toml/#scope) lists the settings and the values that they accept.
 
 ## Monorepo task runners
 
 gspot covers the packages of a workspace through scopes, so run `gspot check` once in the root folder. Do not run it in
-the `lint` script of each package. A run in each package repeats the work, and skips the checks of the root scope. The
+the `lint` script of each package. A run in each package repeats the work, and skips the checks of the root. The
 task runner also keeps a cached pass for a package after `gspot.toml` changes, because the files of a package do not
 include `gspot.toml` or `.gspot/`.
 
