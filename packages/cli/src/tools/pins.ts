@@ -148,7 +148,6 @@ Build the project table of the Python tool project: its name, its Python version
 
 @param configurations the configurations in use.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The written pyproject.toml and the lockfile state of the installers build the same table through it.
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
     return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
 }
@@ -192,7 +191,6 @@ Get the tool that a check names, or the first word of its command.
 @param check the validated check.
 @returns undefined for a built-in check without a tool.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, explain, the gspot check, and the docs read the program of a check through it.
 export function findToolName(check: Check): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }

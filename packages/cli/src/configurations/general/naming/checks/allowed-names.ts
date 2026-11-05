@@ -12,7 +12,6 @@ import type { FileNames, NamedCategory, NamingException } from '#cli/types/confi
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/configurations/general/naming/checks/paths.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three name lists share this one reading of an exception without categories.
 function isCategoryCovered(exception: Pick<NamingException, 'categories'>, category: NamedCategory): boolean {
     return exception.categories === undefined || exception.categories.includes(category);
 }

@@ -118,7 +118,6 @@ export async function writeSandboxChanges(sandbox: Sandbox, changes: SandboxChan
 /**
 Build the changes that replace the files of a sandbox plan with these files and keep its .gitignore.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests in many files replace the files of a sandbox through it, and jscpd reports the inlined copies as clones.
 export function buildSandboxChanges(
     planFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,

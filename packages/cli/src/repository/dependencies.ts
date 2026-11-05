@@ -82,7 +82,6 @@ Read and validate the package.json fields that gspot uses.
 @param path the relative package.json.
 @returns the validated package fields, or undefined when the file does not exist.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, generation, checks, and repository reads validate package.json through it.
 export function readPackageJson(source: string | RunCache, path: string): PackageJson | undefined {
     const text = findText(source, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);

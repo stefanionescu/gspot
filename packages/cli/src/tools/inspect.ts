@@ -271,7 +271,6 @@ Find the path of a tool once per run, or the failure with the next step.
 @param tool the tool to find.
 @param cwd the working folder of the tool.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The check runner, the fixers, and the docker test read a path or its failure through it at each call site.
 export async function findToolPath(session: ToolLookupSession, tool: Tool, cwd: string): Promise<ToolAvailability> {
     return buildToolAvailability(tool, await lookUpTool(session, tool, cwd));
 }

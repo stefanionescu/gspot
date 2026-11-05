@@ -144,7 +144,6 @@ function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSetti
         );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: uv sync --locked fails unless it reads the exclude-newer that uv lock read, so both steps write this file.
 function writeUvSettings(folder: string, indexes: PythonIndexSettings['settings'], days: number): void {
     const settings = stringify({ ...indexes, 'exclude-newer': `${String(days)} days` });
     writeFileSync(join(folder, UV_SETTINGS_FILE), settings, { mode: PRIVATE_FILE });

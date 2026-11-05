@@ -21,7 +21,6 @@ import {
     DETECTION_LABEL_WIDTH,
 } from '#cli/config/commands/edits.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rows of the init summary share this label and gap layout.
 function formatDetectionRow(label: string, names: string[]): string | undefined {
     return names.length === 0
         ? undefined

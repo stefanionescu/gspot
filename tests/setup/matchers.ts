@@ -16,7 +16,6 @@ export async function captureRejection(promise: Promise<unknown>): Promise<Error
 /**
 An object that must hold these properties, typed as the compared value.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cast lets an asymmetric matcher stand where a test expects T.
 export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }

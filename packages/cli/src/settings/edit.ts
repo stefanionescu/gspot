@@ -7,7 +7,6 @@ import { SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
 import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
 import type { TomlTable, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: setKey, removeKey, and removeFromList split a dotted key at its last dot through it.
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };

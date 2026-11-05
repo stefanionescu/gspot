@@ -270,7 +270,6 @@ test('an ignored_prefix override strips handle from function and method names in
     ]);
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests share the settings parser and file context through it.
 async function readNaming(tables: string): Promise<FileNaming> {
     return buildFileNaming(
         await buildScopeNamingSettings(
@@ -279,7 +278,6 @@ async function readNaming(tables: string): Promise<FileNaming> {
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests compare rule IDs and messages through the same finding projection.
 function listRuleMessages(
     identifier: Identifier,
     naming: FileNaming,
@@ -290,11 +288,9 @@ function listRuleMessages(
         [identifier],
     ).map(({ rule, message }) => ({ rule, message }));
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests share the non-test file context through it.
 function buildFileNaming(settings: NamingSettings): FileNaming {
     return { settings, isTestFile: false };
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file build an identifier with these defaults through it, and jscpd reports the inlined copies as clones.
 function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
     const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
     return { file, language, category, line, column, label: `${language} ${category}`, ...fields };

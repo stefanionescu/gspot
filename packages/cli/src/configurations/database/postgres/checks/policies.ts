@@ -8,7 +8,6 @@ Build the name of a table with its schema.
 @param schema the schema, which defaults to public.
 @param name the table.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The statement appliers of the schema reader qualify every name the same way.
 export function qualifyName(schema: string | undefined, name: string | undefined = ''): string {
     return `${schema === undefined || schema === '' ? PUBLIC_SCHEMA : schema}.${name}`;
 }
@@ -20,7 +19,6 @@ Forget a policy that a migration drops.
 @param _name the qualified name of the statement, which a policy does not use.
 @param names the parts of the dropped name: its schema, its table, and the policy.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The drop appliers of the schema reader share one signature.
 export function dropPolicy(state: SchemaState, _name: string, names: string[]): void {
     state.policies
         .get(qualifyName(names.at(POLICY_SCHEMA_INDEX), names.at(SCHEMA_NAME_INDEX)))

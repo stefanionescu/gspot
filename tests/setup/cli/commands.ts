@@ -76,7 +76,6 @@ export async function runInit(
     return { plan, settings: parse(settingsText) as TomlTable };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: This reader keeps the schema parse of the check report at one boundary.
 export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: z.infer<typeof checkReportSchema> } {
     return { ...output, report: checkReportSchema.parse(JSON.parse(output.stdout)) };
 }
@@ -84,7 +83,6 @@ export function parseCheckReport(output: ProcessOutput): ProcessOutput & { repor
 /**
 Run gspot as a child process in a folder with color off and CI set.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Sandbox.run takes it as a value.
 export async function spawnGspot(
     cwd: string,
     commandArguments: readonly string[],

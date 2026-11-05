@@ -76,7 +76,6 @@ Build the path of an installed grammar. Every repository of this user shares the
 
 @param grammar the language syntax.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The parser reads the path through it, and the installer writes that path.
 export function buildGrammarPath(grammar: GrammarName): string {
     return join(readCacheFolder(), GRAMMARS_FOLDER, `${grammar}${GRAMMAR_FILE_EXTENSION}`);
 }

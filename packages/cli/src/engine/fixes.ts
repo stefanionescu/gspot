@@ -28,7 +28,6 @@ function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | un
     return detail === '' ? `${planned.check.id} exited ${String(result.code)}` : detail;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Each fixer round and each run reads the same paths of a planned check through it.
 function listPlannedPaths(planned: PlannedCheck): string[] {
     return [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
 }

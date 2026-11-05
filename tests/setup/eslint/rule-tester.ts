@@ -20,7 +20,6 @@ A rule tester using the TypeScript parser and a fixed repository root.
 @param options.root the folder the rules resolve paths against.
 @param options.languageOptions the parser and runtime settings for the cases.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Rule tests share the parser and runtime options through it.
 export function buildRuleTester({
     root = RULE_TESTER_ROOT,
     languageOptions = {},

@@ -47,7 +47,6 @@ Set the output mode for the process.
 
 @param next the JSON output choice.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Output options stay private to this module.
 export function setOutputOptions(next: OutputOptions): void {
     Object.assign(options, next, { notes: [] });
 }

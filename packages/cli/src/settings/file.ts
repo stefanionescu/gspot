@@ -17,7 +17,6 @@ Identify a written setting that carries both its value and its reason.
 
 @param value the written setting.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
     return isTable(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
 }

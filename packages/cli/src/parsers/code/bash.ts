@@ -118,7 +118,6 @@ function isTemporaryValue(assignment: Node): boolean {
     return substitution?.namedChild(0)?.childForFieldName('name')?.text === TEMPORARY_FILE_COMMAND;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four sites share this one key format, and top marks a variable outside every function.
 function buildVariableKey(functionId: number | undefined, name: string): string {
     return `${String(functionId ?? 'top')}:${name}`;
 }

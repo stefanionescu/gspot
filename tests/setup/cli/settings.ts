@@ -60,7 +60,6 @@ export function validateSettingsText(text: string, root?: string): string[] {
 /**
 Build a command check that prints each path it gets and fails.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The check tests of several files build their reporting check through it.
 export function buildReportingCheck(
     options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'id' | 'paths' | 'stage'>,
 ): NonNullable<WrittenSettings['command_check']>[number] {

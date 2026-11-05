@@ -13,7 +13,6 @@ import type { RunOptions, CheckRunOptions, CheckGeneration } from '#cli/types/en
 /**
 Options for an in-process run of every stage, with no fixes.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: `AGENTS.md` names it as the options of runChecks.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return {
         stage: 'all',
@@ -38,7 +37,6 @@ export function planFixer(session: Session, fix: readonly string[]): PlannedChec
 /**
 Build the gspot.toml text of a fixer whose check passes and whose fix fails, both through the fake tool program.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The fixes tests write the gspot.toml text of a fixer through it, and jscpd reports the inlined copies as clones.
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
 [[command_check]]

@@ -242,7 +242,6 @@ Check whether a check runs once for the whole repository.
 
 @param check the check to inspect.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, skips, the file selection, and list share this one test of the run kind.
 export function isRepositoryRun(check: Pick<Check, 'runs'>): boolean {
     return (ROOT_RUNS as readonly string[]).includes(check.runs);
 }

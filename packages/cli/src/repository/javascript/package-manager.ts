@@ -208,7 +208,6 @@ Run a declared package manager with its pinned runtime and version.
 @param commandArguments the executable options and operands to pass after its name.
 @returns the direct command or the mise command for the exact pin.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: CI generation and the npm installer run a package manager at its version through mise by this one rule.
 export function buildPackageManagerCommand(
     packageManager: PackageManagerCommand,
     commandArguments: readonly string[],

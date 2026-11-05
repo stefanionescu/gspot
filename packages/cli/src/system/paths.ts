@@ -15,7 +15,6 @@ Convert a path to forward slashes on every system, for path patterns, stored pat
 
 @param path the path, with system separators.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers write stored and printed paths with forward slashes through this one Windows rule.
 export function convertToPosixPath(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
 }
@@ -25,7 +24,6 @@ Check whether a path relative to a folder stays inside it: not absolute, not the
 
 @param local the path relative to the folder, with either separator.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers refuse a path outside its folder by this test, which accepts both separators.
 export function isInside(local: string): boolean {
     return !(local === '..' || isAbsolute(local) || local.startsWith('../') || local.startsWith(`..${sep}`));
 }
@@ -61,7 +59,6 @@ Extract the parent folder of a path, '' at the root.
 @param path the slash-separated location to split at the last separator.
 @returns everything before the last slash.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers take the parent folder by this rule, with an empty path at the root.
 export function extractParentFolder(path: string): string {
     const slash = path.lastIndexOf('/');
     return slash === -1 ? '' : path.slice(0, slash);
@@ -97,7 +94,6 @@ List the file names that an executable can have on this system, in the order the
 
 @param name the executable without a suffix.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, tools, and tests list the executable names with the suffixes of this system.
 export function listExecutableNames(name: string): string[] {
     return executableLayout.executableSuffixes.map((suffix) => name + suffix);
 }
@@ -108,7 +104,6 @@ Locate the Python interpreter inside its virtual environment.
 @param folder the environment root.
 @returns the executable path, with the Python launcher suffix of this system.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The interpreter path uses the virtual environment folder and launcher suffix of this system.
 export function buildVenvPythonPath(folder: string): string {
     return join(
         join(folder, executableLayout.environmentFolder),
@@ -174,7 +169,6 @@ Test whether a path passes through an installed dependency folder.
 
 @param path the repository-relative path.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and repository reads skip installed dependency folders by this one rule.
 export function isInInstalledFolder(path: string): boolean {
     return path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment));
 }
@@ -184,7 +178,6 @@ Escape a literal repository path for use within a glob.
 
 @param path the literal path.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers escape a literal path for a glob with the one set of special characters.
 export function escapeGlob(path: string): string {
     return path.replaceAll(GLOB_SPECIAL_CHARACTERS, (match) => `\\${match}`);
 }
@@ -195,7 +188,6 @@ Test scope containment. The empty root path matches every file.
 @param path the file to test.
 @param scopePath the folder that may contain the file.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers test scope containment by this rule: the root scope, an empty path, holds every path.
 export function isInScope(path: string, scopePath: string): boolean {
     return scopePath === '' || path === scopePath || path.startsWith(`${scopePath}/`);
 }

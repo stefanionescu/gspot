@@ -314,7 +314,6 @@ process of its checks waits for.
 @param generation the generators called by checks when they need their output.
 @param selection the content of the run; without one, checks compare with `HEAD` and read the pushed commits.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A check run, the session after fixers, and the tests build a check session through it, each with its own process limiter.
 export function buildCheckSession(
     session: Session,
     generation: CheckGeneration,

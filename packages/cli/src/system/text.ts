@@ -85,7 +85,6 @@ Format the close names of an unknown name, or an empty string when none match.
 @param names the declared names.
 @returns the Did-you-mean clause.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, configurations, and settings validation word the close-name suggestion through it.
 export function formatSimilarNames(name: string, names: string[]): string {
     const near = selectSimilarNames(name, names);
     return near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
@@ -96,7 +95,6 @@ Quote one argument for a POSIX shell command shown to the reader.
 
 @param argument the command token to display without shell expansion.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, CI generation, and settings messages quote a shell argument by this one rule.
 export function quoteArgument(argument: string): string {
     return UNQUOTED_ARGUMENT.test(argument) ? argument : `'${argument.replaceAll("'", "'\"'\"'")}'`;
 }
@@ -108,7 +106,6 @@ Quote each argument of a command for a POSIX shell, and join them with spaces.
 
 @returns the command line, which a shell runs as the same arguments.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers print a command line quoted by this one rule.
 export function quoteCommand(command: readonly string[]): string {
     return command.map((argument) => quoteArgument(argument)).join(' ');
 }
@@ -131,7 +128,6 @@ Join names in a sentence, such as `a, b, and c`.
 @param names the names to join.
 @param type `conjunction` joins with and, and `disjunction` with or.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Messages in many layers join names by this one rule.
 export function formatNameList(names: readonly string[], type: Intl.ListFormatType = 'conjunction'): string {
     return new Intl.ListFormat('en', { type }).format(names);
 }
@@ -142,7 +138,6 @@ Format a count with its singular or plural noun.
 @param count the quantity that selects the noun ending.
 @param noun the singular word.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Messages in many layers form a counted noun with this one plural rule.
 export function formatCount(count: number, noun: string): string {
     return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
 }
@@ -153,7 +148,6 @@ Format a scope the way --scope accepts it.
 @param path the scope path, empty at the repository root.
 @returns the path, or the mark of the root.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reports, lists, explanations, and settings print a scope by this one rule.
 export function formatScope(path: string): string {
     return path === '' ? ROOT_SCOPE_MARK : path;
 }
@@ -192,7 +186,6 @@ Escape text so that a regular expression matches it literally.
 
 @param text the text to match.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Code that builds a regular expression from a name shares this one escaping rule.
 export function escapeRegExp(text: string): string {
     return text.replaceAll(REGEXP_SYNTAX_CHARACTERS, String.raw`\$&`);
 }

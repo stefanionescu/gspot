@@ -42,7 +42,6 @@ Lists the scopes inside another scope, excluding that scope itself.
 @param scopePath the parent folder, empty for the repository root.
 @returns the nested paths in their original order.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, generation, and planning list nested scopes by this rule: inside the scope, and not the scope itself.
 export function listNestedScopes(paths: readonly string[], scopePath: string): string[] {
     return paths.filter((path) => path !== scopePath && isInScope(path, scopePath));
 }
@@ -83,7 +82,6 @@ Resolve a scope-relative path within its repository.
 @param scopePath the repository-relative folder.
 @param path the scope-relative file.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers join a path to its scope by this rule: the root scope, an empty path, adds no prefix.
 export function joinScope(scopePath: string, path: string): string {
     return scopePath === '' ? path : `${scopePath}/${path}`;
 }
@@ -170,7 +168,6 @@ Check whether a path sits outside every child scope.
 @param path the repository-relative path.
 @param children the nested scope folders.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The file selection, the generators, and the checks of several languages share this one test.
 export function isOutsideChildScopes(path: string, children: readonly string[]): boolean {
     return children.every((child) => !isInScope(path, child));
 }

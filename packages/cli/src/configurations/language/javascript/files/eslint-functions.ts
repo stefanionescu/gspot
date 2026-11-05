@@ -275,7 +275,6 @@ Set the plugins of the block.
 @param block the block that the generated file writes.
 @param plugins each imported plugin, by its rule prefix.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function addPlugins(block: JavascriptBlock, plugins: Record<string, unknown>): JavascriptBlock {
     return { ...block, plugins: { ...block.plugins, ...plugins } };
 }
@@ -328,7 +327,6 @@ Configure the resolver interface of the boundaries plugin.
 @param block the configuration block.
 @param projects the TypeScript project paths.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setBoundaryLookup(block: JavascriptBlock, projects: string[]): JavascriptBlock {
     return {
         ...block,
@@ -370,7 +368,6 @@ Set the parser of a Vue or Svelte block. Apply the supplied TypeScript parser to
 @param parser vue-eslint-parser or svelte-eslint-parser.
 @param typescriptParser the parser of TypeScript script elements.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setComponentParser(
     block: JavascriptBlock,
     parser: unknown,
@@ -398,7 +395,6 @@ Set the TypeScript parser of an Astro component.
 @param block the component block.
 @param parser the TypeScript parser.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setScriptParser(block: JavascriptBlock, parser: unknown): JavascriptBlock {
     return {
         ...block,
@@ -418,7 +414,6 @@ Replace the globals of the test block with the Jest globals of the plugin.
 @param plugin.environments.globals the default Jest environment.
 @param plugin.environments.globals.globals the global identifiers of Jest.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setJestGlobals(
     block: JavascriptBlock,
     plugin: { environments: { globals: { globals: EslintGlobals } } },

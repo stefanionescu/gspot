@@ -26,7 +26,6 @@ Create the cache of source bytes and derived values for one repository root.
 @param root the repository folder; the cache keeps its real path.
 @returns empty source and value maps, keyed to the real root.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers and the tests open the run cache through it, with the real root that contained reads compare against.
 export function createRunCache(root: string): RunCache {
     return { root: realpathSync(root), sources: new Map(), texts: new WeakMap(), values: new Map() };
 }

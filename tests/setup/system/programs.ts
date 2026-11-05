@@ -6,7 +6,6 @@ import type { CallRecord, ProgramName } from '#tests/types/setup.ts';
 /**
 Build the command that runs one of the test programs in tests/setup/programs with the running Bun executable.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its ProgramName parameter checks that the test program exists.
 export function buildProgramCommand(program: ProgramName, ...programArguments: string[]): string[] {
     return [process.execPath, join(import.meta.dir, '..', 'programs', `${program}.ts`), ...programArguments];
 }
@@ -14,7 +13,6 @@ export function buildProgramCommand(program: ProgramName, ...programArguments: s
 /**
 Split a `name=value` argument of a test program at its first `=`.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The test programs read every path=text argument through it.
 export function splitAssignment(pair: string): [string, string] {
     const separator = pair.indexOf('=');
     return [pair.slice(0, separator), pair.slice(separator + 1)];
@@ -47,7 +45,6 @@ Locate a console script inside a test's Python environment.
 @param folder the environment root.
 @param name the console script.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The console script path uses the virtual environment folder and launcher suffix of this system.
 export function buildVenvExecutablePath(folder: string, name: string): string {
     return join(folder, executableLayout.environmentFolder, name + executableLayout.environmentSuffix);
 }

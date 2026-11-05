@@ -73,7 +73,6 @@ Build the repository path of a file in the build output.
 @param planned the scope of the site.
 @param file the path relative to the build folder.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every site check reports its build files through this path.
 export function convertToBuildPath(planned: PlannedCheck, file: string): string {
     return `${getTable(planned.scope.settings, 'site').build_folder}/${convertToPosixPath(normalize(file))}`;
 }

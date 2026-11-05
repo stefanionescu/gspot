@@ -3,7 +3,6 @@ Check whether a parsed value holds named fields without an array or date prototy
 
 @param value the parsed value to tell apart from arrays, dates, and null.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isTable(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date);
 }

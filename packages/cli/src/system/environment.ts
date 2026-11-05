@@ -33,7 +33,6 @@ Read one value from the process environment.
 
 @param name the exact process environment key to read.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Only configured environment readers access `process.env`.
 export function readEnvironmentVariable(name: string): string | undefined {
     return process.env[name];
 }
@@ -53,7 +52,6 @@ Translate the Node.js name of this system into the gspot name.
 
 @returns the gspot name, or the Node name for another system.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor, the mise installer, and check planning name this system through the one table of systems.
 export function getOperatingSystem(): string {
     return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;
 }
@@ -64,7 +62,6 @@ Fold variable names for Windows comparisons.
 @param name the environment variable name.
 @returns the case that gspot compares variable names in.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Process, Git, and tool environments compare variable names in the Windows letter case through it.
 export function foldVariableName(name: string): string {
     return process.platform === 'win32' ? name.toUpperCase() : name;
 }

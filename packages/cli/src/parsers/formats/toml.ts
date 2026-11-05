@@ -268,7 +268,6 @@ Check the kind of a TOML syntax node, and narrow its type.
 @param node.type the kind that the parser gave the node.
 @param kind the kind to match, for example InlineArray.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The parser's private node enum needs this predicate to narrow concrete syntax tree unions.
 export function isTomlKind<Kind extends string>(
     node: { type: unknown },
     kind: Kind,

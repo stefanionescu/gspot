@@ -32,7 +32,6 @@ type ListCounts = Map<string, { key: string; count: number }>;
 
 const compiledGlobs = new Map<string, string>();
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Each printed call records its import here, at one place.
 function serializeCall(writer: EslintFileWriter, name: string, args: string[]): string {
     writer.functions.add(name);
     return `${name}(${args.join(', ')})`;

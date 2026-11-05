@@ -62,7 +62,6 @@ export async function buildNpmToolInstall(session: Session, writer: Files): Prom
 /**
 A program pin, with an npm installer when npm names a package.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tool tests share the npm pin record.
 export function buildProgramPin(name: string, version: string, npmPackage?: string): Tool {
     return {
         name,
@@ -75,7 +74,6 @@ export function buildProgramPin(name: string, version: string, npmPackage?: stri
 /**
 What tool search reads, for tests that inspect installed tools.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tool tests build the tool search record through it, and jscpd reports the inlined copies as clones.
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,

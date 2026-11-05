@@ -101,7 +101,6 @@ Resolve a path that may hold links, and keep it only when it stays inside the fo
 @param path the path relative to the folder.
 @returns the real path, or undefined for a path that leaves the folder.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tracked file list, the repository setup, the workspaces, the site build, and file reads share this one containment test.
 export function findContainedPath(root: string, path: string): string | undefined {
     const target = realpathSync.native(join(root, path));
     return isInside(relative(realpathSync.native(root), target)) ? target : undefined;
@@ -130,7 +129,6 @@ Decode UTF-8 bytes as text.
 @param bytes the source buffer to validate before decoding.
 @returns the text, or undefined for invalid UTF-8.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers decode UTF-8 bytes, or get undefined, through this one test.
 export function decodeUtf8(bytes: Buffer): string | undefined {
     return isUtf8(bytes) ? bytes.toString('utf8') : undefined;
 }

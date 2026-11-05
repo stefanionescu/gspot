@@ -28,7 +28,6 @@ Build the code and JavaScript limit rules of one scope.
 
 @param settings the configured size and complexity thresholds for this project.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The ESLint plan and buildLimitRuleBlocks read the limit rules of a scope through it.
 export function buildScopeLimitRules(settings: ScopeSettings): EslintLevelRules {
     return {
         code: {

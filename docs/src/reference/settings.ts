@@ -23,7 +23,6 @@ import {
     MONOREPOS_SCOPE_MESSAGE,
 } from '#docs/config/reference.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Setting headings and links must calculate the same explicit ID.
 function buildSettingAnchor(key: string, kind: SettingReference['kind']): string {
     const name = key.replaceAll(ANGLE_BRACKETS, '');
     return kind === 'value' ? name : name.toLowerCase().replaceAll('.', '');
@@ -88,7 +87,6 @@ function formatSetting(node: SettingReference): string {
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Root keys, tables, and scopes share this heading and anchor renderer.
 function formatSettingKeys(nodes: SettingReference[], headingLevel: number): string {
     return nodes
         .map((node) =>
