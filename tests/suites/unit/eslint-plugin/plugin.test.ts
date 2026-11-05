@@ -19,7 +19,7 @@ test('the recommended preset reports the rules of its level, and the all preset 
     ]);
 });
 
-test('configs.all lints beside a config that registers the plugin again', () => {
+test('a config that registers the plugin again lowers a limit of configs.all', () => {
     const linter = new Linter({ configType: 'flat', cwd: '/repo' });
     const config: object[] = [
         plugin.configs.all,
@@ -28,6 +28,6 @@ test('configs.all lints beside a config that registers the plugin again', () => 
             rules: { 'gspot/no-trivial-functions': ['error', { trivialFunctionStatements: 1 }] },
         },
     ];
-    const messages = linter.verify("export const value = 'public';", config);
+    const messages = linter.verify('function work() {\n    first();\n    second();\n}\nwork();\n', config);
     expect(messages).toStrictEqual([]);
 });
