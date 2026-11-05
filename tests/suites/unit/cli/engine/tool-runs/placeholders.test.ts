@@ -36,7 +36,9 @@ async function writeListSetting(root: string, placeholder: string, generateComma
 test('a list setting expands into one command argument per value, keeping empty and multiword ones', async () => {
     await using sandbox = await createGitSandbox({});
     await writeListSetting(sandbox.path, '{setting:openapi.generate_command}', GENERATE_ARGUMENTS);
-    const result = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']));
+    const result = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json', '--verbose']),
+    );
     expect(result.code, result.stderr).toBe(0);
     expect(result.report.checks).toMatchObject([
         {

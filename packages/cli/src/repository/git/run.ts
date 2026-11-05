@@ -155,7 +155,7 @@ export async function readGitSetting(cwd: string, key: string): Promise<string |
     const result = await runGit(cwd, [...GIT_SETTING_ARGUMENTS, key], {});
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
-    throw buildGitError(cwd, GIT_SETTING_ARGUMENTS, result);
+    throw buildGitError(GIT_SETTING_ARGUMENTS, result);
 }
 
 /**
@@ -166,7 +166,7 @@ Find the folder that Git runs hooks from: core.hooksPath when set, else the hook
 */
 export async function readHooksFolder(cwd: string): Promise<string> {
     const result = await runGit(cwd, GIT_HOOKS_ARGUMENTS, {});
-    if (result.code !== 0) throw buildGitError(cwd, GIT_HOOKS_ARGUMENTS, result);
+    if (result.code !== 0) throw buildGitError(GIT_HOOKS_ARGUMENTS, result);
     return resolve(cwd, result.stdout.replace(TRAILING_NEWLINE, ''));
 }
 
@@ -184,7 +184,7 @@ export async function readGitText(
     options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string> {
     const result = await runGit(cwd, commandArguments, options);
-    if (result.code !== 0) throw buildGitError(cwd, commandArguments, result);
+    if (result.code !== 0) throw buildGitError(commandArguments, result);
     return result.stdout;
 }
 
@@ -217,7 +217,7 @@ export async function readGitPaths(
     options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string[]> {
     const result = await runGitBytes(cwd, commandArguments, options);
-    if (result.code !== 0) throw buildGitError(cwd, commandArguments, result);
+    if (result.code !== 0) throw buildGitError(commandArguments, result);
     return Buffer.from(result.stdout)
         .toString('latin1')
         .split('\0')
@@ -228,18 +228,16 @@ export async function readGitPaths(
 /**
 Build the error for a Git command that exited with a failure.
 
-@param cwd where Git ran.
 @param commandArguments the arguments after git.
 @param result how Git exited.
 */
 export function buildGitError(
-    cwd: string,
     commandArguments: readonly string[],
     result: Pick<SpawnResult, 'code' | 'stderr'>,
 ): GspotError {
     return new GspotError(
         'git',
-        `Git ${commandArguments[0] ?? ''} failed in ${cwd} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+        `Git ${commandArguments[0] ?? ''} failed (exit ${String(result.code)}): ${result.stderr.trim()}`,
     );
 }
 

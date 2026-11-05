@@ -43,6 +43,7 @@ export type CheckOptions = {
     fix: boolean;
     stage?: StageFilter | undefined;
     messageFile?: string | undefined;
+    messageArgument?: string | undefined;
     verbose: boolean;
     toolCache?: RunCache | undefined;
     settings?: Settings | undefined;

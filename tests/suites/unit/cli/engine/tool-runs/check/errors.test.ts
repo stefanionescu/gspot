@@ -44,7 +44,8 @@ test.skipIf(isWindows)('a command check whose program lost its execute bit error
     const unexecutable = await runChecks(await openSession(sandbox.path), options);
     expect(unexecutable.report.exitCode).toBe(2);
     expect(unexecutable.report.checks.map(({ status }) => status)).toStrictEqual(['error']);
-    expect(unexecutable.report.checks[0]?.note).toContain(executable);
+    expect(unexecutable.report.checks[0]?.note).toContain('checker could not run');
+    expect(unexecutable.report.checks[0]?.note).not.toContain(sandbox.path);
     expect(unexecutable.report.checks[0]?.note).toContain('EACCES');
 });
 

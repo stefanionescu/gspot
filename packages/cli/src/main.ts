@@ -221,7 +221,7 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
         const sparse = await runGit(location.root, command, {});
         if (sparse.code === 0 && sparse.stdout.trim() === 'true')
             throw new GspotError('git', 'gspot does not support sparse checkouts. Run git sparse-checkout disable.');
-        if (sparse.code !== 0 && sparse.code !== 1) throw buildGitError(location.root, command, sparse);
+        if (sparse.code !== 0 && sparse.code !== 1) throw buildGitError(command, sparse);
         if (PIN_COMMANDS.has(action.name())) assertGspotPin(location.root);
     });
     const definitions: readonly CommandDefinition[] = [

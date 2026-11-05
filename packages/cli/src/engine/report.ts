@@ -129,7 +129,10 @@ export function buildRunReport(run: FinishedRun): RunReport {
         fixes: fixes ?? null,
         checks: checks
             .filter(({ cause }) => options.verbose === true || cause !== 'no-files')
-            .map(({ reportNotes: _notes, span: _span, ...check }) => check),
+            .map(({ reportNotes: _notes, span: _span, command, ...check }) => ({
+                ...check,
+                ...(options.verbose === true && command !== undefined && { command }),
+            })),
         skippedCount: Object.fromEntries(
             [...skipped].map(([cause, group]) => [cause, new Set(group.map(({ check }) => check)).size]),
         ),

@@ -59,7 +59,7 @@ export async function readGitListing(
     unreadablePaths: string[],
 ): Promise<string> {
     const listed = await runGitBytes(root, gitArguments, { cancelSignal });
-    if (listed.code !== 0) throw buildGitError(root, gitArguments, listed);
+    if (listed.code !== 0) throw buildGitError(gitArguments, listed);
     return decodeGitPaths(listed.stdout, unreadablePaths);
 }
 

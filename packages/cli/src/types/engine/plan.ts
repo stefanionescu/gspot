@@ -21,6 +21,7 @@ export type RunSelection = {
     range?: string[] | undefined;
     shallow?: boolean | undefined;
     messageFile?: string | undefined;
+    messageArgument?: string | undefined;
     unstagedChanges?: number | undefined;
 };
 

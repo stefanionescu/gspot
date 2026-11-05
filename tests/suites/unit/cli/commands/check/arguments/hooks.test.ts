@@ -33,3 +33,33 @@ test('the commit-msg selector keeps the message stage, reads the file after --, 
         { check: 'commits/references', status: 'passed' },
     ]);
 });
+
+test('a failed commit-msg check prints its rerun line with the message file as typed', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['commits']),
+        'notes/message.txt': 'fix(cli): retain the argument of C3-BUG-019\n',
+    });
+    runGitStep(sandbox.path, ['add', 'gspot.toml']);
+    const result = await runGspot(join(sandbox.path, 'notes'), [
+        'check',
+        '--hook',
+        'commit-msg',
+        '--only',
+        'commits/references',
+        '--',
+        'message.txt',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.stdout).toContain('--hook commit-msg -- message.txt');
+    expect(result.stdout).not.toContain(sandbox.path);
+});
+
+test('an unreadable commit message file is named as typed', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
+    const result = await runGspot(sandbox.path, ['check', '--hook', 'commit-msg', '--json', '--', 'gone.txt']);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'filesystem',
+        message: 'gspot cannot read the commit message file gone.txt.',
+    });
+});

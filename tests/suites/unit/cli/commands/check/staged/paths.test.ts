@@ -13,7 +13,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-test('staged error notes and command arguments name the working root instead of the copy', async () => {
+test('a staged error note prints its path from the root, and a verbose command names the working root', async () => {
     const command = buildProgramCommand('fakes/tool', '--stderr', 'Cannot read {root}/settings.json', '--exit', '2');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
@@ -32,10 +32,10 @@ test('staged error notes and command arguments name the working root instead of 
     });
     runGitStep(sandbox.path, ['add', '-A']);
     const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/path-error', '--json']),
+        await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/path-error', '--json', '--verbose']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
-    expect(checked.report.checks[0]!.note).toContain(`${sandbox.path}/settings.json`);
+    expect(checked.report.checks[0]!.note).toContain('Cannot read settings.json');
     expect(checked.report.checks[0]!.command).toStrictEqual(
         command.map((argument) => argument.replaceAll('{root}', () => sandbox.path)),
     );

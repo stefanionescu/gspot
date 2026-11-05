@@ -96,3 +96,21 @@ test('merged runs that overlap report the wall time from the first start to the 
     expect(merged.duration).toBe(1700);
     expect(merged.span).toStrictEqual({ start: 100, end: 1800 });
 });
+
+test('the command and the note of a run in a copy name the repository, not the deleted copy', () => {
+    const base = {
+        check: 'project/copied',
+        scope: '',
+        status: 'error',
+        fileCount: 0,
+        duration: 0,
+        findings: [],
+    } as const;
+    const restored = restoreCommandPaths(
+        { ...base, command: ['tool', '/copy/settings.json'], note: 'Cannot read /copy/settings.json.' },
+        '/copy',
+        '/repository',
+    );
+    expect(restored.command).toStrictEqual(['tool', '/repository/settings.json']);
+    expect(restored.note).toBe('Cannot read /repository/settings.json.');
+});

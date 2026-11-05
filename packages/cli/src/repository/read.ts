@@ -183,7 +183,7 @@ export async function readRepositoryRoot(start: string): Promise<string> {
     if (top.stderr.includes('must be run in a work tree'))
         throw new GspotError(
             'git',
-            `${folder} is a bare repository or a Git folder, not a work tree. Run gspot in the work tree.`,
+            'This folder is a bare repository or a Git folder, not a work tree. Run gspot in the work tree.',
         );
-    throw new GspotError('git', `Git could not open ${folder}: ${top.stderr.trim()}`);
+    throw new GspotError('git', `Git could not open this folder: ${top.stderr.trim()}`);
 }

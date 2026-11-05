@@ -103,12 +103,12 @@ function assertMessageSelection(options: CheckOptions, paths: string[]): void {
     if (options.hook === 'commit-msg' && paths.length !== 1) throw new GspotError('arguments', COMMIT_FILE_MESSAGE);
 }
 
-function assertReadableMessageFile(options: CheckOptions): void {
-    if (options.messageFile === undefined) return;
+function assertReadableMessageFile({ cwd, messageArgument }: CheckOptions): void {
+    if (messageArgument === undefined) return;
     try {
-        accessSync(options.messageFile, constants.R_OK);
+        accessSync(resolve(cwd, messageArgument), constants.R_OK);
     } catch (error) {
-        throw new GspotError('filesystem', `gspot cannot read the commit message file ${options.messageFile}.`, {
+        throw new GspotError('filesystem', `gspot cannot read the commit message file ${messageArgument}.`, {
             cause: error,
         });
     }
@@ -146,6 +146,7 @@ function parseCheckFlags(
         skip: flags.skip,
         base: flags.base,
         messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
+        messageArgument: hook === 'commit-msg' ? paths[0] : undefined,
         stage: hook === undefined ? onlyStage : HOOK_CHECKS[hook].stages[0],
         onProgress: printProgress,
     };

@@ -24,7 +24,9 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
         installedSandbox(),
         buildSandboxChanges(JSCONFIG_SANDBOX.files, sourceFiles),
     );
-    const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/tsc', '--json']));
+    const broken = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'javascript/tsc', '--json', '--verbose']),
+    );
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(broken.report.checks).toMatchObject([...OWN_TYPESCRIPT_RESULTS]);
     expect(broken.report.checks[0]!.command![1]).toBe(join(root, GSPOT_PATHS.nodeModules, 'typescript/bin/tsc'));

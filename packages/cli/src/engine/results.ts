@@ -10,8 +10,9 @@ import {
     STAGED_FLAG,
 } from '#cli/config/engine.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { findToolName } from '#cli/tools/pins.ts';
 import { canReadRuleExplanations } from '#cli/tools/rules.ts';
@@ -31,8 +32,8 @@ import type { Session } from '#cli/types/tools.ts';
 function listSelectionArguments(selection: RunSelection): string[] {
     const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;
     const words = base === undefined ? [] : [BASE_FLAG, quoteArgument(base)];
-    if (selection.messageFile !== undefined)
-        words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(selection.messageFile));
+    if (selection.messageArgument !== undefined)
+        words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(selection.messageArgument));
     if (selection.content === 'index') words.push(STAGED_FLAG);
     return words;
 }
@@ -183,15 +184,23 @@ export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourc
 }
 
 /**
-Replace temporary revision paths with the repository path in reported commands and notes.
+Replace temporary revision paths with the repository path in reported commands, and print the paths of a note from the
+repository root.
 
 @param session the working and temporary repository folders.
 @param result the result to read.
 */
 export function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
-    if (session.root === session.toolsRoot) return result;
-    const roots = new Set([session.root, realpathSync(session.root)]);
-    return roots.values().reduce((restored, root) => restoreCommandPaths(restored, root, session.toolsRoot), result);
+    let restored = result;
+    if (session.root !== session.toolsRoot) {
+        const roots = new Set([session.root, realpathSync(session.root)]);
+        for (const root of roots) restored = restoreCommandPaths(restored, root, session.toolsRoot);
+    }
+    let { note } = restored;
+    if (note === undefined) return restored;
+    const prefixes = listRootPrefixes(convertToPosixPath(session.toolsRoot));
+    for (const prefix of prefixes) note = note.replaceAll(prefix, '');
+    return { ...restored, note };
 }
 
 /**

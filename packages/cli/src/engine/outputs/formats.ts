@@ -22,7 +22,18 @@ function stripRoot(root: string, file: string): string {
     return canonicalFile.startsWith(`${canonicalRoot}/`) ? canonicalFile.slice(canonicalRoot.length + 1) : file;
 }
 
-function listRootPrefixes(root: string): string[] {
+function buildRootRelativePath(path: string, cwd: string, posixRoot: string): string {
+    const file = convertToPosixPath(path);
+    const absolute = isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(convertToPosixPath(cwd), file);
+    return stripRoot(posixRoot, absolute);
+}
+
+/**
+List the forms of a folder path that start a path below it, the longest first.
+
+@param root the folder, with forward slashes.
+*/
+export function listRootPrefixes(root: string): string[] {
     const roots = [root, findCanonicalPath(root) ?? root];
     const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', () => sep)}${sep}`]));
     return [...prefixes].toSorted((first, second) => second.length - first.length);
@@ -55,12 +66,6 @@ export const OUTPUT_FORMATS = {
         namesRules: (output) => (output.pattern ?? '').includes(RULE_GROUP),
     },
 } satisfies Record<CheckOutput['format'], OutputParser>;
-
-function buildRootRelativePath(path: string, cwd: string, posixRoot: string): string {
-    const file = convertToPosixPath(path);
-    const absolute = isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(convertToPosixPath(cwd), file);
-    return stripRoot(posixRoot, absolute);
-}
 
 /**
 Read the findings in the tool output, with every path relative to the root.

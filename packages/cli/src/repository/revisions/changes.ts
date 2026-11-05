@@ -156,7 +156,7 @@ user's `git add` or `git commit` never holds or waits for `.git/index.lock`.
 */
 export async function readTreeStatus(root: string, cancelSignal?: AbortSignal): Promise<TreeStatus> {
     const result = await runGitBytes(root, GIT_STATUS_ARGUMENTS, { cancelSignal, env: GIT_NO_OPTIONAL_LOCKS });
-    if (result.code !== 0) throw buildGitError(root, GIT_STATUS_ARGUMENTS, result);
+    if (result.code !== 0) throw buildGitError(GIT_STATUS_ARGUMENTS, result);
     const records = Buffer.from(result.stdout)
         .toString('latin1')
         .split('\0')

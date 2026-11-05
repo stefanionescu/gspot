@@ -58,9 +58,10 @@ test('a .git file that points at a missing folder is reported, not read as a fol
 
     const listError = await captureRejection(readTestRepository(sandbox.path));
     expect(listError).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(listError.message).not.toContain(sandbox.path);
     const rootError = await captureRejection(readRepositoryRoot(sandbox.path));
     expect(rootError).toMatchObject({ name: 'GspotError', code: 'git' });
-    expect(rootError.message).toContain(sandbox.path);
+    expect(rootError.message).not.toContain(sandbox.path);
 });
 
 test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index', async () => {

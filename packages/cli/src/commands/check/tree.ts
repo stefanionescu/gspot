@@ -103,7 +103,13 @@ async function readSelection(
     cancelSignal: AbortSignal,
 ): Promise<{ selection: RunSelection; note?: string }> {
     if (options.messageFile !== undefined)
-        return { selection: { content: 'message', messageFile: options.messageFile } };
+        return {
+            selection: {
+                content: 'message',
+                messageFile: options.messageFile,
+                messageArgument: options.messageArgument,
+            },
+        };
     if (options.base === undefined) return { selection: { content: 'working-tree' } };
     const changed = await readChangedPaths(session.root, options.base, cancelSignal);
     const note = changed.note === undefined ? {} : { note: changed.note };

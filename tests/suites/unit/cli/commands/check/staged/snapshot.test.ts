@@ -86,7 +86,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
     await writeFile(join(sandbox.path, 'payload.dat'), Buffer.from([0, 1, 2]));
     await chmod(join(sandbox.path, 'task.sh'), 0o644);
     const result = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']),
+        await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/index-bytes', '--json', '--verbose']),
     );
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.report.checks[0]?.status).toBe('passed');
