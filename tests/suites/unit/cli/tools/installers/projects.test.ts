@@ -86,6 +86,6 @@ test.each([
     const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     expect(await isEveryEnvironmentReady(install, [])).toBe(synced);
     expect(uv.mock.calls.map(([command]) => command)).toStrictEqual(
-        venv ? [['/tools/uv', 'sync', '--locked', '--check']] : [],
+        venv ? [['/tools/uv', 'sync', '--locked', '--inexact', '--check']] : [],
     );
 });

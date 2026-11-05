@@ -84,7 +84,7 @@ export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project',
 
 export const UV_REINSTALL_FLAG = '--reinstall';
 
-export const UV_PROJECT_INSTALL_ARGUMENTS = ['sync', '--locked'] as const;
+export const UV_PROJECT_INSTALL_ARGUMENTS = ['sync', '--locked', '--inexact'] as const;
 
 export const REQUIREMENT_PACKAGE_NAME = /^[^=]+/u;
 

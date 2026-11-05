@@ -4,7 +4,7 @@ import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { basename, delimiter, join } from 'node:path';
 
 import { afterAll, beforeAll, expect, test } from 'bun:test';
-import { zipSync } from 'fflate';
+import { strToU8, zipSync } from 'fflate';
 import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -15,8 +15,13 @@ import {
     UV_RELEASE_CUTOFF_LINE,
     ZIP_FILE_OPTIONS,
 } from '#tests/config/integration/commands.ts';
-import { AUTHENTICATION_REQUIRED_MESSAGE, REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
+import {
+    AUTHENTICATION_REQUIRED_MESSAGE,
+    PYTHON_PROJECT_IGNORES,
+    REGISTRY_HOST,
+} from '#tests/config/setup/sandboxes.ts';
 import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
@@ -92,6 +97,52 @@ test.each([...PYTHON_PROJECTS])(
         expect(python.code, python.stdout + python.stderr).toBe(0);
     },
 );
+
+test('gspot install keeps a package that the project installed from an extra', async () => {
+    const metadata = 'local_extra-1.0.0.dist-info';
+    const wheel = zipSync({
+        'local_extra.py': strToU8('VALUE = 1\n'),
+        [`${metadata}/METADATA`]: strToU8('Metadata-Version: 2.1\nName: local-extra\nVersion: 1.0.0\n'),
+        [`${metadata}/WHEEL`]: strToU8(
+            'Wheel-Version: 1.0\nGenerator: gspot\nRoot-Is-Purelib: true\nTag: py3-none-any\n',
+        ),
+        [`${metadata}/RECORD`]: strToU8(''),
+    });
+    await using sandbox = await createGitSandbox({
+        '.gitignore': '.venv/\n',
+        'gspot.toml': buildSandboxSettings(['python'], {
+            ignore: { checks: PYTHON_PROJECT_IGNORES, reason: 'This test exercises the project environment only.' },
+            level: 'basic',
+        }),
+        'pyproject.toml': `[project]
+name = "authored"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+local = ["local-extra"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+local-extra = { path = "wheels/local_extra-1.0.0-py3-none-any.whl" }
+`,
+        'wheels/local_extra-1.0.0-py3-none-any.whl': wheel,
+    });
+    const root = sandbox.path;
+    for (const command of [['lock'], ['sync', '--locked', '--extra', 'local']]) {
+        const step = await runCommand(['uv', ...command], { cwd: root });
+        expect(step.code, step.stdout + step.stderr).toBe(0);
+    }
+    commitAll(root);
+    await applyGeneratedFiles(root);
+    await runGspotStep({ root, run: spawnGspot }, ['install']);
+    const python = buildVenvExecutablePath(join(root, '.venv'), 'python');
+    const imported = await runCommand([python, '-c', 'import local_extra'], { cwd: root });
+    expect(imported.code, imported.stdout + imported.stderr).toBe(0);
+});
 
 test('apply keeps a conflicted Python lockfile and install repairs it', async () => {
     const configuration = 'uv.toml';

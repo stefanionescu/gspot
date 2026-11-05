@@ -224,6 +224,6 @@ test('install syncs each project that has a uv lockfile, and only those', async 
     using _boundary = fakeCommands('project-uv', () => Promise.resolve(buildProcessResult()));
     const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     const lines = await installPythonProjects(install, 'project-uv');
-    expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked']]);
+    expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked', '--inexact']]);
     expect(lines).toStrictEqual(['installed the Python environment of the repository root']);
 });
