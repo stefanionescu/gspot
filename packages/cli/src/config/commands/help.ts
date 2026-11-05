@@ -47,12 +47,12 @@ export const COMMAND_HELP = {
         summary: 'Write the generated files, install the tools, and turn on the Git hooks in this clone',
         group: 'Set up a repository:',
         description:
-            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. install replaces the generated files that gspot owns, and does not change gspot.toml.\n\nThen install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\nBefore the install, install inspects each tool as doctor does. When everything is in place, install changes nothing. A tool that still fails after an install is installed once more from scratch.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
+            'Write the generated files again from gspot.toml: config files for the tools, rule files, Git hooks, and the CI workflow. install replaces the generated files that gspot owns, and does not change gspot.toml.\n\nThen install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile in .gspot/\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\nWhen nothing needs to change, install prints `No change`.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
         arguments: {},
         options: {},
         exitCodes: [
             ['0', 'The tools are installed.'],
-            ['1', 'A tool is still missing or fails after a forced install. The output names it and the reason.'],
+            ['1', 'A tool is still missing or still fails after the install. The output names it and the reason.'],
             ['2', 'gspot.toml is not valid, or install could not finish. The error names the step that failed.'],
             ['129, 130, 143', 'Installation stopped because of SIGHUP, Ctrl-C, or SIGTERM.'],
         ],
@@ -163,7 +163,7 @@ export const COMMAND_HELP = {
         summary: 'Ignore a check, or one lint rule, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Ignore a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. `gspot check --verbose` prints them with their reasons.',
+            'Ignore a check, or one of its lint rules, everywhere or for some paths. Without a check, no check reads these paths.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. `gspot check --verbose` prints them with their reasons.',
         arguments: {
             '[check]': 'The check, such as python/ruff. Leave it out to skip the --paths files in every check.',
         },
