@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
@@ -31,6 +31,20 @@ test('scan refuses a repository that already has a gspot.toml', async () => {
     const result = await runGspot(sandbox.path, ['scan', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
+});
+
+test('scan refuses a repository that tracks no file, because the copy it checks holds only tracked files', async () => {
+    using install = spyOn(installers, 'installTools').mockResolvedValue({
+        installed: [],
+        missing: [],
+        notes: [],
+        steps: [],
+    });
+    await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n', 'src/a.js': 'export {};\n' });
+    const result = await runGspot(sandbox.path, ['scan', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
+    expect(install).not.toHaveBeenCalled();
 });
 
 test('scan reports its run and the plan of init, and leaves the repository as it was', async () => {
@@ -107,6 +121,8 @@ test('scan links the Python environment of the repository into its copy', async 
 
 test('scan reads the staged files, so a file that Git does not track stays out of the report', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'NOTES.md'), '# Notes\n');
     const { totals } = await runScan(sandbox.path);
-    expect(totals.files).toBe(0);
+    expect(totals.files).toBe(1);
 });

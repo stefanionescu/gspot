@@ -4,6 +4,7 @@ import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import { compareInstalledRules, readUserRules } from '#cli/commands/scan/rules.ts';
 import {
     GIT_UNBORN_HEAD_ARGUMENTS,
+    SCAN_NO_FILES_MESSAGE,
     SCAN_SETTINGS_MESSAGE,
     SCAN_STOPPED_MESSAGE,
 } from '#cli/config/commands/reports.ts';
@@ -42,6 +43,7 @@ async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<
     // With no commit behind the index, Git counts every tracked file as staged, so the secret scan reads every file.
     await readGitText(copy.root, GIT_UNBORN_HEAD_ARGUMENTS, { cancelSignal });
     const planning = await planInit(copy.root, { cwd: copy.root });
+    if (planning.detection.files.length === 0) throw new GspotError('arguments', SCAN_NO_FILES_MESSAGE);
     const userRules = await readUserRules(planning);
     await writeInitFiles(copy.root, { ...planning, pinPath: undefined });
     const session = {

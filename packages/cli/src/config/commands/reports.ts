@@ -158,6 +158,9 @@ export const GIT_UNBORN_HEAD_ARGUMENTS = ['symbolic-ref', 'HEAD', 'refs/heads/ma
 export const SCAN_SETTINGS_MESSAGE =
     'This repository already has a gspot.toml, so gspot scan has nothing to preview. Run gspot check.';
 
+export const SCAN_NO_FILES_MESSAGE =
+    'gspot scan checks a copy of the tracked files, and this repository tracks none. Stage your files with git add, then run gspot scan again.';
+
 export const SCAN_STOPPED_MESSAGE = 'Scan stopped before it finished. Your repository did not change.';
 
 export const SCAN_EXAMPLES_SHOWN = 3;
