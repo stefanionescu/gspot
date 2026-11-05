@@ -1,17 +1,14 @@
+import { realpathSync } from 'node:fs';
 import { relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
+import { LEADING_DOT_SLASH, MISSING_PATH_CODES } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { isInside } from '#cli/system/paths.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
+import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
-const FILE_LINK = /^file:\/\/(?<path>[^\s#?]+)/u;
-
-function isLinkInRoot(message: string, root: string): boolean {
-    const path = FILE_LINK.exec(message)?.groups?.['path'];
-    if (path === undefined) return true;
-    return isInside(relative(root, decodeURIComponent(path)));
-}
+const FILE_LINK = /^file:\/\/\/[^\s#?]+/u;
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
     const line = groups['line'];
@@ -21,6 +18,28 @@ function setMatchedFields(finding: Finding, groups: Record<string, string | unde
     if (column !== undefined && column !== '') finding.column = Number(column);
     if (rule !== undefined && rule !== '') finding.rule = rule;
     return finding;
+}
+
+function isLinkInRoot(message: string, root: string): boolean {
+    const link = FILE_LINK.exec(message)?.[0];
+    if (link === undefined) return true;
+    const target = fileURLToPath(link);
+    return isInside(relative(root, target)) || isInside(relative(findCanonicalPath(root) ?? root, target));
+}
+
+/**
+Find the real path of a file or folder.
+
+@param path the path to read.
+@returns undefined when the path does not exist.
+*/
+export function findCanonicalPath(path: string): string | undefined {
+    try {
+        return convertToPosixPath(realpathSync.native(path));
+    } catch (error) {
+        if ([...MISSING_PATH_CODES].some((code) => hasErrorCode(error, code))) return undefined;
+        throw error;
+    }
 }
 
 /**

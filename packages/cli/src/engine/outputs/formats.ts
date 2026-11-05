@@ -1,34 +1,16 @@
-import { realpathSync } from 'node:fs';
 import { isAbsolute, posix, sep } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-import {
-    FILE_GROUP,
-    MISSING_PATH_CODES,
-    MISSING_RULE_HELP,
-    MISSING_RULE_MESSAGE,
-    RULE_GROUP,
-    TAPLO_OUTPUTS,
-} from '#cli/config/engine.ts';
+import { FILE_GROUP, MISSING_RULE_HELP, MISSING_RULE_MESSAGE, RULE_GROUP, TAPLO_OUTPUTS } from '#cli/config/engine.ts';
 import { DRIVE_LETTER } from '#cli/config/system.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
 import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
-import { parseGroupedFindings, parseRegexFindings } from '#cli/engine/outputs/text.ts';
+import { findCanonicalPath, parseGroupedFindings, parseRegexFindings } from '#cli/engine/outputs/text.ts';
 import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
 import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckOutput, Finding, OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
-
-function findCanonicalPath(path: string): string | undefined {
-    try {
-        return convertToPosixPath(realpathSync.native(path));
-    } catch (error) {
-        if ([...MISSING_PATH_CODES].some((code) => hasErrorCode(error, code))) return undefined;
-        throw error;
-    }
-}
 
 function stripRoot(root: string, file: string): string {
     const prefix = `${root}/`;
