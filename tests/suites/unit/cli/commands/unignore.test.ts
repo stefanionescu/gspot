@@ -68,6 +68,47 @@ test('unignore counts the changed ignores and keeps other paths and other rules'
     expect(ignores).toStrictEqual([other, globalOther]);
 });
 
+test('unignore --paths names the rule of an ignore that covers every path, and the printed command removes it', async () => {
+    const everywhere = { check: 'bash/shellcheck', rule: 'SC2086', reason: 'Word splitting is intentional here.' };
+    const narrow = { check: 'bash/shellcheck', rule: 'SC2034', paths: ['a.sh'], reason: 'Read by sourcing scripts.' };
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: stringify({ ignore: [everywhere, narrow] }) }),
+        'a.sh': 'echo a\n',
+    });
+    const narrowed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--paths', 'a.sh', '--json']);
+    expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(0);
+    expect(JSON.parse(narrowed.stdout)).toMatchObject({
+        summary: 'Removed 1 ignore of bash/shellcheck for a.sh.',
+        notes: expect.arrayContaining([
+            'The ignore of rule SC2086 of bash/shellcheck covers every path, so --paths removes nothing from it. Run gspot unignore bash/shellcheck --rule SC2086 to remove it.',
+        ]) as string[],
+    });
+    const unchanged = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--paths', 'a.sh', '--json']);
+    expect(JSON.parse(unchanged.stdout)).toMatchObject({
+        changed: false,
+        summary:
+            'No change. The ignore of rule SC2086 of bash/shellcheck covers every path, so --paths removes nothing from it. Run gspot unignore bash/shellcheck --rule SC2086 to remove it.',
+    });
+    const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    const settings = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(settings['ignore']).toBeUndefined();
+});
+
+test('unignore --paths on an ignore of a whole check names no rule', async () => {
+    const everywhere = { check: 'bash/shellcheck', reason: 'The scripts are generated.' };
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: stringify({ ignore: [everywhere] }) }),
+        'a.sh': 'echo a\n',
+    });
+    const result = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--paths', 'a.sh', '--json']);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        changed: false,
+        summary:
+            'No change. The ignore of bash/shellcheck covers every path, so --paths removes nothing from it. Run gspot unignore bash/shellcheck to remove it.',
+    });
+});
+
 test('unignore --paths from a subfolder removes only the repository-relative path', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {

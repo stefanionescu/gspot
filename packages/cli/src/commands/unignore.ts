@@ -16,7 +16,7 @@ import { assertCheckExists } from '#cli/manifests/read.ts';
 import { removeRecordPaths } from '#cli/settings/edit.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { formatCount, formatNameList } from '#cli/system/text.ts';
+import { formatCount, formatNameList, quoteArgument } from '#cli/system/text.ts';
 import type {
     CommandDefinition,
     IgnoreFlags,
@@ -47,6 +47,7 @@ function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 
     });
     const changed = kept.filter((ignore) => !ignores.includes(ignore)) as IgnoreRecord[];
     const narrowed = ignores.filter((ignore) => matching.has(ignore) && !kept.includes(ignore)) as IgnoreRecord[];
+    const everyPath = [...matching].filter((ignore) => (ignore as IgnoreRecord).paths === undefined) as IgnoreRecord[];
     return {
         kept,
         deleted: ignores.length - kept.length,
@@ -54,18 +55,27 @@ function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 
         removedPaths:
             narrowed.flatMap((ignore) => ignore.paths ?? []).length -
             changed.flatMap((ignore) => ignore.paths ?? []).length,
-        everywhere:
-            paths === undefined
-                ? 0
-                : [...matching].filter((ignore) => (ignore as IgnoreRecord).paths === undefined).length,
+        everywhere: paths === undefined ? [] : everyPath,
     };
+}
+
+function formatIgnoreSubject(check: string, rule: string | undefined): string {
+    return rule === undefined ? check : `rule ${rule} of ${check}`;
 }
 
 function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreTarget {
     if (options.check === undefined) return NO_CHECK_IGNORE_TEXTS;
-    const subject = options.rule === undefined ? options.check : `rule ${options.rule} of ${options.check}`;
+    const subject = formatIgnoreSubject(options.check, options.rule);
     const paths = options.paths === undefined ? '' : ` for ${formatNameList(options.paths)}`;
-    return { unmatched: `${subject} has no matching ignore`, removed: `for ${subject}${paths}` };
+    return { unmatched: `${subject} has no matching ignore`, removed: `of ${subject}${paths}` };
+}
+
+function listEverywhereNotes(check: string | undefined, everywhere: IgnoreRecord[]): string[] {
+    if (check === undefined) return [];
+    return [...new Set(everywhere.map(({ rule }) => rule))].map((rule) => {
+        const ruleFlag = rule === undefined ? '' : ` --rule ${quoteArgument(rule)}`;
+        return `The ignore of ${formatIgnoreSubject(check, rule)} covers every path, so --paths removes nothing from it. Run gspot unignore ${quoteArgument(check)}${ruleFlag} to remove it.`;
+    });
 }
 
 async function runUnignoreCommand(
@@ -78,16 +88,11 @@ async function runUnignoreCommand(
         ...options,
         paths: buildIgnorePaths(context, options.cwd, options.paths),
     });
-    const notes =
-        everywhere > 0 && options.check !== undefined
-            ? [
-                  `The ignore of ${options.check} covers every path, so --paths removes nothing from it. Run gspot unignore ${options.check} to remove it.`,
-              ]
-            : [];
+    const notes = listEverywhereNotes(options.check, everywhere);
     const target = formatIgnoreTarget(options);
     if (deleted + changedIgnores === 0)
         return buildUnchangedResult(
-            notes.length === 0 ? `No change: ${target.unmatched}.` : `No change: ${notes.join(' ')}`,
+            notes.length === 0 ? `No change: ${target.unmatched}.` : `No change. ${notes.join(' ')}`,
         );
     const summary = [
         {
