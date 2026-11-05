@@ -48,10 +48,10 @@ export const IGNORE_COMMENT_CASES = [
             '# Root owner\nlevel="all"\n\n[[ignore]]\ncheck = "docs/links"\npaths = ["docs/**"]\nreason = "Private documentation"\n',
     },
     {
-        name: 'merged ignores date array comments',
+        name: 'ignore rows that gain a rule, with array comments',
         source: 'spelling.allowed_words={BannedWord="The project uses this reviewed name."}\n\n# First ignore\n[[ignore]] # First header inline\ncheck="z/check"\npaths=[\n # A path\n "a.ts", # A inline\n]\nreason="Reviewed findings stay ignored intentionally."\n\n# Second ignore\n[[ignore]] # Second header inline\ncheck="z/check"\npaths=[\n # B path\n "b.ts"\n]\nreason="Reviewed findings stay ignored intentionally."\n',
-        target: 'spelling.allowed_words={BannedWord="The project uses this reviewed name."}\n\n[[ignore]]\ncheck = "z/check"\npaths = [ "a.ts" ]\nreason="Reviewed findings stay ignored intentionally."\nuntil = 2026-12-31\n\n[[ignore]]\ncheck = "z/check"\npaths = [ "b.ts" ]\nreason="Reviewed findings stay ignored intentionally."\nuntil = 2026-12-31\n',
+        target: 'spelling.allowed_words={BannedWord="The project uses this reviewed name."}\n\n[[ignore]]\ncheck = "z/check"\npaths = [ "a.ts" ]\nreason="Reviewed findings stay ignored intentionally."\nrule = "x/y"\n\n[[ignore]]\ncheck = "z/check"\npaths = [ "b.ts" ]\nreason="Reviewed findings stay ignored intentionally."\nrule = "x/y"\n',
         expected:
-            'spelling.allowed_words={BannedWord="The project uses this reviewed name."}\n\n# First ignore\n[[ignore]] # First header inline\ncheck="z/check"\npaths=[\n # A path\n "a.ts", # A inline\n]\nreason="Reviewed findings stay ignored intentionally."\n\nuntil = 2026-12-31\n# Second ignore\n[[ignore]] # Second header inline\ncheck="z/check"\npaths=[\n # B path\n "b.ts"\n]\nreason="Reviewed findings stay ignored intentionally."\nuntil = 2026-12-31\n',
+            'spelling.allowed_words={BannedWord="The project uses this reviewed name."}\n\n# First ignore\n[[ignore]] # First header inline\ncheck="z/check"\npaths=[\n # A path\n "a.ts", # A inline\n]\nreason="Reviewed findings stay ignored intentionally."\n\nrule = "x/y"\n# Second ignore\n[[ignore]] # Second header inline\ncheck="z/check"\npaths=[\n # B path\n "b.ts"\n]\nreason="Reviewed findings stay ignored intentionally."\nrule = "x/y"\n',
     },
 ];
