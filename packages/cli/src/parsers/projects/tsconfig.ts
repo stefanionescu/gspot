@@ -8,6 +8,7 @@ import {
     MISSING_EXTENDED_CONFIG,
     TS_EMPTY_FILES_CODE,
     TS_NO_FILES_CODE,
+    TS_UNKNOWN_VALUE_CODE,
     TSCONFIG_FILE,
 } from '#cli/config/parsers.ts';
 import { NODE_MODULES } from '#cli/config/system.ts';
@@ -73,7 +74,10 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Pa
         fileName,
     );
     const errors = parsed.errors.filter(
-        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TS_NO_FILES_CODE,
+        (error) =>
+            error.code !== TS_EMPTY_FILES_CODE &&
+            error.code !== TS_NO_FILES_CODE &&
+            error.code !== TS_UNKNOWN_VALUE_CODE,
     );
     if (errors.length > 0)
         throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));

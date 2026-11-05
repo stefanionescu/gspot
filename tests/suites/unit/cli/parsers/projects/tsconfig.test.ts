@@ -21,6 +21,15 @@ test('a tsconfig can extend a dependency installed above the repository', async 
     expect(readTsconfig(root, join(root, 'tsconfig.json'), createRunCache(root))?.options.strict).toBe(true);
 });
 
+test('a tsconfig may name a target, a module, and a lib that the bundled compiler does not know yet', async () => {
+    await using sandbox = await testdir({
+        'tsconfig.json':
+            '{"compilerOptions":{"strict":true,"target":"ES2099","module":"ES2099","lib":["ES2099.Promise"]}}',
+    });
+    const read = readTsconfig(sandbox.path, join(sandbox.path, 'tsconfig.json'), createRunCache(sandbox.path));
+    expect(read?.options.strict).toBe(true);
+});
+
 test('a tsconfig keeps dependencies reached through a node_modules symlink readable', async () => {
     await using dependencies = await testdir({
         'node_modules/compiler-settings/package.json': '{"name":"compiler-settings","version":"1.0.0"}',
