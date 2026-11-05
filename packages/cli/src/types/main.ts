@@ -4,7 +4,6 @@ import type cliPackage from '#cli-package';
 import type { GROUP_LABELS } from '#cli/config/generation.ts';
 import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import type { DOCS_PATHS } from '#cli/config/manifests.ts';
-import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import type { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { ConfigurationCheck, ConfigurationReference, Tool } from '#cli/types/manifests.ts';
@@ -37,7 +36,7 @@ export type CliReference = {
     settings: SettingReference[];
     schema: z.core.JSONSchema.JSONSchema;
     setup: SetupReference[];
-    runners: typeof START_RUNNERS;
+    hookProgramMissing: string;
     runtimeMinimums: { node: string };
     packageManagerMinimums: typeof RELEASE_AGE_VERSIONS;
     levelSummaries: Record<Level, string>;

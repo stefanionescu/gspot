@@ -11,7 +11,7 @@ import {
 } from '#docs/config/reference.ts';
 import { SIDEBAR } from '#docs/config/site.ts';
 
-export const { runtimeMinimums, packageManagerMinimums, setup, yarnClassicInstall, cloneInstalls, runners } =
+export const { runtimeMinimums, packageManagerMinimums, setup, yarnClassicInstall, cloneInstalls, hookProgramMissing } =
     CLI_REFERENCE;
 
 const REFERENCE_URL = CLI_REFERENCE.docs.reference;

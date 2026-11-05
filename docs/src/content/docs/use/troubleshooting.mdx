@@ -4,7 +4,7 @@ description: Fix gspot.toml errors, missing tools, failed installs, hooks that c
 ---
 
 import { Code } from '@astrojs/starlight/components';
-import { runners } from '#docs/reference/setup.ts';
+import { hookProgramMissing } from '#docs/reference/setup.ts';
 
 Start with `gspot doctor`. It lists missing tools, problems with the Git hooks, and configurations that your repository
 needs. `gspot check --only gspot/generated-files --verbose` lists each generated file that does not match `gspot.toml`,
@@ -54,16 +54,16 @@ To time one check alone, run `gspot check --only <check>`. A tool command that r
 `gspot install`. Each new clone or Git worktree needs its own install, because it cannot use the packages of another
 worktree.
 
-## A hook cannot find npm, pnpm, Yarn, Bun, or mise
+## A hook cannot find Node.js, Yarn, or mise
 
 The hook did not find the program that starts gspot, so it stopped the commit. The message names the program and the
 `PATH` that the Git client gave the hook:
 
-<Code code={runners.npm.missing.replace('$PATH', '/usr/bin:/bin')} lang="text" />
+<Code code={hookProgramMissing.replaceAll('<program>', 'node').replace('$PATH', '/usr/bin:/bin')} lang="text" />
 
 A Git client in an editor can get a different `PATH` from your terminal. Start the client from a terminal, or add the
 folder of the program to the `PATH` of the client, then restart the client. If the program is not installed, install
-the package manager or mise first.
+Node.js, Yarn, or mise first.
 
 When the hook says that gspot is not installed in the worktree, run the install command that the hook prints, in that
 worktree. Then run `gspot install`. With mise, run `mise install` in that worktree, then `gspot install`.

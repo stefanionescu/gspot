@@ -6,6 +6,7 @@ import {
     PUSH_INPUT_SAVE,
 } from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { HOOK_PROGRAM_MISSING } from '#cli/config/repository/javascript.ts';
 import { HOOK_SHEBANG, LFS_HOOKS } from '#cli/config/repository/setup.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -29,7 +30,7 @@ function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly
     const { program, prefix, command } = runner.hasBinFolder
         ? BIN_FOLDER_START
         : { program: runner.command.split(' ', 1)[0] as string, prefix: '', command: runner.command };
-    const missing = `${program} is not on the PATH that this Git client gives hooks (%s). Start the client from a terminal, or add ${program}'s folder to its PATH.\n`;
+    const missing = `${HOOK_PROGRAM_MISSING.replaceAll('<program>', () => program).replace('$PATH', '%s')}\n`;
     const messagePathLines = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
     const isLfs = lfsHooks.includes(name);
     const check = `${command} ${HOOK_CHECKS[name].arguments}`;

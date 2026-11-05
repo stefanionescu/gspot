@@ -71,6 +71,9 @@ export const PATHS_BASE_OPTION = 'pathsBasePath';
 
 export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
 
+export const HOOK_PROGRAM_MISSING =
+    "<program> is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add <program>'s folder to its PATH.";
+
 export const START_RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',

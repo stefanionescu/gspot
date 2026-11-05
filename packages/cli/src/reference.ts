@@ -5,7 +5,7 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { GROUP_LABELS } from '#cli/config/generation.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
-import { FROZEN_INSTALLS, START_RUNNERS, YARN_BERRY_INSTALL } from '#cli/config/repository/javascript.ts';
+import { FROZEN_INSTALLS, HOOK_PROGRAM_MISSING, YARN_BERRY_INSTALL } from '#cli/config/repository/javascript.ts';
 import { ALL_LEVEL_SUMMARY, LEVEL_SUMMARY } from '#cli/config/settings/schema.ts';
 import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
@@ -120,7 +120,7 @@ export function readCliReference(): CliReference {
         settings: buildSettingsReference(configurations),
         schema: buildJsonSchema(),
         setup: buildSetupReference(),
-        runners: START_RUNNERS,
+        hookProgramMissing: HOOK_PROGRAM_MISSING,
         runtimeMinimums: { node: semver.minVersion(cliPackage.engines.node)?.version as string },
         packageManagerMinimums: RELEASE_AGE_VERSIONS,
         levelSummaries: { basic: LEVEL_SUMMARY, all: ALL_LEVEL_SUMMARY },
