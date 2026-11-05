@@ -232,15 +232,11 @@ export const WORKING_TREE = 'the working tree';
 
 export const EVERY_CHECK = 'every check';
 
-export const BASELINE_EXEMPT_CHECK = /^(?:gspot|secrets)\//u;
-
 export const SKIP_CAUSES = ['level', 'system', 'replaced', 'setting', 'condition', 'ignore'] as const;
 
 export const CHECK_STATUSES = ['passed', 'failed', 'missing', 'skipped', 'error', 'canceled'] as const;
 
 export const COMPARED_CONTENTS = ['working-tree', 'index', 'commit'] as const;
-
-export const BASELINE_STAGES: ReadonlySet<string> = new Set(['commit', 'push']);
 
 export const MISSING_RULE_MESSAGE = /^Definition for rule '.+' was not found\.$/u;
 

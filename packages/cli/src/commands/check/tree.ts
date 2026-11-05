@@ -1,7 +1,5 @@
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
-import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { parseBaseline } from '#cli/engine/baseline.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
@@ -10,7 +8,6 @@ import { assertCheckExists, listChecksById, readConfigurations } from '#cli/mani
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
@@ -145,10 +142,7 @@ export async function runTreeCheck(
                 ? await readSelection(session, options, cancelSignal)
                 : { selection: revision.selection, note: revision.dependencyNote };
         await warnMissingHooks(session, revision);
-        const result = await runChecks(session, {
-            ...buildRunOptions(session, options, { selection, started }),
-            baseline: parseBaseline(findText(treeFolder, BASELINE_FILE)),
-        });
+        const result = await runChecks(session, buildRunOptions(session, options, { selection, started }));
         if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
         if (note !== undefined) result.report.notes.push(note);
         result.report.notes.push(...onlyNotes.map((id) => formatLevelNote(id, result.report, session)));

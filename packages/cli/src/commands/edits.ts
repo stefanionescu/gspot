@@ -8,8 +8,7 @@ import {
 } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION } from '#cli/config/commands/help.ts';
 import { CHECK_LIST_SEPARATOR, EMPTY_CHECKS_MESSAGE } from '#cli/config/commands/reports.ts';
-import { BASELINE_EXEMPT_CHECK, BASELINE_STAGES } from '#cli/config/engine.ts';
-import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findEmptySetting } from '#cli/engine/skips.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -29,9 +28,8 @@ import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { compareText, formatNameList, quoteArgument } from '#cli/system/text.ts';
+import { formatNameList, quoteArgument } from '#cli/system/text.ts';
 import type {
     CommandOption,
     ConfigurationChange,
@@ -114,39 +112,6 @@ function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): 
                 `--paths ${quoteArgument(selector)} matches no repository file. Name an existing file, folder, or matching glob.`,
             );
     }
-}
-
-function listCountedChecks(session: Session): Set<string> {
-    return new Set(
-        session.configuredChecks
-            .filter(({ check }) => BASELINE_STAGES.has(check.stage) && !BASELINE_EXEMPT_CHECK.test(check.id))
-            .map(({ scope, check }) => `${scope.path}\0${check.id}`),
-    );
-}
-
-/**
-Name the checks that an edit turned on, and the baseline command that accepts their findings alone. A plain gspot
-baseline also accepts the new findings of every other check.
-
-@param root the repository root.
-@param sessions the repository before and after the edit.
-@param sessions.previous the repository before the edit, when the command compares the checks.
-@param sessions.session the repository after the edit.
-*/
-function listBaselineNotes(
-    root: string,
-    { previous, session }: { previous: Session | undefined; session: Session },
-): string[] {
-    if (previous === undefined || findText(root, BASELINE_FILE) === undefined) return [];
-    const before = listCountedChecks(previous);
-    const turnedOn = [...listCountedChecks(session)]
-        .filter((key) => !before.has(key))
-        .map((key) => key.slice(key.indexOf('\0') + 1));
-    const checks = [...new Set(turnedOn)].toSorted(compareText);
-    if (checks.length === 0) return [];
-    return [
-        `This change turns on ${formatNameList(checks)}. To accept their findings and keep the other counts of ${BASELINE_FILE}, run gspot baseline --only ${checks.join(CHECK_LIST_SEPARATOR)}.`,
-    ];
 }
 
 /**
@@ -319,7 +284,6 @@ export async function writeSettingsEdit(
     report.notes.push(
         ...(await listInstallNotes(session, generated, report)),
         ...(options.notes ?? []),
-        ...listBaselineNotes(root, { previous: options.previous, session }),
         ...listTurnedOffNotes(options.previous, session),
     );
     const written = report.written.length + report.updated.length + report.deleted.length;

@@ -4,7 +4,6 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER, JAVASCRIPT_RUNTIMES, MARKERS, SCRIPT_TAG, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
     BANNER_BYTES,
-    BASELINE_FILE,
     BINARY_EXTENSIONS,
     BINARY_TAG,
     BUILD_LAUNCHERS,
@@ -86,7 +85,7 @@ function isLicenseFile(path: string): boolean {
 
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
     if (path.startsWith(`${GSPOT_PATHS.valePackages}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
-    if (path === BASELINE_FILE || isGspotPath(path)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
+    if (isGspotPath(path)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildLauncher };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some(({ pattern }) => pattern.test(start))

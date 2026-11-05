@@ -1,6 +1,10 @@
-export const PIN_COMMANDS: ReadonlySet<string> = new Set(['check', 'install', 'baseline']);
+export const PIN_COMMANDS: ReadonlySet<string> = new Set(['check', 'install']);
 
-export const REMOVED_COMMANDS = { apply: 'gspot install writes the generated files. Run gspot install.' } as const;
+export const REMOVED_COMMANDS = {
+    apply: 'gspot install writes the generated files. Run gspot install.',
+    baseline:
+        'gspot baseline was removed. Fix old findings, or run gspot ignore <check> --rule <rule> --paths <old files> --reason "<why>". Delete gspot.baseline.json, and any [[ignore]] of gspot/baseline.',
+} as const;
 
 export const REMOVED_OPTIONS: Readonly<Record<string, string>> = {
     '--stage':
@@ -33,7 +37,7 @@ export const PROGRAM_EXIT_CODES = [
     ['0', 'The command finished. For check: no findings remain.'],
     ['1', 'check found findings, init or install left a tool missing, or doctor found a setup problem.'],
     ['2', 'The command could not finish, or an argument is not valid.'],
-    ['129, 130, 143', 'check, baseline, init, install, or scan stopped because of SIGHUP, Ctrl-C, or SIGTERM.'],
+    ['129, 130, 143', 'check, init, install, or scan stopped because of SIGHUP, Ctrl-C, or SIGTERM.'],
 ] as const;
 
 export const PROGRAM_HELP_FOOTER =

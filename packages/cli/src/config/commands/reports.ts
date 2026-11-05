@@ -162,14 +162,6 @@ export const LINT_RULE_LABELS = [
     ['example', 'Example'],
 ] as const;
 
-export const PRUNE_FLAG = '--prune';
-
-export const NO_BASELINE_MESSAGE = 'This repository has no gspot.baseline.json to prune. Run gspot baseline.';
-
-export const BASELINE_STOPPED_MESSAGE = 'Baseline stopped before every check finished. The file did not change.';
-
-export const BASELINE_LEFT_OUT_MESSAGE = 'A baseline leaves out these checks, so they still fail:';
-
 export const MARKDOWN_FLAG = '--markdown';
 
 export const GIT_UNBORN_HEAD_ARGUMENTS = ['symbolic-ref', 'HEAD', 'refs/heads/main'] as const;

@@ -39,6 +39,13 @@ test('an unknown command exits 2 and names the closest command', async () => {
     });
 });
 
+test('gspot baseline exits 2 and names gspot ignore', async () => {
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, ['baseline']);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('gspot ignore <check>');
+});
+
 test('gspot apply exits 2 with one line that names gspot install', async () => {
     await using sandbox = await testdir();
     const result = await runGspot(sandbox.path, ['apply', '--json']);

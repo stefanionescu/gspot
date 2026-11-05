@@ -69,11 +69,9 @@ test('another pinned version stops the commands that run tools, and names the in
     );
     expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
     expect(error.message).toContain('npm:@gspothq/cli@0.0.1');
-    for (const command of ['check', 'baseline']) {
-        const result = await runGspot(sandbox.path, [command, '--json']);
-        expect(result.code).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: error.message });
-    }
+    const result = await runGspot(sandbox.path, ['check', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: error.message });
 });
 
 test('the pin keeps a sorted devDependencies block sorted, and goes last in an unsorted one', async () => {

@@ -88,10 +88,6 @@ export const reportedTypoSchema = z.object({
     corrections: z.string().array().nullable(),
 });
 
-const ruleCountsSchema = z.record(z.string(), z.int().positive());
-
-export const baselineSchema = z.record(z.string(), z.record(z.string(), ruleCountsSchema));
-
 export const checkStateSchema = z.discriminatedUnion('status', [
     z.strictObject({ status: z.literal('on') }),
     z.strictObject({ status: z.literal('skipped'), cause: z.enum([...SKIP_CAUSES, 'no-files']) }),
@@ -154,7 +150,6 @@ export const runReportSchema = z.strictObject({
     checks: reportedCheckSchema.array().readonly(),
     skippedCount: z.partialRecord(skipCauseSchema, z.int()).readonly(),
     ignores: ignoreSchema.array().readonly(),
-    baselined: z.record(z.string(), z.int()).readonly(),
     unstagedChanges: z.int(),
     partial: z.boolean(),
     failed: z.string().array().readonly(),

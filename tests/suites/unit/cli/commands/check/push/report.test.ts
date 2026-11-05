@@ -126,6 +126,6 @@ test('a pre-push run checks the push stage and leaves the commit stage to the co
     const head = commitAll(sandbox.path, 'broken');
     const stdin = `refs/heads/main ${head} refs/heads/main ${base}\n`;
     const result = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, { stdin });
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ exitCode: 0 });
 });

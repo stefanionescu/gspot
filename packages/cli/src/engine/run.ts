@@ -14,7 +14,6 @@ import {
     FIX_FLAG,
     PROGRESS_INTERVAL_MILLISECONDS,
 } from '#cli/config/engine.ts';
-import { subtractBaseline } from '#cli/engine/baseline.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { listConflictedPaths, runFixers } from '#cli/engine/fixes.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
@@ -105,10 +104,7 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
     if (unrunnable) return unrunnable;
     const started = performance.now();
     try {
-        return await runCheckCode(session, planned, run.codes.get(planned), {
-            verbose: run.options.verbose,
-            baselineRun: run.baselineRun,
-        });
+        return await runCheckCode(session, planned, run.codes.get(planned), { verbose: run.options.verbose });
     } catch (error) {
         return {
             ...base,
@@ -141,9 +137,8 @@ function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
                 return isOtherFinding || (record.paths !== undefined && !buildPathMatcher(record.paths)(finding.file));
             }),
     );
-    const { findings } = subtractBaseline({ ...result, findings: kept }, run);
-    if (result.status !== 'passed' && result.status !== 'failed') return { ...result, findings };
-    return { ...result, findings, status: findings.length > 0 ? 'failed' : 'passed' };
+    if (result.status !== 'passed' && result.status !== 'failed') return { ...result, findings: kept };
+    return { ...result, findings: kept, status: kept.length > 0 ? 'failed' : 'passed' };
 }
 
 function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
@@ -196,7 +191,6 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
         checks.map(async (planned) => {
             if (run.codes.get(planned)?.check !== undefined) await toolsStarted;
             const result = finishResult(run, await runPlannedCheck(run, planned));
-            if (result.status === 'passed' || result.status === 'failed') run.baselineRun.finished.push(planned);
             run.progress.unfinished.delete(planned);
             run.options.onProgress?.({
                 kind: 'finished',
@@ -216,7 +210,7 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
     });
 }
 
-async function runEveryActiveCheck(run: Run, first: PlannedCheck[], last: PlannedCheck[]): Promise<CheckResult[]> {
+async function runEveryActiveCheck(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
     const { progress, options } = run;
     const started = performance.now();
     const ticker = setInterval(() => {
@@ -230,7 +224,7 @@ async function runEveryActiveCheck(run: Run, first: PlannedCheck[], last: Planne
         });
     }, PROGRESS_INTERVAL_MILLISECONDS);
     try {
-        return [...(await runActiveChecks(run, first)), ...(await runActiveChecks(run, last))];
+        return await runActiveChecks(run, checks);
     } finally {
         clearInterval(ticker);
     }
@@ -254,8 +248,7 @@ async function planAfterFixes(session: CheckSession, options: RunOptions): Promi
 }
 
 /**
-Plan and run the checks, after the fixers when --fix asks, then drop ignored and baselined findings and build the run
-report.
+Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
 
 @param session the repository and its tools.
 @param options the stage, the file selection, and the fix flags.
@@ -276,33 +269,24 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
     } = await planAfterFixes(buildCheckSession(session, options.generation, selection), options);
     const active = planned.filter((check) => isActive(check, selection) && check.skip === undefined);
     const codes = new Map(active.map((check) => [check, options.selectCheckCode(check.check)]));
-    const last = active.filter((check) => codes.get(check)?.runsLast === true);
-    const first = active.filter((check) => !last.includes(check));
     const run: Run = {
         session: checked,
         options,
         comparison,
         codes,
-        baselineRun: {
-            unused: Map.groupBy(structuredClone(options.baseline ?? []), ({ file }) => file),
-            finished: [],
-            paths: options.paths,
-        },
-        baselined: {},
         progress: { finished: 0, total: active.length, unfinished: new Set(active) },
     };
     const setup = Date.now() - started.getTime();
-    const results = await runEveryActiveCheck(run, first, last);
+    const results = await runEveryActiveCheck(run, active);
     const report = buildRunReport({
         session: checked,
         options,
         comparison,
         started,
         planned,
-        active: [...first, ...last],
+        active,
         results,
         fixes,
-        baselined: run.baselined,
     });
     return fixes ? { report, planned, setup, fixes } : { report, planned, setup };
 }

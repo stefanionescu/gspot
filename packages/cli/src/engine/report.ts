@@ -81,7 +81,6 @@ export function buildEmptyRunReport(stage: RunOptions['stage'], started: Date, n
         checks: [],
         skippedCount: {},
         ignores: [],
-        baselined: {},
         unstagedChanges: 0,
         partial: true,
         failed: [],
@@ -96,7 +95,7 @@ report leaves out each check that no file selected, as the text does, and counts
 @param run the planned checks and their results.
 */
 export function buildRunReport(run: FinishedRun): RunReport {
-    const { session, options, comparison, started, planned, results: ran, fixes, baselined } = run;
+    const { session, options, comparison, started, planned, results: ran, fixes } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
     const checks = planned.map((check) =>
         addFindingExplanations(
@@ -132,7 +131,6 @@ export function buildRunReport(run: FinishedRun): RunReport {
             [...skipped].map(([cause, group]) => [cause, new Set(group.map(({ check }) => check)).size]),
         ),
         ignores: session.settings.ignore,
-        baselined,
         unstagedChanges: options.selection?.unstagedChanges ?? 0,
         partial: options.selection?.paths !== undefined || options.paths !== undefined,
         failed,

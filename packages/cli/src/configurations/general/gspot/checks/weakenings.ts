@@ -6,9 +6,8 @@ import {
 } from '#cli/config/configurations/structure.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { parseBaseline } from '#cli/engine/baseline.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -17,15 +16,9 @@ import { getSettingValue, listSettingsTables, listWrittenKeys } from '#cli/setti
 import { buildSettings } from '#cli/settings/read.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
-import {
-    type BaselineCount,
-    type BuiltInCheckResult,
-    type CheckCode,
-    type CheckSession,
-} from '#cli/types/engine/run.ts';
+import { type BuiltInCheckResult, type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import type { IgnoreRecord, Settings } from '#cli/types/settings.ts';
 
 function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weakening[] {
@@ -126,40 +119,19 @@ function listSettingsWeakenings(text: string, head: Settings, tracked: string[])
     ];
 }
 
-function listBaselineGrowth(text: string | undefined, head: BaselineCount[]): Weakening[] {
-    const base = parseBaseline(text);
-    if (text === undefined && head.length > 0)
-        return [{ rule: WEAKENING_RULES.baseline, file: BASELINE_FILE, change: BASELINE_FILE, reason: 'it is new' }];
-    return head.flatMap(({ file, check, rule, count }) => {
-        const held = base.find((each) => each.file === file && each.check === check && each.rule === rule);
-        const previous = held?.count ?? 0;
-        if (count <= previous) return [];
-        return [
-            {
-                rule: WEAKENING_RULES.baseline,
-                file: BASELINE_FILE,
-                change: `The count of ${rule} in ${file} grows from ${String(previous)} to ${String(count)}`,
-            },
-        ];
-    });
-}
-
 /**
-Compare gspot.toml and the baseline with the base revision: the pushed range, `--base`, or the last commit. A weakening
-with no reason fails the check, and one with a reason prints as a note.
+Compare gspot.toml with the base revision: the pushed range, `--base`, or the last commit. A weakening with no reason
+fails the check, and one with a reason prints as a note.
 
 @param session the settings of the tree that the run checks, and the base revision of the run.
 */
 async function checkWeakenings(session: CheckSession): Promise<BuiltInCheckResult> {
     const { root, settings, cancelSignal, repository, selection } = session;
-    const paths = [SETTINGS_FILE, BASELINE_FILE];
+    const paths = [SETTINGS_FILE];
     const texts = await readCommittedTexts(root, paths, selection?.base ?? 'HEAD', cancelSignal);
     const settingsText = texts.get(SETTINGS_FILE);
     const tracked = repository.files.map(({ path }) => path);
-    const weakenings = [
-        ...(settingsText === undefined ? [] : listSettingsWeakenings(settingsText, settings, tracked)),
-        ...listBaselineGrowth(texts.get(BASELINE_FILE), parseBaseline(findText(root, BASELINE_FILE))),
-    ];
+    const weakenings = settingsText === undefined ? [] : listSettingsWeakenings(settingsText, settings, tracked);
     return {
         files: paths.filter((path) => tracked.includes(path)),
         findings: weakenings

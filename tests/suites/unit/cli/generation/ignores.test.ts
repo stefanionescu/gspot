@@ -215,9 +215,7 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     const listed = buildIgnoreSections(session, buildConfigs(session))
         .find(({ key }) => key === 'gspot')!
         .patterns.filter((pattern) => !pattern.startsWith(`${GSPOT_FOLDER}/`));
-    expect(listed.toSorted(compareText)).toStrictEqual(
-        [...written, '.gspot-copies/**', 'gspot.baseline.json'].toSorted(compareText),
-    );
+    expect(listed.toSorted(compareText)).toStrictEqual([...written, '.gspot-copies/**'].toSorted(compareText));
     const ruff = files.find(({ path }) => path.startsWith(`${GSPOT_FOLDER}/`) && path.endsWith('ruff.toml'))!;
     const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
     expect(excluded).toContain('../../../../.gspot/**');

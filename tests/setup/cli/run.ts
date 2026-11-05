@@ -49,11 +49,9 @@ stage = "commit"
 }
 
 /**
-The options of one check that a test runs outside the engine, with an empty baseline that no test changes.
+The options of one check that a test runs outside the engine.
 */
-export const CHECK_RUN_OPTIONS: CheckRunOptions = {
-    baselineRun: { unused: new Map(), finished: [], paths: undefined },
-};
+export const CHECK_RUN_OPTIONS: CheckRunOptions = {};
 
 /**
 The production generators, called only when a check needs their output.

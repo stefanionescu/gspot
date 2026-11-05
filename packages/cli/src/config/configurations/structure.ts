@@ -1,12 +1,12 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { BASELINE_FILE, SETTINGS_FILE, SHEBANG_TAG } from '#cli/config/repository/files.ts';
+import { SETTINGS_FILE, SHEBANG_TAG } from '#cli/config/repository/files.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
 
 const INSTALL_HELP = 'Run gspot install.';
 
-export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE, BASELINE_FILE]);
+export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE]);
 
 export const GENERATED_FILE_FINDINGS = {
     changed: { message: 'This generated file is out of date.', help: INSTALL_HELP },
@@ -35,13 +35,11 @@ export const BRACKET_HELP = String.raw` If a folder name holds ( ) [ ], escape e
 export const GSPOT_RULES = {
     unmatchedPath: 'unmatched-path',
     conflictingConfig: 'conflicting-config',
-    staleBaseline: 'stale-baseline',
     detectedConfiguration: 'detected-configuration',
     lintCommand: 'lint-command',
 } as const;
 
 export const WEAKENING_RULES = {
-    baseline: 'baseline',
     configuration: 'configuration',
     hooks: 'hooks',
     level: 'level',

@@ -2,7 +2,7 @@ import { PYTHON_FILES, SQL_FILES } from '#cli/config/configurations/python.ts';
 import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { BASELINE_FILE, GENERATED_HEADER_MARK, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
+import { GENERATED_HEADER_MARK, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
 import type { Group } from '#cli/types/repository.ts';
@@ -179,7 +179,7 @@ export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'Der
 
 export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;
 
-export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`, `${COPIES_FOLDER}/**`, BASELINE_FILE] as const;
+export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`, `${COPIES_FOLDER}/**`] as const;
 
 export const TARGET_PLACEHOLDER = /\{target_(?:json|module)\}/gu;
 

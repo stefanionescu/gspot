@@ -2,7 +2,6 @@ import type { z } from 'zod';
 
 import type { CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
 import type {
-    baselineReportSchema,
     checkExplanationSchema,
     checkIgnoreSchema,
     ciStateSchema,
@@ -143,7 +142,3 @@ export type ScanInput = {
 };
 
 export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };
-
-export type BaselineFlags = { prune?: boolean; only?: string[] };
-
-export type BaselineJson = z.infer<typeof baselineReportSchema>;

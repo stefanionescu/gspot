@@ -297,5 +297,3 @@ export const ROOT_SCOPE = { path: '', origin: 'root' } as const;
 export const NEEDS_GIT_MESSAGE = 'gspot needs a Git repository. Run git init, then gspot init.';
 
 export const SETTINGS_FILE = 'gspot.toml';
-
-export const BASELINE_FILE = 'gspot.baseline.json';

@@ -25,13 +25,6 @@ const commandFieldsSchema = z.strictObject({
     notes: z.string().array(),
 });
 
-export const baselineReportSchema = z.strictObject({
-    summary: z.string(),
-    findingCount: z.int(),
-    fileCount: z.int(),
-    leftOut: z.string().array(),
-});
-
 export const installReportSchema = generatedFilesSchema.extend({
     summary: z.string(),
     installed: z.string().array(),

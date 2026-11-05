@@ -7,8 +7,8 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 /**
-Reports each file whose name without its extension matches the name of a sibling folder. gspot fixes the names of
-gspot.toml and gspot.baseline.json, so they clash with no folder.
+Reports each file whose name without its extension matches the name of a sibling folder. gspot fixes the name of
+gspot.toml, so it clashes with no folder.
 
 @param _session the repository and its tools.
 @param planned the scope files.

@@ -70,15 +70,6 @@ holds paths relative to the root folder of the repository.
 | `nextSteps`     | The commands to run next.                                                                                                           |
 | `checks`        | The result of every planned check, as in [`gspot check`](#gspot-check), with every finding.                                         |
 
-## `gspot baseline`
-
-| Field          | Meaning                                                                     |
-| -------------- | --------------------------------------------------------------------------- |
-| `summary`      | One sentence about the result.                                              |
-| `findingCount` | Number of findings that `gspot.baseline.json` holds.                        |
-| `fileCount`    | Number of files that those findings sit in.                                 |
-| `leftOut`      | The checks that keep failing, because a baseline leaves their findings out. |
-
 ## `gspot init`
 
 The object of `gspot init --json` also has the [generated-file fields](#generated-files).
@@ -132,7 +123,6 @@ new mode. Without `--verbose`, gspot does not compute these diffs.
 | `checks`          | The result of each planned check, with its findings. A check that no file selects appears only with `--verbose`.                |
 | `skippedCount`    | The number of skipped checks for each `cause`, the checks that no file selects included.                                        |
 | `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                                                     |
-| `baselined`       | The number of findings that `gspot.baseline.json` removed, for each check.                                                      |
 | `unstagedChanges` | The number of changed files that the run left out because it read only the staged files.                                        |
 | `partial`         | Whether the run selected only staged files, changed files, or named paths.                                                      |
 | `fixes`           | When present, the changed files, files restored after broken fixes, files skipped for merge-conflict markers, and fixer errors. |

@@ -18,7 +18,6 @@ import {
 } from '#cli/config/commands/reports.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
@@ -162,11 +161,6 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     });
 }
 
-function formatBaselined({ baselined }: RunReport): string[] {
-    const count = Object.values(baselined).reduce((total, each) => total + each, 0);
-    return count === 0 ? [] : [`baselined  ${String(count)} (counted in ${BASELINE_FILE})`];
-}
-
 function formatIncompleteCounts({ checks }: RunReport): string[] {
     const missing = checks.filter((check) => check.status === 'missing');
     const environments = missing.filter((check) => check.note === PROJECT_ENVIRONMENT_MESSAGE);
@@ -281,7 +275,6 @@ export function formatRunReport(
         ...formatMissingChecks(checks),
         ...report.notes.map((note) => `note     ${note}`),
         ...formatIgnores(report, { verbose }),
-        ...formatBaselined(report),
         ...formatUnstagedChanges(report),
         formatSummary(report),
         ...(verbose && setup !== undefined

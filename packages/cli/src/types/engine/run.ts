@@ -17,7 +17,6 @@ export type FinishedRun = {
     active: PlannedCheck[];
     results: CheckResult[];
     fixes: FixReport | undefined;
-    baselined: RunReport['baselined'];
 };
 
 export type PathBytes = Map<string, Buffer | undefined>;
@@ -46,23 +45,12 @@ export type Run = {
     options: RunOptions;
     comparison: RunReport['comparison'];
     codes: Map<PlannedCheck, CheckCode | undefined>;
-    baselineRun: BaselineRun;
-    baselined: Record<string, number>;
     progress: { finished: number; total: number; unfinished: Set<PlannedCheck> };
 };
-
-type BaselineRun = {
-    unused: Map<string, BaselineCount[]>;
-    finished: PlannedCheck[];
-    paths: string[] | undefined;
-};
-
-export type BaselineCount = { file: string; check: string; rule: string; count: number };
 
 export type RunOptions = PlanOptions & {
     generation: CheckGeneration;
     selectCheckCode: (check: Check) => CheckCode | undefined;
-    baseline?: BaselineCount[] | undefined;
     started?: Date | undefined;
     stage: StageFilter;
     onProgress?: ((progress: CheckProgress) => void) | undefined;
@@ -80,7 +68,6 @@ export type CheckStatus = (typeof CHECK_STATUSES)[number];
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) & {
     explanations?: RuleExplanations;
-    runsLast?: boolean;
 };
 
 type CheckRun = (
@@ -92,7 +79,6 @@ type CheckRun = (
 export type CheckRunOptions = {
     verbose?: boolean | undefined;
     command?: string[];
-    baselineRun: BaselineRun;
 };
 
 export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[]; notes?: string[] };

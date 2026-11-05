@@ -19,7 +19,6 @@ import { DOCS_MISSING_PATHS_CHECKS } from '#cli/configurations/general/docs/chec
 import { DOCS_REQUIRED_FILES_CHECKS } from '#cli/configurations/general/docs/checks/required-files.ts';
 import { DOCS_VERSION_STRINGS_CHECKS } from '#cli/configurations/general/docs/checks/version-strings.ts';
 import { ENGINEERING_CHECKS } from '#cli/configurations/general/engineering/checks.ts';
-import { GSPOT_BASELINE_CHECKS } from '#cli/configurations/general/gspot/checks/baseline.ts';
 import { GSPOT_CONFLICTING_CONFIGS_CHECKS } from '#cli/configurations/general/gspot/checks/conflicting-configs.ts';
 import { DETECTED_CONFIGURATIONS_CHECKS } from '#cli/configurations/general/gspot/checks/detected-configurations.ts';
 import { GSPOT_GENERATED_FILES_CHECKS } from '#cli/configurations/general/gspot/checks/generated-files.ts';
@@ -111,7 +110,6 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...ENGINEERING_CHECKS,
     ...EXPO_CHECKS,
     ...GITHUB_ACTIONS_CHECKS,
-    ...GSPOT_BASELINE_CHECKS,
     ...GSPOT_CONFLICTING_CONFIGS_CHECKS,
     ...DETECTED_CONFIGURATIONS_CHECKS,
     ...GSPOT_GENERATED_FILES_CHECKS,

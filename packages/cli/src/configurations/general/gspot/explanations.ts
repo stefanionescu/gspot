@@ -7,12 +7,6 @@ import {
 import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
 
 export const WEAKENING_EXPLANATIONS = {
-    [WEAKENING_RULES.baseline]: {
-        description: '`gspot.baseline.json` counts more findings than at the base revision.',
-        why: 'A count that grows accepts new findings as old ones.',
-        fix: 'Fix the new findings, and run `gspot baseline --prune`.',
-        example: 'A count that rises from one to two in `src/app.ts` reports `baseline`.',
-    },
     [WEAKENING_RULES.configuration]: {
         description: 'A selected configuration goes away against the base revision.',
         why: 'The checks of the configuration stop running.',

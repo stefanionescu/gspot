@@ -16,7 +16,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 test("shared-prefixes and file-folder-clashes leave gspot's own file names out", async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        'gspot.baseline.json': '{}\n',
         'gspot/index.ts': 'export const name = "gspot";\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'structure/shared-prefixes')).toStrictEqual([]);

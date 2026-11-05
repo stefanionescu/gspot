@@ -133,23 +133,6 @@ test('gspot/weakenings reports a scope that goes while its folder stays', async 
     expect(rules).toStrictEqual(['configuration']);
 });
 
-test('gspot/weakenings prints the first baseline as a note, and reports growth after it', async () => {
-    const counts = { 'a.md': { 'docs/missing-paths': { 'docs/missing-paths': 1 } } };
-    const grown = { 'a.md': { 'docs/missing-paths': { 'docs/missing-paths': 2 } } };
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), 'a.md': '# A\n' });
-    commitAll(sandbox.path);
-    await writeFiles(sandbox.path, { 'gspot.baseline.json': JSON.stringify(counts) });
-    expect(await runWeakenings(sandbox.path)).toStrictEqual({
-        rules: [],
-        notes: ['gspot.baseline.json: it is new'],
-    });
-    commitAll(sandbox.path, 'baseline');
-    await writeFiles(sandbox.path, { 'gspot.baseline.json': JSON.stringify(grown) });
-    expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: ['baseline'], notes: [] });
-    await writeFiles(sandbox.path, { 'gspot.baseline.json': JSON.stringify(counts) });
-    expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: [], notes: [] });
-});
-
 test('gspot/weakenings takes a reason through an ignore of the rule', async () => {
     const tables = '[[ignore]]\ncheck = "gspot/weakenings"\nrule = "level"\nreason = "the team chose basic"\n';
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { level: 'all' }) });
