@@ -4,7 +4,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
 import { CHECK_GENERATION } from '#cli/generation/checks.ts';
-import { assertCheckExists, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { assertCheckExists, listCheckIds, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -20,8 +20,10 @@ import type { Session } from '#cli/types/tools.ts';
 function listMatchingFiles(session: Session, cwd: string, path: string, files: string[]): string[] {
     const selector = buildArgumentPath(session.toolsRoot, cwd, path);
     const matches = files.filter((file) => isInScope(file, selector));
-    if (matches.length === 0) throw new GspotError('arguments', `Path ${path} matches no repository files.`);
-    return matches;
+    if (matches.length > 0) return matches;
+    const isCheck = listCheckIds(Object.values(session.settings.commandChecks)).includes(path);
+    const listSyntax = isCheck ? ' To name two checks, write --only a,b.' : '';
+    throw new GspotError('arguments', `Path ${path} matches no repository files.${listSyntax}`);
 }
 
 function selectArgumentPaths(session: Session, options: CheckOptions, changed: string[]): string[] {

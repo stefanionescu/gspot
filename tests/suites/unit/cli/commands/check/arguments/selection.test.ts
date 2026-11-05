@@ -42,6 +42,29 @@ test('file and folder arguments narrow the files each check gets', async () => {
         );
 });
 
+test.each([
+    {
+        path: 'bash/shellcheck',
+        message: 'Path bash/shellcheck matches no repository files. To name two checks, write --only a,b.',
+    },
+    {
+        path: 'sandbox/own',
+        message: 'Path sandbox/own matches no repository files. To name two checks, write --only a,b.',
+    },
+    { path: 'src/gone.ts', message: 'Path src/gone.ts matches no repository files.' },
+])('the path $path that matches no file gets its message', async ({ path, message }) => {
+    const tables = stringify({
+        command_check: [buildReportingCheck({ id: 'sandbox/own', paths: ['*'], stage: 'commit' })],
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables }),
+        'README.md': '# Example\n',
+    });
+    const result = await runGspot(sandbox.path, ['check', '--only', 'sandbox/own', path, '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message });
+});
+
 test('--only repeats and leaves the paths after it as paths', async () => {
     await using sandbox = await createGitSandbox({});
     const checks = ['one', 'two', 'three'].map((name) =>
