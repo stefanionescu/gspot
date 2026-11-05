@@ -10,6 +10,7 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
+import { hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
 import { listChecksById, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
@@ -161,6 +162,17 @@ function formatLintRuleLines(facts: LintRuleExplanation): string[] {
     ];
 }
 
+async function readRuleDocs(
+    root: string,
+    check: Check,
+    identifier: string,
+    session: Session | undefined,
+): Promise<Awaited<ReturnType<typeof readCheckRuleExplanation>>> {
+    const docs = await readCheckRuleExplanation(root, check, identifier, session);
+    if (docs !== undefined) return docs;
+    return hasRuleExplanations(check, selectCheckCode(check)) ? undefined : { fix: check.help };
+}
+
 function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
     const found = listChecksById(readConfigurations().values()).get(checkId);
     if (
@@ -226,7 +238,7 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
 
 /**
 Explain one lint rule: its page, its description from the installed tool, and how to ignore it or change its
-options. ESLint and Stylelint rules must exist in the tools that gspot installed.
+options.
 
 @param root the repository root, whose tool project holds ESLint and Stylelint.
 @param checkId the check that runs the rule.
@@ -234,7 +246,8 @@ options. ESLint and Stylelint rules must exist in the tools that gspot installed
 @param options the detail level and the session.
 @param options.verbose whether to include the full explanation.
 @param options.session the repository settings and tool project, when available.
-@returns undefined when no check runs the tool, or when ESLint or Stylelint has no such rule.
+@returns undefined when no check runs the tool, or when the tool lists its rules and this is not one. A tool that lists
+none gets the help of its check.
 @throws GspotError when gspot cannot name one lint rule of the check.
 */
 export async function explainLintRule(
@@ -248,7 +261,7 @@ export async function explainLintRule(
     const tool = OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output)
         ? findToolName(found.check)
         : undefined;
-    const docs = await readCheckRuleExplanation(root, found.check, identifier, session);
+    const docs = await readRuleDocs(root, found.check, identifier, session);
     if (docs === undefined) return undefined;
     const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;
     const facts: LintRuleExplanation = {

@@ -27,3 +27,11 @@ test('explain reads a documented rule of a check that compares generator outputs
     expect(explained.stdout).toContain('What to do:');
     expect(explained.stdout).toContain('gspot ignore drizzle/stale-migrations --rule stale --paths');
 });
+
+test('explain gives the help of a check whose tool lists no rules, and exits 0', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['python']) });
+    const result = await runGspot(sandbox.path, ['explain', 'python/basedpyright', 'reportUnknownMemberType']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('python/basedpyright reportUnknownMemberType');
+    expect(result.stdout).toContain('gspot ignore python/basedpyright --rule reportUnknownMemberType');
+});
