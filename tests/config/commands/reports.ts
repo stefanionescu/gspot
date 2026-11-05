@@ -39,50 +39,6 @@ reason = "Review this separately."
 
 export const ROOT_EDITORCONFIG = 'root = true\n';
 
-export const REMOVE_SUGGESTIONS = [
-    {
-        configuration: 'bash',
-        evidence: 'no files in . yet; remove it if none are planned',
-        command: 'gspot remove bash --reason "<why>"',
-    },
-    {
-        configuration: 'python',
-        evidence: 'no files in api app yet; remove it if none are planned',
-        command: 'gspot remove python --scope \'api app\' --reason "<why>"',
-    },
-] as const;
-
-export const CI_PREFERENCE_CASES = [
-    {
-        name: 'a GitHub workflow before a GitLab remote',
-        tracked: ['.github/workflows/build.yml'],
-        untracked: '',
-        remote: 'git@gitlab.com:example/repo.git',
-        ci: 'off; gspot set ci.enabled true writes the check workflow',
-    },
-    {
-        name: 'tracked GitLab before GitHub',
-        tracked: ['.gitlab-ci.yml', '.github/workflows/build.yml'],
-        untracked: '',
-        remote: 'git@github.com:example/repo.git',
-        ci: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
-    },
-    {
-        name: 'GitHub remote with unrelated Bitbucket configuration',
-        tracked: ['bitbucket-pipelines.yml'],
-        untracked: '',
-        remote: 'git@github.com:example/repo.git',
-        ci: 'off; gspot set ci.enabled true writes the check workflow',
-    },
-    {
-        name: 'unrecognized remote host',
-        tracked: [],
-        untracked: '',
-        remote: 'https://github.com.example.com/example/repo.git',
-        ci: 'none',
-    },
-] as const;
-
 export const RULE_PAGES = [
     ['javascript/eslint', 'no-var', 'https://eslint.org/docs/latest/rules/no-var'],
     [
