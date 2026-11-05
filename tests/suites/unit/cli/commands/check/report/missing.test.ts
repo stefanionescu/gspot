@@ -35,9 +35,9 @@ test('the summary counts environments and errors apart from tools', () => {
         exitCode: 2,
         checks: [ENVIRONMENT_CHECK, crashed],
     };
-    expect(formatRunReport(report, { verbose: false })).toContain(
-        'Missing environments: 1. Errors: 1. Passed: 0 checks.',
-    );
+    const text = formatRunReport(report, { verbose: false });
+    expect(text).toContain(`missing  ${ENVIRONMENT_CHECK.check}  ${ENVIRONMENT_CHECK.note}\n`);
+    expect(text).toContain('Missing environments: 1. Errors: 1. Passed: 0 checks.');
 });
 
 test('the summary counts canceled checks apart from errors', () => {
