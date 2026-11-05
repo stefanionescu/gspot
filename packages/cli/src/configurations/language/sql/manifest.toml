@@ -38,8 +38,7 @@ tool = "sqlfluff"
 command = ["sqlfluff", "lint", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
 example = "The query `select id from user_accounts;` reports CP01 for lowercase keywords. Write it as `SELECT id FROM user_accounts;`."
 exit_codes = [1]
-fix = ["sqlfluff", "fix", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
-help = "Run the `fix:` command that the report prints."
+help = "Fix the line that SQLFluff names."
 name = "sqlfluff"
 output = { format = "json", children = ["violations"], fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
 stage = "commit"

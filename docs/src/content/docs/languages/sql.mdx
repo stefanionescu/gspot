@@ -6,8 +6,7 @@ configurations: [sql]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot lints SQL files with SQLFluff, in the dialect of your database. `gspot check --fix` rewrites what SQLFluff can
-fix, such as the case of keywords and the layout of a statement. The `sql` configuration runs these checks:
+gspot lints SQL files with SQLFluff, in the dialect of your database. The `sql` configuration runs these checks:
 
 <ChecksTable guide="languages/sql" />
 
@@ -42,8 +41,7 @@ gspot sets the letter case of each kind of word:
 | Literals    | Upper case |
 | Types       | Upper case |
 
-For example, `select id from user_accounts;` gets a `CP01` finding for each lowercase keyword. `gspot check --fix`
-rewrites it as `SELECT id FROM user_accounts;`.
+For example, `select id from user_accounts;` gets a `CP01` finding for each lowercase keyword.
 
 SQLFluff takes its line length from `format.print_width`, and its indent from the `format` settings of SQL files. When
 the rest of your repository uses another indent, `gspot init` writes a `[[format.override]]` record that indents SQL

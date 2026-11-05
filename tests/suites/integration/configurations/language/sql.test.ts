@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -47,7 +47,7 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
     ]);
 });
 
-test('SQLFluff reports and fixes uppercase function names', async () => {
+test('SQLFluff reports uppercase function names', async () => {
     const { root } = installedSandbox();
     await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
@@ -68,9 +68,4 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
         { line: 1, column: 17, rule: 'CP03' },
         { line: 2, column: 8, rule: 'CP03' },
     ]);
-    const fixed = await spawnGspot(root, [...command, '--fix']);
-    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-    expect(await readFile(join(root, 'functions.sql'), 'utf8')).toBe(SQL_FUNCTION_SOURCE);
-    const corrected = await spawnGspot(root, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
