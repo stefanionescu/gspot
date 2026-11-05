@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { CANCELLATION_REPORT_CASES } from '#tests/config/commands/check.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
+import { CHILD_WAIT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 import { CLI_BIN, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -39,7 +39,7 @@ test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
             [process.execPath, CLI_BIN, 'check', '--only', 'project/slow', ...(format === 'json' ? ['--json'] : [])],
             {
                 cwd: sandbox.path,
-                timeoutSeconds: (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+                timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
                 env: GSPOT_ENVIRONMENT,
             },
         );

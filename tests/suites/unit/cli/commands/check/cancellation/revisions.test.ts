@@ -10,11 +10,7 @@ import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { AUTHORED_SCRIPT, SIGNAL_EXITS } from '#tests/config/commands/check.ts';
 import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
-import {
-    BASH_SYNTAX_CHECK,
-    BASH_SYNTAX_PUSH_CHECK,
-    UNIT_TEST_TIMEOUT_MILLISECONDS,
-} from '#tests/config/setup/sandboxes.ts';
+import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK, CHILD_WAIT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 import { CLI_BIN, parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -42,7 +38,7 @@ async function prepareStagedCancellation(root: string, operation: 'status' | 'in
     const capture = resources.use(
         spawnCommand([process.execPath, CLI_BIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'], {
             cwd: root,
-            timeoutSeconds: (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+            timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
             env: { ...GSPOT_ENVIRONMENT, ...environment, TMPDIR: scratch },
         }),
     );
@@ -119,7 +115,7 @@ test.skipIf(isWindows)(
             [process.execPath, CLI_BIN, 'check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
             {
                 cwd: sandbox.path,
-                timeoutSeconds: (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+                timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
                 env: {
                     ...GSPOT_ENVIRONMENT,
                     ...(await fakePausingGit(binaries.path, {
@@ -166,7 +162,7 @@ test.skipIf(isWindows)(
         const command = buildProgramCommand('processes/cli', SIGNAL_MARKER_OPTION, started, ...hook);
         const limited = limitCommand(command, {
             cwd: root,
-            timeoutSeconds: (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+            timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
         });
         const child = Bun.spawn(command, {
             cwd: root,

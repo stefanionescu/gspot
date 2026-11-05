@@ -96,7 +96,7 @@ export const PACKED_PACKAGES_FILE = 'packages.json';
 
 export const TEST_TIMEOUT_MILLISECONDS = 360_000;
 
-export const UNIT_TEST_TIMEOUT_MILLISECONDS = 15_000;
+export const CHILD_WAIT_MILLISECONDS = 15_000;
 
 export const AUTHENTICATION_REQUIRED_MESSAGE = 'Authentication required';
 

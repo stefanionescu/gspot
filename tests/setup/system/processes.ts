@@ -7,7 +7,7 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
-import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
+import { CHILD_WAIT_MILLISECONDS, TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import type { ChildCapture, ProcessCapture } from '#tests/types/setup.ts';
 
@@ -80,7 +80,7 @@ exited, so that refusal counts as an exit.
 */
 export async function waitForExit(pid: number): Promise<void> {
     if (pid === 0 || !Number.isSafeInteger(pid)) throw new Error(`Invalid child PID: ${String(pid)}.`);
-    const deadline = performance.now() + UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND;
+    const deadline = performance.now() + CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND;
     while (performance.now() < deadline) {
         if (hasExited(pid)) return;
         await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
@@ -94,7 +94,7 @@ Wait until a child writes its ready file, or the command timeout elapses. A chil
 content, so the file counts as ready once it holds bytes.
 */
 export async function waitForFile(path: string): Promise<boolean> {
-    const deadline = performance.now() + UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND;
+    const deadline = performance.now() + CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND;
     while (performance.now() < deadline) {
         try {
             const file = await stat(path);
@@ -159,8 +159,7 @@ export function captureChild(child: ProcessCapture): ChildCapture {
     };
 }
 
-export const CHILD_TIMEOUT_SECONDS =
-    (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND;
+export const CHILD_TIMEOUT_SECONDS = (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND;
 
 /**
 Check whether a child stopped: Windows sets its exit code, and other systems set the signal that ended it.
