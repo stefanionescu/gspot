@@ -17,6 +17,22 @@ test('python.import_folders reach the basedpyright search paths', async () => {
     expect(config.extraPaths).toStrictEqual(['../../../..', '../../../../vendor/host']);
 });
 
+test('basedpyright takes the lowest Python of requires-python, and leaves a nested scope out', async () => {
+    const config = JSON.parse(
+        await buildGeneratedFile(
+            buildSandboxSettings(['python'], { scopes: [{ path: 'docs/source', configurations: ['python'] }] }),
+            getManifestTarget('python', 'basedpyright.json'),
+            {
+                'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\nrequires-python = ">=3.8,<4"\n',
+                'main.py': 'VALUE = 1\n',
+                'docs/source/conf.py': 'project = "app"\n',
+            },
+        ),
+    ) as { pythonVersion?: string; exclude: string[] };
+    expect(config.pythonVersion).toBe('3.8');
+    expect(config.exclude).toContain('../../../../docs/source');
+});
+
 test('basedpyright reads the uv environment of a project with a tracked uv.lock, whether .venv exists yet or not', async () => {
     const basedpyrightPath = getManifestTarget('python', 'basedpyright.json');
     const locked = JSON.parse(

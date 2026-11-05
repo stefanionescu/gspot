@@ -19,11 +19,23 @@ test.each([
         'setup.py': 'VALUE = 5\n',
     });
     const { plan, settings } = await runInit(sandbox.path, ['--configurations', 'python']);
-    const paths = ['setup.py', 'src/tools/**', 'tests/**', 'src/app/legacy/**'];
-    expect(settings['ignore']).toContainEqual({
-        check: 'python/basedpyright',
-        paths,
-        reason: `Carried over from ${file}.`,
+    const unchecked = ['**/*.py', '**/*.pyi', '!src/app', '!src/app/**'];
+    const reason = `Carried over from ${file}.`;
+    expect(settings['ignore']).toContainEqual({ check: 'python/basedpyright', paths: unchecked, reason });
+    expect(settings['ignore']).toContainEqual({ check: 'python/basedpyright', paths: ['src/app/legacy/**'], reason });
+    expect(plan.carryover.find(({ path }) => path === file)).toMatchObject({
+        tool: 'basedpyright',
+        carried: [...unchecked, 'src/app/legacy/**'],
     });
-    expect(plan.carryover.find(({ path }) => path === file)).toMatchObject({ tool: 'basedpyright', carried: paths });
+});
+
+test('init lists the typeCheckingMode of a pyright config as dropped', async () => {
+    await using sandbox = await createGitSandbox({
+        'pyrightconfig.json': '{"typeCheckingMode": "basic"}\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
+    expect(plan.carryover.find(({ path }) => path === 'pyrightconfig.json')?.dropped).toStrictEqual([
+        'typeCheckingMode',
+    ]);
 });

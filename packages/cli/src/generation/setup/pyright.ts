@@ -16,11 +16,10 @@ const PYRIGHT_CONFIG_FILE = 'pyrightconfig.json';
 
 const PYRIGHT_TABLES = ['basedpyright', 'pyright'] as const;
 
-const PYTHON_SOURCE = /\.pyi?$/u;
-
 const pyrightScopeSchema = z.looseObject({
     include: z.string().array().default([]),
     exclude: z.string().array().default([]),
+    typeCheckingMode: z.string().optional(),
 });
 
 const pyrightProjectSchema = z.looseObject({
@@ -29,7 +28,9 @@ const pyrightProjectSchema = z.looseObject({
         .optional(),
 });
 
-function readPyrightOptions(root: string): { path: string; include: string[]; exclude: string[] } | undefined {
+function readPyrightOptions(
+    root: string,
+): { path: string; include: string[]; exclude: string[]; typeCheckingMode?: string | undefined } | undefined {
     const config = findText(root, PYRIGHT_CONFIG_FILE);
     if (config !== undefined) {
         const options = tryParseFile(() => parseJsonFile(PYRIGHT_CONFIG_FILE, config, pyrightScopeSchema));
@@ -40,29 +41,6 @@ function readPyrightOptions(root: string): { path: string; include: string[]; ex
     const tables = tryParseFile(() => parseTomlFile(PYPROJECT_TOML, project, pyrightProjectSchema))?.tool;
     const options = PYRIGHT_TABLES.map((table) => tables?.[table]).find((table) => table !== undefined);
     return options === undefined ? undefined : { path: PYPROJECT_TOML, ...options };
-}
-
-/**
-List the selectors of the Python files that a pyright include leaves out: for each such file, the highest folder that
-holds no included file, or the file itself.
-
-@param files the tracked Python files.
-@param include the paths that pyright checks.
-*/
-function listUncheckedPaths(files: string[], include: string[]): string[] {
-    const isIncluded = buildPathMatcher(include.flatMap((path) => [path, `${path.replace(TRAILING_SLASH, '')}/**`]));
-    const included = files.filter((path) => isIncluded(path));
-    const paths = files
-        .filter((path) => !isIncluded(path))
-        .map((path) => {
-            const segments = path.split('/');
-            const depth = segments.slice(0, -1).findIndex((_, index) => {
-                const folder = segments.slice(0, index + 1).join('/');
-                return included.every((file) => !file.startsWith(`${folder}/`));
-            });
-            return depth === -1 ? path : `${segments.slice(0, depth + 1).join('/')}/**`;
-        });
-    return [...new Set(paths)];
 }
 
 /**
@@ -95,17 +73,29 @@ export function readPyrightCarryover({ repository, tools }: CarryoverInput): Car
     const unchecked =
         found.include.length === 0
             ? []
-            : listUncheckedPaths(
-                  tracked.filter((path) => PYTHON_SOURCE.test(path)),
-                  found.include,
-              );
-    const paths = [...new Set([...unchecked, ...listExcludedPaths(found.exclude, tracked)])];
+            : [
+                  '**/*.py',
+                  '**/*.pyi',
+                  ...found.include.flatMap((path) => {
+                      const base = path.replace(TRAILING_SLASH, '');
+                      return [`!${base}`, `!${base}/**`];
+                  }),
+              ];
+    const excluded = listExcludedPaths(found.exclude, tracked);
+    const paths = [...unchecked, ...excluded];
     return {
         tools: {},
-        ignore:
-            paths.length === 0
-                ? []
-                : [{ check: PYRIGHT_CHECK_ID, paths, reason: `${IGNORE_REASON_START} ${found.path}.` }],
-        rows: [{ ...CARRYOVER_ROW_START, path: found.path, tool: 'basedpyright', carried: paths }],
+        ignore: [unchecked, excluded]
+            .filter((list) => list.length > 0)
+            .map((list) => ({ check: PYRIGHT_CHECK_ID, paths: list, reason: `${IGNORE_REASON_START} ${found.path}.` })),
+        rows: [
+            {
+                ...CARRYOVER_ROW_START,
+                path: found.path,
+                tool: 'basedpyright',
+                carried: paths,
+                dropped: found.typeCheckingMode === undefined ? [] : ['typeCheckingMode'],
+            },
+        ],
     };
 }

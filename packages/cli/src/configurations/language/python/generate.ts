@@ -22,12 +22,12 @@ import {
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { RUFF_CHECK } from '#cli/config/repository/setup.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { getLimit, getTable, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
@@ -35,6 +35,8 @@ import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+
+const MINIMUM_PYTHON = /(?:>=|~=|==)\s*(?<version>\d+\.\d+)/u;
 
 // F401 reports a side-effect import as unused, such as import readline, and its fix deletes the import.
 const RUFF_UNFIXABLE = ['F401'];
@@ -45,8 +47,18 @@ function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string)
             pattern.endsWith('/**') ||
             planned.configuration.files.extensions.some((extension) => pattern.endsWith(extension)),
     );
-    const own = listCheckIgnoreSections(planned.scope.settings, checkId).flatMap(({ patterns }) => patterns);
+    const own = listCheckIgnoreSections(planned.scope.settings, checkId)
+        .filter(({ patterns }) => !patterns.some((pattern) => GLOB_EXCLUSION.test(pattern)))
+        .flatMap(({ patterns }) => patterns);
     return [...shared, ...own].map((path) => `${root}/${path}`);
+}
+
+function readMinimumPython(planned: PlannedConfig): string | undefined {
+    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
+    const text = findText(planned.session.cache, pyproject);
+    if (text === undefined) return undefined;
+    const project = tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project;
+    return MINIMUM_PYTHON.exec(project?.['requires-python'] ?? '')?.groups?.['version'];
 }
 
 function listConsoleModules(planned: PlannedConfig): string[] {
@@ -84,6 +96,11 @@ function buildBasedpyrightFile(planned: PlannedConfig): string {
         ? PYTHON_ENVIRONMENT_FOLDER
         : undefined;
     const extraPaths = planned.scope.settings.tables.python?.import_folders ?? [];
+    const pythonVersion = readMinimumPython(planned);
+    const nested = listNestedScopes(
+        planned.session.scopes.map((scope) => scope.path),
+        planned.scope.path,
+    );
     return JSON.stringify(
         {
             ...BASEDPYRIGHT_OPTIONS,
@@ -92,7 +109,11 @@ function buildBasedpyrightFile(planned: PlannedConfig): string {
             ...(pythonVenv !== undefined && { venvPath: pythonScopePath, venv: pythonVenv }),
             include: [pythonScopePath],
             extraPaths: [pythonScopePath, ...extraPaths.map((path) => posix.join(root, path))],
-            exclude: listIgnoredGlobs(planned, BASEDPYRIGHT_CHECK, root),
+            ...(pythonVersion !== undefined && { pythonVersion }),
+            exclude: [
+                ...listIgnoredGlobs(planned, BASEDPYRIGHT_CHECK, root),
+                ...nested.map((path) => posix.join(root, path)),
+            ],
         },
         null,
         JSON_INDENT,

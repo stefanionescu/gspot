@@ -80,7 +80,7 @@ findings of the first `gspot check` before you run `gspot check --fix`.
 
 `gspot init` turns `.prettierignore`, `.eslintignore`, the Ruff `exclude` and `extend-exclude` settings, and the pyright
 `include` and `exclude` settings into `[[ignore]]` records. An `[[ignore]]` record in `gspot.toml` makes the checks
-skip the paths that it names. For a pyright `include`, init ignores each folder of Python files that the `include` leaves out.
+skip the paths that it names. For a pyright `include`, init ignores the Python files that the `include` leaves out, so a new file there stays out too.
 `gspot init` keeps a pattern only when it matches a tracked file, because gspot reads only tracked files. It drops a
 pattern that starts with `!`, and the table lists it as dropped.
 
