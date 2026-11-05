@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 
-import { expect, test } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 
 import {
     COMMENT_SOURCE,
@@ -19,6 +19,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import type { FindingRow } from '#tests/types/setup.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
@@ -77,24 +78,34 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
     );
 });
 
-test.each([...STYLE_CASES])(
-    'Vale $rule reports the expected lines of $path and leaves its code notation alone',
-    async (row) => {
-        const { root } = installedSandbox();
-        await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
-            files: {
-                'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-                [row.path]: row.source,
-            },
-        });
-        const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
-        expect(
-            result.report.checks[0]!.findings.flatMap(({ file, line, rule }) =>
-                rule === `gspot.${row.rule}` ? [{ file, line, rule }] : [],
-            ),
-        ).toStrictEqual(row.findings.map((finding) => ({ file: row.path, ...finding })));
-    },
-);
+describe('with every style sample in one Vale run', () => {
+    const resources = new AsyncDisposableStack();
+    let findings: FindingRow[];
+
+    beforeAll(async () => {
+        const sandbox = installedSandbox();
+        const files = {
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+            ...Object.fromEntries(STYLE_CASES.map(({ path, source }) => [path, source])),
+        };
+        resources.use(await writeSandboxChanges(sandbox, { files }));
+        const { report } = parseCheckReport(
+            await spawnGspot(sandbox.root, ['check', '--only', 'prose/vale', '--json']),
+        );
+        findings = listFindingRows(report);
+    });
+
+    afterAll(() => resources.disposeAsync());
+
+    test.each([...STYLE_CASES])(
+        'Vale $rule reports the expected lines of $path and leaves its code notation alone',
+        (row) => {
+            expect(
+                findings.filter(({ file, rule }) => file === row.path && rule === `gspot.${row.rule}`),
+            ).toStrictEqual(row.findings.map((finding) => ({ file: row.path, ...finding })));
+        },
+    );
+});
 
 test('Vale accepts the words listed in gspot.toml, and typos reports the misspelling, in a child scope', async () => {
     const scope = 'app';

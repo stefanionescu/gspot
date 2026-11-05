@@ -158,7 +158,7 @@ src/
     },
     {
         rule: 'file-paths',
-        path: 'paths.md',
+        path: 'file-paths.md',
         source: `# Guide
 
 Inspect src/view.tsx.
