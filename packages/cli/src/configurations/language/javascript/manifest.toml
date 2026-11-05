@@ -21,19 +21,12 @@ prefixes = ["jsconfig", "eslint", "playwright"]
 [rules."PLAYWRIGHT.md"]
 dependencies = ["@playwright/test", "playwright"]
 
-[rules."NODE.md"]
-absent_dependencies = ["react-native", "expo"]
-runtimes = ["node"]
-
 [rules."DENO.md"]
 filenames = ["deno.json", "deno.jsonc", "**/supabase/config.toml"]
 runtimes = ["deno"]
 
 [rules."COMPONENTS.md"]
 dependencies = ["astro", "svelte", "vue", "react"]
-
-[rules."BUN.md"]
-filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]
 
 [[naming.exception]]
 categories = ["parameters", "variables"]

@@ -131,24 +131,9 @@ export const MARKDOWN_HEADING = /^(#{1,5}) /u;
 
 export const CI_SYSTEMS_SETTING = 'ci.operating_systems';
 
-export const SETTINGS_COMMANDS = ['set', 'unset', 'unignore'] as const;
-
 export const COMMANDS_HEADING = '## Commands';
 
-export const GENERATED_FILES_HEADING = '## Generated files';
-
-export const GENERATED_FILES_LINE =
-    '`.gitattributes` marks each file that gspot writes `linguist-generated`, except the hooks and the CI workflow, which run without a tool, so they stay open in review.';
-
-export const EDIT_KEYS_LINE = 'You can edit the other keys of that file.';
-
-export const FIRST_READ_LINE = 'Read these rules first:';
-
-export const RULE_INDEX_LINES = [
-    'Read a rule below when its sentence fits your task.',
-    'A rule marked `in <folder>/` applies only to files in that folder.',
-    'A more specific rule wins over a general one.',
-] as const;
+export const FOLDER_RULE_LINE = 'A rule marked `in <folder>/` applies only to files in that folder.';
 
 export const MANAGED_KEYS_NOTE =
     'Keys that gspot no longer manages stay in your files. Review your shared tool configs after you remove a configuration.';

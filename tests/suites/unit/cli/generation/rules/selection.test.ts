@@ -27,18 +27,17 @@ async function generateRuleFiles(level: Level, files: Record<string, string>): P
     );
 }
 
-test.each([...RUNTIME_RULE_CASES])('$name selects the runtime rules $rules', async ({ runtime, dependency, rules }) => {
+test.each([...RUNTIME_RULE_CASES])('$name selects the runtime rules $rules', async ({ runtime, rules }) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { rules: true, level: 'all' }),
         'main.js': `#!/usr/bin/env ${runtime}\nconsole.log("ready");\n`,
         'package.json': JSON.stringify({
             engines: { [runtime]: '>=1' },
-            dependencies: dependency === undefined ? {} : { [dependency]: '1.0.0' },
         }),
     });
     const session = await openSession(sandbox.path);
     const paths = selectRuleFiles(session).map((file) => file.path);
-    expect(paths.filter((path) => /^(?:DENO|NODE)\.md$/u.test(path))).toStrictEqual([...rules]);
+    expect(paths.filter((path) => /^DENO\.md$/u.test(path))).toStrictEqual([...rules]);
 });
 
 test('a rule file shows the limit that gspot.toml sets', async () => {
@@ -73,15 +72,10 @@ describe('which rule files gspot writes', () => {
 
     test('rule files that need a file or a dependency are written only when it is there', async () => {
         const present = await generateRuleFiles('all', {
-            'bunfig.toml': '[test]\nroot = "tests"\n',
             'package.json':
                 '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
         });
-        for (const path of [
-            getRuleFilePath('javascript', 'BUN.md'),
-            getRuleFilePath('css', 'TAILWIND.md'),
-            getRuleFilePath('javascript', 'PLAYWRIGHT.md'),
-        ]) {
+        for (const path of [getRuleFilePath('css', 'TAILWIND.md'), getRuleFilePath('javascript', 'PLAYWRIGHT.md')]) {
             expect(all.has(path)).toBe(false);
             expect(present.has(path)).toBe(true);
         }
@@ -107,19 +101,3 @@ test('a Supabase project selects Deno rules without a Deno settings file', async
     const session = await openSession(sandbox.path);
     expect(selectRuleFiles(session).map(({ path }) => path)).toContain('DENO.md');
 });
-
-test.each(['pytest', 'jest'])(
-    '%s selection writes its test guidance and links it from AGENTS.md',
-    async (configuration) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([configuration], { rules: true }),
-        });
-        const generated = buildGeneratedFiles(await openSession(sandbox.path));
-        const path = getRuleFilePath(configuration, `${configuration.toUpperCase()}.md`);
-        expect(generated.files.find((file) => file.path === path)?.content).toContain('Read TESTING.md too.');
-        const agents = generated.blocks.find((block) => block.path === 'AGENTS.md')?.body;
-        expect(agents).toContain(
-            `\`${path}\`: when you write or change a ${configuration === 'jest' ? 'Jest' : 'pytest'} test.`,
-        );
-    },
-);

@@ -78,12 +78,6 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
     const agentsText = stripBlock(agents, { path: AGENTS_FILE });
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),
-        managedKeys: generated.managedKeys
-            .map(({ path, keys }) => ({
-                path,
-                keys: keys.filter((change) => change.value !== undefined).map((change) => change.key.join('.')),
-            }))
-            .filter(({ keys }) => keys.length > 0),
         startCommand: session.startRunner.command,
         hooksEnabled: settings.hooks.enabled,
         files: rules,

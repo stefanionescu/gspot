@@ -76,12 +76,10 @@ export type RuleFile = {
     target: string;
     content: string;
     scopes: string[];
-    group: Configuration['group'];
 };
 
 export type AgentsBlockContent = {
     files: RuleFile[];
-    managedKeys: Array<{ path: string; keys: string[] }>;
     startCommand: string;
     hasOwnTitle: boolean;
     hooksEnabled: boolean;

@@ -7,18 +7,12 @@ import {
     ALL_LEVEL_MARKER,
     BLANK_LINE,
     COMMANDS_HEADING,
-    EDIT_KEYS_LINE,
-    FIRST_READ_LINE,
-    GENERATED_FILES_HEADING,
-    GENERATED_FILES_LINE,
-    GROUP_LABELS,
+    FOLDER_RULE_LINE,
     MARKDOWN_HEADING,
-    RULE_INDEX_LINES,
     RULE_OPENING_PREFIX,
     RULES_HEADING,
-    SETTINGS_COMMANDS,
 } from '#cli/config/generation.ts';
-import { GROUPS, GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { FIRST_READ } from '#cli/config/settings/validation.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
@@ -70,40 +64,29 @@ function buildLevelRuleText(text: string, level: Level): string {
     return output.join('').trimEnd() + '\n';
 }
 
-function listIndexLines(files: RuleFile[]): Array<[string, string[]]> {
-    const rows = new Map<string, string[]>();
-    for (const file of files) {
-        if (FIRST_READ.includes(file.path)) continue;
-        const label = GROUP_LABELS[file.group];
-        const list = rows.get(label) ?? [];
-        const scopes = file.scopes.map((path) => `\`${path}/\``).join(', ');
-        const scope = file.scopes.includes('') ? '' : ` in ${scopes}`;
-        const opening = (file.content.split(BLANK_LINE) as [string, string, ...string[]])[1];
-        const sentence = opening.replaceAll('\n', ' ').replace(RULE_OPENING_PREFIX, '');
-        list.push(`\`${file.target}\`${scope}: ${sentence}`);
-        rows.set(label, list);
-    }
-    return GROUPS.flatMap((group): Array<[string, string[]]> => {
-        const label = GROUP_LABELS[group];
-        const lines = rows.get(label);
-        return lines === undefined ? [] : [[label, lines.toSorted(compareText)]];
-    });
+function listIndexLines(files: RuleFile[]): string[] {
+    return files
+        .filter((file) => !FIRST_READ.includes(file.path))
+        .map((file) => {
+            const scopes = file.scopes.map((path) => `\`${path}/\``).join(', ');
+            const scope = file.scopes.includes('') ? '' : ` in ${scopes}`;
+            const opening = (file.content.split(BLANK_LINE) as [string, string, ...string[]])[1];
+            const sentence = opening.replaceAll('\n', ' ').replace(RULE_OPENING_PREFIX, '');
+            return `- \`${file.target}\`${scope}: ${sentence}`;
+        })
+        .toSorted(compareText);
 }
 
 function formatRulesIndex(files: RuleFile[]): string[] {
+    const firstRead = FIRST_READ.map((path) => `\`${GSPOT_PATHS.rules}/${path}\``);
     return [
-        FIRST_READ_LINE,
+        `Read ${formatNameList(firstRead)} first.`,
+        'Read a rule below when its sentence fits your task.',
+        ...(files.some(({ scopes }) => !scopes.includes('')) ? [FOLDER_RULE_LINE] : []),
+        'A more specific rule wins over a general one.',
         '',
-        ...FIRST_READ.map((path) => `- \`${GSPOT_PATHS.rules}/${path}\``),
+        ...listIndexLines(files),
         '',
-        ...RULE_INDEX_LINES,
-        '',
-        ...listIndexLines(files).flatMap(([label, paths]) => [
-            `## ${label}`,
-            '',
-            ...paths.map((path) => `- ${path}`),
-            '',
-        ]),
     ];
 }
 
@@ -136,17 +119,6 @@ function listScopeRules(scope: Scope): Set<string> {
 }
 
 /**
-List the commands that change gspot.toml, as the AGENTS.md block and the gspot.toml preface name them.
-*/
-export function formatSettingsCommands(): string {
-    const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `gspot ${command}` : command));
-    return formatNameList(
-        commands.map((command) => '`' + command + '`'),
-        'disjunction',
-    );
-}
-
-/**
 Select the shared rules and the configuration rules at the level. Leave out the excluded rules
 and the ones that the level leaves empty.
 
@@ -168,7 +140,7 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
             (excluded) => !isInScope(`${GSPOT_PATHS.rules}/${path}`, stripTrailingSlashes(excluded)),
         ),
     );
-    for (const { source, path, group } of shipped) {
+    for (const { source, path } of shipped) {
         const text = readFileSync(buildAssetPath(source), 'utf8');
         const content = buildLevelRuleText(text, level);
         if (content !== text && parseHeadingSections(content).every((section) => section.depth <= 1)) continue;
@@ -179,7 +151,6 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
             content: content.replaceAll(SETTING_PLACEHOLDER, (_token, name: string) =>
                 String(root.settings.valuesByKey[name]),
             ),
-            group,
             scopes,
         });
     }
@@ -191,18 +162,11 @@ Build the managed block for the rules.
 
 @param block what the block lists.
 @param block.files the rules with their content.
-@param block.managedKeys the keys that gspot manages inside authored config files.
 @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
 @param block.startCommand the command that starts gspot.
 @param block.hooksEnabled whether the Git hooks run the commit checks, so the agent commits and fixes what they report.
 */
-export function buildAgentsBlock({
-    files,
-    managedKeys,
-    startCommand,
-    hasOwnTitle,
-    hooksEnabled,
-}: AgentsBlockContent): string {
+export function buildAgentsBlock({ files, startCommand, hasOwnTitle, hooksEnabled }: AgentsBlockContent): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
     const lines = [
         RULES_HEADING,
@@ -212,22 +176,14 @@ export function buildAgentsBlock({
         '',
         `The rules write \`gspot\` for \`${startCommand}\`.`,
         '',
-        `${hooksEnabled ? 'Commit, and fix what the hook reports.' : 'Before you commit, run `gspot check --staged --only commit`.'} Before you push, run \`gspot check --base origin/HEAD --only push\`.`,
+        `Before you finish a change, stage it and run \`gspot check --staged --only commit\`. ${hooksEnabled ? 'When you commit, fix what the hook reports.' : 'Before you push, run `gspot check --base origin/HEAD`.'}`,
         '',
-        `To change \`gspot.toml\`, run ${formatSettingsCommands()}.`,
-        'When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.',
+        'Change a setting with `gspot set`, `unset`, or `unignore`. Write the other `[[...]]` records by hand, after the user agrees, then run `gspot install`.',
+        'When `gspot check` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.',
         'Run `gspot ignore` or `gspot remove` only after the user agrees, with a reason.',
-        'After you edit `gspot.toml`, a package manifest, or a tsconfig, run `gspot install`.',
+        'After you edit a package manifest or a tsconfig, run `gspot install`.',
         '',
-        GENERATED_FILES_HEADING,
-        '',
-        GENERATED_FILES_LINE,
-        'Do not edit these files. Change `gspot.toml`, then run `gspot install`.',
-        ...managedKeys.flatMap(({ path, keys }) => [
-            '',
-            `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${formatNameList(keys.map((key) => '`' + key + '`'))}.`,
-            EDIT_KEYS_LINE,
-        ]),
+        'Do not edit the files that gspot writes. `gspot/generated-files` reports an edit. Change `gspot.toml`, then run `gspot install`.',
     ];
     return (hasOwnTitle ? lines.map((line) => line.replace(MARKDOWN_HEADING, '#$1 ')) : lines).join('\n');
 }
