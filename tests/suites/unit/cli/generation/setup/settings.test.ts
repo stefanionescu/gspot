@@ -22,7 +22,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
     const settings = readSettings(text, sandbox.path);
     expect({ root: settings.configurations, site: settings.scopes.get('apps/site')?.configurations }).toStrictEqual({
         root: ['typescript'],
-        site: ['javascript', 'python'],
+        site: ['python'],
     });
 });
 

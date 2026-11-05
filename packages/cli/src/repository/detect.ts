@@ -1,3 +1,6 @@
+import { posix } from 'node:path';
+
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { EVERY_REPOSITORY_EVIDENCE, RUNTIME_TAG } from '#cli/config/repository/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
@@ -99,7 +102,9 @@ function findFilenameEvidence(detect: Configuration['detect'], contents: ScopeCo
 }
 
 function findProjectEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
+    const hasNpmDependency = contents.dependencies.values().some((file) => posix.basename(file) === PACKAGE_JSON);
     for (const pattern of detect.project_files) {
+        if (pattern === PACKAGE_JSON && !hasNpmDependency) continue;
         const found = contents.files.find((file) => findProjectFolder(file.path, pattern) !== undefined);
         if (found !== undefined) return { evidence: found.path };
     }

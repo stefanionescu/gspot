@@ -41,7 +41,7 @@ test('init keeps the old config file when the generated one cannot be written', 
 test.each([
     {
         name: 'a package.json without a pin needs the install of the package manager',
-        manifest: '{"name":"example","private":true}\n',
+        manifest: '{"name":"example","private":true,"dependencies":{"left-pad":"1.0.0"}}\n',
         next: 'Next: run npm install to install the gspot that package.json now pins, then gspot check --fix, then gspot baseline.',
     },
     {

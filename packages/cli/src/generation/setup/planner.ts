@@ -1,3 +1,4 @@
+import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -48,7 +49,11 @@ type SettingsPlan = {
 
 function choosePin(root: string, planned: Session): Pick<InitPlanning, 'session' | 'pinPath'> {
     if (readGspotPin(root) !== undefined) return { session: planned, pinPath: undefined };
-    const hasManifest = readPackageJson(root, PACKAGE_JSON) !== undefined;
+    const manifest = readPackageJson(root, PACKAGE_JSON);
+    const hasManifest =
+        manifest !== undefined &&
+        (Object.keys({ ...manifest.dependencies, ...manifest.devDependencies }).length > 0 ||
+            planned.repository.files.some(({ tags }) => CODE_LANGUAGES.some((tag) => tags.includes(tag))));
     const runner = hasManifest ? detectPackageManager(root, []).name : 'mise';
     return {
         session: { ...planned, startRunner: buildStartRunner(runner) },
@@ -155,7 +160,7 @@ export async function writeInitFiles(root: string, initPlan: InitPlanning): Prom
     const writer = openFiles(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
-    if (initPlan.pinPath !== undefined) writeGspotPin(writer);
+    if (initPlan.pinPath !== undefined) writeGspotPin(writer, initPlan.pinPath);
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });
     const kept = deleteConflictingConfigs(writer, initPlan.plan.deleted, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));

@@ -160,6 +160,17 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
 
+test('init pins gspot in mise.toml for a package.json with no dependency and no script file', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
+    const manifest = '{"name":"scripts","bin":{"run":"run.sh"}}\n';
+    await using sandbox = await testdir({ 'package.json': manifest, 'run.sh': '#!/bin/sh\nexit 0\n' });
+    commitAll(sandbox.path);
+    const initialized = await runGspot(sandbox.path, ['init', '--json']);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(existsSync(join(sandbox.path, 'mise.toml'))).toBe(true);
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(manifest);
+});
+
 test('init leaves CI off with a GitHub origin and names the commands that turn it on', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n' });

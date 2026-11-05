@@ -270,7 +270,7 @@ export const TEMPLATE_REFUSALS = [
 ];
 
 export const TEMPLATE_SCOPE_FILES = {
-    'package.json': '{"private":true,"workspaces":["apps/*"]}',
+    'package.json': '{"private":true,"workspaces":["apps/*"],"devDependencies":{"left-pad":"1.0.0"}}',
     'apps/web/package.json': '{"private":true,"dependencies":{"react":"1.0.0"}}',
     'apps/web/app.tsx': 'export const App = () => <main>Hello</main>;\n',
 };

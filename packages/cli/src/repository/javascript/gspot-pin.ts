@@ -101,10 +101,11 @@ export function assertGspotPin(root: string): void {
 Pin this gspot where the hooks start it: as a development dependency, or as a mise tool without a package.json.
 
 @param writer the repository handle.
+@param path the file that takes the pin, when the plan chose one.
 */
-export function writeGspotPin(writer: Files): void {
+export function writeGspotPin(writer: Files, path?: string): void {
     const manifest = writer.read(PACKAGE_JSON);
-    if (manifest !== undefined) {
+    if (manifest !== undefined && path !== MISE_CONFIG_FILE) {
         const bytes = Buffer.from(addPackagePin(manifest.bytes.toString('utf8')));
         writer.write(PACKAGE_JSON, { ...manifest, bytes });
         return;

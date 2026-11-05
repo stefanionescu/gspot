@@ -167,6 +167,14 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection', async (row
     expect(detectConditions([detect], repository.files, dependencyFiles).has(detect)).toBe(row.detected);
 });
 
+test('a package.json with no dependency selects no JavaScript in a shell repository', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"name":"scripts","bin":{"run":"run.sh"}}',
+        'run.sh': '#!/bin/sh\nexit 0\n',
+    });
+    expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('javascript');
+});
+
 test('site is detected from a sitemap.xml in any folder', async () => {
     await using sandbox = await createGitSandbox({ 'docs/public/sitemap.xml': '<urlset/>' });
     expect(await detectSandboxConfigurations(sandbox.path)).toContain('site');
