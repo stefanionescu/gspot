@@ -18,7 +18,7 @@ import { buildSettings } from '#cli/settings/read.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
+import { isInScope } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
@@ -114,10 +114,7 @@ function findRequirementChain(required: string, from: string, seen: Set<string>)
 export const REMOVE_COMMAND: CommandDefinition<[string[]], ScopeFlags & { reason: string }> = {
     name: 'remove',
     arguments: [{ term: '<configuration...>' }],
-    options: [
-        { flags: REASON_OPTION, required: true },
-        { flags: SCOPE_OPTION, parse: stripTrailingSlashes },
-    ],
+    options: [{ flags: REASON_OPTION, required: true }, { flags: SCOPE_OPTION }],
     run: async ({ arguments: commandArguments, flags: { reason, scope: scopePath }, root, cwd }) => {
         const [configurations] = commandArguments;
         const invalid = validateReason(GSPOT_REMOVE, reason, REMOVAL_REASON_SUGGESTION);

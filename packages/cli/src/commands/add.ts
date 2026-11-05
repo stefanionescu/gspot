@@ -8,7 +8,6 @@ import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { overlayTable } from '#cli/settings/edit.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
@@ -64,7 +63,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
 export const ADD_COMMAND: CommandDefinition<[string[]], ScopeFlags> = {
     name: 'add',
     arguments: [{ term: '<configuration...>' }],
-    options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
+    options: [{ flags: SCOPE_OPTION }],
     run: async ({ arguments: commandArguments, flags: { scope: scopePath }, root, cwd }) => {
         const [configurations] = commandArguments;
         return await runAddCommand({ root, cwd, configurations: [...new Set(configurations)], scopePath });
