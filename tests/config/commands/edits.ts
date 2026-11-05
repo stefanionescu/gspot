@@ -11,7 +11,6 @@ reason = "These files retain generated formatting."
 `;
 
 export const UNSET_REFUSALS = [
-    { commandArguments: ['unset', 'configurations'] },
     { commandArguments: ['unset', 'no_such_key'] },
     { commandArguments: ['unset', 'level', 'extra'] },
 ] as const;
@@ -140,8 +139,6 @@ export const SET_REFUSALS = [
     ['an undeclared scope', ['set', 'limits.max_file_lines', '100', '--scope', 'web']],
     ['a setting of a configuration that no scope selects', ['set', 'licenses.allowed', 'MIT']],
     ['an invalid level', ['set', 'level', 'everything']],
-    ['an ignore', ['set', 'ignore', 'bash/shellcheck']],
-    ['another record list', ['set', 'command_check', 'lint']],
 ] as const;
 
 export const KEPT_SETTING_CHANGES = [

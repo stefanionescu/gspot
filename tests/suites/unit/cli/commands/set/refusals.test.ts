@@ -1,4 +1,4 @@
-import { test } from 'bun:test';
+import { expect, test } from 'bun:test';
 
 import {
     REFUSAL_FILES,
@@ -19,6 +19,15 @@ test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments) => {
     });
 
     await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');
+});
+
+test.each([
+    { key: 'ignore', value: 'bash/shellcheck', named: 'gspot ignore' },
+    { key: 'command_check', value: 'lint', named: '[[command_check]]' },
+])('set refuses the record list $key and names where it goes', async ({ key, value, named }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const failure = await assertRefusalWithoutWrites(sandbox.path, ['set', key, value], 'arguments');
+    expect(failure.message).toContain(named);
 });
 
 test.each([...UNKNOWN_SETTING_KEYS])(

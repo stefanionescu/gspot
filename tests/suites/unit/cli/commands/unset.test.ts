@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test';
 
 import { UNSET_REFUSALS } from '#tests/config/commands/edits.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -23,6 +23,12 @@ test.each([...UNSET_REFUSALS])(
         expect(await readFile(path, 'utf8')).toBe(before);
     },
 );
+
+test('unset configurations names the commands that change that list', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const failure = await assertRefusalWithoutWrites(sandbox.path, ['unset', 'configurations'], 'arguments');
+    expect(failure.message).toContain('gspot add or gspot remove');
+});
 
 test('unset removes the scanner setting and keeps bunfig.toml', async () => {
     await using sandbox = await createGitSandbox({
