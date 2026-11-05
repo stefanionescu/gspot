@@ -17,12 +17,8 @@ A suppression turns a lint rule off for one place, and it carries a reason.
 - Do not widen a setting, such as an import boundary or an import rule, so that a finding passes. Move the code instead.
 - Treat a `gspot doctor` row "detected, not selected" as a suggestion. Do not run `gspot add` only to clear it; ask the
   user whether the scope uses that configuration.
-- Delete a suppression when its cause does not apply. Never add filler statements to pass a check.
+- Never add filler statements to pass a check.
 
-This rule covers every suppression comment, in every language. gspot rejects Semgrep and Vale suppressions: record an
-ignore instead.
-
-To accept a finding without changing the code, ask the user first. Then run `gspot ignore <check>` with a reason.
 Ask the user before you run `gspot baseline`, which accepts every current finding. When `gspot/baseline` reports a stale
-count, run `gspot baseline --prune` and commit `gspot.baseline.json`.
-Never remove a configuration or lower the level to stop a finding. Ask the user, and give `gspot remove` a reason.
+count, run `gspot baseline --prune` and commit `gspot.baseline.json`. Never remove a configuration or lower the level to
+stop a finding.
