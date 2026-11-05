@@ -41,13 +41,6 @@ Read this rule when you change an HTTP service.
   referrer policy, and a Content Security Policy that the application's own scripts satisfy.
 - Never pair a wildcard Cross-Origin Resource Sharing (CORS) origin with credentials.
 
-## Wire names
-
-<!-- level: all -->
-
-- Keep existing protocol header names. A new header carries no `X-` prefix, as
-  [Request for Comments (RFC) 6648](https://www.rfc-editor.org/rfc/rfc6648) recommends.
-
 ## Operations
 
 - A startup failure stops the process before it accepts work.
@@ -56,4 +49,3 @@ Read this rule when you change an HTTP service.
 - A fatal runtime error stops new work, reports the failure, and exits.
 - Keep health and readiness endpoints cheap. Call no provider from them.
 - Broad rate limits sit at the edge, application limits in middleware, and route limits beside the route.
-- Either the proxy or the application compresses responses, not both. Under heavy traffic, the reverse proxy does it.
