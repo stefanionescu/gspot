@@ -23,6 +23,10 @@ setting in `gspot.toml`, the message names the line and what to write instead, s
 If it says `gspot did not overwrite these files`, the new release writes a file at a path where you have a file of your
 own. Move each one out of the way, then run it again.
 
+`gspot install` also stops if a pinned tool is newer than `dependencies.min_release_age_days`, 7 by default, and names the
+tool, as it does when you run `gspot init` in a new repository. Wait, or lower the setting. A clone that installs from
+the committed tool lockfiles does not wait.
+
 A new release can pin tools that format or report code in a new way, and `gspot check` lists what they find in the whole
 repository. If your repository had no findings before the upgrade, run `gspot check --fix`, then fix or ignore the rest.
 If it still has old findings, leave them, because a commit checks what you stage, and fix each file as you touch it.
