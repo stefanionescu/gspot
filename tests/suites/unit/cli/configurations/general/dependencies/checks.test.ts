@@ -226,6 +226,19 @@ test('package-manager-pin gives the line to add beside a pnpm lockfile, with the
     ]);
 });
 
+test('package-manager-pin names no mise range in the line to add, because a packageManager field needs an exact version', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({ name: 'shop', private: true }),
+        'pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
+        'mise.toml': '[tools]\npnpm = "10"\n',
+        'gspot.toml': buildSandboxSettings(['javascript']),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
+    expect(findings.map(({ message }) => message)).toStrictEqual([
+        'CI installs only a pinned pnpm. Add "packageManager": "pnpm@<version>" to package.json.',
+    ]);
+});
+
 test('package-manager-pin uses the highest-precedence mise file in a folder', async () => {
     await using sandbox = await createGitSandbox({
         ...Object.fromEntries(MISE_PIN_FILES.map(({ file }) => [file, BUN_PIN_SETTINGS])),

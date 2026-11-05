@@ -1,5 +1,7 @@
 import { join, posix } from 'node:path';
 
+import semver from 'semver';
+
 import {
     DEPENDENCY_RULES,
     DOWNLOAD_PROTOCOLS,
@@ -167,11 +169,12 @@ function listMissingPins(session: Session, folder: string): CheckFinding[] {
             findText(session.cache, packageJsonPath) !== undefined,
     ).map(({ packageManager }) => {
         const { pin } = findMiseFilePin(session, folder, packageManager);
+        const version = semver.valid(pin?.version) ?? '<version>';
         return {
             file: packageJsonPath,
             line: 1,
             rule: DEPENDENCY_RULES.packageManagerPin,
-            message: `CI installs only a pinned ${packageManager}. Add "packageManager": "${packageManager}@${pin?.version ?? '<version>'}" to ${packageJsonPath}.`,
+            message: `CI installs only a pinned ${packageManager}. Add "packageManager": "${packageManager}@${version}" to ${packageJsonPath}.`,
         };
     });
 }
