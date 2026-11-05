@@ -2,76 +2,52 @@
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
-## What it does
-
-- `gspot init` finds the languages and frameworks in your repository, and turns on the linters, formatters, and type
-  checkers for them.
-- gspot pins every tool that it installs to one version, so every machine and CI run the same version. Node.js is yours:
-  gspot needs 22.22.3 or newer.
-- Git hooks check the staged files before each commit, and the pushed files before each push. If gspot finds problems,
-  the commit or push stops, and gspot lists each problem. A CI job checks each pull request and each push to the
-  default branch.
-- gspot writes `AGENTS.md` and rule files for your languages, frameworks, and level. The rule files tell coding agents
-  how to write code that passes the checks.
-
-The [Checks](https://generativespotting.com/reference/checks/) reference lists every check and the problems that it
-finds.
-
-## Requirements
-
-You need Git and Node.js. gspot runs on macOS, Linux, and Windows. Some checks need the Swift toolchain or a running
-Docker daemon.
-
-The setup steps here use Bun. [Install](https://generativespotting.com/start/install/) gives the commands for npm,
-pnpm, Yarn, and a repository without a `package.json`. It also lists the versions that gspot needs, and what each kind
-of check needs.
-
-## Set up
-
-`gspot init` deletes the tool config files that gspot replaces, such as `.eslintrc.json`. Commit your work first, so
-that Git keeps a copy.
-
-Run these commands in the root folder of your repository. They need a `package.json` there:
-
-```shell
-bun add --dev --exact @gspothq/cli
-bunx --no-install gspot init
-bunx --no-install gspot check
-```
-
-1. `bun add` adds gspot as a development dependency, pinned to one version.
-2. `gspot init` prints what it will change, then writes `gspot.toml`, the tool config files, the rules for coding
-   agents, and the Git hooks. Then it installs the tools and turns on the Git hooks.
-3. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and each push.
-
-With mise installed, init also installs the tools that do not come from npm or PyPI. Without mise, init names each tool
-that you must install yourself. CI stays off until you turn it on. `gspot doctor` prints the commands that turn it on
-for GitHub or GitLab.
-
-A finding is one problem that a check reports. To accept the findings that exist today, run `gspot baseline` after
-`gspot init`, and commit the `gspot.baseline.json` file that it writes. `gspot check` then fails only on new findings
-and on secrets.
-
-gspot starts at level `basic`, which checks for bugs, security problems, code style, broken docs and config, formatting,
-and a reason on each suppression. For stricter rules, add `--level all` to the init command. `gspot init` writes its
-files without asking, so run `gspot scan` first to see what init will change.
-
-Commit `gspot.toml` and the files that `gspot init` wrote. In each new clone, install the dependencies first, then run
-`gspot install`.
-
-To let a coding agent do the setup, give it the prompt from the
-[Quickstart](https://generativespotting.com/start/quickstart/).
+It finds the languages and frameworks in your repository and turns on linters, formatters, and type checkers for them.
+gspot pins each tool to one version, so every machine runs the same one. Git hooks run these checks before each commit
+and each push, and stop on a problem. For coding agents, gspot writes `AGENTS.md` and rule files that say how to write
+code that passes the checks. [Checks](https://generativespotting.com/reference/checks/) lists what each check finds.
 
 ## Try it
 
-Run this command in the root folder of any Git repository:
+To see what gspot finds and what `gspot init` changes, run this in the root folder of any Git repository:
 
 ```shell
 npx @gspothq/cli scan
 ```
 
-The scan works on a copy of your files, so nothing in your repository changes. It reports the findings, the files that
-do not match your formatting style, how long each tool took, and the plan of `gspot init`: the changes that init makes.
+The scan works on a copy of your files, so your repository stays as it was. It leaves out tests, builds, and any check
+that loads your code, and it lists what it left out. It still loads your Prettier config and runs your installed ESLint,
+Stylelint, and TypeScript, so run it only on code that you trust.
+
+## Set up
+
+You need Git, Node.js, and npm, pnpm, or Bun. You also need mise or each tool that it installs, because a missing tool
+stops every commit. Node.js 22 comes with an npm that is too old, so run `npm install --global npm@latest`.
+[Install](https://generativespotting.com/start/install/) lists the versions, and the commands for npm, pnpm, Yarn, and a
+repository without a `package.json`.
+
+`gspot init` deletes the tool config files that gspot replaces, such as `.eslintrc.json`, so commit your work first and
+Git keeps a copy. Then run these commands in the root folder of your repository:
+
+```shell
+bun add --dev --exact @gspothq/cli
+bunx --no-install gspot init
+```
+
+`gspot init` prints what it will change, then writes `gspot.toml`, the tool configs, the agent rules, and the Git hooks.
+It also installs the tools and turns on the hooks. Commit the setup files, then fix each file as you touch it.
+
+A finding is one problem that a check reports. In an existing repository, a commit fails on the old findings of the
+files that it touches. The first push fails until the checks that read the whole project pass. Some findings are a
+matter of taste, so `gspot ignore` takes the rule and a reason.
+[Clean up the first findings](https://generativespotting.com/start/quickstart/#clean-up-the-first-findings) shows both.
+
+gspot starts at level `basic`, which checks for bugs, security problems, code style, broken docs and config, formatting,
+and a reason on each suppression. For stricter rules, add `--level all` to the init command. CI stays off until you run
+`gspot set ci.enabled true`. In each new clone, install the dependencies, then run `gspot install`.
+
+To let a coding agent do the setup, give it the prompt from the
+[Quickstart](https://generativespotting.com/start/quickstart/).
 
 ## Documentation
 
