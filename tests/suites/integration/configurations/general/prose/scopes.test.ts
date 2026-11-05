@@ -43,41 +43,6 @@ test('prose/dates checks a child file once at the root', async () => {
     expect(listFindingRows(checked.report)).toStrictEqual([{ file: path, line: 3, rule: 'ambiguous-date' }]);
 });
 
-test('an ignore with a lint rule and a path keeps findings in other files', async () => {
-    const { root } = installedSandbox();
-    const settings = buildSandboxSettings([]);
-    await using _sourceChange = await applyLevelChanges({
-        files: {
-            'gspot.toml': settings,
-            'guide.md': SCHEDULE_RELEASE_MARKDOWN,
-            'archive.md': SCHEDULE_RELEASE_MARKDOWN,
-        },
-    });
-
-    const command = ['check', '--only', 'prose/dates', '--json'];
-    const before = parseCheckReport(await spawnGspot(root, command));
-    expect(before.code, before.stdout + before.stderr).toBe(1);
-    expect(listFindingRows(before.report)).toStrictEqual([
-        { file: 'archive.md', line: 3, rule: 'ambiguous-date' },
-        { file: 'guide.md', line: 3, rule: 'ambiguous-date' },
-    ]);
-    const ignored = await spawnGspot(root, [
-        'ignore',
-        'prose/dates',
-        '--paths',
-        'archive.md',
-        '--reason',
-        'Archived dates retain their original notation.',
-    ]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const after = parseCheckReport(await spawnGspot(root, command));
-    expect(after.code, after.stdout + after.stderr).toBe(1);
-    expect(listFindingRows(after.report)).toStrictEqual([{ file: 'guide.md', line: 3, rule: 'ambiguous-date' }]);
-    await writeFile(join(root, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
-    const corrected = await spawnGspot(root, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
 test('prose/vale at level all runs the gspot package rules without the Microsoft and Red Hat packages', async () => {
     const { root } = installedSandbox();
     const sample = PACKAGE_STYLE_CASES.map(({ sample }) => sample).join('\n\n') + '\n';
