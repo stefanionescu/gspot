@@ -103,7 +103,6 @@ gspot unignore javascript/eslint --rule no-console --paths "scripts/**"
 ```
 
 Each `--paths` value must still match a file, so after you delete the files that an ignore covers, leave `--paths` out.
-For an ignore with no check, `gspot unignore --paths <path>` works while the path matches a file. After that, delete the
-record from `gspot.toml` yourself, because `gspot/unmatched-paths` reports it.
+An ignore with no check goes with `gspot unignore --paths <path>`, which also works once you delete the files.
 
 `gspot check --verbose` lists each ignore that applies, with its reason.

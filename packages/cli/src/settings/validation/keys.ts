@@ -1,3 +1,4 @@
+import cliPackage from '#cli-package' with { type: 'json' };
 import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
 import { AT_TOP_LEVEL, UNDER_TABLE } from '#cli/config/settings/validation.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
@@ -16,6 +17,8 @@ import { getRequired } from '#cli/system/tables.ts';
 import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { AvailableSettings, Settings, SettingsError, SettingsTable, WrittenSetting } from '#cli/types/settings.ts';
+
+const SETTINGS_PAGE = `${cliPackage.homepage}/reference/gspot-toml/`;
 
 function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown): string {
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
@@ -110,7 +113,7 @@ function formatUnknownTable(key: string, availableKeys: string[]): string | unde
     if (tables.size === 0 || tables.has(table)) return undefined;
     const near = selectSimilarNames(table, [...tables]);
     const correction = near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
-    return `There is no ${parent}.${table} table.${correction} The ${parent} tables are ${formatCodeList([...tables])}. Run gspot list settings to see every one.`;
+    return `There is no ${parent}.${table} table.${correction} The ${parent} tables are ${formatCodeList([...tables])}. ${SETTINGS_PAGE} lists every one.`;
 }
 
 function formatUnknownField(key: string, availableKeys: string[]): string {
@@ -136,7 +139,7 @@ function formatUnknownField(key: string, availableKeys: string[]): string {
         suggestions.length === 0
             ? `No setting exists ${place}.`
             : `The settings that exist ${place} are ${formatCodeList(suggestions)}.`
-    } Run gspot list settings to see every one.`;
+    } ${SETTINGS_PAGE} lists every one.`;
 }
 
 /**

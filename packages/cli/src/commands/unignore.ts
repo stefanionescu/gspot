@@ -1,10 +1,4 @@
-import {
-    buildIgnorePaths,
-    buildUnchangedResult,
-    pathsOption,
-    readIgnoreEditContext,
-    writeSettingsEdit,
-} from '#cli/commands/edits.ts';
+import { buildUnchangedResult, pathsOption, readIgnoreEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
 import {
     BARE_UNIGNORE_MESSAGE,
     ESCAPED_GLOB_CHARACTERS,
@@ -14,6 +8,7 @@ import {
 import { RULE_OPTION } from '#cli/config/commands/help.ts';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import { removeRecordPaths } from '#cli/settings/edit.ts';
+import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { formatCount, formatNameList, quoteArgument } from '#cli/system/text.ts';
@@ -86,7 +81,7 @@ async function runUnignoreCommand(
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, {
         ...options,
-        paths: buildIgnorePaths(context, options.cwd, options.paths),
+        paths: buildArgumentPaths(context.root, options.cwd, options.paths),
     });
     const notes = listEverywhereNotes(options.check, everywhere);
     const target = formatIgnoreTarget(options);

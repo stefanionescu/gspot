@@ -128,3 +128,10 @@ test('add cloudflare writes the OpenNext types', async () => {
         types_interface: 'CloudflareEnv',
     });
 });
+
+test('add names each new check that stays off until a setting has a value', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { level: 'all' }) });
+    const result = await runGspot(sandbox.path, ['add', 'licenses']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('licenses/allowed stays off until you set licenses.allowed.');
+});

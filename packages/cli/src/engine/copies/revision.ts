@@ -60,7 +60,7 @@ function assertDependencyReady(copyRoot: string, folder: string, copyCause: stri
     )
         throw new GspotError(
             'copy',
-            `${folder} has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile.${copyCause}`,
+            `${folder === '.' ? 'The repository' : folder} has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile.${copyCause}`,
         );
 }
 

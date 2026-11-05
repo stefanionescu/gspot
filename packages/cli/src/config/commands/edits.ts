@@ -60,7 +60,7 @@ export const AGENT_FILES_LABEL = 'agent files';
 
 export const LINT_FOLDERS_LABEL = 'lint folders';
 
-export const LINT_SETUP_MESSAGE = 'old lint setup; gspot replaces it';
+export const LINT_SETUP_MESSAGE = 'may hold old lint scripts; gspot leaves it';
 
 export const NOT_CHECKED_LABEL = 'not checked';
 

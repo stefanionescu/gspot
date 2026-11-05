@@ -71,6 +71,23 @@ function listTurnedOffNotes(previous: Session | undefined, session: Session): st
     return [...new Set(turnedOff.map(({ check }) => `This turns off ${check.id}.`))];
 }
 
+function listStaysOffNotes(previous: Session | undefined, session: Session): string[] {
+    if (previous === undefined) return [];
+    const before = new Set(
+        previous.scopes.flatMap(({ configurations }) => configurations.flatMap(({ checks }) => checks)),
+    );
+    const notes = session.scopes.flatMap((scope) =>
+        scope.configurations
+            .flatMap(({ checks }) => checks)
+            .filter((check) => !before.has(check))
+            .flatMap((check) => {
+                const setting = findEmptySetting(session.settings, scope, check);
+                return setting === undefined ? [] : [`${check.id} stays off until you set ${setting}.`];
+            }),
+    );
+    return [...new Set(notes)];
+}
+
 async function writeEditedFiles(
     session: Session,
     generated: Generation,
@@ -291,6 +308,7 @@ export async function writeSettingsEdit(
         ...(await listInstallNotes(session, generated, report)),
         ...(options.notes ?? []),
         ...listTurnedOffNotes(context.session, session),
+        ...listStaysOffNotes(context.session, session),
     );
     const written = report.written.length + report.updated.length + report.deleted.length;
     if (written === 0 && !result.changed)

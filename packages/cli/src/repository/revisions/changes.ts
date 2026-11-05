@@ -53,6 +53,11 @@ const UNCHANGED_STATUS = ' ';
 
 const UNTRACKED_STATUS = '?';
 
+const REMOTE_HEAD = 'origin/HEAD';
+
+const REMOTE_HEAD_HELP =
+    ' A clone sets origin/HEAD, and git remote add does not, so run git remote set-head origin --auto.';
+
 async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
     if (COMMIT_HASH_PATTERN.test(compared)) {
         const presence = await runGit(root, [...GIT_HASH_EXISTS_ARGUMENTS, compared], { cancelSignal });
@@ -63,7 +68,7 @@ async function explainInvalidBase(root: string, compared: string, cancelSignal?:
     const help = shallow.trim() === 'true' ? SHALLOW_CLONE_HELP : '';
     throw new GspotError(
         'arguments',
-        `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.${help}`,
+        `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.${compared === REMOTE_HEAD ? REMOTE_HEAD_HELP : ''}${help}`,
     );
 }
 

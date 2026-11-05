@@ -112,3 +112,13 @@ test('an absent full base hash in a shallow clone checks every file and identifi
         'api/source.txt',
     ]);
 });
+
+test('--base origin/HEAD in a repository that never set it names the fix', async () => {
+    await using sandbox = await testdir();
+    await prepareChangedRepository(sandbox.path, { 'api/source.txt': 'before' });
+    runGitStep(sandbox.path, ['init', '-b', 'main']);
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['check', '--base', 'origin/HEAD']);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('git remote set-head origin --auto');
+});

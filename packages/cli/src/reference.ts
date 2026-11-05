@@ -109,7 +109,7 @@ export function readCliReference(): CliReference {
             .toSorted(compareText),
         yarnClassicInstall: FROZEN_INSTALLS['yarn.lock'].join(' '),
         cloneInstalls: [
-            { lockfile: 'yarn.lock', note: 'Yarn 2 on', command: YARN_BERRY_INSTALL.join(' ') },
+            { lockfile: 'yarn.lock', note: 'Yarn 2 or later', command: YARN_BERRY_INSTALL.join(' ') },
             ...Object.entries(FROZEN_INSTALLS).map(([lockfile, command]) => ({
                 lockfile,
                 note: lockfile === 'yarn.lock' ? 'Yarn 1' : undefined,
