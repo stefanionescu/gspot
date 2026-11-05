@@ -47,29 +47,6 @@ bun_scanner = "@socketsecurity/bun-security-scanner"
 [docs]
 allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The npm package page returns HTTP 403 to automated requests." }
 
-[licenses]
-allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "BlueOak-1.0.0", "Python-2.0", "MIT-0", "PSF-2.0"]
-
-[[licenses.allowed_package]]
-name = "@fontsource-variable/geist-mono"
-version = "5.3.0"
-reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist/mono.txt."
-
-[[licenses.allowed_package]]
-name = "@fontsource-variable/geist"
-version = "5.3.0"
-reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist/sans.txt."
-
-[[licenses.allowed_package]]
-name = "@fortawesome/fontawesome-free"
-version = "6.7.2"
-reason = "OFL-1.1. The docs build loads this icon font only while Chromium renders the Mermaid diagrams; none of its code ships in the site."
-
-[[licenses.allowed_package]]
-name = "lightningcss"
-version = "1.33.0"
-reason = "Vite depends on it to build the docs site; the license binds changes to its own files, and none are made."
-
 [spelling.allowed_words]
 NestJS = "NestJS is the name of the framework, so a heading keeps its capitals."
 TanStack = "TanStack Query is the name of the library, so a heading keeps its capitals."
