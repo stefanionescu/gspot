@@ -35,7 +35,12 @@ List the forms of a folder path that start a path below it, the longest first.
 */
 export function listRootPrefixes(root: string): string[] {
     const roots = [root, findCanonicalPath(root) ?? root];
-    const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', () => sep)}${sep}`]));
+    const prefixes = new Set(
+        roots.flatMap((form) => {
+            const native = form.replaceAll('/', () => sep);
+            return [`${form}/`, `${native}${sep}`, `${native}/`];
+        }),
+    );
     return [...prefixes].toSorted((first, second) => second.length - first.length);
 }
 

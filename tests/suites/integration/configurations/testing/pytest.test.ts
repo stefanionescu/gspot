@@ -43,7 +43,9 @@ test.each([...COVERAGE_LIMIT_CASES])(
             const installed = await runCommand(['uv', 'sync'], { cwd: root });
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
             const lockfile = await readFile(join(root, 'uv.lock'), 'utf8');
-            const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'pytest/tests', '--json']));
+            const checked = parseCheckReport(
+                await spawnGspot(root, ['check', '--only', 'pytest/tests', '--json', '--verbose']),
+            );
             expect(checked.code, checked.stdout + checked.stderr).toBe(code);
             expect(
                 checked.report.checks.map(({ scope, status, note, command }) => ({
