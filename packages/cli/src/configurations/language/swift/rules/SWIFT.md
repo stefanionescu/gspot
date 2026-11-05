@@ -21,34 +21,24 @@ with parameters on its own line when it hurts readability inline.
 
 <!-- level: all -->
 
-One primary top-level type per file, with small private helpers allowed beside it. Put `private` and `fileprivate`
-top-level functions above the other functions of the file. Keep overloads adjacent. Organize extensions rather than
-scattering them across files. Group SwiftUI dynamic properties by wrapper type.
+One primary top-level type per file, with small private helpers allowed beside it. Keep overloads adjacent. Organize
+extensions rather than scattering them across files. Group SwiftUI dynamic properties by wrapper type.
 
 ## Practices
 
-Use `let` by default and `var` for required mutation. Class-constrained protocols use `AnyObject`. Prefer shorthand
-types such as `[Element]`, `[Key: Value]`, or `Wrapped?`, and `Void` in function signatures. Use an optional, not a
-sentinel, for a value that the program can omit. Compare it to `nil` when only presence matters, bind it when the code
-uses the value, and chain it for one-off access.
+Use `let` by default and `var` for required mutation. Use an optional, not a sentinel, for a value that the program can
+omit. Compare it to `nil` when only presence matters, bind it when the code uses the value, and chain it for one-off
+access.
 
 A force unwrap or cast needs a proven invariant. Avoid global mutable state: prefer `static let` or a computed
 `static var` to a stored one.
 
-Use `guard` for early exits and `for ... where` for a loop with one condition. Prefer `for` to `forEach` for control
-flow or async work. Use `map`, `compactMap`, and `filter` for side-effect-free transformation. In a pattern binding, put
-`let` on each element where that avoids ambiguity.
+Prefer `for` to `forEach` for control flow or async work. Use `map`, `compactMap`, and `filter` for side-effect-free
+transformation. In a pattern binding, put `let` on each element where that avoids ambiguity.
 
 Use weak capture only when a callback must not extend the lifetime of an object it holds. Otherwise, capture the
 immutable values the callback needs. Use `#fileID` in production logs and `#filePath` only in tests and tools. Overload
 operators only with their standard meaning. Define a custom operator only for standard domain notation.
-
-### Force unwraps
-
-<!-- level: all -->
-
-When the code needs a force unwrap, put `// swiftlint:disable:next force_unwrapping - reason: <the invariant>.` on the
-line above it, as SUPPRESSIONS.md requires.
 
 ### API and ownership conventions
 
@@ -58,9 +48,8 @@ Structs keep synthesized memberwise initializers where sufficient. Value types h
 only for identity, reference semantics, lifecycle, observable state, or framework requirements. An implicitly unwrapped
 optional appears only for Apple lifecycle cases such as `@IBOutlet`, Objective-C nullability gaps, and test data.
 
-Declare the access level of every declaration to match the public contract. An extension carries no blanket access modifier. Nest a type when
-it makes sense only inside its parent. Use a caseless enum only for closely related statics. Prefer methods and
-properties to free functions, except a symmetric function that follows the standard library.
+Nest a type when it makes sense only inside its parent. Use a caseless enum only for closely related statics. Prefer
+methods and properties to free functions, except a symmetric function that follows the standard library.
 
 ## Networking
 
@@ -129,20 +118,6 @@ A static property does not repeat its declaring type: `UIColor.primary`, not `UI
 
 ### Roles
 
-These Swift role words have one meaning:
-
-| Role word        | Use when                                                                               |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `View`           | SwiftUI or UIKit view type that presents UI.                                           |
-| `ViewController` | UIKit screen controller.                                                               |
-| `ViewModel`      | Holds presentation state and user intent for one screen, flow, or cohesive surface.    |
-| `ViewState`      | Value describing screen presentation state.                                            |
-| `ViewAction`     | Typed user or lifecycle intent sent by a view.                                         |
-| `Coordinator`    | Holds navigation or flow state.                                                        |
-| `Router`         | Route mutation or destination-selection boundary, narrower than a coordinator.         |
-| `DataSource`     | UIKit list adapter that feeds rows and sections.                                       |
-| `CellModel`      | Values a reusable cell renders: strings, image references, state, and lightweight IDs. |
-
 Repository protocols use domain language, results, and operations, such as `TemplateRepository.get(id:)`. An
 implementation may name its technology, such as `HTTPTemplateRepository`, when several real variants exist. Client types
 own external API or SDK mechanics such as `TemplateAPIClient`. Coordinators own route state, destination construction,
@@ -163,9 +138,3 @@ A protocol carries no `I` prefix and no `Protocol` suffix. Name a domain role wi
 Name a capability for its behavior, often with `-ing`, such as `ProgressReporting`, `ThemeColorProviding`, or
 `LoginCoordinating`. Avoid an automatic `-able` name that describes no clear capability. `Provider`, `Repository`,
 `Client`, and `Coordinating` appear only when the protocol serves that role.
-
-Presentation identifiers provide stable interfaces for UI identity, diffable data sources, navigation, persistence, and
-tests. Name them for what they identify, not for the framework that consumes them. Give snapshot items stable
-presentation or domain IDs, never DTO identity, array offsets, or index paths. `id` suffices when the enclosing type
-supplies the context, such as `MessageRow.id`. A role-qualified name such as `selectedMessageID` or `conversationID`
-serves a scope with several identifiers.
