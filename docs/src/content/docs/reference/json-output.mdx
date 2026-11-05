@@ -4,7 +4,7 @@ description: The JSON object that every gspot command prints under `--json`.
 ---
 
 Add `--json` to any command to print its result as one JSON object on standard output. Progress messages still go to
-standard error. You can run the command from any folder of your repository.
+standard error.
 
 ```shell
 gspot check --json
@@ -12,36 +12,35 @@ gspot check --json
 
 ## Fields of every object
 
-| Field      | Meaning                                                                                  |
-| ---------- | ---------------------------------------------------------------------------------------- |
-| `version`  | The gspot version that ran, as a string.                                                 |
-| `exitCode` | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                |
-| `notes`    | Lines of text for you to read, such as the next command to run. The list is often empty. |
+| Field      | Meaning                                                                   |
+| ---------- | ------------------------------------------------------------------------- |
+| `version`  | The gspot version that ran, as a string.                                  |
+| `exitCode` | The process exit code. See [Exit codes](/reference/commands/#exit-codes). |
+| `notes`    | Lines of text for you to read, such as the next command to run.           |
 
-The other fields depend on the command. A field has the same type in every command. For example, `written` always holds
-a list of paths, and `summary` always holds a string.
+The other fields depend on the command. Within a command and mode, a command that finishes keeps the same keys.
 
 ## Command errors
 
-When a command fails, its object also has `error` and `message`, and none of the fields of the command. `message`
-describes the failure and what to do. For an unexpected failure, only `--verbose` adds `stack`, which holds the error
-message and its stack trace. `error` holds one of these codes:
+When a command fails, its object has `error` and `message` instead of the fields of the command. `message` describes the
+failure and what to do. For an unexpected failure, only `--verbose` adds `stack`, which holds the error message and its
+stack trace. `error` holds one of these codes:
 
-| Code            | What failed                                                                                                          |
-| --------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `arguments`     | Command arguments or flags, or a command that does not fit the repository, such as `init` where `gspot.toml` exists. |
-| `git`           | A Git operation.                                                                                                     |
-| `copy`          | Copying the files of a check into a temporary folder.                                                                |
-| `writing`       | Writing `gspot.toml` or a generated file.                                                                            |
-| `filesystem`    | A repository file is missing, unreadable, or at a path that gspot rejects.                                           |
-| `parse`         | A file has invalid syntax or structure, including malformed TOML in `gspot.toml`.                                    |
-| `settings`      | A parsed setting has an invalid name, value, or combination.                                                         |
-| `configuration` | A configuration that ships with gspot.                                                                               |
-| `install`       | Installing tools.                                                                                                    |
-| `tool`          | Finding or running a tool.                                                                                           |
-| `runtime`       | The running Node.js or Bun version is older than the minimum of the package.                                         |
-| `unexpected`    | An unexpected error. The message names it.                                                                           |
-| `canceled`      | A signal stopped the command. `exitCode` holds the exit code of the signal.                                          |
+| Code            | What failed                                                                                                           |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `arguments`     | Command arguments or flags, or a command that does not fit the repository, such as `init` where `gspot.toml` exists.  |
+| `git`           | A Git operation.                                                                                                      |
+| `copy`          | gspot could not make the temporary copy of your files that `gspot scan` and some checks run in. The message says why. |
+| `writing`       | Writing `gspot.toml` or a generated file.                                                                             |
+| `filesystem`    | A repository file is missing, unreadable, or at a path that gspot rejects.                                            |
+| `parse`         | A file has invalid syntax or structure, including malformed TOML in `gspot.toml`.                                     |
+| `settings`      | A parsed setting has an invalid name, value, or combination.                                                          |
+| `configuration` | A tsconfig or jsconfig that gspot cannot read, such as one that extends a package that is not installed.              |
+| `install`       | Installing tools.                                                                                                     |
+| `tool`          | Finding or running a tool.                                                                                            |
+| `runtime`       | The running Node.js or Bun version is older than the minimum of the package.                                          |
+| `unexpected`    | An unexpected error. The message names it.                                                                            |
+| `canceled`      | A signal stopped the command. `exitCode` holds the exit code of the signal.                                           |
 
 ## Generated files
 
@@ -65,7 +64,7 @@ holds paths relative to the root folder of the repository.
 | `notRun`        | One line for each check that could not run.                                                                                         |
 | `leftOut`       | The checks that a scan leaves out, because they run your code.                                                                      |
 | `cost`          | The tools, the megabytes in `.gspot/`, and the seconds in `perTool`.                                                                |
-| `plan`          | The plan that `gspot init` prints.                                                                                                  |
+| `plan`          | What `gspot init` will do, as in [`gspot init`](#gspot-init).                                                                       |
 | `settingsText`  | The text of the `gspot.toml` that init writes.                                                                                      |
 | `nextSteps`     | The commands to run next.                                                                                                           |
 | `checks`        | The result of every planned check, as in [`gspot check`](#gspot-check), with every finding.                                         |
@@ -77,20 +76,37 @@ The object of `gspot init --json` also has the [generated-file fields](#generate
 | Field          | Meaning                                                                  |
 | -------------- | ------------------------------------------------------------------------ |
 | `root`         | The repository folder.                                                   |
-| `plan`         | The plan that `init` prints.                                             |
+| `plan`         | What `init` will do.                                                     |
 | `settingsText` | The text of the new `gspot.toml`.                                        |
 | `installed`    | One line per install step that changed something, as in `gspot install`. |
 | `missing`      | What stays missing after the install, with what to do about it.          |
 | `steps`        | The commands that the install ran, as argument lists.                    |
 
-| Field of `plan`                                         | Holds                                                                                                                                      |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `level`                                                 | The level.                                                                                                                                 |
-| `configurations`                                        | One item per configuration: `configuration`, `origin`, `scopes`, `checks`, and `checksOff`.                                                |
-| `write`, `deleted`, `keep`, `change`, and `lintFolders` | One row per file: `path` and `note`.                                                                                                       |
-| `lintCommands`                                          | One row per command: `file`, `line`, `source`, `command`, `tool`, and `fix`.                                                               |
-| `carryover`                                             | One row per replaced tool config: `path`, `tool`, `covered`, `carried`, `differing`, `reasons`, `plugins`, `commandChecks`, and `dropped`. |
-| `from`                                                  | With `--from`: the `file` that `--from` names, and the `leftOutSettings`.                                                                  |
+`plan` describes what `gspot init` will do: the level, the configurations it selects, and the files it writes, deletes,
+keeps, or changes. Each file row has a `path` and a `note`.
+
+| Field of `plan`  | Holds                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `level`          | The level.                                                                                                             |
+| `configurations` | One row per configuration: `configuration`, `origin`, `scopes`, and the counts `checks` and `checksOff`.               |
+| `write`          | The files that init writes.                                                                                            |
+| `deleted`        | The tool configs that init deletes, and the tool that replaces each one.                                               |
+| `keep`           | The files that init leaves as they are, such as a CI file or a hook of another tool.                                   |
+| `change`         | The files that init edits in place, such as the block it adds to `AGENTS.md`.                                          |
+| `lintFolders`    | The folders of lint scripts, which you delete when nothing calls them.                                                 |
+| `lintCommands`   | One row per lint command that gspot replaces, with what to do: `file`, `line`, `source`, `command`, `tool`, and `fix`. |
+| `carryover`      | One row per replaced tool config, with its `path`, its `tool`, and what happens to its rules and options.              |
+| `from`           | With `--from`: the `file` that `--from` names, and the `leftOutSettings`.                                              |
+
+| Field of a `carryover` row | Holds                                          |
+| -------------------------- | ---------------------------------------------- |
+| `covered`                  | The number of rules that gspot already runs.   |
+| `carried`                  | What init copies into `gspot.toml`.            |
+| `differing`                | The options to set after init.                 |
+| `reasons`                  | The weaker values that need a reason.          |
+| `plugins`                  | What to keep with a plugin record.             |
+| `commandChecks`            | What to keep with a command check of your own. |
+| `dropped`                  | What init leaves out.                          |
 
 ## `gspot install`
 
@@ -107,59 +123,86 @@ The object of `gspot install --json` also has the [generated-file fields](#gener
 
 ## `gspot check`
 
-`gspot check --json` returns the report of the run. `exitCode` says whether the checks passed.
+`gspot check --json` returns the report of the run, and `exitCode` says whether the checks passed.
 
-To see how the generated files differ from `gspot.toml` without writing them, run
-`gspot check --only gspot/generated-files --verbose --json`. The finding of a changed file includes `diff`, a unified
-diff of the generated content or of the gspot block. When only the file mode changed, the finding shows the old and the
-new mode. Without `--verbose`, gspot does not compute these diffs.
-
-| Field             | Meaning                                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `stages`          | The stages that ran, such as `commit` and `push`.                                                                               |
-| `started`         | Start time as an ISO 8601 timestamp.                                                                                            |
-| `duration`        | Elapsed run time in milliseconds.                                                                                               |
-| `comparison`      | When present, the content that the run read, `working-tree`, `index`, or `commit`, and its reference.                           |
-| `checks`          | The result of each planned check, with its findings. A check that no file selects appears only with `--verbose`.                |
-| `skippedCount`    | The number of skipped checks for each `cause`, the checks that no file selects included.                                        |
-| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                                                     |
-| `unstagedChanges` | The number of changed files that the run left out because it read only the staged files.                                        |
-| `partial`         | Whether the run selected only staged files, changed files, or named paths.                                                      |
-| `fixes`           | When present, the changed files, files restored after broken fixes, files skipped for merge-conflict markers, and fixer errors. |
-| `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.                                              |
+| Field             | Meaning                                                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stages`          | The stages that ran, such as `commit` and `push`.                                                                                             |
+| `started`         | Start time as an ISO 8601 timestamp.                                                                                                          |
+| `duration`        | Elapsed run time in milliseconds.                                                                                                             |
+| `comparison`      | The content that a run with `--staged` or `--base` read, `working-tree`, `index`, or `commit`, and its reference, or `null`.                  |
+| `checks`          | The result of each planned check, with its findings. A check that no file selects appears only with `--verbose`.                              |
+| `skippedCount`    | The number of skipped checks for each `cause`, the checks that no file selects included.                                                      |
+| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                                                                   |
+| `unstagedChanges` | The number of changed files that the run left out because it read only the staged files.                                                      |
+| `partial`         | Whether the run selected only staged files, changed files, or named paths.                                                                    |
+| `fixes`           | The changed files, files restored after broken fixes, files skipped for merge-conflict markers, and fixer errors of a `--fix` run, or `null`. |
+| `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.                                                            |
 
 Each item of `checks` has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`. It can also have these
-fields: `help`, which says how to fix its findings; `fixCommand`, the `gspot check --fix` command that fixes them;
-`files`; `note`; `rerun`; `command`; and `cause`, for a skipped check. With `--verbose`, a check that stopped with an
-internal error also has `stack`, which holds the error message and its stack trace.
+fields:
 
-`status` holds `passed`, `failed`, `missing`, `error`, `canceled`, or `skipped`. `missing` and `error` mean that the
-run did not finish, and it exits with code `2`. `canceled` marks a check that a signal stopped, and the run then exits
-with the code of that signal. `cause` holds `system`, `replaced`, `setting`, `condition`, `level`, `ignore`, or `no-files`.
+| Field of a `checks` item | Holds                                                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `help`                   | How to fix its findings.                                                                              |
+| `fixCommand`             | The `gspot check --fix` command that fixes them.                                                      |
+| `files`                  | The files that the check read, for a check that lists them.                                           |
+| `note`                   | Why the check was skipped or could not run.                                                           |
+| `rerun`                  | The command that runs only this check again.                                                          |
+| `command`                | With `--verbose`, the command line that gspot ran.                                                    |
+| `cause`                  | Why a skipped check did not run.                                                                      |
+| `stack`                  | With `--verbose`, the error message and the stack trace of a check that stopped on an internal error. |
 
-Each finding has `check`, `file`, `message`, `fixable`, and `explain`. The `explain` field holds the command that
-explains its check or lint rule. A finding can also have `line`, `column`, `rule`, and `help`. Its `help` appears only
-when it differs from the `help` of its check. Lines and columns count from `1`. A finding without a place in a file can
-have an empty `file`.
+`status` holds one of these values. `missing` and `error` mean that the run did not finish, and it exits with code `2`.
+
+| `status`   | The check                                                                |
+| ---------- | ------------------------------------------------------------------------ |
+| `passed`   | Found nothing.                                                           |
+| `failed`   | Reported findings.                                                       |
+| `missing`  | Needs a tool or an environment that is not installed.                    |
+| `error`    | Could not finish. `note` says why.                                       |
+| `canceled` | Was stopped by a signal, and the run exits with the code of that signal. |
+| `skipped`  | Did not run, for the reason in `cause`.                                  |
+
+| `cause`     | The check did not run because                                                        |
+| ----------- | ------------------------------------------------------------------------------------ |
+| `system`    | The operating system cannot run it.                                                  |
+| `replaced`  | Another check runs in its place, such as `nextjs/tsc` for `typescript/tsc`.          |
+| `setting`   | A setting that it needs is empty.                                                    |
+| `condition` | The repository does not meet its condition, such as no TypeScript for `vue/vue-tsc`. |
+| `level`     | It runs only at level `all`.                                                         |
+| `ignore`    | An ignore turns it off.                                                              |
+| `no-files`  | No file of the run matches it.                                                       |
+
+Each finding has `check`, `file`, `message`, `fixable`, and `explain`, which holds the command that explains its check or
+lint rule. It can also have these fields, and a finding without a place in a file can have an empty `file`:
+
+| Field of a finding | Holds                                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `line`, `column`   | The place in the file, counted from `1`.                                                                       |
+| `rule`             | The lint rule.                                                                                                 |
+| `fingerprint`      | The ID of this one finding, from a tool that gives one, such as Gitleaks. `gspot ignore --rule` also takes it. |
+| `help`             | How to fix this finding, when it differs from the `help` of its check.                                         |
+| `diff`             | With `--verbose`, the unified diff of a `gspot/generated-files` finding.                                       |
 
 `gspot check --hook pre-push --json` checks the tree of each pushed commit. It returns these fields:
 
 - `revisions`: one item for each tree, with `hash`, `refs`, `commits`, `shallow`, and its `report`.
 - `skipped`: the pushed refs that gspot did not check, with `ref`, `hash`, and `reason`.
-- `canceled.pendingRefs`: present when a signal stopped the run.
+- `canceled`: `pendingRefs` when a signal stopped the run, and otherwise `null`.
 
 ## Commands that change settings
 
-`add`, `remove`, `set`, `unset`, `ignore`, and `unignore` return these fields. When the command writes `gspot.toml` or
-a generated file, the object also has the [generated-file fields](#generated-files). When an edit leaves `gspot.toml`
-and every generated file unchanged, the object has no generated-file fields.
+`add`, `remove`, `set`, `unset`, `ignore`, and `unignore` return these fields and the [generated-file fields](#generated-files).
+An edit that leaves `gspot.toml` and every generated file unchanged prints `written`, `updated`, `deleted`, and `unchanged`
+as empty lists.
 
 | Field     | Meaning                                   |
 | --------- | ----------------------------------------- |
 | `changed` | Whether the command changed `gspot.toml`. |
 | `summary` | One sentence about the result.            |
 
-Do not read `changed` as a sign that the generated files changed. A command that leaves `gspot.toml` unchanged can
+Do not read `changed` as a sign that the generated files changed, because a command that leaves `gspot.toml` unchanged can
 still rewrite generated files that are out of date.
 
 ## `gspot list`
@@ -181,54 +224,60 @@ Each item of `checks` has `check`, `scope`, and `status`: `on`, or `skipped` wit
 | ---------- | --------------------------- |
 | `settings` | Each setting of each scope. |
 
-Each item has `setting`, `source`, and `scope`. It also has `value` when a default or `gspot.toml` gives one. `source`
-has a `kind` and a `name` that say where the value comes from: `default` and `gspot`, `configuration` and its name,
-`root` and `gspot.toml`, `scope` and the path of the scope that sets it, or `unset`. When a change of the setting needs
-a reason, `reasonFor` names that change, such as `raising`.
+Each item has `setting`, `source`, and `scope`. It also has `value` when a default or `gspot.toml` gives one. When a change
+of the setting needs a reason, `reasonFor` names that change, such as `raising`. `source` says where the value comes from:
+
+| `kind`          | `name`                              |
+| --------------- | ----------------------------------- |
+| `default`       | `gspot`                             |
+| `configuration` | The name of the configuration.      |
+| `root`          | `gspot.toml`                        |
+| `scope`         | The path of the scope that sets it. |
+| `unset`         | Empty.                              |
 
 ## `gspot explain`
 
-`gspot explain <subject> [rule] --json` returns `kind`, `subject`, and the fields of that kind. To explain a lint rule,
-put its name after its check, such as `gspot explain javascript/eslint no-console --json`.
+`gspot explain <subject> [rule] --json` returns `kind`, `subject`, and the fields of that kind. To explain a lint rule, put
+its name after its check, such as `gspot explain javascript/eslint no-console --json`.
 
 ### `check`
 
-| Field           | Meaning                                                                        |
-| --------------- | ------------------------------------------------------------------------------ |
-| `check`         | The check ID.                                                                  |
-| `configuration` | When present, the configuration of a shipped check.                            |
-| `command`       | When present, the command of a `[[command_check]]`.                            |
-| `paths`         | When present, the paths of a `[[command_check]]`.                              |
-| `stage`         | The stage that runs the check.                                                 |
-| `level`         | The level that turns the check on.                                             |
-| `summary`       | What the check looks for.                                                      |
-| `why`           | Why it matters.                                                                |
-| `help`          | How to fix a finding.                                                          |
-| `condition`     | When present, what must hold for the check to run.                             |
-| `crashPattern`  | When present, the output that marks a crash of the tool.                       |
-| `runInCopy`     | When present, whether the check runs on a copy of the files.                   |
-| `minVersions`   | The oldest version of each runtime or tool that the check needs.               |
-| `turnOff`       | The `gspot ignore` command for some paths, and for one lint rule when present. |
-| `settingNames`  | The settings that change the check.                                            |
-| `ruleFiles`     | The rule files that describe what the check enforces.                          |
-| `selected`      | When present, whether a scope selects the configuration of the check.          |
-| `ignores`       | The ignores of `gspot.toml` that name the check, with `reason` and `command`.  |
+| Field           | Meaning                                                                                      |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| `check`         | The check ID.                                                                                |
+| `configuration` | The configuration of a shipped check, or `null`.                                             |
+| `command`       | The command of a `[[command_check]]`, or `null`.                                             |
+| `paths`         | The paths of a `[[command_check]]`, or `null`.                                               |
+| `stage`         | The stage that runs the check.                                                               |
+| `level`         | The level that turns the check on.                                                           |
+| `summary`       | What the check looks for.                                                                    |
+| `why`           | Why it matters.                                                                              |
+| `help`          | How to fix a finding.                                                                        |
+| `condition`     | What must hold for the check to run, or `null`.                                              |
+| `crashPattern`  | The output that marks a crash of the tool, or `null`.                                        |
+| `runInCopy`     | Whether the check runs on a copy of the files, or `null`.                                    |
+| `minVersions`   | The oldest version of each runtime or tool that the check needs.                             |
+| `turnOff`       | The `gspot ignore` commands: `paths` for some paths, and `rule` for one lint rule or `null`. |
+| `settingNames`  | The settings that change the check.                                                          |
+| `ruleFiles`     | The rule files that describe what the check enforces.                                        |
+| `selected`      | Whether a scope selects the configuration of the check, or `null`.                           |
+| `ignores`       | The ignores of `gspot.toml` that name the check, with `reason` and `command`.                |
 
 ### `lint-rule`
 
 | Field           | Meaning                                                                      |
 | --------------- | ---------------------------------------------------------------------------- |
-| `tool`          | When present, the tool that reports the rule.                                |
+| `tool`          | The tool that reports the rule, or `null`.                                   |
 | `rule`          | The rule ID.                                                                 |
 | `check`         | The check that runs the rule.                                                |
 | `page`          | The rule's documentation link, or `null`.                                    |
 | `description`   | The rule's description, or `null`.                                           |
-| `why`           | When present, why the rule matters.                                          |
-| `fix`           | When present, how to fix a finding.                                          |
-| `example`       | When present, an example.                                                    |
-| `explanation`   | When present, the full explanation, which needs `--verbose`.                 |
+| `why`           | Why the rule matters, or `null`.                                             |
+| `fix`           | How to fix a finding, or `null`.                                             |
+| `example`       | An example, or `null`.                                                       |
+| `explanation`   | With `--verbose`, the full explanation, and otherwise `null`.                |
 | `turnOff`       | The `gspot ignore` commands for the rule, `everywhere` and for some `paths`. |
-| `changeOptions` | When present, the `gspot set` command that changes the options of the rule.  |
+| `changeOptions` | The `gspot set` command that changes the options of the rule, or `null`.     |
 
 ### `configuration`
 
@@ -253,41 +302,41 @@ put its name after its check, such as `gspot explain javascript/eslint no-consol
 | `setting`          | The setting name.                                                                                                             |
 | `type`             | Its type.                                                                                                                     |
 | `description`      | What it does.                                                                                                                 |
-| `default`          | When present, its default.                                                                                                    |
-| `defaultAll`       | When present, its default at level `all`.                                                                                     |
-| `languageDefaults` | When present, its default per language.                                                                                       |
-| `reasonFor`        | When present, the change that needs a reason.                                                                                 |
+| `default`          | Its default, or `null`.                                                                                                       |
+| `defaultAll`       | Its default at level `all`, or `null`.                                                                                        |
+| `languageDefaults` | Its default per language, or `null`.                                                                                          |
+| `reasonFor`        | The change that needs a reason, or `null`.                                                                                    |
 | `scopes`           | Each scope, with `scope`, `default`, `value`, `source` as in `gspot list settings`, and, when present, `readBy` and `reason`. |
 
 ### `path`
 
-| Field            | Meaning                                    |
-| ---------------- | ------------------------------------------ |
-| `path`           | The path from the root of the repository.  |
-| `scope`          | Its scope.                                 |
-| `fileKind`       | Its kind, such as `source`.                |
-| `fileKindOrigin` | When present, what set the kind.           |
-| `tags`           | Its tags.                                  |
-| `configurations` | The selected configurations that check it. |
-| `checks`         | The checks that read it.                   |
-| `ignores`        | The ignores that cover it.                 |
-| `unchecked`      | When present, why no check reads it.       |
-| `remedy`         | When present, what to do about it.         |
+| Field            | Meaning                                                                       |
+| ---------------- | ----------------------------------------------------------------------------- |
+| `path`           | The path from the root of the repository.                                     |
+| `scope`          | Its scope.                                                                    |
+| `fileKind`       | Its kind: `source`, `generated`, `vendored`, or `binary`.                     |
+| `fileKindOrigin` | What set the kind.                                                            |
+| `tags`           | The file types that gspot reads the file as, such as `typescript` or `shell`. |
+| `configurations` | The selected configurations that check it.                                    |
+| `checks`         | The checks that read it.                                                      |
+| `ignores`        | The ignores that cover it.                                                    |
+| `unchecked`      | Why no check reads it, or `null`.                                             |
+| `remedy`         | What to do about it, or `null`.                                               |
 
 ## `gspot doctor`
 
-`gspot doctor --json` returns the state of the setup. `exitCode` holds `1` when a tool, an environment, or a
-hook needs you to act.
+`gspot doctor --json` returns the state of the setup. `exitCode` holds `1` when a tool, an environment, or a hook needs
+you to act, or when the repository pins another gspot version.
 
-| Field           | Meaning                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------------------- |
-| `tools`         | Each tool with `name`, `kind`, and `state`, and `want`, `found`, `path`, and `help` when known. |
-| `environments`  | Project environments that a check needs and that are missing.                                   |
-| `hooks`         | The state of the Git hooks.                                                                     |
-| `ci`            | The state of the CI workflow.                                                                   |
-| `ruleFileCount` | The number of rule files for coding agents.                                                     |
-| `submodules`    | Submodule paths, whose contents gspot does not read.                                            |
-| `pin`           | The gspot version that the repository pins, or `null`.                                          |
+| Field           | Meaning                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `tools`         | Each tool with `name`, `kind`, and `state`, and `want`, `found`, `path`, `help`, `note`, and `minimumVersion` when known. |
+| `environments`  | Project environments that a check needs and that are missing.                                                             |
+| `hooks`         | The state of the Git hooks: `ready`, `tool`, and `lines`.                                                                 |
+| `ci`            | The state of the CI workflow: `enabled`, `provider`, and `file`.                                                          |
+| `ruleFileCount` | The number of rule files for coding agents.                                                                               |
+| `submodules`    | Submodule paths, whose contents gspot does not read.                                                                      |
+| `pin`           | The gspot version that the repository pins, or `null`.                                                                    |
 
-`hooks` has `ready`. When gspot knows them, it also has `tool`, the program that runs the hooks, and `lines`, what to
-do about them. `ci` has `enabled`, and when gspot knows them, `provider` and the workflow `file`.
+In `hooks`, `tool` is the program that runs the hooks or `null`, and `lines` says what to do about them, or is empty. In
+`ci`, `provider` and the workflow `file` are `null` when gspot does not know them.
