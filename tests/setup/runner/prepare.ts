@@ -16,7 +16,7 @@ import {
 } from '#tests/config/setup/sandboxes.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
 import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
-import { writeNodeCommand } from '#tests/setup/system/fakes.ts';
+import { writeLauncher } from '#tests/setup/system/fakes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 
@@ -29,11 +29,10 @@ await runNpmPack(TEST_RUN_FOLDER, [
 const paths = await installTestTools();
 
 if (process.argv[2] !== 'e2e') {
-    await writeNodeCommand(
-        TEST_RUN_FOLDER,
-        GSPOT_LAUNCHER_PATH,
+    await writeLauncher(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH), [
+        'node',
         join(REPOSITORY_ROOT, 'packages/cli', cliPackage.bin.gspot),
-    );
+    ]);
     await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 }
 

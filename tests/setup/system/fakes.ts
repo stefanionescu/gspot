@@ -21,7 +21,11 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import type { ProgramName } from '#tests/types/setup.ts';
 
-async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
+/**
+Write a Unix and a Windows command that runs a fixed command before the arguments it gets. Name it without the Windows
+suffix.
+*/
+export async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
     const windowsCommand = command.map((word) => '"' + word.replaceAll('"', '""').replaceAll('%', '%%') + '"');
@@ -101,16 +105,6 @@ export async function writeProgramCommand(
 ): Promise<string> {
     const target = join(folder, path);
     await writeLauncher(target, buildProgramCommand(program, ...programArguments));
-    return dirname(target);
-}
-
-/**
-Write a Unix and a Windows command that runs a script on the Node.js of `PATH` before the arguments it gets. Name it
-without the Windows suffix, and return the folder to put on `PATH`.
-*/
-export async function writeNodeCommand(folder: string, path: string, script: string): Promise<string> {
-    const target = join(folder, path);
-    await writeLauncher(target, ['node', script]);
     return dirname(target);
 }
 
