@@ -83,12 +83,21 @@ function convertPrettierFormat(options: PrettierStyle): TomlTable {
     };
 }
 
-function keepDiffering(paths: readonly string[], format: TomlTable, fields: TomlTable): TomlTable[] {
+function keepDiffering(
+    paths: readonly string[],
+    format: TomlTable,
+    { fields, trackedPaths }: { fields: TomlTable; trackedPaths: readonly string[] },
+): TomlTable[] {
     const differing = Object.entries(format).filter(([key, value]) => fields[key] !== value);
-    return differing.length === 0 ? [] : [{ paths: [...paths], ...Object.fromEntries(differing) }];
+    const tracked = paths.filter((glob) => trackedPaths.some(buildPathMatcher([glob])));
+    return differing.length === 0 || tracked.length === 0 ? [] : [{ paths: tracked, ...Object.fromEntries(differing) }];
 }
 
-function buildFormatterOverrides(fields: TomlTable, repository: Repository): TomlTable[] {
+function buildFormatterOverrides(
+    fields: TomlTable,
+    repository: Repository,
+    trackedPaths: readonly string[],
+): TomlTable[] {
     const tags = new Set(repository.files.filter((file) => file.kind === 'source').flatMap((file) => file.tags));
     const ruff = readRuffOptions(repository.root)?.options;
     const printWidth = readEditorconfig(repository.root)?.printWidth;
@@ -96,9 +105,9 @@ function buildFormatterOverrides(fields: TomlTable, repository: Repository): Tom
     return [
         ...FORMATTER_DEFAULTS.filter(({ tag }) => tags.has(tag)).flatMap(({ tag, paths, format }) => {
             const carried = tag === PYTHON_TAG && ruff !== undefined ? convertRuffFormat(ruff) : {};
-            return keepDiffering(paths, { ...format, ...written, ...carried }, fields);
+            return keepDiffering(paths, { ...format, ...written, ...carried }, { fields, trackedPaths });
         }),
-        ...keepDiffering(SCRIPT_FILES, detectScriptIndent(repository), fields),
+        ...keepDiffering(SCRIPT_FILES, detectScriptIndent(repository), { fields, trackedPaths }),
     ];
 }
 
@@ -354,7 +363,7 @@ export function readScopeFormat(
     const fields = options === null ? {} : convertPrettierFormat(options);
     const overrides = [
         ...buildPrettierOverrides(options, scopePath, draft.trackedPaths),
-        ...(scopePath === '' ? buildFormatterOverrides(fields, repository) : []),
+        ...(scopePath === '' ? buildFormatterOverrides(fields, repository, draft.trackedPaths) : []),
     ];
     const table: TomlTable = { ...fields, ...(overrides.length > 0 && { override: overrides }) };
     return Object.values(table).every((value) => value === undefined) ? {} : { format: table };

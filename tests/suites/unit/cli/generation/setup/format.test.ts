@@ -22,7 +22,8 @@ import {
     WORKSPACE_PYTHON_FILES,
 } from '#tests/config/generation/settings.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { runGspot, runInit } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
 test.each(INVALID_PRETTIER_OPTIONS)(
@@ -226,9 +227,18 @@ test('init gives code without a style config the defaults of each formatter', as
         override: [
             { paths: ['**/*.py'], indent_width: 4, print_width: 88 },
             { paths: ['**/*.swift'], indent_width: 4, print_width: 120 },
-            { paths: ['**/*.sql', '**/*.pgsql', '**/*.psql'], indent_width: 4 },
+            { paths: ['**/*.sql'], indent_width: 4 },
         ],
     });
+});
+
+test('init names only the script extension that the repository tracks, because gspot/unmatched-paths reports the other', async () => {
+    await using sandbox = await createGitSandbox({
+        'run.sh': 'main() {\n    echo ready\n}\n',
+        'source.ts': 'export {};\n',
+    });
+    const { settings } = await runInit(sandbox.path, ['--configurations', 'format']);
+    expect(settings).toHaveProperty('format.override', [{ paths: ['**/*.sh'], indent_width: 4 }]);
 });
 
 test.each([
