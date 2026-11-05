@@ -28,7 +28,7 @@ and temporary notes out of shipped content.
 Use imperatives for requirements and label optional steps. Put a condition before its action. Name the subject instead
 of relying on an ambiguous pronoun.
 
-Dates shown to people include their time zone; machine values retain their required format.
+Times shown to people include their time zone; machine values retain their required format.
 
 ## Words to leave out
 
