@@ -8,7 +8,7 @@ import {
     RUFF_ALL_SELECTOR,
     RUFF_ANY_PREFIX,
 } from '#cli/config/repository/setup.ts';
-import { RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
+import { RUFF_IMPORT_ORDER_SELECTOR, RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { printedRulesSchema } from '#cli/schemas/generation.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -80,7 +80,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
     const selected = [...(lint.select ?? []), ...(lint['extend-select'] ?? [])];
     const running = new RegExp(String.raw`^(?:${shipped.join('|')})(?:\d|$)`, 'u');
     const added = selected.filter((rule) => !running.test(rule));
-    const rules = added.filter((rule) => RUFF_SELECTOR.test(rule));
+    const rules = added.filter((rule) => RUFF_SELECTOR.test(rule) && !RUFF_IMPORT_ORDER_SELECTOR.test(rule));
     const held = [...shipped, ...rules].join('|').replace(RUFF_ALL_SELECTOR, () => RUFF_ANY_PREFIX);
     const runsAfterInit = new RegExp(String.raw`^(?:${held})(?:\d|$)`, 'u');
     const perFile = [lint['per-file-ignores'], lint['extend-per-file-ignores']].flatMap((table) =>
@@ -106,7 +106,7 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
             ...Object.entries({ '': options, 'lint.': options.lint, 'format.': options.format }).flatMap(
                 ([prefix, table]) => (table?.dropped ?? []).map((key) => `${prefix}${key}`),
             ),
-            ...added.filter((rule) => !RUFF_SELECTOR.test(rule)),
+            ...added.filter((rule) => !rules.includes(rule)),
             ...turnedOff.map(({ rule }) => rule).filter((rule) => !RUFF_SELECTOR.test(rule)),
         ],
     };
