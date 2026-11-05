@@ -184,16 +184,26 @@ function listMissingEnvironments(session: Session): string[] {
 
 function formatDoctorReport(
     report: DoctorReport,
-    states: { hooks: string; ci: string; broken: DoctorTool[]; commandPrograms: ReadonlySet<string> },
+    states: {
+        hooks: string;
+        ci: string;
+        broken: DoctorTool[];
+        commandPrograms: ReadonlySet<string>;
+        systemTools: ReadonlySet<string>;
+    },
 ): string {
     const programs = states.broken.filter((tool) => tool.kind === 'program');
-    const installable = programs.filter((tool) => !states.commandPrograms.has(tool.name));
+    const systemTools = programs.filter((tool) => states.systemTools.has(tool.name));
+    const installable = programs.filter(
+        (tool) => !states.commandPrograms.has(tool.name) && !states.systemTools.has(tool.name),
+    );
     const aheadOfPin = report.tools.filter((tool) => tool.kind === 'program' && tool.state === 'newer');
     const packages = states.broken.length - programs.length;
     const ready = report.tools.filter((tool) => tool.kind === 'program').length - programs.length;
     const lines = [
         ...formatTools([...programs, ...aheadOfPin]),
         ...(installable.length === 0 ? [] : ['Run gspot install to install the missing or outdated tools.']),
+        ...systemTools.flatMap((tool) => tool.help ?? []),
         ...(packages === 0 ? [] : [`missing npm packages: ${String(packages)} (run gspot install)`]),
         `tools: ${String(ready)} ready`,
         ...report.environments.map(
@@ -232,6 +242,11 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
             ci: ciText,
             broken,
             commandPrograms: listCommandPrograms(session),
+            systemTools: new Set(
+                session.toolConfigurations.flatMap(({ tools }) =>
+                    tools.filter((tool) => tool.system === true).map((tool) => tool.name),
+                ),
+            ),
         }),
         json: report,
         exitCode: hasFindings ? EXIT_FINDINGS : 0,

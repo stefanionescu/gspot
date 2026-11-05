@@ -11,6 +11,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import * as processes from '#cli/system/processes.ts';
+import * as locate from '#cli/tools/locate.ts';
 import { findPackagePin, getTool, listDistinctTools } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
@@ -288,4 +289,17 @@ test.each([
     const report = doctorOutputSchema.parse(JSON.parse(result.stdout));
     const names = report.tools.map(({ name }) => name).filter((name) => ['swift', 'xcodebuild'].includes(name));
     expect(names).toStrictEqual([...tools]);
+});
+
+test('doctor prints the install help of a missing system tool, because gspot install cannot install it', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['pytest']),
+        'test_main.py': 'def test_value():\n    assert True\n',
+    });
+    const { listExecutablePaths } = locate;
+    using _paths = spyOn(locate, 'listExecutablePaths').mockImplementation(async (root, program, search) =>
+        program === 'pytest' ? { paths: [] } : await listExecutablePaths(root, program, search),
+    );
+    const result = await runGspot(sandbox.path, ['doctor']);
+    expect(result.stdout).toContain('Run python -m pip install pytest.');
 });
