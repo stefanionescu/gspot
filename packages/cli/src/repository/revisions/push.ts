@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
@@ -92,7 +92,7 @@ async function readPeeledCommits(
 
 async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): Promise<Set<string>> {
     const path = await readGitText(root, GIT_SHALLOW_FILE_ARGUMENTS, { cancelSignal });
-    const text = await readFile(resolve(root, path.trim()), 'utf8');
+    const text = readFileSync(resolve(root, path.trim()), 'utf8');
     return new Set(text.trim().split('\n'));
 }
 
