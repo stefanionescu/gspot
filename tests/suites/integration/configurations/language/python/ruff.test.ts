@@ -296,3 +296,20 @@ test('Ruff counts parameters with maximum default', async () => {
         maximum === defaultMaximum ? [scenario.finding] : [],
     );
 });
+
+test('--fix keeps a side-effect import, and a suppression at level basic', async () => {
+    const { root } = installedSandbox();
+    const source = 'import readline\n\nVALUE = 1  # noqa: E501\n';
+    await using _sourceChange = await writeSandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(RUFF_SANDBOX.files, {
+            'gspot.toml': buildSandboxSettings(['python'], { level: 'basic' }),
+            'sample.py': source,
+        }),
+    );
+    const fixed = parseCheckReport(
+        await spawnGspot(root, ['check', 'sample.py', '--only', 'python/ruff', '--fix', '--json']),
+    );
+    expect(await readFile(join(root, 'sample.py'), 'utf8')).toBe(source);
+    expect(fixed.report.checks.flatMap(({ findings }) => findings.map(({ rule }) => rule))).toStrictEqual(['F401']);
+});

@@ -95,7 +95,7 @@ function buildRootBlock(
     return {
         fields: {
             files: eslintFiles.code,
-            linterOptions: { reportUnusedDisableDirectives: 'error' },
+            linterOptions: { reportUnusedDisableDirectives: blockWriter.level === 'all' ? 'error' : 'off' },
             languageOptions: { ecmaVersion: 'latest' },
             settings: { 'import-x/ignore': buildImportIgnores(ignoredGlobs) },
             rules: {

@@ -106,6 +106,20 @@ test('install refuses options for a rule of level all at level basic, and ESLint
     });
 });
 
+test('--fix keeps a suppression for a rule that level basic does not run', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'basic' }),
+        'package.json': '{"private":true,"type":"module"}',
+        'source.js': '',
+    });
+    const eslint = await buildEslint(sandbox.path, { fix: true });
+    const source =
+        '// eslint-disable-next-line max-lines-per-function -- reason: The table reads best in one place.\nexport const value = 1;\n';
+    const [fixed] = await eslint.lintText(source, { filePath: 'source.js' });
+    expect(fixed?.output).toBeUndefined();
+    expect(fixed?.messages).toStrictEqual([]);
+});
+
 test.each(LEVELS)('empty-object fallbacks are reported at level %s and pass after correction', async (level) => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], { level });

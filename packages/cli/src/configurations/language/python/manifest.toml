@@ -50,7 +50,7 @@ version = "0.13.1"
 [[tool]]
 min_version = "0.9.0"
 name = "ruff"
-off = { always = ["W291", "W292", "W293", "W391", "COM812", "COM819", "D203", "D206", "D213", "D300", "D417", "I002", "N806", "N815", "N816", "N999", "ISC001", "ISC002", "Q000", "Q001", "Q002", "Q003", "RUF023", "W191"] }
+off = { basic = ["RUF100"], always = ["W291", "W292", "W293", "W391", "COM812", "COM819", "D203", "D206", "D213", "D300", "D417", "I002", "N806", "N815", "N816", "N999", "ISC001", "ISC002", "Q000", "Q001", "Q002", "Q003", "RUF023", "W191"] }
 pypi = "ruff"
 replace = ["ruff.toml", ".ruff.toml"]
 rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"

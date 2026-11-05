@@ -36,6 +36,9 @@ import { isInScope } from '#cli/system/paths.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
+// F401 reports a side-effect import as unused, such as import readline, and its fix deletes the import.
+const RUFF_UNFIXABLE = ['F401'];
+
 function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string): string[] {
     const shared = convertToGlobs(planned.ignoreSections).filter(
         (pattern) =>
@@ -143,6 +146,7 @@ function buildRuffFile(planned: PlannedConfig): string {
             'explicit-preview-rules': true,
             select: [...ruffRules, ...getTable(planned.scope.settings, 'tools.ruff').rules],
             ignore: listDisabledRules(planned),
+            unfixable: RUFF_UNFIXABLE,
             isort: RUFF_ISORT,
             'flake8-tidy-imports': RUFF_TIDY_IMPORTS,
             mccabe: { 'max-complexity': getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'python') },
