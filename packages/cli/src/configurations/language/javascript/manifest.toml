@@ -343,6 +343,7 @@ needs = ["dependencies", "project-code"]
 runs = "scope"
 stage = "push"
 summary = "Finds files, exports, and dependencies nothing uses."
+when = { filenames = ["package.json"] }
 why = "Teams read, maintain, and ship dead code for nobody."
 
 [check.output]

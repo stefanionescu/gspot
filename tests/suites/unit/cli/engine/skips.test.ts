@@ -174,6 +174,18 @@ test('pytest/tests skips a scope that holds no test file', async () => {
     ]);
 });
 
+test('javascript/knip skips a TypeScript repository that has no package.json', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        'tsconfig.json': '{}',
+        'main.ts': 'export const value = 1;\n',
+    });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['javascript/knip'] });
+    expect(planned.map(({ skip }) => skip)).toStrictEqual([
+        { cause: 'condition', note: expect.stringContaining('package.json') as string },
+    ]);
+});
+
 test('a check for other systems names the host in its skip note', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
