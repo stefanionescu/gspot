@@ -119,7 +119,6 @@ You can edit the other keys of that file.
   types alone.
 - Write a JavaScript module that a generated config loads as a TypeScript source in the `files/` folder of its
   configuration. The manifest names it as the `source` of its config file, and gspot transpiles it.
-- Do not use subagents or parallel agents unless asked in the conversation.
 - Keep the owner's descriptions word for word: the first sentence of `README.md`, and the `description` in
   `packages/cli/package.json`.
 
