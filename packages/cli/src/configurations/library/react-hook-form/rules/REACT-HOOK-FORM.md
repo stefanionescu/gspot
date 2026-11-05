@@ -39,11 +39,3 @@ Read this rule when you change a form built with React Hook Form.
   form's error state.
 - When the project uses an internationalization library, pass error messages through its message API rather than
   building translated sentences from fragments.
-
-## References
-
-- [useForm](https://react-hook-form.com/docs/useform)
-- [Resolvers](https://github.com/react-hook-form/resolvers)
-- [Controller](https://react-hook-form.com/docs/usecontroller/controller)
-- [useFieldArray](https://react-hook-form.com/docs/usefieldarray)
-- [handleSubmit](https://react-hook-form.com/docs/useform/handlesubmit)
