@@ -4,10 +4,6 @@ Read this rule when you change UIKit screens, lists, or cells.
 
 ## Framework boundaries
 
-Keep each screen and component in the presentation framework the project chose for it. When the two frameworks meet, use
-`UIViewRepresentable`, `UIViewControllerRepresentable`, or `UIHostingController` at the presentation boundary
-appropriate to the direction of integration.
-
 Keep UI updates on the main actor. Translate framework callbacks into application operations without moving network,
 persistence, or authorization work into reusable views.
 
@@ -21,18 +17,7 @@ unrelated responsibilities. A view controller can own a small list's data source
 
 ## View-controller lifecycle
 
-Install and constrain owned views through the controller's lifecycle. Balance containment calls when embedding child
-controllers. Retain objects whose lifetime the screen owns. Cancel asynchronous work the screen owns when its results
-become irrelevant.
-
-### Controller responsibilities
-
 <!-- level: all -->
-
-Large `viewDidLoad`, `viewDidAppear`, and app or scene delegate methods move their setup into named private functions or
-composition objects. Replace a mode flag that forces the same branching across several methods with separate strategy or
-data source objects, or with an explicit state type. Composition shares UI behavior. Inheritance serves framework
-requirements or stable shared behavior rather than default reuse.
 
 Preserve supported storyboard, nib, and programmatic construction paths. Mark an initializer unavailable only when the
 construction contract of the component excludes it.
@@ -56,21 +41,9 @@ Create a `UICollectionView.CellRegistration` outside the diffable data source's 
 configured dequeueing. Creating it inside that closure prevents cell reuse and can raise an exception. See the
 [Apple cell-registration documentation](https://developer.apple.com/documentation/uikit/uicollectionviewcellregistration?language=swift).
 
-### Cell models
-
-<!-- level: all -->
-
-Pass cells the values needed for rendering and interaction. Keep provider records and database mechanics at their
-existing boundary. Use a feature-owned enum for a closed set of heterogeneous rows when it makes the relationship
-explicit. Add a shared configurator only for repeated behavior that registration APIs do not already own.
-
 ## Diffable data sources
 
 Use diffable data sources when snapshot-based updates fit the screen.
-
-Build each snapshot from a consistent state. Resolve cells and selection through the current data source. When you write
-tests, cover insertion, removal, reordering, and asynchronous refresh if the screen owns those transitions. Keep
-snapshot-building code with the presentation behavior it serves.
 
 ## Accessibility and interaction
 
