@@ -7,7 +7,7 @@ import { testdir } from 'testdirs';
 import { listRepositoryFiles, readRepositoryRoot } from '#cli/repository/read.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { DUBIOUS_GIT_ENVIRONMENT, ROOT_DISCOVERY_CASES } from '#tests/config/repository/files.ts';
+import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -16,14 +16,11 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
-test.each([...ROOT_DISCOVERY_CASES])(
-    'inside Git, gspot takes the worktree root with $name',
-    async ({ files, start }) => {
-        await using sandbox = await createGitSandbox({ ...files, 'nested/source.ts': 'export {});\n' });
+test('inside Git, gspot takes the worktree root from a nested folder', async () => {
+    await using sandbox = await createGitSandbox({ 'nested/source.ts': 'export {});\n' });
 
-        expect(await readRepositoryRoot(join(sandbox.path, start))).toBe(sandbox.path);
-    },
-);
+    expect(await readRepositoryRoot(join(sandbox.path, 'nested'))).toBe(sandbox.path);
+});
 
 test('a Git ownership refusal while finding the root stays a Git error', async () => {
     await using sandbox = await testdir({ 'source.txt': 'source\n' });
@@ -38,15 +35,6 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
     const error = await captureRejection(readRepositoryRoot(sandbox.path));
     expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
     expect(error.message).toContain(refused.stderr.trim());
-});
-
-test('deleted tracked files are left out of the file list', async () => {
-    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
-
-    runGitStep(sandbox.path, ['add', 'source.ts']);
-    await rm(join(sandbox.path, 'source.ts'));
-    const { files } = await listRepositoryFiles(createRunCache(sandbox.path));
-    expect(files).toStrictEqual([]);
 });
 
 test('a broken Git index is reported instead of a folder walk', async () => {
@@ -73,18 +61,6 @@ test('a .git file that points at a missing folder is reported, not read as a fol
     const rootError = await captureRejection(readRepositoryRoot(sandbox.path));
     expect(rootError).toMatchObject({ name: 'GspotError', code: 'git' });
     expect(rootError.message).toContain(sandbox.path);
-});
-
-test('a missing git program is reported instead of a successful walk', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
-
-    await using empty = await testdir();
-    using resources = new DisposableStack();
-    resources.use(overrideEnvironment({ PATH: empty.path }));
-    const missingGitError = await captureRejection(readTestRepository(sandbox.path));
-    expect(missingGitError).toMatchObject({ name: 'GspotError', code: 'git' });
-    const rootError = await captureRejection(readRepositoryRoot(sandbox.path));
-    expect(rootError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index', async () => {

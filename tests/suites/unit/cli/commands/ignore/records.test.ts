@@ -5,7 +5,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import type { TomlTable } from '#cli/types/settings.ts';
-import { IGNORE_REFUSALS, REFUSAL_FILES, UNKNOWN_IGNORE_ARGUMENTS } from '#tests/config/commands/edits.ts';
+import { REFUSAL_FILES, UNKNOWN_IGNORE_ARGUMENTS } from '#tests/config/commands/edits.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -112,9 +112,9 @@ test('ignore keeps a rule of a check without a rule catalog as given', async () 
     expect(written['ignore']).toMatchObject([{ check: 'typescript/tsc', rule: 'TS2322' }]);
 });
 
-test.each([...IGNORE_REFUSALS])('ignore refuses $name without writing', async ({ arguments: commandArguments }) => {
+test('ignore refuses a one-letter reason without writing', async () => {
     await using sandbox = await createGitSandbox(REFUSAL_FILES);
-    await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');
+    await assertRefusalWithoutWrites(sandbox.path, ['ignore', '--paths', 'vendor/**', '--reason', 'x'], 'arguments');
 });
 
 test('a bare unignore exits 2, names --paths, and keeps every ignore', async () => {

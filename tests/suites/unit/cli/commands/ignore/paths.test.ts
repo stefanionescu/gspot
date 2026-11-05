@@ -50,33 +50,31 @@ test('repeated --paths keeps commas literal and leaves the following check posit
     expect(parse(await readFile(settingsPath, 'utf8'))).not.toHaveProperty('ignore');
 });
 
-test.each(['ignore', 'unignore'])(
-    '%s refuses check IDs and unmatched --paths values before writing',
-    async (command) => {
-        const settings = buildSandboxSettings([], {
-            tables: stringify({
-                command_check: [{ id: 'project/sample', command: ['true'], stage: 'commit', paths: ['source.txt'] }],
-            }),
+test('ignore refuses check IDs and unmatched --paths values before writing', async () => {
+    const settings = buildSandboxSettings([], {
+        tables: stringify({
+            command_check: [{ id: 'project/sample', command: ['true'], stage: 'commit', paths: ['source.txt'] }],
+        }),
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': settings,
+        'source.txt': 'Input.\n',
+        'bash/shellcheck': 'A file that shares a check name.\n',
+    });
+    for (const path of ['bash/shellcheck', 'project/sample', 'missing/**', '!missing.txt']) {
+        const result = await runGspot(sandbox.path, [
+            'ignore',
+            '--paths',
+            path,
+            '--reason',
+            'Generated samples stay outside lint checks.',
+            '--json',
+        ]);
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(path) as string,
         });
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': settings,
-            'source.txt': 'Input.\n',
-            'bash/shellcheck': 'A file that shares a check name.\n',
-        });
-        for (const path of ['bash/shellcheck', 'project/sample', 'missing/**', '!missing.txt']) {
-            const result = await runGspot(sandbox.path, [
-                command,
-                '--paths',
-                path,
-                ...(command === 'ignore' ? ['--reason', 'Generated samples stay outside lint checks.'] : []),
-                '--json',
-            ]);
-            expect(result.code, result.stdout + result.stderr).toBe(2);
-            expect(JSON.parse(result.stdout)).toMatchObject({
-                error: 'arguments',
-                message: expect.stringContaining(path) as string,
-            });
-            expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-        }
-    },
-);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    }
+});

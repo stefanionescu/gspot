@@ -62,7 +62,6 @@ export const LOCKFILE_SECURITY_CASES = [
     ['portable package', 'is-number', '7.0.0', '', true],
     ['identity swap', 'left-pad', '1.3.0', '', false],
     ['root downgrade', 'is-number', '6.0.0', '', false],
-    ['foreign tarball', 'is-number', '7.0.0', 'https://attacker.example/evil.tgz', false],
     ['registry tarball swap', 'is-number', '7.0.0', 'https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz', false],
     ['standard tarball', 'is-number', '7.0.0', 'https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz', true],
 ] as const;

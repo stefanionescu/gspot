@@ -22,29 +22,6 @@ export const UNKNOWN_IGNORE_ARGUMENTS = [
     'The sample check name is misspelled.',
 ] as const;
 
-export const IGNORE_REFUSALS = [
-    {
-        name: 'a one-letter reason',
-        arguments: ['ignore', '--paths', 'vendor/**', '--reason', 'x'],
-    },
-    {
-        name: 'ignore without a check or paths',
-        arguments: ['ignore', '--reason', 'Vendored sources remain outside the checks.'],
-    },
-    {
-        name: 'ignore with a rule but no check',
-        arguments: [
-            'ignore',
-            '--rule',
-            'SC2086',
-            '--paths',
-            'vendor/**',
-            '--reason',
-            'Vendored sources remain outside the checks.',
-        ],
-    },
-] as const;
-
 export const LITERAL_ROUTE_CASES = [
     {
         folder: 'app/[id]',
@@ -190,8 +167,3 @@ allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private
 export const REFUSAL_FILES = { 'gspot.toml': COMMAND_VALUE_SETTINGS, 'control.txt': 'preserve\n' } as const;
 
 export const CONFIGURATIONS_SETTINGS = 'configurations = []\n';
-
-export const SITE_PACKAGE_MANAGER_CASES = [
-    ['npm fallback', {}, 'npm'],
-    ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
-] as const;

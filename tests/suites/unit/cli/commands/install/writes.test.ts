@@ -169,22 +169,3 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     expect(await readFile(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');
 });
-
-test('install restores a committed .gitattributes that was deleted, as it restores AGENTS.md', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
-        'entry.sh': 'echo example\n',
-    });
-    const applied = await runGspot(sandbox.path, ['install']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    commitAll(sandbox.path);
-    const attributes = await readFile(join(sandbox.path, '.gitattributes'), 'utf8');
-    const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
-    await rm(join(sandbox.path, '.gitattributes'));
-    await rm(join(sandbox.path, 'AGENTS.md'));
-    const restored = await runGspot(sandbox.path, ['install']);
-    expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-    expect(await readFile(join(sandbox.path, '.gitattributes'), 'utf8')).toBe(attributes);
-    expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
-});

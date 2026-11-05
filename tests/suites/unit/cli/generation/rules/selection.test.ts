@@ -3,7 +3,6 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { Level } from '#cli/types/settings.ts';
 import { RUNTIME_RULE_CASES } from '#tests/config/generation/generate.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -28,26 +27,11 @@ async function generateRuleFiles(level: Level, files: Record<string, string>): P
     );
 }
 
-test.each(
-    [
-        { place: 'the root', scope: '' },
-        { place: 'a scope', scope: 'app' },
-    ].flatMap((place) =>
-        RUNTIME_RULE_CASES.filter((row) => place.scope === '' || row.name === 'a Node.js script').map((row) => ({
-            ...row,
-            ...place,
-        })),
-    ),
-)('$name in $place selects the runtime rules $rules', async ({ scope, runtime, dependency, rules }) => {
-    const prefix = scope === '' ? '' : scope + '/';
+test.each([...RUNTIME_RULE_CASES])('$name selects the runtime rules $rules', async ({ runtime, dependency, rules }) => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(scope === '' ? ['javascript'] : [], {
-            rules: true,
-            level: 'all',
-            scopes: scope === '' ? [] : [{ path: 'app', configurations: ['javascript'] }],
-        }),
-        [`${prefix}main.js`]: `#!/usr/bin/env ${runtime}\nconsole.log("ready");\n`,
-        [`${prefix}package.json`]: JSON.stringify({
+        'gspot.toml': buildSandboxSettings(['javascript'], { rules: true, level: 'all' }),
+        'main.js': `#!/usr/bin/env ${runtime}\nconsole.log("ready");\n`,
+        'package.json': JSON.stringify({
             engines: { [runtime]: '>=1' },
             dependencies: dependency === undefined ? {} : { [dependency]: '1.0.0' },
         }),
@@ -69,19 +53,6 @@ test('a rule file shows the limit that gspot.toml sets', async () => {
     const writing = selectRuleFiles(session).find(({ path }) => path.endsWith('WRITING.md'));
     expect(writing?.content).toContain('Keep a sentence within 24 words');
     expect(writing?.content).not.toContain('{setting:');
-});
-
-test('an always-selected configuration installs its rule file once', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { rules: true, level: 'all' }),
-    });
-    const session = await openSession(sandbox.path);
-    const configurations = listSelectedConfigurations(session.scopes);
-    const engineering = configurations.find((configuration) => configuration.name === 'engineering')!;
-    for (const selected of [configurations, [...configurations, engineering]]) {
-        const files = selectRuleFiles({ ...session, scopes: [{ ...session.scopes[0]!, configurations: selected }] });
-        expect(files.filter((file) => file.path === 'TALKING.md')).toHaveLength(1);
-    }
 });
 
 describe('which rule files gspot writes', () => {

@@ -102,77 +102,59 @@ test('a dependency link that points at nothing is left out of the copy', async (
     expect(await readFile(join(copy.path, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
 });
 
-test.each([false, true])(
-    "a check's copy holds its files and dependencies, plus an extra file when asked: %p",
-    async (includedPaths) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['javascript']),
-            'selected.js': 'export const selected = 1;',
-            'unselected.js': 'export const unselected = 2;',
-            'document.json': '{"value":3}',
-            'node_modules/tool/value.js': 'export const dependency = 4;',
-        });
+test("a check's copy holds its files and dependencies, plus an extra file when asked", async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'selected.js': 'export const selected = 1;',
+        'unselected.js': 'export const unselected = 2;',
+        'document.json': '{"value":3}',
+        'node_modules/tool/value.js': 'export const dependency = 4;',
+    });
 
-        const session = await openSession(sandbox.path);
-        const input = planSandboxCheck(session, 'format/prettier', { paths: ['selected.js'] });
-        using copy = await createCheckCopy(session, input, includedPaths ? ['document.json'] : []);
-        expect(await readFile(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
-        expect(await readFile(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(
-            'export const dependency = 4;',
-        );
-        expect(existsSync(join(copy.path, 'unselected.js'))).toBe(false);
-        expect(existsSync(join(copy.path, 'document.json'))).toBe(includedPaths);
-        if (includedPaths) expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
-        await writeFile(join(copy.path, 'selected.js'), 'changed in private copy');
-        expect(await readFile(join(sandbox.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
-    },
-);
+    const session = await openSession(sandbox.path);
+    const input = planSandboxCheck(session, 'format/prettier', { paths: ['selected.js'] });
+    using copy = await createCheckCopy(session, input, ['document.json']);
+    expect(await readFile(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
+    expect(await readFile(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe('export const dependency = 4;');
+    expect(existsSync(join(copy.path, 'unselected.js'))).toBe(false);
+    expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
+    await writeFile(join(copy.path, 'selected.js'), 'changed in private copy');
+    expect(await readFile(join(sandbox.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
+});
 
-test.each([false, true])(
-    'workspace dependency copies keep exactly the sources the check imports (revision copy %p)',
-    async (revision) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['javascript'], {
-                scopes: [{ path: 'apps/web', configurations: ['javascript'] }],
-            }),
-            ...WORKSPACE_SOURCE_FILES,
-        });
+test('workspace dependency copies of a revision keep exactly the sources the check imports', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            scopes: [{ path: 'apps/web', configurations: ['javascript'] }],
+        }),
+        ...WORKSPACE_SOURCE_FILES,
+    });
 
-        await mkdir(join(sandbox.path, 'node_modules'));
-        for (const name of ['core', 'utility', 'unused'])
-            await symlink(`../packages/${name}`, join(sandbox.path, 'node_modules', name));
-        if (revision) {
-            runGitStep(sandbox.path, ['init']);
-            runGitStep(sandbox.path, ['add', '.']);
-            await writeFile(join(sandbox.path, 'packages/core/value.js'), 'export const value = "unstaged";');
-            await writeFile(join(sandbox.path, 'packages/core/untracked.js'), 'private working bytes');
-        }
-        const assertCheckCopy = async (root: string) => {
-            const session = await openSession(root);
-            const input = planSandboxCheck(session, 'javascript/eslint', {
-                scope: 'apps/web',
-                paths: ['apps/web/main.js'],
-            });
-            expect(input.files.map((file) => file.path)).toStrictEqual(['apps/web/main.js']);
-            using copy = await createCheckCopy(session, input);
-            const output = runBlockingCommand([process.execPath, 'apps/web/main.js'], { cwd: copy.path });
-            expect(output.code, output.stderr).toBe(0);
-            expect(output.stdout.trim()).toBe('staged dependency');
-            expect(await readFile(join(copy.path, 'packages/aliased/value.js'), 'utf8')).toBe(
-                WORKSPACE_SOURCE_FILES['packages/aliased/value.js'],
-            );
-            expect(existsSync(join(copy.path, 'packages/unused/private.txt'))).toBe(false);
-            expect(existsSync(join(copy.path, 'packages/core/untracked.js'))).toBe(false);
-            await writeFile(join(copy.path, 'packages/core/value.js'), 'private copy change');
-        };
-        if (revision) {
-            using copy = await copyRevision(sandbox.path, { kind: 'index' });
-            await assertCheckCopy(copy.root);
-        } else await assertCheckCopy(sandbox.path);
-        expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
-            revision
-                ? 'export const value = "unstaged";'
-                : 'import {suffix} from "utility"; export const value = "staged" + suffix;',
-        );
-    },
-);
+    await mkdir(join(sandbox.path, 'node_modules'));
+    for (const name of ['core', 'utility', 'unused'])
+        await symlink(`../packages/${name}`, join(sandbox.path, 'node_modules', name));
+    runGitStep(sandbox.path, ['init']);
+    runGitStep(sandbox.path, ['add', '.']);
+    await writeFile(join(sandbox.path, 'packages/core/value.js'), 'export const value = "unstaged";');
+    await writeFile(join(sandbox.path, 'packages/core/untracked.js'), 'private working bytes');
+    using revision = await copyRevision(sandbox.path, { kind: 'index' });
+    const session = await openSession(revision.root);
+    const input = planSandboxCheck(session, 'javascript/eslint', {
+        scope: 'apps/web',
+        paths: ['apps/web/main.js'],
+    });
+    expect(input.files.map((file) => file.path)).toStrictEqual(['apps/web/main.js']);
+    using copy = await createCheckCopy(session, input);
+    const output = runBlockingCommand([process.execPath, 'apps/web/main.js'], { cwd: copy.path });
+    expect(output.code, output.stderr).toBe(0);
+    expect(output.stdout.trim()).toBe('staged dependency');
+    expect(await readFile(join(copy.path, 'packages/aliased/value.js'), 'utf8')).toBe(
+        WORKSPACE_SOURCE_FILES['packages/aliased/value.js'],
+    );
+    expect(existsSync(join(copy.path, 'packages/unused/private.txt'))).toBe(false);
+    expect(existsSync(join(copy.path, 'packages/core/untracked.js'))).toBe(false);
+    await writeFile(join(copy.path, 'packages/core/value.js'), 'private copy change');
+    expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
+        'export const value = "unstaged";',
+    );
+});

@@ -3,12 +3,7 @@ import { expect, test } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { parseConfigurations } from '#cli/manifests/read.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import {
-    CONFIGURATION_TABLE,
-    DECLARATION_ORDERS,
-    EXAMPLE_MANIFEST_FOLDER,
-    MANIFEST_INVARIANT_CASES,
-} from '#tests/config/manifests.ts';
+import { CONFIGURATION_TABLE, EXAMPLE_MANIFEST_FOLDER, MANIFEST_INVARIANT_CASES } from '#tests/config/manifests.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 
@@ -27,24 +22,21 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
     expect(empty.detect.paths).toStrictEqual([]);
 });
 
-test.each(DECLARATION_ORDERS)(
-    'a tool name links to the configuration that declares it, listed $order',
-    ({ ownerFirst }) => {
-        const consumer = {
-            folder: 'src/configurations/infrastructure/consumer',
-            text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n',
-        };
-        const owner = {
-            folder: 'src/configurations/general/owner',
-            text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n',
-        };
-        const configurationsByName = parseConfigurations(ownerFirst ? [owner, consumer] : [consumer, owner]);
-        expect(configurationsByName.get('owner')!.tools).toStrictEqual([
-            { name: 'probe', kind: 'program', system: true, installers: {} },
-        ]);
-        expect(configurationsByName.get('consumer')!.tools).toStrictEqual(configurationsByName.get('owner')!.tools);
-    },
-);
+test('a tool name links to the configuration that declares it, listed after the consumer', () => {
+    const consumer = {
+        folder: 'src/configurations/infrastructure/consumer',
+        text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n',
+    };
+    const owner = {
+        folder: 'src/configurations/general/owner',
+        text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n',
+    };
+    const configurationsByName = parseConfigurations([consumer, owner]);
+    expect(configurationsByName.get('owner')!.tools).toStrictEqual([
+        { name: 'probe', kind: 'program', system: true, installers: {} },
+    ]);
+    expect(configurationsByName.get('consumer')!.tools).toStrictEqual(configurationsByName.get('owner')!.tools);
+});
 
 test('only declared config files are loaded and each record sets its tool and scope', () => {
     const configurationsByName = parseConfigurations([

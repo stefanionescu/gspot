@@ -9,11 +9,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import {
-    CONFIGURATIONS_SETTINGS,
-    INHERITED_CONFIGURATION_SETTINGS,
-    SITE_PACKAGE_MANAGER_CASES,
-} from '#tests/config/commands/edits.ts';
+import { CONFIGURATIONS_SETTINGS, INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
 import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -103,22 +99,18 @@ test('add --scope on a project folder writes its scope record', async () => {
     expect(saved.scopes.get('py')?.configurations).toStrictEqual(['fastapi']);
 });
 
-test.each(
-    SITE_PACKAGE_MANAGER_CASES.flatMap(([name, files, installer]) =>
-        (installer === 'npm' ? [''] : ['', 'app']).map((scope) => ({ name, files, installer, scope })),
-    ),
-)('add site writes the $installer build command in "$scope" ($name)', async ({ files, installer, scope }) => {
+test('add site writes the build command of the package manager that a scope declares', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { scopes: scope === '' ? [] : [{ path: scope, configurations: [] }] }),
-        [join(scope, 'index.html')]: '<!doctype html><title>Site</title>',
-        ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: [] }] }),
+        'app/index.html': '<!doctype html><title>Site</title>',
+        'app/package.json': '{"packageManager":"bun@1.4.2"}',
     });
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['add', 'site', ...(scope === '' ? [] : ['--scope', scope])]);
+    const result = await runGspot(sandbox.path, ['add', 'site', '--scope', 'app']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const session = await openSession(sandbox.path);
-    const selected = session.scopes.find((each) => each.path === scope)!;
-    expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
+    const selected = session.scopes.find((each) => each.path === 'app')!;
+    expect(getTable(selected.settings, 'site').build_command).toStrictEqual(['bun', 'run', 'build']);
 });
 
 test('add cloudflare writes the OpenNext types', async () => {

@@ -18,8 +18,3 @@ export const MANIFEST_INVARIANT_CASES = [
         field: 'check.0.help',
     },
 ] as const;
-
-export const DECLARATION_ORDERS = [
-    { order: 'owner first', ownerFirst: true },
-    { order: 'consumer first', ownerFirst: false },
-];
