@@ -23,6 +23,8 @@ import type { Scope, SettingOrigin, Settings } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
+const SCOPES_NAMED = 3;
+
 function formatScopeGroup(scopes: readonly string[]): string {
     const nested = scopes.filter((scopePath) => scopePath !== '');
     const named = nested.length === 1 ? formatScope(nested[0] as string) : formatCount(nested.length, 'scope');
@@ -79,7 +81,14 @@ function formatCheckStates(checks: ConfigurationsListJson['selected'][number]['c
     const [only] = states as [[string, typeof checks]];
     if (states.length > 1)
         return states
-            .map(([status, group]) => `${status} in ${group.map(({ scope }) => formatScope(scope)).join(', ')}`)
+            .map(([status, group]) => {
+                const scopes = group.map(({ scope }) => scope);
+                const place =
+                    scopes.length > SCOPES_NAMED
+                        ? formatScopeGroup(scopes)
+                        : scopes.map((scope) => formatScope(scope)).join(', ');
+                return `${status} in ${place}`;
+            })
             .join('; ');
     return checks.length === 1 ? only[0] : `${only[0]} in ${formatScopeGroup(checks.map(({ scope }) => scope))}`;
 }

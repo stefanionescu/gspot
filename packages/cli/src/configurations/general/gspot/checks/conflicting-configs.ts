@@ -42,7 +42,7 @@ function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck):
         file,
         line,
         rule: GSPOT_RULES.lintCommand,
-        message: `${LINT_COMMAND_NAMES[source]} calls ${tool}: ${command}. ${fix}`,
+        message: `${LINT_COMMAND_NAMES[source]} ${source === 'settings' ? 'configures' : 'calls'} ${tool}: ${command}. ${fix}`,
     }));
     const findings = [...conflicts, ...commands];
     const narrowed = session.selection?.paths;

@@ -27,6 +27,8 @@ import type { Setting } from '#cli/types/manifests.ts';
 import type { InheritedSetting, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
+const PREVIOUS_VALUE_LENGTH = 80;
+
 function parseInlineValue(text: string): unknown {
     try {
         return (parse(`value = ${text}`) as TomlTable)['value'];
@@ -115,6 +117,13 @@ function assertReason(context: SettingReasonContext): void {
         );
 }
 
+function formatPreviousValue(previous: InheritedSetting | undefined): string {
+    if (previous?.value === undefined) return '';
+    const text = JSON.stringify(previous.value);
+    const shown = text.length > PREVIOUS_VALUE_LENGTH ? `${text.slice(0, PREVIOUS_VALUE_LENGTH)}...` : text;
+    return `  (was ${shown} from ${previous.source})`;
+}
+
 function formatSettingChange(
     change: ParsedSettingValue,
     context: {
@@ -127,8 +136,7 @@ function formatSettingChange(
     const { setting, options, scopePath, previous } = context;
     const displayKey = options.key;
     const where = scopePath === '' ? '' : ` in scope ${scopePath}`;
-    const was =
-        previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
+    const was = formatPreviousValue(previous);
     if (setting.reason_values === true)
         return `Added ${formatNameList(options.values)} to ${displayKey}${where}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;

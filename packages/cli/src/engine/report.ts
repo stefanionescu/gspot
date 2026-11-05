@@ -128,7 +128,9 @@ export function buildRunReport(run: FinishedRun): RunReport {
         checks: checks
             .filter(({ cause }) => options.verbose === true || cause !== 'no-files')
             .map(({ reportNotes: _notes, span: _span, ...check }) => check),
-        skippedCount: Object.fromEntries([...skipped].map(([cause, group]) => [cause, group.length])),
+        skippedCount: Object.fromEntries(
+            [...skipped].map(([cause, group]) => [cause, new Set(group.map(({ check }) => check)).size]),
+        ),
         ignores: session.settings.ignore,
         baselined,
         unstagedChanges: options.selection?.unstagedChanges ?? 0,
