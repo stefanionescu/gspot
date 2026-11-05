@@ -82,7 +82,7 @@ async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'root' | 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
     const context = await readIgnoreEditContext(options.root);
-    const { root, edit: input, settings } = context;
+    const { edit: input, settings } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, {
         ...options,
@@ -109,13 +109,7 @@ async function runUnignoreCommand(
         .join(' ');
     if (kept.length === 0) delete input.table['ignore'];
     else input.table['ignore'] = kept;
-    return await writeSettingsEdit(root, {
-        cache: context.cache,
-        listing: context.listing,
-        edit: input,
-        summary,
-        notes,
-    });
+    return await writeSettingsEdit(context, { summary, notes });
 }
 
 export const UNIGNORE_COMMAND: CommandDefinition<[string | undefined], Partial<IgnoreFlags>> = {

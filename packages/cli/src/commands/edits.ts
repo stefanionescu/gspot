@@ -65,7 +65,8 @@ function listTurnedOffNotes(previous: Session | undefined, session: Session): st
     if (previous === undefined) return [];
     const turnedOff = previous.configuredChecks.filter(({ check, scope }) => {
         const next = session.scopes.find(({ path }) => path === scope.path);
-        return next !== undefined && findEmptySetting(session.settings, next, check) !== undefined;
+        const isSelected = next?.configurations.some(({ checks }) => checks.includes(check)) === true;
+        return next !== undefined && isSelected && findEmptySetting(session.settings, next, check) !== undefined;
     });
     return [...new Set(turnedOff.map(({ check }) => `This turns off ${check.id}.`))];
 }
@@ -270,29 +271,26 @@ export function buildUnchangedResult(summary: string, notes: string[] = []): Com
 /**
 Edit settings, check them, and write them and their generated files. Installs nothing.
 
-@param root the folder where gspot writes settings and generated files.
-@param options the edit and the text the report adds.
+@param context the edit, the repository that it changes, and the session before it, when the command has one.
+@param options the text the report adds.
 */
 export async function writeSettingsEdit(
-    root: string,
+    context: IgnoreEditContext & { session?: Session },
     options: SettingsEditOptions,
 ): Promise<CommandResult<SettingsEditReport>> {
-    const { edit, summary } = options;
+    const { root, edit, cache, listing } = context;
+    const { summary } = options;
     const writer = openFiles(root);
     const result = buildEditedSettings(root, edit);
-    options.cache?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
-    const session = await openSession(root, {
-        cache: options.cache,
-        listing: options.listing,
-        settings: result.settings,
-    });
+    cache.sources.set(SETTINGS_FILE, Buffer.from(result.text));
+    const session = await openSession(root, { cache, listing, settings: result.settings });
     const generated = buildGeneratedFiles(session);
     writeSettings(writer, result.text, edit.previous);
     const report = await writeEditedFiles(session, generated, { writer, summary });
     report.notes.push(
         ...(await listInstallNotes(session, generated, report)),
         ...(options.notes ?? []),
-        ...listTurnedOffNotes(options.previous, session),
+        ...listTurnedOffNotes(context.session, session),
     );
     const written = report.written.length + report.updated.length + report.deleted.length;
     if (written === 0 && !result.changed)

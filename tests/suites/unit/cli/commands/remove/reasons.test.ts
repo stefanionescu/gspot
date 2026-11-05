@@ -50,3 +50,12 @@ test('remove stores the reason of a configuration that detection does not select
     expect(written['configurations']).toBeUndefined();
     expect(written['removed_configurations']).toStrictEqual({ bash: 'The scripts moved elsewhere.' });
 });
+
+test('remove names no check as turned off by a setting, because the configuration goes', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }),
+    });
+    const result = await runGspot(sandbox.path, ['remove', 'licenses', '--reason', 'the team checks these by hand']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).not.toContain('This turns off');
+});

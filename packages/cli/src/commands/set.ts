@@ -207,18 +207,11 @@ async function assertLintRules(edit: SettingsEditContext, key: string, change: P
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     const edit = await readSettingsEditContext(options, options.scopePath);
-    const { root, edit: input, scopeTable } = edit;
+    const { scopeTable } = edit;
     const { setting, change, summary, notes } = buildSettingChange(edit, options);
     await assertLintRules(edit, options.key, change);
     setSetting(scopeTable, change, setting, options);
-    return await writeSettingsEdit(root, {
-        edit: input,
-        summary,
-        notes,
-        cache: edit.cache,
-        listing: edit.listing,
-        previous: edit.session,
-    });
+    return await writeSettingsEdit(edit, { summary, notes });
 }
 
 export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags> = {

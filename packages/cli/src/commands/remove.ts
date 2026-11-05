@@ -60,7 +60,7 @@ function removeUnusedSettings(table: TomlTable, scopePath: string): string {
 
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
     const context = await readConfigurationEditContext(options);
-    const { root, edit: input, scopePath, scopeTable, scopeSettings, selected: selectedNames } = context;
+    const { edit: input, scopePath, scopeTable, scopeSettings, selected: selectedNames } = context;
     const detected = listDetectedAdditions(context.session)
         .filter((addition) => addition.scopePath === scopePath)
         .flatMap((addition) => addition.configurations);
@@ -90,13 +90,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         .filter((configuration) => removed.includes(configuration.name))
         .flatMap((configuration) => configuration.tools)
         .some((tool) => tool.replace_key?.some((replacement) => replacement.pointer === true) === true);
-    return writeSettingsEdit(root, {
-        cache: context.cache,
-        listing: context.listing,
-        edit: input,
-        summary,
-        notes: hasManagedKeys ? [MANAGED_KEYS_NOTE] : [],
-    });
+    return writeSettingsEdit(context, { summary, notes: hasManagedKeys ? [MANAGED_KEYS_NOTE] : [] });
 }
 
 function findRequirementChain(required: string, from: string, seen: Set<string>): string[] | undefined {

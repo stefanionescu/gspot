@@ -83,12 +83,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
         reason: options.reason,
     });
     input.table['ignore'] = list;
-    return await writeSettingsEdit(root, {
-        cache: context.cache,
-        listing: context.listing,
-        edit: input,
-        summary: formatIgnoreSummary(options, paths),
-    });
+    return await writeSettingsEdit(context, { summary: formatIgnoreSummary(options, paths) });
 }
 
 export const IGNORE_COMMAND: CommandDefinition<[string | undefined], IgnoreFlags> = {

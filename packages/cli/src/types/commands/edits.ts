@@ -116,13 +116,9 @@ export type IgnoreEditContext = {
 export type SettingsEditContext = IgnoreEditContext & { session: Session; scopePath: string; scopeTable: TomlTable };
 
 export type SettingsEditOptions = {
-    edit: SettingsEdit;
-    previous?: Session | undefined;
     summary: string;
     unchangedSummary?: string;
     notes?: string[];
-    cache?: RunCache | undefined;
-    listing?: RepositoryListing | undefined;
 };
 
 export type CommandCompletion = (result: CommandResult<object>) => void;

@@ -37,7 +37,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 
     const edit = await readSettingsEditContext(options, options.scopePath);
-    const { root, edit: input, scopeTable, scopePath } = edit;
+    const { scopeTable, scopePath } = edit;
     const { match } = selectSettingToEdit(edit, key);
 
     if (keys.length > 0 && !['list', 'table'].includes(match.setting.type))
@@ -48,13 +48,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     if (keys.length === 0) removeKey(scopeTable, key);
     else if (match.setting.type === 'list') removeFromList(scopeTable, key, keys);
     else removeTableKeys(scopeTable, key, keys);
-    return await writeSettingsEdit(root, {
-        cache: edit.cache,
-        listing: edit.listing,
-        edit: input,
-        previous: edit.session,
-        ...formatUnsetSummary(key, keys, scopePath),
-    });
+    return await writeSettingsEdit(edit, formatUnsetSummary(key, keys, scopePath));
 }
 
 export const UNSET_COMMAND: CommandDefinition<[string, string[]], ScopeFlags> = {
