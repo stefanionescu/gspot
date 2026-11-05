@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { preferPromiseShorthand } from '#eslint-plugin/rules/promises/prefer-promise-shorthand.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-promise-shorthand', preferPromiseShorthand, {
     valid: [

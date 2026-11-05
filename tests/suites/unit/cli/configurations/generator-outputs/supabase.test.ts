@@ -1,18 +1,20 @@
-import executables from 'which';
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+import executables from 'which';
+
 import { runChecks } from '#cli/engine/run.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
+import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/configurations/general.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/configurations/general.ts';
+import { fakeExecutableLookup, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function prepareSupabaseCheck(
     root: string,

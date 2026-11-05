@@ -1,10 +1,12 @@
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { createRunCache } from '#cli/system/cache.ts';
+
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 test('parsed source copies remain usable after the run releases its resources', async () => {

@@ -1,8 +1,9 @@
-import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
 import { doctorOutputSchema } from '#cli/schemas/commands.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('doctor and gspot check both report the missing program of a command check', async () => {

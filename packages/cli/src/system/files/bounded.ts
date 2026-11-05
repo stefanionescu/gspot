@@ -1,33 +1,33 @@
 import { randomUUID } from 'node:crypto';
-import { join, dirname } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
-import { splitSystemPath } from '#cli/system/files/reads.ts';
-import type { FileBounds, FileContents } from '#cli/types/system.ts';
-import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
-
 import {
-    openSync,
+    closeSync,
+    fchmodSync,
     lstatSync,
     mkdirSync,
-    closeSync,
-    type Stats,
-    unlinkSync,
-    fchmodSync,
-    renameSync,
+    openSync,
     readFileSync,
     readlinkSync,
+    renameSync,
+    type Stats,
+    unlinkSync,
     writeFileSync,
 } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
+
 import {
     MODE_BITS,
-    PRIVATE_FILE,
-    WRITABLE_FILE,
-    READ_ONLY_FILE,
-    PERMISSION_BITS,
     OWNER_WRITE_BIT,
-    TEMPORARY_FILE_SUFFIX,
+    PERMISSION_BITS,
+    PRIVATE_FILE,
+    READ_ONLY_FILE,
     TEMPORARY_FILE_PREFIX,
+    TEMPORARY_FILE_SUFFIX,
+    WRITABLE_FILE,
 } from '#cli/config/system.ts';
+import { buildWriteError, GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { splitSystemPath } from '#cli/system/files/reads.ts';
+import type { FileBounds, FileContents } from '#cli/types/system.ts';
 
 function prepareParentFolder(folder: string): Stats {
     try {

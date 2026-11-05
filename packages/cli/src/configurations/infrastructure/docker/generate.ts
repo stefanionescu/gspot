@@ -1,9 +1,10 @@
 import { stringify } from 'yaml';
-import { getTable } from '#cli/settings/scopes.ts';
+
+import { HADOLINT_FAILURE_THRESHOLD, TRIVY_SKIPPED_FOLDERS } from '#cli/config/configurations/infrastructure.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { TRIVY_SKIPPED_FOLDERS, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/configurations/infrastructure.ts';
 
 /**
 Build hadolint.yml: the Hadolint exclusions and trusted registry settings.

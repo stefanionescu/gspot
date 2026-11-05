@@ -1,18 +1,18 @@
-import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
+import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
+import { explainPath } from '#cli/commands/explain/path.ts';
+import { explainSetting } from '#cli/commands/explain/setting.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
+import { listInheritedSettings } from '#cli/settings/inherit.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { explainPath } from '#cli/commands/explain/path.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { listInheritedSettings } from '#cli/settings/inherit.ts';
-import { explainSetting } from '#cli/commands/explain/setting.ts';
+import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
 import type { Explanation } from '#cli/types/commands/reports.ts';
-import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
-import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
-import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
-import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const subjects = [

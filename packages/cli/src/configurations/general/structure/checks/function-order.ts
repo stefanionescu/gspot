@@ -1,19 +1,19 @@
 import type { Node } from 'web-tree-sitter';
-import type { Session } from '#cli/types/tools.ts';
-import type { GrammarName } from '#cli/types/parsers.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
-import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
 
 import {
     DEFAULT_EXPORT_NAME,
     FUNCTION_ORDER_RULE,
-    SCRIPT_FUNCTION_VALUES,
     PRIVATE_SWIFT_VISIBILITIES,
     SCRIPT_FUNCTION_DECLARATIONS,
+    SCRIPT_FUNCTION_VALUES,
 } from '#cli/config/configurations/structure.ts';
+import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { GrammarName } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const REFERENCE_TYPES = ['identifier', 'simple_identifier'];
 

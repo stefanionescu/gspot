@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsPublicBucketGrants } from '#eslint-plugin/rules/aws/aws-public-bucket-grants.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-public-bucket-grants', awsPublicBucketGrants, {
     valid: [

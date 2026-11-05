@@ -1,9 +1,8 @@
 import { NEXT_MESSAGES } from '#tests/config/setup/configurations.ts';
-
 import {
     NESTJS_CONTROLLER,
-    STRICT_COMPILER_OPTIONS,
     NESTJS_CONTROLLER_UNSUPPRESSED,
+    STRICT_COMPILER_OPTIONS,
 } from '#tests/config/setup/languages.ts';
 
 export const COMPONENT_TSCONFIG = { compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] } as const;

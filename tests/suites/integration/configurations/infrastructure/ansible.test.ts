@@ -1,14 +1,16 @@
-import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { test, expect, describe } from 'bun:test';
-import type { Sandbox } from '#tests/types/setup.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { join } from 'node:path';
+
+import { describe, expect, test } from 'bun:test';
+
+import { ANSIBLE_CONFIG, ANSIBLE_PLAYBOOK, ANSIBLE_SANDBOX } from '#tests/config/integration/infrastructure.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';
+import { listFindingRows, listScopeFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { ANSIBLE_CONFIG, ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK } from '#tests/config/integration/infrastructure.ts';
-import { spawnGspot, listFindingRows, parseCheckReport, listScopeFindingRows } from '#tests/setup/cli/commands.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import type { Sandbox } from '#tests/types/setup.ts';
 
 describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     const installedSandbox = shareInstalledSandbox(ANSIBLE_SANDBOX);

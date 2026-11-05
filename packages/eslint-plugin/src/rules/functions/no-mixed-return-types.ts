@@ -1,18 +1,18 @@
-import { createRule } from '../../rule.ts';
-import { getTypes } from '../../language/checker.ts';
-import { EMPTY_TYPE_NAMES } from '../../config/types.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { TypeReader, CheckedType, FunctionNode, CheckedSignature } from '../../types/plugin.ts';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
     ANY_TYPE,
-    TRUE_TYPE,
-    RETURN_DOC_TAGS,
     BOXED_STRING_NAME,
     FUNCTION_TYPE_TEXT,
+    RETURN_DOC_TAGS,
     SANITATION_MEMBERS,
+    TRUE_TYPE,
     UNKNOWN_TYPE_NAMES,
 } from '../../config/functions.ts';
+import { EMPTY_TYPE_NAMES } from '../../config/types.ts';
+import { getTypes } from '../../language/checker.ts';
+import { createRule } from '../../rule.ts';
+import type { CheckedSignature, CheckedType, FunctionNode, TypeReader } from '../../types/plugin.ts';
 
 function getTypeLabel(returned: CheckedType, types: TypeReader): string {
     const { checker } = types;

@@ -1,6 +1,6 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { TRANSLATION_RULES } from '#cli/config/configurations/framework.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const TRANSLATION_EXPLANATIONS = {
     [TRANSLATION_RULES.message]: {

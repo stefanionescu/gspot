@@ -1,20 +1,20 @@
 import { join } from 'node:path';
-import { CheckStop } from '#cli/system/errors.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 
 import {
-    UNUSED_RULE,
-    PERIPHERY_TOOL,
+    BUILD_SOURCE_FOLDER,
     FAILED_BUILD_NOTE,
     PERIPHERY_COMMAND,
-    BUILD_SOURCE_FOLDER,
     PERIPHERY_INDEX_STORE_FLAG,
+    PERIPHERY_TOOL,
+    UNUSED_RULE,
 } from '#cli/config/configurations/builds.ts';
+import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 /**
 Runs Periphery over the project and reports every declaration nothing uses.

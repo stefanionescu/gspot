@@ -1,22 +1,24 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { runChecks } from '#cli/engine/run.ts';
-import { compareText } from '#cli/system/text.ts';
+import { join } from 'node:path';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import type { RunSelection } from '#cli/types/engine/plan.ts';
-import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.ts';
-import { TSC_REPLACEMENTS, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/engine/run.ts';
-import { TWO_WORDS, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/setup/configurations.ts';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { RunSelection } from '#cli/types/engine/plan.ts';
+import { SCOPE_WIDE_IGNORE_CASES, TSC_REPLACEMENTS } from '#tests/config/engine/run.ts';
+import { SCHEDULE_RELEASE_MARKDOWN, TWO_WORDS } from '#tests/config/setup/configurations.ts';
+import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('coverage stripping leaves your own checks and given arguments unchanged', async () => {
     await using sandbox = await createGitSandbox({});

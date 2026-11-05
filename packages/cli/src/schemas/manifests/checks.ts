@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
 import {
-    STAGES,
-    MAX_EXIT_CODE,
-    DEFAULT_PATTERN,
     DEFAULT_FILE_PATTERN,
-    DEFAULT_OUTPUT_FORMAT,
     DEFAULT_GROUPED_PATTERN,
+    DEFAULT_OUTPUT_FORMAT,
+    DEFAULT_PATTERN,
+    MAX_EXIT_CODE,
+    STAGES,
 } from '#cli/config/manifests.ts';
 
 const findingExitCodesSchema = z.int().min(1).max(MAX_EXIT_CODE).array();

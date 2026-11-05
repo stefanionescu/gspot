@@ -1,13 +1,15 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { settingOutputSchema } from '#cli/schemas/commands.ts';
+import { NAMING_LIMITS, REASON_VALUES, SCOPE_SETTING_EXPLANATION } from '#tests/config/commands/reports.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NAMING_LIMITS, REASON_VALUES, SCOPE_SETTING_EXPLANATION } from '#tests/config/commands/reports.ts';
 
 test.each(NAMING_LIMITS)(
     "explain shows each scope's default and value naming limit: $key",

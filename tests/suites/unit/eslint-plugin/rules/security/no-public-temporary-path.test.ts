@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noPublicTemporaryPath } from '#eslint-plugin/rules/security/no-public-temporary-path.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-public-temporary-path', noPublicTemporaryPath, {
     valid: [

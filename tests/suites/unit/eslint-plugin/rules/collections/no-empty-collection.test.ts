@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noEmptyCollection } from '#eslint-plugin/rules/collections/no-empty-collection.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-empty-collection', noEmptyCollection, {
     valid: [

@@ -1,47 +1,48 @@
-import { join, posix } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { testdir, createFileTree } from 'testdirs';
-import { stringify } from '@decimalturn/toml-patch';
-import { readSettings } from '#cli/settings/read.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { initOutputSchema } from '#cli/schemas/commands.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
-import * as installers from '#cli/tools/installers/install.ts';
-import { LINT_FOLDER_MESSAGE } from '#cli/config/generation.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
-import { GOOGLE_PYPROJECT, EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { chmod, readFile, readlink, stat, symlink, writeFile } from 'node:fs/promises';
+import { join, posix } from 'node:path';
 
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { LINT_FOLDER_MESSAGE } from '#cli/config/generation.ts';
+import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import {
+    HOOK_NAMED_SOURCE,
+    HOOKS_PATH_CASES,
+    INACTIVE_CONFIGURATIONS,
+    INVALID_CSS,
+    LINKED_SETUP_CONFIG,
+    REPLACED_CONFIG_DELETIONS,
+    REPLACED_PYPROJECT_TABLES,
+    SHARED_SETUP_CONFIG,
+    SQL_PACKAGE_FILES,
+    STYLELINT_REPLACEMENT_CASES,
+    SYNCPACK_FILE,
+} from '#tests/config/generation/plan.ts';
+import { EMPTY_DEFAULT_SOURCE, GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
+import {
+    EMPTY_TOOL_INSTALL,
     INIT_FILES,
     SQL_COMMAND_CHECK,
-    EMPTY_TOOL_INSTALL,
     SQL_SEARCH_ARGUMENTS,
     SYNCPACK_PACKAGE_FILES,
 } from '#tests/config/setup/sandboxes.ts';
-import {
-    INVALID_CSS,
-    SYNCPACK_FILE,
-    HOOKS_PATH_CASES,
-    HOOK_NAMED_SOURCE,
-    SQL_PACKAGE_FILES,
-    SHARED_SETUP_CONFIG,
-    LINKED_SETUP_CONFIG,
-    INACTIVE_CONFIGURATIONS,
-    REPLACED_CONFIG_DELETIONS,
-    REPLACED_PYPROJECT_TABLES,
-    STYLELINT_REPLACEMENT_CASES,
-} from '#tests/config/generation/plan.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([...HOOKS_PATH_CASES])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses ($hooksPath)',

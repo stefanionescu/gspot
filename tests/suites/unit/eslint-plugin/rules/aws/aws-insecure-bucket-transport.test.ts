@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsInsecureBucketTransport } from '#eslint-plugin/rules/aws/aws-insecure-bucket-transport.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-insecure-bucket-transport', awsInsecureBucketTransport, {
     valid: ["import * as s3 from 'aws-cdk-lib/aws-s3';\nnew s3.Bucket(this, 'Assets', { enforceSSL: true });"],

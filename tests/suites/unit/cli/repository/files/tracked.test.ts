@@ -1,16 +1,18 @@
+import { symlink, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { unlink, symlink } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import { compareText } from '#cli/system/text.ts';
+import { OUTSIDE_LINK_CASES } from '#tests/config/repository/files.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { listRepositoryFiles } from '#cli/repository/read.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { OUTSIDE_LINK_CASES } from '#tests/config/repository/files.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outside link %s', async (name, target) => {
     await using sandbox = await testdir({

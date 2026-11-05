@@ -1,11 +1,12 @@
-import { createRule } from '../../rule.ts';
-import { getRegex } from '../../language/regex.ts';
-import type { GroupRead } from '../../types/variables.ts';
-import { unwrapExpression } from '../../language/syntax.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
 import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { EXEC_METHOD, MATCH_METHODS, GROUPS_PROPERTY, INDICES_PROPERTY } from '../../config/regex.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { EXEC_METHOD, GROUPS_PROPERTY, INDICES_PROPERTY, MATCH_METHODS } from '../../config/regex.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { getRegex } from '../../language/regex.ts';
+import { unwrapExpression } from '../../language/syntax.ts';
+import { createRule } from '../../rule.ts';
+import type { GroupRead } from '../../types/variables.ts';
 
 function traceRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
     const value = getExpressionValue(node, source);

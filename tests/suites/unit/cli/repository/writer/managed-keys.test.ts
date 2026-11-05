@@ -1,16 +1,18 @@
+import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { openFiles } from '#cli/system/files/open.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
-import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { hasManagedKeys, planManagedKeys, writePlans } from '#cli/repository/writer.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/repository/files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
-import { writePlans, hasManagedKeys, planManagedKeys } from '#cli/repository/writer.ts';
+import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {
     await using sandbox = await testdir();

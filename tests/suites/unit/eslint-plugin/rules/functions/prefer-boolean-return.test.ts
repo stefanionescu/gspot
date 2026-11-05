@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { preferBooleanReturn } from '#eslint-plugin/rules/functions/prefer-boolean-return.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-boolean-return', preferBooleanReturn, {
     valid: [

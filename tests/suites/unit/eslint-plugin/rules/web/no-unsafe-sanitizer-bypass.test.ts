@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noUnsafeSanitizerBypass } from '#eslint-plugin/rules/web/no-unsafe-sanitizer-bypass.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-unsafe-sanitizer-bypass', noUnsafeSanitizerBypass, {
     valid: [

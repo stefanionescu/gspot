@@ -1,14 +1,16 @@
-import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import * as revisions from '#cli/engine/copies/revision.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a staged check of a clean tree runs in place, and an ignored file stays out of it', async () => {
     await using sandbox = await createGitSandbox({

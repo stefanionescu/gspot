@@ -1,16 +1,16 @@
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { UNUSED_RECORD_RULE } from '#cli/config/configurations/naming.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/configurations/general/naming/checks/paths.ts';
+import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { UNUSED_RECORD_RULE } from '#cli/config/configurations/naming.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { FileNames, NamedCategory, NamingException } from '#cli/types/configurations/general.ts';
-import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
-import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/configurations/general/naming/checks/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function isCategoryCovered(exception: Pick<NamingException, 'categories'>, category: NamedCategory): boolean {
     return exception.categories === undefined || exception.categories.includes(category);

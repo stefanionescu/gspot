@@ -1,19 +1,21 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { pathToFileURL } from 'node:url';
-import { stringify } from '@decimalturn/toml-patch';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { FILES_CASES, FILES_SANDBOX, YAML_SCOPE_FILES, YAML_SCOPE_TABLES } from '#tests/config/integration/general.ts';
 import { UNCLOSED_SEQUENCE } from '#tests/config/setup/languages.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { FILES_CASES, FILES_SANDBOX, YAML_SCOPE_FILES, YAML_SCOPE_TABLES } from '#tests/config/integration/general.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yaml', '--json']));

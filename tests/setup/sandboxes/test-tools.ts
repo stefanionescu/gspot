@@ -1,14 +1,15 @@
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+
 import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
-import { mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
+import { GRAMMAR_NAMES, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { BUN_LOCKFILE, JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { downloadGrammar } from '#cli/tools/installers/grammars.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { PACKAGE_JSON, GRAMMAR_NAMES } from '#cli/config/parsers.ts';
-import { JSON_INDENT, BUN_LOCKFILE } from '#cli/config/tools/installers.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 
 const pins = Object.entries(listPackagePins(readConfigurations().values().toArray()).npm).filter(
     ([name]) => name !== eslintPluginPackage.name,

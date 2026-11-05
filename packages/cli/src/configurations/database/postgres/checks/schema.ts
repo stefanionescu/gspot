@@ -1,35 +1,35 @@
-import type { Node, Constraint } from '@pgsql/types';
-import type { SqlStatement } from '#cli/types/parsers.ts';
-import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { renameTable, applyRename } from '#cli/configurations/database/postgres/checks/renames.ts';
+import type { Constraint, Node } from '@pgsql/types';
 
 import {
-    dropFunctions,
-    applyAlterFunction,
-    applyCreateFunction,
-} from '#cli/configurations/database/postgres/checks/functions.ts';
-import {
-    dropPolicy,
-    qualifyName,
-    applyAlterPolicy,
-    applyCreatePolicy,
-} from '#cli/configurations/database/postgres/checks/policies.ts';
-import {
-    SCHEMA_NAME_INDEX,
     CONSTRAINT_SUFFIXES,
     DISABLED_OPTION_VALUES,
+    SCHEMA_NAME_INDEX,
     SECURITY_INVOKER_OPTION,
 } from '#cli/config/configurations/infrastructure.ts';
+import {
+    applyAlterFunction,
+    applyCreateFunction,
+    dropFunctions,
+} from '#cli/configurations/database/postgres/checks/functions.ts';
+import {
+    applyAlterPolicy,
+    applyCreatePolicy,
+    dropPolicy,
+    qualifyName,
+} from '#cli/configurations/database/postgres/checks/policies.ts';
+import { applyRename, renameTable } from '#cli/configurations/database/postgres/checks/renames.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import type {
-    Schema,
     Location,
     Migration,
+    Schema,
+    SchemaAlterations,
     SchemaState,
     SourceStatement,
-    StatementApplier,
-    SchemaAlterations,
     SqlStatementVisitors,
+    StatementApplier,
 } from '#cli/types/configurations/infrastructure.ts';
+import type { SqlStatement } from '#cli/types/parsers.ts';
 
 function removeTable(state: SchemaState, table: string): void {
     state.tables.delete(table);

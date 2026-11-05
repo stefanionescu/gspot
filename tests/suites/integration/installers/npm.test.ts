@@ -1,30 +1,31 @@
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { join, basename } from 'node:path';
-import { runTool } from '#cli/tools/run.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { appendFile, chmod, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import prettierPackage from 'prettier/package.json' with { type: 'json' };
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { doctorOutputSchema, installOutputSchema } from '#cli/schemas/commands.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
+import { runTool } from '#cli/tools/run.ts';
+import { PACKAGE_MANAGER_AGE_REFUSALS, PACKAGE_MANAGER_CASES } from '#tests/config/integration/commands.ts';
+import {
+    AUTHENTICATION_REQUIRED_MESSAGE,
+    NPM_REGISTRY_TOKEN,
+    PNPM_WORKSPACE,
+    REGISTRY_HOST,
+} from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import prettierPackage from 'prettier/package.json' with { type: 'json' };
-import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { doctorOutputSchema, installOutputSchema } from '#cli/schemas/commands.ts';
-import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { PACKAGE_MANAGER_CASES, PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/commands.ts';
-
-import {
-    REGISTRY_HOST,
-    PNPM_WORKSPACE,
-    NPM_REGISTRY_TOKEN,
-    AUTHENTICATION_REQUIRED_MESSAGE,
-} from '#tests/config/setup/sandboxes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 
 test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s: a write of the generated files keeps a stale lockfile and install repairs it',

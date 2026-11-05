@@ -1,10 +1,12 @@
+import { cp, readFile, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { cp, symlink, readFile } from 'node:fs/promises';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { BASH_MANIFEST, PACKAGE_FOLDER } from '#tests/config/system.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { BASH_MANIFEST, PACKAGE_FOLDER } from '#tests/config/system.ts';
 
 async function writePackageFolder(folder: string): Promise<string> {
     const root = join(import.meta.dir, '../../../../..');

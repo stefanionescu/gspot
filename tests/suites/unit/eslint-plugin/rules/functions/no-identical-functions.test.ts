@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noIdenticalFunctions } from '#eslint-plugin/rules/functions/no-identical-functions.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-identical-functions', noIdenticalFunctions, {
     valid: [

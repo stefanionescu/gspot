@@ -1,18 +1,20 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
+import { readdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { readTree } from '#tests/setup/system/files.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PRESERVE_SOURCE, UNCOMMITTED_FORMAT_CASES } from '#tests/config/generation/plan.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-import { PRESERVE_SOURCE, UNCOMMITTED_FORMAT_CASES } from '#tests/config/generation/plan.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

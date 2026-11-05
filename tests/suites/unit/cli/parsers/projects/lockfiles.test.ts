@@ -1,8 +1,10 @@
 import { posix } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { createRunCache } from '#cli/system/cache.ts';
+
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { LOCKED_VERSION_CASES } from '#tests/config/parsers/formats.ts';
 
 test.each([...LOCKED_VERSION_CASES])(

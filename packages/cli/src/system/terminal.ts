@@ -1,21 +1,21 @@
-import cliPackage from '#cli-package' with { type: 'json' };
-import { styleText, stripVTControlCharacters } from 'node:util';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { stripVTControlCharacters, styleText } from 'node:util';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import {
     EXIT_ERROR,
-    SIGNAL_EXIT_CODES,
     RESULT_JSON_INDENT,
+    SIGNAL_EXIT_CODES,
     TERMINAL_COLOR_SEQUENCE,
     TERMINAL_CONTROL_CHARACTERS,
 } from '#cli/config/system.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type {
+    CanceledCommandJson,
+    CommandFailureJson,
     CommandJson,
-    OutputState,
     CommandResult,
     OutputOptions,
-    CommandFailureJson,
-    CanceledCommandJson,
+    OutputState,
 } from '#cli/types/system.ts';
 
 const PROGRESS_CLEAR = '\r\u{1B}[2K';

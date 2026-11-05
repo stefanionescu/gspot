@@ -1,14 +1,14 @@
 import { unescape } from 'node:querystring';
-import { GspotError } from '#cli/system/errors.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 
 import {
-    REDACTED,
-    URL_CREDENTIALS,
     EMPTY_OUTPUT_MESSAGE,
     INSTALL_OUTPUT_LIMIT,
     LOCKFILE_URL_PASSWORD,
+    REDACTED,
+    URL_CREDENTIALS,
 } from '#cli/config/tools/installers.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 
 /**
 Reject a generated lockfile that holds a configured credential in either URL form.

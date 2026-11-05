@@ -1,5 +1,6 @@
-import { createRule } from '../../rule.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+
+import { createRule } from '../../rule.ts';
 
 export const noDuplicateInComposite = createRule<[], 'duplicate'>({
     name: 'no-duplicate-in-composite',

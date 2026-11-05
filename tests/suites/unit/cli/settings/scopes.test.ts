@@ -1,28 +1,28 @@
-import { test, expect } from 'bun:test';
+import { parse as parseToml, stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { setKey, addScopeTable } from '#cli/settings/edit.ts';
-import type { Scope, TomlTable } from '#cli/types/settings.ts';
-import { TWO_WORDS } from '#tests/config/setup/configurations.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
+import { addScopeTable, setKey } from '#cli/settings/edit.ts';
 import {
     getLimit,
     getTable,
-    listIgnores,
     listIgnoredRules,
+    listIgnores,
     selectConfigurationsForScope,
 } from '#cli/settings/scopes.ts';
+import type { Scope, TomlTable } from '#cli/types/settings.ts';
 import {
-    PROJECT_CHOICES,
-    PROJECT_SCOPE_CASES,
     NESTED_SCOPE_SETTINGS,
     OPENAPI_SCOPE_SETTINGS,
     POSTGRES_SCOPE_SETTINGS,
+    PROJECT_CHOICES,
+    PROJECT_SCOPE_CASES,
 } from '#tests/config/settings/read.ts';
+import { TWO_WORDS } from '#tests/config/setup/configurations.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function readNestedScopes(): Promise<Scope[]> {
     await using sandbox = await createGitSandbox({

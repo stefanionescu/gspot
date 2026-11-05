@@ -1,20 +1,20 @@
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { readSettings } from '#cli/settings/read.ts';
-import { listAllowedRules } from '#cli/settings/import-rules.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
 
+import { listAllowedRules } from '#cli/settings/import-rules.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import {
-    REFUSED_SCOPE_PATHS,
+    BOUNDARY_IMPORT_RULES,
+    INVALID_SETTING_LOCATIONS,
     ORDERED_IMPORT_RULES,
     REFUSED_RULE_OPTIONS,
+    REFUSED_SCOPE_PATHS,
     SETTING_RULE_OPTIONS,
-    BOUNDARY_IMPORT_RULES,
     SWIFT_TARGET_REASON_CASES,
-    INVALID_SETTING_LOCATIONS,
 } from '#tests/config/settings/validation.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 test.each([...INVALID_SETTING_LOCATIONS])('settings errors locate $name', ({ text, where }) => {
     expect(validateSettingsText(text)).toStrictEqual([where]);

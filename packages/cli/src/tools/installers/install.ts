@@ -1,29 +1,28 @@
-import type { Tool } from '#cli/types/manifests.ts';
-import { findProgram } from '#cli/system/programs.ts';
-import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { MISE_TOOL } from '#cli/config/tools/installers.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
-import { getTable, getRootScope } from '#cli/settings/scopes.ts';
-import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
-import { installGrammars } from '#cli/tools/installers/grammars.ts';
-import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
-import { installMiseTools, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
+import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import { lookUpTool, inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { findMisePin, findPackagePin, findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
-import type { Session, BrokenTool, ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/tools.ts';
-
+import { planReplacements, writePlans } from '#cli/repository/writer.ts';
+import { getRootScope, getTable } from '#cli/settings/scopes.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
+import { findProgram } from '#cli/system/programs.ts';
+import { buildToolAvailability, inspectTool, lookUpTool } from '#cli/tools/inspect.ts';
+import { installGrammars } from '#cli/tools/installers/grammars.ts';
+import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
+import { installMiseTools, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
+import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
 import {
-    repairToolProjects,
-    listStaleLockfiles,
     installNpmToolProject,
-    isEveryEnvironmentReady,
     installPythonToolProjects,
+    isEveryEnvironmentReady,
+    listStaleLockfiles,
+    repairToolProjects,
 } from '#cli/tools/installers/projects.ts';
+import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
+import { installValePackages } from '#cli/tools/installers/vale.ts';
+import { readToolBinPaths } from '#cli/tools/locate.ts';
+import { findMisePin, findMissingBuild, findPackagePin, listDistinctTools } from '#cli/tools/pins.ts';
+import type { Tool } from '#cli/types/manifests.ts';
+import type { BrokenTool, InstallResult, Session, ToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
 
 async function readInstallPackageManager(session: Session): Promise<ToolPackageManager | undefined> {
     const pin = session.packageManager;

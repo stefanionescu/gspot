@@ -1,34 +1,34 @@
-import { parseAllDocuments } from 'yaml';
-import { getPosition } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { CodeFence, ParseCache } from '#cli/types/parsers.ts';
-import { JSONC_OPTIONS, FENCE_GRAMMARS } from '#cli/config/parsers.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
+import { parseAllDocuments } from 'yaml';
 
+import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
+import {
+    ANGLE_PLACEHOLDER,
+    CAMEL_CASE_BOUNDARY,
+    ELLIPSIS_ARGUMENTS,
+    EMPTY_ARGUMENTS,
+    FENCE_PARSERS,
+    JSON_FENCE_OPTIONS,
+    PLACEHOLDER_VALUE,
+    SYNTAX_ERROR_MESSAGE,
+} from '#cli/config/configurations/language.ts';
+import { FENCE_GRAMMARS, JSONC_OPTIONS } from '#cli/config/parsers.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { getPosition } from '#cli/system/text.ts';
 import type {
     FenceParser,
     FenceSyntaxError,
     FormatFenceParser,
     GrammarFenceParser,
 } from '#cli/types/configurations/language.ts';
-import {
-    FENCE_PARSERS,
-    EMPTY_ARGUMENTS,
-    ANGLE_PLACEHOLDER,
-    PLACEHOLDER_VALUE,
-    ELLIPSIS_ARGUMENTS,
-    JSON_FENCE_OPTIONS,
-    CAMEL_CASE_BOUNDARY,
-    SYNTAX_ERROR_MESSAGE,
-} from '#cli/config/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CodeFence, ParseCache } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
 

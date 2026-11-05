@@ -1,6 +1,7 @@
 import { stringify as stringifyYaml } from 'yaml';
-import { getTable } from '#cli/settings/scopes.ts';
+
 import { PERIPHERY_RETAIN } from '#cli/config/configurations/swift.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 

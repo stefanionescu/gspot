@@ -1,8 +1,9 @@
-import { test, expect } from 'bun:test';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { expect, test } from 'bun:test';
+
 import { NESTJS_SANDBOX } from '#tests/config/setup/languages.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 
 test.each([
     { name: 'without', swagger: {}, expected: [] },

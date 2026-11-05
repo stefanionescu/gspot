@@ -1,8 +1,9 @@
-import type { SqlStatement } from '#cli/types/parsers.ts';
-import type { Node, DefElem, TypeName } from '@pgsql/types';
-import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import type { DefElem, Node, TypeName } from '@pgsql/types';
+
 import { PUBLIC_SCHEMA } from '#cli/config/configurations/infrastructure.ts';
-import type { SchemaState, StatementApplier, FunctionSecurity } from '#cli/types/configurations/infrastructure.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import type { FunctionSecurity, SchemaState, StatementApplier } from '#cli/types/configurations/infrastructure.ts';
+import type { SqlStatement } from '#cli/types/parsers.ts';
 
 function buildFunctionKey(names: Node[] | undefined, parameters: Array<TypeName | undefined>): string {
     const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);

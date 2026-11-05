@@ -1,8 +1,9 @@
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { KEY_WRITE_ARGUMENTS } from '../../config/collections.ts';
+import { haveSameTokens } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { KeyWrite } from '../../types/variables.ts';
-import { haveSameTokens } from '../../language/syntax.ts';
-import { KEY_WRITE_ARGUMENTS } from '../../config/collections.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getKey(node: TSESTree.Node | undefined): string | undefined {
     if (node?.type === AST_NODE_TYPES.Identifier) return node.name;

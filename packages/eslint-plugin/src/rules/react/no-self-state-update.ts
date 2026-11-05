@@ -1,6 +1,7 @@
-import { createRule } from '../../rule.ts';
-import { getStateHook } from '../../libraries/react.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+
+import { getStateHook } from '../../libraries/react.ts';
+import { createRule } from '../../rule.ts';
 
 export const noSelfStateUpdate = createRule<[], 'useless'>({
     name: 'no-self-state-update',

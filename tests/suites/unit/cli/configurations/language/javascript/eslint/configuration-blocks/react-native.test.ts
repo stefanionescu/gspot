@@ -1,5 +1,6 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, readEslintRules } from '#tests/setup/eslint/lint.ts';
 

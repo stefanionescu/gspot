@@ -1,14 +1,16 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { readFile, utimes, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { utimes, readFile, writeFile } from 'node:fs/promises';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { readChangedPaths, readDefaultRef, readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readDefaultRef, readTreeStatus, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('the status of an unborn index lists its staged, unstaged, and untracked paths', async () => {
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n', 'notes.txt': 'draft\n' });

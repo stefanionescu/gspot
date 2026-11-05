@@ -1,17 +1,18 @@
 import { join } from 'node:path';
+
+import { ANSIBLE_CONFIG_EXTENSION, ANSIBLE_CONFIG_FILE } from '#cli/config/configurations/infrastructure.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
-import { isInScope, isInInstalledFolder } from '#cli/system/paths.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
+import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { listSourcePaths } from '#cli/repository/files/selection.ts';
+import { findProjectFolder, isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { listNestedScopes, findProjectFolder, isOutsideChildScopes } from '#cli/repository/scopes.ts';
-import { ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 async function lintProject(
     session: CheckSession,

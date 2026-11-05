@@ -1,12 +1,12 @@
-import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { PASS_THROUGH_FOLDER_RULE } from '#cli/config/configurations/structure.ts';
-import { isInInstalledFolder, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
+import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import { extractParentFolder, isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each folder inside the scope that holds only one folder, above the code of the scope.

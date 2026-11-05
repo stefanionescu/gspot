@@ -1,5 +1,6 @@
-import { parseArgs } from 'node:util';
 import { appendFileSync } from 'node:fs';
+import { parseArgs } from 'node:util';
+
 import { FIND_TEXT_OPTIONS } from '#tests/config/setup/programs.ts';
 
 const { values, positionals } = parseArgs({ options: FIND_TEXT_OPTIONS, allowPositionals: true });

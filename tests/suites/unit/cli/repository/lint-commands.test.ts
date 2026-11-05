@@ -1,6 +1,7 @@
-import { test, spyOn, expect } from 'bun:test';
-import type { LintCommand } from '#cli/types/repository.ts';
+import { expect, spyOn, test } from 'bun:test';
+
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
+import type { LintCommand } from '#cli/types/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

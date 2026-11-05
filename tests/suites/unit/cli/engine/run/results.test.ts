@@ -1,23 +1,25 @@
-import { join } from 'node:path';
-import { createFileTree } from 'testdirs';
-import { runChecks } from '#cli/engine/run.ts';
-import * as locate from '#cli/tools/locate.ts';
-import { test, spyOn, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { compareText } from '#cli/system/text.ts';
+import * as locate from '#cli/tools/locate.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { QUALITY_SEARCH_ARGUMENTS, SCOPE_CHECK_FILES, SCOPE_FINDINGS } from '#tests/config/engine/run.ts';
 import { CANCELED_CHECK_NOTE } from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
-import { readCallRecords, buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { SCOPE_FINDINGS, SCOPE_CHECK_FILES, QUALITY_SEARCH_ARGUMENTS } from '#tests/config/engine/run.ts';
+import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
     await using sandbox = await createGitSandbox({});

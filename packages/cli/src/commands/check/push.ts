@@ -1,15 +1,15 @@
-import { createRunCache } from '#cli/system/cache.ts';
-import { readGitLines } from '#cli/repository/git/run.ts';
-import type { CommandResult } from '#cli/types/system.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { readHead } from '#cli/repository/revisions/files.ts';
+import { EMPTY_PUSH_MESSAGE, NO_PENDING_REFS } from '#cli/config/commands/reports.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { readGitLines } from '#cli/repository/git/run.ts';
 import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
+import { readHead } from '#cli/repository/revisions/files.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
-import { NO_PENDING_REFS, EMPTY_PUSH_MESSAGE } from '#cli/config/commands/reports.ts';
-import type { PushRevision, UntrackedFiles, PushedRevisions } from '#cli/types/repository.ts';
-import type { PushReport, CheckOptions, RevisionCheckResult } from '#cli/types/commands/reports.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import type { CheckOptions, PushReport, RevisionCheckResult } from '#cli/types/commands/reports.ts';
+import type { PushedRevisions, PushRevision, UntrackedFiles } from '#cli/types/repository.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 
 type CleanHead = { hash: string; untracked: UntrackedFiles };
 

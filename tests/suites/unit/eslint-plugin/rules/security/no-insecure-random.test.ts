@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noInsecureRandom } from '#eslint-plugin/rules/security/no-insecure-random.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-insecure-random', noInsecureRandom, {
     valid: [

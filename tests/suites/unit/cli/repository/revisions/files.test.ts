@@ -1,10 +1,12 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { readHead, readIndexTree } from '#cli/repository/revisions/files.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('unborn history is empty, and a broken HEAD refuses committed history', async () => {
     await using sandbox = await createGitSandbox({});

@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 const isTestRun = process.argv.includes('test-without-building');
 const bundle = process.argv[process.argv.indexOf('-resultBundlePath') + 1] ?? '';

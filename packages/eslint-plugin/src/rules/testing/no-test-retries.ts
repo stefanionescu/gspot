@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { MARKED_TEST_MODIFIERS, RETRY_MODULES } from '../../config/testing.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { RETRY_MODULES, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getTestCall } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
 
 function getJestOrigin(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
     if (node.type !== AST_NODE_TYPES.Identifier || node.name !== 'jest') return undefined;

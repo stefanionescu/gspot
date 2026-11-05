@@ -1,29 +1,30 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
-import type { Level } from '#cli/types/settings.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { ScriptFindingCase } from '#tests/types/configurations.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { LintFinding, EslintConfiguration } from '#tests/types/setup.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { compareText } from '#cli/system/text.ts';
+import type { Level } from '#cli/types/settings.ts';
 import {
+    ENGINE_FINDINGS,
+    ENGINE_PACKAGES,
     ENGINE_PATHS,
     ENGINE_PHASES,
     ENGINE_SCOPES,
     ENGINE_SOURCE,
-    UNLINTED_FILES,
-    ENGINE_PACKAGES,
-    ENGINE_FINDINGS,
+    EXTENSIONLESS_SCRIPT_CASES,
+    EXTENSIONLESS_SCRIPT_RULES,
     NODE_SCRIPT_CASES,
     NODE_SCRIPT_FILES,
     NODE_SCRIPT_RULES,
     NODE_SCRIPT_TABLES,
-    EXTENSIONLESS_SCRIPT_CASES,
-    EXTENSIONLESS_SCRIPT_RULES,
+    UNLINTED_FILES,
 } from '#tests/config/configurations/javascript/node.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import type { ScriptFindingCase } from '#tests/types/configurations.ts';
+import type { EslintConfiguration, LintFinding } from '#tests/types/setup.ts';
 
 test.each([...ENGINE_PHASES])(
     `ESLint reports Node APIs newer than the engines of each file's package ($name)`,

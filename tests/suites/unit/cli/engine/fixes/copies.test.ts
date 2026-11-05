@@ -1,14 +1,16 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { runFixers } from '#cli/engine/fixes.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildFixerSettings, CHECK_GENERATION, planFixer } from '#tests/setup/cli/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { readCallRecords, buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { planFixer, CHECK_GENERATION, buildFixerSettings } from '#tests/setup/cli/run.ts';
+import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
 
 test('a fix in a copy writes only the selected file back and removes the copy', async () => {
     await using sandbox = await createGitSandbox({

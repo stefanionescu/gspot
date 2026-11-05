@@ -1,19 +1,19 @@
-import type { Host } from '#cli/types/tools.ts';
+import { LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
+import { isRepositoryRun } from '#cli/engine/files.ts';
+import { LIMIT_READERS } from '#cli/manifests/limits.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { isScopeCovered } from '#cli/repository/scopes.ts';
+import { listIgnores } from '#cli/settings/scopes.ts';
+import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import { listIgnores } from '#cli/settings/scopes.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
-import { isRepositoryRun } from '#cli/engine/files.ts';
-import { LIMIT_READERS } from '#cli/manifests/limits.ts';
-import { isScopeCovered } from '#cli/repository/scopes.ts';
-import type { Tool, Check } from '#cli/types/manifests.ts';
+import type { PlannedCheck, PlannedScope, SettingReader, SettingsSkip, Skip } from '#cli/types/engine/plan.ts';
+import type { Check, Tool } from '#cli/types/manifests.ts';
 import type { Repository } from '#cli/types/repository.ts';
-import { LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
-import { buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import type { Skip, PlannedCheck, PlannedScope, SettingsSkip, SettingReader } from '#cli/types/engine/plan.ts';
+import type { Host } from '#cli/types/tools.ts';
 
 function findDependencySkip(
     dependencies: string[] | undefined,

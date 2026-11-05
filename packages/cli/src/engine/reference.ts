@@ -1,10 +1,10 @@
-import { quoteArgument } from '#cli/system/text.ts';
-import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { getTool, findToolName } from '#cli/tools/pins.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { quoteArgument } from '#cli/system/text.ts';
+import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
-import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
+import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 
 function listCheckSystems(check: Check, tool: Tool | undefined): string[] | undefined {
     const limits = tool?.builds ?? check.operating_systems;

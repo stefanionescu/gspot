@@ -1,10 +1,9 @@
-import { getTable } from '#cli/settings/scopes.ts';
 import { DRIZZLE_RULES } from '#cli/config/configurations/framework.ts';
-
+import { getTable } from '#cli/settings/scopes.ts';
 import {
-    type EslintScope,
     type ConfigurationBlocks,
     type ConfigurationBuilder,
+    type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
 /**

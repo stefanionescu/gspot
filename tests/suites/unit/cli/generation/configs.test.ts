@@ -1,5 +1,6 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

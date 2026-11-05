@@ -1,16 +1,16 @@
 import {
-    type EslintScope,
-    type ConfigurationBlocks,
-    type ConfigurationBuilder,
-} from '#cli/types/configurations/language.ts';
-import {
-    ASTRO_RULES,
     ASTRO_FILES,
-    ASTRO_TYPED_RULES,
     ASTRO_RULE_OPTIONS,
+    ASTRO_RULES,
     ASTRO_SCRIPT_FILES,
+    ASTRO_TYPED_RULES,
     TYPESCRIPT_CONFIGURATION,
 } from '#cli/config/configurations/framework.ts';
+import {
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+    type EslintScope,
+} from '#cli/types/configurations/language.ts';
 
 /**
 Apply Astro's presets and its component parser.

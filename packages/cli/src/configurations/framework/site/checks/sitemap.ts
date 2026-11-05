@@ -1,11 +1,12 @@
 import { decodeXML } from 'entities';
-import { getPosition } from '#cli/system/text.ts';
+
+import { SITE_RULES, SITEMAP_EXTENSION, SITEMAP_FILE, SITEMAP_LOCATION } from '#cli/config/configurations/framework.ts';
+import { convertToBuildPath } from '#cli/configurations/framework/site/checks/build.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { getPosition } from '#cli/system/text.ts';
+import type { SitemapUrls } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { SitemapUrls } from '#cli/types/configurations/language.ts';
-import { convertToBuildPath } from '#cli/configurations/framework/site/checks/build.ts';
-import { SITE_RULES, SITEMAP_FILE, SITEMAP_LOCATION, SITEMAP_EXTENSION } from '#cli/config/configurations/framework.ts';
 
 function parseSitemapUrl(value: string): URL | undefined {
     const url = URL.parse(value);

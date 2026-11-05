@@ -1,14 +1,16 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
-import { NODE_SCRIPT } from '#tests/config/setup/languages.ts';
 import { SESSION_FILES } from '#tests/config/engine/tool-runs.ts';
+import { NODE_SCRIPT } from '#tests/config/setup/languages.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 
 test('a copied session generates settings from its replacement inventory and run cache', async () => {
     await using sandbox = await createGitSandbox({

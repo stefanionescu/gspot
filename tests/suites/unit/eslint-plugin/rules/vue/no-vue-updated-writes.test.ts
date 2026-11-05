@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noVueUpdatedWrites } from '#eslint-plugin/rules/vue/no-vue-updated-writes.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-vue-updated-writes', noVueUpdatedWrites, {
     valid: [

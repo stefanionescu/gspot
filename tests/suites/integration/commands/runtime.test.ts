@@ -1,9 +1,11 @@
-import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { CLI_BIN } from '#tests/setup/cli/commands.ts';
+
+import { expect, test } from 'bun:test';
+
 import cliPackage from '#cli-package' with { type: 'json' };
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { CLI_BIN } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 test.each(['exception', 'rejection'])('an uncaught %s exits 2 with the command error envelope', async (kind) => {
     await using sandbox = await createGitSandbox({});

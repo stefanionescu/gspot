@@ -1,5 +1,5 @@
-import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
+import { LINE_BREAK } from '#cli/config/parsers.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {

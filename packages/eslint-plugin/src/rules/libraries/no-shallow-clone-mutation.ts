@@ -1,17 +1,17 @@
-import { createRule } from '../../rule.ts';
-import type { Isolation } from '../../types/libraries.ts';
-import { haveSameTokens, unwrapExpression } from '../../language/syntax.ts';
-import { getAssignedValue, getQualifiedName } from '../../language/modules.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
     CLONE_ADVICE,
-    MUTATING_CALL,
     DEEP_CLONE_NAMES,
+    MUTATING_CALL,
     NESTED_MEMBER_DEPTH,
     SHALLOW_CLONE_NAMES,
     STRUCTURED_CLONE_NAME,
 } from '../../config/libraries.ts';
+import { getAssignedValue, getQualifiedName } from '../../language/modules.ts';
+import { haveSameTokens, unwrapExpression } from '../../language/syntax.ts';
+import { createRule } from '../../rule.ts';
+import type { Isolation } from '../../types/libraries.ts';
 
 function getMemberRoot(node: TSESTree.Node): TSESTree.Identifier | undefined {
     let value = unwrapExpression(node);

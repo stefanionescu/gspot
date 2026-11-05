@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { requireSessionRegeneration } from '#eslint-plugin/rules/servers/require-session-regeneration.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('require-session-regeneration', requireSessionRegeneration, {
     valid: [

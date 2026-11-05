@@ -1,10 +1,11 @@
 import { posix } from 'node:path';
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
+
+import { NESTED_AGENTS_MESSAGE, NESTED_AGENTS_RULE } from '#cli/config/configurations/general.ts';
 import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { NESTED_AGENTS_RULE, NESTED_AGENTS_MESSAGE } from '#cli/config/configurations/general.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each tracked AGENTS.md outside the repository root.

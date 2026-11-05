@@ -1,18 +1,19 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { RunReport } from '#cli/types/engine/run.ts';
-import { initSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import type { RunReport } from '#cli/types/engine/run.ts';
 import {
-    SHARED_IMPORTS,
     DUPLICATED_METADATA,
-    SHARED_PYTHON_IMPORTS,
     DUPLICATED_PYTHON_LOGIC,
+    SHARED_IMPORTS,
+    SHARED_PYTHON_IMPORTS,
 } from '#tests/config/integration/general.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 const COUNT_STEPS = Array.from(
     { length: 30 },

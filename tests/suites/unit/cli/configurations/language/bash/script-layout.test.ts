@@ -1,19 +1,20 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { markExecutable } from '#tests/setup/system/git.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
+    ENVIRONMENT_READER_SCOPE_TABLES,
     LAYOUT_RULE_CASES,
     SCRIPT_LAYOUT_CASES,
-    ENVIRONMENT_READER_SCOPE_TABLES,
 } from '#tests/config/configurations/bash.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { markExecutable } from '#tests/setup/system/git.ts';
 
 test('an environment reader that only its scope declares may run top-level commands', async () => {
     await using sandbox = await createGitSandbox({

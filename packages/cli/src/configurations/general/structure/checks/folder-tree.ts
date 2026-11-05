@@ -1,9 +1,9 @@
-import { compareText } from '#cli/system/text.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { FolderChild } from '#cli/types/configurations/general.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { FolderChild } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 
 /**
 Lists the source files other than Markdown.

@@ -1,9 +1,11 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { buildEslint } from '#tests/setup/eslint/lint.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
 
 test.each(['JavaScript', 'TypeScript'])('Svelte parser errors restore the working folder for %s', async (language) => {
     await using sandbox = await testdir({

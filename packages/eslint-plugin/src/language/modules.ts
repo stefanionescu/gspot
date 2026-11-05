@@ -1,7 +1,8 @@
-import { unwrapExpression } from './syntax.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { DRIVE_LETTER, MODULE_SEPARATOR, NODE_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
 import type { CallText } from '../types/plugin.ts';
-import { NODE_PREFIX, DRIVE_LETTER, TRAILING_SLASH, MODULE_SEPARATOR } from '../config/plugin.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { unwrapExpression } from './syntax.ts';
 
 function getImportSpecifier(node: TSESTree.ImportSpecifier, module: string): string | undefined {
     if (node.importKind === 'type') return undefined;

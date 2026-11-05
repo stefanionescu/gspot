@@ -1,5 +1,5 @@
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noSelectorParameter } from '#eslint-plugin/rules/functions/no-selector-parameter.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 const rule = noSelectorParameter;
 

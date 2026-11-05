@@ -1,29 +1,30 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
-import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { installNpmTools, planNpmLockfile, installUnlockedNpmTools } from '#cli/tools/installers/npm/project.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { installNpmTools, installUnlockedNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import {
-    CREDENTIAL_TOKEN,
     CREDENTIAL_LOCKFILE,
-    FAILED_INSTALL_CASES,
     CREDENTIAL_PACKAGE_JSON,
+    CREDENTIAL_TOKEN,
+    FAILED_INSTALL_CASES,
 } from '#tests/config/tools/npm.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function prepareCredentialProject(root: string, packageJson: string, lockfile: string) {
     const files = {

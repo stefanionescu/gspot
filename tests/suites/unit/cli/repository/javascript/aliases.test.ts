@@ -1,13 +1,15 @@
+import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { readPackageAliases, readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
-import { ALIAS_FILES, SCOPE_ALIASES, ALIAS_PROJECT } from '#tests/config/repository/detect.ts';
+import { ALIAS_FILES, ALIAS_PROJECT, SCOPE_ALIASES } from '#tests/config/repository/detect.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, code }) => {
     await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });

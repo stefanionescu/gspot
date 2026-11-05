@@ -1,37 +1,37 @@
-import { CST, Lexer } from 'yaml';
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { Node } from 'web-tree-sitter';
-import type { TextRange } from '#cli/types/system.ts';
-import { extractExtension } from '#cli/system/paths.ts';
-import { fromMarkdown } from 'mdast-util-from-markdown';
-import { listSqlTokens } from '#cli/parsers/code/sql.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import { getPosition, replaceRanges } from '#cli/system/text.ts';
-import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import { CST, Lexer } from 'yaml';
 
+import {
+    ASTRO_EXTENSION,
+    ASTRO_FRONT_MATTER,
+    BLOCK_COMMENT_END,
+    COMMENT_NODES,
+    HTML_ALTERNATE_COMMENT_END,
+    HTML_COMMENT_END,
+    MDX_COMMENT,
+    MDX_ESM,
+    NOT_LINE_BREAK,
+    SCRIPT_TAG,
+    TSX_LANGUAGES,
+    YAML_SCALAR_TOKENS,
+} from '#cli/config/parsers.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
+import { listSqlTokens } from '#cli/parsers/code/sql.ts';
+import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import { getPosition, replaceRanges } from '#cli/system/text.ts';
 import type {
-    ParseCache,
-    GrammarName,
     CommentParser,
+    ComponentScript,
+    GrammarName,
+    ParseCache,
     SourceComment,
     SourcePosition,
-    ComponentScript,
 } from '#cli/types/parsers.ts';
-import {
-    MDX_ESM,
-    SCRIPT_TAG,
-    MDX_COMMENT,
-    TSX_LANGUAGES,
-    COMMENT_NODES,
-    NOT_LINE_BREAK,
-    ASTRO_EXTENSION,
-    HTML_COMMENT_END,
-    BLOCK_COMMENT_END,
-    ASTRO_FRONT_MATTER,
-    YAML_SCALAR_TOKENS,
-    HTML_ALTERNATE_COMMENT_END,
-} from '#cli/config/parsers.ts';
+import type { TextRange } from '#cli/types/system.ts';
 
 function buildComment(text: string, start: number, end: number, line: number): SourceComment {
     const lineStart = text.lastIndexOf('\n', start - 1) + 1;

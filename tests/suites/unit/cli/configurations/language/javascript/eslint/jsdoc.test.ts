@@ -1,21 +1,22 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { compareText } from '#cli/system/text.ts';
 import {
-    JSDOC_FILES,
-    JSDOC_RULES,
-    JSDOC_FINDINGS,
     CORRECTED_JSDOC,
-    ROOT_PARAMETERS,
+    JSDOC_FILES,
+    JSDOC_FINDINGS,
+    JSDOC_RULES,
     MEMBER_FUNCTIONS,
+    ROOT_PARAMETERS,
 } from '#tests/config/configurations/javascript/plugins.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 test.each(['all'] as const)(
     'JSDoc types are allowed in JavaScript and duplicate TypeScript type tags are reported at %s',

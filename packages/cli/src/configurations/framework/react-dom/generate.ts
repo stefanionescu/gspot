@@ -1,12 +1,12 @@
 import {
-    REACT_FILES,
     REACT_DOM_RULE_OPTIONS,
+    REACT_FILES,
     REACT_NATIVE_CONFIGURATION,
 } from '#cli/config/configurations/framework.ts';
 import {
-    type EslintScope,
     type ConfigurationBlocks,
     type ConfigurationBuilder,
+    type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
 /**

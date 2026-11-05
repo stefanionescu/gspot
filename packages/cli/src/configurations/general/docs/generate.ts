@@ -1,18 +1,18 @@
-import { getTable } from '#cli/settings/scopes.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 import {
+    LYCHEE_MDX_EXPRESSION,
     LYCHEE_NOTES,
+    LYCHEE_REPOSITORY_LINKS,
+    LYCHEE_ROOT_LINKS,
     LYCHEE_ROOT_NOTE,
     LYCHEE_SITE_NOTE,
-    LYCHEE_ROOT_LINKS,
     SITE_CONFIGURATION,
-    LYCHEE_MDX_EXPRESSION,
-    LYCHEE_REPOSITORY_LINKS,
 } from '#cli/config/configurations/general.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 /**
 Build lychee.toml: a note on why the file exists, and the lychee link exclusions as TOML.

@@ -1,38 +1,39 @@
-import type ts from 'typescript';
 import { join, posix } from 'node:path';
-import { setKey } from '#cli/settings/edit.ts';
-import { isInScope } from '#cli/system/paths.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import type { Repository } from '#cli/types/repository.ts';
-import { requireTypescript } from '#cli/system/typescript.ts';
-import { buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
-import { TSCONFIG_FILE, PBXPROJ_SUFFIX } from '#cli/config/parsers.ts';
-import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import type { TomlTable, DetectedScopes, ScopeConfigurations, ImportExtensionStyle } from '#cli/types/settings.ts';
 
+import type ts from 'typescript';
+
+import { PBXPROJ_SUFFIX, TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import {
     BUILD_SCRIPT,
-    MESSAGES_FOLDER,
-    OPENNEXT_PACKAGE,
     BUNDLER_PACKAGES,
-    XCODE_DESTINATIONS,
-    SITE_CONFIGURATION,
-    SWIFT_CONFIGURATION,
-    MESSAGES_FILE_SUFFIX,
-    OPENAPI_CONFIGURATION,
-    OPENNEXT_TYPE_DEFAULTS,
     CLOUDFLARE_CONFIGURATION,
     IMPORT_EXTENSION_SETTING,
     JAVASCRIPT_CONFIGURATION,
+    MESSAGES_FILE_SUFFIX,
+    MESSAGES_FOLDER,
+    OPENAPI_CONFIGURATION,
+    OPENNEXT_PACKAGE,
+    OPENNEXT_TYPE_DEFAULTS,
+    SITE_CONFIGURATION,
+    SWIFT_CONFIGURATION,
     TRANSLATIONS_CONFIGURATION,
+    XCODE_DESTINATIONS,
 } from '#cli/config/settings/detected.ts';
+import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
+import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
+import { setKey } from '#cli/settings/edit.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildFilenameMatcher } from '#cli/system/matchers.ts';
+import { isInScope } from '#cli/system/paths.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import type { DetectedScopes, ImportExtensionStyle, ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 const TS_SUFFIX_IMPORT = /(?:\bfrom|\bimport)\s*(?:\(\s*)?["']\.{1,2}\/[^"']*\.[cm]?tsx?["']/u;
 

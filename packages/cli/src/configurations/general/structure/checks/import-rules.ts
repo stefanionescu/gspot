@@ -1,48 +1,49 @@
 import { posix } from 'node:path';
-import type { Node } from 'web-tree-sitter';
-import { escapeGlob } from '#cli/system/paths.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { ImportRule } from '#cli/types/settings.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { findImportedModule } from '#cli/parsers/code/swift.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { PYTHON_CONFIGURATION } from '#cli/config/configurations/python.ts';
-import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
-import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
-import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
-import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 
-import type {
-    RuleLookup,
-    SwiftModule,
-    ImportOwners,
-    PythonSearch,
-    LocatedImport,
-} from '#cli/types/configurations/general.ts';
+import type { Node } from 'web-tree-sitter';
+
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
+import { PYTHON_CONFIGURATION } from '#cli/config/configurations/python.ts';
 import {
-    MISE_TASKS_GLOB,
-    RELATIVE_IMPORT,
     CONFIG_PATTERNS,
+    IMPORT_RULE_CATEGORY,
+    IMPORT_RULE_CHECK_RULES,
+    IMPORT_RULE_EXTENSIONS,
+    MISE_TASKS_GLOB,
     NODE_SHEBANG_TAG,
     PYTHON_EXTENSIONS,
-    SWIFT_CONFIGURATION,
-    PYTHON_SOURCE_ROOTS,
-    IMPORT_RULE_CATEGORY,
     PYTHON_FROM_STATEMENT,
-    PYTHON_MODULE_SUFFIXES,
-    UNCOVERED_FILE_MESSAGE,
-    IMPORT_RULE_EXTENSIONS,
-    IMPORT_RULE_CHECK_RULES,
     PYTHON_IMPORT_STATEMENT,
+    PYTHON_MODULE_SUFFIXES,
+    PYTHON_SOURCE_ROOTS,
+    RELATIVE_IMPORT,
+    SWIFT_CONFIGURATION,
+    UNCOVERED_FILE_MESSAGE,
 } from '#cli/config/configurations/structure.ts';
+import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
+import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
+import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { findImportedModule } from '#cli/parsers/code/swift.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { formatRefusedImport, listAllowedRules } from '#cli/settings/import-rules.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import type {
+    ImportOwners,
+    LocatedImport,
+    PythonSearch,
+    RuleLookup,
+    SwiftModule,
+} from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { ImportRule } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function buildRuleLookup(rules: ImportRule[]): RuleLookup {
     const matchers = rules.map((rule) => buildPathMatcher(rule.paths));

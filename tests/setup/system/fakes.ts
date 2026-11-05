@@ -1,23 +1,25 @@
-import executables from 'which';
-import { tmpdir } from 'node:os';
-import { getTool } from '#cli/tools/pins.ts';
-import * as locate from '#cli/tools/locate.ts';
-import { mock, spyOn, type Mock } from 'bun:test';
-import { quoteArgument } from '#cli/system/text.ts';
-import { type Tool } from '#cli/types/manifests.ts';
-import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { ProgramName } from '#tests/types/setup.ts';
-import { listExecutableNames } from '#cli/system/paths.ts';
-import type { runProcess } from '#cli/system/processes.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { join, parse, dirname, basename } from 'node:path';
+import { tmpdir } from 'node:os';
+import { basename, dirname, join, parse } from 'node:path';
+
+import { mock, type Mock, spyOn } from 'bun:test';
+import executables from 'which';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { GIT_PROGRAM } from '#cli/config/repository/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { listExecutableNames } from '#cli/system/paths.ts';
+import * as processes from '#cli/system/processes.ts';
+import type { runProcess } from '#cli/system/processes.ts';
+import { quoteArgument } from '#cli/system/text.ts';
+import * as locate from '#cli/tools/locate.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { type Tool } from '#cli/types/manifests.ts';
+import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
+import type { ProgramName } from '#tests/types/setup.ts';
 
 async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
     await mkdir(dirname(target), { recursive: true });

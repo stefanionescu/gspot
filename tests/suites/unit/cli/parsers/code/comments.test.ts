@@ -1,4 +1,5 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import { COMMENT_BOUNDARIES, COMPONENT_SCRIPT_COMMENTS } from '#tests/config/parsers/comments.ts';
 

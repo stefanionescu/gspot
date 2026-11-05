@@ -1,13 +1,14 @@
-import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/engine/run.ts';
-import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { compareText } from '#cli/system/text.ts';
+import { FILE_LINE_PATTERN } from '#tests/config/engine/tool-runs.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { FILE_LINE_PATTERN } from '#tests/config/engine/tool-runs.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each(['{file}', '{files}'])(
     '%s keeps filenames beginning with a dash out of tool options',

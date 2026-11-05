@@ -1,27 +1,28 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
-import { parse } from '@decimalturn/toml-patch';
 import { existsSync, readFileSync } from 'node:fs';
-import { readSettings } from '#cli/settings/read.ts';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { parse } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import {
+    API_LANGUAGE_REASON,
+    EXCLUDED_CONFIGURATION_SETTINGS,
+    PARENT_REQUIREMENT_SETTINGS,
+    SCOPE_REMOVALS,
+} from '#tests/config/commands/edits.ts';
 import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    SCOPE_REMOVALS,
-    API_LANGUAGE_REASON,
-    PARENT_REQUIREMENT_SETTINGS,
-    EXCLUDED_CONFIGURATION_SETTINGS,
-} from '#tests/config/commands/edits.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test.each([...SCOPE_REMOVALS])('remove bash --scope $scope: $name', async ({ settings, files, scope, expected }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings, ...files });

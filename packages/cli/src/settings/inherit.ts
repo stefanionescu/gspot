@@ -1,33 +1,33 @@
 import { z } from 'zod';
-import { isInScope } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
-import type { Setting } from '#cli/types/manifests.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
-import { joinSettingPaths } from '#cli/settings/paths.ts';
-import { isTable, findValueAt } from '#cli/system/tables.ts';
-import { compareScopeDepth } from '#cli/repository/scopes.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import { CATEGORY_PARENTS, CATEGORY_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';
 
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import {
     LANGUAGE_GROUP_TABLES,
-    SHIPPED_DEFAULT_OWNER,
-    SHIPPED_DEFAULT_ORIGIN,
     NAMING_LANGUAGE_CATEGORIES,
+    SHIPPED_DEFAULT_ORIGIN,
+    SHIPPED_DEFAULT_OWNER,
 } from '#cli/config/settings/schema.ts';
+import { CATEGORY_KEY_SEGMENTS, CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { commandSchema } from '#cli/schemas/manifests/checks.ts';
+import { isReasonedValue } from '#cli/settings/file.ts';
+import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { joinSettingPaths } from '#cli/settings/paths.ts';
+import { isInScope } from '#cli/system/paths.ts';
+import { findValueAt, isTable } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { Setting } from '#cli/types/manifests.ts';
 import type {
-    Settings,
-    SettingMatch,
-    SettingsTable,
-    SettingOrigin,
+    AvailableSettings,
+    InheritedSetting,
     InheritedValue,
     SettingDefault,
-    WrittenSetting,
-    InheritedSetting,
-    AvailableSettings,
+    SettingMatch,
+    SettingOrigin,
+    Settings,
+    SettingsTable,
     WrittenScopeTable,
+    WrittenSetting,
 } from '#cli/types/settings.ts';
 
 function findLanguageSetting(

@@ -1,19 +1,20 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
-    TRAP_SCRIPT_FORMS,
-    TRAP_FUNCTION_SOURCE,
-    UNUSED_FUNCTION_CASES,
     LITERAL_FUNCTION_REFERENCES,
+    TRAP_FUNCTION_SOURCE,
+    TRAP_SCRIPT_FORMS,
+    UNUSED_FUNCTION_CASES,
 } from '#tests/config/configurations/bash.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each(TRAP_SCRIPT_FORMS)('a function called by trap %s is not reported', async (script) => {
     await using sandbox = await createGitSandbox({

@@ -1,18 +1,19 @@
-import { join } from 'node:path';
-import { createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { PythonProject } from '#tests/types/setup.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { join } from 'node:path';
+
+import { createFileTree } from 'testdirs';
 
 import {
     PYTHON_INDEX_NAME,
-    UV_PROJECT_VARIABLES,
     PYTHON_PROJECT_FILES,
     PYTHON_PROJECT_IGNORES,
+    UV_PROJECT_VARIABLES,
 } from '#tests/config/setup/sandboxes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import type { PythonProject } from '#tests/types/setup.ts';
 
 /**
 Create a Python project with a lockfile, and point the uv variables at the sandbox.

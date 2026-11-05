@@ -1,22 +1,22 @@
 import { posix } from 'node:path';
-import type { Scope } from '#cli/types/settings.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import type { DependencyFile } from '#cli/types/parsers.ts';
-import { joinScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
-import type { EslintRuntime } from '#cli/types/configurations/language.ts';
-import { isInScope, escapeGlob, listEnclosingFolders } from '#cli/system/paths.ts';
-import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/framework.ts';
-import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 
+import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/framework.ts';
 import {
     COMMONJS_FILES,
-    NEXTJS_CONFIGURATION,
     COMMONJS_PACKAGE_TYPE,
-    ESLINT_SETTINGS_TABLE,
-    TYPELESS_JAVASCRIPT_FILES,
     ESLINT_BROWSER_CONFIGURATIONS,
+    ESLINT_SETTINGS_TABLE,
+    NEXTJS_CONFIGURATION,
+    TYPELESS_JAVASCRIPT_FILES,
 } from '#cli/config/configurations/javascript.ts';
+import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { compareScopeDepth, joinScope } from '#cli/repository/scopes.ts';
+import { escapeGlob, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';
+import type { EslintRuntime } from '#cli/types/configurations/language.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
+import type { Scope } from '#cli/types/settings.ts';
 
 function selectFrameworkRuntime(configurations: string[]): string | undefined {
     if (configurations.includes(REACT_NATIVE_CONFIGURATION)) return 'react-native';

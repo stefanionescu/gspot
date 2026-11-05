@@ -1,18 +1,20 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { runChecks } from '#cli/engine/run.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { planChecks } from '#cli/engine/plan.ts';
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
+import { BUILT_IN_LIMIT_CASES, GENERATOR_LIMITS, NEXT_INTL_PROJECTS } from '#tests/config/engine/skips.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
-import { GENERATOR_LIMITS, NEXT_INTL_PROJECTS, BUILT_IN_LIMIT_CASES } from '#tests/config/engine/skips.ts';
+import { fakePlatform, isWindows } from '#tests/setup/system/platform.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });

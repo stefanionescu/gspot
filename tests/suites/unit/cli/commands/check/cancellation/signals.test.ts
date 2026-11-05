@@ -1,17 +1,19 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { expect, test } from 'bun:test';
+
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { CLI_BIN, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { CANCELLATION_REPORT_CASES } from '#tests/config/commands/check.ts';
+import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
-import { waitForExit, waitForFile, spawnCommand } from '#tests/setup/system/processes.ts';
+import { CLI_BIN, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { spawnCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
     'check passes $signal to a running tool and reports the run as canceled in $format',

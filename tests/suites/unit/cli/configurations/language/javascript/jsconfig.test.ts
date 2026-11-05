@@ -1,16 +1,18 @@
+import { dirname, join, resolve } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import ts from 'typescript';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { join, dirname, resolve } from 'node:path';
-import { openSession } from '#cli/engine/session.ts';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { compareText } from '#cli/system/text.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a jsconfig beside a tsconfig keeps authored exclusions and lists only tracked declaration files', async () => {
     await using sandbox = await createGitSandbox({

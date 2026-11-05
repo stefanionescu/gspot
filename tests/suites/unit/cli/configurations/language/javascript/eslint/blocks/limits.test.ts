@@ -1,5 +1,6 @@
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 

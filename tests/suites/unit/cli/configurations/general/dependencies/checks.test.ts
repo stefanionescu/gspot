@@ -1,34 +1,35 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { getTool } from '#cli/tools/pins.ts';
-import { runChecks } from '#cli/engine/run.ts';
-import { planChecks } from '#cli/engine/plan.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { unlink, writeFile } from 'node:fs/promises';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { planChecks } from '#cli/engine/plan.ts';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import {
+    ALLOWED_GITHUB_REGISTRIES,
+    BUN_PIN_SETTINGS,
+    DEPENDENCIES_SANDBOX,
+    HOST_LOCKFILE,
+    LOCKFILE_DOWNLOAD_CASES,
+    LOCKFILE_HOST_CASES,
+    MISE_PIN_FILES,
+    REGISTRY_SCOPE_RESULTS,
+} from '#tests/config/configurations/dependencies.ts';
+import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-
-import {
-    HOST_LOCKFILE,
-    MISE_PIN_FILES,
-    BUN_PIN_SETTINGS,
-    LOCKFILE_HOST_CASES,
-    DEPENDENCIES_SANDBOX,
-    REGISTRY_SCOPE_RESULTS,
-    LOCKFILE_DOWNLOAD_CASES,
-    ALLOWED_GITHUB_REGISTRIES,
-} from '#tests/config/configurations/dependencies.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('dependencies/lockfiles accepts a vendored file tarball without treating it as a download', async () => {
     await using sandbox = await createGitSandbox({

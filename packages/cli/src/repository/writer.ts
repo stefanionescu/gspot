@@ -1,36 +1,36 @@
 import { lstatSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { basename, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { isInside } from '#cli/system/paths.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { normalizeTables } from '#cli/system/tables.ts';
-import type { EditableFile } from '#cli/types/parsers.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { openJsonFile } from '#cli/parsers/formats/json.ts';
-import { openTomlFile } from '#cli/parsers/formats/toml.ts';
-import { decodeUtf8File } from '#cli/system/files/reads.ts';
-import { isSameContents } from '#cli/system/files/bounded.ts';
-import type { Files, FileContents } from '#cli/types/system.ts';
-import { GSPOT_FOLDER, LEADING_NEWLINE } from '#cli/config/parsers.ts';
-import { parseAttributePatterns } from '#cli/repository/git/output.ts';
-import { isGspotPath, hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
-import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open.ts';
-import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
-import type { WritePlan, Repository, ManagedKeys, ReplacementRequest } from '#cli/types/repository.ts';
 
+import { GSPOT_FOLDER, LEADING_NEWLINE } from '#cli/config/parsers.ts';
+import { GITATTRIBUTES_FILE, GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import {
     AGENTS_FILE,
-    TOML_BARE_KEY,
-    TOML_EXTENSION,
     EMPTY_JSON_TEXT,
+    INSTALLED_TOOL_FOLDERS,
+    LEADING_PATH_SEGMENTS,
     OWNER_WRITABLE_FILE,
     TEMPORARY_FILE_NAME,
-    VALE_TEMPORARY_NAME,
+    TOML_BARE_KEY,
+    TOML_EXTENSION,
     TRAILING_BLANK_LINE,
-    LEADING_PATH_SEGMENTS,
-    INSTALLED_TOOL_FOLDERS,
+    VALE_TEMPORARY_NAME,
 } from '#cli/config/repository/setup.ts';
+import { openJsonFile } from '#cli/parsers/formats/json.ts';
+import { findBlockBody, findBlockSpan, replaceBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { openTomlFile } from '#cli/parsers/formats/toml.ts';
+import { hasGeneratedHeader, isGspotPath } from '#cli/repository/files/classify.ts';
+import { parseAttributePatterns } from '#cli/repository/git/output.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
+import { deleteEmptyFolders, openFiles, walkFiles } from '#cli/system/files/open.ts';
+import { decodeUtf8File } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { isInside } from '#cli/system/paths.ts';
+import { normalizeTables } from '#cli/system/tables.ts';
+import type { EditableFile } from '#cli/types/parsers.ts';
+import type { ManagedKeys, ReplacementRequest, Repository, WritePlan } from '#cli/types/repository.ts';
+import type { FileContents, Files } from '#cli/types/system.ts';
 
 function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
     const text = onDisk === undefined ? undefined : decodeUtf8File(path, onDisk.bytes);

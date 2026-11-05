@@ -1,15 +1,14 @@
-import { getTable } from '#cli/settings/scopes.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { listDisabledRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
-
 import {
-    PRETTIER_STYLE,
-    MARKDOWNLINT_RULES,
     MARKDOWNLINT_ALL_RULES,
     MARKDOWNLINT_PRETTIER_DISABLED,
+    MARKDOWNLINT_RULES,
+    PRETTIER_STYLE,
 } from '#cli/config/configurations/language.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { assertRunningRuleOptions, listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 /**
 Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, your own rule options, and the rules

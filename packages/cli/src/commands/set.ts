@@ -1,31 +1,31 @@
-import { setKey } from '#cli/settings/edit.ts';
 import { parse } from '@decimalturn/toml-patch';
-import { GspotError } from '#cli/system/errors.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import type { Setting } from '#cli/types/manifests.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
-import { listSettingReaders } from '#cli/engine/skips.ts';
-import { joinSettingPaths } from '#cli/settings/paths.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { findSettingSchema } from '#cli/settings/lookup.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { isTable, findValueAt } from '#cli/system/tables.ts';
-import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import type { TomlTable, InheritedSetting } from '#cli/types/settings.ts';
-import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
-import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
-import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
-import { writeSettingsEdit, selectSettingToEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
-import { TOML_QUOTES, NUMBER_TEXT, BOOLEAN_WORDS, TOML_COMPOUND_START } from '#cli/config/commands/edits.ts';
 
+import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
+import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/commands/edits.ts';
+import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
+import { listSettingReaders } from '#cli/engine/skips.ts';
+import { setKey } from '#cli/settings/edit.ts';
+import { isReasonedValue } from '#cli/settings/file.ts';
+import { findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
+import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { joinSettingPaths } from '#cli/settings/paths.ts';
+import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { findValueAt, isTable } from '#cli/system/tables.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type {
-    SetOptions,
-    ReasonFlags,
     CommandDefinition,
     ParsedSettingValue,
-    SettingsEditContext,
+    ReasonFlags,
+    SetOptions,
     SettingReasonContext,
+    SettingsEditContext,
 } from '#cli/types/commands/edits.ts';
+import type { Setting } from '#cli/types/manifests.ts';
+import type { InheritedSetting, TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 
 function parseInlineValue(text: string): unknown {
     try {

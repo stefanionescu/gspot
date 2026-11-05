@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
-import { isSameTokens } from '../../libraries/testing.ts';
-import type { AssertionChain } from '../../types/assertions.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+
 import { listImportedModules } from '../../libraries/packages.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { isSameTokens } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { AssertionChain } from '../../types/assertions.ts';
 
 function getChain(node: TSESTree.Node): AssertionChain {
     const values: TSESTree.Node[] = [];

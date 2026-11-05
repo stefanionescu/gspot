@@ -1,25 +1,24 @@
-import { extractExtension } from '#cli/system/paths.ts';
-import { GROUP_LABELS } from '#cli/config/generation.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { DetectionSummary } from '#cli/types/generation.ts';
-import { buildFileMatcher } from '#cli/repository/files/selection.ts';
-
 import {
+    AGENT_FILES_LABEL,
+    ANY_FILE_GLOB,
     CI_LABEL,
-    OWN_HOOKS,
+    DETECTION_GAP_WIDTH,
+    DETECTION_LABEL_WIDTH,
     HOOKS_LABEL,
     LEAVES_LABEL,
-    ANY_FILE_GLOB,
-    REPLACES_LABEL,
-    PROJECT_FILE_NOTE,
-    AGENT_FILES_LABEL,
-    NOT_CHECKED_LABEL,
     LINT_FOLDERS_LABEL,
     LINT_SETUP_MESSAGE,
-    DETECTION_GAP_WIDTH,
+    NOT_CHECKED_LABEL,
+    OWN_HOOKS,
+    PROJECT_FILE_NOTE,
+    REPLACES_LABEL,
     UNCHECKED_FILES_SHOWN,
-    DETECTION_LABEL_WIDTH,
 } from '#cli/config/commands/edits.ts';
+import { GROUP_LABELS } from '#cli/config/generation.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildFileMatcher } from '#cli/repository/files/selection.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import type { DetectionSummary } from '#cli/types/generation.ts';
 
 function formatDetectionRow(label: string, names: string[]): string | undefined {
     return names.length === 0

@@ -1,5 +1,5 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
 import { HTML_RULES } from '#cli/config/configurations/language.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const HTML_EXPLANATIONS = {
     [HTML_RULES.inlineScript]: {

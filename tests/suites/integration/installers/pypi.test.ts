@@ -1,30 +1,31 @@
+import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { chmod, readFile, writeFile } from 'node:fs/promises';
+import { basename, delimiter, join } from 'node:path';
+
+import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { zipSync } from 'fflate';
 import { testdir } from 'testdirs';
-import { existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-import { join, basename, delimiter } from 'node:path';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { test, expect, afterAll, beforeAll } from 'bun:test';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { chmod, readFile, writeFile } from 'node:fs/promises';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import {
+    PYTHON_INDEX_CREDENTIALS,
+    PYTHON_PROJECTS,
+    UV_RELEASE_CUTOFF_LINE,
+    ZIP_FILE_OPTIONS,
+} from '#tests/config/integration/commands.ts';
+import { AUTHENTICATION_REQUIRED_MESSAGE, REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
+import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import type { IndexedPythonProject } from '#tests/types/integration.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { REGISTRY_HOST, AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/sandboxes.ts';
-
-import {
-    PYTHON_PROJECTS,
-    ZIP_FILE_OPTIONS,
-    UV_RELEASE_CUTOFF_LINE,
-    PYTHON_INDEX_CREDENTIALS,
-} from '#tests/config/integration/commands.ts';
+import type { IndexedPythonProject } from '#tests/types/integration.ts';
 
 const resources = new AsyncDisposableStack();
 

@@ -1,18 +1,20 @@
 import * as fs from 'node:fs';
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { symlink } from 'node:fs/promises';
-import { runChecks } from '#cli/engine/run.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { symlink } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 test('the ignore file of the copies stays until every check of a run ends', async () => {
     await using sandbox = await createGitSandbox({

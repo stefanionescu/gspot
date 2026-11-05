@@ -1,18 +1,18 @@
-import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import type { EslintConfiguration } from '#tests/types/setup.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
-import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 
 import {
-    EXPRESS_SOURCE,
     COMPONENT_FILES,
     EXPRESS_FINDINGS,
-    NEXTJS_ROUTE_FILES,
-    INDEX_ONLY_REEXPORTS,
+    EXPRESS_SOURCE,
     HTML_INJECTION_CASES,
+    INDEX_ONLY_REEXPORTS,
+    NEXTJS_ROUTE_FILES,
 } from '#tests/config/configurations/javascript/configuration-blocks.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings, readEslintRules } from '#tests/setup/eslint/lint.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 
 test('Vue, Svelte and Astro files parse in their scopes, and a scope without them gets none of their rules', async () => {
     await using sandbox = await testdir({

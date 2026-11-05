@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { preferTypeGuard } from '#eslint-plugin/rules/types/prefer-type-guard.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-type-guard', preferTypeGuard, {
     valid: [

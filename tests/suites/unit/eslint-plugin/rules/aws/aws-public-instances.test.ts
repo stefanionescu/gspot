@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsPublicInstances } from '#eslint-plugin/rules/aws/aws-public-instances.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-public-instances', awsPublicInstances, {
     valid: [

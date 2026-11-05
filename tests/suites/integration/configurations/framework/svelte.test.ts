@@ -1,13 +1,15 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { CLEAN_SVELTE, SVELTE_CASES, SVELTE_SANDBOX } from '#tests/config/integration/framework.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SVELTE_CASES, CLEAN_SVELTE, SVELTE_SANDBOX } from '#tests/config/integration/framework.ts';
 
 const installedSandbox = shareInstalledSandbox({
     ...SVELTE_SANDBOX,

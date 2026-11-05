@@ -1,33 +1,32 @@
-import { GspotError } from '#cli/system/errors.ts';
 import { CODE_MARK } from '#cli/config/commands/help.ts';
-import { describeCheck } from '#cli/engine/reference.ts';
-import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { getTool, findToolName } from '#cli/tools/pins.ts';
-import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
-import type { Session, ScopeCheck } from '#cli/types/tools.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
-import { SETTING_RULES } from '#cli/config/settings/validation.ts';
-import { isConfigurationSelected } from '#cli/manifests/select.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
-import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
-import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-
 import {
     LINT_RULE_LABELS,
     REPOSITORY_COMMAND,
     RUN_IN_COPY_MESSAGE,
     SELECTED_YES_MESSAGE,
 } from '#cli/config/commands/reports.ts';
+import { SETTING_RULES } from '#cli/config/settings/validation.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { describeCheck } from '#cli/engine/reference.ts';
+import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
+import { listChecksById, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { isConfigurationSelected } from '#cli/manifests/select.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
+import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type {
+    CheckExplanation,
     CheckFacts,
     CheckIgnore,
     Explanation,
-    CheckExplanation,
     LintRuleExplanation,
 } from '#cli/types/commands/reports.ts';
+import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
+import type { ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
     return (session?.settings.ignore ?? [])

@@ -1,23 +1,23 @@
-import type { Session } from '#cli/types/tools.ts';
-import { join, dirname, relative } from 'node:path';
-import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { Scope, Level } from '#cli/types/settings.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { requireTypescript } from '#cli/system/typescript.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
-import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { dirname, join, relative } from 'node:path';
 
+import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import {
     COMPILER_OPTIONS,
-    TYPESCRIPT_DEFAULTS,
-    NESTJS_CONFIGURATION,
     DEFAULT_LEVEL_OPTIONS,
     NESTJS_COMPILER_OPTIONS,
+    NESTJS_CONFIGURATION,
+    TYPESCRIPT_DEFAULTS,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/registry.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { Level, Scope } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Builds the scope compiler configuration, extending its authored project when present.

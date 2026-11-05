@@ -1,25 +1,26 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { compareText } from '#cli/system/text.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
 import {
+    COMMENTED_TEMPLATE,
     TEAM_LEFT_OUT,
     TEAM_TEMPLATE,
     TEMPLATE_REFUSALS,
-    COMMENTED_TEMPLATE,
     TEMPLATE_SCOPE_FILES,
 } from '#tests/config/generation/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('init --from copies the settings that fit any repository and lists each one it leaves out', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

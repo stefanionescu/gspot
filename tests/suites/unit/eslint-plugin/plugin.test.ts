@@ -1,5 +1,6 @@
+import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-import { test, expect } from 'bun:test';
+
 import plugin from '#eslint-plugin/plugin.ts';
 
 test('the recommended preset reports the rules of its level, and the all preset adds the others', () => {

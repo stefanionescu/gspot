@@ -1,9 +1,11 @@
-import { createRule } from '../../rule.ts';
 import { createRequire } from 'node:module';
+
+import { AST_NODE_TYPES, ESLintUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { FUNCTION_NODES } from '../../config/plugin.ts';
+import { MAGIC_NUMBER_OPTIONS_SCHEMA, TABLE_CONSTRUCTORS, UPSTREAM_RULE } from '../../config/variables.ts';
+import { createRule } from '../../rule.ts';
 import type { MagicNumbersOptions } from '../../types/variables.ts';
-import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { UPSTREAM_RULE, TABLE_CONSTRUCTORS, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../../config/variables.ts';
 
 const require = createRequire(import.meta.url);
 

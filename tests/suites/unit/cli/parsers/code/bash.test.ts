@@ -1,14 +1,14 @@
-import { test, expect } from 'bun:test';
-import { CONTINUED_TRAP_SOURCE } from '#tests/config/setup/languages.ts';
-import { listCodeLines, parseBashScript } from '#cli/parsers/code/bash.ts';
+import { expect, test } from 'bun:test';
 
+import { listCodeLines, parseBashScript } from '#cli/parsers/code/bash.ts';
 import {
-    TRAP_CALLS,
     BASH_FUNCTIONS,
-    QUOTED_TRAP_CALLS,
-    MKTEMP_CLEANUP_CASES,
     FORWARDING_CALL_CASES,
+    MKTEMP_CLEANUP_CASES,
+    QUOTED_TRAP_CALLS,
+    TRAP_CALLS,
 } from '#tests/config/parsers/bash.ts';
+import { CONTINUED_TRAP_SOURCE } from '#tests/config/setup/languages.ts';
 
 test('comment masking keeps quoted hashes and line numbers and drops blank lines', async () => {
     const parsed = await parseBashScript('\n# note\necho "a # b" # c\n  ');

@@ -1,23 +1,23 @@
 import { type Node } from 'web-tree-sitter';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { ParseCache, TrapScript, ScriptSyntax } from '#cli/types/parsers.ts';
 
 import {
-    SAVED_IFS,
-    IFS_VARIABLE,
-    TRAP_COMMAND,
-    END_OF_OPTIONS,
-    ELEVATE_COMMAND,
     BASH_TOKEN_FORMS,
-    SEQUENCE_COMMAND,
-    TRAP_SOURCE_ROWS,
     DOWNLOAD_COMMANDS,
+    ELEVATE_COMMAND,
+    END_OF_OPTIONS,
     FORWARDED_ARGUMENTS,
-    TRAP_STRING_ESCAPES,
-    INTERPRETER_COMMANDS,
-    TRAP_EXPANSION_NODES,
+    IFS_VARIABLE,
     INLINE_ASSIGNMENT_NODES,
+    INTERPRETER_COMMANDS,
+    SAVED_IFS,
+    SEQUENCE_COMMAND,
+    TRAP_COMMAND,
+    TRAP_EXPANSION_NODES,
+    TRAP_SOURCE_ROWS,
+    TRAP_STRING_ESCAPES,
 } from '#cli/config/parsers.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import type { ParseCache, ScriptSyntax, TrapScript } from '#cli/types/parsers.ts';
 
 function getTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
     const quoted = body.text.slice(1, -1);

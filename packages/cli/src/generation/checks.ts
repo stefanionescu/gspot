@@ -1,14 +1,14 @@
-import { runChecks } from '#cli/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { convertToGlobs } from '#cli/configurations/ignores.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { printProgress } from '#cli/engine/report.ts';
+import { runChecks } from '#cli/engine/run.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import { rewriteProgress } from '#cli/system/terminal.ts';
-import { convertToGlobs } from '#cli/configurations/ignores.ts';
-import { buildIgnoreSections } from '#cli/generation/ignores.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { RunResult, CheckGeneration } from '#cli/types/engine/run.ts';
+import type { CheckGeneration, RunResult } from '#cli/types/engine/run.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,

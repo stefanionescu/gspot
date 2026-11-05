@@ -1,23 +1,24 @@
-import { test, expect } from 'bun:test';
-import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { TYPO } from '#tests/config/setup/configurations.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, spawnRootCheck, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join, posix } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
-    STYLE_CASES,
-    PROSE_SANDBOX,
     COMMENT_SOURCE,
-    VOCABULARY_SOURCE,
     HEADING_CASE_GUIDE,
-    VERSION_RANGE_SOURCE,
+    PROSE_SANDBOX,
+    STYLE_CASES,
     SUPPRESSION_COMMENTS,
+    VERSION_RANGE_SOURCE,
+    VOCABULARY_SOURCE,
 } from '#tests/config/integration/prose.ts';
+import { TYPO } from '#tests/config/setup/configurations.ts';
+import { listFindingRows, parseCheckReport, spawnGspot, spawnRootCheck } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 

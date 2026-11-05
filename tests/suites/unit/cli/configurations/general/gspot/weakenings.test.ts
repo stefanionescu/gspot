@@ -1,14 +1,16 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/engine/run.ts';
 import { rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 async function runWeakenings(root: string): Promise<{ rules: Array<string | undefined>; notes: string[] }> {
     const session = await openSession(root);

@@ -1,16 +1,17 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
+    SQUAWK_CHILD_MIGRATION_PATH,
+    SQUAWK_ROOT_MIGRATION_PATH,
     SQUAWK_SCOPE_SETTINGS,
     UNWRAPPED_MIGRATION_SQL,
-    SQUAWK_ROOT_MIGRATION_PATH,
-    SQUAWK_CHILD_MIGRATION_PATH,
 } from '#tests/config/integration/infrastructure.ts';
+import { listFindingRows, parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test("Squawk uses each scope's assume_in_transaction setting", async () => {
     await using sandbox = await createGitSandbox({

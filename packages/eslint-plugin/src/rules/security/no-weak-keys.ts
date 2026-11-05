@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { KEY_PAIR_SELECTOR, MINIMUM_KEY_LENGTHS, WEAK_CURVES } from '../../config/security.ts';
 import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
-import { WEAK_CURVES, KEY_PAIR_SELECTOR, MINIMUM_KEY_LENGTHS } from '../../config/security.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
 
 function getStaticValue(
     source: Readonly<TSESLint.SourceCode>,

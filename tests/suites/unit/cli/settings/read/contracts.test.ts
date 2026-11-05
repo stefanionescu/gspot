@@ -1,9 +1,10 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { readSettings, parseSettings } from '#cli/settings/read.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+
+import { parseSettings, readSettings } from '#cli/settings/read.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { UNKNOWN_TABLE_FIELDS, CONFIGURATION_CONFLICTS } from '#tests/config/settings/read.ts';
+import { CONFIGURATION_CONFLICTS, UNKNOWN_TABLE_FIELDS } from '#tests/config/settings/read.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('a generator command must declare at least one output', () => {
     using sandbox = createTemporaryFolder();

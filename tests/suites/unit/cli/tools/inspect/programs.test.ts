@@ -1,29 +1,31 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { runTool } from '#cli/tools/run.ts';
-import { getTool } from '#cli/tools/pins.ts';
-import { testdir, createFileTree } from 'testdirs';
-import type { Tool } from '#cli/types/manifests.ts';
-import { openSession } from '#cli/engine/session.ts';
+import { readFile, symlink, unlink } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { listExecutablePaths } from '#cli/tools/locate.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { unlink, symlink, readFile } from 'node:fs/promises';
+import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { formatUnavailableNote, inspectTool, lookUpTool } from '#cli/tools/inspect.ts';
+import { listExecutablePaths } from '#cli/tools/locate.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { runTool } from '#cli/tools/run.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
-import { lookUpTool, inspectTool, formatUnavailableNote } from '#cli/tools/inspect.ts';
-import { fakeCommands, fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeCommands, fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
 test('tool inspection finds the project compiler, and the repository compiler from a copy', async () => {
     await using sandbox = await testdir({

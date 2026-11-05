@@ -1,32 +1,33 @@
-import { z } from 'zod';
 import { posix } from 'node:path';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
-import { outputSchema, commandCheckFields } from '#cli/schemas/manifests/checks.ts';
+
+import { z } from 'zod';
 
 import {
-    levelSchema,
-    regexSchema,
+    CASE_NAMES,
+    CHECK_CWD_VALUES,
+    CHECK_NEEDS,
+    CHECK_RUNS,
+    FILE_KINDS,
+    GROUPS,
+    GSPOT_PATHS,
+    IGNORE_COMMAND,
+    NAME_PATTERN,
+    NAMED_CATEGORIES,
+    RULE_FILE_PATTERN,
+    SETTING_LANGUAGES,
+    SHIPPED_FILES_FOLDER,
+} from '#cli/config/manifests.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
+import { commandCheckFields, outputSchema } from '#cli/schemas/manifests/checks.ts';
+import {
     conditionSchema,
+    levelSchema,
     manifestToolSchema,
     nonemptyStringSchema,
     operatingSystemSchema,
+    regexSchema,
     writtenNamingExceptionSchema,
 } from '#cli/schemas/manifests/tools.ts';
-import {
-    GROUPS,
-    CASE_NAMES,
-    FILE_KINDS,
-    CHECK_RUNS,
-    CHECK_NEEDS,
-    GSPOT_PATHS,
-    NAME_PATTERN,
-    IGNORE_COMMAND,
-    NAMED_CATEGORIES,
-    CHECK_CWD_VALUES,
-    SETTING_LANGUAGES,
-    RULE_FILE_PATTERN,
-    SHIPPED_FILES_FOLDER,
-} from '#cli/config/manifests.ts';
 
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),

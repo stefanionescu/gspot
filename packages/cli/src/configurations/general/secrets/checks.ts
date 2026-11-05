@@ -1,30 +1,30 @@
 import { posix } from 'node:path';
-import { CheckStop } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { buildBaseResult } from '#cli/engine/results.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { EnvironmentRead } from '#cli/types/parsers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { readPushedRange, readPushedCommits } from '#cli/repository/revisions/push.ts';
-import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
-import { type CheckCode, type CheckResult, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
 
 import {
     ENV_KEY_LINE,
-    SECRET_KEY_NAME,
-    MISSING_KEY_RULE,
-    GITLEAKS_LOG_FLAG,
-    GITLEAKS_LOG_OPTIONS,
     ENVIRONMENT_DEFAULT_RULE,
     ENVIRONMENT_READ_LANGUAGES,
+    GITLEAKS_LOG_FLAG,
+    GITLEAKS_LOG_OPTIONS,
+    MISSING_KEY_RULE,
+    SECRET_KEY_NAME,
 } from '#cli/config/configurations/general.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { buildBaseResult } from '#cli/engine/results.ts';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli/parsers/code/environment.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { readPushedCommits, readPushedRange } from '#cli/repository/revisions/push.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckResult, type CheckRunOptions, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { EnvironmentRead } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const GITLEAKS_GIT_MODE = 'git';
 

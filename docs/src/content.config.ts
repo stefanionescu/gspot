@@ -1,25 +1,25 @@
-import { defineCollection } from 'astro:content';
-import { CLI_REFERENCE } from '#cli/reference.ts';
-import { docsSchema } from '@astrojs/starlight/schema';
-import { guideSchema } from '#docs/schemas/content.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
+import { docsSchema } from '@astrojs/starlight/schema';
+import { defineCollection } from 'astro:content';
 import type { Loader, LoaderContext } from 'astro/loaders';
-import { buildCommandPage } from '#docs/reference/commands.ts';
-import { buildSettingsPage } from '#docs/reference/settings.ts';
-import { buildChangelogPage } from '#docs/reference/changelog.ts';
-import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
-import { buildConfigurationPages } from '#docs/reference/configurations.ts';
-import { buildCheckIndex, formatCheckTable } from '#docs/reference/checks.ts';
-import type { ReferencePage, ConfigurationGuide } from '#docs/types/pages.ts';
 
+import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
-    PAGES_FOLDER,
     CHANGELOG_PATH,
-    REFERENCE_PATH,
     DOCS_SOURCE_NAME,
+    PAGES_FOLDER,
     REFERENCE_FOLDERS,
     REFERENCE_IDS_KEY,
+    REFERENCE_PATH,
 } from '#docs/config/reference.ts';
+import { buildChangelogPage } from '#docs/reference/changelog.ts';
+import { buildCheckIndex, formatCheckTable } from '#docs/reference/checks.ts';
+import { buildCommandPage } from '#docs/reference/commands.ts';
+import { buildConfigurationPages } from '#docs/reference/configurations.ts';
+import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
+import { buildSettingsPage } from '#docs/reference/settings.ts';
+import { guideSchema } from '#docs/schemas/content.ts';
+import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
 
 async function buildGuideIndex(context: LoaderContext): Promise<Map<string, ConfigurationGuide>> {
     const guides = new Map<string, ConfigurationGuide>();

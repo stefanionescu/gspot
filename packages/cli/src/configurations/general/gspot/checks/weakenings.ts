@@ -1,33 +1,32 @@
-import { isInScope } from '#cli/system/paths.ts';
-import { LEVELS } from '#cli/config/manifests.ts';
-import { EVERY_CHECK } from '#cli/config/engine.ts';
-import { buildSettings } from '#cli/settings/read.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { parseBaseline } from '#cli/engine/baseline.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import type { Settings, IgnoreRecord } from '#cli/types/settings.ts';
-import type { Weakening } from '#cli/types/configurations/general.ts';
-import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
-import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { getSettingValue, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
-import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-
-import {
-    type CheckCode,
-    type CheckSession,
-    type BaselineCount,
-    type BuiltInCheckResult,
-} from '#cli/types/engine/run.ts';
 import {
     WEAKENING_FIXES,
-    WEAKENING_RULES,
     WEAKENING_IGNORE_HELP,
+    WEAKENING_RULES,
     WEAKENINGS_UNREAD_BASE,
 } from '#cli/config/configurations/structure.ts';
+import { EVERY_CHECK } from '#cli/config/engine.ts';
+import { LEVELS } from '#cli/config/manifests.ts';
+import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
+import { parseBaseline } from '#cli/engine/baseline.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { getSettingValue, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
+import { buildSettings } from '#cli/settings/read.ts';
+import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { isInScope } from '#cli/system/paths.ts';
+import type { Weakening } from '#cli/types/configurations/general.ts';
+import {
+    type BaselineCount,
+    type BuiltInCheckResult,
+    type CheckCode,
+    type CheckSession,
+} from '#cli/types/engine/run.ts';
+import type { IgnoreRecord, Settings } from '#cli/types/settings.ts';
 
 function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weakening[] {
     return head.flatMap((record) => {

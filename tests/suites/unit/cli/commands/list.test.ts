@@ -1,13 +1,14 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { compareText } from '#cli/system/text.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { configurationsListOutputSchema, settingsListOutputSchema } from '#cli/schemas/commands.ts';
+import { compareText } from '#cli/system/text.ts';
+import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/reports.ts';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/reports.ts';
-import { settingsListOutputSchema, configurationsListOutputSchema } from '#cli/schemas/commands.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using sandbox = await createGitSandbox({});

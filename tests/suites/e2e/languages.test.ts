@@ -1,15 +1,17 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e.ts';
-import { parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { GUIDE_READ_MARKDOWN } from '#tests/config/setup/configurations.ts';
+import { parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import type { Sandbox, SampleFix, CheckSample, GspotProject } from '#tests/types/setup.ts';
+import type { CheckSample, GspotProject, SampleFix, Sandbox } from '#tests/types/setup.ts';
 
 async function prepareLanguages(installation: GspotProject): Promise<void> {
     const { online } = installation;

@@ -1,13 +1,13 @@
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
-import { IDENTIFIER_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
-import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
+import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
+import { IDENTIFIER_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Checks the names that source files declare.

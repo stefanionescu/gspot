@@ -1,6 +1,6 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
 import { DEPENDENCY_RULES } from '#cli/config/configurations/general.ts';
 import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const LOCKFILE_EXPLANATIONS = {
     [DEPENDENCY_RULES.host]: {

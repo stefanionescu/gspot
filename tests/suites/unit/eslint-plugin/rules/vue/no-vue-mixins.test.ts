@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+
 import { noVueMixins } from '#eslint-plugin/rules/vue/no-vue-mixins.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

@@ -1,17 +1,18 @@
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import * as parser from '@typescript-eslint/parser';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { RuleTester, type RuleTesterConfig } from '@typescript-eslint/rule-tester';
 
 import {
-    TYPED_RULE_FILES,
-    RULE_TESTER_ROOT,
-    TYPED_RULE_TSCONFIG,
-    TYPED_RULE_FOLDER_PREFIX,
     RULE_TESTER_PARSER_OPTIONS,
+    RULE_TESTER_ROOT,
+    TYPED_RULE_FILES,
+    TYPED_RULE_FOLDER_PREFIX,
+    TYPED_RULE_TSCONFIG,
 } from '#tests/config/setup/sandboxes.ts';
+import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
 /**
 A rule tester using the TypeScript parser and a fixed repository root.

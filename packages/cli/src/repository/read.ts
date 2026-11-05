@@ -1,49 +1,49 @@
 import { realpathSync } from 'node:fs';
 import { posix, resolve } from 'node:path';
-import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+
 import { SWIFT_EXTENSION } from '#cli/config/parsers.ts';
+import {
+    FILE_PREFIX_BYTES,
+    GENERATED_ATTRIBUTE,
+    GIT_CHECK_ATTRIBUTES_ARGUMENTS,
+    GIT_INDEX_FILES_ARGUMENTS,
+    GIT_UNTRACKED_FILES_ARGUMENTS,
+    GITATTRIBUTES_FILE,
+    NEEDS_GIT_MESSAGE,
+    ROOT_SCOPE,
+    SET_VALUES,
+    SETTINGS_FILE,
+    VENDORED_ATTRIBUTE,
+} from '#cli/config/repository/files.ts';
+import { GIT_LOCALE, GIT_TOP_LEVEL_ARGUMENTS, INDEX_LINE, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
-import { detectScopeFolders } from '#cli/repository/scopes.ts';
-import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
-import { classifyFile } from '#cli/repository/files/classify.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
-import { runGit, isOutsideRepository } from '#cli/repository/git/run.ts';
-import { readText, findText, readBytes } from '#cli/system/files/reads.ts';
-import { readGitListing, listTrackedFiles } from '#cli/repository/files/tracked.ts';
-import { INDEX_LINE, GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
-
+import { classifyFile } from '#cli/repository/files/classify.ts';
+import { listTrackedFiles, readGitListing } from '#cli/repository/files/tracked.ts';
 import {
     mergeAttributes,
+    parseAttributePatterns,
     parseListingLine,
     parsePathAttributes,
-    parseAttributePatterns,
 } from '#cli/repository/git/output.ts';
+import { isOutsideRepository, runGit } from '#cli/repository/git/run.ts';
+import { detectScopeFolders } from '#cli/repository/scopes.ts';
+import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { findText, readBytes, readText } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text.ts';
 import type {
+    GeneratedPaths,
     Repository,
+    RepositoryListing,
     ScopeFolder,
     TrackedFile,
     UntrackedFiles,
-    GeneratedPaths,
-    RepositoryListing,
 } from '#cli/types/repository.ts';
-import {
-    SET_VALUES,
-    ROOT_SCOPE,
-    SETTINGS_FILE,
-    NEEDS_GIT_MESSAGE,
-    FILE_PREFIX_BYTES,
-    GITATTRIBUTES_FILE,
-    VENDORED_ATTRIBUTE,
-    GENERATED_ATTRIBUTE,
-    GIT_INDEX_FILES_ARGUMENTS,
-    GIT_UNTRACKED_FILES_ARGUMENTS,
-    GIT_CHECK_ATTRIBUTES_ARGUMENTS,
-} from '#cli/config/repository/files.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 type RepositoryReadOptions = {
     generatedPaths: GeneratedPaths[];

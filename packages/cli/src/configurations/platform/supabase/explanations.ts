@@ -1,6 +1,6 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { SUPABASE_CHECK_RULES } from '#cli/config/configurations/infrastructure.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const DENO_CHECK_EXPLANATIONS = {
     [SUPABASE_CHECK_RULES.typeError]: {

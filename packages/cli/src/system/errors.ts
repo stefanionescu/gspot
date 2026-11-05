@@ -1,6 +1,7 @@
 import type { z } from 'zod';
-import type { ErrorCode } from '#cli/types/system.ts';
+
 import { WRITE_FAILURE_CODES } from '#cli/config/system.ts';
+import type { ErrorCode } from '#cli/types/system.ts';
 
 export class GspotError extends Error {
     readonly code: ErrorCode;

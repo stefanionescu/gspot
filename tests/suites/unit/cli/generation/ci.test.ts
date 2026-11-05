@@ -1,27 +1,29 @@
-import { parse } from 'yaml';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { join, delimiter } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import type { Pipeline } from '#cli/types/generation.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { delimiter, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { parse } from 'yaml';
+
+import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation.ts';
 import { CI_NODE } from '#cli/config/repository/javascript.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { readCallRecords } from '#tests/setup/system/programs.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { Pipeline } from '#cli/types/generation.ts';
+import { LINUX_PIPELINE, SETUP_ARGUMENTS, SETUP_CASES } from '#tests/config/generation/files.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { readCallRecords } from '#tests/setup/system/programs.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
-import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation.ts';
-import { SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/files.ts';
-import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 
 test('the GitHub workflow gives the GitHub token to the gspot install only', () => {
     const workflow = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;

@@ -1,35 +1,35 @@
-import { styleText } from 'node:util';
 import { randomUUID } from 'node:crypto';
-import { EVERY_CHECK } from '#cli/config/engine.ts';
-import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { CODE_MARK } from '#cli/config/commands/help.ts';
-import { formatCheckedContent } from '#cli/engine/report.ts';
-import { formatExplainCommand } from '#cli/engine/results.ts';
-import { print, printWarning } from '#cli/system/terminal.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { BASELINE_FILE } from '#cli/config/repository/files.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { CheckCommandJson } from '#cli/types/commands/reports.ts';
-import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
-import type { FixReport, RunReport, CheckResult } from '#cli/types/engine/run.ts';
+import { styleText } from 'node:util';
 
+import { CODE_MARK } from '#cli/config/commands/help.ts';
 import {
+    CANCELED_RUN_MESSAGE,
+    CHECK_STATUS_COLORS,
+    FINDINGS_SHOWN,
     FIX_LABEL,
+    FIXER_ERROR_PREFIX,
+    INSTALL_REMINDER,
+    NOTE_STATUSES,
     RERUN_LABEL,
     SENTENCE_END,
-    NOTE_STATUSES,
-    FINDINGS_SHOWN,
-    INSTALL_REMINDER,
-    FIXER_ERROR_PREFIX,
-    STATUS_LABEL_WIDTH,
-    CHECK_STATUS_COLORS,
-    CANCELED_RUN_MESSAGE,
     STANDARD_INSTALL_HELP,
+    STATUS_LABEL_WIDTH,
     UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/reports.ts';
+import { EVERY_CHECK } from '#cli/config/engine.ts';
+import { LINE_BREAK } from '#cli/config/parsers.ts';
+import { BASELINE_FILE } from '#cli/config/repository/files.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { formatCheckedContent } from '#cli/engine/report.ts';
+import { formatExplainCommand } from '#cli/engine/results.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { print, printWarning } from '#cli/system/terminal.ts';
+import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
+import type { CheckCommandJson } from '#cli/types/commands/reports.ts';
+import type { CheckResult, FixReport, RunReport } from '#cli/types/engine/run.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 
 const GITHUB_ANNOTATION_LIMIT = 10;
 

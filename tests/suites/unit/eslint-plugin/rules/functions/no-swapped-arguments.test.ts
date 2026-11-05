@@ -1,5 +1,5 @@
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noSwappedArguments } from '#eslint-plugin/rules/functions/no-swapped-arguments.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 const rule = noSwappedArguments;
 

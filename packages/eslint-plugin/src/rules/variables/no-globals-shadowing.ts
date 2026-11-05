@@ -1,9 +1,10 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { UNDEFINED_NAME } from '../../config/plugin.ts';
-import type { FunctionNode } from '../../types/plugin.ts';
-import type { NameSet, NamedNode } from '../../types/variables.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ARGUMENTS_NAME, BUILTIN_GLOBALS, SHADOWING_EXCEPTIONS } from '../../config/variables.ts';
+import { createRule } from '../../rule.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
+import type { NamedNode, NameSet } from '../../types/variables.ts';
 
 function unwrapPattern(node: TSESTree.Node | null | undefined): TSESTree.Node | null | undefined {
     let pattern = node;

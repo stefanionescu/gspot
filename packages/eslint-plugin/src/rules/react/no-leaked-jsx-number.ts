@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
-import { listImportedModules } from '../../libraries/packages.ts';
+import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils';
+
 import { LEAKING_TYPES, NATIVE_LEAKING_TYPES } from '../../config/react.ts';
-import { ESLintUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { listImportedModules } from '../../libraries/packages.ts';
+import { createRule } from '../../rule.ts';
 
 function listOperands(node: TSESTree.Expression): TSESTree.Expression[] {
     const operands: TSESTree.Expression[] = [];

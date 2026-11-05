@@ -1,24 +1,25 @@
-import type { Session } from '#cli/types/tools.ts';
-import type { Scope } from '#cli/types/settings.ts';
 import { basename, relative } from 'node:path/posix';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import type { Config } from '#cli/types/repository.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { BASE_RULES } from '#cli/config/configurations/eslint.ts';
-import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { BOUNDARY_FOLDERS_CONSTANT } from '#cli/config/configurations/javascript.ts';
-import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
-import { escapeGlob, convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
-import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
+
 import { CODE_LANGUAGES, DEFAULT_PROJECT_FILES } from '#cli/config/configurations/blocks.ts';
-import type { PlannedConfig, PlannedEslintFile } from '#cli/types/configurations/language.ts';
-import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
-import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
+import { BASE_RULES } from '#cli/config/configurations/eslint.ts';
+import { BOUNDARY_FOLDERS_CONSTANT } from '#cli/config/configurations/javascript.ts';
+import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import { buildFilePatterns, buildExtensionGlob } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
+import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
+import { buildExtensionGlob, buildFilePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { convertToPosixPath, escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
+import type { PlannedConfig, PlannedEslintFile } from '#cli/types/configurations/language.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { Config } from '#cli/types/repository.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listContributingConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
     if (config.per_scope) return scope.configurations;

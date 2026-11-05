@@ -1,7 +1,8 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
+import { SKIP_REASON_CASES } from '#tests/config/configurations/swift.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SKIP_REASON_CASES } from '#tests/config/configurations/swift.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...SKIP_REASON_CASES])(

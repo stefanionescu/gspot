@@ -1,18 +1,18 @@
+import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { GRAMMARS_FOLDER } from '#cli/config/parsers.ts';
-import { CACHE_FOLDER_NAME } from '#cli/config/system.ts';
-import { rm, mkdir, mkdtemp, symlink } from 'node:fs/promises';
-import { GIT_VARIABLE_PREFIX } from '#cli/config/repository/git.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { readCacheFolder, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
+import { GRAMMARS_FOLDER } from '#cli/config/parsers.ts';
+import { GIT_VARIABLE_PREFIX } from '#cli/config/repository/git.ts';
+import { CACHE_FOLDER_NAME } from '#cli/config/system.ts';
+import { buildSpawnEnvironment, readCacheFolder, readEnvironmentVariable } from '#cli/system/environment.ts';
 import {
     CACHE_FOLDER,
     CONFIG_FOLDER,
-    TEMPORARY_FOLDER,
-    MISSING_TEST_RUN_FOLDER,
     GIT_ISOLATION_ENVIRONMENT,
+    MISSING_TEST_RUN_FOLDER,
+    TEMPORARY_FOLDER,
 } from '#tests/config/setup/sandboxes.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 export const REPOSITORY_ROOT = join(import.meta.dir, '../../..');
 

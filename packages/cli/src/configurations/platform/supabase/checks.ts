@@ -1,58 +1,59 @@
 import { statSync } from 'node:fs';
-import type { Node } from '@pgsql/types';
-import { fileURLToPath } from 'node:url';
-import { CheckStop } from '#cli/system/errors.ts';
 import { join, posix, relative } from 'node:path';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { formatOutputTail, assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
-import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
-import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 
+import type { Node } from '@pgsql/types';
+
+import {
+    DENO_CHECK_COMMAND,
+    DENO_CHECK_FAILED_MESSAGE,
+    DENO_CONFIG_FILES,
+    DENO_CONFIG_FLAG,
+    DENO_IMPORT_MAP_FLAG,
+    DENO_LINT_COMMAND,
+    DENO_LINT_NAME,
+    DENO_LOCATION,
+    FILE_URL_PREFIX,
+    FUNCTION_ENTRYPOINT,
+    SERVICE_ROLE_KEY_EXTENSIONS,
+    SERVICE_ROLE_KEY_MESSAGE,
+    SERVICE_ROLE_KEY_NAMES,
+    SERVICE_ROLE_KEY_TAGS,
+    SHARED_PREFIX,
+    STORAGE_POLICY_TABLE,
+    SUPABASE_CHECK_RULES,
+    SUPABASE_PROJECT_FILE,
+    SYNTAX_RULE,
+    VERIFY_JWT_MESSAGE,
+    VERIFY_JWT_OFF,
+} from '#cli/config/configurations/infrastructure.ts';
+import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import {
     DENO_CHECK_EXPLANATIONS,
     STORAGE_POLICY_EXPLANATIONS,
 } from '#cli/configurations/platform/supabase/explanations.ts';
-import {
-    SYNTAX_RULE,
-    DENO_LOCATION,
-    SHARED_PREFIX,
-    DENO_LINT_NAME,
-    VERIFY_JWT_OFF,
-    FILE_URL_PREFIX,
-    DENO_CONFIG_FLAG,
-    DENO_CONFIG_FILES,
-    DENO_LINT_COMMAND,
-    DENO_CHECK_COMMAND,
-    VERIFY_JWT_MESSAGE,
-    FUNCTION_ENTRYPOINT,
-    SUPABASE_CHECK_RULES,
-    DENO_IMPORT_MAP_FLAG,
-    STORAGE_POLICY_TABLE,
-    SERVICE_ROLE_KEY_TAGS,
-    SUPABASE_PROJECT_FILE,
-    SERVICE_ROLE_KEY_NAMES,
-    SERVICE_ROLE_KEY_MESSAGE,
-    DENO_CHECK_FAILED_MESSAGE,
-    SERVICE_ROLE_KEY_EXTENSIONS,
-} from '#cli/config/configurations/infrastructure.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { assertToolFindings, formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
+import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listEqualityBuckets(expression: SqlNodeFields['A_Expr']): string[] {
     for (const [column, value] of [

@@ -1,23 +1,24 @@
-import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { test, expect, describe } from 'bun:test';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { join } from 'node:path';
+
+import { describe, expect, test } from 'bun:test';
 
 import {
-    SEMGREP_CHECK,
-    FASTAPI_SOURCE,
-    FASTAPI_PROJECT,
-    SEMGREP_SANDBOX,
-    SEMGREP_CHECK_ID,
-    FASTAPI_SCOPE_SETTINGS,
     FASTAPI_CONFIGURATION_CASES,
+    FASTAPI_PROJECT,
+    FASTAPI_SCOPE_SETTINGS,
+    FASTAPI_SOURCE,
+    SEMGREP_CHECK,
+    SEMGREP_CHECK_ID,
+    SEMGREP_SANDBOX,
 } from '#tests/config/integration/semgrep.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

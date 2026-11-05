@@ -1,33 +1,34 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import { parse } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { TomlTable } from '#cli/types/settings.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { initOutputSchema } from '#cli/schemas/commands.ts';
-import type { ToolPackageJson } from '#tests/types/setup.ts';
-import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import * as installers from '#cli/tools/installers/install.ts';
-import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
+import { join } from 'node:path';
 
+import { parse } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import * as installers from '#cli/tools/installers/install.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 import {
-    TOOL_ONLY_PACKAGE,
-    STYLE_SOURCE_FILES,
-    NEXTJS_LOCALE_CASES,
     CONFIGURATION_CHOICES,
+    NEXTJS_LOCALE_CASES,
     PLATFORM_PROJECT_FILES,
+    STYLE_SOURCE_FILES,
+    TOOL_ONLY_PACKAGE,
 } from '#tests/config/generation/plan.ts';
+import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import type { ToolPackageJson } from '#tests/types/setup.ts';
 
 async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, ['init', '--json']);

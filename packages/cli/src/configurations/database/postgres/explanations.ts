@@ -1,13 +1,12 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
-
 import {
-    FROZEN_RULE,
-    POLICY_RULES,
-    MIGRATION_RULES,
     DRIFT_GUARD_RULE,
+    FROZEN_RULE,
+    MIGRATION_RULES,
+    POLICY_RULES,
     ROW_SECURITY_RULE,
 } from '#cli/config/configurations/infrastructure.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const EDITED_MIGRATION_EXPLANATIONS = {
     [FROZEN_RULE]: {

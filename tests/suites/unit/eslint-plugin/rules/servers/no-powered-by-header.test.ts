@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noPoweredByHeader } from '#eslint-plugin/rules/servers/no-powered-by-header.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-powered-by-header', noPoweredByHeader, {
     valid: [

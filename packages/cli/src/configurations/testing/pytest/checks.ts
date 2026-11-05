@@ -1,14 +1,14 @@
-import { isTable } from '#cli/system/tables.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { stripCoverageArguments } from '#cli/engine/plan.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
-import { type CheckCode, type CheckResult, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckResult, type CheckRunOptions, type CheckSession } from '#cli/types/engine/run.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function hasProjectCoverage(session: Session, scopePath: string): boolean {
     if (findText(session.cache, joinScope(scopePath, '.coveragerc')) !== undefined) return true;

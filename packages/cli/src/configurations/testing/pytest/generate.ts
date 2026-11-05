@@ -1,6 +1,6 @@
+import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/framework.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/framework.ts';
 
 /**
 Build the coverage exclusions for the test files of this scope.

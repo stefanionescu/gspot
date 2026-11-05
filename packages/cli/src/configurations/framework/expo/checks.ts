@@ -1,24 +1,24 @@
 import { join } from 'node:path';
-import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { findInstalledDependency } from '#cli/tools/packages.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 
 import {
-    EXPO_PACKAGE,
-    FAILED_CHECK_RULE,
-    FAILED_CHECK_LINE,
-    PASSED_CHECKS_LINE,
     BLOCK_END_PREFIXES,
     EXPO_DOCTOR_COMMAND,
+    EXPO_PACKAGE,
+    FAILED_CHECK_LINE,
+    FAILED_CHECK_RULE,
+    PASSED_CHECKS_LINE,
     UNINSTALLED_EXPO_MESSAGE,
 } from '#cli/config/configurations/framework.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { findInstalledDependency } from '#cli/tools/packages.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 function parseExpoDoctor(stdout: string): string[] {
     const lines = stripVTControlCharacters(stdout)

@@ -1,6 +1,6 @@
+import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { Repository } from '#cli/types/repository.ts';
-import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 
 /**
 Read the files of a sandbox with the shipped configurations, no scopes, and no generated or vendored paths.

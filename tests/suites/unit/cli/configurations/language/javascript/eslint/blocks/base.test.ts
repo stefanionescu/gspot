@@ -1,9 +1,10 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import plugin from '#eslint-plugin/plugin.ts';
+
 import { LEVELS } from '#cli/config/manifests.ts';
+import plugin from '#eslint-plugin/plugin.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings, readEslintRules } from '#tests/setup/eslint/lint.ts';
 
 test('the pin rule pins every range of a private package and only the dev dependencies of a published one', async () => {
     await using sandbox = await testdir({

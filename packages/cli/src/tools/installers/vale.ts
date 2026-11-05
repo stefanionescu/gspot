@@ -1,40 +1,40 @@
-import http from 'node:http';
 import { createHash } from 'node:crypto';
-import { getTool } from '#cli/tools/pins.ts';
-import { join, posix, dirname } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
-import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
-import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
-import type { ToolInstall, ArchiveDownload, DownloadSession } from '#cli/types/tools.ts';
+import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import http from 'node:http';
+import { dirname, join, posix } from 'node:path';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import {
-    JSON_INDENT,
     CONFIG_FLAG,
+    JSON_INDENT,
     NETWORK_ADVICE,
-    PROXY_VARIABLES,
     NODE_PROXY_ADVICE,
+    PROXY_VARIABLES,
 } from '#cli/config/tools/installers.ts';
 import {
-    VALE_TOOL,
-    VALE_PACKAGES,
-    VALE_PACKAGE_URLS,
-    VALE_INSTALL_STEP,
-    VALE_DOWNLOAD_NAME,
     VALE_ARCHIVE_LIMIT,
+    VALE_DOWNLOAD_NAME,
+    VALE_INSTALL_ARGUMENTS,
     VALE_INSTALL_PREFIX,
+    VALE_INSTALL_STEP,
     VALE_PACKAGE_FOLDERS,
     VALE_PACKAGE_RELEASES,
-    VALE_INSTALL_ARGUMENTS,
+    VALE_PACKAGE_URLS,
+    VALE_PACKAGES,
+    VALE_TOOL,
 } from '#cli/config/tools/vale.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildToolAvailability, inspectTool } from '#cli/tools/inspect.ts';
+import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import type { ArchiveDownload, DownloadSession, ToolInstall } from '#cli/types/tools.ts';
 
 function selectProxyAdvice(): string {
     if (PROXY_VARIABLES.every((name) => readEnvironmentVariable(name) === undefined)) return NETWORK_ADVICE;

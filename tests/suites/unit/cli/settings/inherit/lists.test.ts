@@ -1,17 +1,19 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { getTable } from '#cli/settings/scopes.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import { getSettingValue } from '#cli/settings/inherit.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getSettingValue } from '#cli/settings/inherit.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/read.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {

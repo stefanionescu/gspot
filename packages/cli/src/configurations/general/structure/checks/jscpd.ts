@@ -1,30 +1,30 @@
 import { writeFileSync } from 'node:fs';
-import { openFiles } from '#cli/system/files/open.ts';
-import { readBytes } from '#cli/system/files/reads.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import { jscpdOutputSchema } from '#cli/schemas/configurations.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listSourceConfigurations } from '#cli/manifests/select.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
 
 import {
     CLONE_RULE,
-    JSCPD_TOOL,
-    OUTPUT_FLAG,
     JSCPD_ARGUMENTS,
     JSCPD_CONFIG_FILE,
     JSCPD_REPORT_FILE,
+    JSCPD_TOOL,
+    OUTPUT_FLAG,
 } from '#cli/config/configurations/general.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { jscpdOutputSchema } from '#cli/schemas/configurations.ts';
+import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 /**
 Runs jscpd over the scope and reports the clones.

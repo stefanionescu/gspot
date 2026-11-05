@@ -1,17 +1,19 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { INIT_FILES } from '#tests/config/setup/sandboxes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 
 test('after init and install, gspot/generated-files reports nothing', async () => {
     await using sandbox = await testdir(INIT_FILES);

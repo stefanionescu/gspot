@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+
 import { REDUCE_METHOD } from '../../config/collections.ts';
+import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { getAssignedValue } from '../../language/modules.ts';
-import { getTypes, getTypeCategory } from '../../language/checker.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
 
 export const requireReduceInitialValue = createRule<[], 'initial'>({
     name: 'require-reduce-initial-value',

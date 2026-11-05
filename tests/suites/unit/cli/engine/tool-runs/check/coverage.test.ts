@@ -1,17 +1,19 @@
-import { test, expect } from 'bun:test';
-import { join, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { planChecks } from '#cli/engine/plan.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { join, resolve } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { COVERAGE_PROJECT_FILES } from '#tests/config/engine/tool-runs.ts';
 import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test.each(COVERAGE_PROJECT_FILES)(
     'pytest respects $name and only adds its generated omissions as a fallback',

@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noAmbiguousAnchors } from '#eslint-plugin/rules/regex/no-ambiguous-anchors.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-ambiguous-anchors', noAmbiguousAnchors, {
     valid: [String.raw`/^\s+|\s+$/gu;`, '/^(?:a|b)$/u;', '/a|^b|c$/u;'],

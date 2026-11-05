@@ -1,6 +1,7 @@
 import { z } from 'zod';
+
 import { TOOL_STATES } from '#cli/config/tools/programs.ts';
-import { npmLockfileSchema, bunLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers.ts';
+import { bunLockfileSchema, npmLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers.ts';
 
 const miseVersionSchema = z.looseObject({ version: z.string() });
 

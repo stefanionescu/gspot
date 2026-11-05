@@ -1,30 +1,31 @@
-import { Glob } from 'bun';
-import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { planChecks } from '#cli/engine/plan.ts';
-import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
 
+import { Glob } from 'bun';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { planChecks } from '#cli/engine/plan.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
-    SYNTAX_FILES,
-    SYNTAX_CASES,
     DIALECT_FIXES,
     DIALECT_SOURCES,
     SHELLCHECK_DIALECT_FINDINGS,
+    SYNTAX_CASES,
+    SYNTAX_FILES,
 } from '#tests/config/integration/language.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test('ShellCheck reports a finding in a filename that starts with a dash', async () => {
     await using sandbox = await createGitSandbox({

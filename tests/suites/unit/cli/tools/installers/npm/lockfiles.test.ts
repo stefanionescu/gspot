@@ -1,12 +1,12 @@
+import { describe, expect, test } from 'bun:test';
 import { stringify } from 'yaml';
-import { test, expect, describe } from 'bun:test';
-import { isLockfileFresh, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
 
+import { isLockfileFresh, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
 import {
-    ROOT_DEPENDENCIES,
     LOCKFILE_REGISTRY,
-    LOCKFILE_SECURITY_CASES,
     LOCKFILE_REGISTRY_CASES,
+    LOCKFILE_SECURITY_CASES,
+    ROOT_DEPENDENCIES,
 } from '#tests/config/tools/npm.ts';
 
 test.each([...ROOT_DEPENDENCIES])(

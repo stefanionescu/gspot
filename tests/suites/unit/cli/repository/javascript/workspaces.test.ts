@@ -1,16 +1,17 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { symlink, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import {
     INACTIVE_LERNA_FILES,
     NESTED_WORKSPACE_FILES,
     OUTSIDE_WORKSPACE_FILES,
 } from '#tests/config/repository/detect.ts';
+import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 
 test('workspace detection stays inside the folder', async () => {
     await using sandbox = await testdir(NESTED_WORKSPACE_FILES);

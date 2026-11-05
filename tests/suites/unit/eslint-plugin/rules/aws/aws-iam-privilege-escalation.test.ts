@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsIamPrivilegeEscalation } from '#eslint-plugin/rules/aws/aws-iam-privilege-escalation.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-iam-privilege-escalation', awsIamPrivilegeEscalation, {
     valid: [

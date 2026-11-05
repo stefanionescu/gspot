@@ -1,25 +1,25 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
 import {
-    ENV_ACCESSOR_FILES,
+    COMPONENT_ENVIRONMENT_FINDINGS,
     ENV_ACCESSOR_EXAMPLE,
-    READER_PROJECT_FILES,
-    ENVIRONMENT_TEXT_CASES,
+    ENV_ACCESSOR_FILES,
+    ENVIRONMENT_FUNCTION_EXAMPLE,
+    ENVIRONMENT_FUNCTION_FINDINGS,
     ENVIRONMENT_SCOPE_RESULTS,
+    ENVIRONMENT_TEXT_CASES,
+    READER_PROJECT_FILES,
     SCOPE_FUNCTION_CORRECTIONS,
     SCOPE_READER_PROJECT_FILES,
     SCOPE_READER_PROJECT_TABLES,
-    ENVIRONMENT_FUNCTION_EXAMPLE,
-    ENVIRONMENT_FUNCTION_FINDINGS,
-    COMPONENT_ENVIRONMENT_FINDINGS,
 } from '#tests/config/configurations/secrets.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a nested scope uses the default example environment file names', async () => {
     await using sandbox = await createGitSandbox({

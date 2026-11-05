@@ -1,9 +1,10 @@
-import { parseArgs } from 'node:util';
-import { pathToFileURL } from 'node:url';
-import { join, dirname } from 'node:path';
+import { copyFileSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
+
 import { SITE_BUILD_OPTIONS } from '#tests/config/setup/programs.ts';
-import { statSync, mkdirSync, readdirSync, copyFileSync, writeFileSync } from 'node:fs';
 
 const { values } = parseArgs({ options: SITE_BUILD_OPTIONS });
 const pairs = values.copy ?? [];

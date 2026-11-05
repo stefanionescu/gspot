@@ -1,22 +1,22 @@
 import type { Node } from 'web-tree-sitter';
-import type { Session } from '#cli/types/tools.ts';
-import type { SourceTree } from '#cli/types/parsers.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 import {
     COMMENT_NODES,
-    INITIALIZER_NAME,
-    OVERRIDE_MODIFIER,
     DOC_COMMENT_START,
-    UNNAMED_PARAMETER,
-    PUBLIC_VISIBILITIES,
-    DOCUMENTED_PARAMETER,
-    MISSING_PARAMETER_RULE,
     DOCUMENTED_DECLARATIONS,
+    DOCUMENTED_PARAMETER,
+    INITIALIZER_NAME,
+    MISSING_PARAMETER_RULE,
+    OVERRIDE_MODIFIER,
+    PUBLIC_VISIBILITIES,
+    UNNAMED_PARAMETER,
 } from '#cli/config/configurations/builds.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { SourceTree } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function isPublicDeclaration(declaration: Node): boolean {
     const modifiers = declaration.namedChildren.find((child) => child.type === 'modifiers')?.namedChildren ?? [];

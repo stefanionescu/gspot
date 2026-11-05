@@ -1,36 +1,35 @@
-import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { decodeGitPaths } from '#cli/repository/git/output.ts';
-import type { MergeBase, TreeStatus, ChangedPaths } from '#cli/types/repository.ts';
-
 import {
-    runGit,
-    readGitText,
-    runGitBytes,
-    readGitLines,
-    readGitPaths,
-    buildGitError,
-} from '#cli/repository/git/run.ts';
-import {
-    ORIGIN_REMOTE,
-    COMMIT_SUFFIX,
-    REMOTES_PREFIX,
-    EMPTY_BASE_HASH,
-    DEFAULT_BRANCHES,
     COMMIT_HASH_PATTERN,
+    COMMIT_SUFFIX,
+    DEFAULT_BRANCHES,
+    EMPTY_BASE_HASH,
+    GIT_CHANGED_COMMITS_ARGUMENTS,
+    GIT_DIFF_NAMES_ARGUMENTS,
+    GIT_HASH_EXISTS_ARGUMENTS,
+    GIT_HEAD_NAME_ARGUMENTS,
+    GIT_LOCAL_BRANCHES_ARGUMENTS,
+    GIT_MERGE_BASE_ARGUMENTS,
+    GIT_REMOTE_HEADS_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
-    REMOTE_HEAD_FIELD_COUNT,
-    GIT_HEAD_NAME_ARGUMENTS,
-    GIT_DIFF_NAMES_ARGUMENTS,
-    GIT_MERGE_BASE_ARGUMENTS,
-    GIT_HASH_EXISTS_ARGUMENTS,
-    GIT_REMOTE_HEADS_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
-    GIT_LOCAL_BRANCHES_ARGUMENTS,
-    GIT_CHANGED_COMMITS_ARGUMENTS,
+    ORIGIN_REMOTE,
+    REMOTE_HEAD_FIELD_COUNT,
+    REMOTES_PREFIX,
 } from '#cli/config/repository/git.ts';
+import { decodeGitPaths } from '#cli/repository/git/output.ts';
+import {
+    buildGitError,
+    readGitLines,
+    readGitPaths,
+    readGitText,
+    runGit,
+    runGitBytes,
+} from '#cli/repository/git/run.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { ChangedPaths, MergeBase, TreeStatus } from '#cli/types/repository.ts';
 
 // Git opens a submodule only to find dirty content, which no check reads, and that step fails on a gitlink path that
 // is a link. The recorded commit of a submodule still counts.

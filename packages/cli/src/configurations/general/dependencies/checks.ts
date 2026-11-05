@@ -1,44 +1,44 @@
 import { join, posix } from 'node:path';
-import { isTable } from '#cli/system/tables.ts';
-import { getPosition } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { miseToolsSchema } from '#cli/schemas/parsers.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { readText, findText } from '#cli/system/files/reads.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { PACKAGE_JSON, IMPORTER_LOCKFILES, PNPM_ROOT_IMPORTER, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
 
+import {
+    DEPENDENCY_RULES,
+    DOWNLOAD_PROTOCOLS,
+    LOCKFILE_KEY_SUFFIX,
+    LOCKFILE_UPDATE_COMMANDS,
+    MISE_FILES,
+    NPM_TOOL_PREFIX,
+    PACKAGE_MANAGER_HASH_SEPARATOR,
+    PACKAGE_MANAGER_VERSION_SEPARATOR,
+    STALE_LOCKFILE_SECTIONS,
+    UNBUNDLED_PACKAGE_MANAGERS,
+} from '#cli/config/configurations/general.ts';
+import { IMPORTER_LOCKFILES, JAVASCRIPT_LOCKFILES, PACKAGE_JSON, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import {
     LOCKFILE_EXPLANATIONS,
     PACKAGE_MANAGER_PIN_EXPLANATIONS,
 } from '#cli/configurations/general/dependencies/explanations.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import {
-    listSpecifiers,
-    listLockfileUrls,
-    SPECIFIER_PARSERS,
     findNearestLockfile,
+    listLockfileUrls,
+    listSpecifiers,
+    SPECIFIER_PARSERS,
 } from '#cli/parsers/projects/lockfiles.ts';
-import {
-    MISE_FILES,
-    NPM_TOOL_PREFIX,
-    DEPENDENCY_RULES,
-    DOWNLOAD_PROTOCOLS,
-    LOCKFILE_KEY_SUFFIX,
-    STALE_LOCKFILE_SECTIONS,
-    LOCKFILE_UPDATE_COMMANDS,
-    UNBUNDLED_PACKAGE_MANAGERS,
-    PACKAGE_MANAGER_HASH_SEPARATOR,
-    PACKAGE_MANAGER_VERSION_SEPARATOR,
-} from '#cli/config/configurations/general.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
+import { miseToolsSchema } from '#cli/schemas/parsers.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { getPosition } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

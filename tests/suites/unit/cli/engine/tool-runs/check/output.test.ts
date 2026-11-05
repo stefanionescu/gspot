@@ -1,17 +1,18 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+
 import { runChecks } from '#cli/engine/run.ts';
-import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { compareText } from '#cli/system/text.ts';
 import { PENDING_NOTE_RESULTS } from '#tests/config/engine/tool-runs.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a command check runs its command and reports file and line through its output format', async () => {
     const command = buildProgramCommand('checks/search', '--text', 'PENDING', '--report', 'line', '--', '{files}');

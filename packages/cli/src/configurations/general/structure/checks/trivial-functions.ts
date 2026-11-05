@@ -1,37 +1,38 @@
 import { basename } from 'node:path';
+
 import type { Node } from 'web-tree-sitter';
-import { getLimit } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { listCheckFiles } from '#cli/engine/files.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { isDocstring } from '#cli/parsers/code/python.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
-import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
-import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
 
 import {
-    ONE_STATEMENT,
-    FUNCTION_LABEL,
     BARE_NAME_NODES,
-    TYPE_ALIAS_NODES,
-    FORWARDING_NODES,
-    PYTHON_EXPORT_LIST,
     BASH_COMMAND_NODES,
-    PYTHON_PACKAGE_FILE,
-    TRIVIAL_FILE_MESSAGE,
-    SWIFT_ACCESSOR_NODES,
-    TYPE_REFERENCE_NODES,
     BASH_SOURCE_COMMANDS,
-    DECORATED_PYTHON_NODE,
-    SWIFT_FUNCTION_LABELS,
-    SWIFT_ACCESSOR_OWNERS,
-    TRIVIAL_FUNCTION_RULES,
     COUNTED_FUNCTION_NODES,
+    DECORATED_PYTHON_NODE,
+    FORWARDING_NODES,
+    FUNCTION_LABEL,
+    ONE_STATEMENT,
+    PYTHON_EXPORT_LIST,
+    PYTHON_PACKAGE_FILE,
+    SWIFT_ACCESSOR_NODES,
+    SWIFT_ACCESSOR_OWNERS,
+    SWIFT_FUNCTION_LABELS,
+    TRIVIAL_FILE_MESSAGE,
+    TRIVIAL_FUNCTION_RULES,
+    TYPE_ALIAS_NODES,
+    TYPE_REFERENCE_NODES,
 } from '#cli/config/configurations/structure.ts';
+import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
+import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
+import { listCheckFiles } from '#cli/engine/files.ts';
+import { isDocstring } from '#cli/parsers/code/python.ts';
+import { getLimit } from '#cli/settings/scopes.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import type { ParsedLanguage, ParsedSource } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 type TrivialFunction = { finding: CheckFinding; key?: string };
 

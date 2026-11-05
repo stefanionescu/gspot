@@ -1,32 +1,32 @@
 import { realpathSync } from 'node:fs';
-import { findToolName } from '#cli/tools/pins.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { quoteArgument } from '#cli/system/text.ts';
 import { setImmediate } from 'node:timers/promises';
-import type { Check } from '#cli/types/manifests.ts';
+
+import {
+    BASE_FLAG,
+    CHECK_COMMAND,
+    HOOK_FLAG,
+    INCOMPLETE_STATUSES,
+    SHORT_HASH_LENGTH,
+    STAGED_FLAG,
+} from '#cli/config/engine.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
-import { canReadRuleExplanations } from '#cli/tools/rules.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { type RunSelection, type PlannedCheck } from '#cli/types/engine/plan.ts';
-
+import { quoteArgument } from '#cli/system/text.ts';
+import { findToolName } from '#cli/tools/pins.ts';
+import { canReadRuleExplanations } from '#cli/tools/rules.ts';
+import { type PlannedCheck, type RunSelection } from '#cli/types/engine/plan.ts';
 import type {
-    CheckCode,
-    RunOptions,
-    CheckResult,
-    CheckSession,
     BuiltInCheck,
+    CheckCode,
+    CheckResult,
     CheckRunOptions,
+    CheckSession,
+    RunOptions,
 } from '#cli/types/engine/run.ts';
-import {
-    HOOK_FLAG,
-    BASE_FLAG,
-    STAGED_FLAG,
-    CHECK_COMMAND,
-    SHORT_HASH_LENGTH,
-    INCOMPLETE_STATUSES,
-} from '#cli/config/engine.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listSelectionArguments(selection: RunSelection): string[] {
     const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;

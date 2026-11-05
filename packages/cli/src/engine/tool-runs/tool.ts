@@ -1,19 +1,20 @@
-import { runTool } from '#cli/tools/run.ts';
-import { getTool } from '#cli/tools/pins.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
-import { dirname, basename, delimiter } from 'node:path';
+import { basename, delimiter, dirname } from 'node:path';
+
+import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
+import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { listSecondaryTools } from '#cli/engine/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { readToolCommandPrefix } from '#cli/tools/packages.ts';
-import { lookUpTool, findToolPath } from '#cli/tools/inspect.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
-import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
+import { readToolCommandPrefix } from '#cli/tools/packages.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { runTool } from '#cli/tools/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckTool, CheckToolOptions, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
 
 async function readCheckTool(
     session: CheckSession,

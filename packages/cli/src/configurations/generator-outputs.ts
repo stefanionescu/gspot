@@ -1,20 +1,21 @@
 import { join, posix } from 'node:path';
-import { compareText } from '#cli/system/text.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
+
+import { GENERATOR_IGNORED_FOLDERS, RULES } from '#cli/config/configurations/registry.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
+import { buildFileCommandLines, expandCommand, replacePlaceholders } from '#cli/engine/tool-runs/placeholders.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { GeneratorOutput, GeneratorRun } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding, Substitutions } from '#cli/types/engine/tool-runs.ts';
-import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/configurations/registry.ts';
-import type { GeneratorRun, GeneratorOutput } from '#cli/types/configurations/general.ts';
-import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/engine/tool-runs/placeholders.ts';
 
 function listMissingOutputs(session: CheckSession, outputs: GeneratorOutput[], commandText: string): CheckFinding[] {
     return outputs

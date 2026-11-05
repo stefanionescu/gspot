@@ -1,4 +1,5 @@
 import { stringify } from 'yaml';
+
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 

@@ -1,5 +1,6 @@
-import type { FunctionNode } from './plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+
+import type { FunctionNode } from './plugin.ts';
 
 export type MagicNumbersOptions = [Record<string, unknown>];
 

@@ -1,26 +1,27 @@
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
 import * as prettier from 'prettier';
-import { test, expect } from 'bun:test';
 import type { Options } from 'prettier';
 import { createFileTree } from 'testdirs';
-import { writeFile } from 'node:fs/promises';
-import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/configurations/general.ts';
-import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/configurations/general.ts';
 import {
+    FORMAT_OVERRIDES_SETTINGS,
     NESTED_YAML,
     PRETTIER_OPTIONS_BY_FILE,
-    FORMAT_OVERRIDES_SETTINGS,
 } from '#tests/config/setup/configurations.ts';
+import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
+import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     'a format override selector that EditorConfig cannot express is a settings error ($pattern)',

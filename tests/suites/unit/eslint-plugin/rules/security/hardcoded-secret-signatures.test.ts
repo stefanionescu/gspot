@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { hardcodedSecretSignatures } from '#eslint-plugin/rules/security/hardcoded-secret-signatures.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('hardcoded-secret-signatures', hardcodedSecretSignatures, {
     valid: [

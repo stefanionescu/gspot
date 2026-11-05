@@ -1,5 +1,5 @@
+import { PIP_INSTALL_MESSAGE, PYTHON_RULES } from '#cli/config/configurations/python.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
-import { PYTHON_RULES, PIP_INSTALL_MESSAGE } from '#cli/config/configurations/python.ts';
 
 export const PIP_INSTALL_EXPLANATIONS = {
     [PYTHON_RULES.requirementsFile]: {

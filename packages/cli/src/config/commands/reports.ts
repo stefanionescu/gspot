@@ -1,6 +1,6 @@
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation.ts';
 
 export const CHECK_LIST_SEPARATOR = ',';
 

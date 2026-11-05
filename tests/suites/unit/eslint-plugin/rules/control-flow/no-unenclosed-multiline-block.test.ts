@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noUnenclosedMultilineBlock } from '#eslint-plugin/rules/control-flow/no-unenclosed-multiline-block.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-unenclosed-multiline-block', noUnenclosedMultilineBlock, {
     valid: [

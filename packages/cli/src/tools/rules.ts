@@ -1,37 +1,37 @@
-import { devNull } from 'node:os';
-import { pathToFileURL } from 'node:url';
-import { runTool } from '#cli/tools/run.ts';
-import { createRequire } from 'node:module';
-import { getTool } from '#cli/tools/pins.ts';
-import { isInside } from '#cli/system/paths.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import type { Tool } from '#cli/types/manifests.ts';
 import { readFileSync, realpathSync } from 'node:fs';
-import { findText } from '#cli/system/files/reads.ts';
+import { createRequire } from 'node:module';
+import { devNull } from 'node:os';
+import { dirname, join, relative, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
+import {
+    ESLINT_BUILTIN_RULES,
+    INSTALL_FOR_RULES_MESSAGE,
+    MARKDOWNLINT_RULE_DESCRIPTION,
+    MARKDOWNLINT_RULE_SCHEMA,
+    SHELLCHECK_RULE_IDENTIFIER,
+    STYLELINT_MANIFEST_TOOL,
+    SWIFTLINT_RULE_ARGUMENTS,
+    SWIFTLINT_RULE_IDENTIFIER,
+} from '#cli/config/tools/programs.ts';
+import { VALE_PACKAGES_MESSAGE, VALE_RULE_IDENTIFIER, VALE_STYLES_PATH, VALE_TOOL } from '#cli/config/tools/vale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { join, dirname, resolve, relative } from 'node:path';
-import { hasValePackages } from '#cli/tools/installers/vale.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
-import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
+import { installedRulesSchema, ruffRuleSchema, ruleDocumentationSchema, valeRuleSchema } from '#cli/schemas/tools.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { isInside } from '#cli/system/paths.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import { hasValePackages } from '#cli/tools/installers/vale.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
-import type { RuleToolSearch, RuleExplanation, RuleExplanationOptions } from '#cli/types/tools.ts';
-import { VALE_TOOL, VALE_STYLES_PATH, VALE_RULE_IDENTIFIER, VALE_PACKAGES_MESSAGE } from '#cli/config/tools/vale.ts';
-import { ruffRuleSchema, valeRuleSchema, installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools.ts';
-
-import {
-    ESLINT_BUILTIN_RULES,
-    STYLELINT_MANIFEST_TOOL,
-    MARKDOWNLINT_RULE_SCHEMA,
-    SWIFTLINT_RULE_ARGUMENTS,
-    INSTALL_FOR_RULES_MESSAGE,
-    SWIFTLINT_RULE_IDENTIFIER,
-    SHELLCHECK_RULE_IDENTIFIER,
-    MARKDOWNLINT_RULE_DESCRIPTION,
-} from '#cli/config/tools/programs.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { runTool } from '#cli/tools/run.ts';
+import type { Tool } from '#cli/types/manifests.ts';
+import type { RuleExplanation, RuleExplanationOptions, RuleToolSearch } from '#cli/types/tools.ts';
 
 const RULE_READER_TOOLS: ReadonlySet<string> = new Set([
     'ruff',

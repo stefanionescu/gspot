@@ -1,10 +1,10 @@
-import type { Configuration } from '#cli/types/manifests.ts';
-import { listPathTags } from '#cli/repository/files/classify.ts';
-import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { isInScope, escapeGlob, extractExtension } from '#cli/system/paths.ts';
-import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
-import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import { listPathTags } from '#cli/repository/files/classify.ts';
+import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts';
+import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { CoveredFilesOptions, TrackedFile } from '#cli/types/repository.ts';
 
 function buildCoverageMatcher(
     table: Configuration['files'],

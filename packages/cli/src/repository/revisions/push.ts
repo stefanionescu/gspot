@@ -1,46 +1,46 @@
-import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import { readHead } from '#cli/repository/revisions/files.ts';
-import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/repository/git/run.ts';
-import type { PushLine, Comparison, PushSearch, PushRevision, PushedRevisions } from '#cli/types/repository.ts';
 
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
-    readMergeBase,
-    readDefaultRef,
-    listRemoteRefs,
-    findRemoteDefaultBranch,
-} from '#cli/repository/revisions/changes.ts';
-import {
-    NOT_FLAG,
-    TREE_SUFFIX,
-    PEEL_SUFFIX,
     ABSENT_HASH,
-    HASH_PATTERN,
-    REMOTES_FLAG,
     BRANCHES_PREFIX,
     DEFAULT_BRANCHES,
-    NON_COMMIT_REASON,
-    GIT_LOG_ARGUMENTS,
     DELETED_REF_REASON,
-    GIT_TREE_ARGUMENTS,
-    GIT_PEEL_ARGUMENTS,
     FORCE_PUSH_MESSAGE,
-    PEEL_FAILURE_MESSAGE,
-    GIT_REMOTE_ARGUMENTS,
-    GIT_SHALLOW_ARGUMENTS,
-    GIT_REV_LIST_ARGUMENTS,
-    UNFETCHED_PUSH_MESSAGE,
     GIT_DIFF_NAMES_ARGUMENTS,
     GIT_IS_ANCESTOR_ARGUMENTS,
-    INVALID_PUSH_INPUT_MESSAGE,
+    GIT_LOG_ARGUMENTS,
+    GIT_PEEL_ARGUMENTS,
+    GIT_REMOTE_ARGUMENTS,
+    GIT_REV_LIST_ARGUMENTS,
     GIT_ROOT_COMMITS_ARGUMENTS,
+    GIT_SHALLOW_ARGUMENTS,
     GIT_SHALLOW_FILE_ARGUMENTS,
+    GIT_TREE_ARGUMENTS,
+    HASH_PATTERN,
+    INVALID_PUSH_INPUT_MESSAGE,
     MISSING_PUSH_REVISION_MESSAGE,
+    NON_COMMIT_REASON,
+    NOT_FLAG,
+    PEEL_FAILURE_MESSAGE,
+    PEEL_SUFFIX,
+    REMOTES_FLAG,
+    TREE_SUFFIX,
+    UNFETCHED_PUSH_MESSAGE,
 } from '#cli/config/repository/git.ts';
+import { readGitLines, readGitPaths, readGitText, runGit } from '#cli/repository/git/run.ts';
+import {
+    findRemoteDefaultBranch,
+    listRemoteRefs,
+    readDefaultRef,
+    readMergeBase,
+} from '#cli/repository/revisions/changes.ts';
+import { readHead } from '#cli/repository/revisions/files.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { Comparison, PushedRevisions, PushLine, PushRevision, PushSearch } from '#cli/types/repository.ts';
 
 function parsePushLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(WHITESPACE_RUN);

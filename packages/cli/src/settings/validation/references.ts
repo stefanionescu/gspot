@@ -1,22 +1,21 @@
-import type { Files } from '#cli/types/system.ts';
-import { LINK_REFUSAL } from '#cli/config/system.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { joinScopeSelector } from '#cli/settings/paths.ts';
-import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
-import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
-import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
-import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
-import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Settings, SettingsError, AvailableSettings, WrittenScopeTable } from '#cli/types/settings.ts';
-
 import {
+    COVERAGE_LINES_SETTING,
     FIRST_READ,
     SETTING_RULES,
     SWIFT_TARGET_MESSAGE,
-    COVERAGE_LINES_SETTING,
 } from '#cli/config/settings/validation.ts';
+import { LINK_REFUSAL } from '#cli/config/system.ts';
+import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
+import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
+import type { AvailableSettings, Settings, SettingsError, WrittenScopeTable } from '#cli/types/settings.ts';
+import type { Files } from '#cli/types/system.ts';
 
 function readPathStats(files: Files, path: string): ReturnType<Files['findStats']> | Error {
     try {

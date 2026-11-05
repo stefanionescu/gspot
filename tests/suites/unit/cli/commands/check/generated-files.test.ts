@@ -1,19 +1,21 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { chmod, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/engine/session.ts';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { compareText } from '#cli/system/text.ts';
+import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
+import { readTree } from '#tests/setup/system/files.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 test.skipIf(isWindows)(
     'generated-files shows a mode-only difference under verbose without changing the file',

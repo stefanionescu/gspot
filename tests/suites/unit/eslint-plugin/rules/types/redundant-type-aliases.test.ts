@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { redundantTypeAliases } from '#eslint-plugin/rules/types/redundant-type-aliases.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('redundant-type-aliases', redundantTypeAliases, {
     valid: [

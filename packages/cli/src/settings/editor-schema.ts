@@ -1,10 +1,11 @@
 import { z } from 'zod';
-import { compareText } from '#cli/system/text.ts';
+
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { HIDDEN_FACT_KEYS, JSON_SCHEMA_DIALECT, SCHEMA_DESCRIPTION } from '#cli/config/settings/schema.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
-import { HIDDEN_FACT_KEYS, SCHEMA_DESCRIPTION, JSON_SCHEMA_DIALECT } from '#cli/config/settings/schema.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { compareText } from '#cli/system/text.ts';
 
 /**
 Copy the examples of a setting into its converted schema. A configuration name may only be a shipped name, and a check

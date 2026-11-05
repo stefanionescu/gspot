@@ -1,28 +1,29 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import { parse } from '@decimalturn/toml-patch';
-import { getTable } from '#cli/settings/scopes.ts';
-import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { initOutputSchema } from '#cli/schemas/commands.ts';
-import * as installers from '#cli/tools/installers/install.ts';
-import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import type { FormatSettings } from '#cli/types/configurations/language.ts';
-import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carryover.ts';
+import { join } from 'node:path';
 
+import { parse } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { initOutputSchema } from '#cli/schemas/commands.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import * as installers from '#cli/tools/installers/install.ts';
+import type { FormatSettings } from '#cli/types/configurations/language.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carryover.ts';
 import {
     FORMAT_FILE_CASES,
-    SCOPE_FORMAT_FILES,
-    WORKSPACE_PYTHON_FILES,
     FORMAT_WORKSPACE_FILES,
     PRETTIER_FORMAT_OPTIONS,
+    SCOPE_FORMAT_FILES,
+    WORKSPACE_PYTHON_FILES,
 } from '#tests/config/generation/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test.each(INVALID_PRETTIER_OPTIONS)(
     'init drops $field of $file, which gspot.toml cannot hold, and goes on',

@@ -1,20 +1,21 @@
+import { lstatSync, realpathSync, statSync } from 'node:fs';
+import { join, normalize, relative } from 'node:path';
+
+import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/framework.ts';
+import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import { join, relative, normalize } from 'node:path';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { statSync, lstatSync, realpathSync } from 'node:fs';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { findContainedPath } from '#cli/system/files/reads.ts';
-import { compareText, quoteCommand } from '#cli/system/text.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { compareText, quoteCommand } from '#cli/system/text.ts';
 import type { SiteBuild } from '#cli/types/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/framework.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 const SITE_BUILDS = Symbol('site builds');
 

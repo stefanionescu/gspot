@@ -1,11 +1,12 @@
-import { createRule } from '../../rule.ts';
-import { readPackageFacts } from '../../libraries/packages.ts';
-import type { TestCall, SkipFramework } from '../../types/testing.ts';
-import type { FileContext, FunctionNode } from '../../types/plugin.ts';
-import { getTestCall, isPlaywrightSuite } from '../../libraries/testing.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { EXPLANATION_LETTER, NODE_TEST_MODULES, SKIP_FRAMEWORKS, SKIPPED_TEST_CALLS } from '../../config/testing.ts';
 import { getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { SKIP_FRAMEWORKS, NODE_TEST_MODULES, EXPLANATION_LETTER, SKIPPED_TEST_CALLS } from '../../config/testing.ts';
+import { readPackageFacts } from '../../libraries/packages.ts';
+import { getTestCall, isPlaywrightSuite } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { FileContext, FunctionNode } from '../../types/plugin.ts';
+import type { SkipFramework, TestCall } from '../../types/testing.ts';
 
 function selectFramework(context: FileContext): SkipFramework | 'node' | undefined {
     const facts = readPackageFacts(context);

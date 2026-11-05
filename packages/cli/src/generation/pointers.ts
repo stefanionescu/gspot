@@ -1,38 +1,38 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { compareText } from '#cli/system/text.ts';
-import { getRequired } from '#cli/system/tables.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { listCheckTools } from '#cli/engine/tools.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { formatHeader } from '#cli/generation/header.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import type { Session, GeneratedFile } from '#cli/types/tools.ts';
-import type { PlannedPointerField } from '#cli/types/generation.ts';
-import type { Config, ManagedKeys } from '#cli/types/repository.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
-import type { ConfigOwner } from '#cli/types/configurations/language.ts';
-import { joinScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 
-import {
-    isInScope,
-    escapeGlob,
-    findOutermostFolder,
-    extractParentFolder,
-    buildModuleSpecifier,
-} from '#cli/system/paths.ts';
 import {
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
-    TARGET_PLACEHOLDER,
     OVERRIDES_PLACEHOLDER,
     TARGET_MODULE_PLACEHOLDER,
+    TARGET_PLACEHOLDER,
 } from '#cli/config/generation.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
+import { listCheckTools } from '#cli/engine/tools.ts';
+import { formatHeader } from '#cli/generation/header.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { isOutsideChildScopes, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import {
+    buildModuleSpecifier,
+    escapeGlob,
+    extractParentFolder,
+    findOutermostFolder,
+    isInScope,
+} from '#cli/system/paths.ts';
+import { getRequired } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { ConfigOwner } from '#cli/types/configurations/language.ts';
+import type { PlannedPointerField } from '#cli/types/generation.ts';
+import type { Config, ManagedKeys } from '#cli/types/repository.ts';
+import type { GeneratedFile, Session } from '#cli/types/tools.ts';
 
 function fillTarget(body: string, pointerPath: string, targetPath: string): string {
     const target = buildModuleSpecifier(pointerPath, targetPath);

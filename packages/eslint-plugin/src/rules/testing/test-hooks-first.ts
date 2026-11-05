@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { MARKED_TEST_MODIFIERS, TEST_AFTER_HOOK_NAMES } from '../../config/testing.ts';
 import { getTestCall } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
 import type { SuiteMember } from '../../types/testing.ts';
-import { TEST_AFTER_HOOK_NAMES, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listMembers(body: TSESTree.Statement[], source: TSESLint.SourceCode): SuiteMember[] {
     const calls = body.flatMap((statement, index) =>

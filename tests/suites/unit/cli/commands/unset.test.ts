@@ -1,11 +1,13 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { parse } from '@decimalturn/toml-patch';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { expect, test } from 'bun:test';
+
 import { UNSET_REFUSALS } from '#tests/config/commands/edits.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

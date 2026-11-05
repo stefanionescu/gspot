@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { preferNativeJquery } from '#eslint-plugin/rules/libraries/prefer-native-jquery.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-native-jquery', preferNativeJquery, {
     valid: [

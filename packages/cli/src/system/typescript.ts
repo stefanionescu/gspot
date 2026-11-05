@@ -1,5 +1,6 @@
-import type ts from 'typescript';
 import { createRequire } from 'node:module';
+
+import type ts from 'typescript';
 
 const requireModule = createRequire(import.meta.url);
 

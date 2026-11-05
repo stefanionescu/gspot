@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noExcessCallArguments } from '#eslint-plugin/rules/functions/no-excess-call-arguments.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-excess-call-arguments', noExcessCallArguments, {
     valid: [

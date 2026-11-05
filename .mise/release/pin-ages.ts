@@ -1,11 +1,12 @@
 // Refuses a release whose npm pins came out within the release hold. The release task runs it on Bun before it tags.
-import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { promisify } from 'node:util';
+
 import { GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
 import { MILLISECONDS_PER_DAY } from '#cli/config/tools/installers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { generalTableSchemas } from '#cli/schemas/settings/general.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 
 type PinRelease = { pin: string; released: number };
 

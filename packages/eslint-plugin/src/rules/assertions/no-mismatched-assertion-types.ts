@@ -1,9 +1,10 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { OPEN_CATEGORIES, TYPE_CATEGORIES } from '../../config/assertions/matchers.ts';
 import { getTypes } from '../../language/checker.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
-import type { TypeReader, CheckedType } from '../../types/plugin.ts';
-import { OPEN_CATEGORIES, TYPE_CATEGORIES } from '../../config/assertions/matchers.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import type { CheckedType, TypeReader } from '../../types/plugin.ts';
 
 function getCategories(types: TypeReader, type: CheckedType): string[] {
     const base = types.checker.getBaseTypeOfLiteralType(type);

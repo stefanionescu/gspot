@@ -1,16 +1,15 @@
-import { splitWords } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { type CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
-
 import {
-    PYTHON_RULES,
-    PLACEHOLDERS,
-    NON_WORD_RUN,
     CLASS_DOCSTRING_OPENING,
+    NON_WORD_RUN,
+    PLACEHOLDERS,
+    PYTHON_RULES,
 } from '#cli/config/configurations/python.ts';
+import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
+import { splitWords } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports Python docstrings that only repeat a name or placeholder.

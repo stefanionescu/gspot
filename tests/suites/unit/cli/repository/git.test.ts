@@ -1,24 +1,25 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
-import { Readable } from 'node:stream';
-import { test, expect } from 'bun:test';
 import { copyFile, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { readGitText, readGitLines } from '#cli/repository/git/run.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { parseGitBlobs, parseTreeFiles, mergeAttributes, parseAttributePatterns } from '#cli/repository/git/output.ts';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
 
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { mergeAttributes, parseAttributePatterns, parseGitBlobs, parseTreeFiles } from '#cli/repository/git/output.ts';
+import { readGitLines, readGitText } from '#cli/repository/git/run.ts';
 import {
+    ATTRIBUTE_LINES,
+    BINARY_BLOB,
+    INDEX_PATH,
+    INVALID_BLOBS,
     SHA1,
     SHA256,
-    INDEX_PATH,
-    BINARY_BLOB,
-    INVALID_BLOBS,
-    ATTRIBUTE_LINES,
     TRAILING_BLOB_CHUNKS,
 } from '#tests/config/repository/files.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test.each([...ATTRIBUTE_LINES])(
     'a .gitattributes line in C quoting decodes its octal bytes, and an [attr] macro line gives no pattern: $line',

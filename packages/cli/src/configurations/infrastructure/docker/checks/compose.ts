@@ -1,25 +1,25 @@
 import { posix } from 'node:path';
-import type { Session } from '#cli/types/tools.ts';
-import { listCheckFiles } from '#cli/engine/files.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { composeSchema } from '#cli/schemas/configurations.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
-import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
-import type { ComposeFiles, ComposeDocuments, ComposeDeclaration } from '#cli/types/configurations/infrastructure.ts';
 
 import {
-    DOCKERIGNORE,
     COMPOSE_CHECK,
-    COMPOSE_SUFFIXES,
-    COMPOSE_OVERRIDE,
     COMPOSE_FILE_FLAG,
+    COMPOSE_OVERRIDE,
+    COMPOSE_SUFFIXES,
+    DOCKERIGNORE,
 } from '#cli/config/configurations/infrastructure.ts';
+import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
+import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { listCheckFiles } from '#cli/engine/files.ts';
+import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { composeSchema } from '#cli/schemas/configurations.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { ComposeDeclaration, ComposeDocuments, ComposeFiles } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();

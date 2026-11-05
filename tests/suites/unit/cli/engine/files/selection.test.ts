@@ -1,30 +1,31 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { planChecks } from '#cli/engine/plan.ts';
-import { compareText } from '#cli/system/text.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { symlink, writeFile } from 'node:fs/promises';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { join } from 'node:path';
 
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { listCheckedFiles } from '#cli/engine/files.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
-    TSC_PUSH_OPTIONS,
     EDITORCONFIG_FILES,
-    PROJECT_PATH_IGNORES,
     LAYERED_SCOPE_SETTINGS,
+    PROJECT_PATH_IGNORES,
+    TSC_PUSH_OPTIONS,
     TYPESCRIPT_SCOPES_SETTINGS,
 } from '#tests/config/engine/files.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
     await using sandbox = await createGitSandbox({

@@ -1,13 +1,13 @@
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import type { EslintConfiguration } from '#tests/types/setup.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 
 import {
-    TESTING_LIBRARY_CASES,
     ASSERTION_RULE_OWNERS,
+    TESTING_LIBRARY_CASES,
 } from '#tests/config/configurations/javascript/configuration-blocks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 
 test.each(['jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
     await using sandbox = await testdir({

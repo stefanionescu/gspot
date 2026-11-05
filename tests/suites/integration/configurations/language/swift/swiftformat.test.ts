@@ -1,26 +1,27 @@
+import { chmod, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { stat, chmod, readFile } from 'node:fs/promises';
-import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
+
+import { expect, test } from 'bun:test';
+
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import {
+    BLOCK_COMMENT_FINDINGS,
+    FORMATTED_DOCS_SOURCE,
+    FORMATTED_INLINE_DOCS,
+    INLINE_COMMENT_FINDINGS,
+    SOURCE_HEADER,
+    SPACED_COMMENT_FINDINGS,
+    SWIFT_DOCS_SOURCE,
+    SWIFT_INLINE_DOCS,
+    SWIFT_SANDBOX,
+} from '#tests/config/integration/swift.ts';
+import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles, changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { changeSandbox, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-
-import {
-    SWIFT_SANDBOX,
-    SOURCE_HEADER,
-    SWIFT_INLINE_DOCS,
-    SWIFT_DOCS_SOURCE,
-    FORMATTED_INLINE_DOCS,
-    FORMATTED_DOCS_SOURCE,
-    BLOCK_COMMENT_FINDINGS,
-    INLINE_COMMENT_FINDINGS,
-    SPACED_COMMENT_FINDINGS,
-} from '#tests/config/integration/swift.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 

@@ -1,20 +1,20 @@
-import { createRule } from '../../rule.ts';
-import type { FunctionNode } from '../../types/plugin.ts';
-import { EQUALITY_OPERATORS } from '../../config/logic.ts';
-import { findFunction } from '../../language/functions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { listArgumentValues, getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
+import { EQUALITY_OPERATORS } from '../../config/logic.ts';
 import {
-    EXPRESS_MODULE,
-    SERVER_FUNCTION,
-    MIDDLEWARE_METHOD,
     ALLOW_ORIGIN_HEADER,
     CROSS_ORIGIN_MODULE,
+    EXPRESS_MODULE,
     EXPRESS_ROUTE_METHODS,
+    MIDDLEWARE_METHOD,
     RESPONSE_CALL_ARGUMENTS,
+    SERVER_FUNCTION,
 } from '../../config/servers.ts';
+import { getExpressionValue, getOptionProperties, listArgumentValues } from '../../language/expressions.ts';
+import { findFunction } from '../../language/functions.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { createRule } from '../../rule.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 
 function listResponseCalls(
     source: Readonly<TSESLint.SourceCode>,

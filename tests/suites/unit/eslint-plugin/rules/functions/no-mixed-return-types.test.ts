@@ -1,5 +1,5 @@
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noMixedReturnTypes } from '#eslint-plugin/rules/functions/no-mixed-return-types.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 const rule = noMixedReturnTypes;
 

@@ -1,10 +1,12 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { parse, stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

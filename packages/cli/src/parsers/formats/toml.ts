@@ -1,27 +1,27 @@
+import { parseDocument, parse as parseToml, patch } from '@decimalturn/toml-patch';
 import type { z } from 'zod';
-import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
-import { patch, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
-import { MESSAGE_END, PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers.ts';
 
+import { MESSAGE_END, MISSING_RANGE_MESSAGE, PATCH_FORMAT, TABLE_PROPERTY_FLAGS } from '#cli/config/parsers.ts';
+import { GspotError, parseFileFields } from '#cli/system/errors.ts';
+import { findValueAt, isTable, normalizeTables } from '#cli/system/tables.ts';
 import type {
-    KeyPath,
-    TomlBlock,
-    TomlValue,
-    TomlSyntax,
-    SourceRange,
-    TomlLocation,
-    TomlDocument,
     EditableFile,
-    TomlComments,
-    TomlKeyValue,
-    TomlPathNode,
-    TomlTextChunk,
-    TomlCommentNode,
+    KeyPath,
+    SourceRange,
+    TomlAnchoredComment,
+    TomlBlock,
     TomlCommentMove,
+    TomlCommentNode,
+    TomlComments,
+    TomlDocument,
+    TomlKeyValue,
+    TomlLocation,
+    TomlPathNode,
+    TomlSyntax,
     TomlTableOptions,
     TomlTablePositions,
-    TomlAnchoredComment,
+    TomlTextChunk,
+    TomlValue,
 } from '#cli/types/parsers.ts';
 
 function findTomlTable(

@@ -1,8 +1,9 @@
 ---
 import { Icon } from '@astrojs/starlight/components';
+
+import { COPIED_MESSAGE, COPY_FAILED_MESSAGE, URL_BREAK } from '#docs/config/home.ts';
 import { CURL_COMMAND } from '#docs/config/reference.ts';
-import { URL_BREAK, COPIED_MESSAGE, COPY_FAILED_MESSAGE } from '#docs/config/home.ts';
-import { setup, LLMS_URL, AGENT_PROMPT, LLMS_COMMAND } from '#docs/reference/setup.ts';
+import { AGENT_PROMPT, LLMS_COMMAND, LLMS_URL, setup } from '#docs/reference/setup.ts';
 
 const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);

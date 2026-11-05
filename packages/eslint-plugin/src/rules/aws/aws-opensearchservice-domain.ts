@@ -1,9 +1,10 @@
+import { AST_NODE_TYPES, type TSESLint } from '@typescript-eslint/utils';
+
+import { CDK_PROPS_POSITION, SEARCH_DOMAINS, SEARCH_ENGINES } from '../../config/aws.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { getCdkArgument, getCdkName, getCdkProperty, getCdkResult } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
 import type { CdkResult } from '../../types/aws.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { type TSESLint, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { SEARCH_DOMAINS, SEARCH_ENGINES, CDK_PROPS_POSITION } from '../../config/aws.ts';
-import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../../libraries/aws.ts';
 
 function detectEngine(
     source: Readonly<TSESLint.SourceCode>,

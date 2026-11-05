@@ -1,9 +1,10 @@
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { FUNCTION_NODES } from '../../config/plugin.ts';
+import { DONE_STOP_STATEMENTS, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
+import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { TestCall } from '../../types/testing.ts';
-import { FUNCTION_NODES } from '../../config/plugin.ts';
-import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
-import { DONE_STOP_STATEMENTS, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listFollowingStatements(statement: TSESTree.Node): TSESTree.Node[] {
     const { parent } = statement;

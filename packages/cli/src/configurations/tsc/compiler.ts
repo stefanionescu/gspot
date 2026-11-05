@@ -1,38 +1,39 @@
-import type ts from 'typescript';
-import { remember } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { buildBaseResult } from '#cli/engine/results.ts';
-import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import { requireTypescript } from '#cli/system/typescript.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { GSPOT_FOLDER, TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/language.ts';
-import { TSCONFIG_COPY_FOLDER } from '#cli/config/configurations/framework.ts';
-import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';
-import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
-import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import type { TypeScriptReferenceCopy } from '#cli/types/configurations/general.ts';
-import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
+import type ts from 'typescript';
+
+import { TSCONFIG_COPY_FOLDER } from '#cli/config/configurations/framework.ts';
+import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
+import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/language.ts';
 import {
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
-    TSC_PROJECT_COMMAND,
-    TSCONFIG_TSBUILDINFO,
-    TSC_REFERENCE_BUNDLE,
-    TSC_CONFIG_INPUT_PATHS,
     TSC_COMPILER_INPUT_PATHS,
-    TYPESCRIPT_TSCONFIG_CHECK,
+    TSC_CONFIG_INPUT_PATHS,
+    TSC_PROJECT_COMMAND,
+    TSC_REFERENCE_BUNDLE,
     TSC_REFERENCE_OUTPUT_FOLDER,
+    TSCONFIG_TSBUILDINFO,
+    TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/registry.ts';
+import { GSPOT_FOLDER, TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { buildBaseResult } from '#cli/engine/results.ts';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { listSourceFiles, readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import { remember } from '#cli/system/cache.ts';
+import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const CHECKED_PROJECTS = Symbol('checked projects');
 

@@ -1,53 +1,53 @@
 import { join, posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { getTool } from '#cli/tools/pins.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { muteOutput } from '#cli/system/terminal.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { joinScopeSelector } from '#cli/settings/paths.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+
+import { EDITORCONFIG_FIXED_SECTIONS } from '#cli/config/configurations/general.ts';
+import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
+import {
+    EDITORCONFIG_COMMENT,
+    EDITORCONFIG_FILE,
+    EDITORCONFIG_SECTION,
+    FORMAT_CONFIGURATION,
+    FORMATTER_DEFAULTS,
+    PRETTIER_DEFAULTS,
+    PRETTIER_FILE_FORMATS,
+    PRETTIER_PACKAGE_KEY,
+    PRETTIER_SCRIPT_FILE,
+    PRETTIER_SCRIPT_NAME,
+    PROSE_TAGS,
+    PYTHON_TAG,
+    RUFF_SETTINGS_FILES,
+} from '#cli/config/generation.ts';
+import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { PRETTIER_ROOT_FILES, UNREADABLE_CONFIG_MESSAGE } from '#cli/config/repository/setup.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
-import { tryParseFile, parseFileFields } from '#cli/system/errors.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
-import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
-import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { EDITORCONFIG_FIXED_SECTIONS } from '#cli/config/configurations/general.ts';
-import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
-import { PRETTIER_ROOT_FILES, UNREADABLE_CONFIG_MESSAGE } from '#cli/config/repository/setup.ts';
-
 import {
-    ruffOptionsSchema,
-    ruffProjectSchema,
     prettierOptionsSchema,
     prettierSettingsSchema,
+    ruffOptionsSchema,
+    ruffProjectSchema,
 } from '#cli/schemas/generation.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { parseFileFields, tryParseFile } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { muteOutput } from '#cli/system/terminal.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import type {
-    RuffOptions,
+    EditorconfigSection,
     FormatSearch,
-    SettingsDraft,
-    PrettierStyle,
     PrettierOptions,
     PrettierScripts,
-    EditorconfigSection,
+    PrettierStyle,
+    RuffOptions,
+    SettingsDraft,
 } from '#cli/types/generation.ts';
-import {
-    PROSE_TAGS,
-    PYTHON_TAG,
-    PRETTIER_DEFAULTS,
-    EDITORCONFIG_FILE,
-    FORMATTER_DEFAULTS,
-    RUFF_SETTINGS_FILES,
-    FORMAT_CONFIGURATION,
-    PRETTIER_SCRIPT_FILE,
-    PRETTIER_SCRIPT_NAME,
-    EDITORCONFIG_SECTION,
-    EDITORCONFIG_COMMENT,
-    PRETTIER_PACKAGE_KEY,
-    PRETTIER_FILE_FORMATS,
-} from '#cli/config/generation.ts';
+import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
+import type { ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;

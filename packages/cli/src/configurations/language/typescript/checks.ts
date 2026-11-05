@@ -1,28 +1,28 @@
 import { join, posix, relative } from 'node:path';
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers.ts';
-import { CheckStop, GspotError } from '#cli/system/errors.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
-import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { TSCONFIG_EXPLANATIONS } from '#cli/configurations/language/typescript/explanations.ts';
 
+import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import {
+    MISSING_TSCONFIG_MESSAGE,
+    MISSING_TSCONFIG_RULE,
     OPTION_HELP,
-    TSCONFIG_NAME,
     PARENT_TSCONFIG_SKIP,
     STRICT_FAMILY_OPTIONS,
-    MISSING_TSCONFIG_RULE,
-    MISSING_TSCONFIG_MESSAGE,
+    TSCONFIG_NAME,
     UNREADABLE_TSCONFIG_RULE,
 } from '#cli/config/configurations/language.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { TSCONFIG_EXPLANATIONS } from '#cli/configurations/language/typescript/explanations.ts';
+import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
+import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { CheckStop, GspotError } from '#cli/system/errors.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 type TsconfigProject = { path: string; parsed: ParsedTsconfig };
 

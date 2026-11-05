@@ -1,6 +1,7 @@
 import { join } from 'node:path';
-import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+
 import { noMisplacedAssertions } from '#eslint-plugin/rules/assertions/no-misplaced-assertions.ts';
+import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ jest: { devDependencies: { jest: '30.0.0' } } });
 

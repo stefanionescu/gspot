@@ -1,38 +1,37 @@
 import { CLI_REFERENCE } from '#cli/reference.ts';
-import type { CliReference } from '#docs/types/reference.ts';
-import { formatCheckSection } from '#docs/reference/checks.ts';
-import { formatSettingLink } from '#docs/reference/settings.ts';
-import type { ReferencePage, ConfigurationGuide } from '#docs/types/pages.ts';
-
 import {
-    formatText,
-    formatTable,
-    formatSection,
-    buildReferencePage,
-    formatConfigurationLink,
-} from '#docs/reference/markdown.ts';
-import {
-    SETS_HEADING,
-    CHECKS_HEADING,
     ALL_FILES_LABEL,
-    SELECTED_HEADING,
-    DEFAULTS_HEADING,
-    REFERENCE_FOLDERS,
-    RULES_OFF_HEADING,
-    RULE_FILE_HEADING,
-    INSTALLED_HEADING,
-    CONJUNCTION_FORMAT,
-    RULE_FILES_HEADING,
-    LINT_RULES_HEADING,
-    SELF_INSTALL_LABEL,
+    ALWAYS_SELECTED_MESSAGE,
+    CHECKS_HEADING,
     CONDITION_SEPARATOR,
     CONFIG_FILES_HEADING,
-    IGNORED_PATHS_HEADING,
-    CONFIGURATIONS_OPENING,
-    TOOLS_VERSIONS_HEADING,
-    ALWAYS_SELECTED_MESSAGE,
     CONFIGURATIONS_DESCRIPTION,
+    CONFIGURATIONS_OPENING,
+    CONJUNCTION_FORMAT,
+    DEFAULTS_HEADING,
+    IGNORED_PATHS_HEADING,
+    INSTALLED_HEADING,
+    LINT_RULES_HEADING,
+    REFERENCE_FOLDERS,
+    RULE_FILE_HEADING,
+    RULE_FILES_HEADING,
+    RULES_OFF_HEADING,
+    SELECTED_HEADING,
+    SELF_INSTALL_LABEL,
+    SETS_HEADING,
+    TOOLS_VERSIONS_HEADING,
 } from '#docs/config/reference.ts';
+import { formatCheckSection } from '#docs/reference/checks.ts';
+import {
+    buildReferencePage,
+    formatConfigurationLink,
+    formatSection,
+    formatTable,
+    formatText,
+} from '#docs/reference/markdown.ts';
+import { formatSettingLink } from '#docs/reference/settings.ts';
+import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
+import type { CliReference } from '#docs/types/reference.ts';
 
 function formatRuleFiles(configuration: CliReference['configurations'][number]): string {
     const rows = configuration.ruleFiles.map(({ path, conditions, exclusions }) => {

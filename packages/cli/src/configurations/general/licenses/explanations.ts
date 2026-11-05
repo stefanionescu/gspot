@@ -1,5 +1,5 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
 import { LICENSE_RULES } from '#cli/config/configurations/general.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const LICENSE_EXPLANATIONS = {
     [LICENSE_RULES.disallowedLicense]: {

@@ -1,17 +1,19 @@
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
+import { expect, test } from 'bun:test';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readFile, writeFile } from 'node:fs/promises';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { GENERATED_BASH_FILES } from '#tests/config/configurations/gspot/files.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { GENERATED_BASH_FILES } from '#tests/config/configurations/gspot/files.ts';
 
 test('gspot/generated-files reports an edited file with the install help and passes after a write, while tool lockfiles stay missing', async () => {
     await using sandbox = await createGitSandbox(GENERATED_BASH_FILES);

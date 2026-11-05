@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
-import { listImportedModules } from '../../libraries/packages.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { MNEMONIC_FUNCTIONS, WALLET_MODULES } from '../../config/security.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
-import { WALLET_MODULES, MNEMONIC_FUNCTIONS } from '../../config/security.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { listImportedModules } from '../../libraries/packages.ts';
+import { createRule } from '../../rule.ts';
 
 function findHardcodedPhrase(
     source: Readonly<TSESLint.SourceCode>,

@@ -1,12 +1,14 @@
-import ignore from 'ignore';
 import { posix } from 'node:path';
-import type { RunCache } from '#cli/types/system.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { readText, findText } from '#cli/system/files/reads.ts';
+
+import ignore from 'ignore';
+
 import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { extractParentFolder, isInside } from '#cli/system/paths.ts';
 import type { GitignoreMatcher } from '#cli/types/repository.ts';
-import { isInside, extractParentFolder } from '#cli/system/paths.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 const SKIPPED_PATTERN_STARTS = ['#', '!'] as const;
 

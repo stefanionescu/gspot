@@ -1,10 +1,11 @@
-import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
+import { expect, test } from 'bun:test';
+
 import { parseBuildSettings, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { FIRST_GROUP_SWIFT_PATH, PROJECT_SYNTAX_CASES, XCODE_PROJECT_REFUSALS } from '#tests/config/parsers/formats.ts';
+import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
-import { PROJECT_SYNTAX_CASES, FIRST_GROUP_SWIFT_PATH, XCODE_PROJECT_REFUSALS } from '#tests/config/parsers/formats.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 test('the project folder offset and source roots apply separately', () => {
     const source = GROUPED_PBXPROJ.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');

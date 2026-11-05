@@ -1,34 +1,35 @@
-import type { z } from 'zod';
 import { posix } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { gitFileSchema } from '#cli/schemas/repository.ts';
-import { OCTAL_RADIX, LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/repository.ts';
 
+import type { z } from 'zod';
+
+import { LEADING_SLASH, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
-    LINE_FEED,
-    TREE_LINE,
-    INDEX_LINE,
-    SIZE_GROUP,
-    BLOB_HEADER,
-    PATH_ESCAPES,
-    ATTRIBUTE_LINE,
-    OCTAL_PATH_BYTE,
-    OCTAL_BYTE_WIDTH,
-    ATTRIBUTE_FIELDS,
     ANY_FOLDER_PREFIX,
-    QUOTED_PATH_CHUNKS,
+    ATTRIBUTE_ASSIGNMENT_SIDES,
+    ATTRIBUTE_FIELDS,
+    ATTRIBUTE_LINE,
+    BLOB_HEADER,
+    FIRST_NON_PRINTABLE_BYTE,
     FIRST_PRINTABLE_BYTE,
     IGNORED_ATTRIBUTE_LINE,
-    FIRST_NON_PRINTABLE_BYTE,
-    QUOTED_ATTRIBUTE_PATTERN,
     IGNORED_ATTRIBUTE_PATTERN,
-    ATTRIBUTE_ASSIGNMENT_SIDES,
+    INDEX_LINE,
     INVALID_GIT_STREAM_MESSAGE,
+    LINE_FEED,
+    OCTAL_BYTE_WIDTH,
+    OCTAL_PATH_BYTE,
+    PATH_ESCAPES,
+    QUOTED_ATTRIBUTE_PATTERN,
+    QUOTED_PATH_CHUNKS,
+    SIZE_GROUP,
+    TREE_LINE,
     UNSUPPORTED_GIT_FILE_MESSAGE,
 } from '#cli/config/repository/git.ts';
+import { gitFileSchema } from '#cli/schemas/repository.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { formatNameList } from '#cli/system/text.ts';
+import type { AttributePattern, GitFile, GitIndexFile, GitStream } from '#cli/types/repository.ts';
 
 async function readNextChunk(stream: GitStream): Promise<Buffer | undefined> {
     while (stream.cursor === stream.chunk.length) {

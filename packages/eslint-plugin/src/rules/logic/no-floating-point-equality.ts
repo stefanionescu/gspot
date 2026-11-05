@@ -1,18 +1,18 @@
-import { createRule } from '../../rule.ts';
-import { haveSameTokens } from '../../language/syntax.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    SIGNS,
     BIGINT_ZERO,
     BINARY_FACTOR,
     DECIMAL_FACTOR,
     DECIMAL_LITERAL,
-    FRACTION_MARKER,
-    RANGE_OPERATORS,
     EQUALITY_OPERATORS,
     FLOAT_ARITHMETIC_OPERATORS,
+    FRACTION_MARKER,
+    RANGE_OPERATORS,
+    SIGNS,
 } from '../../config/logic.ts';
+import { haveSameTokens } from '../../language/syntax.ts';
+import { createRule } from '../../rule.ts';
 
 function isInexactLiteral(text: string): boolean {
     const digits = text.replaceAll('_', '').toLowerCase();

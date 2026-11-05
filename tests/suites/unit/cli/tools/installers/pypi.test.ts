@@ -1,39 +1,40 @@
-import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
-import { parse } from '@decimalturn/toml-patch';
 import { existsSync, readFileSync } from 'node:fs';
-import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { rm, readFile, writeFile } from 'node:fs/promises';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import type { PythonToolProject } from '#cli/types/tools.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
+import { parse } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { openSession } from '#cli/engine/session.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import {
-    installPythonTools,
-    readPythonSettings,
-    planPythonLockfile,
     installPythonProjects,
+    installPythonTools,
     isPythonLockfileFresh,
+    planPythonLockfile,
+    readPythonSettings,
 } from '#cli/tools/installers/pypi.ts';
+import type { PythonToolProject } from '#cli/types/tools.ts';
 import {
-    UV_TOML,
-    PYPROJECT_UV_INDEX,
-    UV_LOCKFILE_ORIGINS,
-    PYTHON_TOOL_PROJECT,
     INVALID_UV_SETTINGS,
+    LOCKFILE_PASSWORD_ERROR,
+    PYPROJECT_UV_INDEX,
     PYTHON_INSTALL_FILES,
     PYTHON_TOOL_LOCKFILE,
+    PYTHON_TOOL_PROJECT,
     UV_LOCKFILE_MISMATCHES,
-    LOCKFILE_PASSWORD_ERROR,
+    UV_LOCKFILE_ORIGINS,
+    UV_TOML,
 } from '#tests/config/tools/installers.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;
 

@@ -1,30 +1,29 @@
-import { isTable } from '#cli/system/tables.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import { buildSettings } from '#cli/settings/read.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { removeKey, addScopeTable } from '#cli/settings/edit.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
-import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
-import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
-import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
-import { listDetectedAdditions, selectProposedConfigurations } from '#cli/repository/proposals.ts';
-import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
-
 import {
-    writeSettingsEdit,
     buildUnchangedResult,
     formatConfigurationChange,
     readConfigurationEditContext,
+    writeSettingsEdit,
 } from '#cli/commands/edits.ts';
+import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/edits.ts';
+import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { listDetectedAdditions, selectProposedConfigurations } from '#cli/repository/proposals.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { addScopeTable, removeKey } from '#cli/settings/edit.ts';
+import { findSetting, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
+import { buildSettings } from '#cli/settings/read.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { formatNameList } from '#cli/system/text.ts';
+import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function assertRemovable(names: string[], kept: string[]): void {
     for (const configuration of names) {

@@ -1,13 +1,14 @@
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import type { ManagedKeys } from '#cli/types/repository.ts';
-import { getTable, listIgnores } from '#cli/settings/scopes.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
+
+import { BUNFIG_FILE, OSV_SCANNER_CHECK, OSV_SCANNER_NOTES, SCANNER_KEY } from '#cli/config/configurations/general.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { SCANNER_KEY, BUNFIG_FILE, OSV_SCANNER_CHECK, OSV_SCANNER_NOTES } from '#cli/config/configurations/general.ts';
+import type { ManagedKeys } from '#cli/types/repository.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Build osv-scanner.toml: a note on why the file exists, and the package ignores and their reasons.

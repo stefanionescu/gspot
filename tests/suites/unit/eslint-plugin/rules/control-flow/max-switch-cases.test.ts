@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { maxSwitchCases } from '#eslint-plugin/rules/control-flow/max-switch-cases.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('max-switch-cases', maxSwitchCases, {
     valid: [

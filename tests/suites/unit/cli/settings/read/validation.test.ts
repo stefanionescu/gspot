@@ -1,33 +1,34 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
-import { stringify } from '@decimalturn/toml-patch';
-import { readSettings } from '#cli/settings/read.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { FIRST_READ } from '#cli/config/settings/validation.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { join } from 'node:path';
 
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { FIRST_READ } from '#cli/config/settings/validation.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import {
+    DUPLICATED_REASON_ERRORS,
     EMPTY_REASONS,
-    VALID_LICENSES,
+    INVALID_LICENSES,
+    INVALID_MARKDOWNLINT_NAMES,
+    INVALID_TOOL_ENUMS,
     KEY_PATH_CASES,
     REVIEWED_REASON,
-    INVALID_LICENSES,
     RULE_FILE_ERRORS,
-    UNKNOWN_KEY_CASES,
-    INVALID_TOOL_ENUMS,
     RULE_FILE_SETTINGS,
-    DUPLICATED_REASON_ERRORS,
     RULE_OPTION_REASON_TABLES,
-    INVALID_MARKDOWNLINT_NAMES,
     SCOPE_CONFIGURATION_SETTINGS,
+    UNKNOWN_KEY_CASES,
+    VALID_LICENSES,
 } from '#tests/config/settings/read.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 test.each([...RULE_OPTION_REASON_TABLES])(
     'a reason option in $name rules belongs to the lint rule',

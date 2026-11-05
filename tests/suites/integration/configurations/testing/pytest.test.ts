@@ -1,19 +1,20 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import {
+    COVERAGE_LIMIT_CASES,
+    PYTEST_CASES,
+    PYTEST_PYPROJECT,
+    PYTEST_SANDBOX,
+} from '#tests/config/integration/testing.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    PYTEST_CASES,
-    PYTEST_SANDBOX,
-    PYTEST_PYPROJECT,
-    COVERAGE_LIMIT_CASES,
-} from '#tests/config/integration/testing.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 const installedSandbox = shareInstalledSandbox({ install: false, ...PYTEST_SANDBOX, commands: [['uv', 'sync']] });
 

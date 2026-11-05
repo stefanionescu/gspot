@@ -1,40 +1,40 @@
-import type { Files } from '#cli/types/system.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { copyFileSync, lstatSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, posix, relative } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
-import { openFiles } from '#cli/system/files/open.ts';
-import { extractExtension } from '#cli/system/paths.ts';
-import { copyValePackages } from '#cli/engine/copies/vale.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import { writeRevisionFiles } from '#cli/engine/copies/files.ts';
-import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { runGit, readGitText } from '#cli/repository/git/run.ts';
-import type { GitFile, Revision } from '#cli/types/repository.ts';
-import { join, posix, dirname, basename, relative } from 'node:path';
-import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
-import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
-import { statSync, lstatSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
-import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/repository/git.ts';
-import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
 
 import {
-    DEPENDENCY_FILES,
-    GIT_SHALLOW_PATH,
-    GIT_INIT_ARGUMENTS,
-    GIT_HASH_ARGUMENTS,
-    GIT_PATH_ARGUMENTS,
-    GIT_ALTERNATES_PATH,
-    GIT_SET_HEAD_ARGUMENTS,
-    DEPENDENCY_REVISION_NOTE,
-    GIT_EMPTY_INDEX_ARGUMENTS,
-    GIT_VERIFY_HEAD_ARGUMENTS,
-    GIT_HASH_FORMAT_ARGUMENTS,
-    GIT_UPDATE_INDEX_ARGUMENTS,
     DECLARATION_CONFIG_EXTENSIONS,
+    DEPENDENCY_FILES,
+    DEPENDENCY_REVISION_NOTE,
+    GIT_ALTERNATES_PATH,
+    GIT_EMPTY_INDEX_ARGUMENTS,
+    GIT_HASH_ARGUMENTS,
+    GIT_HASH_FORMAT_ARGUMENTS,
+    GIT_INIT_ARGUMENTS,
+    GIT_PATH_ARGUMENTS,
+    GIT_SET_HEAD_ARGUMENTS,
+    GIT_SHALLOW_PATH,
+    GIT_UPDATE_INDEX_ARGUMENTS,
+    GIT_VERIFY_HEAD_ARGUMENTS,
     INSTALLED_DEPENDENCIES_MESSAGE,
 } from '#cli/config/engine.ts';
+import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { copyDependencies, readDeclarationDependencies, readIgnoredPaths } from '#cli/engine/copies/dependencies.ts';
+import { writeRevisionFiles } from '#cli/engine/copies/files.ts';
+import { createCopyFolder } from '#cli/engine/copies/folders.ts';
+import { copyValePackages } from '#cli/engine/copies/vale.ts';
+import { readGitText, runGit } from '#cli/repository/git/run.ts';
+import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
+import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
+import type { GitFile, Revision } from '#cli/types/repository.ts';
+import type { Files } from '#cli/types/system.ts';
 
 const UNSTAGED_COPY_CAUSE =
     ' The staged check runs in a copy of the index because the working tree holds unstaged or untracked files. Stashing them with git stash push --keep-index --include-untracked also lets it run.';

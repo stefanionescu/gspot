@@ -1,19 +1,20 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
-    HTML_SANDBOX,
-    AUTOPLAY_PAGE,
     AUTOPLAY_CHECKS,
+    AUTOPLAY_PAGE,
     CONTROLLED_PLAYBACK_PAGE,
+    HTML_SANDBOX,
 } from '#tests/config/integration/language.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 const installedSandbox = shareInstalledSandbox(HTML_SANDBOX);
 

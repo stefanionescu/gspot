@@ -1,12 +1,14 @@
-import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+
+import { z } from 'zod';
+
+import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/validation.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/validation.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import type { SettingVariant, SettingReference, AcceptedSettingValues } from '#cli/types/settings.ts';
+import type { AcceptedSettingValues, SettingReference, SettingVariant } from '#cli/types/settings.ts';
 
 function unwrapSchemaPipes(schema: z.ZodType): z.ZodType {
     let inner = unwrapSettingSchema(schema);

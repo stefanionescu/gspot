@@ -1,33 +1,34 @@
 import { posix } from 'node:path';
+
 import type { Node } from 'web-tree-sitter';
-import { escapeRegExp } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { ComponentScript } from '#cli/types/parsers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
-import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/language.ts';
-import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
-import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
-import { UNUSED_ASSET_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 
 import {
-    ASSET_FOLDER,
-    TEXT_EXTENSIONS,
-    ASSET_GLOB_CALL,
-    UNUSED_ASSET_RULE,
-    CONVENTIONAL_ASSETS,
     ALIAS_WILDCARD_SIDES,
-    UNUSED_ASSET_MESSAGE,
+    ASSET_FOLDER,
+    ASSET_GLOB_CALL,
     ASSET_REFERENCE_PREFIX,
     ASSET_REFERENCE_SUFFIX,
+    CONVENTIONAL_ASSETS,
+    TEXT_EXTENSIONS,
+    UNUSED_ASSET_MESSAGE,
+    UNUSED_ASSET_RULE,
 } from '#cli/config/configurations/framework.ts';
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { FILENAME_TAGS, GIT_FILE_MODES, SYMLINK_MODE } from '#cli/config/repository/files.ts';
+import { UNUSED_ASSET_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
+import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
+import type { AssetGlobImport, AssetSource } from '#cli/types/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { ComponentScript } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function getGlobPatterns(node: Node): string[] | undefined {
     const argument = node.childForFieldName('arguments')?.namedChild(0);

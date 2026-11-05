@@ -1,17 +1,18 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { getTool } from '#cli/tools/pins.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+import { join } from 'node:path';
+
 import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { buildVenvPythonPath } from '#cli/system/paths.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { UV_FLAGS, UV_PROJECT_ENVIRONMENT, UV_TOOL } from '#cli/config/tools/installers.ts';
+import { PROJECT_ENVIRONMENT_MESSAGE, UV_RUN_ARGUMENTS } from '#cli/config/tools/programs.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { buildVenvPythonPath } from '#cli/system/paths.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import type { Tool, VersionedInstaller } from '#cli/types/manifests.ts';
-import type { Session, ScopeCheck, ProcessFailure } from '#cli/types/tools.ts';
-import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
-import { UV_RUN_ARGUMENTS, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import type { ProcessFailure, ScopeCheck, Session } from '#cli/types/tools.ts';
 
 const ACTIVE_ENVIRONMENT_VARIABLE = 'VIRTUAL_ENV';
 

@@ -1,29 +1,29 @@
-import { cp } from 'node:fs/promises';
-import { GspotError } from '#cli/system/errors.ts';
-import { runGit } from '#cli/repository/git/run.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import type { GitFile } from '#cli/types/repository.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers.ts';
-import { splitSystemPath } from '#cli/system/files/reads.ts';
-import { join, posix, dirname, basename, relative } from 'node:path';
-import { JSCONFIG_FILE, GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/engine.ts';
-import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
-import { isInside, isInScope, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { NODE_MODULES, DECLARATION_EXTENSIONS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-
 import {
-    statSync,
     constants,
-    mkdirSync,
-    existsSync,
-    readdirSync,
-    symlinkSync,
     copyFileSync,
+    existsSync,
+    mkdirSync,
+    readdirSync,
     realpathSync,
+    statSync,
+    symlinkSync,
 } from 'node:fs';
+import { cp } from 'node:fs/promises';
+import { basename, dirname, join, posix, relative } from 'node:path';
+
+import { GIT_CHECK_IGNORE_ARGUMENTS, JSCONFIG_FILE } from '#cli/config/engine.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { DECLARATION_EXTENSIONS, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
+import { runGit } from '#cli/repository/git/run.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { splitSystemPath } from '#cli/system/files/reads.ts';
+import { convertToPosixPath, extractExtension, isInScope, isInside } from '#cli/system/paths.ts';
+import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
+import type { GitFile } from '#cli/types/repository.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 function listUntrackedDeclarations(root: string, tracked: ReadonlySet<string>, paths: string[]): string[] {
     return paths.flatMap((path) => {

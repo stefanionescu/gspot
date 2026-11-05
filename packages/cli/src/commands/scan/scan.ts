@@ -1,31 +1,31 @@
 import { join } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
-import { openSession } from '#cli/engine/session.ts';
+
+import { buildScanReport, formatScanMarkdown, formatScanText } from '#cli/commands/scan/report.ts';
+import { compareInstalledRules, readUserRules } from '#cli/commands/scan/rules.ts';
+import {
+    GIT_UNBORN_HEAD_ARGUMENTS,
+    MARKDOWN_FLAG,
+    SCAN_SETTINGS_MESSAGE,
+    SCAN_STOPPED_MESSAGE,
+} from '#cli/config/commands/reports.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { readGitText } from '#cli/repository/git/run.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { linkEnvironments } from '#cli/engine/copies/dependencies.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { runEveryCheck } from '#cli/generation/checks.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { runCancelableCommand } from '#cli/system/terminal.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildToolProjects } from '#cli/generation/generate.ts';
-import { installTools } from '#cli/tools/installers/install.ts';
-import { findText, measureFolder } from '#cli/system/files/reads.ts';
-import { linkEnvironments } from '#cli/engine/copies/dependencies.ts';
-import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import { readGitText } from '#cli/repository/git/run.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { findText, measureFolder } from '#cli/system/files/reads.ts';
+import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { installTools } from '#cli/tools/installers/install.ts';
+import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { ScanFlags, ScanReport } from '#cli/types/commands/reports.ts';
-import { readUserRules, compareInstalledRules } from '#cli/commands/scan/rules.ts';
-import { formatScanText, buildScanReport, formatScanMarkdown } from '#cli/commands/scan/report.ts';
-
-import {
-    MARKDOWN_FLAG,
-    SCAN_STOPPED_MESSAGE,
-    SCAN_SETTINGS_MESSAGE,
-    GIT_UNBORN_HEAD_ARGUMENTS,
-} from '#cli/config/commands/reports.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 
 async function runScanCommand(
     root: string,

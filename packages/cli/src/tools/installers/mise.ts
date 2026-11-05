@@ -1,41 +1,42 @@
-import which from 'which';
-import { join, dirname } from 'node:path';
-import { patch } from '@decimalturn/toml-patch';
-import { formatCount } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { miseLockfileSchema } from '#cli/schemas/tools.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { isTable, getRequired } from '#cli/system/tables.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
-import { GSPOT_PATHS, MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
-import { findMisePin, listMisePins, listPackagePins, findMissingBuild } from '#cli/tools/pins.ts';
-import type { MiseToolPin, MiseInstall, ToolInstall, MiseLockfile, GeneratedFile } from '#cli/types/tools.ts';
+import { dirname, join } from 'node:path';
 
+import { patch } from '@decimalturn/toml-patch';
+import which from 'which';
+
+import { GSPOT_PATHS, MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import {
-    UV_TOOL,
-    MISE_TOOL_NOUN,
-    MISE_FORCE_FLAG,
     GITHUB_RATE_LIMIT,
-    MISE_RELEASE_HOSTS,
-    MISE_LOCK_ARGUMENTS,
     GITHUB_TOKEN_MESSAGE,
-    MISE_PLATFORM_PREFIX,
-    MISE_CHECKSUM_PATTERN,
-    MISE_RELEASE_PROTOCOL,
-    MISE_INSTALL_ARGUMENTS,
-    MISE_LOCKED_ENVIRONMENT,
     MISE_BIN_PATHS_ARGUMENTS,
     MISE_CEILING_PATHS_VARIABLE,
+    MISE_CHECKSUM_PATTERN,
+    MISE_FORCE_FLAG,
+    MISE_INSTALL_ARGUMENTS,
+    MISE_LOCK_ARGUMENTS,
+    MISE_LOCKED_ENVIRONMENT,
+    MISE_PLATFORM_PREFIX,
+    MISE_RELEASE_HOSTS,
+    MISE_RELEASE_PROTOCOL,
+    MISE_TOOL_NOUN,
     MISE_TRUSTED_PATHS_VARIABLE,
+    UV_TOOL,
 } from '#cli/config/tools/installers.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { planReplacements, writePlans } from '#cli/repository/writer.ts';
+import { miseLockfileSchema } from '#cli/schemas/tools.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { getRequired, isTable } from '#cli/system/tables.ts';
+import { formatCount } from '#cli/system/text.ts';
+import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
+import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
+import { findMisePin, findMissingBuild, listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import type { GeneratedFile, MiseInstall, MiseLockfile, MiseToolPin, ToolInstall } from '#cli/types/tools.ts';
 
 function selectMiseTools(install: ToolInstall) {
     const { session, tools, checkTools } = install;

@@ -1,22 +1,24 @@
 import { existsSync } from 'node:fs';
-import { join, posix } from 'node:path';
-import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
-import { pushOutputSchema } from '#cli/schemas/commands.ts';
+import { join, posix } from 'node:path';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { pushOutputSchema } from '#cli/schemas/commands.ts';
+import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/general.ts';
+import { COMMITLINT_GSPOT_PACKAGE, LICENSE } from '#tests/config/setup/configurations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { LICENSE, COMMITLINT_GSPOT_PACKAGE } from '#tests/config/setup/configurations.ts';
-import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/general.ts';
-import { runGspot, spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
     const checked = parseCheckReport(

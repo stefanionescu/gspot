@@ -1,26 +1,27 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
-import { stringify } from '@decimalturn/toml-patch';
+import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { formatRunReport } from '#cli/commands/check/report.ts';
 import { printProgress } from '#cli/engine/report.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { fakeTerminals } from '#tests/setup/system/fakes.ts';
-import { formatRunReport } from '#cli/commands/check/report.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
 import {
-    NO_COLOR_SETTINGS,
-    VERBOSITY_ARGUMENTS,
     FAILED_CHECK_REPORT,
     FINDINGS_TOOL_ARGUMENTS,
+    NO_COLOR_SETTINGS,
+    VERBOSITY_ARGUMENTS,
 } from '#tests/config/commands/check.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeTerminals } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function createVerbositySandbox(
     findingsCommand: string[],

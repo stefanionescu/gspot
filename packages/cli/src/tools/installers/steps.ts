@@ -1,18 +1,17 @@
-import { runTool } from '#cli/tools/run.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { writeProgress } from '#cli/system/terminal.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import type { ToolInstall, ToolRelease } from '#cli/types/tools.ts';
-import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
-import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
-
 import {
+    MILLISECONDS_PER_DAY,
     NETWORK_ADVICE,
     NOT_FOUND_STATUS,
-    MILLISECONDS_PER_DAY,
     PYTHON_DEFAULT_INDEX_ORIGIN,
 } from '#cli/config/tools/installers.ts';
+import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { writeProgress } from '#cli/system/terminal.ts';
+import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
+import { runTool } from '#cli/tools/run.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import type { ToolInstall, ToolRelease } from '#cli/types/tools.ts';
 
 async function readReleaseState(install: ToolInstall, release: ToolRelease): Promise<'absent' | 'held' | undefined> {
     const response = await fetch(release.url, {

@@ -1,25 +1,27 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { parse as parseToml, stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
 import * as prettier from 'prettier';
 import { type Options } from 'prettier';
-import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { createFileTree, testdir } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { rm, readFile, writeFile } from 'node:fs/promises';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { CONFIG_PROJECT, NESTED_YAML, NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { NESTED_YAML, CONFIG_PROJECT, NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test.each(['absent', 'authored', 'managed'])(
     '%s attributes keep LF in every text file, also in a scope folder with a space',

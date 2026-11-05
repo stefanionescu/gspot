@@ -1,39 +1,40 @@
 import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
-import { isInScope } from '#cli/system/paths.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import { tryParseFile } from '#cli/system/errors.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { UV_LOCKFILE } from '#cli/config/manifests.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { pyprojectSchema } from '#cli/schemas/parsers.ts';
-import { RUFF_CHECK } from '#cli/config/repository/setup.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
-import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import { getTable, getLimit, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
-import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 
+import { stringify } from '@decimalturn/toml-patch';
+
+import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import {
-    RUFF_ISORT,
-    PYTHON_FILES,
-    RUFF_PATH_RULES,
-    PYDANTIC_PACKAGE,
-    RUFF_TIDY_IMPORTS,
-    RUFF_CONSOLE_RULES,
-    RUFF_RUNTIME_TYPES,
+    BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
     BASEDPYRIGHT_CHECK,
+    BASEDPYRIGHT_DEFAULT_OPTIONS,
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
     FASTAPI_CONFIGURATION,
-    BASEDPYRIGHT_DEFAULT_OPTIONS,
-    BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
+    PYDANTIC_PACKAGE,
+    PYTHON_FILES,
+    RUFF_CONSOLE_RULES,
+    RUFF_ISORT,
+    RUFF_PATH_RULES,
+    RUFF_RUNTIME_TYPES,
+    RUFF_TIDY_IMPORTS,
 } from '#cli/config/configurations/python.ts';
+import { UV_LOCKFILE } from '#cli/config/manifests.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { RUFF_CHECK } from '#cli/config/repository/setup.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { pyprojectSchema } from '#cli/schemas/parsers.ts';
+import { getLimit, getTable, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { isInScope } from '#cli/system/paths.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string): string[] {
     const shared = convertToGlobs(planned.ignoreSections).filter(

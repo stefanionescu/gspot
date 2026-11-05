@@ -1,12 +1,12 @@
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { COMMAND_CHECK_DEFAULTS, COMMAND_CHECK_HELP, COMMAND_CHECK_WHY } from '#cli/config/settings/validation.ts';
+import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { formatSettingsError } from '#cli/settings/validation/messages.ts';
+import { formatSettingsIssue, validateSettings } from '#cli/settings/validation/schema.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { formatSettingsError } from '#cli/settings/validation/messages.ts';
-import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/schema.ts';
-import type { Settings, TomlTable, SettingsError, ParsedSettings } from '#cli/types/settings.ts';
-import { COMMAND_CHECK_WHY, COMMAND_CHECK_HELP, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/validation.ts';
+import type { ParsedSettings, Settings, SettingsError, TomlTable } from '#cli/types/settings.ts';
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
     return Object.fromEntries(

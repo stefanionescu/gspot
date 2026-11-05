@@ -1,12 +1,12 @@
-import { formatScope } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { DOCS_RULES, LICENSE_PATH, MISSING_LICENSE_MESSAGE, README_FILE } from '#cli/config/configurations/general.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { REQUIRED_FILE_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
-import { DOCS_RULES, README_FILE, LICENSE_PATH, MISSING_LICENSE_MESSAGE } from '#cli/config/configurations/general.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { formatScope } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports a scope without a README.md, and a root without a license file.

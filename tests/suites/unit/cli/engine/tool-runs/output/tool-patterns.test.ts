@@ -1,9 +1,10 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { TOOL_PATTERN_CASES } from '#tests/config/engine/tool-runs.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test.each(TOOL_PATTERN_CASES)(
     '$check reports actionable output and ignores summary lines',

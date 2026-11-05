@@ -1,21 +1,21 @@
 import { isDeepStrictEqual } from 'node:util';
-import type { Scope } from '#cli/types/settings.ts';
-import { findParentScope } from '#cli/settings/scopes.ts';
-import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
-import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { isInScope, escapeGlob, extractExtension } from '#cli/system/paths.ts';
-import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
-import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
-import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 
+import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
+import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
+import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { compareScopeDepth, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { findParentScope } from '#cli/settings/scopes.ts';
+import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
+import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
 import type {
-    EslintFiles,
-    ScopeOverride,
-    PathExpressions,
-    EslintFileGroups,
     EslintBlockFields,
+    EslintFileGroups,
+    EslintFiles,
+    PathExpressions,
+    ScopeOverride,
 } from '#cli/types/configurations/language.ts';
+import type { Scope } from '#cli/types/settings.ts';
 
 /**
 Build the glob of the files of these languages.

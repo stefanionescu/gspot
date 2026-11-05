@@ -1,14 +1,15 @@
 import { expect } from 'bun:test';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import type { Sandbox, SampleFix, CheckSample, ProcessOutput, SandboxChanges } from '#tests/types/setup.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import type { CheckSample, ProcessOutput, SampleFix, Sandbox, SandboxChanges } from '#tests/types/setup.ts';
 
 async function listReportedChecks(
     sandbox: Sandbox,

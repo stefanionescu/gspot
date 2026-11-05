@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsSqsUnencryptedQueue } from '#eslint-plugin/rules/aws/aws-sqs-unencrypted-queue.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-sqs-unencrypted-queue', awsSqsUnencryptedQueue, {
     valid: [

@@ -1,15 +1,17 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { STARTING_FILES } from '#tests/config/e2e.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { initOutputSchema } from '#cli/schemas/commands.ts';
-import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { STARTING_FILES } from '#tests/config/e2e.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 async function assertConflictingConfigs(root: string, output: string): Promise<void> {
     const { plan } = initOutputSchema.parse(JSON.parse(output));

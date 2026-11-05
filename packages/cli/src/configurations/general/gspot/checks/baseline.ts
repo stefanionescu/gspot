@@ -1,10 +1,10 @@
-import { formatCount } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { BASELINE_FILE } from '#cli/config/repository/files.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
+import { BASELINE_FILE } from '#cli/config/repository/files.ts';
+import { formatCount } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckRunOptions } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each baseline count that no finding used. The engine runs this check after the others. A count stays unjudged

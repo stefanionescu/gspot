@@ -1,20 +1,22 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { pathToFileURL } from 'node:url';
-import { getTool } from '#cli/tools/pins.ts';
 import { writeFile } from 'node:fs/promises';
-import { escapeRegExp } from '#cli/system/text.ts';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { expect, test } from 'bun:test';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands, fakeToolExecutables, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 
 test('a sitemap index supplies the base path for encoded and CDATA page URLs and Lychee remaps', async () => {
     const buildCommand = buildProgramCommand('fakes/site-build', '--copy', 'built=dist');

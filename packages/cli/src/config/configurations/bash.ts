@@ -1,5 +1,5 @@
-import type { BashForm } from '#cli/types/parsers.ts';
 import type { BashCommandForm } from '#cli/types/configurations/language.ts';
+import type { BashForm } from '#cli/types/parsers.ts';
 
 export const SHELLCHECK_TOOL_COMMENT = /^#\s*shellcheck\b/u;
 

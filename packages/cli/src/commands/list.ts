@@ -1,28 +1,27 @@
-import type { Session } from '#cli/types/tools.ts';
-import { openSession } from '#cli/engine/session.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { formatCount, formatScope } from '#cli/system/text.ts';
-import { listInheritedSettings } from '#cli/settings/inherit.ts';
-import { planChecks, buildCheckState } from '#cli/engine/plan.ts';
-import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
-import { isRootOnlyCheck, isRepositoryRun } from '#cli/engine/files.ts';
-import type { Scope, Settings, SettingOrigin } from '#cli/types/settings.ts';
-import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/reports.ts';
-
 import {
     KEY_GAP,
-    NOT_SET,
-    LIST_KINDS,
-    VALUE_WIDTH,
     LIST_ARGUMENT,
+    LIST_KINDS,
+    NOT_SET,
     REASON_HEADER,
+    VALUE_WIDTH,
 } from '#cli/config/commands/reports.ts';
+import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
+import { isRepositoryRun, isRootOnlyCheck } from '#cli/engine/files.ts';
+import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { listInheritedSettings } from '#cli/settings/inherit.ts';
+import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
+import { formatCount, formatScope } from '#cli/system/text.ts';
+import type { CommandDefinition } from '#cli/types/commands/edits.ts';
+import type { ConfigurationsListJson, SettingsListJson } from '#cli/types/commands/reports.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { Scope, SettingOrigin, Settings } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function formatScopeGroup(scopes: readonly string[]): string {
     const nested = scopes.filter((scopePath) => scopePath !== '');

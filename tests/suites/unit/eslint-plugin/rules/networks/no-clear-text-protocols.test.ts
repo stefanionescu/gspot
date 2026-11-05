@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noClearTextProtocols } from '#eslint-plugin/rules/networks/no-clear-text-protocols.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-clear-text-protocols', noClearTextProtocols, {
     valid: [

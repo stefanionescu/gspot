@@ -1,12 +1,14 @@
-import { test, expect } from 'bun:test';
-import { join, basename } from 'node:path';
+import { basename, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { RUFF_SUPPRESSIONS, VALE_SUPPRESSION_SETTINGS, VALE_SUPPRESSIONS } from '#tests/config/integration/general.ts';
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { VALE_SUPPRESSIONS, RUFF_SUPPRESSIONS, VALE_SUPPRESSION_SETTINGS } from '#tests/config/integration/general.ts';
 
 test('suppression detection agrees with Ruff on every noqa comment form and place', async () => {
     const paths = RUFF_SUPPRESSIONS.map((_, index) => `source_${String(index)}.py`);

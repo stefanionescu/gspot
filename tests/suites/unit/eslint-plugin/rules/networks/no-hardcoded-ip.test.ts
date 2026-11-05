@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noHardcodedIp } from '#eslint-plugin/rules/networks/no-hardcoded-ip.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-hardcoded-ip', noHardcodedIp, {
     valid: ["const host = '127.0.0.1';\nconst documentation = '192.0.2.10';\nconst version = '1.2.3';"],

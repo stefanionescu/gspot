@@ -1,33 +1,34 @@
-import { join } from 'node:path';
 import { chmod } from 'node:fs/promises';
-import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/tools/pins.ts';
-import { test, spyOn, expect } from 'bun:test';
-import { planChecks } from '#cli/engine/plan.ts';
-import type { Session } from '#cli/types/tools.ts';
-import type { Level } from '#cli/types/settings.ts';
-import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import { PYPROJECT } from '#tests/config/setup/languages.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { fakeToolExecutables, buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
+import { join } from 'node:path';
 
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { CHECK_CODE } from '#cli/configurations/registry.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import * as processes from '#cli/system/processes.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Level } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 import {
     FAILED_STYLE_BATCH,
-    NUMPY_DOCSTRING_MODULE,
     GOOGLE_DOCSTRING_MODULE,
+    NUMPY_DOCSTRING_MODULE,
     PYDOCLINT_PROJECT_CASES,
 } from '#tests/config/configurations/python.ts';
+import { PYPROJECT } from '#tests/config/setup/languages.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildPythonToolFiles, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
 test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, setting, expected }) => {
     await using sandbox = await createGitSandbox({});

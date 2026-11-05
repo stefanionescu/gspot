@@ -1,18 +1,18 @@
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { TYPO } from '#tests/config/setup/configurations.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { changeSandbox, writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { expect, test } from 'bun:test';
 
+import { compareText } from '#cli/system/text.ts';
 import {
-    SPELLING_SANDBOX,
     SPELLING_IGNORE_CASES,
     SPELLING_LOCALE_SETTINGS,
+    SPELLING_SANDBOX,
 } from '#tests/config/integration/general.ts';
+import { TYPO } from '#tests/config/setup/configurations.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxChanges, changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 const installedSandbox = shareInstalledSandbox(SPELLING_SANDBOX);
 

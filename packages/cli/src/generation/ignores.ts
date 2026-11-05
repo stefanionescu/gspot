@@ -1,28 +1,28 @@
-import { join, basename } from 'node:path/posix';
-import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { GITLINK_MODE } from '#cli/config/repository/files.ts';
-import { convertToGlob } from '#cli/configurations/ignores.ts';
-import { listPointerPaths } from '#cli/generation/pointers.ts';
-import { readLinguistPatterns } from '#cli/repository/read.ts';
-import { listOwnedConfigs } from '#cli/generation/selection.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { OwnedConfig } from '#cli/types/configurations/language.ts';
-import type { IgnoreSection } from '#cli/types/configurations/general.ts';
-import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
-import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
+import { basename, join } from 'node:path/posix';
 
+import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
 import {
-    GITHUB_WORKFLOW,
-    GITLAB_WORKFLOW,
     BUILD_OUTPUT_FOLDERS,
     BUILD_OUTPUT_PATTERNS,
+    GITHUB_WORKFLOW,
+    GITLAB_WORKFLOW,
     GSPOT_FOLDER_PATTERNS,
 } from '#cli/config/generation.ts';
+import { GITLINK_MODE } from '#cli/config/repository/files.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { convertToGlob } from '#cli/configurations/ignores.ts';
+import { listPointerPaths } from '#cli/generation/pointers.ts';
+import { listOwnedConfigs } from '#cli/generation/selection.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
+import { readLinguistPatterns } from '#cli/repository/read.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { IgnoreSection } from '#cli/types/configurations/general.ts';
+import type { OwnedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Check whether a scope reads the root config of a tool that walks up to its parent configs, so it needs no pointer.

@@ -1,15 +1,17 @@
 import { readFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
+
 import { parse } from '@decimalturn/toml-patch';
-import { findValueAt } from '#cli/system/tables.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { expect, spyOn, test } from 'bun:test';
+
 import { initOutputSchema } from '#cli/schemas/commands.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { IMPORT_STYLE_CASES, SIMULATOR_DESTINATION, WORKSPACE_SITE_FILES } from '#tests/config/generation/settings.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
-import { IMPORT_STYLE_CASES, WORKSPACE_SITE_FILES, SIMULATOR_DESTINATION } from '#tests/config/generation/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the gspot.toml text keeps root and scope configurations', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

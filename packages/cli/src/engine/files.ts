@@ -1,19 +1,20 @@
-import { posix } from 'node:path';
 import { isUtf8 } from 'node:buffer';
-import { isInScope } from '#cli/system/paths.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import type { ScopeCheck } from '#cli/types/tools.ts';
+import { posix } from 'node:path';
+
+import { BYTES_PER_KILOBYTE, FILES_PLACEHOLDER, IGNORED_PATHS_MESSAGE, ROOT_RUNS } from '#cli/config/engine.ts';
+import { SETTINGS_FILE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
+import { isOutsideChildScopes, joinScope, listNestedScopes, selectScope } from '#cli/repository/scopes.ts';
+import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { getTable, listIgnores } from '#cli/settings/scopes.ts';
+import { isInScope } from '#cli/system/paths.ts';
+import type { PlanInventory, PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
-import { SYMLINK_MODE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
-import type { PlannedCheck, PlannedScope, PlanInventory } from '#cli/types/engine/plan.ts';
-import { joinScope, selectScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
-import { ROOT_RUNS, FILES_PLACEHOLDER, BYTES_PER_KILOBYTE, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import type { ScopeCheck } from '#cli/types/tools.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const { inventory, session, children } = planned;

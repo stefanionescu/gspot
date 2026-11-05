@@ -1,15 +1,17 @@
-import { test, expect } from 'bun:test';
-import { join, posix } from 'node:path';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join, posix } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { runChecks } from '#cli/engine/run.ts';
-import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { compareText } from '#cli/system/text.ts';
+import { NEST_SUFFIX_FILES, NESTJS_PREFIX_RESULTS, PREFIX_TREE } from '#tests/config/configurations/structure/files.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { PREFIX_TREE, NEST_SUFFIX_FILES, NESTJS_PREFIX_RESULTS } from '#tests/config/configurations/structure/files.ts';
 
 test("shared-prefixes and file-folder-clashes leave gspot's own file names out", async () => {
     await using sandbox = await createGitSandbox({

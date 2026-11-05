@@ -1,6 +1,7 @@
-import { test, expect } from 'bun:test';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { expect, test } from 'bun:test';
+
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 
 test('every shipped check without a command has runnable code', () => {
     const checks = readConfigurations()

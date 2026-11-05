@@ -1,30 +1,29 @@
-import type { Session } from '#cli/types/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { formatScope, formatNameList } from '#cli/system/text.ts';
-import { writeProgress, rewriteProgress } from '#cli/system/terminal.ts';
-import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
-import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
-
-import type {
-    FixReport,
-    RunReport,
-    RunOptions,
-    CheckResult,
-    FinishedRun,
-    CheckProgress,
-} from '#cli/types/engine/run.ts';
 import {
+    EXIT_FINDINGS,
+    FAILED_STATUSES,
+    INCOMPLETE_STATUSES,
+    NO_FILES_MESSAGE,
+    PROGRESS_INTERVAL_MILLISECONDS,
+    REPORT_STAGES,
+    SHORT_HASH_LENGTH,
     STAGED_FILES,
     WORKING_TREE,
-    EXIT_FINDINGS,
-    REPORT_STAGES,
-    FAILED_STATUSES,
-    NO_FILES_MESSAGE,
-    SHORT_HASH_LENGTH,
-    INCOMPLETE_STATUSES,
-    PROGRESS_INTERVAL_MILLISECONDS,
 } from '#cli/config/engine.ts';
+import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
+import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
+import { rewriteProgress, writeProgress } from '#cli/system/terminal.ts';
+import { formatNameList, formatScope } from '#cli/system/text.ts';
+import type {
+    CheckProgress,
+    CheckResult,
+    FinishedRun,
+    FixReport,
+    RunOptions,
+    RunReport,
+} from '#cli/types/engine/run.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const RUNNING_CHECKS_SHOWN = 3;
 

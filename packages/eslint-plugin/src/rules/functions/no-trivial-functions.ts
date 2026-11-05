@@ -1,20 +1,20 @@
-import { createRule } from '../../rule.ts';
-import { FUNCTION_NODES } from '../../config/plugin.ts';
-import { type FunctionNode } from '../../types/plugin.ts';
-import { type TrivialFunctionsOptions } from '../../types/functions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    ONE_STATEMENT,
-    FUNCTION_SELECTOR,
-    TYPE_DECLARATIONS,
-    INLINE_VALUE_PARENTS,
     EXECUTABLE_DECLARATIONS,
-    TRANSPARENT_EXPRESSIONS,
+    FUNCTION_SELECTOR,
+    INLINE_VALUE_PARENTS,
     NON_EXECUTABLE_STATEMENTS,
-    TRIVIAL_FUNCTION_STATEMENTS,
+    ONE_STATEMENT,
+    TRANSPARENT_EXPRESSIONS,
     TRIVIAL_FUNCTION_OPTIONS_SCHEMA,
+    TRIVIAL_FUNCTION_STATEMENTS,
+    TYPE_DECLARATIONS,
 } from '../../config/functions.ts';
+import { FUNCTION_NODES } from '../../config/plugin.ts';
+import { createRule } from '../../rule.ts';
+import { type TrivialFunctionsOptions } from '../../types/functions.ts';
+import { type FunctionNode } from '../../types/plugin.ts';
 
 const EXPORT_REFERENCE_PARENTS: ReadonlySet<string> = new Set(['ExportSpecifier', 'ExportDefaultDeclaration']);
 

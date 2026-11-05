@@ -1,4 +1,5 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { validateRuntimeVersion } from '#cli/system/runtime.ts';
 
 test('gspot refuses a Node.js older than the minimum version in engines and names that version', () => {

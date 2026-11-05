@@ -1,28 +1,28 @@
-import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
-import plugin from '#eslint-plugin/plugin.ts';
-import { compareText } from '#cli/system/text.ts';
-import { getRequired } from '#cli/system/tables.ts';
-import type { ReferencePage } from '#docs/types/pages.ts';
-import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
-import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { formatText, formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
+import { posix } from 'node:path';
 
+import { getRequired } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
-    HELP_HEADING,
-    REFERENCE_PATH,
-    PURPOSE_HEADING,
-    NO_CONFIG_MESSAGE,
-    REFERENCE_FOLDERS,
     CONJUNCTION_FORMAT,
-    SCHEMA_TYPE_LABELS,
-    NO_OPTIONS_MESSAGE,
+    DEFAULT_OPTION_DESCRIPTION,
     ESLINT_FIX_MESSAGE,
+    HELP_HEADING,
+    NO_CONFIG_MESSAGE,
+    NO_OPTIONS_MESSAGE,
+    PURPOSE_HEADING,
+    REFERENCE_FOLDERS,
+    REFERENCE_PATH,
+    SCHEMA_TYPE_LABELS,
+    SUBSECTION_HEADING_LEVEL,
     TABLE_HEADING_LEVEL,
     TYPE_INFORMATION_MESSAGE,
-    SUBSECTION_HEADING_LEVEL,
-    DEFAULT_OPTION_DESCRIPTION,
 } from '#docs/config/reference.ts';
+import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
+import type { ReferencePage } from '#docs/types/pages.ts';
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
+import plugin from '#eslint-plugin/plugin.ts';
 
 const PLUGIN_PATH = `${REFERENCE_PATH}${REFERENCE_FOLDERS.eslintPlugin}/`;
 const RULE_MODULES = import.meta.glob<Readonly<Record<string, unknown>>>(

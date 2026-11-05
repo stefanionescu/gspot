@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noEqualLoopCondition } from '#eslint-plugin/rules/control-flow/no-equal-loop-condition.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-equal-loop-condition', noEqualLoopCondition, {
     valid: [

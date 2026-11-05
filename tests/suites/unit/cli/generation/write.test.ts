@@ -1,30 +1,31 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { formatHeader } from '#cli/generation/header.ts';
-import { listStaleFiles } from '#cli/generation/stale.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { PackageFieldScenario } from '#tests/types/setup.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
-import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
-    MANAGED_KEYS_NOTE,
     HOOKS_CHANGED_NOTE,
-    TOOLS_CHANGED_NOTE,
+    MANAGED_KEYS_NOTE,
     STALE_LOCKFILE_NOTE,
+    TOOLS_CHANGED_NOTE,
 } from '#cli/config/generation.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { formatHeader } from '#cli/generation/header.ts';
+import { listStaleFiles } from '#cli/generation/stale.ts';
+import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import type { PackageFieldScenario } from '#tests/types/setup.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);

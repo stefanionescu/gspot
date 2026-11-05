@@ -1,14 +1,15 @@
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { createRunCache } from '#cli/system/cache.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { buildInitSettings } from '#cli/generation/setup/settings.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
+import { addScopeTable, buildEditedSettings, setKey } from '#cli/settings/edit.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { buildInitSettings } from '#cli/generation/setup/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import { setKey, addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { ARRAY_COMMENT_CASES, FIELD_COMMENT_CASES, IGNORE_COMMENT_CASES } from '#tests/config/settings/text.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CASES])(
     'a template keeps each comment of $name on its key',

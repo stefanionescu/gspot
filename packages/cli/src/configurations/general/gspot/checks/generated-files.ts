@@ -1,9 +1,9 @@
+import { GENERATED_FILE_FINDINGS, TOOL_LOCKFILES } from '#cli/config/configurations/structure.ts';
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { GENERATED_FILE_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { TOOL_LOCKFILES, GENERATED_FILE_FINDINGS } from '#cli/config/configurations/structure.ts';
-import { type CheckCode, type CheckSession, type CheckRunOptions } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckRunOptions, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 /**
 Reports each generated file on disk that does not match what the settings generate.

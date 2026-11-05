@@ -1,4 +1,5 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { formatRunReport } from '#cli/commands/check/report.ts';
 import { ENVIRONMENT_CHECK, FAILED_CHECK_REPORT } from '#tests/config/commands/check.ts';
 

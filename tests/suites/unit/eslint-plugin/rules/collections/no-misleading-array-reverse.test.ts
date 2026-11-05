@@ -1,5 +1,5 @@
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noMisleadingArrayReverse } from '#eslint-plugin/rules/collections/no-misleading-array-reverse.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-misleading-array-reverse', noMisleadingArrayReverse, {
     valid: ['try { list.sort(); } catch {}'],

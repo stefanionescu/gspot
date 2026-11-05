@@ -1,32 +1,33 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/tools/pins.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
-import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
-import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
+import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import {
+    AUTHORED_VALE_FILES,
     GOOGLE_RULE_PATH,
     STRAY_STYLE_PATH,
-    AUTHORED_VALE_FILES,
     VALE_INSTALL_FAILURES,
 } from '#tests/config/integration/commands.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
+import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
+import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 

@@ -1,7 +1,8 @@
 import { dirname } from 'node:path';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GUIDE } from '#tests/config/integration/language.ts';
-import { TYPO, README, LICENSE } from '#tests/config/setup/configurations.ts';
+import { LICENSE, README, TYPO } from '#tests/config/setup/configurations.ts';
 
 export const PROSE_COMMENT_CASES = [
     ['mts', '//', 'const text = "delve";'],

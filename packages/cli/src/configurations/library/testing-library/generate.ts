@@ -1,14 +1,14 @@
 import {
-    type EslintScope,
+    TESTING_LIBRARY_DEFAULT_PRESET,
+    TESTING_LIBRARY_PRESETS,
+    TESTING_LIBRARY_SCOPE,
+    TESTING_LIBRARY_SETTINGS,
+} from '#cli/config/configurations/framework.ts';
+import {
     type ConfigurationBlocks,
     type ConfigurationBuilder,
+    type EslintScope,
 } from '#cli/types/configurations/language.ts';
-import {
-    TESTING_LIBRARY_SCOPE,
-    TESTING_LIBRARY_PRESETS,
-    TESTING_LIBRARY_SETTINGS,
-    TESTING_LIBRARY_DEFAULT_PRESET,
-} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the Testing Library presets of the frameworks in use.

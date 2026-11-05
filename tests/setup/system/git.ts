@@ -1,7 +1,8 @@
+import { chmod, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { stat, chmod } from 'node:fs/promises';
-import { isWindows } from '#tests/setup/system/platform.ts';
+
 import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 /**

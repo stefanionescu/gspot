@@ -1,16 +1,18 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { installNpmTools } from '#cli/tools/installers/npm/project.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('Bun keeps installed modules while it runs the frozen install', async () => {
     await using sandbox = await createGitSandbox({

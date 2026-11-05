@@ -1,11 +1,12 @@
 // Writes the CHANGELOG.md section of one CLI version. `mise run changelog <version>` runs it on Bun.
+import { execFile } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { execFile } from 'node:child_process';
+
 import type { CliReference } from '#cli/types/main.ts';
 import type { SettingReference } from '#cli/types/settings.ts';
-import { rmSync, existsSync, mkdtempSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 type Settings = Map<string, string | undefined>;
 

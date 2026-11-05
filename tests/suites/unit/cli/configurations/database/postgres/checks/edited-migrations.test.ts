@@ -1,17 +1,19 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NAME_COLUMN_SQL } from '#tests/config/configurations/database.ts';
-import { TEAMS_TABLE_SQL, TEAMS_MIGRATION_PATH } from '#tests/config/setup/sandboxes.ts';
+import { TEAMS_MIGRATION_PATH, TEAMS_TABLE_SQL } from '#tests/config/setup/sandboxes.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox, createMigrationHistory } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('history checks compare committed migration changes with the selected base revision', async () => {
     await using sandbox = await createMigrationHistory();

@@ -1,23 +1,24 @@
-import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { test, expect, describe } from 'bun:test';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { Sandbox, SandboxChanges } from '#tests/types/setup.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { changeSandbox, buildSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { join } from 'node:path';
+
+import { describe, expect, test } from 'bun:test';
 
 import {
+    MALFORMED_SEMGREP_RESULTS,
+    REPOSITORY_BASH_RULE,
+    REPOSITORY_RULE,
     SEMGREP_CHECK,
     SEMGREP_SANDBOX,
-    REPOSITORY_RULE,
-    REPOSITORY_BASH_RULE,
-    MALFORMED_SEMGREP_RESULTS,
 } from '#tests/config/integration/semgrep.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles, buildSandboxChanges, changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import type { Sandbox, SandboxChanges } from '#tests/types/setup.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

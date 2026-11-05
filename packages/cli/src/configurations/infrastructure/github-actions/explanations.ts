@@ -1,5 +1,5 @@
+import { WORKFLOW_SHAPE_MESSAGES, WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/infrastructure.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
-import { WORKFLOW_SHAPE_RULES, WORKFLOW_SHAPE_MESSAGES } from '#cli/config/configurations/infrastructure.ts';
 
 export const WORKFLOW_SHAPE_EXPLANATIONS = {
     [WORKFLOW_SHAPE_RULES.timeout]: {

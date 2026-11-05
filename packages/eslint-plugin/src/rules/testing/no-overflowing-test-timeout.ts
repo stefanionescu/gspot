@@ -1,9 +1,10 @@
-import { createRule } from '../../rule.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+
+import { MARKED_TEST_MODIFIERS, MAXIMUM_TIMER_DELAY, MOCHA_CONSTRUCTS } from '../../config/testing.ts';
 import { getLiteralValue } from '../../language/expressions.ts';
 import { listImportedModules } from '../../libraries/packages.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { MOCHA_CONSTRUCTS, MAXIMUM_TIMER_DELAY, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
+import { getTestCall } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
 
 export const noOverflowingTestTimeout = createRule<[], 'overflow'>({
     name: 'no-overflowing-test-timeout',

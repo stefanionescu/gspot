@@ -1,22 +1,23 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { GITHUB_WORKFLOW } from '#cli/config/generation.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { GITHUB_WORKFLOW } from '#cli/config/generation.ts';
 import {
-    COMPOSITE_ACTION,
     CHECKOUT_WORKFLOW,
+    COMPOSITE_ACTION,
     REQUIRED_INPUT_WORKFLOW,
     TEMPLATE_INJECTION_WORKFLOW,
 } from '#tests/config/integration/infrastructure.ts';
+import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('zizmor reports an untrusted expression in a run step', async () => {
     await using sandbox = await createGitSandbox({

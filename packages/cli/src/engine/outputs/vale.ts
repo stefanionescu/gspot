@@ -1,5 +1,5 @@
-import { valeOutputSchema } from '#cli/schemas/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { valeOutputSchema } from '#cli/schemas/engine.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 /**

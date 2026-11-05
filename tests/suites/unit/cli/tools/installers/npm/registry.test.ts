@@ -1,14 +1,16 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
-import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { readRegistryEnvironment, writeNpmrc } from '#cli/tools/installers/npm/registry.ts';
+import { LINKED_NODE_FILES, NPM_PREFIX_ENVIRONMENT, NPMRC_REFUSALS } from '#tests/config/tools/npm.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { writeNpmrc, readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { NPMRC_REFUSALS, LINKED_NODE_FILES, NPM_PREFIX_ENVIRONMENT } from '#tests/config/tools/npm.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 test.each([...NPMRC_REFUSALS])('an invalid .npmrc setting stops the registry read: $name', async ({ source }) => {
     await using sandbox = await testdir({ '.npmrc': source, 'package.json': '{"private":true}\n' });

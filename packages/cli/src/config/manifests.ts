@@ -1,5 +1,5 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { NODE_MODULES, OPERATING_SYSTEMS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 export const MISE_CONFIG_FILE = 'mise.toml';

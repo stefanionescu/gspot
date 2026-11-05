@@ -1,5 +1,6 @@
-import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { executableLayout } from '#cli/system/paths.ts';
 import type { CallRecord, ProgramName } from '#tests/types/setup.ts';
 

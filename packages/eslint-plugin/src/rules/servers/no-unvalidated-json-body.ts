@@ -1,6 +1,7 @@
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { BODY_SCHEMA_PARSERS, JSON_BODY_READ, SCHEMA_PARSERS } from '../../config/servers.ts';
 import { createRule } from '../../rule.ts';
-import { JSON_BODY_READ, SCHEMA_PARSERS, BODY_SCHEMA_PARSERS } from '../../config/servers.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isParsedBy(node: TSESTree.Node, parsers: ReadonlySet<string | null>): boolean {
     const call = node.parent;

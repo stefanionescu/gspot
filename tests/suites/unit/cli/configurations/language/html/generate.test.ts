@@ -1,7 +1,8 @@
+import { expect, test } from 'bun:test';
+import { type ConfigData, HtmlValidate } from 'html-validate';
 import { parse } from 'jsonc-parser';
-import { test, expect } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { HtmlValidate, type ConfigData } from 'html-validate';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

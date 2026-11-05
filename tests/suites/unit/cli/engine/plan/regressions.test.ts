@@ -1,9 +1,10 @@
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
+import { expect, test } from 'bun:test';
+
+import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { compareText } from '#cli/system/text.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.ts';
 
 test('a shared function coverage limit enables Jest coverage without enabling pytest coverage', async () => {
     await using sandbox = await createGitSandbox({

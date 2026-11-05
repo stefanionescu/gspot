@@ -1,9 +1,11 @@
-import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
-import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a baseline holds the findings that no fixer fixes, and a prune drops the counts that went away', async () => {
     await using sandbox = await createGitSandbox({

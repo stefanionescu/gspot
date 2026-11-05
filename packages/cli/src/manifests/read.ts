@@ -1,20 +1,20 @@
-import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { isTable } from '#cli/system/tables.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
-import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
-import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
-import { compareText, formatSimilarNames } from '#cli/system/text.ts';
-import { RULES_FOLDER, MANIFEST_FILE, CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests.ts';
+import { posix } from 'node:path';
 
+import { CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT, MANIFEST_FILE, RULES_FOLDER } from '#cli/config/manifests.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
+import { buildAssetPath, listAssets } from '#cli/system/assets.ts';
+import { formatZodIssue, GspotError } from '#cli/system/errors.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import type {
     Check,
-    ShippedRule,
     Configuration,
+    ConfigurationCheck,
     ManifestSource,
     ParsedManifest,
-    ConfigurationCheck,
+    ShippedRule,
 } from '#cli/types/manifests.ts';
 
 const shipped: { configurations?: Map<string, Configuration> } = {};

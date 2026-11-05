@@ -1,10 +1,12 @@
-import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import * as assets from '#cli/system/assets.ts';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import * as assets from '#cli/system/assets.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

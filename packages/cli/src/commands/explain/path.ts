@@ -1,21 +1,20 @@
-import { formatScope } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/tools.ts';
+import {
+    BINARY_ELIGIBLE_MESSAGE,
+    GENERATED_ELIGIBLE_MESSAGE,
+    MARK_GENERATED_MESSAGE,
+    UNCHECKED_REASON,
+    VENDORED_ELIGIBLE_MESSAGE,
+} from '#cli/config/commands/reports.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
+import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
+import { buildArgumentPath, selectScope } from '#cli/repository/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import { planChecks, buildCheckState } from '#cli/engine/plan.ts';
-import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
+import { formatScope } from '#cli/system/text.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
-
-import {
-    UNCHECKED_REASON,
-    MARK_GENERATED_MESSAGE,
-    BINARY_ELIGIBLE_MESSAGE,
-    VENDORED_ELIGIBLE_MESSAGE,
-    GENERATED_ELIGIBLE_MESSAGE,
-} from '#cli/config/commands/reports.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
     if (file.kind === 'binary') return BINARY_ELIGIBLE_MESSAGE;

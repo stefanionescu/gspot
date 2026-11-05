@@ -1,18 +1,18 @@
 import { splitByCase } from 'scule';
-import type { TextRange, TextPosition } from '#cli/types/system.ts';
 
 import {
-    TYPO_MIN,
+    DIGIT_BOUNDARY,
     LIST_LIMIT,
     NUMERIC_WORDS,
-    TYPO_FRACTION,
-    DIGIT_BOUNDARY,
-    WORD_SEPARATORS,
-    ROOT_SCOPE_MARK,
-    UNQUOTED_ARGUMENT,
-    SIMILAR_NAME_LIMIT,
     REGEXP_SYNTAX_CHARACTERS,
+    ROOT_SCOPE_MARK,
+    SIMILAR_NAME_LIMIT,
+    TYPO_FRACTION,
+    TYPO_MIN,
+    UNQUOTED_ARGUMENT,
+    WORD_SEPARATORS,
 } from '#cli/config/system.ts';
+import type { TextPosition, TextRange } from '#cli/types/system.ts';
 
 const CONFLICT_START = /^<{7}(?: |$)/u;
 

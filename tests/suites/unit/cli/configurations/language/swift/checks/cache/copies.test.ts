@@ -1,14 +1,16 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { openSession } from '#cli/engine/session.ts';
+import { mkdir, open, readFile, stat, symlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
+
+import { expect, test } from 'bun:test';
+
+import { openSession } from '#cli/engine/session.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { getBuiltInCheck, planSandboxCheck, prepareSwiftCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('Swift build side effects stay in the source copy and do not reach later runs', async () => {
     using resources = new DisposableStack();

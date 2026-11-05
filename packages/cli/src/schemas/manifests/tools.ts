@@ -1,24 +1,24 @@
-import { z } from 'zod';
 import semver from 'semver';
-import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
-import type { ToolInstallers } from '#cli/types/manifests.ts';
-import { outputSchema, commandSchema } from '#cli/schemas/manifests/checks.ts';
+import { z } from 'zod';
 
 import {
-    LEVELS,
     CASE_NAMES,
-    TOOL_KINDS,
-    TOOL_BUILDS,
-    NAMED_CATEGORIES,
-    RULE_PLACEHOLDER,
     EXTENSION_PATTERN,
-    VALID_UNICODE_MESSAGE,
-    MINIMUM_VERSION_PATTERN,
-    NUMERIC_MINIMUM_MESSAGE,
-    SHIPPED_CHECKSUM_PATTERN,
     INSTALLER_VERSION_MESSAGE,
+    LEVELS,
+    MINIMUM_VERSION_PATTERN,
+    NAMED_CATEGORIES,
+    NUMERIC_MINIMUM_MESSAGE,
+    RULE_PLACEHOLDER,
+    SHIPPED_CHECKSUM_PATTERN,
+    TOOL_BUILDS,
+    TOOL_KINDS,
+    VALID_UNICODE_MESSAGE,
 } from '#cli/config/manifests.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
+import { commandSchema, outputSchema } from '#cli/schemas/manifests/checks.ts';
+import type { ToolInstallers } from '#cli/types/manifests.ts';
 
 export const nonemptyStringSchema = z.string().min(1);
 

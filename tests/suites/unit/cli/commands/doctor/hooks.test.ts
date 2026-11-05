@@ -1,15 +1,17 @@
-import { test, expect } from 'bun:test';
-import { dirname, delimiter } from 'node:path';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { delimiter, dirname } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import cliPackage from '#cli-package' with { type: 'json' };
 import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test.each([false, true])(
     'doctor starts the Bun hook executable instead of its package script (installed: %s)',

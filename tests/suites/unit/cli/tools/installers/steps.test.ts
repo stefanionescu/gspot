@@ -1,13 +1,14 @@
-import { test, spyOn, expect } from 'bun:test';
+import { expect, spyOn, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { explainReleaseAgeHold, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { explainReleaseAgeHold, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 const ESLINT_RELEASE = {
     label: 'eslint@10.13.0',

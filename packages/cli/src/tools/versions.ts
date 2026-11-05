@@ -1,29 +1,30 @@
-import semver from 'semver';
 import { realpathSync } from 'node:fs';
-import type { Tool } from '#cli/types/manifests.ts';
+import { basename, dirname, join, relative } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { openFiles } from '#cli/system/files/open.ts';
-import { runProcess } from '#cli/system/processes.ts';
+
+import semver from 'semver';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { join, dirname, basename, relative } from 'node:path';
-import type { Files, SpawnResult } from '#cli/types/system.ts';
-import { readToolProjectPackage } from '#cli/tools/packages.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
-import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
-import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools.ts';
-
 import {
+    DISTRIBUTION_SUFFIX,
     NO_VERSION,
     NPM_BIN_FOLDER,
-    STACK_FRAME_LINE,
-    TOOL_ENVIRONMENT,
-    DISTRIBUTION_SUFFIX,
     PYTHON_LIBRARY_FOLDERS,
     PYTHON_PACKAGES_FOLDER,
+    STACK_FRAME_LINE,
+    TOOL_ENVIRONMENT,
 } from '#cli/config/tools/programs.ts';
+import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { runProcess } from '#cli/system/processes.ts';
+import { readToolProjectPackage } from '#cli/tools/packages.ts';
+import type { Tool } from '#cli/types/manifests.ts';
+import type { Files, SpawnResult } from '#cli/types/system.ts';
+import type { InspectedTool, ParsedToolVersion, ToolInspection } from '#cli/types/tools.ts';
 
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {

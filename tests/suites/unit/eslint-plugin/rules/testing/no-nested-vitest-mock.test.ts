@@ -1,6 +1,7 @@
 import { join } from 'node:path';
-import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+
 import { noNestedVitestMock } from '#eslint-plugin/rules/testing/no-nested-vitest-mock.ts';
+import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ vitest: { devDependencies: { vitest: '4.0.0' } }, plain: {} });
 const filename = join(root, 'vitest/a.test.ts');

@@ -1,28 +1,28 @@
-import { UNDEFINED_NAME } from '../config/plugin.ts';
-import { getQualifiedName } from '../language/modules.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { listArgumentValues, getExpressionValue, getOptionProperties } from '../language/expressions.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import type {
-    CdkIssue,
-    CdkResult,
-    CdkTarget,
-    CdkFinding,
-    CdkPathResult,
-    PolicyStatement,
-    CdkLiteralTarget,
-    CdkPropertyCheck,
-} from '../types/aws.ts';
 import {
-    S3_BUCKET,
+    CDK_PROPS_POSITION,
+    POLICY_CONSTRUCT_KEYS,
+    POLICY_DOCUMENT_FROM_JSON,
     POLICY_FROM_JSON,
     POLICY_JSON_KEYS,
     POLICY_STATEMENT,
-    CDK_PROPS_POSITION,
-    POLICY_CONSTRUCT_KEYS,
     POLICY_STATEMENTS_KEY,
-    POLICY_DOCUMENT_FROM_JSON,
+    S3_BUCKET,
 } from '../config/aws.ts';
+import { UNDEFINED_NAME } from '../config/plugin.ts';
+import { getExpressionValue, getOptionProperties, listArgumentValues } from '../language/expressions.ts';
+import { getQualifiedName } from '../language/modules.ts';
+import type {
+    CdkFinding,
+    CdkIssue,
+    CdkLiteralTarget,
+    CdkPathResult,
+    CdkPropertyCheck,
+    CdkResult,
+    CdkTarget,
+    PolicyStatement,
+} from '../types/aws.ts';
 
 /**
 Tell whether nothing in the file gives an expression a value. The expression, or the start of its member chain, names

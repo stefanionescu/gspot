@@ -1,4 +1,5 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

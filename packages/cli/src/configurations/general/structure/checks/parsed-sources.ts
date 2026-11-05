@@ -1,10 +1,11 @@
-import type { Session } from '#cli/types/tools.ts';
-import { Query, type Node } from 'web-tree-sitter';
-import { SCRIPT_TAG } from '#cli/config/parsers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type Node, Query } from 'web-tree-sitter';
+
 import { SOURCE_QUERIES } from '#cli/config/configurations/structure.ts';
-import type { ParsedSource, ParsedLanguage } from '#cli/types/configurations/general.ts';
-import { visitParsedSources, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
+import { SCRIPT_TAG } from '#cli/config/parsers.ts';
+import { findGrammarByExtension, visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { ParsedLanguage, ParsedSource } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Parse the source files that a Python, Swift, or Bash configuration of the scope reads, capture the nodes that the

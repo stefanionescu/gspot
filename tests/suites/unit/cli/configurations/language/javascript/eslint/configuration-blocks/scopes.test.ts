@@ -1,13 +1,13 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { buildEslint } from '#tests/setup/eslint/lint.ts';
-import type { EslintConfiguration } from '#tests/types/setup.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     MATCHING_SCOPE_FILES,
     MATCHING_SCOPE_SETTINGS,
 } from '#tests/config/configurations/javascript/configuration-blocks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 
 test("a parent's configuration block covers a matching nested scope, and a different scope keeps its test paths", async () => {
     await using sandbox = await testdir({

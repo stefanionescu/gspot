@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noCypressThenAssertions } from '#eslint-plugin/rules/assertions/no-cypress-then-assertions.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-cypress-then-assertions', noCypressThenAssertions, {
     valid: [

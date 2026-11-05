@@ -1,5 +1,6 @@
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { createRule } from '../../rule.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function findCalledVariable(
     node: TSESTree.CallExpression | TSESTree.NewExpression,

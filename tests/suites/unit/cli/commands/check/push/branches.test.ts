@@ -1,9 +1,10 @@
-import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { expect, test } from 'bun:test';
+
 import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
-import { createGitSandbox, assertWorkingTreeKept, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { assertWorkingTreeKept, createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a new branch compares with the remote-tracking commit, and with a fetch mapping with the mapped commit', async () => {
     await using sandbox = await createGitSandbox({});

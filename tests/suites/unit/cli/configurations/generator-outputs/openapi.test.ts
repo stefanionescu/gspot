@@ -1,14 +1,15 @@
-import { test, spyOn, expect } from 'bun:test';
+import { expect, spyOn, test } from 'bun:test';
+
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 import { MISSING_OPENAPI_FINDINGS } from '#tests/config/configurations/general.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a missing OpenAPI document is reported before generation', async () => {
     using resources = new DisposableStack();

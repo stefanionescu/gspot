@@ -1,14 +1,14 @@
-import { createRule } from '../../rule.ts';
-import type { ReturnScope } from '../../types/functions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    BRANCH_KEYS,
-    MINIMUM_RETURNS,
     BARE_RETURN_BRANCH,
+    BRANCH_KEYS,
     EFFECT_ONLY_BRANCH,
     EFFECT_RETURN_BRANCH,
+    MINIMUM_RETURNS,
 } from '../../config/functions.ts';
+import { createRule } from '../../rule.ts';
+import type { ReturnScope } from '../../types/functions.ts';
 
 function isBranchBody(node: TSESTree.BlockStatement | TSESTree.ExpressionStatement): boolean {
     const { parent } = node;

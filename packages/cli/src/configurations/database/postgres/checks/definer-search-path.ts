@@ -1,11 +1,11 @@
-import { getPosition } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
+import { DEFINER_SEARCH_PATH_RULE, SECURITY_DEFINER_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { SECURITY_DEFINER_MESSAGE, DEFINER_SEARCH_PATH_RULE } from '#cli/config/configurations/infrastructure.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
+import { getPosition } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each SECURITY DEFINER function that sets no search_path.

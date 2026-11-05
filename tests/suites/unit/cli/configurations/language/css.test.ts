@@ -1,14 +1,16 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
+import { expect, test } from 'bun:test';
 import type { Config } from 'stylelint';
 import type stylelintModule from 'stylelint';
-import { compareText } from '#cli/system/text.ts';
+
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { compareText } from '#cli/system/text.ts';
+import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolModules))) as {
     default: typeof stylelintModule;

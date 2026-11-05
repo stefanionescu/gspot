@@ -1,31 +1,31 @@
 import { statSync } from 'node:fs';
-import { sep, join } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+import { join, sep } from 'node:path';
+
+import {
+    COMMAND_PLACEHOLDER,
+    CONFIG_PLACEHOLDER,
+    EACH_PLACEHOLDER,
+    FILE_PLACEHOLDER,
+    FILES_PLACEHOLDER,
+    FORMATTER_CHECKS,
+    POINTER_PLACEHOLDER,
+    SETTING_ONLY_PLACEHOLDER,
+    WORKSPACE_PLACEHOLDER,
+} from '#cli/config/engine.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import type { Config } from '#cli/types/repository.ts';
 import { extractConfigName } from '#cli/engine/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { ScopeSettings } from '#cli/types/settings.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { formatScope, compareText } from '#cli/system/text.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { addPluginExtensions } from '#cli/repository/files/selection.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import type { CommandLine, ConfigTargets, Substitutions, CommandArgument } from '#cli/types/engine/tool-runs.ts';
-
-import {
-    FILE_PLACEHOLDER,
-    EACH_PLACEHOLDER,
-    FORMATTER_CHECKS,
-    FILES_PLACEHOLDER,
-    CONFIG_PLACEHOLDER,
-    COMMAND_PLACEHOLDER,
-    POINTER_PLACEHOLDER,
-    WORKSPACE_PLACEHOLDER,
-    SETTING_ONLY_PLACEHOLDER,
-} from '#cli/config/engine.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { compareText, formatScope } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { CommandArgument, CommandLine, ConfigTargets, Substitutions } from '#cli/types/engine/tool-runs.ts';
+import type { Config } from '#cli/types/repository.ts';
+import type { ScopeSettings } from '#cli/types/settings.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {
     if (Array.isArray(value) && value.every((element) => typeof element === 'string')) return value;

@@ -1,47 +1,47 @@
-import { getUvPin } from '#cli/tools/pins.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { CI_PINS } from '#cli/config/settings/schema.ts';
-import { formatHeader } from '#cli/generation/header.ts';
+import { Document, type Node, Scalar, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
+
 import cliPackage from '#cli-package' with { type: 'json' };
 import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
-import type { PackageManagerPin } from '#cli/types/repository.ts';
-import { type Session, type GeneratedFile } from '#cli/types/tools.ts';
-import { buildFrozenInstallArguments } from '#cli/repository/javascript/setup.ts';
-import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation.ts';
-import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
-import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
-import { findPackageManagerPin, buildPackageManagerCommand } from '#cli/repository/javascript/package-manager.ts';
-
 import {
-    CI_JOB_NAME,
-    GITLAB_RULES,
-    GITLAB_CACHE,
-    CI_DIFF_LINES,
-    CI_STEP_NAMES,
-    GITHUB_EVENTS,
-    GITHUB_WORKFLOW,
-    GITLAB_WORKFLOW,
-    GITLAB_VARIABLES,
-    CI_CHECK_COMMAND,
-    CI_BASE_VARIABLE,
     CHECKOUT_OPTIONS,
-    GITLAB_BASE_LINE,
-    GITLAB_MISE_IMAGE,
-    CI_PACKAGE_RUNNER,
-    CI_TESTS_JOB_NAME,
+    CI_BASE_VARIABLE,
+    CI_CHECK_COMMAND,
+    CI_DIFF_LINES,
     CI_INSTALL_COMMAND,
-    GITHUB_CONCURRENCY,
+    CI_JOB_NAME,
+    CI_PACKAGE_RUNNER,
+    CI_STEP_NAMES,
+    CI_TESTS_JOB_NAME,
     CI_TIMEOUT_MINUTES,
-    GITHUB_PUSH_CONDITION,
-    MISE_TOKEN_ENVIRONMENT,
     GITHUB_BASE_EXPRESSION,
-    GITHUB_EXPRESSION_START,
+    GITHUB_CONCURRENCY,
+    GITHUB_EVENTS,
     GITHUB_EXPRESSION_MESSAGE,
+    GITHUB_EXPRESSION_START,
+    GITHUB_PUSH_CONDITION,
+    GITHUB_WORKFLOW,
+    GITLAB_BASE_LINE,
+    GITLAB_CACHE,
+    GITLAB_MISE_IMAGE,
+    GITLAB_RULES,
+    GITLAB_VARIABLES,
+    GITLAB_WORKFLOW,
+    MISE_TOKEN_ENVIRONMENT,
 } from '#cli/config/generation.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+import { CI_PINS } from '#cli/config/settings/schema.ts';
+import { formatHeader } from '#cli/generation/header.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { buildPackageManagerCommand, findPackageManagerPin } from '#cli/repository/javascript/package-manager.ts';
+import { buildFrozenInstallArguments } from '#cli/repository/javascript/setup.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
+import { getUvPin } from '#cli/tools/pins.ts';
+import type { ActionPin, FrozenLockfile, Pipeline } from '#cli/types/generation.ts';
+import type { PackageManagerPin } from '#cli/types/repository.ts';
+import { type GeneratedFile, type Session } from '#cli/types/tools.ts';
 
 function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);

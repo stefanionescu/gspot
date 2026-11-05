@@ -1,9 +1,10 @@
-import { join } from 'node:path';
-import { parseArgs } from 'node:util';
-import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
-import { splitAssignment } from '#tests/setup/system/programs.ts';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
+
 import { IMPORT_DEPENDENCY_OPTIONS } from '#tests/config/setup/programs.ts';
+import { splitAssignment } from '#tests/setup/system/programs.ts';
 
 const { values } = parseArgs({ options: IMPORT_DEPENDENCY_OPTIONS });
 const modulePath = createRequire(join(process.cwd(), 'package.json')).resolve(values.name ?? '');

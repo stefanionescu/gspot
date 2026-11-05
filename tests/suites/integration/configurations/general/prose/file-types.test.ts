@@ -1,23 +1,24 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import {
-    VALE_INI,
-    PROSE_CASES,
-    PROSE_SANDBOX,
     CONCRETE_RULE,
-    PROSE_COMMENT_CASES,
     EXAMPLE_STYLE_FOLDER,
     MARKDOWN_COMMENT_CASES,
+    PROSE_CASES,
+    PROSE_COMMENT_CASES,
+    PROSE_SANDBOX,
+    VALE_INI,
 } from '#tests/config/integration/prose.ts';
+import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
 test('prose/vale reports a finding in a .sh file and passes after the fix', async () => {
     const sandbox = installedSandbox();

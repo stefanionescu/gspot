@@ -1,11 +1,13 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 async function checkMessage(
     message: string,

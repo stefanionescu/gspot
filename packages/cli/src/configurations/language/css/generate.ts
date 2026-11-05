@@ -1,21 +1,20 @@
-import { getTable } from '#cli/settings/scopes.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { isInScope, buildModuleSpecifier } from '#cli/system/paths.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-
 import {
-    listDisabledRules,
-    readToolDisabledRules,
-    assertRunningRuleOptions,
-} from '#cli/configurations/rule-options.ts';
-import {
-    TAILWIND_AT_RULES,
-    STYLELINT_COMPONENTS,
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
+    STYLELINT_COMPONENTS,
+    TAILWIND_AT_RULES,
 } from '#cli/config/configurations/language.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import {
+    assertRunningRuleOptions,
+    listDisabledRules,
+    readToolDisabledRules,
+} from '#cli/configurations/rule-options.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { buildModuleSpecifier, isInScope } from '#cli/system/paths.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 function buildComponentOverrides(tailwindFunctions: string[], picked: Record<string, unknown>, offRules: string[]) {
     return STYLELINT_COMPONENTS.map((override) => {

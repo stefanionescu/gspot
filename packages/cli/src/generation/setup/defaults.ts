@@ -1,16 +1,18 @@
-import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { buildSettings } from '#cli/settings/read.ts';
-import type { WrittenTable } from '#cli/types/generation.ts';
+
+import type { z } from 'zod';
+
 import { DETECTED_SETTINGS } from '#cli/config/generation.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { Settings, TomlTable } from '#cli/types/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
+import { buildSettings } from '#cli/settings/read.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
-import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
-import { isTable, findValueAt, getRequired } from '#cli/system/tables.ts';
+import { findValueAt, getRequired, isTable } from '#cli/system/tables.ts';
+import type { WrittenTable } from '#cli/types/generation.ts';
+import type { Settings, TomlTable } from '#cli/types/settings.ts';
 
 function isInheritedValueChanged(
     name: string,

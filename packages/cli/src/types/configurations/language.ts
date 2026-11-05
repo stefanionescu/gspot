@@ -1,19 +1,20 @@
-import type { z } from 'zod';
-import type { Node } from 'web-tree-sitter';
-import type { Files } from '#cli/types/system.ts';
-import type { Config } from '#cli/types/repository.ts';
-import type { FENCE_GRAMMARS } from '#cli/config/parsers.ts';
-import type { Session, GeneratedFile } from '#cli/types/tools.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import type { MessageFormatElement } from '@formatjs/icu-messageformat-parser';
-import type { DOCSTRING_STYLES } from '#cli/config/configurations/registry.ts';
-import { type ScriptSyntax, type DependencyFile } from '#cli/types/parsers.ts';
-import { type xccovSchema, type deptrySchema } from '#cli/schemas/configurations.ts';
+import type { Node } from 'web-tree-sitter';
+import type { z } from 'zod';
+
 import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
+import type { DOCSTRING_STYLES } from '#cli/config/configurations/registry.ts';
+import type { FENCE_GRAMMARS } from '#cli/config/parsers.ts';
+import { type deptrySchema, type xccovSchema } from '#cli/schemas/configurations.ts';
+import type { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { IgnoreSection, SourcedConfig } from '#cli/types/configurations/general.ts';
-import type { Level, Scope, Defined, Settings, ScopeSettings, ParsedSettings } from '#cli/types/settings.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
+import { type DependencyFile, type ScriptSyntax } from '#cli/types/parsers.ts';
+import type { Config } from '#cli/types/repository.ts';
+import type { Defined, Level, ParsedSettings, Scope, ScopeSettings, Settings } from '#cli/types/settings.ts';
+import type { Files } from '#cli/types/system.ts';
+import type { GeneratedFile, Session } from '#cli/types/tools.ts';
 
 export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
 

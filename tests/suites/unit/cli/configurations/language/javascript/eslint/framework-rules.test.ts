@@ -1,8 +1,9 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the Supabase configuration checks the JSON body of each edge function', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,6 +1,6 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
-import type { ScopeSettings } from '#cli/types/settings.ts';
 import type { IgnoreSection } from '#cli/types/configurations/general.ts';
+import type { ScopeSettings } from '#cli/types/settings.ts';
 
 /**
 Convert one gitignore pattern to the glob that config files use.

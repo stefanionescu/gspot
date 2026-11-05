@@ -1,24 +1,25 @@
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
+import { expect, test } from 'bun:test';
+
 import { LEVELS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { stat, readFile, writeFile } from 'node:fs/promises';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { changeSandbox, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { APP_SCOPE_SETTINGS, STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
 import {
     KEPT_DECLARATION_FILES,
-    TYPESCRIPT_SCOPES_SANDBOX,
     STANDALONE_TYPESCRIPT_FILES,
     STANDALONE_TYPESCRIPT_FINDINGS,
+    TYPESCRIPT_SCOPES_SANDBOX,
 } from '#tests/config/integration/typescript.ts';
+import { APP_SCOPE_SETTINGS, STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { applyGeneratedFiles, changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SCOPES_SANDBOX);
 

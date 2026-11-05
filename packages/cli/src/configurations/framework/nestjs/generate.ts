@@ -1,13 +1,12 @@
-import { escapeGlob } from '#cli/system/paths.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { type ConfigurationBuilder } from '#cli/types/configurations/language.ts';
-
 import {
-    TS_PATTERN,
+    NESTJS_INJECTABLE_FILTER_PATHS,
     NESTJS_RULES,
     SWAGGER_PACKAGE,
-    NESTJS_INJECTABLE_FILTER_PATHS,
+    TS_PATTERN,
 } from '#cli/config/configurations/framework.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { type ConfigurationBuilder } from '#cli/types/configurations/language.ts';
 
 export const NESTJS_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
     nestjs: (scope) => {

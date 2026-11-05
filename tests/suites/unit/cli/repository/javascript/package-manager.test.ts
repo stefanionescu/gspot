@@ -1,32 +1,33 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import {
+    detectPackageManager,
+    readPackageManagerVersion,
+    readToolPackageManager,
+} from '#cli/repository/javascript/package-manager.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
 import {
     NON_EXACT_PNPM_VERSIONS,
     PACKAGE_MANAGER_PIN_CASES,
     UNSUPPORTED_PACKAGE_MANAGERS,
 } from '#tests/config/repository/detect.ts';
-import {
-    detectPackageManager,
-    readToolPackageManager,
-    readPackageManagerVersion,
-} from '#cli/repository/javascript/package-manager.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
     await using sandbox = await createGitSandbox({});

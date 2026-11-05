@@ -1,24 +1,26 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { parse, stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { doctorOutputSchema } from '#cli/schemas/commands.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX, UNQUOTED_SCRIPT } from '#tests/config/integration/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { HOOKS_SETTINGS, MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
+import { runtimePinsSchema } from '#tests/schemas/setup.ts';
+import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { MISE_TRUST, HOOKS_SETTINGS, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
-import { runGspot, spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { UNQUOTED_SCRIPT, HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX } from '#tests/config/integration/commands.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await createGitSandbox({

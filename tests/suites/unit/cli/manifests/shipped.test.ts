@@ -1,20 +1,22 @@
-import semver from 'semver';
-import type { z } from 'zod';
-import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { visit } from 'unist-util-visit';
+import { posix } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { EACH_PLACEHOLDER } from '#cli/config/engine.ts';
-import { gfmTable } from 'micromark-extension-gfm-table';
-import type { Tool, Check } from '#cli/types/manifests.ts';
-import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { gfmTableFromMarkdown } from 'mdast-util-gfm-table';
-import type { SettingDefinition } from '#cli/types/settings.ts';
-import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
+import { gfmTable } from 'micromark-extension-gfm-table';
+import semver from 'semver';
+import { visit } from 'unist-util-visit';
+import type { z } from 'zod';
+
+import { EACH_PLACEHOLDER } from '#cli/config/engine.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { buildAssetPath, listAssets } from '#cli/system/assets.ts';
+import type { Check, Tool } from '#cli/types/manifests.ts';
+import type { SettingDefinition } from '#cli/types/settings.ts';
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
 test('each accepted suppression example matches its marker and gives a reason', () => {
     const forms = readConfigurations()

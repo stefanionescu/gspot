@@ -1,27 +1,26 @@
-import { findSettingSchema } from '#cli/settings/lookup.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { addTable, findValueAt } from '#cli/system/tables.ts';
-import { selectConfigurations } from '#cli/manifests/select.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { isInScope, extractParentFolder } from '#cli/system/paths.ts';
-import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
-import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { NAMING_LANGUAGE_CATEGORIES, NAMING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
+import { selectConfigurations } from '#cli/manifests/select.ts';
+import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { compareScopeDepth, isScopeCovered, selectScopePath } from '#cli/repository/scopes.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
+import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
-import { NAMING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
-import { isScopeCovered, selectScopePath, compareScopeDepth } from '#cli/repository/scopes.ts';
-
+import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { extractParentFolder, isInScope } from '#cli/system/paths.ts';
+import { addTable, findValueAt } from '#cli/system/tables.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import type {
-    Scope,
-    Settings,
-    TableValues,
-    TableSettings,
-    ScopeSettings,
-    InheritedSetting,
     AvailableSettings,
+    InheritedSetting,
     RemovedConfiguration,
+    Scope,
+    ScopeSettings,
     SelectedConfigurations,
+    Settings,
+    TableSettings,
+    TableValues,
 } from '#cli/types/settings.ts';
 
 function listNamingVariants(

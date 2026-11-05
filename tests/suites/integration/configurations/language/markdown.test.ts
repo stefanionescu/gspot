@@ -1,28 +1,29 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { README, LICENSE } from '#tests/config/setup/configurations.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { ALT_TEXT_CASES, LINK_TEXT_GUIDE, CORRECTED_LINK_TEXT_GUIDE } from '#tests/config/integration/prose.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
     GUIDE,
-    MDX_FILES,
     MARKDOWN_FILES,
-    TITLED_DOCUMENT,
-    REQUEST_FLOW_IMAGE,
     MARKDOWNLINT_TABLES,
+    MDX_FILES,
+    REQUEST_FLOW_IMAGE,
+    TITLED_DOCUMENT,
 } from '#tests/config/integration/language.ts';
+import { ALT_TEXT_CASES, CORRECTED_LINK_TEXT_GUIDE, LINK_TEXT_GUIDE } from '#tests/config/integration/prose.ts';
+import { LICENSE, README } from '#tests/config/setup/configurations.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['markdown'],

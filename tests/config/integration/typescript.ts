@@ -1,6 +1,6 @@
-import { README, LICENSE } from '#tests/config/setup/configurations.ts';
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
+import { LICENSE, README } from '#tests/config/setup/configurations.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
 
 const TYPESCRIPT_PACKAGE = `{
     "name": "example",

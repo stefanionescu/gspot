@@ -1,16 +1,16 @@
-import { GspotError } from '#cli/system/errors.ts';
-import type { Check } from '#cli/types/manifests.ts';
-import { getTool, findToolName } from '#cli/tools/pins.ts';
 import { COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
+import { buildPlanInventory, isRepositoryRun, isRootOnlyCheck, selectCheckFiles } from '#cli/engine/files.ts';
+import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import type { Session, ScopeCheck } from '#cli/types/tools.ts';
+import { getRootScope, getTable } from '#cli/settings/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { getTable, getRootScope } from '#cli/settings/scopes.ts';
-import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { isRootOnlyCheck, isRepositoryRun, selectCheckFiles, buildPlanInventory } from '#cli/engine/files.ts';
-import type { CheckState, PlanOptions, PlannedScope, RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { findToolName, getTool } from '#cli/tools/pins.ts';
+import type { CheckState, PlannedCheck, PlannedScope, PlanOptions, RunSelection } from '#cli/types/engine/plan.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
+import type { ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';

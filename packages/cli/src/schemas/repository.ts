@@ -1,5 +1,6 @@
-import { z } from 'zod';
 import semver from 'semver';
+import { z } from 'zod';
+
 import { GIT_MODES } from '#cli/config/repository/files.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 import { configTableSchema, stringValuesSchema } from '#cli/schemas/parsers.ts';

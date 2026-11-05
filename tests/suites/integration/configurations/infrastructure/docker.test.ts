@@ -1,33 +1,34 @@
-import { promisify } from 'node:util';
-import { test, expect } from 'bun:test';
-import { join, posix } from 'node:path';
-import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/tools/pins.ts';
-import { LEVELS } from '#cli/config/manifests.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { generateKeyPair, randomUUID } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isLinux } from '#tests/setup/system/platform.ts';
-import { randomUUID, generateKeyPair } from 'node:crypto';
+import { join, posix } from 'node:path';
+import { promisify } from 'node:util';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { LEVELS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import {
+    DEBIAN_DOCKERFILE,
+    DOCKER_CASES,
+    DOCKER_SANDBOX,
+    HADOLINT_BOTH_LEVEL_CODES,
+    ROOT_USER_DOCKERFILE,
+    TRIVY_SCOPE_RESULTS,
+    TRIVY_SCOPE_TABLES,
+} from '#tests/config/integration/infrastructure.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    DOCKER_CASES,
-    DOCKER_SANDBOX,
-    DEBIAN_DOCKERFILE,
-    TRIVY_SCOPE_TABLES,
-    TRIVY_SCOPE_RESULTS,
-    ROOT_USER_DOCKERFILE,
-    HADOLINT_BOTH_LEVEL_CODES,
-} from '#tests/config/integration/infrastructure.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { isLinux } from '#tests/setup/system/platform.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
     await writeFile(join(root, 'payload.pem'), contents);

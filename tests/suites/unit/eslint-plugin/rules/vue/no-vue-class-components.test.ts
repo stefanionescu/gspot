@@ -1,7 +1,8 @@
-import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { join } from 'node:path';
+
 import { noVueClassComponents } from '#eslint-plugin/rules/vue/no-vue-class-components.ts';
+import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({
     three: { dependencies: { vue: '^3.4.0' } },

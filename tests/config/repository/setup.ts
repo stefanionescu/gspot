@@ -1,5 +1,5 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 
 export const INI_HEADING_CASES = [
     ['too long', '[sqlfluffbox]\nvalue = 3\n'],

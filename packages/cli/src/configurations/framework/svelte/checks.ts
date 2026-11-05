@@ -1,27 +1,27 @@
-import { join, dirname } from 'node:path';
-import { CheckStop } from '#cli/system/errors.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/configurations.ts';
+import { dirname, join } from 'node:path';
 
 import {
     FAILURE_LINE,
     FINDING_LINE,
-    SVELTE_CHECK_RULE,
-    TSCONFIG_COPY_FOLDER,
     SVELTE_CHECK_COMMAND,
+    SVELTE_CHECK_RULE,
     SVELTE_TSCONFIG_FLAG,
+    TSCONFIG_COPY_FOLDER,
 } from '#cli/config/configurations/framework.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { failureMessageSchema, svelteFindingSchema } from '#cli/schemas/configurations.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckFinding[] {
     const lines = stdout.split('\n');

@@ -1,23 +1,24 @@
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+
+import { expect, test } from 'bun:test';
 
 import {
-    LOCAL_PLUGIN,
-    SCOPE_PLUGIN_FILES,
-    SCOPE_PLUGIN_TABLES,
-    LOCAL_PLUGIN_TABLES,
-    SCOPE_PLUGIN_FINDINGS,
-    DUPLICATE_PLUGIN_ERROR,
     CONFLICTING_LOCAL_PLUGIN_FILES,
     CONFLICTING_LOCAL_PLUGIN_TABLES,
+    DUPLICATE_PLUGIN_ERROR,
+    LOCAL_PLUGIN,
+    LOCAL_PLUGIN_TABLES,
+    SCOPE_PLUGIN_FILES,
+    SCOPE_PLUGIN_FINDINGS,
+    SCOPE_PLUGIN_TABLES,
 } from '#tests/config/configurations/javascript/plugins.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a scope plugin reaches its scope and an inherited root plugin reaches nested files', async () => {
     await using sandbox = await createGitSandbox({

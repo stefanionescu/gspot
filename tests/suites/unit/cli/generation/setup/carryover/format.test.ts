@@ -1,6 +1,7 @@
-import { test, expect } from 'bun:test';
-import { runInit } from '#tests/setup/cli/commands.ts';
+import { expect, test } from 'bun:test';
+
 import type { TomlTable } from '#cli/types/settings.ts';
+import { runInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('init names the Prettier options that no setting holds', async () => {

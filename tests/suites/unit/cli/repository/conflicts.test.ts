@@ -1,14 +1,14 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import {
     CONFLICT_FILES,
+    CONFLICT_REPLACEMENTS,
     INI_HEADING_CASES,
     ORDERED_CONFLICTS,
-    CONFLICT_REPLACEMENTS,
 } from '#tests/config/repository/setup.ts';
 
 test('INI tool headings include their exact sections and subsections', async () => {

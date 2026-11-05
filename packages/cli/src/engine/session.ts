@@ -1,21 +1,21 @@
-import { readSettings } from '#cli/settings/read.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { createRunCache } from '#cli/system/cache.ts';
 import { listEnabledChecks } from '#cli/engine/plan.ts';
-import { readSettingsText } from '#cli/settings/file.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import type { SessionOptions } from '#cli/types/engine/plan.ts';
-import type { Session, SessionBase } from '#cli/types/tools.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { pinProjectTypescript, selectToolConfigurations } from '#cli/engine/tools.ts';
+import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { detectPackageManager, selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
+import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { readSettingsText } from '#cli/settings/file.ts';
+import { readSettings } from '#cli/settings/read.ts';
 import { buildScopeSettings, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-import type { Repository, UntrackedFiles, RepositoryListing } from '#cli/types/repository.ts';
-import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
+import type { SessionOptions } from '#cli/types/engine/plan.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { Repository, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import type { Session, SessionBase } from '#cli/types/tools.ts';
 
 function buildScopes(settings: Settings, repository: Repository): Scope[] {
     const { scopeFolders } = repository;

@@ -1,22 +1,21 @@
-import { splitWords } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { ScriptFunction } from '#cli/types/parsers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import {
+    ARGUMENTS_SECTION,
+    DOC_COMMENT_RULES,
+    DOC_SECTIONS,
+    LEADING_UNDERSCORES,
+    MAIN_FUNCTION,
+    SHELLCHECK_TOOL_COMMENT,
+    VAGUE_WORDS,
+    WORD,
+} from '#cli/config/configurations/bash.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import { DOC_COMMENT_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
-
-import {
-    WORD,
-    VAGUE_WORDS,
-    DOC_SECTIONS,
-    MAIN_FUNCTION,
-    DOC_COMMENT_RULES,
-    ARGUMENTS_SECTION,
-    LEADING_UNDERSCORES,
-    SHELLCHECK_TOOL_COMMENT,
-} from '#cli/config/configurations/bash.ts';
+import { splitWords } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { ScriptFunction } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function findCommentBlock(lines: string[], start: number): string[] {
     const block: string[] = [];

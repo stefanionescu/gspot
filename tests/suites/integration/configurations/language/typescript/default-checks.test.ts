@@ -1,11 +1,13 @@
-import { join } from 'node:path';
 import { appendFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { beforeAll, describe, expect, test } from 'bun:test';
+
+import { ARCHITECTURE_SETTINGS, TYPESCRIPT_CASES, TYPESCRIPT_SANDBOX } from '#tests/config/integration/typescript.ts';
 import { spawnGspot } from '#tests/setup/cli/commands.ts';
-import { test, expect, describe, beforeAll } from 'bun:test';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { TYPESCRIPT_CASES, TYPESCRIPT_SANDBOX, ARCHITECTURE_SETTINGS } from '#tests/config/integration/typescript.ts';
 
 describe('after the shared TypeScript sandbox installs its tools', () => {
     const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SANDBOX);

@@ -1,24 +1,25 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
-
 import {
+    AVATARS_BUCKET_CONFIG,
     SECRET_KEY_READS,
-    STORAGE_POLICIES,
     SERVICE_KEY_READERS,
     SERVICE_KEY_SETTINGS,
-    SERVICE_ROLE_CLIENTS,
-    AVATARS_BUCKET_CONFIG,
     SERVICE_ROLE_CLIENT_FILES,
+    SERVICE_ROLE_CLIENTS,
+    STORAGE_POLICIES,
 } from '#tests/config/configurations/platform.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 
 test('supabase/storage-policies reports a syntax finding for malformed TOML', async () => {
     await using sandbox = await createGitSandbox({

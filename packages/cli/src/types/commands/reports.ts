@@ -1,33 +1,33 @@
 import type { z } from 'zod';
-import type { Session } from '#cli/types/tools.ts';
-import type { Setting } from '#cli/types/manifests.ts';
-import type { Settings, InheritedSetting } from '#cli/types/settings.ts';
-import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
-import type { RunReport, PushInput, CheckProgress } from '#cli/types/engine/run.ts';
-import type { CHECK_STAGES, CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
-import type { RunCache, CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
-import type { StageFilter, RunSelection, CheckDescription } from '#cli/types/engine/plan.ts';
-import type { UntrackedFiles, PushedRevisions, RepositoryListing } from '#cli/types/repository.ts';
 
+import type { CHECK_INPUT_HOOKS, CHECK_STAGES } from '#cli/config/commands/reports.ts';
 import type {
-    ciStateSchema,
-    doctorToolSchema,
-    pushReportSchema,
-    scanReportSchema,
-    suggestionsSchema,
-    checkIgnoreSchema,
-    settingsListSchema,
-    doctorReportSchema,
-    scanCategorySchema,
-    suggestionRowSchema,
     baselineReportSchema,
-    pathExplanationSchema,
     checkExplanationSchema,
-    configurationsListSchema,
-    settingExplanationSchema,
-    lintRuleExplanationSchema,
+    checkIgnoreSchema,
+    ciStateSchema,
     configurationExplanationSchema,
+    configurationsListSchema,
+    doctorReportSchema,
+    doctorToolSchema,
+    lintRuleExplanationSchema,
+    pathExplanationSchema,
+    pushReportSchema,
+    scanCategorySchema,
+    scanReportSchema,
+    settingExplanationSchema,
+    settingsListSchema,
+    suggestionRowSchema,
+    suggestionsSchema,
 } from '#cli/schemas/commands.ts';
+import type { CheckDescription, RunSelection, StageFilter } from '#cli/types/engine/plan.ts';
+import type { CheckProgress, PushInput, RunReport } from '#cli/types/engine/run.ts';
+import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
+import type { Setting } from '#cli/types/manifests.ts';
+import type { PushedRevisions, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
+import type { InheritedSetting, Settings } from '#cli/types/settings.ts';
+import type { CanceledCommandJson, CommandResult, RunCache } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 export type PushReport = z.infer<typeof pushReportSchema>;
 

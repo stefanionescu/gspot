@@ -1,5 +1,6 @@
-import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { noLeakedJsxNumber } from '#eslint-plugin/rules/react/no-leaked-jsx-number.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

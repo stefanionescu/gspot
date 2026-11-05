@@ -1,14 +1,14 @@
-import { createRule } from '../../rule.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    SECRET_ARGUMENTS,
-    SECRET_PROPERTIES,
     PLACEHOLDER_SECRET,
     PLACEHOLDER_SECRET_LENGTH,
+    SECRET_ARGUMENTS,
+    SECRET_PROPERTIES,
 } from '../../config/security.ts';
+import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { createRule } from '../../rule.ts';
 
 function isHardcodedString(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     const value =

@@ -1,9 +1,10 @@
 ---
 import Head from '@astrojs/starlight/components/Head.astro';
-import RuleRedirect from '#docs/components/starlight/RuleRedirect.astro';
-import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
-import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
 import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
+import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+
+import RuleRedirect from '#docs/components/starlight/RuleRedirect.astro';
+import { REFERENCE_FOLDERS, REFERENCE_PATH } from '#docs/config/reference.ts';
 
 const SOCIAL_IMAGE = { path: '/open-graph.png', alt: 'The gspot name and logo.', width: 1200, height: 630 } as const;
 const SECTION_IMAGES = new Map([

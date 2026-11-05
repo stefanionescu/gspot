@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noCompoundCase } from '#eslint-plugin/rules/control-flow/no-compound-case.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-compound-case', noCompoundCase, {
     valid: [

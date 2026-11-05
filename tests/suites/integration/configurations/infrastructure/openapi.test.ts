@@ -1,7 +1,8 @@
 import { test } from 'bun:test';
+
+import { OPENAPI_CASES, OPENAPI_SANDBOX } from '#tests/config/integration/infrastructure.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { OPENAPI_CASES, OPENAPI_SANDBOX } from '#tests/config/integration/infrastructure.ts';
 
 const installedSandbox = shareInstalledSandbox(OPENAPI_SANDBOX);
 

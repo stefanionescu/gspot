@@ -1,19 +1,19 @@
-import { z } from 'zod';
 import semver from 'semver';
-import { quoteArgument } from '#cli/system/text.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { isTable, getRequired } from '#cli/system/tables.ts';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
-import { allowReasonedValue, relativePathSchema, nonemptyStringsSchema } from '#cli/schemas/settings/fields.ts';
+import { z } from 'zod';
 
 import {
-    RULE_CONDITIONS,
-    NPM_PACKAGE_NAME,
-    ESLINT_SEVERITIES,
-    ESLINT_PLUGIN_NAME,
     ESLINT_PLUGIN_MODULE,
+    ESLINT_PLUGIN_NAME,
+    ESLINT_SEVERITIES,
+    NPM_PACKAGE_NAME,
     PLUGIN_SOURCE_REFUSAL,
+    RULE_CONDITIONS,
 } from '#cli/config/settings/schema.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
+import { allowReasonedValue, nonemptyStringsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';
+import { getRequired, isTable } from '#cli/system/tables.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 
 const commitlintValuesSchema = z.record(
     z.string().superRefine((name, context) => {

@@ -1,21 +1,20 @@
-import { formatCount } from '#cli/system/text.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import { EVERY_REPOSITORY_EVIDENCE, RUNTIME_TAG } from '#cli/config/repository/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { DependencyFile } from '#cli/types/parsers.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import { joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
-import { isInScope, escapeGlob, extractExtension } from '#cli/system/paths.ts';
-import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { RUNTIME_TAG, EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
-
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { findProjectFolder, joinScope } from '#cli/repository/scopes.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts';
+import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
+import { formatCount } from '#cli/system/text.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
 import type {
-    Repository,
-    TrackedFile,
-    ScopeContents,
-    DetectionEvidence,
     ConfigurationEvidence,
+    DetectionEvidence,
+    Repository,
+    ScopeContents,
+    TrackedFile,
 } from '#cli/types/repository.ts';
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scopePath: string): ScopeContents {

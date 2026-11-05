@@ -1,26 +1,27 @@
-import picomatch from 'picomatch';
 import { isDeepStrictEqual } from 'node:util';
-import { escapeGlob } from '#cli/system/paths.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { ESLINT_INDENT, GSPOT_PRESET_LEVELS } from '#cli/config/configurations/blocks.ts';
 
+import picomatch from 'picomatch';
+
+import { ESLINT_INDENT, GSPOT_PRESET_LEVELS } from '#cli/config/configurations/blocks.ts';
+import {
+    ESLINT_NAMED_IMPORTS,
+    ESLINT_PACKAGE_IMPORTERS,
+    ESLINT_RUNTIMES_CONSTANT,
+    NAME_SEPARATOR,
+    PACKAGE_SCOPE_MARK,
+    SHARED_LIST_MARK,
+    SHARED_LIST_REFERENCE,
+} from '#cli/config/configurations/javascript.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
 import type {
-    EslintReference,
-    EslintFileWriter,
     EslintBlockFields,
     EslintCallArgument,
+    EslintFileWriter,
+    EslintReference,
     PlannedEslintBlock,
 } from '#cli/types/configurations/language.ts';
-import {
-    NAME_SEPARATOR,
-    SHARED_LIST_MARK,
-    PACKAGE_SCOPE_MARK,
-    ESLINT_NAMED_IMPORTS,
-    SHARED_LIST_REFERENCE,
-    ESLINT_RUNTIMES_CONSTANT,
-    ESLINT_PACKAGE_IMPORTERS,
-} from '#cli/config/configurations/javascript.ts';
 
 const IDENTIFIER_SEPARATOR = /[^\w$]/gu;
 

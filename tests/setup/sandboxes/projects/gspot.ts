@@ -1,15 +1,17 @@
-import { testdir } from 'testdirs';
-import { isInside } from '#cli/system/paths.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import type { GspotProject } from '#tests/types/setup.ts';
+import { delimiter, join, relative, resolve } from 'node:path';
+
+import { testdir } from 'testdirs';
+
 import cliPackage from '#cli-package' with { type: 'json' };
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { join, resolve, relative, delimiter } from 'node:path';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
+import { isInside } from '#cli/system/paths.ts';
 import { GSPOT_ENVIRONMENT, OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
+import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import type { GspotProject } from '#tests/types/setup.ts';
 
 export const isolatedEnvironment: Record<string, string | undefined> = {
     NODE_PATH: undefined,

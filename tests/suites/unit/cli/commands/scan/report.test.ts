@@ -1,9 +1,10 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
+import { buildScanReport, formatScanMarkdown, formatScanText } from '#cli/commands/scan/report.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
 import { SCAN_RUN_REPORT } from '#tests/config/commands/check.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { formatScanText, buildScanReport, formatScanMarkdown } from '#cli/commands/scan/report.ts';
 
 async function buildSampleReport(): Promise<ScanReport> {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n', 'src/a.js': 'export const a = 1;\n' });

@@ -1,6 +1,6 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { RULES as NAMING_RULES } from '#cli/config/configurations/naming.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const NAMING_EXPLANATIONS = {
     [NAMING_RULES.case]: {

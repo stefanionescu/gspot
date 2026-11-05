@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noSetterInComponent } from '#eslint-plugin/rules/react/no-setter-in-component.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-setter-in-component', noSetterInComponent, {
     valid: [

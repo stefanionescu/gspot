@@ -1,8 +1,8 @@
-import { CheckStop } from '#cli/system/errors.ts';
-import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
+import { SEMGREP_PARSE_ERRORS, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_RULE } from '#cli/config/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
-import { SEMGREP_PARSE_RULE, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_ERRORS } from '#cli/config/engine.ts';
 
 /**
 Read Semgrep rule findings and source parsing errors, and refuse scanner or rule failures.

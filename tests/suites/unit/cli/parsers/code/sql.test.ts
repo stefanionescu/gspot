@@ -1,16 +1,16 @@
-import { test, expect } from 'bun:test';
-import { getPosition } from '#cli/system/text.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { TYPO } from '#tests/config/setup/configurations.ts';
-import { parseSqlFile, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { expect, test } from 'bun:test';
 
+import { parseSqlFile, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { getPosition } from '#cli/system/text.ts';
 import {
-    SELECT_SQL,
-    NESTED_COMMENT_SQL,
-    QUOTED_PSQL_SOURCES,
     FROZEN_MIGRATION_CASES,
     FROZEN_MIGRATION_PATHS,
+    NESTED_COMMENT_SQL,
+    QUOTED_PSQL_SOURCES,
+    SELECT_SQL,
 } from '#tests/config/parsers/comments.ts';
+import { TYPO } from '#tests/config/setup/configurations.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('', createRunCache(process.cwd()));

@@ -1,44 +1,45 @@
-import { stringify } from 'yaml';
-import { compareText } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
 import { dirname, relative } from 'node:path/posix';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+
+import { stringify } from 'yaml';
 
 import {
-    ACRONYMS,
-    ACRONYM_NAME,
-    LENGTH_STYLES,
+    ACRONYM_DEFINITION_PATTERN,
     ACRONYM_MESSAGE,
+    ACRONYM_NAME,
     ACRONYM_PATTERN,
+    ACRONYMS,
+    BANNED_HEADING_MESSAGE,
     BANNED_HEADINGS,
     FILE_NAME_PATTERN,
-    VALE_REGEX_SYMBOLS,
     HEADING_CASE_STYLE,
-    BANNED_HEADING_MESSAGE,
-    ACRONYM_DEFINITION_PATTERN,
+    LENGTH_STYLES,
+    VALE_REGEX_SYMBOLS,
 } from '#cli/config/configurations/prose.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import {
-    VOCAB_LINE,
-    VALE_PACKAGES,
+    ALL_FILES_SECTION,
     BLOCK_IGNORES,
-    TOKEN_IGNORES,
-    PROSE_GRAMMARS,
+    MARKUP_RULES_COMMENT,
     MIN_ALERT_LINE,
     NO_STYLES_LINE,
-    VALE_OFF_RULES,
-    VALE_STYLES_PATH,
-    VALE_PACKAGE_URLS,
-    ALL_FILES_SECTION,
-    VALE_MARKUP_RULES,
-    VALE_MARKUP_FILES,
-    VALE_COMMENT_RULES,
+    PROSE_GRAMMARS,
     STYLES_PATH_COMMENT,
+    TOKEN_IGNORES,
+    VALE_COMMENT_RULES,
+    VALE_MARKUP_FILES,
+    VALE_MARKUP_RULES,
+    VALE_OFF_RULES,
+    VALE_PACKAGE_URLS,
+    VALE_PACKAGES,
     VALE_SKIPPED_SCOPES,
-    MARKUP_RULES_COMMENT,
+    VALE_STYLES_PATH,
+    VOCAB_LINE,
 } from '#cli/config/tools/vale.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const TERMS_MESSAGE = "Use '%s' instead of '%s'.";
 

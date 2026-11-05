@@ -1,27 +1,27 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
+    FRAMEWORK_SELECTOR_CASES,
     SELECTOR_FILES,
     SELECTOR_LIBRARY_FILES,
-    FRAMEWORK_SELECTOR_CASES,
 } from '#tests/config/configurations/javascript/blocks.ts';
 import {
-    EXPRESS_SOURCES,
-    JWT_SCOPE_FILES,
-    PLATFORM_SOURCES,
-    NEXT_CONFIG_CASES,
-    PLATFORM_FINDINGS,
     EXPRESS_SCOPE_FILES,
-    SUPABASE_FOLDER_FILES,
     EXPRESS_SCOPE_SETTINGS,
     EXPRESS_SOURCE_FINDINGS,
-    SUPABASE_FOLDER_SETTINGS,
+    EXPRESS_SOURCES,
     JAVASCRIPT_SELECTOR_FILES,
     JAVASCRIPT_SELECTOR_FINDINGS,
+    JWT_SCOPE_FILES,
+    NEXT_CONFIG_CASES,
+    PLATFORM_FINDINGS,
+    PLATFORM_SOURCES,
+    SUPABASE_FOLDER_FILES,
+    SUPABASE_FOLDER_SETTINGS,
 } from '#tests/config/configurations/javascript/selectors.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test('a template message to a logger method, including log, is reported, and console.log is not', async () => {
     await using sandbox = await testdir({

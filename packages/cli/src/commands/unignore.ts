@@ -1,31 +1,30 @@
-import { isTable } from '#cli/system/tables.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { removeRecordPaths } from '#cli/settings/edit.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { RULE_OPTION } from '#cli/config/commands/help.ts';
-import { assertCheckExists } from '#cli/manifests/read.ts';
-import { formatCount, formatNameList } from '#cli/system/text.ts';
-import type { TomlTable, IgnoreRecord } from '#cli/types/settings.ts';
-
 import {
-    NO_CHECK_IGNORE_TEXTS,
+    buildIgnorePaths,
+    buildUnchangedResult,
+    pathsOption,
+    readIgnoreEditContext,
+    writeSettingsEdit,
+} from '#cli/commands/edits.ts';
+import {
     ESCAPED_GLOB_CHARACTERS,
+    NO_CHECK_IGNORE_TEXTS,
     RULE_WITHOUT_CHECK_MESSAGE,
 } from '#cli/config/commands/edits.ts';
+import { RULE_OPTION } from '#cli/config/commands/help.ts';
+import { assertCheckExists } from '#cli/manifests/read.ts';
+import { removeRecordPaths } from '#cli/settings/edit.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { formatCount, formatNameList } from '#cli/system/text.ts';
 import type {
+    CommandDefinition,
     IgnoreFlags,
-    IgnoreTarget,
     IgnoreOptions,
     IgnoreRemoval,
-    CommandDefinition,
+    IgnoreTarget,
 } from '#cli/types/commands/edits.ts';
-import {
-    pathsOption,
-    buildIgnorePaths,
-    writeSettingsEdit,
-    buildUnchangedResult,
-    readIgnoreEditContext,
-} from '#cli/commands/edits.ts';
+import type { IgnoreRecord, TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const { check, rule, paths } = options;

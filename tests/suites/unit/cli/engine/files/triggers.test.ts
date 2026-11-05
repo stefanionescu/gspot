@@ -1,32 +1,33 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { runFixers } from '#cli/engine/fixes.ts';
-import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { openSession } from '#cli/engine/session.ts';
-import type { Check } from '#cli/types/manifests.ts';
+import { appendFile, mkdir, readFile, unlink } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { runFixers } from '#cli/engine/fixes.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/changes.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import type { Session } from '#cli/types/tools.ts';
+import {
+    LAST_FILE_CHANGES,
+    PROJECT_FINDING_MESSAGE,
+    TSC_PUSH_OPTIONS,
+    TWO_SCOPES_SETTINGS,
+} from '#tests/config/engine/files.ts';
 import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
-import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { mkdir, unlink, readFile, appendFile } from 'node:fs/promises';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { readTreeStatus, readChangedPaths } from '#cli/repository/revisions/changes.ts';
-
-import {
-    TSC_PUSH_OPTIONS,
-    LAST_FILE_CHANGES,
-    TWO_SCOPES_SETTINGS,
-    PROJECT_FINDING_MESSAGE,
-} from '#tests/config/engine/files.ts';
 
 async function replaceChildScopeChecks(session: Session): Promise<void> {
     if (existsSync(join(session.root, '.git/info/exclude')))

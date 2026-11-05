@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noNestedFunctions } from '#eslint-plugin/rules/functions/no-nested-functions.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-nested-functions', noNestedFunctions, {
     valid: [

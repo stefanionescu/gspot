@@ -1,24 +1,25 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-
 import {
+    IMPLICIT_RETURNS_IGNORE,
     REFERENCE_BUILD_FILES,
     REFERENCE_BUILD_RESULTS,
-    IMPLICIT_RETURNS_IGNORE,
 } from '#tests/config/configurations/language.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a project with its own tsconfig.json keeps its own compiler options', async () => {
     await using sandbox = await createGitSandbox({

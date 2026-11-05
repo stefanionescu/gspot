@@ -1,14 +1,16 @@
-import { z } from 'zod';
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { isTable } from '#cli/system/tables.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { join } from 'node:path';
+
+import { z } from 'zod';
+
+import { GLOB_BRACKETS, REASONED_VALUE_KEY, RECORD_PATHS_KEY } from '#cli/config/settings/validation.ts';
+import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
-import { buildArgumentPath } from '#cli/repository/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { isTable } from '#cli/system/tables.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
-import { GLOB_BRACKETS, RECORD_PATHS_KEY, REASONED_VALUE_KEY } from '#cli/config/settings/validation.ts';
 
 function escapeLiteralPath(root: string, path: string): string {
     const segments = path.split('/');

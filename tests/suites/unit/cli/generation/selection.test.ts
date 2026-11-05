@@ -1,25 +1,27 @@
-import ts from 'typescript';
-import { test, expect } from 'bun:test';
-import { parse as parseIni } from 'ini';
-import { parse as parseYaml } from 'yaml';
 import { writeFile } from 'node:fs/promises';
-import { findValueAt } from '#cli/system/tables.ts';
-import { join, extname, basename } from 'node:path';
-import { openSession } from '#cli/engine/session.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { basename, extname, join } from 'node:path';
+
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { expect, test } from 'bun:test';
+import { parse as parseIni } from 'ini';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import ts from 'typescript';
+import { parse as parseYaml } from 'yaml';
+
+import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
+import { IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS, UNPARSED_CONFIGS } from '#tests/config/generation/generate.ts';
 import { CONFIG_PROJECT } from '#tests/config/setup/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { UNPARSED_CONFIGS, IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS } from '#tests/config/generation/generate.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test('a child project receives Python configuration only after its first Python file', async () => {
     await using sandbox = await createGitSandbox({

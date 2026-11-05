@@ -1,10 +1,11 @@
-import picomatch from 'picomatch';
-import { createRule } from '../../rule.ts';
-import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { findPathInFolder } from '../../language/modules.ts';
-import type { RestrictedSyntaxOptions } from '../../types/structure.ts';
+import picomatch from 'picomatch';
+
+import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import { RESTRICTED_SYNTAX_OPTIONS_SCHEMA } from '../../config/structure.ts';
+import { findPathInFolder } from '../../language/modules.ts';
+import { createRule } from '../../rule.ts';
+import type { RestrictedSyntaxOptions } from '../../types/structure.ts';
 
 function isSelected(path: string | undefined, { files, ignores }: RestrictedSyntaxOptions[number]): boolean {
     if (path === undefined) return files === undefined;

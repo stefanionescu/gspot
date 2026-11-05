@@ -1,12 +1,14 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 
 test('with a baseline, set level all names the checks it turns on and the baseline command for them', async () => {
     await using sandbox = await createGitSandbox({

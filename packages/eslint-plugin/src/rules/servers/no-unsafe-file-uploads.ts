@@ -1,15 +1,15 @@
-import { createRule } from '../../rule.ts';
-import type { UploadForm } from '../../types/security.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { MULTER_MODULE, UPLOAD_MESSAGES, FORMIDABLE_MODULE } from '../../config/servers.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
+import { FORMIDABLE_MODULE, MULTER_MODULE, UPLOAD_MESSAGES } from '../../config/servers.ts';
 import {
-    getExpressionValue,
-    getOptionProperties,
     findAssignedVariable,
     findMemberAssignment,
+    getExpressionValue,
+    getOptionProperties,
 } from '../../language/expressions.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { createRule } from '../../rule.ts';
+import type { UploadForm } from '../../types/security.ts';
 
 function getOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string) {
     const literal = getExpressionValue(options, source);

@@ -1,17 +1,18 @@
 import { realpathSync } from 'node:fs';
-import { sep, posix, isAbsolute } from 'node:path';
-import { DRIVE_LETTER } from '#cli/config/system.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
+import { isAbsolute, posix, sep } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+
+import { FILE_GROUP, MISSING_PATH_CODES, RULE_GROUP, TAPLO_OUTPUTS } from '#cli/config/engine.ts';
+import { DRIVE_LETTER } from '#cli/config/system.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
-import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
-import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
 import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
-import { parseRegexFindings, parseGroupedFindings } from '#cli/engine/outputs/text.ts';
-import { FILE_GROUP, RULE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/engine.ts';
-import type { Finding, CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/engine/tool-runs.ts';
+import { parseGroupedFindings, parseRegexFindings } from '#cli/engine/outputs/text.ts';
+import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
+import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { CheckOutput, Finding, OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
 
 function findCanonicalPath(path: string): string | undefined {
     try {

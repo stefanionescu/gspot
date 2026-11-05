@@ -1,12 +1,13 @@
-import { isTable } from '#cli/system/tables.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { join, dirname, resolve, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
+
+import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { IMPORT_CONDITIONS, LOCAL_PATH_PREFIX, PATHS_BASE_OPTION } from '#cli/config/repository/javascript.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import { IMPORT_CONDITIONS, PATHS_BASE_OPTION, LOCAL_PATH_PREFIX } from '#cli/config/repository/javascript.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;

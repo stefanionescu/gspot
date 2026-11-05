@@ -1,18 +1,19 @@
 import semver from 'semver';
-import type { Scope } from '#cli/types/settings.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool, findPackagePin } from '#cli/tools/pins.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
-import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
-import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
-import { isSettingEmpty, findSystemSkip } from '#cli/engine/skips.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+
+import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
+import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan.ts';
+import { findSystemSkip, isSettingEmpty } from '#cli/engine/skips.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan.ts';
-import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import { PACKAGE_JSON, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { findPackagePin, getTool } from '#cli/tools/pins.ts';
+import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
+import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
 
 const TYPESCRIPT_PACKAGE = 'typescript';
 

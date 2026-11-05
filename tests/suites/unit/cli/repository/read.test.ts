@@ -1,18 +1,20 @@
+import { chmod, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { createRunCache } from '#cli/system/cache.ts';
-import { rm, chmod, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+
+import { listRepositoryFiles, readRepositoryRoot } from '#cli/repository/read.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { DUBIOUS_GIT_ENVIRONMENT, ROOT_DISCOVERY_CASES } from '#tests/config/repository/files.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
-import { ROOT_DISCOVERY_CASES, DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/files.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test.each([...ROOT_DISCOVERY_CASES])(
     'inside Git, gspot takes the worktree root with $name',

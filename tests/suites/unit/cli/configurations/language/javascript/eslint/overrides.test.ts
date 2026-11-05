@@ -1,17 +1,18 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { unlink, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
+    ESLINT_OVERRIDES_SETTINGS,
     IGNORE_CASES,
+    RESTRICTED_IMPORT_FINDINGS,
     SCOPE_IMPORT_FILES,
     SCOPE_IMPORT_TABLES,
-    ESLINT_OVERRIDES_SETTINGS,
-    RESTRICTED_IMPORT_FINDINGS,
 } from '#tests/config/configurations/javascript/overrides.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each(IGNORE_CASES)('an ignore of an ESLint rule applies after your rule options ($name)', async ({ ignored }) => {
     const settings = buildSandboxSettings(['javascript'], {

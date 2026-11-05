@@ -1,5 +1,5 @@
-import type { RuleExplanation } from '#cli/types/tools.ts';
 import type { MESSAGE_REFERENCES } from '#cli/config/configurations/general.ts';
+import type { RuleExplanation } from '#cli/types/tools.ts';
 
 export const REFERENCE_EXPLANATIONS = {
     'session-link': {

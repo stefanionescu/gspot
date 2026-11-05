@@ -1,5 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { STYLELINT_FILES, NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
+import { NPM_CHECK_IGNORES, STYLELINT_FILES } from '#tests/config/setup/configurations.ts';
 
 export const MARKDOWNLINT_SCOPE_TABLES = `[[scope]]
 path = "same"

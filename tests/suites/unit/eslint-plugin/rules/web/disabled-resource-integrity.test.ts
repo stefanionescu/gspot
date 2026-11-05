@@ -1,5 +1,5 @@
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { disabledResourceIntegrity } from '#eslint-plugin/rules/web/disabled-resource-integrity.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('disabled-resource-integrity', disabledResourceIntegrity, {
     valid: [

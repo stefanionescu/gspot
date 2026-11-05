@@ -1,27 +1,27 @@
-import { createRule } from '../../rule.ts';
-import { getTypes } from '../../language/checker.ts';
-import { findFunction } from '../../language/functions.ts';
-import type { TypeReader, FunctionNode } from '../../types/plugin.ts';
-import { getExpressionValue, findAssignedVariable } from '../../language/expressions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, AST_TOKEN_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    WINDOW_TOKEN,
+    ADD_LISTENER_SELECTOR,
+    ANY_TARGET_ORIGIN,
+    COMPARED_EVENT_DEPTH,
+    COMPARED_ORIGIN_DEPTH,
+    DOM_LIBRARY_FILE,
+    JQUERY_EVENT_MEMBER,
     MESSAGE_EVENT,
+    MESSAGE_LISTENER_PROPERTY,
+    ON_MESSAGE_SELECTOR,
     ORIGIN_MEMBER,
+    POST_MESSAGE_SELECTOR,
     UNTYPED_TYPES,
     WINDOW_MEMBERS,
-    DOM_LIBRARY_FILE,
     WINDOW_RECEIVERS,
-    ANY_TARGET_ORIGIN,
-    ON_MESSAGE_SELECTOR,
-    JQUERY_EVENT_MEMBER,
-    COMPARED_EVENT_DEPTH,
-    POST_MESSAGE_SELECTOR,
-    ADD_LISTENER_SELECTOR,
-    COMPARED_ORIGIN_DEPTH,
-    MESSAGE_LISTENER_PROPERTY,
+    WINDOW_TOKEN,
 } from '../../config/web.ts';
+import { getTypes } from '../../language/checker.ts';
+import { findAssignedVariable, getExpressionValue } from '../../language/expressions.ts';
+import { findFunction } from '../../language/functions.ts';
+import { createRule } from '../../rule.ts';
+import type { FunctionNode, TypeReader } from '../../types/plugin.ts';
 
 function isInIfStatement(node: TSESTree.Node): boolean {
     let ancestor = node.parent;

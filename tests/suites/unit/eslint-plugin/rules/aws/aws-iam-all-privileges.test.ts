@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsIamAllPrivileges } from '#eslint-plugin/rules/aws/aws-iam-all-privileges.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-iam-all-privileges', awsIamAllPrivileges, {
     valid: [

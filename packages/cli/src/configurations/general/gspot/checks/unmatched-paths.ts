@@ -1,17 +1,17 @@
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
+import { BRACKET_HELP, GSPOT_RULES, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/structure.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { findSettingLine, readSettingsText } from '#cli/settings/file.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { joinScopeSelector, mapSettingPaths } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
-import { isTable, findValueAt } from '#cli/system/tables.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { findSettingLine, readSettingsText } from '#cli/settings/file.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
-import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { mapSettingPaths, joinScopeSelector } from '#cli/settings/paths.ts';
-import { GSPOT_RULES, BRACKET_HELP, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/structure.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports setting paths that match no tracked file or folder.

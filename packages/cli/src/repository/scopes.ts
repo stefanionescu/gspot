@@ -1,23 +1,23 @@
-import { resolve, relative } from 'node:path';
-import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { DependencyFile } from '#cli/types/parsers.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/system.ts';
-import type { ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
-import { LINT_FOLDERS, EVERY_FILE_GLOBS } from '#cli/config/repository/setup.ts';
-import { listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
+import { relative, resolve } from 'node:path';
 
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { EVERY_FILE_GLOBS, LINT_FOLDERS } from '#cli/config/repository/setup.ts';
+import { FOLDER_CONTENTS, GLOB_EXCLUDE } from '#cli/config/system.ts';
+import { listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import {
-    isInside,
-    isInScope,
-    escapeGlob,
     convertToPosixPath,
+    escapeGlob,
     findEnclosingFolder,
     isInInstalledFolder,
+    isInScope,
+    isInside,
 } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
+import type { ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 
 const scopeFolderSets = new WeakMap<ReadonlyArray<{ path: string }>, ReadonlySet<string>>();
 

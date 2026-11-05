@@ -1,24 +1,25 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/engine/session.ts';
-import { createRunCache } from '#cli/system/cache.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { detectConditions, detectConfigurations } from '#cli/repository/detect.ts';
-import { buildConfiguration, listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
-
+import { createRunCache } from '#cli/system/cache.ts';
 import {
     MKDOCS_CASES,
     PRISMA_SCHEMA_CASES,
     PYTHON_DEPENDENCY_CASES,
     RUNTIME_DETECTION_CASES,
 } from '#tests/config/repository/detect.ts';
+import { buildConfiguration, listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function detectSandboxConfigurations(root: string): Promise<string[]> {
     const repository = await readTestRepository(root);

@@ -1,23 +1,25 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { createFileTree } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
-import { runFixers } from '#cli/engine/fixes.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import * as manifests from '#cli/manifests/read.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { formatFixes } from '#cli/commands/check/report.ts';
-import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
-import { buildProgramPin } from '#tests/setup/cli/tools.ts';
+import { runFixers } from '#cli/engine/fixes.ts';
+import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
+import * as manifests from '#cli/manifests/read.ts';
+import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
+import { buildFixerSettings, buildRunOptions, CHECK_GENERATION, planFixer } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { planFixer, buildRunOptions, CHECK_GENERATION, buildFixerSettings } from '#tests/setup/cli/run.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([0])('the fixer tool owns crash detection when exit is %p', async (code) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });

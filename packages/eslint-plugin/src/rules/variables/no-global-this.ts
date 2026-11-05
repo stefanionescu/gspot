@@ -1,5 +1,6 @@
+import { AST_NODE_TYPES, TSESLint } from '@typescript-eslint/utils';
+
 import { createRule } from '../../rule.ts';
-import { TSESLint, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noGlobalThis = createRule<[], 'this'>({
     name: 'no-global-this',

@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { encryptionSecureMode } from '#eslint-plugin/rules/security/encryption-secure-mode.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('encryption-secure-mode', encryptionSecureMode, {
     valid: [

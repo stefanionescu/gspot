@@ -1,5 +1,6 @@
-import type { TypeReader, FileContext } from './plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+
+import type { FileContext, TypeReader } from './plugin.ts';
 
 export type AssertionFinding = [TSESTree.Node, 'complete' | 'call'];
 

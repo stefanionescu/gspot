@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noNegatedComparison } from '#eslint-plugin/rules/logic/no-negated-comparison.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-negated-comparison', noNegatedComparison, {
     valid: ['!ready;', '!(first + second);', 'first !== second;'],

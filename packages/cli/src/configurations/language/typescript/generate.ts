@@ -1,12 +1,11 @@
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { DEFAULT_PROJECT_FILE_LIMIT, DEFAULT_PROJECT_LIMIT_OPTION } from '#cli/config/configurations/blocks.ts';
 import { ASTRO_FILES } from '#cli/config/configurations/framework.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/configurations/language.ts';
-import { DEFAULT_PROJECT_FILE_LIMIT, DEFAULT_PROJECT_LIMIT_OPTION } from '#cli/config/configurations/blocks.ts';
-
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import {
-    type EslintScope,
     type ConfigurationBlocks,
     type ConfigurationBuilder,
+    type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
 /**

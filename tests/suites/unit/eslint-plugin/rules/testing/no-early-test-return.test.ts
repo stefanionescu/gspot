@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+
 import { noEarlyTestReturn } from '#eslint-plugin/rules/testing/no-early-test-return.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

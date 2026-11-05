@@ -1,21 +1,21 @@
-import type { z } from 'zod';
 import type { Ignore } from 'ignore';
+import type { z } from 'zod';
+
+import type { CONFIGURATION_ORIGINS, FILE_KINDS, GROUPS } from '#cli/config/manifests.ts';
 import type { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { KeyPath, DependencyFile } from '#cli/types/parsers.ts';
-import type { SpawnResult, FileContents } from '#cli/types/system.ts';
 import type { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import type { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
-import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
-import type { GROUPS, FILE_KINDS, CONFIGURATION_ORIGINS } from '#cli/config/manifests.ts';
-
 import type {
     gitFileSchema,
     gitIndexFileSchema,
-    packageManagerSchema,
-    packageManagerPinSchema,
     lintCommandPackageSchema,
+    packageManagerPinSchema,
+    packageManagerSchema,
 } from '#cli/schemas/repository.ts';
+import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
+import type { DependencyFile, KeyPath } from '#cli/types/parsers.ts';
+import type { FileContents, SpawnResult } from '#cli/types/system.ts';
 
 export type ConfigurationOrigin = (typeof CONFIGURATION_ORIGINS)[number];
 

@@ -1,7 +1,9 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { runInit } from '#tests/setup/cli/commands.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { runInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('init adds the Ruff rules that gspot does not run, and carries each rule that the config turns off as an ignore', async () => {

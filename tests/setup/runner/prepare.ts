@@ -1,24 +1,24 @@
-import { join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { writeNodeCommand } from '#tests/setup/system/fakes.ts';
-import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
-import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
-import { findMisePin, buildMiseInstall, listDistinctTools } from '#cli/tools/pins.ts';
-import { MISE_INSTALL_ARGUMENTS, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/installers.ts';
+import { join } from 'node:path';
 
+import cliPackage from '#cli-package' with { type: 'json' };
+import { MISE_BIN_PATHS_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/tools/installers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildMiseInstall, findMisePin, listDistinctTools } from '#cli/tools/pins.ts';
+import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import {
+    GSPOT_LAUNCHER_PATH,
     LINE_BREAK,
     MISE_TRUST,
-    TOOL_PINS_FILE,
-    TOOL_PATHS_FILE,
     TOOL_INSTALL_FOLDER,
-    GSPOT_LAUNCHER_PATH,
+    TOOL_PATHS_FILE,
+    TOOL_PINS_FILE,
 } from '#tests/config/setup/sandboxes.ts';
+import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
+import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
+import { writeNodeCommand } from '#tests/setup/system/fakes.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 await runNpmPack(TEST_RUN_FOLDER, [
     { ...eslintPluginPackage, source: join(REPOSITORY_ROOT, 'packages/eslint-plugin') },

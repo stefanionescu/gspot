@@ -1,20 +1,22 @@
-import { join } from 'node:path';
-import { format } from 'prettier';
-import { afterAll, beforeAll } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import type { Level } from '#cli/types/settings.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { formatSchema } from '#cli/schemas/settings/fields.ts';
+import { join } from 'node:path';
+
+import { afterAll, beforeAll } from 'bun:test';
+import { format } from 'prettier';
+import { createFileTree, testdir } from 'testdirs';
+
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { formatSchema } from '#cli/schemas/settings/fields.ts';
+import type { Level } from '#cli/types/settings.ts';
+import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON, SANDBOX_REMOVAL_REASON } from '#tests/config/setup/sandboxes.ts';
+import { runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { runGspot, spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import type { Sandbox, SandboxPlan, ProcessOutput, InstalledSandboxPlan } from '#tests/types/setup.ts';
-import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON, SANDBOX_REMOVAL_REASON } from '#tests/config/setup/sandboxes.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import type { InstalledSandboxPlan, ProcessOutput, Sandbox, SandboxPlan } from '#tests/types/setup.ts';
 
 async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });

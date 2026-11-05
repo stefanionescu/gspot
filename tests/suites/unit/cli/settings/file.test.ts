@@ -1,12 +1,14 @@
+import { readFile, stat, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { openFiles } from '#cli/system/files/open.ts';
+
+import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/read.ts';
-import { stat, symlink, readFile, writeFile } from 'node:fs/promises';
-import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 
 test('an edit of a file with invalid UTF-8 is refused and the file is unchanged', async () => {
     await using sandbox = await testdir();

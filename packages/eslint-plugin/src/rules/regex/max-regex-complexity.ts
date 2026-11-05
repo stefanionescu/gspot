@@ -1,13 +1,13 @@
-import { createRule } from '../../rule.ts';
-import { buildRegexVisitors } from '../../language/regex.ts';
 import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
 
 import {
     CHOICE_BASE,
-    LOOKAROUND_KINDS,
     DEFAULT_REGEX_COMPLEXITY,
+    LOOKAROUND_KINDS,
     REGEX_COMPLEXITY_OPTIONS_SCHEMA,
 } from '../../config/regex.ts';
+import { buildRegexVisitors } from '../../language/regex.ts';
+import { createRule } from '../../rule.ts';
 
 function getDeepening(node: AST.Node): number {
     if (node.type === 'Quantifier' || node.type === 'CharacterClass') return 1;

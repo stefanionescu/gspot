@@ -1,27 +1,28 @@
-import { remember } from '#cli/system/cache.ts';
-import { getPosition } from '#cli/system/text.ts';
-import { dirname, basename } from 'node:path/posix';
-import type { Node, ParseResult } from '@pgsql/types';
-import type { RunCache, TextRange } from '#cli/types/system.ts';
+import { basename, dirname } from 'node:path/posix';
 
-import type {
-    Parsed,
-    SqlFile,
-    SqlToken,
-    BlankedSql,
-    SqlStatement,
-    MatchedToken,
-    SqlNodeFields,
-} from '#cli/types/parsers.ts';
+import type { Node, ParseResult } from '@pgsql/types';
+
 import {
+    DOLLAR_TAG_BLOCKER,
     FROZEN_ALL,
     FROZEN_NONE,
-    WORD_CHARACTER,
     IDENTIFIER_START,
     MIGRATION_VERSION,
-    DOLLAR_TAG_BLOCKER,
     PRISMA_MIGRATION_FILE,
+    WORD_CHARACTER,
 } from '#cli/config/parsers.ts';
+import { remember } from '#cli/system/cache.ts';
+import { getPosition } from '#cli/system/text.ts';
+import type {
+    BlankedSql,
+    MatchedToken,
+    Parsed,
+    SqlFile,
+    SqlNodeFields,
+    SqlStatement,
+    SqlToken,
+} from '#cli/types/parsers.ts';
+import type { RunCache, TextRange } from '#cli/types/system.ts';
 
 async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
     const { SqlError, parse: parseSql } = await import('libpg-query');

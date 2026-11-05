@@ -1,25 +1,26 @@
 import semver from 'semver';
-import { buildProgram } from '#cli/main.ts';
-import { findPackagePin } from '#cli/tools/pins.ts';
-import { DOCS_PATHS } from '#cli/config/manifests.ts';
-import { GROUP_LABELS } from '#cli/config/generation.ts';
-import { describeCheck } from '#cli/engine/reference.ts';
+
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
-import { compareText, quoteArgument } from '#cli/system/text.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildSettingsReference } from '#cli/settings/reference.ts';
-import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { GROUP_LABELS } from '#cli/config/generation.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import { buildSetupReference } from '#cli/repository/javascript/setup.ts';
+import { DOCS_PATHS } from '#cli/config/manifests.ts';
+import { FROZEN_INSTALLS, START_RUNNERS, YARN_BERRY_INSTALL } from '#cli/config/repository/javascript.ts';
+import { ALL_LEVEL_SUMMARY, LEVEL_SUMMARY } from '#cli/config/settings/schema.ts';
+import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { describeCheck } from '#cli/engine/reference.ts';
+import { buildProgram } from '#cli/main.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/schema.ts';
-import type { CliReference, CheckReference, CommandReference } from '#cli/types/main.ts';
-import { listRuleReferences, formatDetectionConditions } from '#cli/manifests/reference.ts';
+import { formatDetectionConditions, listRuleReferences } from '#cli/manifests/reference.ts';
+import { buildSetupReference } from '#cli/repository/javascript/setup.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
+import { buildSettingsReference } from '#cli/settings/reference.ts';
+import { compareText, quoteArgument } from '#cli/system/text.ts';
+import { findPackagePin } from '#cli/tools/pins.ts';
+import type { CheckReference, CliReference, CommandReference } from '#cli/types/main.ts';
 import type { Configuration, ConfigurationCheck, ConfigurationReference } from '#cli/types/manifests.ts';
-import { START_RUNNERS, FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/javascript.ts';
 
 function buildCommandReference(command: ReturnType<typeof buildProgram>['commands'][number]): CommandReference {
     const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];

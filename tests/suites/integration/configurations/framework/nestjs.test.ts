@@ -1,8 +1,9 @@
 import { test } from 'bun:test';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+
+import { NESTJS_CASES } from '#tests/config/integration/framework.ts';
 import { NESTJS_SANDBOX } from '#tests/config/setup/languages.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { NESTJS_CASES } from '#tests/config/integration/framework.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
 const installedSandbox = shareInstalledSandbox({

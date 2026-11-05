@@ -1,34 +1,35 @@
-import semver from 'semver';
 import { realpathSync } from 'node:fs';
-import { CheckStop } from '#cli/system/errors.ts';
 import { join, posix, relative } from 'node:path';
-import { getTable } from '#cli/settings/scopes.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
-import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { LockedPackage, AllowedPackage } from '#cli/types/configurations/general.ts';
-import { LICENSE_EXPLANATIONS } from '#cli/configurations/general/licenses/explanations.ts';
+
+import semver from 'semver';
 
 import {
     ANY_VERSION,
-    LICENSE_RULES,
-    OSV_SCANNER_NAME,
-    OSV_LOCKFILE_FLAG,
-    OSV_LICENSES_FLAG,
-    OSV_FINDINGS_CODE,
     EMPTY_SCAN_MESSAGE,
+    LICENSE_RULES,
+    OSV_FINDINGS_CODE,
     OSV_LICENSE_COMMAND,
+    OSV_LICENSES_FLAG,
+    OSV_LOCKFILE_FLAG,
     OSV_PYTHON_ECOSYSTEM,
+    OSV_SCANNER_NAME,
 } from '#cli/config/configurations/general.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { LICENSE_EXPLANATIONS } from '#cli/configurations/general/licenses/explanations.ts';
+import { listCheckedFiles } from '#cli/engine/files.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { AllowedPackage, LockedPackage } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 async function readLockedPackages(session: CheckSession, planned: PlannedCheck): Promise<LockedPackage[]> {
     const { allowed } = getTable(planned.scope.settings, 'licenses');

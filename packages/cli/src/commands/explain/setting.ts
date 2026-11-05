@@ -1,16 +1,16 @@
-import type { Session } from '#cli/types/tools.ts';
-import { buildSettings } from '#cli/settings/read.ts';
-import type { Setting } from '#cli/types/manifests.ts';
+import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/reports.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { formatScope, quoteArgument, formatNameList } from '#cli/system/text.ts';
-import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/reports.ts';
-import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
-import type { Explanation, SettingScope, ExplainedSetting } from '#cli/types/commands/reports.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { findSetting, findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
+import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { buildSettings } from '#cli/settings/read.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { formatNameList, formatScope, quoteArgument } from '#cli/system/text.ts';
+import type { ExplainedSetting, Explanation, SettingScope } from '#cli/types/commands/reports.ts';
+import type { Setting } from '#cli/types/manifests.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scopePath, shipped, inherited } = scopeSetting;

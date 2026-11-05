@@ -1,9 +1,10 @@
-import { createRule } from '../../rule.ts';
-import { COMPONENT_NAME } from '../../config/react.ts';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { FUNCTION_NODES } from '../../config/plugin.ts';
-import type { StateHook } from '../../types/libraries.ts';
+import { COMPONENT_NAME } from '../../config/react.ts';
 import { getStateHook, isNamedFunction } from '../../libraries/react.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import type { StateHook } from '../../types/libraries.ts';
 
 function isComponentBody(hook: StateHook, ancestors: TSESTree.Node[], source: TSESLint.SourceCode): boolean {
     const owner = ancestors.findLast((ancestor) => FUNCTION_NODES.has(ancestor.type));

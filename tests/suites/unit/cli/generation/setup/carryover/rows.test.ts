@@ -1,7 +1,8 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
+import { CARRYOVER_ROW_CASES } from '#tests/config/generation/carryover.ts';
 import { runInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CARRYOVER_ROW_CASES } from '#tests/config/generation/carryover.ts';
 
 test('init turns the ignore files into ignore records, and keeps what matches a tracked file', async () => {
     await using sandbox = await createGitSandbox({

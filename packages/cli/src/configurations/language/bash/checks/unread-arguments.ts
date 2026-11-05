@@ -1,10 +1,10 @@
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { formatCount, formatNameList } from '#cli/system/text.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/configurations/bash.ts';
-import { readScripts, listFunctionCalls } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { listFunctionCalls, readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { formatCount, formatNameList } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function formatUnreadPositions(width: number, highest: number): string {
     const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));

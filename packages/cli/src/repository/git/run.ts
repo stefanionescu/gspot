@@ -1,31 +1,31 @@
 import { realpathSync } from 'node:fs';
-import { resolve, relative } from 'node:path';
-import { isInside } from '#cli/system/paths.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { runProcess, streamProcess } from '#cli/system/processes.ts';
-import type { GitLookup, GitEnvironment } from '#cli/types/repository.ts';
-import type { SpawnResult, StdoutReader, CancelableSpawnOptions } from '#cli/types/system.ts';
-import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { relative, resolve } from 'node:path';
 
 import {
-    GIT_PROGRAM,
     COPIES_FOLDER,
-    TRAILING_NEWLINE,
-    GIT_PATH_VARIABLES,
+    GIT_COMMAND_CONFIGURATION,
+    GIT_CREATION_COMMANDS,
     GIT_FOLDER_VARIABLE,
     GIT_HOOKS_ARGUMENTS,
-    GIT_VARIABLE_PREFIX,
-    NOT_REPOSITORY_CODE,
-    GIT_SETTING_ARGUMENTS,
-    GIT_CREATION_COMMANDS,
-    GIT_WORK_TREE_VARIABLE,
-    NOT_REPOSITORY_MESSAGE,
-    GIT_TOP_LEVEL_ARGUMENTS,
-    GIT_COMMAND_CONFIGURATION,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
+    GIT_PATH_VARIABLES,
+    GIT_PROGRAM,
+    GIT_SETTING_ARGUMENTS,
+    GIT_TOP_LEVEL_ARGUMENTS,
+    GIT_VARIABLE_PREFIX,
+    GIT_WORK_TREE_VARIABLE,
+    NOT_REPOSITORY_CODE,
+    NOT_REPOSITORY_MESSAGE,
+    TRAILING_NEWLINE,
 } from '#cli/config/repository/git.ts';
+import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { isInside } from '#cli/system/paths.ts';
+import { runProcess, streamProcess } from '#cli/system/processes.ts';
+import type { GitEnvironment, GitLookup } from '#cli/types/repository.ts';
+import type { CancelableSpawnOptions, SpawnResult, StdoutReader } from '#cli/types/system.ts';
 
 const localVariableReads = new Map<string, Promise<SpawnResult>>();
 

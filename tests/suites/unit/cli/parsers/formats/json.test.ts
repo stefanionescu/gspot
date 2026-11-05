@@ -1,8 +1,9 @@
-import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { expect, test } from 'bun:test';
+
+import { openJsonFile, parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { SYNTAX_ERRORS } from '#tests/config/parsers/formats.ts';
-import { openJsonFile, parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 test.each(['null', '[]'])(
     'a JSON file whose root is %s, not an object, fails with an error that names the file and the shape',

@@ -1,18 +1,19 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import type { ESLint } from 'eslint';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import type { ESLint } from 'eslint';
+import { testdir } from 'testdirs';
+
+import { compareText } from '#cli/system/text.ts';
 import {
     TYPE_EXPORT_FILES,
     TYPED_RULE_PROJECTS,
 } from '#tests/config/configurations/javascript/configuration-blocks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 // typescript-estree keeps the first project service of a process, and unit files share a process, so ESLint runs alone.
 test('a config file outside every tsconfig gets the typed rules, and one that a tsconfig includes stays there', async () => {

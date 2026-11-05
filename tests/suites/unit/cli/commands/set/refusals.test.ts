@@ -1,15 +1,15 @@
 import { test } from 'bun:test';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
+    REFUSAL_FILES,
     SET_REFUSALS,
     SET_SETTINGS,
-    REFUSAL_FILES,
     SET_VALUE_REFUSALS,
     UNKNOWN_SETTING_KEYS,
 } from '#tests/config/commands/edits.ts';
+import { assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments) => {
     await using sandbox = await createGitSandbox({

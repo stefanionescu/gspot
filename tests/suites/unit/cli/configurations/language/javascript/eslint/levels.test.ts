@@ -1,25 +1,26 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { LEVELS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import type { EslintConfiguration } from '#tests/types/setup.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import {
-    COALESCING_SOURCE,
     COALESCING_CORRECTED,
-    DOCUMENTED_PRICE_SOURCE,
+    COALESCING_SOURCE,
     CONFIGURATION_RULE_OPTIONS,
+    DOCUMENTED_PRICE_SOURCE,
 } from '#tests/config/configurations/javascript/overrides.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 
 test.each(['all'] as const)('%s keeps the syntax selectors of a configuration inside its scope', async (level) => {
     await using sandbox = await createGitSandbox({

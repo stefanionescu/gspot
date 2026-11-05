@@ -1,19 +1,18 @@
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { assertConfigurationsExist, expandSuggestions, selectConfigurations } from '#cli/manifests/select.ts';
+import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/manifests/select.ts';
-
 import type {
-    Repository,
-    ScopeFolder,
-    ConfigurationOrigin,
     ConfigurationChoices,
     ConfigurationEvidence,
-    ProposedConfigurations,
+    ConfigurationOrigin,
     ConfigurationSelection,
+    ProposedConfigurations,
+    Repository,
+    ScopeFolder,
 } from '#cli/types/repository.ts';
 
 type ConfigurationRequest = {

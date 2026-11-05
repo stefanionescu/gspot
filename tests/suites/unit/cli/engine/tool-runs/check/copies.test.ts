@@ -1,20 +1,22 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { planChecks } from '#cli/engine/plan.ts';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
-import { buildCheckSession } from '#cli/engine/run.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { PYVENV_HOME } from '#tests/config/setup/languages.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { PYVENV_HOME } from '#tests/config/setup/languages.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { fakeNpmTool, fakeCommands, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeCommands, fakeExecutableLookup, fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('a Python check that runs in a copy uses the environment that the working tree installed', async () => {
     await using working = await createGitSandbox({});

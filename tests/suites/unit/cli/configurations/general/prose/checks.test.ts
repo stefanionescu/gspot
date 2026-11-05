@@ -1,28 +1,29 @@
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/tools/pins.ts';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readBytes } from '#cli/system/files/reads.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { rm, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
-
+import { readBytes } from '#cli/system/files/reads.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import {
-    VALE_ALERT,
     EMPTY_VALE_INI,
+    VALE_ALERT,
+    VALE_INSTALLED_FILES,
     VALE_OUTPUT_CASES,
     VALE_SANDBOX_FILES,
-    VALE_INSTALLED_FILES,
 } from '#tests/config/configurations/general.ts';
+import { getBuiltInCheck, openFakeToolSession, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function openValeSandbox(resources: AsyncDisposableStack) {
     const settings = buildSandboxSettings(['prose', 'markdown'], { level: 'all' });

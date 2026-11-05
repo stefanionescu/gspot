@@ -1,25 +1,27 @@
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmod, mkdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { expect, test } from 'bun:test';
 import { createFileTree, type TestdirResult } from 'testdirs';
+
 import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
 import { SCRIPT_SPACES, STAGED_PACKAGE_JSON, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check.ts';
+import { NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({});

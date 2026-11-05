@@ -1,12 +1,13 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+
 import { FUNCTION_NODES } from '../../config/plugin.ts';
-import type { FunctionNode } from '../../types/plugin.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
-import { getLocalFunction } from '../../language/functions.ts';
-import type { TestCall, TitleScan } from '../../types/testing.ts';
-import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { RUNNING_TEST_MODIFIERS, TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
+import { getLocalFunction } from '../../language/functions.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
+import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
+import type { TestCall, TitleScan } from '../../types/testing.ts';
 
 function getRunningCall(call: TestCall | undefined, kind: TestCall['kind']): TestCall | undefined {
     if (call?.kind !== kind) return undefined;

@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { maxRequestSize } from '#eslint-plugin/rules/servers/max-request-size.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('max-request-size', maxRequestSize, {
     valid: [

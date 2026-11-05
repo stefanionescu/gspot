@@ -1,17 +1,17 @@
-import { createRule } from '../../rule.ts';
-import type { TestCall, SimilarTest } from '../../types/testing.ts';
-import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
-import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    SIMILAR_TEST_NAMES,
-    SIMILAR_TEST_LIMITS,
-    GLOBAL_TEST_BLOCKERS,
-    SIMILAR_TEST_ORIGINS,
-    SIMILAR_TEST_MODULES,
     CONCRETE_TEST_MODIFIERS,
+    GLOBAL_TEST_BLOCKERS,
+    SIMILAR_TEST_LIMITS,
+    SIMILAR_TEST_MODULES,
+    SIMILAR_TEST_NAMES,
+    SIMILAR_TEST_ORIGINS,
 } from '../../config/testing.ts';
+import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
+import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { SimilarTest, TestCall } from '../../types/testing.ts';
 
 function mapLiterals(node: TSESTree.Node, source: TSESLint.SourceCode, literals: Map<number, TSESTree.Literal>): void {
     const isParameter = node.type === AST_NODE_TYPES.Literal && typeof node.value !== 'object';

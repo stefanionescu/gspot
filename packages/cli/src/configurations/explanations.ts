@@ -1,6 +1,6 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import { RULES as GENERATOR_OUTPUT_RULES } from '#cli/config/configurations/registry.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const SYNTAX_EXPLANATIONS = {
     [SYNTAX_RULE]: {

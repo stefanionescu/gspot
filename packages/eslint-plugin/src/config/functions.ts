@@ -1,5 +1,6 @@
-import { TYPE_ASSERTION_NODES } from './plugin.ts';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
+
+import { TYPE_ASSERTION_NODES } from './plugin.ts';
 
 export const NAMED_ARGUMENT_MINIMUM = 2;
 

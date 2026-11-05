@@ -1,27 +1,27 @@
 import type { z } from 'zod';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
-import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
-import type { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import type { Files, RunCache, CancelableSpawnOptions } from '#cli/types/system.ts';
 
-import type {
-    Repository,
-    ManagedKeys,
-    StartRunner,
-    PackageManager,
-    PackageManagerPin,
-    PackageManagerCommand,
-} from '#cli/types/repository.ts';
+import type { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
+import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import type {
     bunPackageSchema,
     hookStatusSchema,
     miseLockfileSchema,
-    toolInspectionSchema,
     ruleExplanationSchema,
+    toolInspectionSchema,
     uvProjectSettingsSchema,
 } from '#cli/schemas/tools.ts';
+import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import type {
+    ManagedKeys,
+    PackageManager,
+    PackageManagerCommand,
+    PackageManagerPin,
+    Repository,
+    StartRunner,
+} from '#cli/types/repository.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
+import type { CancelableSpawnOptions, Files, RunCache } from '#cli/types/system.ts';
 
 export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: string };
 

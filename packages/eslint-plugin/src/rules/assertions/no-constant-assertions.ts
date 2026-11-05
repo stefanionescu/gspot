@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
-import { readAssertion } from '../../libraries/assertions.ts';
 import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-import type { Assertion, AssertedValue, ConstantFinding } from '../../types/assertions.ts';
-import { FRESH_VALUES, DEEP_MATCHERS, IDENTITY_STYLES, FRESH_PREDICATES } from '../../config/assertions/styles.ts';
+
+import { DEEP_MATCHERS, FRESH_PREDICATES, FRESH_VALUES, IDENTITY_STYLES } from '../../config/assertions/styles.ts';
+import { readAssertion } from '../../libraries/assertions.ts';
+import { createRule } from '../../rule.ts';
+import type { AssertedValue, Assertion, ConstantFinding } from '../../types/assertions.ts';
 
 function getValue(node: TSESTree.Node, source: TSESLint.SourceCode): AssertedValue {
     const evaluated = ASTUtils.getStaticValue(node, source.getScope(node));

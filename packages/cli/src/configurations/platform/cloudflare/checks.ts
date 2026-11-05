@@ -1,34 +1,33 @@
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { NumberedLine } from '#cli/types/parsers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { HEADER_EXPLANATIONS } from '#cli/configurations/platform/cloudflare/explanations.ts';
-import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/infrastructure.ts';
-
 import {
-    SYNTAX_RULE,
-    HEADERS_FILE,
-    DETACH_PREFIX,
-    PATH_PREFIXES,
-    INDENTED_LINE,
-    REDIRECTS_FILE,
-    REDIRECT_FIELDS,
-    FRAME_ANCESTORS,
-    HTTP_HEADER_LINE,
-    REQUIRED_HEADERS,
     BLOCK_PATH_MESSAGE,
+    DETACH_PREFIX,
+    FRAME_ANCESTORS,
+    HEADER_WITHOUT_PATH_MESSAGE,
+    HEADERS_FILE,
+    HTTP_HEADER_LINE,
+    INDENTED_LINE,
+    MALFORMED_HEADER_MESSAGE,
     MISSING_HEADER_RULE,
-    REDIRECT_STATUS_CODES,
+    PATH_PREFIXES,
+    REDIRECT_DESTINATION_MESSAGE,
+    REDIRECT_FIELDS,
     REDIRECT_FIELDS_MESSAGE,
     REDIRECT_SOURCE_MESSAGE,
-    MALFORMED_HEADER_MESSAGE,
-    HEADER_WITHOUT_PATH_MESSAGE,
-    REDIRECT_DESTINATION_MESSAGE,
+    REDIRECT_STATUS_CODES,
+    REDIRECTS_FILE,
+    REQUIRED_HEADERS,
+    SYNTAX_RULE,
 } from '#cli/config/configurations/infrastructure.ts';
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { HEADER_EXPLANATIONS } from '#cli/configurations/platform/cloudflare/explanations.ts';
+import { listSourcePaths } from '#cli/repository/files/selection.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { NumberedLine } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function splitContentLines(text: string): NumberedLine[] {
     return text

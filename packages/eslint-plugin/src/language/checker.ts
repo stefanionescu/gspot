@@ -1,5 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { TypeReader, CheckedType, TypeCategory } from '../types/plugin.ts';
+
+import type { CheckedType, TypeCategory, TypeReader } from '../types/plugin.ts';
 
 /**
 Get the TypeScript types of a file that the parser checked with a program. Files without type information get none.

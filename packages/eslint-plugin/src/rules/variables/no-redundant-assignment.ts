@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { LOOP_BODY_PARENTS } from '../../config/logic.ts';
-import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { PathFrame, ValueState, SegmentFlow, AssignedValues, AssignmentFrame } from '../../types/variables.ts';
+import { createRule } from '../../rule.ts';
+import type { AssignedValues, AssignmentFrame, PathFrame, SegmentFlow, ValueState } from '../../types/variables.ts';
 
 function getAssignedValues(
     value: TSESTree.Node | null | undefined,

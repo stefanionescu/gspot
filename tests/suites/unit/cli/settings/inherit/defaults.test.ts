@@ -1,6 +1,8 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { POSTGRES_ORIGIN } from '#tests/config/settings/read.ts';

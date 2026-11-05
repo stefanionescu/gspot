@@ -1,17 +1,18 @@
-import type { Session } from '#cli/types/tools.ts';
-import { join, dirname, relative } from 'node:path';
-import { createRunCache } from '#cli/system/cache.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import { restoreCommandPaths } from '#cli/engine/results.ts';
-import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { dirname, join, relative } from 'node:path';
+
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import { listCompilerFiles, runTsc, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
+import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import { listCheckedFiles } from '#cli/engine/files.ts';
+import { restoreCommandPaths } from '#cli/engine/results.ts';
+import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
-import { runTsc, listCompilerFiles, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
     const checked = new Set(

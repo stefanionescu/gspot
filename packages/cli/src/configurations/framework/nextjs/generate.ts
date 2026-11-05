@@ -1,19 +1,18 @@
+import {
+    NEXT_PACKAGE,
+    NEXT_PAGES_FOLDERS,
+    NEXT_RULE_OPTIONS,
+    NEXT_RULES,
+    NEXT_SERVER_FILES,
+    REACT_FILES,
+} from '#cli/config/configurations/framework.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { extractParentFolder, findEnclosingFolder } from '#cli/system/paths.ts';
-
 import {
-    type EslintScope,
     type ConfigurationBlocks,
     type ConfigurationBuilder,
+    type EslintScope,
 } from '#cli/types/configurations/language.ts';
-import {
-    NEXT_RULES,
-    REACT_FILES,
-    NEXT_PACKAGE,
-    NEXT_RULE_OPTIONS,
-    NEXT_SERVER_FILES,
-    NEXT_PAGES_FOLDERS,
-} from '#cli/config/configurations/framework.ts';
 
 /**
 Apply the Next.js presets and the pages and JSX settings.

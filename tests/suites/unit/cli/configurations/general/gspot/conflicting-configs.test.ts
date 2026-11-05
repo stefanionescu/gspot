@@ -1,10 +1,12 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { CONFLICTING_CONFIG_CASES } from '#tests/config/configurations/gspot/files.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CONFLICTING_CONFIG_CASES } from '#tests/config/configurations/gspot/files.ts';
 
 test.each([...CONFLICTING_CONFIG_CASES])(
     'gspot/conflicting-configs at level %s reports the settings file of each tool gspot runs',

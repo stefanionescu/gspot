@@ -1,21 +1,22 @@
 import { isDeepStrictEqual } from 'node:util';
-import { compareText } from '#cli/system/text.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { TomlBlock, TomlValue } from '#cli/types/parsers.ts';
-import { findValueAt, normalizeTables } from '#cli/system/tables.ts';
-import type { TomlTable, TaploLayout } from '#cli/types/settings.ts';
-import { ROOT_KEYS, TOML_FORMAT, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/validation.ts';
 
+import { stringify } from '@decimalturn/toml-patch';
+
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { FIRST_TABLES, LAST_TABLES, ROOT_KEYS, TOML_FORMAT } from '#cli/config/settings/validation.ts';
 import {
-    isTomlKind,
+    buildPatchedToml,
     getTomlRange,
+    isTomlKind,
+    parseTomlDocument,
     parseTomlFile,
     parseTomlSyntax,
-    buildPatchedToml,
-    parseTomlDocument,
 } from '#cli/parsers/formats/toml.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { findValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { TomlBlock, TomlValue } from '#cli/types/parsers.ts';
+import type { TaploLayout, TomlTable } from '#cli/types/settings.ts';
 
 function sortTable(table: TomlTable): TomlTable {
     const placed = new Set<string>([...ROOT_KEYS, ...FIRST_TABLES, ...LAST_TABLES]);

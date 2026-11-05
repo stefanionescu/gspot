@@ -1,25 +1,26 @@
 import { spyOn } from 'bun:test';
-import { getTool } from '#cli/tools/pins.ts';
-import { planChecks } from '#cli/engine/plan.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { runBuiltInCheck } from '#cli/engine/results.ts';
-import * as environment from '#cli/system/environment.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import type { NamingSettings } from '#cli/types/configurations/general.ts';
-import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
-import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
-import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
+import { createFileTree, type DirectoryJSON, testdir, type TestdirResult } from 'testdirs';
+
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
-import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { runBuiltInCheck } from '#cli/engine/results.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import * as environment from '#cli/system/environment.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import type { NamingSettings } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 /**
 Keep the compiler cache in a temporary folder until the test ends.

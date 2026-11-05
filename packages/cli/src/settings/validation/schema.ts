@@ -1,28 +1,28 @@
 import { z } from 'zod';
-import { findValueAt } from '#cli/system/tables.ts';
-import { formatSimilarNames } from '#cli/system/text.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import type { WrittenConfiguration } from '#cli/types/manifests.ts';
-import { listUnknownConfigurations } from '#cli/manifests/select.ts';
-import type { Settings, SettingsError } from '#cli/types/settings.ts';
-import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+
+import { NO_CHECK_PATHS_MESSAGE, RECORD_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
+import { listUnknownConfigurations } from '#cli/manifests/select.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { findChildSchema, RECORD_FIELDS, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { formatUnknownSetting, validateKeys } from '#cli/settings/validation/keys.ts';
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
-import { validateKeys, formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import { RECORD_PATHS_MESSAGE, NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
-
 import {
-    validateScopePaths,
     validateRuleExcludes,
+    validateRuleFilePaths,
+    validateScopePaths,
     validateSettingRules,
     validateSwiftTargets,
-    validateRuleFilePaths,
 } from '#cli/settings/validation/references.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import { formatSimilarNames } from '#cli/system/text.ts';
+import type { WrittenConfiguration } from '#cli/types/manifests.ts';
+import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
+import type { Settings, SettingsError } from '#cli/types/settings.ts';
 
 function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: TomlSyntax): SettingsError | undefined {
     const [record, index, field] = path;

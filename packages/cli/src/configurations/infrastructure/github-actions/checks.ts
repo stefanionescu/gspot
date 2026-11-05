@@ -1,42 +1,43 @@
-import { join, posix } from 'node:path';
-import type { Session } from '#cli/types/tools.ts';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { createCopy } from '#cli/engine/copies/files.ts';
-import { restoreCommandPaths } from '#cli/engine/results.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
-import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
+import { join, posix } from 'node:path';
 
 import {
-    isMap,
-    isSeq,
-    isAlias,
-    isScalar,
-    type Scalar,
-    LineCounter,
-    type YAMLMap,
-    parseDocument,
     type Document,
+    isAlias,
+    isMap,
+    isScalar,
+    isSeq,
+    LineCounter,
+    parseDocument,
+    type Scalar,
+    type YAMLMap,
 } from 'yaml';
+
 import {
-    GIT_FOLDER,
     ACTION_FILES,
-    GITHUB_FOLDER,
+    ENCODED_DOLLAR_SUFFIX,
     FLOATING_RUNNER,
-    WORKFLOW_EXPRESSION,
-    WORKFLOW_SHAPE_RULES,
+    GIT_FOLDER,
+    GITHUB_FOLDER,
     PULL_REQUEST_TRIGGERS,
     SELF_REFERENCE_PREFIX,
-    ENCODED_DOLLAR_SUFFIX,
-    UPLOAD_ARTIFACT_ACTION,
     SELF_REPOSITORY_MARKER,
+    UPLOAD_ARTIFACT_ACTION,
+    WORKFLOW_EXPRESSION,
     WORKFLOW_SHAPE_MESSAGES,
+    WORKFLOW_SHAPE_RULES,
 } from '#cli/config/configurations/infrastructure.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
+import { createCopy } from '#cli/engine/copies/files.ts';
+import { restoreCommandPaths } from '#cli/engine/results.ts';
+import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listStepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];

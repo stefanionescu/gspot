@@ -1,18 +1,20 @@
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { rm, readFile, writeFile } from 'node:fs/promises';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { doctorOutputSchema } from '#cli/schemas/commands.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { CI_PREFERENCE_CASES, REMOVE_SUGGESTIONS } from '#tests/config/commands/reports.ts';
+import { COMMITLINT_PACKAGE, STYLELINT_FILES } from '#tests/config/setup/configurations.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES } from '#tests/config/commands/reports.ts';
-import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/setup/configurations.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 async function listDetectedNames(root: string): Promise<Array<string | undefined>> {
     const findings = await runSandboxCheck(root, 'gspot/detected-configurations');

@@ -1,16 +1,15 @@
-import { SIDEBAR } from '#docs/config/site.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import { compareText } from '#cli/system/text.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-
 import {
-    CURL_COMMAND,
     CHANGELOG_PATH,
-    REFERENCE_FOLDERS,
-    DISJUNCTION_FORMAT,
     CONJUNCTION_FORMAT,
+    CURL_COMMAND,
+    DISJUNCTION_FORMAT,
+    REFERENCE_FOLDERS,
     RELEASE_AGE_EXCLUSIONS,
 } from '#docs/config/reference.ts';
+import { SIDEBAR } from '#docs/config/site.ts';
 
 export const { runtimeMinimums, packageManagerMinimums, setup, yarnClassicInstall, cloneInstalls, runners } =
     CLI_REFERENCE;

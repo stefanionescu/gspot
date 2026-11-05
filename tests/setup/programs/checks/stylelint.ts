@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+
 import type { LinterResult } from 'stylelint';
+
 import { STYLELINT_MODULE_PATH } from '#tests/config/setup/programs.ts';
 
 const [stylesheet = ''] = process.argv.slice(2);

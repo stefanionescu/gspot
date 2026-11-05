@@ -1,5 +1,6 @@
+import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { COLLECTION_TYPE_NAMES } from '../config/collections.ts';
-import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 /**
 List the variables of every scope below the global scope, the scopes whose variables a collection rule inspects.

@@ -1,13 +1,15 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { FIX_SUMMARY_CASES } from '#tests/config/engine/run.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([...FIX_SUMMARY_CASES])('check --fix reports $name', async ({ paths, appliedText }) => {
     await using sandbox = await createGitSandbox({});

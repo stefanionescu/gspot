@@ -1,19 +1,19 @@
-import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
-import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/setup.ts';
+import { join } from 'node:path';
 
 import {
-    REGISTRY_HOST,
-    NPM_PACK_FLAGS,
-    UPSTREAM_REGISTRY,
-    PACKED_PUBLISH_TIME,
-    GSPOT_PACKAGE_SCOPE,
-    PACKED_PACKAGES_FILE,
     AUTHENTICATION_REQUIRED_MESSAGE,
+    GSPOT_PACKAGE_SCOPE,
+    NPM_PACK_FLAGS,
+    PACKED_PACKAGES_FILE,
+    PACKED_PUBLISH_TIME,
+    REGISTRY_HOST,
+    UPSTREAM_REGISTRY,
 } from '#tests/config/setup/sandboxes.ts';
+import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/setup.ts';
 
 async function answerRegistryRequest(
     request: Request,

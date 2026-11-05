@@ -1,5 +1,6 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
 import { runTool } from '#cli/tools/run.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 

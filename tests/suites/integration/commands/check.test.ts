@@ -1,22 +1,24 @@
-import { test, expect } from 'bun:test';
+import { chmod, readFile, symlink, writeFile } from 'node:fs/promises';
+import { delimiter, dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { getTool } from '#cli/tools/pins.ts';
-import { testdir, createFileTree } from 'testdirs';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { join, dirname, delimiter } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version', async () => {
     await using sandbox = await createGitSandbox({

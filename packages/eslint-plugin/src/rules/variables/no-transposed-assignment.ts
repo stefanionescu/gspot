@@ -1,6 +1,7 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+
 import { TRANSPOSED_UNARY_OPERATORS } from '../../config/variables.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
 
 function isAssignmentValue(node: TSESTree.UnaryExpression): boolean {
     const { parent } = node;

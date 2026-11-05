@@ -1,11 +1,11 @@
-import { sep, join, posix, isAbsolute } from 'node:path';
+import { isAbsolute, join, posix, sep } from 'node:path';
 
 import {
-    PYTHON_EXECUTABLE,
-    EXECUTABLE_LAYOUTS,
     DECLARATION_EXTENSIONS,
+    EXECUTABLE_LAYOUTS,
     GLOB_SPECIAL_CHARACTERS,
     INSTALLED_DEPENDENCY_FOLDERS,
+    PYTHON_EXECUTABLE,
 } from '#cli/config/system.ts';
 
 export const executableLayout = process.platform === 'win32' ? EXECUTABLE_LAYOUTS.windows : EXECUTABLE_LAYOUTS.posix;

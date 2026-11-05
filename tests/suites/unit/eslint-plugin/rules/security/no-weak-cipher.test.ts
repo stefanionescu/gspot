@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noWeakCipher } from '#eslint-plugin/rules/security/no-weak-cipher.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-weak-cipher', noWeakCipher, {
     valid: [

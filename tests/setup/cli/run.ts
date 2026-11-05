@@ -1,14 +1,14 @@
+import { convertToGlobs } from '#cli/configurations/ignores.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
-import type { Session } from '#cli/types/tools.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { convertToGlobs } from '#cli/configurations/ignores.ts';
-import { buildIgnoreSections } from '#cli/generation/ignores.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import type { CheckGeneration, CheckRunOptions, RunOptions } from '#cli/types/engine/run.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import type { RunOptions, CheckRunOptions, CheckGeneration } from '#cli/types/engine/run.ts';
 
 /**
 Options for an in-process run of every stage, with no fixes.

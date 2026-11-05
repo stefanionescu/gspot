@@ -1,6 +1,7 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['javascript', 'zod'],

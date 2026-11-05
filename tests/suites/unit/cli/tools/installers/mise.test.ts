@@ -1,24 +1,26 @@
-import { join, dirname } from 'node:path';
-import { createFileTree } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
-import { listMisePins } from '#cli/tools/pins.ts';
 import { existsSync, realpathSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+
+import { parse, stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { installMiseTools, isMiseLockfileFresh, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
+import { listMisePins } from '#cli/tools/pins.ts';
 import type { MiseToolPin } from '#cli/types/tools.ts';
-import { readFile, writeFile } from 'node:fs/promises';
-import type { MiseProject } from '#tests/types/setup.ts';
-import { parse, stringify } from '@decimalturn/toml-patch';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { installMiseTools, reinstallMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import type { MiseProject } from '#tests/types/setup.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
     const checksum = `sha256:${'a'.repeat(64)}`;

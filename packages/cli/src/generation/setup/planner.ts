@@ -1,43 +1,42 @@
-import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readCarryover } from '#cli/generation/setup/carryover.ts';
+import { deleteConflictingConfigs, readConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
+import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
+import { readPrettierScripts } from '#cli/generation/setup/format.ts';
+import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/settings.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
+import { buildStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
+import { listLintCommands } from '#cli/repository/lint-commands.ts';
+import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
+import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
+import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
+import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { writeSettings } from '#cli/settings/file.ts';
+import { readSettings } from '#cli/settings/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { listReplacedTools } from '#cli/tools/pins.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { readRepositorySetup } from '#cli/repository/setup.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { compareText } from '#cli/system/text.ts';
+import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { readCarryover } from '#cli/generation/setup/carryover.ts';
-import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
-import { listLintCommands } from '#cli/repository/lint-commands.ts';
-import { readPrettierScripts } from '#cli/generation/setup/format.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
-import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
-import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-import type { Repository, ConflictingConfig } from '#cli/types/repository.ts';
-import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
-import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/settings.ts';
-import { readConflictingConfigs, deleteConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
-import { buildStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
-
 import type {
-    InitScan,
     ApplyReport,
     InitOptions,
     InitPlanning,
-    SettingsDraft,
+    InitScan,
     PlannedSettings,
+    SettingsDraft,
 } from '#cli/types/generation.ts';
+import type { ConflictingConfig, Repository } from '#cli/types/repository.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 type SettingsPlan = {
     root: string;

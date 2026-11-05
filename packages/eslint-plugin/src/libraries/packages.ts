@@ -1,24 +1,25 @@
-import { join, dirname } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
-import { PLUGIN_PREFIX } from '../config/plugin.ts';
-import type { FileContext } from '../types/plugin.ts';
-import type { PackageFacts, VersionCeiling } from '../types/libraries.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { dirname, join } from 'node:path';
+
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    VUE_THREE,
-    VERSION_SIZE,
-    VERSION_NUMBER,
-    VERSION_SPACES,
-    VERSION_PATTERN,
-    PACKAGE_MANIFEST,
-    VERSION_WILDCARD,
     DEPENDENCY_FIELDS,
+    PACKAGE_MANIFEST,
     REPOSITORY_MARKER,
-    VERSION_OPERATORS,
     UNBOUNDED_VERSIONS,
     VERSION_ALTERNATIVES,
+    VERSION_NUMBER,
+    VERSION_OPERATORS,
+    VERSION_PATTERN,
+    VERSION_SIZE,
+    VERSION_SPACES,
+    VERSION_WILDCARD,
+    VUE_THREE,
 } from '../config/libraries.ts';
+import { PLUGIN_PREFIX } from '../config/plugin.ts';
+import type { PackageFacts, VersionCeiling } from '../types/libraries.ts';
+import type { FileContext } from '../types/plugin.ts';
 
 const manifestCache = new WeakMap<TSESLint.SourceCode, PackageFacts>();
 

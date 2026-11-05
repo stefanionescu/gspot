@@ -1,32 +1,31 @@
-import { escapeGlob } from '#cli/system/paths.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
-import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
-import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
-
-import type {
-    EslintBlock,
-    ScopeBoundaries,
-    PlannedEslintFile,
-    EslintBoundaryPolicy,
-} from '#cli/types/configurations/language.ts';
 import {
-    TEMPLATE_OPEN,
-    CODE_LANGUAGES,
-    TRPC_CONFIGURATION,
-    TEST_IMPORT_POLICY,
-    OTHER_BOUNDARY_FILE,
-    TRPC_SERVER_CATEGORY,
-    TEMPLATE_OPEN_ESCAPED,
-    TEST_BOUNDARY_CATEGORY,
-    OTHER_BOUNDARY_ELEMENTS,
-    UNKNOWN_IMPORT_POLICIES,
-    BOUNDARY_OWNER_TEMPLATE,
-    TRPC_SERVER_VALUE_POLICY,
-    BOUNDARY_SOURCE_TEMPLATE,
     BOUNDARY_DEPENDENCY_NODES,
     BOUNDARY_DEPENDENCY_SELECTORS,
+    BOUNDARY_OWNER_TEMPLATE,
+    BOUNDARY_SOURCE_TEMPLATE,
+    CODE_LANGUAGES,
+    OTHER_BOUNDARY_ELEMENTS,
+    OTHER_BOUNDARY_FILE,
+    TEMPLATE_OPEN,
+    TEMPLATE_OPEN_ESCAPED,
+    TEST_BOUNDARY_CATEGORY,
+    TEST_IMPORT_POLICY,
+    TRPC_CONFIGURATION,
+    TRPC_SERVER_CATEGORY,
+    TRPC_SERVER_VALUE_POLICY,
+    UNKNOWN_IMPORT_POLICIES,
 } from '#cli/config/configurations/blocks.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
+import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { formatRefusedImport, listAllowedRules } from '#cli/settings/import-rules.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import type {
+    EslintBlock,
+    EslintBoundaryPolicy,
+    PlannedEslintFile,
+    ScopeBoundaries,
+} from '#cli/types/configurations/language.ts';
 
 function buildDependencyPolicies({
     importRules,

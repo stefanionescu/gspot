@@ -1,29 +1,28 @@
-import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { parseCheckNames } from '#cli/commands/edits.ts';
+import {
+    BASELINE_LEFT_OUT_MESSAGE,
+    BASELINE_STOPPED_MESSAGE,
+    NO_BASELINE_MESSAGE,
+    ONLY_OPTION,
+    PRUNE_FLAG,
+} from '#cli/config/commands/reports.ts';
+import { BASELINE_EXEMPT_CHECK, BASELINE_STAGES, INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
+import { BASELINE_FILE } from '#cli/config/repository/files.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { countFindings, formatBaseline, parseBaseline, pruneCounts } from '#cli/engine/baseline.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { runEveryCheck } from '#cli/generation/checks.ts';
+import { assertCheckExists } from '#cli/manifests/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { parseCheckNames } from '#cli/commands/edits.ts';
-import { runEveryCheck } from '#cli/generation/checks.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { assertCheckExists } from '#cli/manifests/read.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
-import { BASELINE_FILE } from '#cli/config/repository/files.ts';
 import { formatCount, formatNameList } from '#cli/system/text.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import type { CheckResult, BaselineCount } from '#cli/types/engine/run.ts';
-import type { BaselineJson, BaselineFlags } from '#cli/types/commands/reports.ts';
-import { BASELINE_STAGES, INCOMPLETE_STATUSES, BASELINE_EXEMPT_CHECK } from '#cli/config/engine.ts';
-import { pruneCounts, parseBaseline, countFindings, formatBaseline } from '#cli/engine/baseline.ts';
-
-import {
-    PRUNE_FLAG,
-    ONLY_OPTION,
-    NO_BASELINE_MESSAGE,
-    BASELINE_STOPPED_MESSAGE,
-    BASELINE_LEFT_OUT_MESSAGE,
-} from '#cli/config/commands/reports.ts';
+import type { BaselineFlags, BaselineJson } from '#cli/types/commands/reports.ts';
+import type { BaselineCount, CheckResult } from '#cli/types/engine/run.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function formatStoppedChecks(checks: readonly CheckResult[]): string {
     const causes = checks.map(({ check, note }) => {

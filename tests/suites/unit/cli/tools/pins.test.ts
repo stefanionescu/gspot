@@ -1,12 +1,13 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { buildProgramPin } from '#tests/setup/cli/tools.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findMissingBuild, findPackagePin, listNpmProjectPins } from '#cli/tools/pins.ts';
 import { TOOL_PROJECT_PACKAGES } from '#tests/config/tools/versions.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramPin } from '#tests/setup/cli/tools.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { findPackagePin, findMissingBuild, listNpmProjectPins } from '#cli/tools/pins.ts';
 
 test.each([...TOOL_PROJECT_PACKAGES])('$name: the installers give the expected tool project package', (row) => {
     const tool = { ...buildProgramPin(row.tool, row.version), system: row.system, installers: row.installers };

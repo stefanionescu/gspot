@@ -1,24 +1,26 @@
-import type { z } from 'zod';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { spyOn, expect } from 'bun:test';
-import { runProgram } from '#cli/main.ts';
+
 import { parse } from '@decimalturn/toml-patch';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import type { InitJson } from '#cli/types/commands/edits.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { expect, spyOn } from 'bun:test';
+import type { z } from 'zod';
+
+import { runProgram } from '#cli/main.ts';
+import { checkReportSchema, initOutputSchema } from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { captureTerminal } from '#tests/setup/system/terminal.ts';
+import type { InitJson } from '#cli/types/commands/edits.ts';
+import type { CheckResult, RunReport } from '#cli/types/engine/run.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import type { CancelableSpawnOptions, CommandFailureJson, ErrorCode } from '#cli/types/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { initOutputSchema, checkReportSchema } from '#cli/schemas/commands.ts';
-import type { ErrorCode, CommandFailureJson, CancelableSpawnOptions } from '#cli/types/system.ts';
-import type { Sandbox, FindingRow, StdinOptions, ProcessOutput, ScopeFindingRow } from '#tests/types/setup.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { captureTerminal } from '#tests/setup/system/terminal.ts';
+import type { FindingRow, ProcessOutput, Sandbox, ScopeFindingRow, StdinOptions } from '#tests/types/setup.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
 

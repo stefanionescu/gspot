@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+
 import { noTestRetries } from '#eslint-plugin/rules/testing/no-test-retries.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

@@ -1,5 +1,5 @@
-import { GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
+import { GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
 
 export const PYDOCLINT_CHECK_ARGUMENTS = ['check', '--only', 'python/pydoclint', '--json'] as const;
 

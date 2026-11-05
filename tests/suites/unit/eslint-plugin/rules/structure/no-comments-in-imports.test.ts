@@ -1,8 +1,9 @@
+import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-import { test, expect } from 'bun:test';
+
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noCommentsInImports } from '#eslint-plugin/rules/structure/no-comments-in-imports.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 test.each(['class Sample {}', 'export class Sample {}', 'export default class Sample {}'])(
     'the default JavaScript parser preserves declaration comments and fixes import headers before %s',

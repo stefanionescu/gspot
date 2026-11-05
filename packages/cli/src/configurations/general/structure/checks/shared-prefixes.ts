@@ -1,33 +1,33 @@
 import { posix } from 'node:path';
-import { splitWords } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { FolderChild } from '#cli/types/configurations/general.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
-import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
-import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 
 import {
-    isInScope,
+    COMPANION_SUFFIX,
+    GSPOT_FIXED_NAMES,
+    HOOK_FOLDERS,
+    INDEX_BASE_NAMES,
+    SHARED_PREFIX_RULE,
+    SPEC_SUFFIX,
+    TYPE_FILE_CASE,
+} from '#cli/config/configurations/structure.ts';
+import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
+import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
+import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import {
     extractBaseName,
     extractExtension,
-    isInInstalledFolder,
     extractParentFolder,
+    isInInstalledFolder,
+    isInScope,
 } from '#cli/system/paths.ts';
-import {
-    SPEC_SUFFIX,
-    HOOK_FOLDERS,
-    TYPE_FILE_CASE,
-    COMPANION_SUFFIX,
-    INDEX_BASE_NAMES,
-    GSPOT_FIXED_NAMES,
-    SHARED_PREFIX_RULE,
-} from '#cli/config/configurations/structure.ts';
+import { splitWords } from '#cli/system/text.ts';
+import type { FolderChild } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function hasKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);

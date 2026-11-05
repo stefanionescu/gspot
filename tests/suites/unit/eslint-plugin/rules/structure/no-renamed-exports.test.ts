@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noRenamedExports } from '#eslint-plugin/rules/structure/no-renamed-exports.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-renamed-exports', noRenamedExports, {
     valid: [

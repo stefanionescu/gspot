@@ -1,27 +1,27 @@
 import { isDeepStrictEqual } from 'node:util';
-import { CLI_REFERENCE } from '#cli/reference.ts';
-import type { ReferencePage } from '#docs/types/pages.ts';
-import type { SettingVariant, SettingReference, AcceptedSettingValues } from '#docs/types/reference.ts';
-import { formatText, formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
+import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
-    SENTENCE_END,
-    REFERENCE_PATH,
     ANGLE_BRACKETS,
-    SETTINGS_OPENING,
-    NAME_PLACEHOLDER,
-    REFERENCE_FOLDERS,
-    TOP_LEVEL_HEADING,
-    SCHEMA_TYPE_LABELS,
     BANNED_NAME_MESSAGE,
-    LISTED_VALUES_LIMIT,
-    TABLE_HEADING_LEVEL,
-    SETTINGS_DESCRIPTION,
     CATEGORY_PLACEHOLDER,
     LANGUAGE_PLACEHOLDER,
-    REASONED_VALUE_LABEL,
+    LISTED_VALUES_LIMIT,
     MONOREPOS_SCOPE_MESSAGE,
+    NAME_PLACEHOLDER,
+    REASONED_VALUE_LABEL,
+    REFERENCE_FOLDERS,
+    REFERENCE_PATH,
+    SCHEMA_TYPE_LABELS,
+    SENTENCE_END,
+    SETTINGS_DESCRIPTION,
+    SETTINGS_OPENING,
+    TABLE_HEADING_LEVEL,
+    TOP_LEVEL_HEADING,
 } from '#docs/config/reference.ts';
+import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
+import type { ReferencePage } from '#docs/types/pages.ts';
+import type { AcceptedSettingValues, SettingReference, SettingVariant } from '#docs/types/reference.ts';
 
 function buildSettingAnchor(key: string, kind: SettingReference['kind']): string {
     const name = key.replaceAll(ANGLE_BRACKETS, '');

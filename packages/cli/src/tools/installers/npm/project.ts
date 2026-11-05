@@ -1,48 +1,49 @@
-import semver from 'semver';
-import { join } from 'node:path';
-import { formatCount } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import { findProgram } from '#cli/system/programs.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { ReplacementRequest } from '#cli/types/repository.ts';
-import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
-import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import { runInstallStep, explainReleaseAgeHold } from '#cli/tools/installers/steps.ts';
-import { buildPackageManagerCommand } from '#cli/repository/javascript/package-manager.ts';
-import { writeNpmrc, extractRegistryCredentials } from '#cli/tools/installers/npm/registry.ts';
-import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
-import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/installers/credentials.ts';
-import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
+import { join } from 'node:path';
 
+import semver from 'semver';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
+import {
+    INSTALL_FAILURE,
+    LOCKFILE_CREDENTIAL_MESSAGE,
+    LOCKFILE_FAILURE,
+    NODE_MISSING_MESSAGE,
+    NODE_TOOL,
+    NPM_CONFIG_FOLDER_VARIABLE,
+    NPM_DEFAULT_REGISTRY,
+    NPM_LOCKFILE_CREDENTIAL_MESSAGE,
+    NPM_SETTING_PREFIX,
+    NPM_TOOL_NOUN,
+    NPMRC_FILE,
+    PACKAGE_MANAGER_ARGUMENTS,
+    PACKAGE_MANAGER_SETTINGS_NAME,
+    RELEASE_AGE_VERSIONS,
+} from '#cli/config/tools/installers.ts';
+import { buildPackageManagerCommand } from '#cli/repository/javascript/package-manager.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { findProgram } from '#cli/system/programs.ts';
+import { formatCount } from '#cli/system/text.ts';
+import { assertCredentialFreeLockfile, redactInstallOutput } from '#cli/tools/installers/credentials.ts';
+import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
+import { extractRegistryCredentials, writeNpmrc } from '#cli/tools/installers/npm/registry.ts';
+import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
+import { explainReleaseAgeHold, runInstallStep } from '#cli/tools/installers/steps.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
+import type { ReplacementRequest } from '#cli/types/repository.ts';
 import type {
-    ToolInstall,
-    ToolRelease,
     GeneratedFile,
     NpmToolInstall,
-    PackageManagerRun,
     PackageManagerRequest,
+    PackageManagerRun,
+    ToolInstall,
+    ToolRelease,
 } from '#cli/types/tools.ts';
-import {
-    NODE_TOOL,
-    NPMRC_FILE,
-    NPM_TOOL_NOUN,
-    INSTALL_FAILURE,
-    LOCKFILE_FAILURE,
-    NPM_SETTING_PREFIX,
-    NPM_DEFAULT_REGISTRY,
-    RELEASE_AGE_VERSIONS,
-    NODE_MISSING_MESSAGE,
-    PACKAGE_MANAGER_ARGUMENTS,
-    NPM_CONFIG_FOLDER_VARIABLE,
-    LOCKFILE_CREDENTIAL_MESSAGE,
-    PACKAGE_MANAGER_SETTINGS_NAME,
-    NPM_LOCKFILE_CREDENTIAL_MESSAGE,
-} from '#cli/config/tools/installers.ts';
 
 const LOCK_ONLY_FLAG = '--package-lock-only';
 

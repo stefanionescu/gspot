@@ -1,15 +1,17 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
+
+import { expect, test } from 'bun:test';
+
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { compareText } from '#cli/system/text.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 test.each(['', 'app'])('Biome applies language limits in scope "%s" without enabling other rules', async (scope) => {
     const prefix = scope === '' ? '' : `${scope}/`;

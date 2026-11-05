@@ -1,17 +1,17 @@
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import { getTable, getLimit, selectFormat } from '#cli/settings/scopes.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import { Document, type Node, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
-import { listDisabledRules, readToolDisabledRules } from '#cli/configurations/rule-options.ts';
 
 import {
     SWIFT_FILES,
-    SWIFTLINT_OPT_IN,
     SWIFTLINT_ANALYZER,
     SWIFTLINT_COMMENTS,
-    SWIFTLINT_LEVEL_NOTE,
     SWIFTLINT_FUNCTION_NESTING,
+    SWIFTLINT_LEVEL_NOTE,
+    SWIFTLINT_OPT_IN,
 } from '#cli/config/configurations/swift.ts';
+import { listDisabledRules, readToolDisabledRules } from '#cli/configurations/rule-options.ts';
+import { getLimit, getTable, selectFormat } from '#cli/settings/scopes.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     const format = selectFormat(planned.scope.settings, SWIFT_FILES);

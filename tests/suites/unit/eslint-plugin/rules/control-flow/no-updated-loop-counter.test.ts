@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noUpdatedLoopCounter } from '#eslint-plugin/rules/control-flow/no-updated-loop-counter.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-updated-loop-counter', noUpdatedLoopCounter, {
     valid: [

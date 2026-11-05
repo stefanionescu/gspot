@@ -1,23 +1,24 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { OS_SOURCE } from '#tests/config/configurations/python.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NAMED_TARGET_SOURCE, EMPTY_DEFAULT_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
-
 import {
-    SWIFT_IMPORT_FILES,
-    SWIFT_IMPORT_RULES,
     PYTHON_IMPORT_FILES,
     PYTHON_IMPORT_RULES,
+    SWIFT_IMPORT_FILES,
+    SWIFT_IMPORT_RULES,
 } from '#tests/config/configurations/structure/files.ts';
+import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
+import { EMPTY_DEFAULT_SOURCE, NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('structure/import-rules reports a Python file outside every rule and each refused import, a relative one too', async () => {
     await using sandbox = await createGitSandbox({

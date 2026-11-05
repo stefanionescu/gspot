@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { preferTypeAlias } from '#eslint-plugin/rules/types/prefer-type-alias.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-type-alias', preferTypeAlias, {
     valid: [

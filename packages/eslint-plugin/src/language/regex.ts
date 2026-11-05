@@ -1,6 +1,7 @@
-import { REGEXP_CONSTRUCTOR } from '../config/regex.ts';
 import { type AST, parseRegExpLiteral } from '@eslint-community/regexpp';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { REGEXP_CONSTRUCTOR } from '../config/regex.ts';
 
 function getStaticString(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): string | undefined {
     const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));

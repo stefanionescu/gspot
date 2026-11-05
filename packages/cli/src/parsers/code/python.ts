@@ -1,9 +1,10 @@
 import { type Node } from 'web-tree-sitter';
+
+import { DOCSTRING_PREFIXES, PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { remember } from '#cli/system/cache.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { PYTHON_EXTENSION, DOCSTRING_PREFIXES, PYTHON_FUNCTION_NODES } from '#cli/config/parsers.ts';
-import type { ParseCache, SourceFiles, PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers.ts';
+import type { ParseCache, PythonFiles, PythonFunction, PythonModule, SourceFiles } from '#cli/types/parsers.ts';
 
 function listFunctions(module: PythonModule): PythonFunction[] {
     return module.tree.rootNode

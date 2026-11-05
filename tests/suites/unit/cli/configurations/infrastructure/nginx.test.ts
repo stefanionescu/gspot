@@ -1,25 +1,26 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { getTool } from '#cli/tools/pins.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
-
+import { getTool } from '#cli/tools/pins.ts';
 import {
-    NGINX_MOUNT_CASES,
     NGINX_FAILURE_CASES,
+    NGINX_MOUNT_CASES,
     NGINX_UPSTREAM_CONFIG,
 } from '#tests/config/configurations/infrastructure.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const NGINX_DIRECTIVE_CASES: Array<{ source: string; expected: Array<[string, ...string[]]> }> = [
     {

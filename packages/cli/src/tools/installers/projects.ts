@@ -1,49 +1,50 @@
-import which from 'which';
 import { join } from 'node:path';
-import type { Files } from '#cli/types/system.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { listExecutablePaths } from '#cli/tools/locate.ts';
-import { runInstallStep } from '#cli/tools/installers/steps.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import type { ReplacementRequest } from '#cli/types/repository.ts';
-import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
-import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import { UV_TOOL, UV_REINSTALL_FLAG, UV_PROJECT_INSTALL_ARGUMENTS } from '#cli/config/tools/installers.ts';
 
-import {
-    listMisePins,
-    findPackagePin,
-    listPackagePins,
-    listNpmProjectPins,
-    buildPythonProjectTable,
-} from '#cli/tools/pins.ts';
+import which from 'which';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG, UV_TOOL } from '#cli/config/tools/installers.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { planReplacements, writePlans } from '#cli/repository/writer.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
+import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import {
     installNpmTools,
-    planNpmLockfile,
-    isNpmLockfileFresh,
     installUnlockedNpmTools,
+    isNpmLockfileFresh,
+    planNpmLockfile,
 } from '#cli/tools/installers/npm/project.ts';
+import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import {
-    installPythonTools,
-    planPythonLockfile,
     installPythonProjects,
+    installPythonTools,
     isPythonLockfileFresh,
     listLockedPythonProjects,
+    planPythonLockfile,
 } from '#cli/tools/installers/pypi.ts';
+import { runInstallStep } from '#cli/tools/installers/steps.ts';
+import { listExecutablePaths } from '#cli/tools/locate.ts';
+import {
+    buildPythonProjectTable,
+    findPackagePin,
+    listMisePins,
+    listNpmProjectPins,
+    listPackagePins,
+} from '#cli/tools/pins.ts';
+import type { Tool } from '#cli/types/manifests.ts';
+import type { ReplacementRequest } from '#cli/types/repository.ts';
+import type { Files } from '#cli/types/system.ts';
 import type {
-    Session,
-    ToolInstall,
     GeneratedFile,
-    StaleLockfile,
     NpmToolInstall,
-    ToolProjectsInstall,
+    Session,
+    StaleLockfile,
+    ToolInstall,
     ToolPackageManagerName,
+    ToolProjectsInstall,
 } from '#cli/types/tools.ts';
 
 const UV_CHECK_FLAG = '--check';

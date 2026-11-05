@@ -1,43 +1,43 @@
 import { dirname } from 'node:path';
-import { formatCount } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import { readHooks } from '#cli/repository/setup.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+
+import { BUNFIG_FILE, SCANNER_KEY } from '#cli/config/configurations/general.ts';
+import {
+    CHANGE_LABEL_WIDTH,
+    GENERATED_FILE_NOUN,
+    HOOKS_CHANGED_NOTE,
+    MANAGED_KEYS_NOTE,
+    STALE_LOCKFILE_NOTE,
+    TOOL_PROJECT_FILES,
+    TOOLS_CHANGED_NOTE,
+} from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { INSTALLED_TOOL_FOLDERS, OWNER_WRITABLE_FILE, TEMPORARY_FILE_NAME } from '#cli/config/repository/setup.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import { listExpectedPaths } from '#cli/generation/stale.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { installHooks } from '#cli/tools/installers/hooks.ts';
-import { listOwnablePaths } from '#cli/generation/pointers.ts';
-import type { Session, Generation } from '#cli/types/tools.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import type { Files, FileContents } from '#cli/types/system.ts';
-import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
-import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/configurations/general.ts';
-import { TEMPORARY_FILE_NAME, OWNER_WRITABLE_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
-
+import { joinScope } from '#cli/repository/scopes.ts';
+import { readHooks } from '#cli/repository/setup.ts';
 import {
-    planBlock,
-    writePlans,
-    planRemovals,
     listStrayPaths,
+    planBlock,
     planManagedKeys,
+    planRemovals,
     planReplacements,
+    writePlans,
 } from '#cli/repository/writer.ts';
-import {
-    MANAGED_KEYS_NOTE,
-    CHANGE_LABEL_WIDTH,
-    TOOL_PROJECT_FILES,
-    HOOKS_CHANGED_NOTE,
-    TOOLS_CHANGED_NOTE,
-    GENERATED_FILE_NOUN,
-    STALE_LOCKFILE_NOTE,
-} from '#cli/config/generation.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import { formatCount } from '#cli/system/text.ts';
+import { installHooks } from '#cli/tools/installers/hooks.ts';
+import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
+import type { FileContents, Files } from '#cli/types/system.ts';
+import type { Generation, Session } from '#cli/types/tools.ts';
 
 function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [

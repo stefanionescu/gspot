@@ -1,23 +1,23 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import type { CheckStop } from '#cli/system/errors.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-
+import type { CheckStop } from '#cli/system/errors.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import {
-    FIX_FIELD_CASES,
-    MARKDOWN_REPORT,
-    TWO_LEVEL_FORMAT,
     EMPTY_JSON_CASES,
+    FIX_FIELD_CASES,
     FLAT_JSON_FINDINGS,
+    INVALID_FINDING_REPORTS,
+    MARKDOWN_REPORT,
     NESTED_LIST_FORMAT,
     NESTED_LIST_OUTPUT,
-    INVALID_FINDING_REPORTS,
+    TWO_LEVEL_FORMAT,
 } from '#tests/config/engine/outputs.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 function parseJsonReport(checkId: string, output: unknown, stdout: string): Finding[] {
     return parseJsonFindings({

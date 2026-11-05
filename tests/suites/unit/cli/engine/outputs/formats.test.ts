@@ -1,36 +1,37 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { realpathSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { getTool } from '#cli/tools/pins.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { Check } from '#cli/types/manifests.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { isLinux } from '#tests/setup/system/platform.ts';
+import { addCommandLine, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import type { CommandRun, Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import {
+    BRACKETED_WORD_FINDINGS,
+    CHECK_OUTPUTS,
+    EDITORCONFIG_REPORT,
+    ESLINT_PATH_CASES,
+    FIXABLE_FORMAT_CASES,
+    LINE_ENDING_CASES,
+    OUTPUT_PARSE_RESULTS,
+    WINDOWS_ROOT_CASES,
+} from '#tests/config/engine/outputs.ts';
+import { BASE_CHECK, FAILED_RUN } from '#tests/config/engine/tool-runs.ts';
 import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
 import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import type { Finding, CommandRun } from '#cli/types/engine/tool-runs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { FAILED_RUN, BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
-import { addCommandLine, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-
-import {
-    CHECK_OUTPUTS,
-    LINE_ENDING_CASES,
-    ESLINT_PATH_CASES,
-    WINDOWS_ROOT_CASES,
-    EDITORCONFIG_REPORT,
-    OUTPUT_PARSE_RESULTS,
-    FIXABLE_FORMAT_CASES,
-    BRACKETED_WORD_FINDINGS,
-} from '#tests/config/engine/outputs.ts';
+import { isLinux } from '#tests/setup/system/platform.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 function readParseResult(parse: () => Finding[]): { findings: readonly Finding[] } | { error: string } {
     try {

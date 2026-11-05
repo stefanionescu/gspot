@@ -1,10 +1,10 @@
-import { escapeGlob } from '#cli/system/paths.ts';
-import type { Session } from '#cli/types/tools.ts';
-import type { Level, Scope } from '#cli/types/settings.ts';
-import { listNestedScopes } from '#cli/repository/scopes.ts';
+import { ALIAS_IMPORT_SELECTORS, BASE_SELECTORS, ENVIRONMENT_SELECTOR } from '#cli/config/configurations/blocks.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listNestedScopes } from '#cli/repository/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
 import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/language.ts';
-import { BASE_SELECTORS, ENVIRONMENT_SELECTOR, ALIAS_IMPORT_SELECTORS } from '#cli/config/configurations/blocks.ts';
+import type { Level, Scope } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];

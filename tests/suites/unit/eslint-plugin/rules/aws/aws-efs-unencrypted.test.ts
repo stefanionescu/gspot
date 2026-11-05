@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsEfsUnencrypted } from '#eslint-plugin/rules/aws/aws-efs-unencrypted.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-efs-unencrypted', awsEfsUnencrypted, {
     valid: [

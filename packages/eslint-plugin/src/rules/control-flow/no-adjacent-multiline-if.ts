@@ -1,5 +1,6 @@
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+
 import { createRule } from '../../rule.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getPrecedingIf(node: TSESTree.IfStatement): TSESTree.IfStatement | undefined {
     const { parent } = node;

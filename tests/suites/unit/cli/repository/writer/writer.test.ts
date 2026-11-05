@@ -1,12 +1,14 @@
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { planReplacements, writePlans } from '#cli/repository/writer.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { unlink, readFile, writeFile } from 'node:fs/promises';
-import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 
 const AUTHORED_REFUSAL = matchFields<GspotError>({
     name: 'GspotError',

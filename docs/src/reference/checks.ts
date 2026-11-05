@@ -1,34 +1,34 @@
 import { posix } from 'node:path';
-import { CLI_REFERENCE } from '#cli/reference.ts';
-import type { ReferencePage } from '#docs/types/pages.ts';
-import type { Suppression, CliReference } from '#docs/types/reference.ts';
 
+import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
-    formatText,
-    formatTable,
-    formatSection,
-    buildReferencePage,
-    formatConfigurationLink,
-} from '#docs/reference/markdown.ts';
-import {
-    HELP_HEADING,
-    CHECKS_OPENING,
-    PURPOSE_HEADING,
-    CHECK_RUN_LABELS,
     BUILT_IN_MESSAGE,
-    TURN_OFF_HEADING,
     CHECK_FIX_MESSAGE,
-    CONJUNCTION_FORMAT,
     CHECK_NEEDS_LABELS,
-    SUPPRESSIONS_CHECK,
-    LINT_RULES_MESSAGE,
+    CHECK_RUN_LABELS,
+    CHECKS_OPENING,
+    CONJUNCTION_FORMAT,
+    HELP_HEADING,
     LINT_RULES_HEADING,
-    REFUSED_FORM_LABEL,
+    LINT_RULES_MESSAGE,
     MINOR_HEADING_LEVEL,
+    PURPOSE_HEADING,
+    REFUSED_FORM_LABEL,
+    REFUSED_SUPPRESSION_MESSAGE,
     SUBSECTION_HEADING_LEVEL,
     SUPPRESSION_FORMS_HEADING,
-    REFUSED_SUPPRESSION_MESSAGE,
+    SUPPRESSIONS_CHECK,
+    TURN_OFF_HEADING,
 } from '#docs/config/reference.ts';
+import {
+    buildReferencePage,
+    formatConfigurationLink,
+    formatSection,
+    formatTable,
+    formatText,
+} from '#docs/reference/markdown.ts';
+import type { ReferencePage } from '#docs/types/pages.ts';
+import type { CliReference, Suppression } from '#docs/types/reference.ts';
 
 function listCheckRequirements(reference: CliReference['checks'][number]): string[] {
     const { programs, systems, needs } = reference;

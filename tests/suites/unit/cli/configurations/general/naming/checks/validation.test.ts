@@ -1,19 +1,19 @@
-import { test, expect } from 'bun:test';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
+import { expect, test } from 'bun:test';
+
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
 import type { FileNaming, Identifier, NamingSettings } from '#cli/types/configurations/general.ts';
-
 import {
-    NAME_WORDS,
-    NAMING_LIMIT_CASES,
-    LINTER_LIMIT_CASES,
-    HOOK_PREFIX_TABLES,
     ALLOWED_NAME_TABLES,
     HANDLE_PREFIX_TABLES,
-    OVERLONG_NAME_FINDINGS,
     HANDLE_ROUTE_IDENTIFIER,
+    HOOK_PREFIX_TABLES,
+    LINTER_LIMIT_CASES,
+    NAME_WORDS,
+    NAMING_LIMIT_CASES,
+    OVERLONG_NAME_FINDINGS,
 } from '#tests/config/configurations/naming/validation.ts';
+import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test.each([...NAMING_LIMIT_CASES])(
     '$language accepts its exact limits and reports the next character or word',

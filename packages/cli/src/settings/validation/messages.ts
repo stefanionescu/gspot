@@ -1,10 +1,11 @@
 import { z } from 'zod';
+
+import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
+import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import type { SettingsError } from '#cli/types/settings.ts';
-import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
-import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 
 function formatValueAdvice(
     schema: z.ZodType | undefined,

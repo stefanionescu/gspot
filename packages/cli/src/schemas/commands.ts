@@ -1,23 +1,23 @@
 import { z } from 'zod';
-import { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
-import { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
-import { checkFieldsSchema } from '#cli/schemas/manifests/manifest.ts';
-import { hookStatusSchema, toolInspectionSchema } from '#cli/schemas/tools.ts';
-import { initPlanSchema, generatedFilesSchema } from '#cli/schemas/generation.ts';
-import { GROUPS, TOOL_KINDS, FILE_KINDS, SETTING_TYPES } from '#cli/config/manifests.ts';
 
+import { FILE_KINDS, GROUPS, SETTING_TYPES, TOOL_KINDS } from '#cli/config/manifests.ts';
+import { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
+import { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
 import {
-    settingOriginSchema,
+    checkStateSchema,
+    findingSchema,
+    fixReportSchema,
+    reportedCheckSchema,
+    runReportSchema,
+} from '#cli/schemas/engine.ts';
+import { generatedFilesSchema, initPlanSchema } from '#cli/schemas/generation.ts';
+import { checkFieldsSchema } from '#cli/schemas/manifests/manifest.ts';
+import {
     reasonRequirementSchema,
     removedConfigurationSchema,
+    settingOriginSchema,
 } from '#cli/schemas/settings/fields.ts';
-import {
-    findingSchema,
-    runReportSchema,
-    fixReportSchema,
-    checkStateSchema,
-    reportedCheckSchema,
-} from '#cli/schemas/engine.ts';
+import { hookStatusSchema, toolInspectionSchema } from '#cli/schemas/tools.ts';
 
 const commandFieldsSchema = z.strictObject({
     version: z.string(),

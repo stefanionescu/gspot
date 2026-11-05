@@ -1,16 +1,16 @@
-import { overlayTable } from '#cli/settings/edit.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import { buildSettingsText } from '#cli/settings/text.ts';
 import { LEADING_COMMENTS } from '#cli/config/generation.ts';
-import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { formatSettingsCommands } from '#cli/generation/rules.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
+import { buildDetectedTables } from '#cli/settings/detected.ts';
+import { overlayTable } from '#cli/settings/edit.ts';
+import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { buildSettingsText } from '#cli/settings/text.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
-import type { Repository, ProposedConfigurations } from '#cli/types/repository.ts';
+import type { ProposedConfigurations, Repository } from '#cli/types/repository.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 
 function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlTable {
     const selected = {

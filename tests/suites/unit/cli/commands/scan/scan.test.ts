@@ -1,14 +1,16 @@
-import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+
 import cliPackage from '#cli-package' with { type: 'json' };
 import { scanOutputSchema } from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 async function runScan(root: string): Promise<ScanReport> {
     using install = spyOn(installers, 'installTools').mockResolvedValue({

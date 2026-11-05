@@ -1,42 +1,41 @@
-import { NUMERIC_WORDS } from '#cli/config/system.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { splitWords, formatNameList } from '#cli/system/text.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
-
-import type {
-    BannedWord,
-    NamingCase,
-    Identifier,
-    FileNaming,
-    NamingCheck,
-    CategoryLimits,
-    NamingSettings,
-    CompiledException,
-    CheckedIdentifier,
-} from '#cli/types/configurations/general.ts';
 import {
-    RULES,
-    DIGIT,
-    SILENT_E,
-    TRAILING_Y,
-    UPPER_WORD,
-    CAMEL_WORD,
-    LOWER_WORD,
-    DIGITS_ONLY,
-    PASCAL_WORD,
-    VOWEL_SUFFIX,
-    LAST_EXTENSION,
-    TEST_WORD_LIST,
-    RUFF_CATEGORIES,
-    MIGRATION_DIGITS,
     BANNED_WORD_FORMS,
     CAMEL_ACRONYM_WORD,
-    WORD_FORM_SUFFIXES,
+    CAMEL_WORD,
+    DIGIT,
+    DIGITS_ONLY,
+    LAST_EXTENSION,
+    LOWER_WORD,
+    MIGRATION_DIGITS,
     PASCAL_ACRONYM_WORD,
-    WORD_FORM_CONSONANT,
+    PASCAL_WORD,
+    RUFF_CATEGORIES,
+    RULES,
+    SILENT_E,
     SWIFTLINT_CATEGORIES,
+    TEST_WORD_LIST,
+    TRAILING_Y,
+    UPPER_WORD,
+    VOWEL_SUFFIX,
+    WORD_FORM_CONSONANT,
+    WORD_FORM_SUFFIXES,
 } from '#cli/config/configurations/naming.ts';
+import { NUMERIC_WORDS } from '#cli/config/system.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { formatNameList, splitWords } from '#cli/system/text.ts';
+import type {
+    BannedWord,
+    CategoryLimits,
+    CheckedIdentifier,
+    CompiledException,
+    FileNaming,
+    Identifier,
+    NamingCase,
+    NamingCheck,
+    NamingSettings,
+} from '#cli/types/configurations/general.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_DIGITS);

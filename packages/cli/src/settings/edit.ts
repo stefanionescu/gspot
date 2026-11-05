@@ -1,11 +1,11 @@
-import { GspotError } from '#cli/system/errors.ts';
-import { parseSettings } from '#cli/settings/read.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
-import { buildSettingsText } from '#cli/settings/text.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
-import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
-import type { TomlTable, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings.ts';
+import { isReasonedValue } from '#cli/settings/file.ts';
+import { parseSettings } from '#cli/settings/read.ts';
+import { buildSettingsText } from '#cli/settings/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { addTable, findValueAt, isTable } from '#cli/system/tables.ts';
+import type { EditedSettings, SettingKey, SettingsEdit, TomlTable } from '#cli/types/settings.ts';
 
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');

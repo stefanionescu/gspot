@@ -1,17 +1,17 @@
-import { test, expect } from 'bun:test';
-import { createRunCache } from '#cli/system/cache.ts';
+import { expect, test } from 'bun:test';
+
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { parseSqlFile } from '#cli/parsers/code/sql.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import {
+    DROPPED_CONSTRAINTS_SQL,
+    EQUIVALENT_INDEXES_SQL,
+    RECREATED_TABLE_SQL,
+    RENAMED_TABLE_SQL,
+} from '#tests/config/configurations/database.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
-
-import {
-    RENAMED_TABLE_SQL,
-    RECREATED_TABLE_SQL,
-    EQUIVALENT_INDEXES_SQL,
-    DROPPED_CONSTRAINTS_SQL,
-} from '#tests/config/configurations/database.ts';
 
 test('table and column renames retain their foreign keys, indexes, and row security', async () => {
     const renamedTable = await parseSqlFile(RENAMED_TABLE_SQL, createRunCache(process.cwd()));

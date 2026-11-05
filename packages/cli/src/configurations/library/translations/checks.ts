@@ -1,32 +1,33 @@
 import { posix } from 'node:path';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { getPosition, compareText } from '#cli/system/text.ts';
-import { messagesSchema } from '#cli/schemas/configurations.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { parseTree, findNodeAtLocation } from 'jsonc-parser/lib/esm/main.js';
-import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
-import { TRANSLATION_EXPLANATIONS } from '#cli/configurations/library/translations/explanations.ts';
 
 import {
-    TYPE,
+    type MessageFormatElement,
     parse,
     type PluralElement,
     type SelectElement,
-    type MessageFormatElement,
+    TYPE,
 } from '@formatjs/icu-messageformat-parser';
+import { findNodeAtLocation, parseTree } from 'jsonc-parser/lib/esm/main.js';
+
 import {
-    EMPTY_MESSAGE,
-    PLURAL_FORMAT,
     ARGUMENT_FORMATS,
-    TRANSLATION_RULES,
+    EMPTY_MESSAGE,
     MESSAGE_FILE_SUFFIX,
+    PLURAL_FORMAT,
+    TRANSLATION_RULES,
 } from '#cli/config/configurations/framework.ts';
+import { TRANSLATION_EXPLANATIONS } from '#cli/configurations/library/translations/explanations.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { messagesSchema } from '#cli/schemas/configurations.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { compareText, getPosition } from '#cli/system/text.ts';
+import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();

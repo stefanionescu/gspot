@@ -1,20 +1,21 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
 import { rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { createFileTree, type TestdirResult } from 'testdirs';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
 import {
-    VITEST_SOURCE,
-    UNTESTED_SOURCE,
     COVERAGE_ZERO_LIMITS,
+    UNTESTED_SOURCE,
     VITEST_PROJECT_FILES,
+    VITEST_SOURCE,
 } from '#tests/config/integration/testing.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,

@@ -1,34 +1,35 @@
-import semver from 'semver';
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { remember } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { runProcess } from '#cli/system/processes.ts';
-import type { PackageJson } from '#cli/types/parsers.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { GspotError, tryParseFile } from '#cli/system/errors.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository.ts';
+import { dirname, join } from 'node:path';
 
-import type {
-    StartRunner,
-    PackageManager,
-    PackageManagerPin,
-    PackageManagerField,
-    PackageManagerCommand,
-} from '#cli/types/repository.ts';
+import semver from 'semver';
+
+import cliPackage from '#cli-package' with { type: 'json' };
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import {
     CI_NODE,
-    NPM_TOOL,
     LOCKFILES,
-    VERSION_FLAG,
-    START_RUNNERS,
-    PACKAGE_MANAGERS,
+    NPM_TOOL,
     PACKAGE_MANAGER_HASH_SUFFIX,
+    PACKAGE_MANAGERS,
+    START_RUNNERS,
+    VERSION_FLAG,
 } from '#cli/config/repository/javascript.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { packageManagerPinSchema, packageManagerSchema } from '#cli/schemas/repository.ts';
+import { remember } from '#cli/system/cache.ts';
+import { GspotError, tryParseFile } from '#cli/system/errors.ts';
+import { runProcess } from '#cli/system/processes.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { PackageJson } from '#cli/types/parsers.ts';
+import type {
+    PackageManager,
+    PackageManagerCommand,
+    PackageManagerField,
+    PackageManagerPin,
+    StartRunner,
+} from '#cli/types/repository.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 const PACKAGE_MANAGER_VERSIONS = Symbol('package manager versions');
 

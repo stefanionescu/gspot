@@ -1,26 +1,27 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
-import { getTable } from '#cli/settings/scopes.ts';
 import { existsSync, readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-
 import {
     CONFIGURATIONS_SETTINGS,
-    SITE_PACKAGE_MANAGER_CASES,
     INHERITED_CONFIGURATION_SETTINGS,
+    SITE_PACKAGE_MANAGER_CASES,
 } from '#tests/config/commands/edits.ts';
+import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('add --scope writes the scope list and applies the generated files', async () => {
     await using sandbox = await createGitSandbox({

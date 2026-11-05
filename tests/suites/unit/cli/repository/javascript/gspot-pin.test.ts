@@ -1,14 +1,16 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import cliPackage from '#cli-package' with { type: 'json' };
+import { assertGspotPin, readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readGspotPin, writeGspotPin, assertGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 
 test('the pin of a repository with package.json is an exact development dependency', async () => {
     await using sandbox = await createGitSandbox({ 'package.json': '{\n  "name": "example"\n}\n' });

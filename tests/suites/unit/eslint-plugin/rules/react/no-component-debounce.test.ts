@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noComponentDebounce } from '#eslint-plugin/rules/react/no-component-debounce.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-component-debounce', noComponentDebounce, {
     valid: [

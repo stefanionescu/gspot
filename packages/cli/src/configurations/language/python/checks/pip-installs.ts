@@ -1,22 +1,21 @@
-import { CheckStop } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { type CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import {
+    INSTALL_FILE_SUFFIXES,
+    NO_LOCKFILE_NOTE,
+    PIP_INSTALL,
+    PIP_INSTALL_MESSAGE,
+    PYTHON_RULES,
+    REQUIREMENTS_FILE_MESSAGE,
+    REQUIREMENTS_FOLDER_FILE,
+} from '#cli/config/configurations/python.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { PIP_INSTALL_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
-
-import {
-    PIP_INSTALL,
-    PYTHON_RULES,
-    NO_LOCKFILE_NOTE,
-    PIP_INSTALL_MESSAGE,
-    INSTALL_FILE_SUFFIXES,
-    REQUIREMENTS_FOLDER_FILE,
-    REQUIREMENTS_FILE_MESSAGE,
-} from '#cli/config/configurations/python.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.

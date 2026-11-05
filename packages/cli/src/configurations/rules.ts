@@ -1,10 +1,10 @@
-import { findToolName } from '#cli/tools/pins.ts';
-import type { Check } from '#cli/types/manifests.ts';
-import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { readLintRuleExplanation } from '#cli/tools/rules.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import type { Session, RuleExplanation, RuleExplanationOptions } from '#cli/types/tools.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { readToolBinPaths } from '#cli/tools/locate.ts';
+import { findToolName } from '#cli/tools/pins.ts';
+import { readLintRuleExplanation } from '#cli/tools/rules.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import type { RuleExplanation, RuleExplanationOptions, Session } from '#cli/types/tools.ts';
 
 /**
 Read the explanation of a rule from its built-in check or installed tool.

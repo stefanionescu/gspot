@@ -1,42 +1,42 @@
 import type { Node } from 'web-tree-sitter';
-import { replaceRanges } from '#cli/system/text.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
 
 import {
-    findSourceLine,
-    listScriptForms,
-    parseTrapScripts,
-    buildCommandCalls,
-    listScriptCommands,
-    listSwallowedLines,
-} from '#cli/parsers/code/traps.ts';
-import type {
-    Removal,
-    ParseCache,
-    TrapScript,
-    TrapCleanup,
-    NumberedLine,
-    ScriptSyntax,
-    TemporaryPath,
-    ScriptTemporaryPaths,
-} from '#cli/types/parsers.ts';
-import {
-    SHIFT_COMMAND,
-    NOT_LINE_BREAK,
-    END_OF_OPTIONS,
-    REMOVE_COMMAND,
-    GETOPTS_COMMAND,
-    EXPANSION_NODES,
+    ALL_POSITIONAL_PARAMETERS,
     BASH_BRANCH_NODES,
-    FOR_HEADER_FIELDS,
     BASH_COMPOUND_NODES,
-    POSITIONAL_PARAMETER,
-    TEMPORARY_VALUE_NODES,
-    TEMPORARY_FILE_COMMAND,
+    END_OF_OPTIONS,
+    EXPANSION_NODES,
+    FOR_HEADER_FIELDS,
+    GETOPTS_COMMAND,
     GLOBAL_DECLARATION_FLAG,
     LOCAL_DECLARATION_WORDS,
-    ALL_POSITIONAL_PARAMETERS,
+    NOT_LINE_BREAK,
+    POSITIONAL_PARAMETER,
+    REMOVE_COMMAND,
+    SHIFT_COMMAND,
+    TEMPORARY_FILE_COMMAND,
+    TEMPORARY_VALUE_NODES,
 } from '#cli/config/parsers.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import {
+    buildCommandCalls,
+    findSourceLine,
+    listScriptCommands,
+    listScriptForms,
+    listSwallowedLines,
+    parseTrapScripts,
+} from '#cli/parsers/code/traps.ts';
+import { replaceRanges } from '#cli/system/text.ts';
+import type {
+    NumberedLine,
+    ParseCache,
+    Removal,
+    ScriptSyntax,
+    ScriptTemporaryPaths,
+    TemporaryPath,
+    TrapCleanup,
+    TrapScript,
+} from '#cli/types/parsers.ts';
 
 function findHighestParameter(node: Node): number {
     const expansions = node.descendantsOfType([...EXPANSION_NODES]);

@@ -1,4 +1,5 @@
 import { dirname } from 'node:path';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 

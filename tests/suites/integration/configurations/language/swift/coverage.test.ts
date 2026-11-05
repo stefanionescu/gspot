@@ -1,18 +1,19 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { isMacos } from '#tests/setup/system/platform.ts';
-import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
-    TEST_TARGET_PBXPROJ,
-    XCTEST_COVERAGE_TESTS,
-    XCTEST_COVERAGE_SOURCE,
     COVERAGE_TARGET_SETTINGS,
+    TEST_TARGET_PBXPROJ,
+    XCTEST_COVERAGE_SOURCE,
+    XCTEST_COVERAGE_TESTS,
 } from '#tests/config/integration/swift.ts';
+import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { isMacos } from '#tests/setup/system/platform.ts';
 
 test.skipIf(!isMacos)(
     'swift/tests reports a target under its coverage limit and passes after testing the uncovered function',

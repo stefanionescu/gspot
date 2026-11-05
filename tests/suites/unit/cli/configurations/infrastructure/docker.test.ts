@@ -1,28 +1,28 @@
-import { test, expect } from 'bun:test';
-import { getTool } from '#cli/tools/pins.ts';
+import { expect, test } from 'bun:test';
+
+import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import {
+    COMPOSE_PAIRING_CASES,
+    COMPOSE_SOURCES,
+    DOCKERIGNORE_ALLOWLISTS,
+    DOCKERIGNORE_CASES,
+    INVALID_COMPOSE_SOURCES,
+    NGINX_COMPOSE,
+    TRIVY_IMAGE_FINDINGS,
+    TRIVY_REGISTRY_FAILURE,
+} from '#tests/config/configurations/docker.ts';
+import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
-
-import {
-    NGINX_COMPOSE,
-    COMPOSE_SOURCES,
-    DOCKERIGNORE_CASES,
-    TRIVY_IMAGE_FINDINGS,
-    COMPOSE_PAIRING_CASES,
-    TRIVY_REGISTRY_FAILURE,
-    DOCKERIGNORE_ALLOWLISTS,
-    INVALID_COMPOSE_SOURCES,
-} from '#tests/config/configurations/docker.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function scanImages(root: string, stdout: string, resources: DisposableStack) {
     const session = await openFakeToolSession(root, ['trivy'], resources);

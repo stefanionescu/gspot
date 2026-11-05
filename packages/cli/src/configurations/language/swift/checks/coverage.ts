@@ -1,49 +1,49 @@
 import { realpathSync } from 'node:fs';
-import { CheckStop } from '#cli/system/errors.ts';
-import type { Files } from '#cli/types/system.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { basename, isAbsolute, join, relative, resolve } from 'node:path';
+
+import {
+    APP_TARGET_SUFFIX,
+    COVERAGE_BUNDLE,
+    COVERAGE_RULE,
+    FAILED_BUILD_NOTE,
+    FAILED_TEST_RULE,
+    MACOS_PRIVATE_PATH,
+    MISSING_COVERAGE_MESSAGE,
+    SCRATCH_PATH_FLAG,
+    SWIFT_CODECOV_COMMAND,
+    SWIFT_DESCRIBE_COMMAND,
+    SWIFT_PACKAGE_NAME,
+    SWIFT_TARGET_MODULE,
+    SWIFT_TEST_NAME,
+    SWIFT_TESTING_FAILURE_LINE,
+    SWIFT_TESTS_MESSAGE,
+    TEST_RUNNER_MESSAGE,
+    TEST_TARGET_TYPE,
+    XCCOV_COMMAND,
+    XCODE_COVERAGE_FLAGS,
+    XCTEST_FAILURE_LINE,
+} from '#cli/config/configurations/builds.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { TableSettings } from '#cli/types/settings.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { join, resolve, relative, basename, isAbsolute } from 'node:path';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { SWIFT_TEST_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
-import type { CoverageRun, CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
-import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
-
-import {
-    XCCOV_COMMAND,
-    COVERAGE_RULE,
-    COVERAGE_BUNDLE,
-    SWIFT_TEST_NAME,
-    FAILED_TEST_RULE,
-    TEST_TARGET_TYPE,
-    FAILED_BUILD_NOTE,
-    SCRATCH_PATH_FLAG,
-    APP_TARGET_SUFFIX,
-    MACOS_PRIVATE_PATH,
-    SWIFT_PACKAGE_NAME,
-    XCTEST_FAILURE_LINE,
-    SWIFT_TARGET_MODULE,
-    SWIFT_TESTS_MESSAGE,
-    TEST_RUNNER_MESSAGE,
-    XCODE_COVERAGE_FLAGS,
-    SWIFT_CODECOV_COMMAND,
-    SWIFT_DESCRIBE_COMMAND,
-    MISSING_COVERAGE_MESSAGE,
-    SWIFT_TESTING_FAILURE_LINE,
-} from '#cli/config/configurations/builds.ts';
+import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { packageDescriptionSchema, swiftCoverageSchema, xccovSchema } from '#cli/schemas/configurations.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { CoverageOutput, CoverageRun, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { TableSettings } from '#cli/types/settings.ts';
+import type { Files } from '#cli/types/system.ts';
 
 function findFailureFile(planned: PlannedCheck, file: string, cwd: string): string | undefined {
     const restored = file.replaceAll(

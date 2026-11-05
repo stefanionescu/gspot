@@ -1,8 +1,8 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { BASELINE_FILE, SETTINGS_FILE, SHEBANG_TAG } from '#cli/config/repository/files.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
-import { SHEBANG_TAG, BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 
 const INSTALL_HELP = 'Run gspot install.';
 

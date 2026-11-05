@@ -1,5 +1,5 @@
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/python.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 
 export const COVERAGE_ZERO_LIMITS = `[coverage]
 min_line_percent = { value = 0, reason = "This test checks execution without coverage collection." }

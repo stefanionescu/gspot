@@ -1,17 +1,19 @@
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { runChecks } from '#cli/engine/run.ts';
 import { join, toNamespacedPath } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { JSCPD_SCOPE_FINDINGS } from '#tests/config/configurations/general.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { JSCPD_SCOPE_FINDINGS } from '#tests/config/configurations/general.ts';
+import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
     const folder = resources.use(await createGitSandbox({}));

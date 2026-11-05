@@ -1,28 +1,28 @@
 import { posix } from 'node:path';
-import type { Session } from '#cli/types/tools.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import { selectScope } from '#cli/repository/scopes.ts';
-import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { DockerIgnoredSource } from '#cli/types/configurations/infrastructure.ts';
-import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
-import { DOCKERIGNORE_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
-import { listDockerInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 
 import {
+    COPY_FROM_FLAG,
     DOCKER_RULES,
     DOCKERIGNORE,
+    DOCKERIGNORE_PATTERNS,
     EDGE_SLASHES,
-    COPY_FROM_FLAG,
     EXCLUDE_ALL_LINES,
     IGNORE_PATTERN_FORMS,
-    DOCKERIGNORE_PATTERNS,
 } from '#cli/config/configurations/infrastructure.ts';
+import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
+import { listDockerInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
+import { DOCKERIGNORE_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
+import { selectScope } from '#cli/repository/scopes.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { formatNameList } from '#cli/system/text.ts';
+import type { DockerIgnoredSource } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function isPatternExcluded(pattern: string, lines: Array<{ negated: boolean; glob: string }>): boolean {
     let isExcluded = false;

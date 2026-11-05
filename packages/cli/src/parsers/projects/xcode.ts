@@ -1,38 +1,38 @@
 import { posix } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
-import { pbxprojSchema } from '#cli/schemas/parsers.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
 
-import type {
-    PbxElement,
-    TargetFolder,
-    XcodeProject,
-    ProjectTokens,
-    ParsedPbxproj,
-    ProjectSources,
-    ProjectBuildTarget,
-    ProjectBuildSettings,
-} from '#cli/types/parsers.ts';
 import {
-    OCTAL_RADIX,
-    PBXPROJ_SUFFIX,
-    PROJECT_TOKENS,
-    PROJECT_ESCAPE,
-    SWIFT_EXTENSION,
-    PROJECT_ESCAPES,
-    SWIFT_SIX_PREFIX,
-    HEXADECIMAL_RADIX,
-    SETTING_REFERENCE,
-    STRICT_CONCURRENCY,
-    OCTAL_ESCAPE_START,
-    PROJECT_PUNCTUATION,
     GROUP_CYCLE_MESSAGE,
-    MISSING_ROOT_MESSAGE,
-    TRAILING_TEXT_MESSAGE,
+    HEXADECIMAL_RADIX,
     INVALID_STRING_MESSAGE,
     MISSING_FILE_REF_MESSAGE,
     MISSING_MAIN_GROUP_MESSAGE,
+    MISSING_ROOT_MESSAGE,
+    OCTAL_ESCAPE_START,
+    OCTAL_RADIX,
+    PBXPROJ_SUFFIX,
+    PROJECT_ESCAPE,
+    PROJECT_ESCAPES,
+    PROJECT_PUNCTUATION,
+    PROJECT_TOKENS,
+    SETTING_REFERENCE,
+    STRICT_CONCURRENCY,
+    SWIFT_EXTENSION,
+    SWIFT_SIX_PREFIX,
+    TRAILING_TEXT_MESSAGE,
 } from '#cli/config/parsers.ts';
+import { pbxprojSchema } from '#cli/schemas/parsers.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
+import type {
+    ParsedPbxproj,
+    PbxElement,
+    ProjectBuildSettings,
+    ProjectBuildTarget,
+    ProjectSources,
+    ProjectTokens,
+    TargetFolder,
+    XcodeProject,
+} from '#cli/types/parsers.ts';
 
 function parseProjectString(token: string | undefined): string {
     if (token === undefined || PROJECT_PUNCTUATION.has(token)) throw new Error(INVALID_STRING_MESSAGE);

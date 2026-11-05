@@ -1,14 +1,15 @@
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import * as processes from '#cli/system/processes.ts';
+import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';
+import { getBuiltInCheck, openFakeToolSession, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 test('each Ansible project lints its own files and not those of a nested project', async () => {
     await using sandbox = await createGitSandbox({

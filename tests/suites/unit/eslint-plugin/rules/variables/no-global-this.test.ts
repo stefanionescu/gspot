@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noGlobalThis } from '#eslint-plugin/rules/variables/no-global-this.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-global-this', noGlobalThis, {
     valid: [

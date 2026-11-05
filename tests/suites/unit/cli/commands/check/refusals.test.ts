@@ -1,21 +1,23 @@
+import { readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
+
 import { stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import type { CommandFailureJson } from '#cli/types/system.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
+import { ARGUMENT_REFUSALS, FIX_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { limitCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = buildProgramCommand('fakes/tool', '--text', 'fixed\n', 'source.txt');

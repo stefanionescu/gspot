@@ -1,6 +1,6 @@
-import type { RuleExplanations } from '#cli/types/tools.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import { XCODE_RULES } from '#cli/config/configurations/infrastructure.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const ASSET_EXPLANATIONS = {
     [XCODE_RULES.emptySet]: {

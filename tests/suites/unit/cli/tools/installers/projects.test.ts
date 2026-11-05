@@ -1,19 +1,21 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { installNpmToolProject, isEveryEnvironmentReady, listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { listStaleLockfiles, installNpmToolProject, isEveryEnvironmentReady } from '#cli/tools/installers/projects.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',

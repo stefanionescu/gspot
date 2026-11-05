@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+
+import { NO_OPENER_FEATURE, WEB_URL, WINDOW_FEATURES_ARGUMENT, WINDOW_OPEN_SELECTOR } from '../../config/web.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { WEB_URL, NO_OPENER_FEATURE, WINDOW_OPEN_SELECTOR, WINDOW_FEATURES_ARGUMENT } from '../../config/web.ts';
+import { createRule } from '../../rule.ts';
 
 export const requireNoopener = createRule<[], 'opener'>({
     name: 'require-noopener',

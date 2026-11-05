@@ -1,7 +1,8 @@
-import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
+import { expect, test } from 'bun:test';
+
 import { selectConfigurations } from '#cli/manifests/select.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 test('adds required configurations, dependencies first, in order of first mention', () => {
     const ids = selectConfigurations(['nextjs', 'react']).map((configuration) => configuration.name);

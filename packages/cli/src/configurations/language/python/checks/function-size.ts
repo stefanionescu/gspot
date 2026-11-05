@@ -1,12 +1,12 @@
-import { getLimit } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
-import { type CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { countCodeLines } from '#cli/parsers/code/comments.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { PYTHON_RULES } from '#cli/config/configurations/python.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
+import { getLimit } from '#cli/settings/scopes.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 async function listLongFunctions(
     session: Session,

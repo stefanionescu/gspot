@@ -1,26 +1,26 @@
-import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
-import type { Session } from '#cli/types/tools.ts';
-import type { SourceTree } from '#cli/types/parsers.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
-import { HTML_EXPLANATIONS } from '#cli/configurations/language/html/explanations.ts';
+import type { Node } from 'web-tree-sitter';
 
 import {
-    HTML_RULES,
-    SCRIPT_SCHEMES,
-    URL_ATTRIBUTES,
-    EVENT_ATTRIBUTE,
-    RELATIVE_URL_BASE,
-    SURROUNDING_QUOTES,
-    INLINE_SCRIPT_MESSAGE,
     ACTIVE_DOCUMENT_TYPES,
-    EXECUTABLE_SCRIPT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
+    EVENT_ATTRIBUTE,
+    EXECUTABLE_SCRIPT_TYPES,
+    HTML_RULES,
+    INLINE_SCRIPT_MESSAGE,
+    RELATIVE_URL_BASE,
+    SCRIPT_SCHEMES,
+    SURROUNDING_QUOTES,
+    URL_ATTRIBUTES,
 } from '#cli/config/configurations/language.ts';
+import { HTML_EXPLANATIONS } from '#cli/configurations/language/html/explanations.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { SourceTree } from '#cli/types/parsers.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listElementAttributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');

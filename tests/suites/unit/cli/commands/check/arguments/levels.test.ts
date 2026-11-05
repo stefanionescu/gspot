@@ -1,10 +1,12 @@
-import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('--only runs a stricter check without changing the level or the hook plan and explains the override', async () => {

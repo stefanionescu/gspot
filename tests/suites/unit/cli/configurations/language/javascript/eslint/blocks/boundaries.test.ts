@@ -1,29 +1,30 @@
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { unlink, readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { ToolPackageJson, EslintConfiguration } from '#tests/types/setup.ts';
 
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
+    BOUNDARY_IMPORT_TABLES,
+    COMPONENT_IMPORT_CASES,
     ENVIRONMENT_CASES,
+    ENVIRONMENT_READER_PATHS,
+    ENVIRONMENT_TABLES,
     IMPORT_RULE_CASES,
     IMPORT_RULE_FILES,
-    TEST_IMPORT_CASES,
-    ENVIRONMENT_TABLES,
     IMPORT_RULE_TABLES,
-    TEST_IMPORT_TSCONFIG,
-    COMPONENT_IMPORT_CASES,
-    BOUNDARY_IMPORT_TABLES,
-    TEST_IMPORT_RULE_CASES,
     REFUSED_IMPORT_MESSAGES,
+    TEST_IMPORT_CASES,
+    TEST_IMPORT_RULE_CASES,
     TEST_IMPORT_RULE_TABLES,
-    ENVIRONMENT_READER_PATHS,
+    TEST_IMPORT_TSCONFIG,
 } from '#tests/config/configurations/javascript/blocks.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import type { EslintConfiguration, ToolPackageJson } from '#tests/types/setup.ts';
 
 test.each(COMPONENT_IMPORT_CASES)(
     '$configuration component imports obey their import rule',

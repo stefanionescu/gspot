@@ -1,23 +1,24 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { readFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { runProcess, streamProcess } from '#cli/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
-import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
-import { CLEANING_TOOL, STUBBORN_TOOL, STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system.ts';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { runProcess, streamProcess } from '#cli/system/processes.ts';
+import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
+import { CLEANING_TOOL, STOPPED_CAPTURES, STREAM_FAILURE, STUBBORN_TOOL } from '#tests/config/system.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakePlatform, isWindows } from '#tests/setup/system/platform.ts';
 import {
+    CHILD_TIMEOUT_SECONDS,
     isStopped,
+    limitCommand,
+    spawnCommand,
     waitForExit,
     waitForFile,
-    spawnCommand,
-    limitCommand,
-    CHILD_TIMEOUT_SECONDS,
 } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 function startFailedCapture(capture: 'text' | 'bytes', root: string) {
     using children = spyOn(childProcess, 'spawn');

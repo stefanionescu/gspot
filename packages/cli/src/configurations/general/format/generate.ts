@@ -1,34 +1,33 @@
-import { isTable } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import {
+    DEFAULT_QUOTES,
+    EDITORCONFIG_FIXED_SECTIONS,
+    EDITORCONFIG_ROOT_LINE,
+    PRETTIER_CHECK,
+    PRETTIER_MARKDOWN_OVERRIDE,
+    UNREPRESENTABLE_SELECTOR,
+} from '#cli/config/configurations/general.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { Settings } from '#cli/types/settings.ts';
-import { listPrettierPlugins } from '#cli/engine/tools.ts';
-import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { listPrettierPlugins } from '#cli/engine/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
-import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-
+import { isTable } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
-    type ScopeFormat,
     type ConfigBuilder,
-    type WrittenFormat,
     type FormatOverride,
+    type ScopeFormat,
+    type WrittenFormat,
 } from '#cli/types/configurations/general.ts';
-import {
-    PRETTIER_CHECK,
-    DEFAULT_QUOTES,
-    EDITORCONFIG_ROOT_LINE,
-    UNREPRESENTABLE_SELECTOR,
-    PRETTIER_MARKDOWN_OVERRIDE,
-    EDITORCONFIG_FIXED_SECTIONS,
-} from '#cli/config/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
+import type { Settings } from '#cli/types/settings.ts';
 
 const SHFMT_CONFIGURATION = 'bash';
 

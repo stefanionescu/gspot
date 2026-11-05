@@ -1,7 +1,7 @@
-import { readText } from '#cli/system/files/reads.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { DEFAULT_DIALECT } from '#cli/config/repository/files.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 
 const BATS_EXTENSION = '.bats';

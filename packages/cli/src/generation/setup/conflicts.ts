@@ -1,14 +1,14 @@
-import { GspotError } from '#cli/system/errors.ts';
-import { runGit } from '#cli/repository/git/run.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { writePlans } from '#cli/repository/writer.ts';
-import { isSameContents } from '#cli/system/files/bounded.ts';
-import { isEditedInPlace } from '#cli/repository/conflicts.ts';
-import type { Files, FileContents } from '#cli/types/system.ts';
+import { DROPPED_LINE_SETTINGS, NAME_ONLY_FLAG, READ_COMMITTED_MESSAGE, VERIFY_FLAG } from '#cli/config/generation.ts';
 import { parsePrettierFile } from '#cli/generation/setup/format.ts';
-import type { WritePlan, RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
-import type { InitPlan, ConflictSearch, PrettierScripts, ConflictingConfigs } from '#cli/types/generation.ts';
-import { VERIFY_FLAG, NAME_ONLY_FLAG, DROPPED_LINE_SETTINGS, READ_COMMITTED_MESSAGE } from '#cli/config/generation.ts';
+import { isEditedInPlace } from '#cli/repository/conflicts.ts';
+import { runGit } from '#cli/repository/git/run.ts';
+import { writePlans } from '#cli/repository/writer.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import type { ConflictingConfigs, ConflictSearch, InitPlan, PrettierScripts } from '#cli/types/generation.ts';
+import type { ConflictingConfig, RepositorySetup, WritePlan } from '#cli/types/repository.ts';
+import type { FileContents, Files } from '#cli/types/system.ts';
 
 async function listCommittedPaths(root: string, paths: string[]): Promise<Set<string>> {
     const head = await runGit(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD'], {});

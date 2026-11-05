@@ -1,28 +1,29 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import type { Sandbox } from '#tests/types/setup.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { readFile, writeFile } from 'node:fs/promises';
-import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import workspacePackage from '#root-package' with { type: 'json' };
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
 import {
     NEXT_PACKAGE,
     NEXTJS_SANDBOX,
     REFERENCE_PROJECT_FILES,
     REFERENCED_PROJECT_FINDING,
 } from '#tests/config/integration/framework.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { tsconfigSchema } from '#tests/schemas/setup.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import type { Sandbox } from '#tests/types/setup.ts';
 
 async function readCheckReport(sandbox: Sandbox, checks: string[], code: number): Promise<RunReport> {
     const result = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', checks.join(','), '--json']));

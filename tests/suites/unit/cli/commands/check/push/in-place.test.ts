@@ -1,15 +1,17 @@
-import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import * as revisions from '#cli/engine/copies/revision.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test.each([
     ['runs in place on a clean tree', false, 0],

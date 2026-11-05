@@ -1,4 +1,5 @@
 import { z } from 'astro/zod';
+
 import { CLI_REFERENCE } from '#cli/reference.ts';
 
 const configurationNameSchema = z.enum(CLI_REFERENCE.configurations.map(({ name }) => name));

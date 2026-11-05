@@ -1,27 +1,28 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { compareText } from '#cli/system/text.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { listProjectDependencyNames, readDependencyFiles, readPackageJson } from '#cli/repository/dependencies.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { SOURCE_KIND } from '#cli/config/repository/files.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-
+import { compareText } from '#cli/system/text.ts';
 import {
-    PACKAGE_FIELDS,
-    REACT_VUE_PACKAGES,
-    PYTHON_DEPENDENCY_CASES,
     INVALID_DEPENDENCY_FILES,
+    PACKAGE_FIELDS,
     PROJECT_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_SCOPES,
+    PYTHON_DEPENDENCY_CASES,
+    REACT_VUE_PACKAGES,
     ROOT_PACKAGE_WITHOUT_DEPENDENCIES,
 } from '#tests/config/repository/detect.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('Python dependency groups with includes keep every dependency', async () => {
     await using sandbox = await createGitSandbox({

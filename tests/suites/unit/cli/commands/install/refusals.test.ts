@@ -1,15 +1,17 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { symlink, readFile } from 'node:fs/promises';
+import { readFile, symlink } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a broken managed block stops install before generated files change', async () => {
     await using sandbox = await createGitSandbox({});

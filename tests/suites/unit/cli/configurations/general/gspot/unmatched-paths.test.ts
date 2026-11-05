@@ -1,13 +1,14 @@
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { buildEslint } from '#tests/setup/eslint/lint.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { TERMS_SOURCE } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { UNMATCHED_PATH_CASES } from '#tests/config/configurations/gspot/files.ts';
+import { TERMS_SOURCE } from '#tests/config/setup/languages.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test.each([...UNMATCHED_PATH_CASES])(
     'gspot/unmatched-paths reports each setting path without a tracked match: $name',

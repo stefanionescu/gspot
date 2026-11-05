@@ -1,5 +1,5 @@
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noImpossibleCollectionSize } from '#eslint-plugin/rules/collections/no-impossible-collection-size.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-impossible-collection-size', noImpossibleCollectionSize, {
     valid: [

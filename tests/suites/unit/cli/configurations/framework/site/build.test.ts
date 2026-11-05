@@ -1,23 +1,25 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { openSession } from '#cli/engine/session.ts';
+import { mkdir, readFile, symlink, unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
+import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
-import { runChecks, buildCheckSession } from '#cli/engine/run.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/configurations/framework.ts';
+import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions, CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { buildRunOptions, CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
-import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/configurations/framework.ts';
-import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
     const buildCommand = buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built');

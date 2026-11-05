@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsOpensearchserviceDomain } from '#eslint-plugin/rules/aws/aws-opensearchservice-domain.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-opensearchservice-domain', awsOpensearchserviceDomain, {
     valid: [

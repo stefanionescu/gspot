@@ -1,11 +1,12 @@
-import { createRule } from '../../rule.ts';
-import { getTestCall } from '../../libraries/testing.ts';
-import type { FileContext } from '../../types/plugin.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
-import type { PlacementState } from '../../types/assertions.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { EVIDENCE_DEPENDENCIES, EVIDENCE_IMPORTS, STATEMENT_LINKS } from '../../config/assertions/evidence.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { STATEMENT_LINKS, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES } from '../../config/assertions/evidence.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
+import { getTestCall } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { PlacementState } from '../../types/assertions.ts';
+import type { FileContext } from '../../types/plugin.ts';
 
 function isStatementLink(parent: TSESTree.Node, child: TSESTree.Node): boolean {
     const isReceiver = parent.type === AST_NODE_TYPES.MemberExpression && parent.object === child;

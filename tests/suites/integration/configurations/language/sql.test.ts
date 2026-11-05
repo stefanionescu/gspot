@@ -1,11 +1,13 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { SQL_FUNCTION_SOURCE, SQL_SANDBOX, SQLFLUFF_DIALECT_SETTINGS } from '#tests/config/integration/language.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SQL_SANDBOX, SQL_FUNCTION_SOURCE, SQLFLUFF_DIALECT_SETTINGS } from '#tests/config/integration/language.ts';
 
 const installedSandbox = shareInstalledSandbox(SQL_SANDBOX);
 

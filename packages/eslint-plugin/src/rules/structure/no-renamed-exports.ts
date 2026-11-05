@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { isAlias } from '../../language/syntax.ts';
+import { createRule } from '../../rule.ts';
 import { type RenamedValue } from '../../types/structure.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listPropertyRenames(property: TSESTree.Property | TSESTree.RestElement): RenamedValue[] {
     if (property.type !== AST_NODE_TYPES.Property || property.computed) return [];

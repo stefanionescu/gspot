@@ -1,12 +1,13 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
+import { BASH_SYNTAX_PUSH_CHECK, HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { HOOKS_SETTINGS, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('check names a package.json that does not parse, which gives the run no dependencies', async () => {
     await using sandbox = await createGitSandbox({

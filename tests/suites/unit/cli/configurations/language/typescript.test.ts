@@ -1,27 +1,28 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { getTool } from '#cli/tools/pins.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import {
-    ROOT_PORT_SOURCE,
+    ALL_LEVEL_OPTION_FINDINGS,
     CHILD_PORT_SOURCE,
     COUNT_NUMBER_SOURCE,
+    DEFAULT_LEVEL_TSCONFIG,
+    ROOT_PORT_SOURCE,
     STRICT_OFF_FINDINGS,
     TSCONFIG_READ_ERRORS,
-    DEFAULT_LEVEL_TSCONFIG,
-    ALL_LEVEL_OPTION_FINDINGS,
 } from '#tests/config/configurations/language.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
+import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...TSCONFIG_READ_ERRORS])(
     '$name is an unreadable finding that names the file, not missing options',

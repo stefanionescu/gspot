@@ -1,13 +1,12 @@
-import type { BashForm } from '#cli/types/parsers.ts';
-import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
-
 import {
-    SAFETY_RULES,
+    BASH_FORM_MESSAGES,
     type COUNT_LIMITS,
     DOC_COMMENT_RULES,
-    BASH_FORM_MESSAGES,
+    SAFETY_RULES,
     SCRIPT_LAYOUT_RULES,
 } from '#cli/config/configurations/bash.ts';
+import type { BashForm } from '#cli/types/parsers.ts';
+import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
 
 export const DOC_COMMENT_EXPLANATIONS = {
     [DOC_COMMENT_RULES.missingComment]: {

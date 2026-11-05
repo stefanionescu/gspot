@@ -1,18 +1,20 @@
+import { extname, posix } from 'node:path';
+
 import picomatch from 'picomatch';
-import { posix, extname } from 'node:path';
-import { isTable } from '#cli/system/tables.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+
+import { INI_EXTENSIONS, JSON_EXTENSION, TOML_EXTENSION, YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { listProjectFolders } from '#cli/repository/scopes.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import type { TrackedFile, ManagedKeys, ConflictingConfig } from '#cli/types/repository.ts';
-import { TOML_EXTENSION, JSON_EXTENSION, INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
+import { listProjectFolders } from '#cli/repository/scopes.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { ConflictingConfig, ManagedKeys, TrackedFile } from '#cli/types/repository.ts';
 
 function listReplacementConflicts(root: string, paths: string[], replacement: ConflictingConfig): ConflictingConfig[] {
     return paths

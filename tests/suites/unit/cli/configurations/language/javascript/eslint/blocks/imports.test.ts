@@ -1,12 +1,14 @@
-import { ESLint } from 'eslint';
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { ESLint } from 'eslint';
+import { createFileTree, testdir } from 'testdirs';
+
+import { HOST_MODULE, SORT_CASES, SORT_RULES } from '#tests/config/configurations/javascript/blocks.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { SORT_CASES, SORT_RULES, HOST_MODULE } from '#tests/config/configurations/javascript/blocks.ts';
 
 test.each(['all'] as const)(
     'imports and exports are sorted at level all only, in root and child scopes (%s)',

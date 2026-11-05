@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noProductionDebug } from '#eslint-plugin/rules/servers/no-production-debug.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-production-debug', noProductionDebug, {
     valid: [

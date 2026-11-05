@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { maxRegexComplexity } from '#eslint-plugin/rules/regex/max-regex-complexity.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('max-regex-complexity', maxRegexComplexity, {
     valid: ['/^(a|b|c)[a-z]+$/u;', { code: '/a+/u;', options: [{ threshold: 1 }] }],

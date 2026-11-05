@@ -1,16 +1,16 @@
 import semver from 'semver';
-import cliPackage from '#cli-package' with { type: 'json' };
-import type { SetupReference } from '#cli/types/repository.ts';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import {
+    FROZEN_INSTALLS,
     LOCKFILES,
+    PACKAGE_MANAGER_LABELS,
     SETUP_NODE,
     START_RUNNERS,
-    FROZEN_INSTALLS,
-    YARN_BERRY_MAJOR,
     YARN_BERRY_INSTALL,
-    PACKAGE_MANAGER_LABELS,
+    YARN_BERRY_MAJOR,
 } from '#cli/config/repository/javascript.ts';
+import type { SetupReference } from '#cli/types/repository.ts';
 
 /**
 Choose the frozen-install arguments for a lockfile and package-manager version.

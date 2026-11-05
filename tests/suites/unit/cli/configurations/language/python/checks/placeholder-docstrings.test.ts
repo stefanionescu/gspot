@@ -1,10 +1,11 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
+import { PLACEHOLDER_DOCSTRING_CASES, PYTHON_MODULE_SANDBOX } from '#tests/config/configurations/python.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { PYTHON_MODULE_SANDBOX, PLACEHOLDER_DOCSTRING_CASES } from '#tests/config/configurations/python.ts';
 
 test.each([...PLACEHOLDER_DOCSTRING_CASES])(
     '$check reports $expected.rule in $expected.file and passes after the fix',

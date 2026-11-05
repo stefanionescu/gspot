@@ -1,18 +1,18 @@
-import { compareText } from '#cli/system/text.ts';
-import type { Files, FileBounds } from '#cli/types/system.ts';
-import { readContainedPath } from '#cli/system/files/reads.ts';
-import { LINK_REFUSAL, PRIVATE_FOLDER } from '#cli/config/system.ts';
-import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
-import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
+import { chmodSync, lstatSync, mkdirSync, readdirSync, realpathSync, rmdirSync, rmSync, unlinkSync } from 'node:fs';
 
+import { LINK_REFUSAL, PRIVATE_FOLDER } from '#cli/config/system.ts';
+import { buildWriteError, GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import {
+    buildContainedPath,
     preparePath,
     readBoundedFile,
-    replaceBoundedFile,
-    buildContainedPath,
     readBoundedKeepingLinks,
+    replaceBoundedFile,
 } from '#cli/system/files/bounded.ts';
+import { readContainedPath } from '#cli/system/files/reads.ts';
+import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { FileBounds, Files } from '#cli/types/system.ts';
 
 function createBoundedFolder(bounds: FileBounds, path: string): void {
     try {

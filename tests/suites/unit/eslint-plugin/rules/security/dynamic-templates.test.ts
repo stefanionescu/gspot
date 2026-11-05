@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { dynamicTemplates } from '#eslint-plugin/rules/security/dynamic-templates.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('dynamic-templates', dynamicTemplates, {
     valid: [

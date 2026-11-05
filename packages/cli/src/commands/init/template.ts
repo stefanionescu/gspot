@@ -1,20 +1,22 @@
-import { z } from 'zod';
+import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { setKey } from '#cli/settings/edit.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { statSync, readFileSync } from 'node:fs';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
+
+import { z } from 'zod';
+
 import { LOCAL_RECORDS } from '#cli/config/commands/edits.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
-import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
-import type { Template, LeftOutSetting } from '#cli/types/generation.ts';
-import { formatSettingsError } from '#cli/settings/validation/messages.ts';
-import type { TomlTable, SettingDefinition } from '#cli/types/settings.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { setKey } from '#cli/settings/edit.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { formatSettingsError } from '#cli/settings/validation/messages.ts';
+import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { LeftOutSetting, Template } from '#cli/types/generation.ts';
+import type { SettingDefinition, TomlTable } from '#cli/types/settings.ts';
 
 function isSettingsTable(schema: z.ZodType): boolean {
     let inner = unwrapSettingSchema(schema);

@@ -1,16 +1,18 @@
-import { promisify } from 'node:util';
-import { chromium } from 'playwright';
-import { fileURLToPath } from 'node:url';
-import starlight from '@astrojs/starlight';
 import { execFile } from 'node:child_process';
-import starlightLlmsTxt from 'starlight-llms-txt';
-import { createMermaidRenderer } from 'mermaid-isomorphic';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+import starlight from '@astrojs/starlight';
 import { defineConfig, passthroughImageService } from 'astro/config';
-import { type HastNode, defineHastPlugin, type HastPluginEntry } from 'satteri';
-import { LLMS_PAGES, AGENT_FACTS, AGENT_STEPS, AGENT_EVALUATION } from '#docs/reference/setup.ts';
-import { SIDEBAR, EDIT_URL, SITE_TITLE, REPOSITORY_URL, README_OPENING_BLOCKS } from '#docs/config/site.ts';
+import { createMermaidRenderer } from 'mermaid-isomorphic';
+import { chromium } from 'playwright';
+import { defineHastPlugin, type HastNode, type HastPluginEntry } from 'satteri';
+import starlightLlmsTxt from 'starlight-llms-txt';
+
+import cliPackage from '#cli-package' with { type: 'json' };
+import { EDIT_URL, README_OPENING_BLOCKS, REPOSITORY_URL, SIDEBAR, SITE_TITLE } from '#docs/config/site.ts';
+import { AGENT_EVALUATION, AGENT_FACTS, AGENT_STEPS, LLMS_PAGES } from '#docs/reference/setup.ts';
 
 const FAVICON = '/favicon.svg';
 const ICONS = [

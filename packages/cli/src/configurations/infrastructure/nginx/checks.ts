@@ -1,46 +1,47 @@
-import picomatch from 'picomatch';
-import { join, posix } from 'node:path';
-import { CheckStop } from '#cli/system/errors.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
-import { readBytes } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { DOCKER_TOOL, DOCKER_DAEMON_NOTE } from '#cli/config/engine.ts';
-import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
-import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
-import { type CheckCode, type CheckSession, type BuiltInCheckResult } from '#cli/types/engine/run.ts';
+import { join, posix } from 'node:path';
+
+import picomatch from 'picomatch';
 
 import {
-    MOUNT_FLAG,
-    SYNTAX_RULE,
-    LOCAL_NAMES,
-    NGINX_FOLDER,
     ADD_HOST_FLAG,
-    HOST_PATTERNS,
-    NGINX_KEY_FILE,
+    CERTIFICATE_ARGUMENTS,
+    CERTIFICATE_DIRECTIVES,
+    DOCKER_DAEMON_ERROR,
+    DOCKER_RUN_ARGUMENTS,
     ERROR_LOCATION,
-    OPENSSL_PROGRAM,
+    HOST_PATTERNS,
+    LOCAL_NAMES,
     LOOPBACK_ADDRESS,
-    OPENSSL_KEY_FLAG,
+    MOUNT_FLAG,
+    NGINX_CERTIFICATE_FILE,
     NGINX_CONFIG_FILE,
     NGINX_COPY_PREFIX,
-    NGINX_MAIN_TARGET,
-    NGINX_TEST_COMMAND,
-    DOCKER_DAEMON_ERROR,
-    NGINX_VARIABLE_MARK,
     NGINX_DUMP_FILE_LINE,
     NGINX_EMERGENCY_MARK,
-    DOCKER_RUN_ARGUMENTS,
-    CERTIFICATE_ARGUMENTS,
-    NGINX_CERTIFICATE_FILE,
-    CERTIFICATE_DIRECTIVES,
+    NGINX_FOLDER,
+    NGINX_KEY_FILE,
+    NGINX_MAIN_TARGET,
+    NGINX_TEST_COMMAND,
+    NGINX_VARIABLE_MARK,
     OPENSSL_CERTIFICATE_FLAG,
+    OPENSSL_KEY_FLAG,
+    OPENSSL_PROGRAM,
+    SYNTAX_RULE,
 } from '#cli/config/configurations/infrastructure.ts';
+import { DOCKER_DAEMON_NOTE, DOCKER_TOOL } from '#cli/config/engine.ts';
+import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { listSourcePaths } from '#cli/repository/files/selection.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
+import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type BuiltInCheckResult, type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listIncludedFiles(planned: PlannedCheck, text: string, base: string): Array<Pick<Mount, 'path' | 'target'>> {
     const included: Array<Pick<Mount, 'path' | 'target'>> = [];

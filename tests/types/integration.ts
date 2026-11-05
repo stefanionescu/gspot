@@ -1,5 +1,5 @@
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import type { PythonProject, GithubWorkflow, GitlabPipeline, ToolProjectFiles } from '#tests/types/setup.ts';
+import type { GithubWorkflow, GitlabPipeline, PythonProject, ToolProjectFiles } from '#tests/types/setup.ts';
 
 export type CiDocument = GithubWorkflow | GitlabPipeline;
 

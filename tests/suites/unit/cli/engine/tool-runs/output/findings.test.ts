@@ -1,29 +1,30 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { planChecks } from '#cli/engine/plan.ts';
-import { testdir, createFileTree } from 'testdirs';
+import { join } from 'node:path';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import {
+    BASE_CHECK,
+    FAILED_RUN,
+    FILELESS_CHECKS,
+    LOCATED_CHECK,
+    MISSING_LOCATED_FILE,
+    REGEX_OUTPUT_CASES,
+} from '#tests/config/engine/tool-runs.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-
-import {
-    FAILED_RUN,
-    BASE_CHECK,
-    LOCATED_CHECK,
-    FILELESS_CHECKS,
-    REGEX_OUTPUT_CASES,
-    MISSING_LOCATED_FILE,
-} from '#tests/config/engine/tool-runs.ts';
 
 test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
     await using sandbox = await testdir({ 'source.txt': 'source' });

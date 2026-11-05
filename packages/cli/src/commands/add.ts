@@ -1,20 +1,19 @@
-import { overlayTable } from '#cli/settings/edit.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { isTable, getRequired } from '#cli/system/tables.ts';
-import { selectConfigurations } from '#cli/manifests/select.ts';
-import { buildDetectedTables } from '#cli/settings/detected.ts';
-import type { ScopeFlags, CommandDefinition, ConfigurationsOptions } from '#cli/types/commands/edits.ts';
-
 import {
-    writeSettingsEdit,
     buildUnchangedResult,
     formatConfigurationChange,
     readConfigurationEditContext,
+    writeSettingsEdit,
 } from '#cli/commands/edits.ts';
+import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
+import { selectConfigurations } from '#cli/manifests/select.ts';
+import { buildDetectedTables } from '#cli/settings/detected.ts';
+import { overlayTable } from '#cli/settings/edit.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { getRequired, isTable } from '#cli/system/tables.ts';
+import { formatNameList } from '#cli/system/text.ts';
+import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 
 function restoreConfigurations(table: TomlTable, added: string[]): void {
     const previous = table['removed_configurations'];

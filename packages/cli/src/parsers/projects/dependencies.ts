@@ -1,35 +1,35 @@
 import { posix } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
+
+import {
+    GIT_SUFFIX,
+    INLINE_COMMENT,
+    JAVASCRIPT_RUNTIMES,
+    LINE_BREAK,
+    LINE_CONTINUATION,
+    PACKAGE_JSON,
+    PACKAGE_SWIFT,
+    PIPFILE,
+    PYPROJECT_TOML,
+    PYTEST_TABLE,
+    REQUIREMENT_NAME,
+    REQUIREMENT_NAME_END,
+    REQUIREMENTS_TXT,
+    RUNTIME_COMMAND,
+} from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
-import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/parsers.ts';
-
+import { packageJsonSchema, pipfileSchema, pyprojectSchema } from '#cli/schemas/parsers.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type {
-    Pyproject,
-    PackageJson,
     Dependencies,
     DependencyFile,
-    PythonDependency,
     DependencyFileParser,
+    PackageJson,
+    Pyproject,
+    PythonDependency,
 } from '#cli/types/parsers.ts';
-import {
-    PIPFILE,
-    LINE_BREAK,
-    GIT_SUFFIX,
-    PYTEST_TABLE,
-    PACKAGE_JSON,
-    PACKAGE_SWIFT,
-    INLINE_COMMENT,
-    PYPROJECT_TOML,
-    RUNTIME_COMMAND,
-    REQUIREMENTS_TXT,
-    REQUIREMENT_NAME,
-    LINE_CONTINUATION,
-    JAVASCRIPT_RUNTIMES,
-    REQUIREMENT_NAME_END,
-} from '#cli/config/parsers.ts';
 
 function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();

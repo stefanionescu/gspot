@@ -1,12 +1,12 @@
-import { getLimit } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { listCodeLines } from '#cli/parsers/code/bash.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { COUNT_LIMITS } from '#cli/config/configurations/bash.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import { FUNCTION_SIZE_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
+import { listCodeLines } from '#cli/parsers/code/bash.ts';
+import { getLimit } from '#cli/settings/scopes.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Checks each shell function against the size limits: code lines, branches, nesting, and assignments.

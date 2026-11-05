@@ -1,22 +1,23 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import {
+    ALL_LEVEL_STYLELINT_TABLES,
+    CORRECTED_STYLESHEETS,
+    STYLELINT_COMMAND,
+    STYLESHEETS,
+    TAILWIND_FILES,
+} from '#tests/config/integration/language.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    STYLESHEETS,
-    TAILWIND_FILES,
-    STYLELINT_COMMAND,
-    CORRECTED_STYLESHEETS,
-    ALL_LEVEL_STYLELINT_TABLES,
-} from '#tests/config/integration/language.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['css'],

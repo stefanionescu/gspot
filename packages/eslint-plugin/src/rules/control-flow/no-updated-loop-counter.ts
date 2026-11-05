@@ -1,6 +1,7 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { SPLICE_METHOD } from '../../config/logic.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
 
 function listCounters(update: TSESTree.Node): TSESTree.Identifier[] {
     if (update.type === AST_NODE_TYPES.SequenceExpression)

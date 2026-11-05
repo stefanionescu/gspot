@@ -1,14 +1,16 @@
-import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
-import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+
+import { ESLint } from 'eslint';
+
 import { extractConfigName } from '#cli/engine/files.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import type { LintFinding, EslintConfiguration } from '#tests/types/setup.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import type { EslintConfiguration, LintFinding } from '#tests/types/setup.ts';
 
 /**
 Lint the files and keep the findings of these rules and fatal errors, sorted.

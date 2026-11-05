@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noNestedTemplateLiterals } from '#eslint-plugin/rules/structure/no-nested-template-literals.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-nested-template-literals', noNestedTemplateLiterals, {
     valid: ['const text = `value ${name}`;', 'const text = `outer\n${`inner ${name}`}\nend`;'],

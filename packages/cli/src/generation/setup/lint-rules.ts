@@ -1,28 +1,28 @@
-import { runTool } from '#cli/tools/run.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { GspotError } from '#cli/system/errors.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
-import { printedRulesSchema } from '#cli/schemas/generation.ts';
-import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
 import {
-    LIMIT_RULE,
-    FIRST_NUMBER,
-    RUFF_ANY_PREFIX,
-    RUFF_ALL_SELECTOR,
     CARRYOVER_ROW_START,
+    FIRST_NUMBER,
+    LIMIT_RULE,
     PRINT_TIMEOUT_SECONDS,
+    RUFF_ALL_SELECTOR,
+    RUFF_ANY_PREFIX,
 } from '#cli/config/repository/setup.ts';
+import { RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { printedRulesSchema } from '#cli/schemas/generation.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
+import { runTool } from '#cli/tools/run.ts';
 import type {
+    CarryoverRow,
+    ComparedRules,
+    PrintedRules,
+    RuffRuleInput,
     RuffRules,
+    RuleComparison,
     RuleState,
     RuleTable,
-    CarryoverRow,
-    PrintedRules,
-    ComparedRules,
-    RuffRuleInput,
-    RuleComparison,
 } from '#cli/types/generation.ts';
 
 function isWeakerRule(rule: string, user: unknown[], shipped: unknown[]): boolean {

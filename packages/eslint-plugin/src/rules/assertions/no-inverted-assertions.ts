@@ -1,9 +1,10 @@
-import { createRule } from '../../rule.ts';
-import { MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
-import type { OrderedArguments } from '../../types/assertions.ts';
-import { isCallOf, getTestCall } from '../../libraries/testing.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { ORDERED_ASSERTIONS, ORDERED_EXPECT_METHODS } from '../../config/assertions/styles.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
+import { getTestCall, isCallOf } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { OrderedArguments } from '../../types/assertions.ts';
 
 function getAssertArguments(node: TSESTree.CallExpression): OrderedArguments | undefined {
     const { callee } = node;

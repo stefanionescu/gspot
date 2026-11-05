@@ -1,16 +1,16 @@
-import { test, expect } from 'bun:test';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { SOURCE_KIND } from '#cli/config/repository/files.ts';
-import { selectConfigurations } from '#cli/manifests/select.ts';
-import { listCoveredFiles, buildFileMatcher } from '#cli/repository/files/selection.ts';
+import { expect, test } from 'bun:test';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { SOURCE_KIND } from '#cli/config/repository/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { selectConfigurations } from '#cli/manifests/select.ts';
+import { buildFileMatcher, listCoveredFiles } from '#cli/repository/files/selection.ts';
 import {
     JEST_CASES,
     JEST_PATHS,
-    TRACKED_SOURCE,
     MIGRATION_CASES,
     PRETTIER_PLUGIN_CASES,
+    TRACKED_SOURCE,
 } from '#tests/config/repository/files.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {

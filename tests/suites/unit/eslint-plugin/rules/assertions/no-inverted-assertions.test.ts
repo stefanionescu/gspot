@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noInvertedAssertions } from '#eslint-plugin/rules/assertions/no-inverted-assertions.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-inverted-assertions', noInvertedAssertions, {
     valid: [

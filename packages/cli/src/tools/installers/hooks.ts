@@ -1,24 +1,24 @@
+import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { statSync, readFileSync } from 'node:fs';
-import { GspotError } from '#cli/system/errors.ts';
-import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { runGit } from '#cli/repository/git/run.ts';
-import { readHooks } from '#cli/repository/setup.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
-import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
-import type { Session, HookName, HookPlan, HookStatus, ScopeCheck } from '#cli/types/tools.ts';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { LINE_BREAK } from '#cli/config/parsers.ts';
+import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 import {
     CHECK_HOOKS,
     HOOK_CHECKS,
-    SET_HOOKS_PATH,
-    UNSET_HOOKS_NOTE,
-    UNSET_HOOKS_PATH,
     HOOK_COMMENT_LINE,
     HOOK_FOLDER_KINDS,
     NOT_INSTALLED_STATUS,
+    SET_HOOKS_PATH,
+    UNSET_HOOKS_NOTE,
+    UNSET_HOOKS_PATH,
 } from '#cli/config/tools/installers.ts';
+import { runGit } from '#cli/repository/git/run.ts';
+import { readHooks } from '#cli/repository/setup.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
+import type { HookName, HookPlan, HookStatus, ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function describeForeignHooks(
     hooks: RepositorySetup['hooks'],

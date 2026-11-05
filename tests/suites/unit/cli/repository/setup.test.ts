@@ -1,22 +1,23 @@
-import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
-import { createFileTree } from 'testdirs';
-import { compareText } from '#cli/system/text.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { readHooks, readRepositorySetup } from '#cli/repository/setup.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { chmod, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, symlink, unlink, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { readHooks, readRepositorySetup } from '#cli/repository/setup.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
-    LINKED_HOOK_FILES,
     HOOK_FOLDER_FILES,
+    LINKED_HOOK_FILES,
     LINKED_RUFF_SECTION,
     PRETTIER_SETTINGS_FILES,
     SIMPLE_GIT_HOOKS_PACKAGES,
 } from '#tests/config/repository/setup.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('tool discovery finds nested config files and skips root .gspot and vendored folders', async () => {
     await using sandbox = await createGitSandbox(PRETTIER_SETTINGS_FILES);

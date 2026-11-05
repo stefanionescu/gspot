@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+
 import { EXCLUSIVE_TEST_NAMES } from '../../config/testing.ts';
 import { isPlaywrightSuite } from '../../libraries/testing.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
 
 export const noExclusiveTests = createRule<[], 'exclusive' | 'removeOnly'>({
     name: 'no-exclusive-tests',

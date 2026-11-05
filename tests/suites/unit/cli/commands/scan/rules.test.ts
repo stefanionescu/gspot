@@ -1,9 +1,11 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { convertRule } from '#cli/generation/setup/lint-rules.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { compareInstalledRules } from '#cli/commands/scan/rules.ts';
 import { PRINTED_RULE_TOOLS } from '#cli/config/repository/setup.ts';
+import { convertRule } from '#cli/generation/setup/lint-rules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function writePrinter(root: string, rules: unknown): Promise<void> {

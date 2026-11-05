@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
-import { isVueThreeUsed } from '../../libraries/packages.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+
 import { getExpressionValue } from '../../language/expressions.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { isVueThreeUsed } from '../../libraries/packages.ts';
+import { createRule } from '../../rule.ts';
 
 export const noVueMixins = createRule<[], 'mixin'>({
     name: 'no-vue-mixins',

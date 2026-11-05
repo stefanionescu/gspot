@@ -1,17 +1,19 @@
-import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { dirname, relative, resolve } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { dirname, resolve, relative } from 'node:path';
-import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import { SVELTE_CHECK_FINDINGS, SVELTE_CHECK_OUTPUT, SVELTE_PROJECTS } from '#tests/config/configurations/framework.ts';
+import { tsconfigSchema } from '#tests/schemas/setup.ts';
+import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/config/configurations/framework.ts';
+import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
     const scope = options.scope ?? '';

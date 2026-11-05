@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noAnyOriginPolicy } from '#eslint-plugin/rules/servers/no-any-origin-policy.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-any-origin-policy', noAnyOriginPolicy, {
     valid: [

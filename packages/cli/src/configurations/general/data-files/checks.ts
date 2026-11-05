@@ -1,35 +1,36 @@
 import { posix } from 'node:path';
-import { readText } from '#cli/system/files/reads.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { YamlFinding, YamlAnchorToken } from '#cli/types/configurations/general.ts';
-import { YAML_EXPLANATIONS } from '#cli/configurations/general/data-files/explanations.ts';
 
 import {
-    CST,
-    visit,
-    isNode,
-    isAlias,
-    isScalar,
-    type Node,
     type Alias,
-    type Scalar,
-    LineCounter,
+    CST,
     type Document,
+    isAlias,
+    isNode,
+    isScalar,
+    LineCounter,
+    type Node,
     parseAllDocuments,
+    type Scalar,
+    visit,
 } from 'yaml';
+
 import {
-    YAML_RULES,
-    YAML_TRUTHY,
-    YAML_MESSAGES,
     YAML_COMMIT_USE,
-    YAML_LEADING_ZERO,
-    YAML_TRAILING_ZERO,
-    YAML_REQUIRED_NAMES,
-    YAML_VERSION_COMMENT,
     YAML_GENERATED_ANCHOR,
+    YAML_LEADING_ZERO,
+    YAML_MESSAGES,
+    YAML_REQUIRED_NAMES,
+    YAML_RULES,
+    YAML_TRAILING_ZERO,
+    YAML_TRUTHY,
+    YAML_VERSION_COMMENT,
 } from '#cli/config/configurations/general.ts';
+import { YAML_EXPLANATIONS } from '#cli/configurations/general/data-files/explanations.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { YamlAnchorToken, YamlFinding } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 function listScalarFindings(node: Scalar, isKey: boolean): YamlFinding[] {
     if (node.type !== 'PLAIN' || node.tag !== undefined) return [];

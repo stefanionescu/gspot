@@ -1,15 +1,14 @@
-import { findText } from '#cli/system/files/reads.ts';
-import { escapeRegExp, quoteArgument } from '#cli/system/text.ts';
-import { compareRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
-import type { RuleRead, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
-
 import {
-    RULE_PRINT_FLAG,
-    PRINTED_RULE_TOOLS,
-    REASON_PLACEHOLDER,
     CARRYOVER_ROW_START,
     NOT_COMPARED_MESSAGE,
+    PRINTED_RULE_TOOLS,
+    REASON_PLACEHOLDER,
+    RULE_PRINT_FLAG,
 } from '#cli/config/repository/setup.ts';
+import { compareRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { escapeRegExp, quoteArgument } from '#cli/system/text.ts';
+import type { CarryoverRow, InitPlanning, RuleRead } from '#cli/types/generation.ts';
 
 /**
 Read the rules that the ESLint and Stylelint of the repository resolve. Call this before init replaces their configs.

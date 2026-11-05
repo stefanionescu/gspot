@@ -1,17 +1,16 @@
-import { quoteArgument } from '#cli/system/text.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import type { StartRunner } from '#cli/types/repository.ts';
-import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
-import type { HookName, GeneratedFile } from '#cli/types/tools.ts';
-import { LFS_HOOKS, HOOK_SHEBANG } from '#cli/config/repository/setup.ts';
-
 import {
-    PUSH_INPUT_SAVE,
+    COMMIT_MESSAGE_PATH_LINES,
     LFS_MISSING_GUARD,
     PUSH_INPUT_REPLAY,
-    COMMIT_MESSAGE_PATH_LINES,
+    PUSH_INPUT_SAVE,
 } from '#cli/config/generation.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { HOOK_SHEBANG, LFS_HOOKS } from '#cli/config/repository/setup.ts';
+import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
+import { quoteArgument } from '#cli/system/text.ts';
+import type { StartRunner } from '#cli/types/repository.ts';
+import type { GeneratedFile, HookName } from '#cli/types/tools.ts';
 
 // Yarn Plug'n'Play keeps packages out of node_modules, so its loader file shows that the project is installed.
 const YARN_PNP_FILE = '.pnp.cjs';

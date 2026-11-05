@@ -1,36 +1,36 @@
-import { createRule } from '../../rule.ts';
-import type { AdminAccess } from '../../types/aws.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty } from '../../libraries/aws.ts';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    getLiteralValue,
-    listArgumentValues,
-    getExpressionValue,
-    getOptionProperties,
-} from '../../language/expressions.ts';
-import {
-    ALL_PORTS,
-    ANY_PEERS,
-    ALLOW_FROM,
-    PORT_RANGE,
-    ADMIN_PORTS,
-    SINGLE_PORT,
-    INGRESS_RULE,
     ADDRESS_PEERS,
+    ADMIN_PORTS,
+    ALL_PORTS,
     ALL_PROTOCOLS,
-    TCP_PROTOCOLS,
+    ALLOW_FROM,
+    ALLOW_FROM_ANY_IPV4,
+    ANY_PEERS,
+    CDK_PROPS_POSITION,
+    CONNECTION_OWNERS,
+    DEFAULT_PORT_ANYWHERE,
+    DEFAULT_PORT_FROM,
+    INGRESS_RULE,
     OPEN_ADDRESSES,
     PORT_CONSTRUCT,
+    PORT_RANGE,
     SECURITY_GROUP,
-    CONNECTION_OWNERS,
-    DEFAULT_PORT_FROM,
-    CDK_PROPS_POSITION,
-    TCP_PROTOCOL_NAMES,
-    ALLOW_FROM_ANY_IPV4,
-    DEFAULT_PORT_ANYWHERE,
     SECURITY_GROUP_INGRESS,
+    SINGLE_PORT,
+    TCP_PROTOCOL_NAMES,
+    TCP_PROTOCOLS,
 } from '../../config/aws.ts';
+import {
+    getExpressionValue,
+    getLiteralValue,
+    getOptionProperties,
+    listArgumentValues,
+} from '../../language/expressions.ts';
+import { getCdkArgument, getCdkName, getCdkProperty, getCdkResult } from '../../libraries/aws.ts';
+import { createRule } from '../../rule.ts';
+import type { AdminAccess } from '../../types/aws.ts';
 
 function getField(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string): unknown {
     const property = getOptionProperties(options, source).get(key);

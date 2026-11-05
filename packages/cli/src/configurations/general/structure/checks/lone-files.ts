@@ -1,13 +1,13 @@
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { LONE_FILE_RULE } from '#cli/config/configurations/structure.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each leaf folder that holds only one code file.

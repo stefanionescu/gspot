@@ -1,13 +1,15 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { COMPILER_SOURCE } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { JSCONFIG_SANDBOX, KNIP_FOLDER_FILES, OWN_TYPESCRIPT_RESULTS } from '#tests/config/integration/javascript.ts';
+import { COMPILER_SOURCE } from '#tests/config/setup/languages.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
 const installedSandbox = shareInstalledSandbox(JSCONFIG_SANDBOX);
 

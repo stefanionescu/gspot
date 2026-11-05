@@ -1,40 +1,40 @@
-import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
-import { buildHookFiles } from '#cli/generation/hooks.ts';
-import { getSettingValue } from '#cli/settings/inherit.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { listWrittenPaths } from '#cli/generation/ignores.ts';
-import { listHookNames } from '#cli/tools/installers/hooks.ts';
-import type { Pipeline, RuleFile } from '#cli/types/generation.ts';
-import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
-import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
-import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
-import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { LFS_FILTER, FILTER_ATTRIBUTE, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
-import { buildMiseInstall, listNpmProjectPins, buildPythonProjectTable } from '#cli/tools/pins.ts';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import {
-    listTestChecks,
+    ATTRIBUTE_GLOB_CHARACTERS,
+    ATTRIBUTE_QUOTED_CHARACTERS,
+    CI_SYSTEMS_SETTING,
+    GIT_ATTRIBUTES_BLOCK,
+    NPM_TOOL_PROJECT,
+} from '#cli/config/generation.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { FILTER_ATTRIBUTE, GITATTRIBUTES_FILE, LFS_FILTER } from '#cli/config/repository/files.ts';
+import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
+import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
+import {
     buildGithubWorkflow,
     buildGitlabWorkflow,
     listProjectInstallLines,
+    listTestChecks,
 } from '#cli/generation/ci.ts';
-import {
-    NPM_TOOL_PROJECT,
-    CI_SYSTEMS_SETTING,
-    GIT_ATTRIBUTES_BLOCK,
-    ATTRIBUTE_GLOB_CHARACTERS,
-    ATTRIBUTE_QUOTED_CHARACTERS,
-} from '#cli/config/generation.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
+import { buildHookFiles } from '#cli/generation/hooks.ts';
+import { listWrittenPaths } from '#cli/generation/ignores.ts';
+import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
+import { buildAgentsBlock, hasTopHeading, selectRuleFiles } from '#cli/generation/rules.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { getSettingValue } from '#cli/settings/inherit.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text.ts';
+import { listHookNames } from '#cli/tools/installers/hooks.ts';
+import { buildMiseInstall, buildPythonProjectTable, listNpmProjectPins } from '#cli/tools/pins.ts';
+import type { Pipeline, RuleFile } from '#cli/types/generation.ts';
+import type { GeneratedFile, Generation, Session } from '#cli/types/tools.ts';
 
 function addWorkflow(session: Session, generated: Generation): void {
     const { settings, scopes } = session;

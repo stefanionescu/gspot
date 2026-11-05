@@ -1,22 +1,21 @@
-import { getRequired } from '#cli/system/tables.ts';
-import type { Setting } from '#cli/types/manifests.ts';
+import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
+import { AT_TOP_LEVEL, UNDER_TABLE } from '#cli/config/settings/validation.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import {
+    findSetting,
+    findSettingDefault,
+    findWrittenSetting,
+    listApplicableTables,
+    listSettingsTables,
+    listWrittenKeys,
+} from '#cli/settings/inherit.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { UNDER_TABLE, AT_TOP_LEVEL } from '#cli/config/settings/validation.ts';
-import { quoteArgument, formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text.ts';
-import type { Settings, SettingsError, SettingsTable, WrittenSetting, AvailableSettings } from '#cli/types/settings.ts';
-
-import {
-    findSetting,
-    listWrittenKeys,
-    findWrittenSetting,
-    listSettingsTables,
-    findSettingDefault,
-    listApplicableTables,
-} from '#cli/settings/inherit.ts';
+import { getRequired } from '#cli/system/tables.ts';
+import { formatCodeList, formatNameList, quoteArgument, selectSimilarNames } from '#cli/system/text.ts';
+import type { Setting } from '#cli/types/manifests.ts';
+import type { AvailableSettings, Settings, SettingsError, SettingsTable, WrittenSetting } from '#cli/types/settings.ts';
 
 function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown, scopePath: string): string {
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;

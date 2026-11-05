@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noStatefulRegex } from '#eslint-plugin/rules/regex/no-stateful-regex.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-stateful-regex', noStatefulRegex, {
     valid: [

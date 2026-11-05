@@ -1,22 +1,23 @@
-import picomatch from 'picomatch';
-import { createRule } from '../../rule.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { PLUGIN_PREFIX } from '../../config/plugin.ts';
-import { PACKAGE_MANIFEST } from '../../config/libraries.ts';
-import { findPathInFolder } from '../../language/modules.ts';
-import { join, dirname, resolve, basename } from 'node:path';
-import { isAlias, isTypeAlias } from '../../language/syntax.ts';
-import { listManifestFolders } from '../../libraries/packages.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { TrivialFilesOptions, TrivialFilesContext } from '../../types/structure.ts';
+import { basename, dirname, join, resolve } from 'node:path';
 
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import picomatch from 'picomatch';
+
+import { PACKAGE_MANIFEST } from '../../config/libraries.ts';
+import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import {
-    INDEX_EXPORTS,
-    INDEX_BASENAMES,
     BARREL_DECLARATIONS,
     DECLARING_DEFAULT_EXPORTS,
+    INDEX_BASENAMES,
+    INDEX_EXPORTS,
     TRIVIAL_FILE_OPTIONS_SCHEMA,
 } from '../../config/structure.ts';
+import { findPathInFolder } from '../../language/modules.ts';
+import { isAlias, isTypeAlias } from '../../language/syntax.ts';
+import { listManifestFolders } from '../../libraries/packages.ts';
+import { createRule } from '../../rule.ts';
+import type { TrivialFilesContext, TrivialFilesOptions } from '../../types/structure.ts';
 
 const PUBLISHED_PATH_FIELDS = ['exports', 'main', 'bin'] as const;
 

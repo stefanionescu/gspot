@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+
+import { EQUALITY_OPERATORS, REPEATED_OPERATORS, UNIT_SHIFT_VALUES } from '../../config/logic.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { UNIT_SHIFT_VALUES, EQUALITY_OPERATORS, REPEATED_OPERATORS } from '../../config/logic.ts';
+import { createRule } from '../../rule.ts';
 
 function isComparedOperator(node: TSESTree.BinaryExpression | TSESTree.LogicalExpression): boolean {
     const { left, right, operator } = node;

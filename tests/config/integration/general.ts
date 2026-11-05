@@ -1,6 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { AWS_KEY_ID } from '#tests/config/setup/configurations.ts';
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
+import { AWS_KEY_ID } from '#tests/config/setup/configurations.ts';
 
 export const FILES_SANDBOX = {
     configurations: ['data-files'],

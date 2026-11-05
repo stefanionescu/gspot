@@ -1,46 +1,46 @@
+import { accessSync, constants, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
-import { GspotError } from '#cli/system/errors.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import { parseCheckNames } from '#cli/commands/edits.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { runPushCheck } from '#cli/commands/check/push.ts';
-import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { constants, accessSync, existsSync } from 'node:fs';
-import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { formatAnnotations } from '#cli/commands/check/report.ts';
-import { readIndexTree } from '#cli/repository/revisions/files.ts';
-import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
-import { readGitText, readGitPaths } from '#cli/repository/git/run.ts';
-import { FIX_FLAG, BASE_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
-import { printProgress, buildEmptyRunReport } from '#cli/engine/report.ts';
-import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
-import type { CommandLocation, CommandDefinition } from '#cli/types/commands/edits.ts';
-import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/reports.ts';
 
+import { runPushCheck } from '#cli/commands/check/push.ts';
+import { formatAnnotations } from '#cli/commands/check/report.ts';
+import { runTreeCheck } from '#cli/commands/check/tree.ts';
+import { parseCheckNames } from '#cli/commands/edits.ts';
 import {
-    STAGE_FLAG,
-    SETUP_PATHS,
-    ONLY_OPTION,
-    SKIP_OPTION,
-    HOOK_OPTION,
     BASE_OPTION,
     CHANGED_FLAG,
-    CHECK_STAGES,
-    STAGE_OPTION,
     CHECK_INPUT_HOOKS,
-    PUSH_STDIN_MESSAGE,
-    PUSH_INPUT_MESSAGE,
-    COMMIT_FILE_MESSAGE,
-    STAGE_SETUP_MESSAGE,
+    CHECK_STAGES,
     CHECK_STOPPED_MESSAGE,
-    NOTHING_STAGED_MESSAGE,
+    COMMIT_FILE_MESSAGE,
     GIT_SETUP_FILES_ARGUMENTS,
     GIT_STAGED_SETTINGS_ARGUMENTS,
+    HOOK_OPTION,
+    NOTHING_STAGED_MESSAGE,
+    ONLY_OPTION,
+    PUSH_INPUT_MESSAGE,
+    PUSH_STDIN_MESSAGE,
+    SETUP_PATHS,
+    SKIP_OPTION,
+    STAGE_FLAG,
+    STAGE_OPTION,
+    STAGE_SETUP_MESSAGE,
 } from '#cli/config/commands/reports.ts';
+import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
+import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { buildEmptyRunReport, printProgress } from '#cli/engine/report.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { readGitPaths, readGitText } from '#cli/repository/git/run.ts';
+import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
+import { readIndexTree } from '#cli/repository/revisions/files.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
+import { formatNameList } from '#cli/system/text.ts';
+import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
+import type { CheckCommandJson, CheckFlags, CheckOptions } from '#cli/types/commands/reports.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();

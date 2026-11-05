@@ -1,5 +1,5 @@
-import { NODE_MODULES } from '#cli/config/system.ts';
 import { GSPOT_FOLDER, PBXPROJ_FILE } from '#cli/config/parsers.ts';
+import { NODE_MODULES } from '#cli/config/system.ts';
 
 export const SYNTAX_RULE = 'syntax';
 

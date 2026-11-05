@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { mkdir, readdir, readFile, realpath, symlink, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+
 import type { PackageJson } from '#cli/types/parsers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { IGNORE_ALL_PATTERN } from '#tests/config/setup/sandboxes.ts';
-import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 const FOLDER_LINK_TYPE = isWindows ? 'junction' : 'dir';
 

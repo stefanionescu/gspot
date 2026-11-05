@@ -1,5 +1,5 @@
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { requireReduceInitialValue } from '#eslint-plugin/rules/collections/require-reduce-initial-value.ts';
+import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('require-reduce-initial-value', requireReduceInitialValue, {
     valid: [

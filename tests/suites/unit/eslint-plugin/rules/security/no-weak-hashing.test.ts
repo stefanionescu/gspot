@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noWeakHashing } from '#eslint-plugin/rules/security/no-weak-hashing.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-weak-hashing', noWeakHashing, {
     valid: [

@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noTransposedAssignment } from '#eslint-plugin/rules/variables/no-transposed-assignment.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-transposed-assignment', noTransposedAssignment, {
     valid: [

@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noElementOverwrite } from '#eslint-plugin/rules/collections/no-element-overwrite.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-element-overwrite', noElementOverwrite, {
     valid: [

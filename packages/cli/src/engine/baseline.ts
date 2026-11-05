@@ -1,10 +1,10 @@
-import { compareText } from '#cli/system/text.ts';
-import { baselineSchema } from '#cli/schemas/engine.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { BASELINE_EXEMPT_CHECK } from '#cli/config/engine.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { BASELINE_FILE } from '#cli/config/repository/files.ts';
-import type { Run, CheckResult, BaselineCount } from '#cli/types/engine/run.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { baselineSchema } from '#cli/schemas/engine.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { BaselineCount, CheckResult, Run } from '#cli/types/engine/run.ts';
 
 /**
 Parse the text of a baseline file.

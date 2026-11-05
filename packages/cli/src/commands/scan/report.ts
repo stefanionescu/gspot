@@ -1,30 +1,29 @@
-import type { RunReport } from '#cli/types/engine/run.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { compareText, formatCount } from '#cli/system/text.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
-import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
-import type { ScanInput, ScanReport, ScanSection, ScanCategory } from '#cli/types/commands/reports.ts';
-
 import {
-    SCAN_CATEGORIES,
-    SCAN_NEXT_STEPS,
-    SCAN_PLAN_TITLE,
     BYTES_PER_MEGABYTE,
     SCAN_BUILT_IN_TOOL,
+    SCAN_CARRYOVER_TITLE,
+    SCAN_CATEGORIES,
     SCAN_CODE_CATEGORY,
-    SCAN_FORMAT_CHECKS,
-    SCAN_NOT_RUN_TITLE,
     SCAN_COMMANDS_TITLE,
     SCAN_EXAMPLES_SHOWN,
-    SCAN_CARRYOVER_TITLE,
+    SCAN_FORMAT_CHECKS,
     SCAN_FORMATTING_TITLE,
+    SCAN_NEXT_STEPS,
     SCAN_NEXT_STEPS_TITLE,
+    SCAN_NOT_RUN_TITLE,
+    SCAN_PLAN_TITLE,
 } from '#cli/config/commands/reports.ts';
+import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
+import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
+import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { compareText, formatCount } from '#cli/system/text.ts';
+import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
+import type { ScanCategory, ScanInput, ScanReport, ScanSection } from '#cli/types/commands/reports.ts';
+import type { RunReport } from '#cli/types/engine/run.ts';
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 
 function selectCategory({ check }: Finding): string {
     const configuration = check.split('/', 1)[0] as string;

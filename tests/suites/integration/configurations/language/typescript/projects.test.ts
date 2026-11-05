@@ -1,24 +1,25 @@
+import { chmod, readdir, readFile, stat, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import type { TypecheckResult } from '#tests/types/integration.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { stat, chmod, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { writeSandboxChanges, buildSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
+import { expect, test } from 'bun:test';
+
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
-    OUTDIR_CASES,
     AUTHORED_TSCONFIG,
     IMPLICIT_PROJECT_FILES,
+    OUTDIR_CASES,
     TYPESCRIPT_PROJECTS_SANDBOX,
 } from '#tests/config/integration/typescript.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles, buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import type { TypecheckResult } from '#tests/types/integration.ts';
 
 async function runTscCheck(root: string): Promise<TypecheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));

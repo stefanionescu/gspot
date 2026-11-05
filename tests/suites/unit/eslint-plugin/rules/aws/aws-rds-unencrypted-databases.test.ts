@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { awsRdsUnencryptedDatabases } from '#eslint-plugin/rules/aws/aws-rds-unencrypted-databases.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-rds-unencrypted-databases', awsRdsUnencryptedDatabases, {
     valid: [

@@ -1,16 +1,16 @@
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { PlacedRow, TableCell, JsxAttributeValue } from '../types/accessibility.ts';
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    TABLE_CELLS,
-    LAYOUT_ROLES,
     BOOLEAN_TEXTS,
-    HTML_ELEMENTS,
-    TABLE_SECTIONS,
     HEADER_SEPARATOR,
-    MAXIMUM_ROW_SPAN,
+    HTML_ELEMENTS,
+    LAYOUT_ROLES,
     MAXIMUM_COLUMN_SPAN,
+    MAXIMUM_ROW_SPAN,
+    TABLE_CELLS,
+    TABLE_SECTIONS,
 } from '../config/accessibility.ts';
+import type { JsxAttributeValue, PlacedRow, TableCell } from '../types/accessibility.ts';
 
 function normalizeLiteral(value: unknown): unknown {
     if (typeof value !== 'string') return value;

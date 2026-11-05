@@ -1,11 +1,12 @@
-import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+
+import { SQL_EXTENSION, SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/infrastructure.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { SQL_EXTENSION, SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/infrastructure.ts';
 
 /**
 Build squawk.toml: the disabled Squawk migration rules.

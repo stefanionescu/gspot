@@ -1,11 +1,12 @@
-import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/engine/run.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a fix run rereads the repository and keeps the package scopes it found', async () => {
     await using sandbox = await createGitSandbox({

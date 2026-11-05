@@ -1,12 +1,14 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { pushOutputSchema } from '#cli/schemas/commands.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     const files = {

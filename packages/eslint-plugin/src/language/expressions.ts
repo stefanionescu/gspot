@@ -1,7 +1,8 @@
-import { unwrapExpression } from './syntax.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import type { MemberAssignment } from '../types/plugin.ts';
 import { getAssignedValue, getQualifiedName } from './modules.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { unwrapExpression } from './syntax.ts';
 
 /**
 Follow single assignments while retaining the expression that supplies the value.

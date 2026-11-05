@@ -1,50 +1,51 @@
-import pLimit from 'p-limit';
-import { join, relative } from 'node:path';
-import { getTool } from '#cli/tools/pins.ts';
 import { availableParallelism } from 'node:os';
-import { remember } from '#cli/system/cache.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { quoteArgument } from '#cli/system/text.ts';
+import { join, relative } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
-import { openSession } from '#cli/engine/session.ts';
-import { runProcess } from '#cli/system/processes.ts';
-import { buildRunReport } from '#cli/engine/report.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { findMissingEnvironment } from '#cli/tools/uv.ts';
-import { subtractBaseline } from '#cli/engine/baseline.ts';
-import { isActive, planChecks } from '#cli/engine/plan.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { CheckStop, GspotError } from '#cli/system/errors.ts';
-import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
-import { formatUnexpectedError } from '#cli/system/terminal.ts';
-import { runFixers, listConflictedPaths } from '#cli/engine/fixes.ts';
-import type { RunSelection, PlannedCheck } from '#cli/types/engine/plan.ts';
-import { findToolPath, findMissingDependencies } from '#cli/tools/inspect.ts';
-import { runCommandCheck, lookUpCommandTools } from '#cli/engine/tool-runs/check.ts';
-import { buildBaseResult, runBuiltInCheck, normalizeResultPaths, formatReproduceCommand } from '#cli/engine/results.ts';
 
-import type {
-    Run,
-    CheckCode,
-    RunResult,
-    RunOptions,
-    CheckResult,
-    CheckSession,
-    PlanAfterFixes,
-    CheckGeneration,
-    CheckRunOptions,
-} from '#cli/types/engine/run.ts';
+import pLimit from 'p-limit';
+
 import {
-    FIX_FLAG,
-    DOCKER_TOOL,
-    CHECK_COMMAND,
-    FAILED_STATUSES,
-    DOCKER_DAEMON_NOTE,
     CANCELED_CHECK_NOTE,
+    CHECK_COMMAND,
+    DOCKER_DAEMON_NOTE,
     DOCKER_MISSING_MESSAGE,
+    DOCKER_TOOL,
+    FAILED_STATUSES,
+    FIX_FLAG,
     PROGRESS_INTERVAL_MILLISECONDS,
 } from '#cli/config/engine.ts';
+import { subtractBaseline } from '#cli/engine/baseline.ts';
+import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
+import { listConflictedPaths, runFixers } from '#cli/engine/fixes.ts';
+import { isActive, planChecks } from '#cli/engine/plan.ts';
+import { buildRunReport } from '#cli/engine/report.ts';
+import { buildBaseResult, formatReproduceCommand, normalizeResultPaths, runBuiltInCheck } from '#cli/engine/results.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { lookUpCommandTools, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { remember } from '#cli/system/cache.ts';
+import { CheckStop, GspotError } from '#cli/system/errors.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { runProcess } from '#cli/system/processes.ts';
+import { formatUnexpectedError } from '#cli/system/terminal.ts';
+import { quoteArgument } from '#cli/system/text.ts';
+import { findMissingDependencies, findToolPath } from '#cli/tools/inspect.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { findMissingEnvironment } from '#cli/tools/uv.ts';
+import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
+import type {
+    CheckCode,
+    CheckGeneration,
+    CheckResult,
+    CheckRunOptions,
+    CheckSession,
+    PlanAfterFixes,
+    Run,
+    RunOptions,
+    RunResult,
+} from '#cli/types/engine/run.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const DOCKER_AVAILABILITY = Symbol('docker availability');
 

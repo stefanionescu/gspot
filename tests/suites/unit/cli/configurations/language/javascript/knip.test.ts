@@ -1,28 +1,29 @@
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { join, basename } from 'node:path';
 import { rm, writeFile } from 'node:fs/promises';
-import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import type { KnipConfig } from '#tests/types/configurations.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import { basename, join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
     KNIP_ARGUMENTS,
-    KNIP_UNUSED_FILES,
-    KNIP_POINTER_FILES,
-    KNIP_WORKSPACE_FILES,
     KNIP_COMPONENT_FILES,
+    KNIP_POINTER_FILES,
+    KNIP_UNUSED_FILES,
+    KNIP_WORKSPACE_FILES,
 } from '#tests/config/configurations/javascript/checks.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import type { KnipConfig } from '#tests/types/configurations.ts';
 
 const knipArguments = [...KNIP_ARGUMENTS, '--config', getManifestTarget('javascript', 'knip.json'), '--include'];
 

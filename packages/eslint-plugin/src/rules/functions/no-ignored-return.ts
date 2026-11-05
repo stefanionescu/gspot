@@ -1,9 +1,10 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { EARLY_EXIT_METHODS, PURE_METHODS, PURE_RECEIVER_SYMBOLS, REPLACE_METHOD } from '../../config/functions.ts';
 import { getTypes } from '../../language/checker.ts';
 import { listChildren } from '../../language/syntax.ts';
+import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { PURE_METHODS, REPLACE_METHOD, EARLY_EXIT_METHODS, PURE_RECEIVER_SYMBOLS } from '../../config/functions.ts';
 
 function getReceiver(node: TSESTree.Node, types: TypeReader): string | undefined {
     const type = types.get(node);

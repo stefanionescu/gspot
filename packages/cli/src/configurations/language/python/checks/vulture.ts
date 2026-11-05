@@ -1,20 +1,20 @@
 import { sep } from 'node:path';
-import { isInScope } from '#cli/system/paths.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
-import { VULTURE_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
 
 import {
     PYTHON_RULES,
     VULTURE_COMMAND,
-    VULTURE_FINDING,
     VULTURE_DEAD_CODE,
+    VULTURE_FINDING,
 } from '#cli/config/configurations/python.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { VULTURE_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
+import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isInScope } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 function parseVultureFinding(line: string, selected: ReadonlySet<string>): CheckFinding[] {
     const groups = VULTURE_FINDING.exec(line)?.groups;

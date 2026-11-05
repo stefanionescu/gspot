@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { testingLibraryQueries } from '#eslint-plugin/rules/testing/testing-library-queries.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('testing-library-queries', testingLibraryQueries, {
     valid: [

@@ -1,19 +1,21 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { readSettings } from '#cli/settings/read.ts';
-import { symlink, readFile } from 'node:fs/promises';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readFile, symlink } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import cliPackage from '#cli-package' with { type: 'json' };
+import { ATTRIBUTES_ROW, DROPPED_LINE_SETTINGS_NOTE, UNREAD_SUBMODULE_MESSAGE } from '#cli/config/generation.ts';
 import { initOutputSchema } from '#cli/schemas/commands.ts';
+import { readSettings } from '#cli/settings/read.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { WORKSPACE_PYTHON_FILES } from '#tests/config/generation/settings.ts';
 import { GIT_PLAN_CASES, PRESERVE_SOURCE, QUALITY_PACKAGE_FILES } from '#tests/config/generation/plan.ts';
-import { ATTRIBUTES_ROW, UNREAD_SUBMODULE_MESSAGE, DROPPED_LINE_SETTINGS_NOTE } from '#cli/config/generation.ts';
+import { WORKSPACE_PYTHON_FILES } from '#tests/config/generation/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test.each([
     { name: 'a new .gitattributes under write', files: {}, attributes: 'write' },

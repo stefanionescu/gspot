@@ -1,11 +1,11 @@
-import type { Session } from '#cli/types/tools.ts';
-import { quoteArgument } from '#cli/system/text.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { listDetectedAdditions } from '#cli/repository/proposals.ts';
+import { quoteArgument } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each configuration that the files of a scope suggest and that gspot.toml neither selects nor removes.

@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { reviewBlockchainMnemonic } from '#eslint-plugin/rules/security/review-blockchain-mnemonic.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('review-blockchain-mnemonic', reviewBlockchainMnemonic, {
     valid: [

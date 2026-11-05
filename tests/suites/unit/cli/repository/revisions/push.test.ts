@@ -1,18 +1,19 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { pathToFileURL } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { PUSH_CONTENT } from '#tests/config/setup/sandboxes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { readPushedCommits, readPushedRevisions } from '#cli/repository/revisions/push.ts';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { readPushedCommits, readPushedRevisions } from '#cli/repository/revisions/push.ts';
+import { PUSH_CONTENT } from '#tests/config/setup/sandboxes.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import {
     createGitSandbox,
-    preparePushRepository,
     prepareNestedRepository,
+    preparePushRepository,
 } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('push comparison tells a missing upstream from an upstream whose commit is gone', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });

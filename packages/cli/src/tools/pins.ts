@@ -1,22 +1,22 @@
-import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { LintCommandSearch } from '#cli/types/repository.ts';
-import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
-import { UV_TOOL, NODE_TOOL, CONFIG_TOML_FORMAT, PYTHON_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
+import { CONFIG_TOML_FORMAT, NODE_TOOL, PYTHON_TOOL_PROJECT, UV_TOOL } from '#cli/config/tools/installers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import type { LintCommandSearch } from '#cli/types/repository.ts';
 import type {
-    Host,
-    Session,
-    PackagePin,
-    MiseToolPin,
-    PackagePins,
     GeneratedFile,
+    Host,
+    MiseToolPin,
+    PackagePin,
+    PackagePins,
     PythonToolProject,
+    Session,
 } from '#cli/types/tools.ts';
 
 /**

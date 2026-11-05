@@ -1,56 +1,56 @@
 import { posix } from 'node:path';
-import { isTable } from '#cli/system/tables.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { configTableSchema } from '#cli/schemas/parsers.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import { EDITORCONFIG_FILE } from '#cli/config/generation.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
-import { listUnparsedCiFiles } from '#cli/repository/lint-commands.ts';
-import { readPyrightCarryover } from '#cli/generation/setup/pyright.ts';
-import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
-import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
-import { readIgnoreFiles, convertIgnorePattern } from '#cli/generation/setup/ignore-files.ts';
-import { readRuffOptions, readPrettierOptions, buildPrettierOverrides } from '#cli/generation/setup/format.ts';
-import { convertRule, compareRules, compareRuffRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
 
-import type {
-    Carryover,
-    RuleTable,
-    CarryoverRow,
-    CarryoverInput,
-    CarryoverSection,
-    ToolCarryoverInput,
-    MarkdownlintConfig,
-} from '#cli/types/generation.ts';
+import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
+import { EDITORCONFIG_FILE } from '#cli/config/generation.ts';
 import {
-    RUFF_CHECK,
     CARRIED_TOOLS,
-    RUFF_CHECK_IDS,
-    EMPTY_CARRYOVER,
-    RUFF_STYLE_KEYS,
-    RUFF_FORMAT_KEYS,
-    COMMITLINT_TARGET,
-    PRINTED_RULE_TOOLS,
-    SCAN_FIRST_MESSAGE,
     CARRYOVER_ROW_START,
     COMMITLINT_CHECK_ID,
-    IGNORE_REASON_START,
-    MARKDOWNLINT_TARGET,
-    MARKDOWNLINT_ALIASES,
-    PRETTIER_EXCLUDE_KEY,
-    UNREAD_CONFIG_MESSAGE,
-    MARKDOWNLINT_CHECK_ID,
     COMMITLINT_CONFIG_PATH,
-    PRETTIER_OVERRIDES_KEY,
-    MARKDOWNLINT_RUNNER_FILE,
+    COMMITLINT_TARGET,
+    EMPTY_CARRYOVER,
+    IGNORE_REASON_START,
+    MARKDOWNLINT_ALIASES,
+    MARKDOWNLINT_CHECK_ID,
     MARKDOWNLINT_CONFIG_FILES,
-    UNREADABLE_CONFIG_MESSAGE,
     MARKDOWNLINT_RETIRED_RULES,
+    MARKDOWNLINT_RUNNER_FILE,
+    MARKDOWNLINT_TARGET,
+    PRETTIER_EXCLUDE_KEY,
+    PRETTIER_OVERRIDES_KEY,
+    PRINTED_RULE_TOOLS,
+    RUFF_CHECK,
+    RUFF_CHECK_IDS,
+    RUFF_FORMAT_KEYS,
+    RUFF_STYLE_KEYS,
+    SCAN_FIRST_MESSAGE,
+    UNREAD_CONFIG_MESSAGE,
+    UNREADABLE_CONFIG_MESSAGE,
 } from '#cli/config/repository/setup.ts';
+import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildPrettierOverrides, readPrettierOptions, readRuffOptions } from '#cli/generation/setup/format.ts';
+import { convertIgnorePattern, readIgnoreFiles } from '#cli/generation/setup/ignore-files.ts';
+import { compareRuffRules, compareRules, convertRule, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
+import { readPyrightCarryover } from '#cli/generation/setup/pyright.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
+import { listUnparsedCiFiles } from '#cli/repository/lint-commands.ts';
+import { configTableSchema } from '#cli/schemas/parsers.ts';
+import { toolsSchema } from '#cli/schemas/settings/tools.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type {
+    Carryover,
+    CarryoverInput,
+    CarryoverRow,
+    CarryoverSection,
+    MarkdownlintConfig,
+    RuleTable,
+    ToolCarryoverInput,
+} from '#cli/types/generation.ts';
 
 function readRuffCarryover(input: CarryoverInput): CarryoverSection {
     const { repository, tools, configurations, level } = input;

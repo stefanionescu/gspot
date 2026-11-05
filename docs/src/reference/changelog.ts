@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
-import type { ReferencePage } from '#docs/types/pages.ts';
+
 import { TABLE_HEADING_LEVEL } from '#docs/config/reference.ts';
-import { formatText, buildReferencePage } from '#docs/reference/markdown.ts';
+import { buildReferencePage, formatText } from '#docs/reference/markdown.ts';
+import type { ReferencePage } from '#docs/types/pages.ts';
 
 const CHANGELOG_TITLE = '# Changelog\n';
 

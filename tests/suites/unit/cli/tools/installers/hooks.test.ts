@@ -1,19 +1,21 @@
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
+import { chmod, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { HOOK_CONFIGURATION_CASES, HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH } from '#tests/config/tools/installers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { rm, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
-import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/config/tools/installers.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',

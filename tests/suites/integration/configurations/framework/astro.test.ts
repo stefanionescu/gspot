@@ -1,13 +1,15 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { doctorOutputSchema } from '#cli/schemas/commands.ts';
+import { ANSWER_MODULE, ASTRO_PAGE, ASTRO_PAGE_PATH, COMPONENT_TSCONFIG } from '#tests/config/integration/framework.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { ASTRO_PAGE, ANSWER_MODULE, ASTRO_PAGE_PATH, COMPONENT_TSCONFIG } from '#tests/config/integration/framework.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['typescript', 'astro', 'format'],

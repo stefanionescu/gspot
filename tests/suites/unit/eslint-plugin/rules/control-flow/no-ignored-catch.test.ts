@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noIgnoredCatch } from '#eslint-plugin/rules/control-flow/no-ignored-catch.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-ignored-catch', noIgnoredCatch, {
     valid: [

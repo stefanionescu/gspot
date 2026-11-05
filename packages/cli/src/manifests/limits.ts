@@ -1,5 +1,5 @@
-import type { LimitCheck } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import type { LimitCheck } from '#cli/types/manifests.ts';
 
 const checks = readConfigurations()
     .values()

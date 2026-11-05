@@ -1,8 +1,9 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('limits that no check reads are refused', () => {
     const errors = validateSettingsText(

@@ -1,25 +1,26 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { compareText } from '#cli/system/text.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { openSession } from '#cli/engine/session.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
+import { compareText } from '#cli/system/text.ts';
 import {
-    NOT_GENERATED,
     GENERATED_HEADERS,
     GENERATED_LAUNCHERS,
     GENERATED_PATH_CASES,
+    NOT_GENERATED,
     TYPE_DECLARATION_FILES,
 } from '#tests/config/repository/files.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test.each([...GENERATED_HEADERS])('the generated header is found in each comment form: %j', (text) => {
     expect(hasGeneratedHeader(text)).toBe(true);

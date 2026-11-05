@@ -1,65 +1,65 @@
 import { posix } from 'node:path';
-import { readText } from '#cli/system/files/reads.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import { isInScope, extractExtension } from '#cli/system/paths.ts';
-import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { MARKERS, SCRIPT_TAG, GSPOT_FOLDER, WHITESPACE_RUN, JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
 
-import type {
-    Config,
-    FileTags,
-    ListedFile,
-    TrackedFile,
-    FileKindRules,
-    GeneratedPaths,
-    FileClassification,
-} from '#cli/types/repository.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER, JAVASCRIPT_RUNTIMES, MARKERS, SCRIPT_TAG, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
-    TEXT_TAG,
-    SET_STATE,
-    SET_VALUES,
-    LFS_FILTER,
-    BINARY_TAG,
-    RUNTIME_TAG,
-    SHEBANG_TAG,
-    SOURCE_KIND,
-    NOTICE_FILE,
-    UNSET_STATE,
     BANNER_BYTES,
-    LICENSE_FILE,
-    SHEBANG_TAGS,
-    KIND_ORIGINS,
-    LICENSE_TAGS,
     BASELINE_FILE,
-    FILENAME_TAGS,
-    DOTENV_PREFIX,
-    TEXT_ATTRIBUTE,
-    DIFF_ATTRIBUTE,
-    ENV_SPLIT_FLAG,
-    SHEBANG_PREFIX,
-    EXTENSION_TAGS,
-    DEFAULT_DIALECT,
-    DOCKERFILE_NAME,
-    BUILD_LAUNCHERS,
-    FILTER_ATTRIBUTE,
-    TRAILING_VERSION,
-    VENDORED_FOLDERS,
     BINARY_EXTENSIONS,
-    GITATTRIBUTES_FILE,
-    MARKDOWN_EXTENSION,
-    VENDORED_ATTRIBUTE,
-    GENERATED_ATTRIBUTE,
+    BINARY_TAG,
+    BUILD_LAUNCHERS,
+    DEFAULT_DIALECT,
+    DIFF_ATTRIBUTE,
     DOCKERFILE_EXTENSION,
+    DOCKERFILE_NAME,
+    DOTENV_PREFIX,
+    ENV_EXECUTABLE_SUFFIX,
+    ENV_SPLIT_FLAG,
+    EXTENSION_TAGS,
+    FILENAME_TAGS,
+    FILTER_ATTRIBUTE,
+    GENERATED_ATTRIBUTE,
+    GENERATED_HEADER_LINE,
+    GENERATOR_OUTPUT_BANNERS,
+    GITATTRIBUTES_FILE,
     HEADER_LINES_CHECKED,
     INTERPRETER_DIALECTS,
+    KIND_ORIGINS,
+    LFS_FILTER,
+    LICENSE_FILE,
+    LICENSE_TAGS,
+    MARKDOWN_EXTENSION,
+    NOTICE_FILE,
+    RUNTIME_TAG,
+    SET_STATE,
+    SET_VALUES,
     SHEBANG_INTERPRETERS,
-    GENERATED_HEADER_LINE,
-    ENV_EXECUTABLE_SUFFIX,
-    GENERATOR_OUTPUT_BANNERS,
+    SHEBANG_PREFIX,
+    SHEBANG_TAG,
+    SHEBANG_TAGS,
+    SOURCE_KIND,
+    TEXT_ATTRIBUTE,
+    TEXT_TAG,
+    TRAILING_VERSION,
+    UNSET_STATE,
+    VENDORED_ATTRIBUTE,
+    VENDORED_FOLDERS,
 } from '#cli/config/repository/files.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { extractExtension, isInScope } from '#cli/system/paths.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type {
+    Config,
+    FileClassification,
+    FileKindRules,
+    FileTags,
+    GeneratedPaths,
+    ListedFile,
+    TrackedFile,
+} from '#cli/types/repository.ts';
 
 function findConfiguredKind(path: string, rules: FileKindRules): FileClassification | undefined {
     const attribute = findAttributeKind(rules.attributes.get(path));

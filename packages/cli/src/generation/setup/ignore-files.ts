@@ -1,18 +1,18 @@
 import { posix } from 'node:path';
+
+import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
+import {
+    CARRYOVER_ROW_START,
+    COMMENT_PATTERN,
+    IGNORE_FILES,
+    IGNORE_REASON_START,
+    LEADING_SLASH,
+} from '#cli/config/repository/setup.ts';
+import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import type { CarryoverInput, CarryoverSection } from '#cli/types/generation.ts';
-
-import {
-    IGNORE_FILES,
-    LEADING_SLASH,
-    COMMENT_PATTERN,
-    CARRYOVER_ROW_START,
-    IGNORE_REASON_START,
-} from '#cli/config/repository/setup.ts';
 
 function convertIgnoreFile(path: string, text: string, tracked: string[]): { paths: string[]; dropped: string[] } {
     const folder = posix.dirname(path) === '.' ? '' : posix.dirname(path);

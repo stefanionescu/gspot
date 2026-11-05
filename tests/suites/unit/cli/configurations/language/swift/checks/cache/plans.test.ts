@@ -1,23 +1,25 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { runChecks } from '#cli/engine/run.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import { openSession } from '#cli/engine/session.ts';
-import type { CheckStop } from '#cli/system/errors.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { fakePlatform } from '#tests/setup/system/platform.ts';
-import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/configurations/swift.ts';
-import { XCTEST_SOURCE, SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
+
 import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/configurations/language/swift/checks/cache.ts';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import type { CheckStop } from '#cli/system/errors.ts';
+import { SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/configurations/swift.ts';
+import { SWIFT_PACKAGE_HEADER, XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
+import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakePlatform } from '#tests/setup/system/platform.ts';
 
 test.each(['platform=macOS'])(
     'Xcode build plans keep destination %s for the build and the tests',

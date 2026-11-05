@@ -1,30 +1,31 @@
 import { statSync } from 'node:fs';
+import { delimiter, dirname, isAbsolute, resolve } from 'node:path';
+
 import { execa, type Options } from 'execa';
-import { hasErrorCode } from '#cli/system/errors.ts';
-import { findProgramCommand } from '#cli/system/programs.ts';
-import { trackProcessTree } from '#cli/system/process-trees.ts';
-import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
-import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
-    FAILED_CODE,
-    OUTPUT_LIMIT,
-    MISSING_CODE,
-    PATHEXT_DEFAULT,
-    PATH_SEPARATORS,
-    EMPTY_COMMAND_MESSAGE,
     CANCELED_START_MESSAGE,
+    EMPTY_COMMAND_MESSAGE,
+    FAILED_CODE,
+    MISSING_CODE,
+    OUTPUT_LIMIT,
+    PATH_SEPARATORS,
+    PATHEXT_DEFAULT,
 } from '#cli/config/system.ts';
+import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
+import { trackProcessTree } from '#cli/system/process-trees.ts';
+import { findProgramCommand } from '#cli/system/programs.ts';
 import type {
+    CancelableSpawnOptions,
     ProcessEnd,
-    SpawnResult,
-    SpawnOptions,
-    StdoutReader,
+    ProcessTreeControl,
+    ProcessTreeState,
     RunningProcess,
     SpawnCompletion,
-    ProcessTreeState,
-    ProcessTreeControl,
-    CancelableSpawnOptions,
+    SpawnOptions,
+    SpawnResult,
+    StdoutReader,
 } from '#cli/types/system.ts';
 
 const UNSTARTED_COMPLETION = { failed: true, stdout: '', stderr: '' } as const;

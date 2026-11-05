@@ -1,28 +1,29 @@
 import { posix } from 'node:path';
+
 import type { Node } from 'web-tree-sitter';
-import { getPosition } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
-import { WHITESPACE_RUN, DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers.ts';
-import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 
 import {
-    NGINX_IMAGE,
-    NPM_COMMAND,
+    DOCKER_INSTRUCTION,
     EXEC_FORM_START,
-    LOCKED_INSTALLS,
+    INSTRUCTION_MESSAGES,
     INSTRUCTION_RULES,
     LINE_CONTINUATION,
+    LOCKED_INSTALLS,
+    NGINX_IMAGE,
+    NPM_COMMAND,
     NPM_INSTALL_VERBS,
-    DOCKER_INSTRUCTION,
     PATCH_LEVEL_VERSION,
-    INSTRUCTION_MESSAGES,
 } from '#cli/config/configurations/infrastructure.ts';
+import { DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS, WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { getPosition } from '#cli/system/text.ts';
+import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function isUnlockedInstall(command: Node): boolean {
     const [verb = '', ...rest] = command.childrenForFieldName('argument').map(({ text }) => text);

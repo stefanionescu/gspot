@@ -1,38 +1,38 @@
 import type { Node } from 'web-tree-sitter';
-import { readComponentSources } from '#cli/parsers/code/comments.ts';
-import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 
-import type {
-    ParseCache,
-    EnvironmentRead,
-    EnvironmentKind,
-    ComponentScript,
-    EnvironmentNames,
-    EnvironmentScope,
-} from '#cli/types/parsers.ts';
 import {
-    OS_MODULE,
-    OCTAL_RADIX,
-    VARIABLE_NAME,
-    WHITESPACE_RUN,
+    COMPONENT_EXTENSION,
     EXPANSION_NODES,
     HEXADECIMAL_RADIX,
-    SWIFT_ENVIRONMENT,
-    MAXIMUM_CODE_POINT,
-    PYTHON_SCOPE_NODES,
-    COMPONENT_EXTENSION,
-    PYTHON_IMPORT_NODES,
-    PYTHON_LITERAL_NODES,
-    PYTHON_STRING_ESCAPE,
-    PYTHON_STRING_ESCAPES,
-    OS_ENVIRONMENT_MEMBERS,
-    PYTHON_DECLARATION_NODES,
-    JAVASCRIPT_LITERAL_NODES,
-    JAVASCRIPT_PROPERTY_NODES,
     JAVASCRIPT_DEFAULT_OPERATORS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
     JAVASCRIPT_ENVIRONMENT_GETTERS,
+    JAVASCRIPT_LITERAL_NODES,
+    JAVASCRIPT_PROPERTY_NODES,
+    MAXIMUM_CODE_POINT,
+    OCTAL_RADIX,
+    OS_ENVIRONMENT_MEMBERS,
+    OS_MODULE,
+    PYTHON_DECLARATION_NODES,
+    PYTHON_IMPORT_NODES,
+    PYTHON_LITERAL_NODES,
+    PYTHON_SCOPE_NODES,
+    PYTHON_STRING_ESCAPE,
+    PYTHON_STRING_ESCAPES,
+    SWIFT_ENVIRONMENT,
+    VARIABLE_NAME,
+    WHITESPACE_RUN,
 } from '#cli/config/parsers.ts';
+import { readComponentSources } from '#cli/parsers/code/comments.ts';
+import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
+import type {
+    ComponentScript,
+    EnvironmentKind,
+    EnvironmentNames,
+    EnvironmentRead,
+    EnvironmentScope,
+    ParseCache,
+} from '#cli/types/parsers.ts';
 
 function getCallKey(node: Node, getters: Set<string>): string | undefined {
     const name = node.childForFieldName('function')?.text.replaceAll(WHITESPACE_RUN, '');

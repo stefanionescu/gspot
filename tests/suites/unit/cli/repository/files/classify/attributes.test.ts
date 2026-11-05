@@ -1,21 +1,22 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { openSession } from '#cli/engine/session.ts';
+import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import {
+    CLASSIFICATION_FILES,
+    LINGUIST_GENERATED_LINE,
+    TYPE_DECLARATION_FILES,
+} from '#tests/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
-
-import {
-    CLASSIFICATION_FILES,
-    TYPE_DECLARATION_FILES,
-    LINGUIST_GENERATED_LINE,
-} from '#tests/config/repository/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('Git attributes win over the generated files of configurations', async () => {
     await using sandbox = await createGitSandbox({

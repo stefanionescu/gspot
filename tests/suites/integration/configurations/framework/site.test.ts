@@ -1,22 +1,23 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
-    SITE_SANDBOX,
-    OUTPUT_CASES,
     ALT_TEXT_PAGE,
-    TWO_SITE_TABLES,
     BUILT_HTML_SITES,
     MISSING_ALT_PAGE,
+    OUTPUT_CASES,
+    SITE_SANDBOX,
+    TWO_SITE_TABLES,
 } from '#tests/config/integration/site.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 const installedSandbox = shareInstalledSandbox(SITE_SANDBOX);
 

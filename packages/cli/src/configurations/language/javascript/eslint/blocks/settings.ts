@@ -1,43 +1,43 @@
 import { isDeepStrictEqual } from 'node:util';
-import { escapeGlob } from '#cli/system/paths.ts';
-import { getRequired } from '#cli/system/tables.ts';
-import { joinScopeSelector } from '#cli/settings/paths.ts';
-import type { DependencyFile } from '#cli/types/parsers.ts';
-import { getLimit, getTable } from '#cli/settings/scopes.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
+
+import {
+    CLIENT_ENVIRONMENT_RULE,
+    CODE_LANGUAGES,
+    ENVIRONMENT_LANGUAGES,
+    ENVIRONMENT_RULES,
+    ESLINT_CHECK,
+    JAVASCRIPT_CONFIGURATION,
+    PACKAGE_JSON_PATTERN,
+    PACKAGE_JSON_RULE_PREFIX,
+    TRIVIAL_FILES_RULE,
+    TRIVIAL_FUNCTIONS_RULE,
+    TYPED_LANGUAGES,
+} from '#cli/config/configurations/blocks.ts';
+import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
+import {
+    buildExtensionGlob,
+    buildNodePatterns,
+    buildScopeFiles,
+    buildScopeOverrideBlocks,
+    splitGlobs,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
-
+import { compareScopeDepth, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { getLimit, getTable } from '#cli/settings/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { getRequired } from '#cli/system/tables.ts';
 import type {
-    EslintRuleBlock,
     EslintBlockFields,
+    EslintRuleBlock,
     EslintRuleOptions,
     PlannedEslintFile,
     ScopeEslintSettings,
 } from '#cli/types/configurations/language.ts';
-import {
-    splitGlobs,
-    buildScopeFiles,
-    buildNodePatterns,
-    buildExtensionGlob,
-    buildScopeOverrideBlocks,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
-import {
-    ESLINT_CHECK,
-    CODE_LANGUAGES,
-    TYPED_LANGUAGES,
-    ENVIRONMENT_RULES,
-    TRIVIAL_FILES_RULE,
-    PACKAGE_JSON_PATTERN,
-    ENVIRONMENT_LANGUAGES,
-    TRIVIAL_FUNCTIONS_RULE,
-    CLIENT_ENVIRONMENT_RULE,
-    JAVASCRIPT_CONFIGURATION,
-    PACKAGE_JSON_RULE_PREFIX,
-} from '#cli/config/configurations/blocks.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 
 function listManifestRuleBlocks(scope: Scope, excluded: string[], dependencyNames: string[]): EslintRuleBlock[] {
     const tables = scope.configurations.map(({ eslint }) => eslint);

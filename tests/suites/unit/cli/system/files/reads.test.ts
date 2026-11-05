@@ -1,11 +1,13 @@
+import { link, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { createRunCache } from '#cli/system/cache.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { rm, link, mkdir, symlink, writeFile } from 'node:fs/promises';
-import { findText, readText, readBytes } from '#cli/system/files/reads.ts';
+import { findText, readBytes, readText } from '#cli/system/files/reads.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 test('a tracked link whose target is missing reads as empty text, not as a missing file', async () => {
     await using sandbox = await testdir();

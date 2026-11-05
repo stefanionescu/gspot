@@ -1,15 +1,15 @@
-import type { Session } from '#cli/types/tools.ts';
-import { listReplacedTools } from '#cli/tools/pins.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { listLintCommands } from '#cli/repository/lint-commands.ts';
-import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
 import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
+import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
+import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
+import { listLintCommands } from '#cli/repository/lint-commands.ts';
+import { listReplacedTools } from '#cli/tools/pins.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 /**
 Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs,

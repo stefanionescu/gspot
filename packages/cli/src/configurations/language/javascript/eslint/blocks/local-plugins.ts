@@ -1,13 +1,14 @@
 import { isDeepStrictEqual } from 'node:util';
-import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob, buildModuleSpecifier } from '#cli/system/paths.ts';
+
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
-import type { EslintPlugins, EslintBlockFields } from '#cli/types/configurations/language.ts';
 import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { buildModuleSpecifier, escapeGlob } from '#cli/system/paths.ts';
+import type { EslintBlockFields, EslintPlugins } from '#cli/types/configurations/language.ts';
+import type { Scope } from '#cli/types/settings.ts';
 
 function listPluginRecords(scopes: Scope[]) {
     return buildScopeOverrideBlocks(

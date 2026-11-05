@@ -1,12 +1,14 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { spawnGspot } from '#tests/setup/cli/commands.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { SYNCPACK_PACKAGE_FILES } from '#tests/config/setup/sandboxes.ts';
+import { spawnGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 async function initAtLevelAll(root: string): Promise<void> {
     commitAll(root);

@@ -1,56 +1,56 @@
+import { extname, isAbsolute, join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { CheckStop } from '#cli/system/errors.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
-import { LEADING_SLASH } from '#cli/config/parsers.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { join, extname, relative, isAbsolute } from 'node:path';
-import { readText, readBytes } from '#cli/system/files/reads.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
-import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
-import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
-import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 
 import {
-    listBuiltFiles,
-    convertToBuildPath,
-    readSuccessfulBuild,
-} from '#cli/configurations/framework/site/checks/build.ts';
-import {
-    SITE_RULES,
-    REMAP_FLAG,
-    INDEX_PAGE,
-    LYCHEE_TOOL,
-    EXCLUDE_FLAG,
-    SITEMAP_FILE,
-    PURGECSS_TOOL,
     CSS_EXTENSION,
-    STYLE_SCOPING,
+    EXCLUDE_FLAG,
     HTML_EXTENSION,
-    ROOT_FOLDER_FLAG,
-    STYLE_EXTENSIONS,
-    STYLE_COMPONENTS,
-    STYLE_WHITESPACE,
-    PURGECSS_CONTENT,
-    PURGECSS_PROCESS,
-    LYCHEE_ARGUMENTS,
-    HTML_VALIDATE_TOOL,
-    HTML_VALIDATE_OUTPUT,
-    UNLISTED_PAGE_MESSAGE,
     HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
+    HTML_VALIDATE_OUTPUT,
+    HTML_VALIDATE_TOOL,
+    INDEX_PAGE,
+    LYCHEE_ARGUMENTS,
+    LYCHEE_TOOL,
+    PURGECSS_CONTENT,
+    PURGECSS_PROCESS,
+    PURGECSS_TOOL,
+    REMAP_FLAG,
+    ROOT_FOLDER_FLAG,
+    SITE_RULES,
+    SITEMAP_FILE,
+    STYLE_COMPONENTS,
+    STYLE_EXTENSIONS,
+    STYLE_SCOPING,
+    STYLE_WHITESPACE,
+    UNLISTED_PAGE_MESSAGE,
 } from '#cli/config/configurations/framework.ts';
+import { LEADING_SLASH } from '#cli/config/parsers.ts';
+import {
+    convertToBuildPath,
+    listBuiltFiles,
+    readSuccessfulBuild,
+} from '#cli/configurations/framework/site/checks/build.ts';
+import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
+import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
+import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { readBytes, readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 function listPossiblePages(pathname: string): [string, ...string[]] {
     const path = decodeURIComponent(pathname).replace(LEADING_SLASH, '');

@@ -1,29 +1,30 @@
-import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
+import { readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { parse } from '@decimalturn/toml-patch';
-import { findValueAt } from '#cli/system/tables.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { settingsListOutputSchema } from '#cli/schemas/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
+import { readSettings } from '#cli/settings/read.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import {
+    KEPT_SETTING_CHANGES,
+    STOPPED_APPLY_FILES,
+    STRING_SETTING_VALUES,
+    WEAKENED_SETTINGS,
+} from '#tests/config/commands/edits.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
+import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    WEAKENED_SETTINGS,
-    STOPPED_APPLY_FILES,
-    KEPT_SETTING_CHANGES,
-    STRING_SETTING_VALUES,
-} from '#tests/config/commands/edits.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('set writes and unset removes a setting of a selected configuration', async () => {
     await using sandbox = await createGitSandbox({

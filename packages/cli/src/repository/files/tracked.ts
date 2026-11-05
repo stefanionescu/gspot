@@ -1,14 +1,15 @@
+import { lstatSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { statSync, lstatSync } from 'node:fs';
-import { compareText } from '#cli/system/text.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
-import { decodeGitPaths } from '#cli/repository/git/output.ts';
-import { findContainedPath } from '#cli/system/files/reads.ts';
+
+import { EXECUTABLE_BITS, EXECUTABLE_FILE, GIT_FILE_MODES, GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
-import { runGitBytes, buildGitError } from '#cli/repository/git/run.ts';
-import type { ListedFile, GitIndexFile } from '#cli/types/repository.ts';
-import { isInScope, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE, EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
+import { decodeGitPaths } from '#cli/repository/git/output.ts';
+import { buildGitError, runGitBytes } from '#cli/repository/git/run.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
+import { extractParentFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { GitIndexFile, ListedFile } from '#cli/types/repository.ts';
 
 function readSymlinkFile(root: string, path: string, isTracked: boolean): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };

@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+
 import { noEmptyTestTable } from '#eslint-plugin/rules/testing/no-empty-test-table.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

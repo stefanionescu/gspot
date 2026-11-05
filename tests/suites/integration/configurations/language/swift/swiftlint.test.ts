@@ -1,28 +1,29 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
-import type { LinterJsonFinding } from '#tests/types/integration.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
-import { writeSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
 
 import {
     CAST_SWIFT,
+    CORRECTED_PARSER_SOURCE,
+    PARAMETER_LIMIT_CASE,
+    PARSER_SOURCE,
     SWIFT_SANDBOX,
     XCTEST_SCOPES,
-    PARSER_SOURCE,
-    PARAMETER_LIMIT_CASE,
-    CORRECTED_PARSER_SOURCE,
 } from '#tests/config/integration/swift.ts';
+import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
+import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 

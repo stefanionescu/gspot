@@ -1,10 +1,11 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+
 import { LEVELS } from '#cli/config/manifests.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESLINT_LEVEL_CASES } from '#tests/config/configurations/javascript/configuration-blocks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...LEVELS])('%s lints a JavaScript class, which the default parser gives no decorators', async (level) => {
     const rules = ['gspot/no-trivial-functions', 'gspot/no-vue-class-components'];

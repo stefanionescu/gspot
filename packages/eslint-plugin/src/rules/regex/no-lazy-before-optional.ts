@@ -1,6 +1,6 @@
-import { createRule } from '../../rule.ts';
 import { ENDING_PAIR } from '../../config/regex.ts';
 import { buildRegexVisitors } from '../../language/regex.ts';
+import { createRule } from '../../rule.ts';
 
 export const noLazyBeforeOptional = createRule<[], 'lazy'>({
     name: 'no-lazy-before-optional',

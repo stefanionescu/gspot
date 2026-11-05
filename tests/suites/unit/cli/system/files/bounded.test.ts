@@ -1,6 +1,8 @@
 import * as fs from 'node:fs';
+
+import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
+
 import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
 
 test('a failed staged write removes its temporary file and preserves the destination', async () => {

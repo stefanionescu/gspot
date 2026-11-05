@@ -1,15 +1,17 @@
+import { writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import { join } from 'node:path';
-import { writeFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
+
 import { stringify } from '@decimalturn/toml-patch';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { expect, spyOn, test } from 'bun:test';
+
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('staged error notes and command arguments name the working root instead of the copy', async () => {
     const command = buildProgramCommand('fakes/tool', '--stderr', 'Cannot read {root}/settings.json', '--exit', '2');

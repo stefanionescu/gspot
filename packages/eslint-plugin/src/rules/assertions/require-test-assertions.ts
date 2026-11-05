@@ -1,23 +1,23 @@
-import { createRule } from '../../rule.ts';
-import { getTypes } from '../../language/checker.ts';
-import type { TypeReader } from '../../types/plugin.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
-import { listChildNodes } from '../../libraries/testing.ts';
-import type { AssertionSearch } from '../../types/assertions.ts';
-import { readAssertionKind } from '../../libraries/assertions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
     ASSERTION_TEXT,
+    CHECKED_TEST_CALLEE,
     DONE_CALLBACKS,
+    EVIDENCE_DEPENDENCIES,
     EVIDENCE_IMPORTS,
     HTTP_EXPECTATIONS,
-    CHECKED_TEST_CALLEE,
     HTTP_TESTING_MODULE,
-    EVIDENCE_DEPENDENCIES,
-    TEST_FRAMEWORK_IMPORTS,
     TEST_FRAMEWORK_DEPENDENCIES,
+    TEST_FRAMEWORK_IMPORTS,
 } from '../../config/assertions/evidence.ts';
+import { getTypes } from '../../language/checker.ts';
+import { readAssertionKind } from '../../libraries/assertions.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
+import { listChildNodes } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { AssertionSearch } from '../../types/assertions.ts';
+import type { TypeReader } from '../../types/plugin.ts';
 
 const CHAI_TERMINALS: ReadonlySet<string | null> = new Set([
     'Arguments',

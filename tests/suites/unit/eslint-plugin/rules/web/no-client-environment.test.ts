@@ -1,7 +1,7 @@
+import { noClientEnvironment } from '#eslint-plugin/rules/web/no-client-environment.ts';
+import type { ClientEnvironmentOptions } from '#eslint-plugin/types/security.ts';
 import { ENVIRONMENT_GLOBALS } from '#tests/config/eslint-plugin.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import type { ClientEnvironmentOptions } from '#eslint-plugin/types/security.ts';
-import { noClientEnvironment } from '#eslint-plugin/rules/web/no-client-environment.ts';
 
 buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [Partial<ClientEnvironmentOptions[0]>]>(
     'no-client-environment',

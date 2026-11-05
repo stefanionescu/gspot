@@ -1,12 +1,9 @@
+import { lstatSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import picomatch from 'picomatch';
 import { globSync } from 'tinyglobby';
-import { GspotError } from '#cli/system/errors.ts';
-import { printWarning } from '#cli/system/terminal.ts';
-import { isProcessRunning } from '#cli/system/processes.ts';
-import type { Files, TemporaryFolder } from '#cli/types/system.ts';
-import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 
 import {
     DRIVE_LETTER,
@@ -16,6 +13,10 @@ import {
     TEMPORARY_REMOVAL_OPTIONS,
     TEMPORARY_STALE_MILLISECONDS,
 } from '#cli/config/system.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { isProcessRunning } from '#cli/system/processes.ts';
+import { printWarning } from '#cli/system/terminal.ts';
+import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 
 function isStaleTemporaryPath(path: string, pid: string | undefined): boolean {
     if (pid !== undefined) return !isProcessRunning(Number(pid));

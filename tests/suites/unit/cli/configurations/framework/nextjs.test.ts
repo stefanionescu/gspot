@@ -1,32 +1,33 @@
 import { existsSync } from 'node:fs';
-import { createFileTree } from 'testdirs';
-import { join, basename } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
-import { planChecks } from '#cli/engine/plan.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
-import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
+import { chmod, mkdir, open, readFile, writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { CHECK_CODE } from '#cli/configurations/registry.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import * as processes from '#cli/system/processes.ts';
+import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 import {
-    UNRELATED_FILE,
+    AUTHORED_NEXT_ENV,
     GENERATED_ROUTES,
     NEXT_CACHE_BYTES,
-    AUTHORED_NEXT_ENV,
     ROUTE_TYPES_COMMENT,
+    UNRELATED_FILE,
 } from '#tests/config/configurations/framework.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function prepareNextjsBuild(root: string, scopePath: string): Promise<Session> {
     await createFileTree(root, {

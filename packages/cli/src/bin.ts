@@ -1,8 +1,8 @@
-import { EXIT_ERROR } from '#cli/config/system.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { FATAL_ERROR_EVENTS, JSON_FLAG, PROCESS_ARGUMENTS_START, VERBOSE_FLAG } from '#cli/config/main.ts';
+import { EXIT_ERROR } from '#cli/config/system.ts';
 import { validateRuntimeVersion } from '#cli/system/runtime.ts';
-import { printError, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
-import { JSON_FLAG, VERBOSE_FLAG, FATAL_ERROR_EVENTS, PROCESS_ARGUMENTS_START } from '#cli/config/main.ts';
+import { printError, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
 
 const commandArguments = process.argv.slice(PROCESS_ARGUMENTS_START);
 const separator = commandArguments.indexOf('--');

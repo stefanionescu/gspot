@@ -1,19 +1,21 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
-import { PROJECT_NOTES, GENERATOR_CASES, UNTRACKED_NOTES } from '#tests/config/configurations/general.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { GENERATOR_CASES, PROJECT_NOTES, UNTRACKED_NOTES } from '#tests/config/configurations/general.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function prepareGeneratorCheck(root: string, scenario: (typeof GENERATOR_CASES)[number]) {
     await createFileTree(root, {

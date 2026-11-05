@@ -1,21 +1,22 @@
-import { testdir } from 'testdirs';
-import { afterAll } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { join, dirname, delimiter } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
+
+import { afterAll } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { SIGNAL_EXIT_CODES } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { TEST_RUN_FOLDER, prepareRunFolders } from '#tests/setup/runner/run-folder.ts';
-import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
-
 import {
-    LINE_BREAK,
-    TOOL_PATHS_FILE,
     GSPOT_LAUNCHER_PATH,
-    PACKED_PACKAGES_FILE,
+    LINE_BREAK,
     MISE_LOCK_ENVIRONMENT,
+    PACKED_PACKAGES_FILE,
+    TOOL_PATHS_FILE,
 } from '#tests/config/setup/sandboxes.ts';
+import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
+import { prepareRunFolders, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
+import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 const resources = new AsyncDisposableStack();
 

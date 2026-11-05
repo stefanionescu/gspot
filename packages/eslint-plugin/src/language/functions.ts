@@ -1,6 +1,7 @@
-import { getExpressionValue } from './expressions.ts';
+import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import type { FunctionNode, LocalFunction } from '../types/plugin.ts';
-import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getExpressionValue } from './expressions.ts';
 
 function getFunctionNode(node: TSESTree.Node | null): LocalFunction | undefined {
     switch (node?.type) {

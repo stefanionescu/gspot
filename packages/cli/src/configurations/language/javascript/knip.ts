@@ -1,33 +1,33 @@
 import { posix } from 'node:path';
-import { compareText } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { listDistinctTools } from '#cli/tools/pins.ts';
-import { joinScopeSelector } from '#cli/settings/paths.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import { listApplicableTables } from '#cli/settings/inherit.ts';
-import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
 import {
-    KNIP_CHECK,
-    PACKAGE_RUNNERS,
-    UNQUOTED_COMMENT,
-    HIDDEN_FILE_GLOB,
-    KNIP_ESLINT_CONFIG,
-    MISE_FILE_TASK_GLOBS,
     COMMAND_WORD_SEPARATORS,
+    HIDDEN_FILE_GLOB,
+    KNIP_CHECK,
+    KNIP_ESLINT_CONFIG,
     KNIP_IGNORED_DEPENDENCIES,
     KNIP_JAVASCRIPT_ENTRY_FILES,
+    MISE_FILE_TASK_GLOBS,
+    PACKAGE_RUNNERS,
+    UNQUOTED_COMMENT,
 } from '#cli/config/configurations/javascript.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listApplicableTables } from '#cli/settings/inherit.ts';
+import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { compareText } from '#cli/system/text.ts';
+import { listDistinctTools } from '#cli/tools/pins.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 
 function buildScopePattern(pattern: string, scopePath: string): string | undefined {
     const sign = pattern.startsWith('!') ? '!' : '';

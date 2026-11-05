@@ -1,9 +1,11 @@
-import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { test, expect } from 'bun:test';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

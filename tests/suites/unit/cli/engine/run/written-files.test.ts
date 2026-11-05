@@ -1,12 +1,13 @@
-import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/engine/run.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([
     ['a file of its own and the files that gspot writes', ['source.txt'], 'failed'],

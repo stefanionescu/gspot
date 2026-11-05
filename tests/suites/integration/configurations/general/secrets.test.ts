@@ -1,20 +1,22 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
+import { join } from 'node:path';
+
 import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { pushOutputSchema } from '#cli/schemas/commands.ts';
+import { compareText } from '#cli/system/text.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { API_TOKEN, DOTENV_LINTER_CASES, FIXED_SECRET_FILES, SECRET_FILES } from '#tests/config/integration/general.ts';
 import { AWS_KEY_ID } from '#tests/config/setup/configurations.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import type { GitleaksHistory } from '#tests/types/integration.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { API_TOKEN, SECRET_FILES, FIXED_SECRET_FILES, DOTENV_LINTER_CASES } from '#tests/config/integration/general.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import type { GitleaksHistory } from '#tests/types/integration.ts';
 
 async function prepareSecrets(root: string): Promise<void> {
     runGitStep(root, ['init', '-q']);

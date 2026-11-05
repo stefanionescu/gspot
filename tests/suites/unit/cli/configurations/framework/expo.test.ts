@@ -1,17 +1,19 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/tools/pins.ts';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
     await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_OUTPUT });

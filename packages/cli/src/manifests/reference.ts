@@ -1,7 +1,8 @@
 import { posix } from 'node:path';
-import { formatNameList } from '#cli/system/text.ts';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
+import { formatNameList } from '#cli/system/text.ts';
 import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
 
 const DETECTION_LABELS = {

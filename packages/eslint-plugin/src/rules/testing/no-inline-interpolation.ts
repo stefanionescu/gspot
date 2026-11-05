@@ -1,14 +1,14 @@
-import { createRule } from '../../rule.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
-import { getCalleeName } from '../../libraries/testing.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    INLINE_MATCHERS,
+    INLINE_EXPECT_MODIFIERS,
     INLINE_EXPECT_MODULES,
     INLINE_EXPECT_ORIGINS,
-    INLINE_EXPECT_MODIFIERS,
+    INLINE_MATCHERS,
 } from '../../config/testing.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
+import { getCalleeName } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
 
 function isExpectChain(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     let value = node;

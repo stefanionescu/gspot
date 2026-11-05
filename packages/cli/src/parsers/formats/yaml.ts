@@ -1,5 +1,6 @@
-import type { z } from 'zod';
 import { parse, parseAllDocuments } from 'yaml';
+import type { z } from 'zod';
+
 import { MESSAGE_END } from '#cli/config/parsers.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 

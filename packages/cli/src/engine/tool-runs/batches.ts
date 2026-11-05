@@ -1,19 +1,18 @@
-import { CheckStop } from '#cli/system/errors.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CommandLine, Substitutions } from '#cli/types/engine/tool-runs.ts';
-import { expandCommand, buildFileCommandLines } from '#cli/engine/tool-runs/placeholders.ts';
-
 import {
     BATCH_FILE,
-    UNIX_COMMAND_LIMIT,
-    WINDOWS_PROCESS_LIMIT,
-    WINDOWS_COMMAND_LIMIT,
-    WINDOWS_QUOTES_LENGTH,
     TOOL_ARGUMENTS_MESSAGE,
-    WINDOWS_ESCAPE_EXPANSION,
+    UNIX_COMMAND_LIMIT,
     WINDOWS_ARGUMENT_OVERHEAD,
+    WINDOWS_COMMAND_LIMIT,
+    WINDOWS_ESCAPE_EXPANSION,
+    WINDOWS_PROCESS_LIMIT,
+    WINDOWS_QUOTES_LENGTH,
 } from '#cli/config/engine.ts';
+import { buildFileCommandLines, expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { CommandLine, Substitutions } from '#cli/types/engine/tool-runs.ts';
 
 function selectCommandLimit(platform: NodeJS.Platform, isBatchFile: boolean): number {
     if (platform !== 'win32') return UNIX_COMMAND_LIMIT;

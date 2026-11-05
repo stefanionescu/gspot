@@ -1,23 +1,25 @@
-import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
-import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/tools/pins.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { dirname, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { runCommand, buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import { CLOUDFLARE_ENV_SOURCE, UNTRACKED_CLOUDFLARE_FINDINGS } from '#tests/config/configurations/general.ts';
+import { planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { buildProcessResult, runCommand } from '#tests/setup/system/processes.ts';
 
 async function fakeWrangler(root: string): Promise<DisposableStack> {
     const pin = getTool(readConfigurations().values(), 'wrangler');

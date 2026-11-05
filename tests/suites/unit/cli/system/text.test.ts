@@ -1,5 +1,6 @@
-import { test, expect } from 'bun:test';
-import { splitWords, formatScope, escapeRegExp, formatNameList } from '#cli/system/text.ts';
+import { expect, test } from 'bun:test';
+
+import { escapeRegExp, formatNameList, formatScope, splitWords } from '#cli/system/text.ts';
 
 test('an escaped text matches itself in a Unicode pattern, and each syntax character stays literal', () => {
     const text = String.raw`a.b*c+d?e^f$g{h}i(j)k|l[m]n\o/p-q`;

@@ -1,16 +1,15 @@
-import { CheckStop } from '#cli/system/errors.ts';
-import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
-
 import {
-    JSON_START,
-    NO_OUTPUT_MESSAGE,
-    JSON_PREVIEW_LENGTH,
     EMPTY_FINDING_MESSAGE,
     INVALID_FINDING_MESSAGE,
+    JSON_PREVIEW_LENGTH,
+    JSON_START,
+    NO_OUTPUT_MESSAGE,
 } from '#cli/config/engine.ts';
+import { LINE_BREAK } from '#cli/config/parsers.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 function buildJsonSyntaxError(stdout: string, cause?: unknown): CheckStop {
     const first = stdout

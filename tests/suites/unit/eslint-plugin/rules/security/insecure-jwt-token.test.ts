@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { insecureJwtToken } from '#eslint-plugin/rules/security/insecure-jwt-token.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('insecure-jwt-token', insecureJwtToken, {
     valid: [

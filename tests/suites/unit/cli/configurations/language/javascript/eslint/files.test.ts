@@ -1,17 +1,17 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { openSession } from '#cli/engine/session.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { listCodeTestFiles, buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/files.ts';
 
+import { buildScopeOverrideBlocks, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { openSession } from '#cli/engine/session.ts';
 import {
     NESTED_ESLINT_FILES,
     NESTED_ESLINT_PATHS,
     NESTED_ESLINT_RULES,
     WILDCARD_ESLINT_FILES,
 } from '#tests/config/configurations/javascript/overrides.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test("a child scope's test_files and script_files get the test and script rule blocks", async () => {
     await using sandbox = await testdir({

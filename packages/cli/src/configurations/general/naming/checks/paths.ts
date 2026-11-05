@@ -1,17 +1,18 @@
 import { posix } from 'node:path';
-import type { Session } from '#cli/types/tools.ts';
-import { extractBaseName } from '#cli/system/paths.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { readNamingDefaults } from '#cli/manifests/read.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
-import { REST_SEGMENT, CATEGORY_LABELS } from '#cli/config/configurations/naming.ts';
-import type { Identifier, PathContainer } from '#cli/types/configurations/general.ts';
-import { NAMING_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
+import { CATEGORY_LABELS, REST_SEGMENT } from '#cli/config/configurations/naming.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
+import { NAMING_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
+import { readNamingDefaults } from '#cli/manifests/read.ts';
+import { extractBaseName } from '#cli/system/paths.ts';
+import type { Identifier, PathContainer } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function parseSegmentName(
     segment: string,

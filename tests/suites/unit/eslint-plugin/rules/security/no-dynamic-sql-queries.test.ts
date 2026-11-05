@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noDynamicSqlQueries } from '#eslint-plugin/rules/security/no-dynamic-sql-queries.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-dynamic-sql-queries', noDynamicSqlQueries, {
     valid: [

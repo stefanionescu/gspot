@@ -1,8 +1,9 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
+import { listExpectedPaths, listStaleFiles } from '#cli/generation/stale.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { listStaleFiles, listExpectedPaths } from '#cli/generation/stale.ts';
 
 test('changed managed keys are reported without a whole-file replacement', async () => {
     await using sandbox = await createGitSandbox({

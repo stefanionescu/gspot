@@ -1,41 +1,41 @@
 import { z } from 'zod';
-import { CHECK_RUNS } from '#cli/config/manifests.ts';
-import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { levelSchema } from '#cli/schemas/manifests/tools.ts';
-import { hooksSchema } from '#cli/schemas/settings/general.ts';
-import { limitsSchema } from '#cli/schemas/settings/limits.ts';
-import { commandCheckFields } from '#cli/schemas/manifests/checks.ts';
-import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
-import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
-import { ciSchema, namingSchema, ruleFilesSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
 
+import { CHECK_RUNS } from '#cli/config/manifests.ts';
 import {
-    WEAKENINGS_CHECK,
-    NO_CHECK_PATHS_MESSAGE,
-    WEAKENINGS_IGNORE_MESSAGE,
-} from '#cli/config/settings/validation.ts';
-import {
-    formatSchema,
-    relativePathSchema,
-    nonemptyPathsSchema,
-    configurationNameSchema,
-    removedConfigurationsSchema,
-} from '#cli/schemas/settings/fields.ts';
-import {
-    DEVICE_NAME,
-    LEVEL_SUMMARY,
-    UNSAFE_PATH_END,
-    COMMAND_CHECK_ID,
-    UNSAFE_CHARACTERS,
-    GSPOT_FOLDER_PATH,
     ALL_LEVEL_SUMMARY,
+    COMMAND_CHECK_ID,
+    DEVICE_NAME,
+    GSPOT_FOLDER_PATH,
+    LEVEL_SUMMARY,
+    NO_CHECK_RULE_MESSAGE,
+    SCOPE_PATH_MESSAGES,
     SETTINGS_EXAMPLES,
     TABLE_DESCRIPTIONS,
-    SCOPE_PATH_MESSAGES,
-    NO_CHECK_RULE_MESSAGE,
     TOOL_TIMEOUT_SECONDS_DEFAULT,
+    UNSAFE_CHARACTERS,
+    UNSAFE_PATH_END,
 } from '#cli/config/settings/schema.ts';
+import {
+    NO_CHECK_PATHS_MESSAGE,
+    WEAKENINGS_CHECK,
+    WEAKENINGS_IGNORE_MESSAGE,
+} from '#cli/config/settings/validation.ts';
+import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
+import { commandCheckFields } from '#cli/schemas/manifests/checks.ts';
+import { levelSchema } from '#cli/schemas/manifests/tools.ts';
+import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
+import {
+    configurationNameSchema,
+    formatSchema,
+    nonemptyPathsSchema,
+    relativePathSchema,
+    removedConfigurationsSchema,
+} from '#cli/schemas/settings/fields.ts';
+import { hooksSchema } from '#cli/schemas/settings/general.ts';
+import { limitsSchema } from '#cli/schemas/settings/limits.ts';
+import { ciSchema, importRulesSchema, namingSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
+import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
 
 /**
 Give each table of a settings shape its description in the global registry, where the editor schema and the

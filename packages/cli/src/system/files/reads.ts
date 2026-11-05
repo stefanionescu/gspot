@@ -1,16 +1,16 @@
 import { isUtf8 } from 'node:buffer';
+import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { isInside } from '#cli/system/paths.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { openSync, readSync, statSync, lstatSync, closeSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 
 import {
+    MISSING_TRACKED_FILE_MESSAGE,
     PATH_SEPARATORS,
     RESERVED_SEGMENTS,
     UNSAFE_PATH_MESSAGE,
-    MISSING_TRACKED_FILE_MESSAGE,
 } from '#cli/config/system.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { isInside } from '#cli/system/paths.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 function readFilePrefix(path: string, limit: number): Buffer {
     const buffer = Buffer.alloc(limit);

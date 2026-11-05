@@ -1,25 +1,25 @@
 import type { Node } from 'web-tree-sitter';
-import type { Session } from '#cli/types/tools.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { SWIFT_SECURITY_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
 
 import {
-    LOG_METHODS,
-    SECRET_WORD,
-    SECRET_VALUE,
     LOG_FUNCTIONS,
+    LOG_METHODS,
+    PLIST_READ_EXPRESSION,
     PRIVACY_LABEL,
     PUBLIC_PRIVACY,
     SECRET_PLIST_KEY,
-    UNSAFE_SWIFT_NAMES,
+    SECRET_VALUE,
+    SECRET_WORD,
     SWIFT_SECRET_FINDINGS,
-    PLIST_READ_EXPRESSION,
-    USER_DEFAULTS_RECEIVER,
+    UNSAFE_SWIFT_NAMES,
     USER_DEFAULTS_DECLARATION,
+    USER_DEFAULTS_RECEIVER,
 } from '#cli/config/configurations/swift.ts';
+import { SWIFT_SECURITY_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listCallValues(call: Node): Node[] {
     const argumentsNode = call.namedChildren

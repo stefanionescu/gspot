@@ -1,15 +1,17 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { listPackagePins } from '#cli/tools/pins.ts';
 import { cp, mkdir, writeFile } from 'node:fs/promises';
-import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e.ts';
+import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
     const [, program = ''] = buildProgramCommand('processes/eslint-plugin');

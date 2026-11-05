@@ -1,26 +1,26 @@
-import { getTable } from '#cli/settings/scopes.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import { join, dirname, relative } from 'node:path';
-import { JSCONFIG_FILE } from '#cli/config/engine.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import { convertToGlobs } from '#cli/configurations/ignores.ts';
-import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { dirname, join, relative } from 'node:path';
 
 import {
-    STANDALONE_OPTIONS,
-    JAVASCRIPT_OPTIONS,
-    JAVASCRIPT_EXTENSIONS,
-    SOURCE_SELECTION_FIELDS,
-    JAVASCRIPT_IGNORED_GLOBS,
     JAVASCRIPT_BUNDLED_IMPORTS,
+    JAVASCRIPT_EXTENSIONS,
+    JAVASCRIPT_IGNORED_GLOBS,
+    JAVASCRIPT_OPTIONS,
+    SOURCE_SELECTION_FIELDS,
+    STANDALONE_OPTIONS,
 } from '#cli/config/configurations/javascript.ts';
+import { JSCONFIG_FILE } from '#cli/config/engine.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { convertToGlobs } from '#cli/configurations/ignores.ts';
+import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 
 function buildExtendedExclude(
     planned: PlannedConfig,

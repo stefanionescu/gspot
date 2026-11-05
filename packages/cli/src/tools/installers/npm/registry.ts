@@ -1,28 +1,28 @@
-import { join, dirname, resolve } from 'node:path';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
-import { findProgram } from '#cli/system/programs.ts';
 import { realpathSync, writeFileSync } from 'node:fs';
-import { NPM_TOOL } from '#cli/config/repository/javascript.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { extractUrlPasswords } from '#cli/tools/installers/credentials.ts';
+import { dirname, join, resolve } from 'node:path';
 
+import { NPM_TOOL } from '#cli/config/repository/javascript.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
 import {
-    NODE_TOOL,
-    NPMRC_FILE,
-    CREDENTIAL_KEY,
-    CONNECTION_KEYS,
     CERTIFICATE_KEYS,
-    REGISTRY_AUTH_KEY,
-    NPM_SETTING_PREFIX,
+    CONNECTION_KEYS,
     CONNECTION_URL_KEY,
-    REGISTRY_URL_MESSAGE,
-    READ_REGISTRY_MESSAGE,
-    NPMRC_SETTINGS_MESSAGE,
-    NPM_SCOPE_REGISTRY_KEY,
+    CREDENTIAL_KEY,
     ENCODED_CREDENTIAL_KEY,
+    NODE_TOOL,
+    NPM_SCOPE_REGISTRY_KEY,
+    NPM_SETTING_PREFIX,
     NPM_SETTING_VARIABLE_PREFIX,
+    NPMRC_FILE,
+    NPMRC_SETTINGS_MESSAGE,
+    READ_REGISTRY_MESSAGE,
+    REGISTRY_AUTH_KEY,
+    REGISTRY_URL_MESSAGE,
 } from '#cli/config/tools/installers.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { findProgram } from '#cli/system/programs.ts';
+import { extractUrlPasswords } from '#cli/tools/installers/credentials.ts';
 
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
     const [npmConfig, { default: npmDefinitions }] = await Promise.all([

@@ -1,30 +1,30 @@
 import picomatch from 'picomatch';
-import { escapeGlob } from '#cli/system/paths.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import { FOLDER_CONTENTS } from '#cli/config/system.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
-import type { EslintBlock, PlannedEslintFile, EslintImportBoundaryRule } from '#cli/types/configurations/language.ts';
 
 import {
-    buildNodePatterns,
-    buildExtensionGlob,
-    buildScopeOverrideBlocks,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
-import {
-    REGEX_SYMBOLS,
-    CODE_LANGUAGES,
     ANY_DEPTH_PREFIX,
-    IMPORT_EXTENSIONS,
+    CODE_LANGUAGES,
+    DENO_IMPORT_EXTENSION,
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
-    NODE_SCRIPT_PATTERNS,
-    DENO_IMPORT_EXTENSION,
-    PATH_SEPARATOR_PATTERN,
     IMPORT_BOUNDARIES_RULE,
     IMPORT_BOUNDARY_FOLDERS,
+    IMPORT_EXTENSIONS,
+    NODE_SCRIPT_PATTERNS,
+    PATH_SEPARATOR_PATTERN,
+    REGEX_SYMBOLS,
     TYPESCRIPT_EXTENSION_MAP,
 } from '#cli/config/configurations/blocks.ts';
+import { FOLDER_CONTENTS } from '#cli/config/system.ts';
+import {
+    buildExtensionGlob,
+    buildNodePatterns,
+    buildScopeOverrideBlocks,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
+import { readPackageAliases, readScopeAliases } from '#cli/repository/javascript/aliases.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/language.ts';
+import type { Scope } from '#cli/types/settings.ts';
 
 /**
 Build the n/file-extension-in-import blocks for each project and path style.

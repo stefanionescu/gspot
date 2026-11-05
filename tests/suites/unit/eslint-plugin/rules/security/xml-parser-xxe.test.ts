@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { xmlParserXxe } from '#eslint-plugin/rules/security/xml-parser-xxe.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('xml-parser-xxe', xmlParserXxe, {
     valid: [

@@ -1,30 +1,31 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { createFileTree } from 'testdirs';
-import { getTool } from '#cli/tools/pins.ts';
-import { test, spyOn, expect } from 'bun:test';
-import { planChecks } from '#cli/engine/plan.ts';
-import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { readCallRecords } from '#tests/setup/system/programs.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
-import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import * as processes from '#cli/system/processes.ts';
+import { getTool } from '#cli/tools/pins.ts';
 import {
     ACTIONLINT_EXITS,
-    WORKFLOW_TEXT_CASES,
     OUTSIDE_GITHUB_ACTIONS,
+    WORKFLOW_TEXT_CASES,
 } from '#tests/config/configurations/infrastructure.ts';
+import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeToolExecutables, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { readCallRecords } from '#tests/setup/system/programs.ts';
 
 test('actionlint copies root actions and unchanged actions outside .github with workflow replacements', async () => {
     await using sandbox = await createGitSandbox({

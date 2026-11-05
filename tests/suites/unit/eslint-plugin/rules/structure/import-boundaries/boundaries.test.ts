@@ -1,10 +1,11 @@
+import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-import { test, expect } from 'bun:test';
+
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { importBoundaries } from '#eslint-plugin/rules/structure/import-boundaries.ts';
 import type { ImportBoundariesOptions } from '#eslint-plugin/types/structure.ts';
 import { IMPORT_ALIASES, PROJECT_FOLDERS } from '#tests/config/eslint-plugin.ts';
-import { importBoundaries } from '#eslint-plugin/rules/structure/import-boundaries.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Partial<ImportBoundariesOptions[0]>]>(
     'import-boundaries',

@@ -1,20 +1,21 @@
-import { testdir } from 'testdirs';
 import { relative } from 'node:path';
-import { test, expect } from 'bun:test';
-import { stringify } from '@decimalturn/toml-patch';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { buildEslint } from '#tests/setup/eslint/lint.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import {
+    FRAMEWORK_RUNTIME_CASES,
+    PROCESS_UNDEFINED_MESSAGE,
     RUNTIME_CASES,
     RUNTIME_GLOBAL_FINDINGS,
-    FRAMEWORK_RUNTIME_CASES,
+    RUNTIME_OVERRIDE_SETTINGS,
     RUNTIME_OVERRIDE_TABLES,
     WINDOW_UNDEFINED_MESSAGE,
-    PROCESS_UNDEFINED_MESSAGE,
-    RUNTIME_OVERRIDE_SETTINGS,
 } from '#tests/config/configurations/javascript/overrides.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
 
 test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($runtime)', async (row) => {
     await using sandbox = await testdir({

@@ -1,42 +1,42 @@
-import { compareText } from '#cli/system/text.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findContainedPath } from '#cli/system/files/reads.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
-import { join, dirname, resolve, basename, relative } from 'node:path';
-import { statSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
-import { readGitSetting, readHooksFolder } from '#cli/repository/git/run.ts';
-import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
-import type { Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
+import { lstatSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
 import {
-    LFS_HOOKS,
-    HUSKY_PATH,
     AGENT_FILES,
-    HOOK_SHEBANG,
-    LINT_FOLDERS,
-    RULE_FOLDERS,
-    KEPT_DOT_FILE,
-    LFS_PUSH_CALLS,
-    LEFTHOOK_NAMES,
-    GITLAB_CI_FILE,
-    YAML_EXTENSIONS,
-    PRE_COMMIT_FILE,
-    LFS_GUARD_PREFIX,
     FOREIGN_CI_FILES,
-    GITLAB_CI_FOLDER,
-    LEFTHOOK_PREFIXES,
-    SAMPLE_HOOK_SUFFIX,
-    HOOKS_PATH_SETTING,
-    LEFTHOOK_EXTENSIONS,
     FOREIGN_HOOK_FOLDERS,
-    SIMPLE_GIT_HOOKS_KEY,
     GITHUB_WORKFLOWS_FOLDER,
+    GITLAB_CI_FILE,
+    GITLAB_CI_FOLDER,
+    HOOK_SHEBANG,
+    HOOKS_PATH_SETTING,
+    HUSKY_PATH,
+    KEPT_DOT_FILE,
+    LEFTHOOK_EXTENSIONS,
+    LEFTHOOK_NAMES,
+    LEFTHOOK_PREFIXES,
+    LFS_GUARD_PREFIX,
+    LFS_HOOKS,
+    LFS_PUSH_CALLS,
+    LINT_FOLDERS,
+    PRE_COMMIT_FILE,
+    RULE_FOLDERS,
+    SAMPLE_HOOK_SUFFIX,
+    SIMPLE_GIT_HOOKS_KEY,
+    YAML_EXTENSIONS,
 } from '#cli/config/repository/setup.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readGitSetting, readHooksFolder } from '#cli/repository/git/run.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 function listFolder(root: string, folder: string): string[] {
     if (statSync(join(root, folder), { throwIfNoEntry: false }) === undefined) return [];

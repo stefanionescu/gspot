@@ -1,8 +1,8 @@
 import { STAGES } from '#cli/config/manifests.ts';
-import type { CheckStatus } from '#cli/types/engine/run.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML, TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { CheckStatus } from '#cli/types/engine/run.ts';
 import type { CheckOutput } from '#cli/types/engine/tool-runs.ts';
-import { PACKAGE_JSON, TSCONFIG_FILE, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 
 export const SHORT_HASH_LENGTH = 7;
 

@@ -1,17 +1,17 @@
-import { test, expect } from 'bun:test';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { fakeTerminals } from '#tests/setup/system/fakes.ts';
-import { captureTerminal } from '#tests/setup/system/terminal.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { expect, test } from 'bun:test';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import {
     printError,
     printResult,
-    printWarning,
-    setOutputOptions,
     printUnexpectedError,
+    printWarning,
     runCancelableCommand,
+    setOutputOptions,
 } from '#cli/system/terminal.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeTerminals } from '#tests/setup/system/fakes.ts';
+import { captureTerminal } from '#tests/setup/system/terminal.ts';
 
 test('an aborted command returns its cancellation status and removes its signal listeners', async () => {
     const listeners = process.listenerCount('SIGINT');

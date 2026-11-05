@@ -1,9 +1,10 @@
-import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
 import { PYVENV_HOME } from '#tests/config/setup/languages.ts';
-import type { RuffConfig } from '#tests/types/configurations.ts';
+import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import type { RuffConfig } from '#tests/types/configurations.ts';
 
 test('python.import_folders reach the basedpyright search paths', async () => {
     const config = JSON.parse(

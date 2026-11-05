@@ -1,13 +1,13 @@
-import type { ImportSource } from '../types/plugin.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
+    IMPORT_EQUALS_SELECTOR,
     IMPORT_SELECTOR,
+    MODULE_DECLARATION_NODES,
     REQUIRE_SELECTOR,
     UNWRAPPABLE_NODES,
-    IMPORT_EQUALS_SELECTOR,
-    MODULE_DECLARATION_NODES,
 } from '../config/plugin.ts';
+import type { ImportSource } from '../types/plugin.ts';
 
 const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map((type) => AST_NODE_TYPES[type]));
 

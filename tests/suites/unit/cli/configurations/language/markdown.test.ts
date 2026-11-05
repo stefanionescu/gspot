@@ -1,19 +1,21 @@
-import { parse } from 'jsonc-parser';
-import { test, expect } from 'bun:test';
-import { pathToFileURL } from 'node:url';
-import { join, dirname } from 'node:path';
-import { createRequire } from 'node:module';
-import { compareText } from '#cli/system/text.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
 import { readFile, realpath } from 'node:fs/promises';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { parse } from 'jsonc-parser';
+
+import { MARKDOWNLINT_PRETTIER_DISABLED, MARKDOWNLINT_RULES } from '#cli/config/configurations/language.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { compareText } from '#cli/system/text.ts';
+import { MARKDOWN_FENCE_CASES } from '#tests/config/configurations/language.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { MARKDOWN_FENCE_CASES } from '#tests/config/configurations/language.ts';
-import { MARKDOWNLINT_RULES, MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
 
 test.each([...MARKDOWN_FENCE_CASES])(
     'markdown/fences reports each fence that does not parse: $name',

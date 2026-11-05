@@ -1,40 +1,40 @@
 import { join } from 'node:path';
 import { styleText } from 'node:util';
+
+import cliPackage from '#cli-package' with { type: 'json' };
+import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
+import {
+    CI_FILE_NOTES,
+    CI_FILES,
+    CI_OFF_NOTES,
+    ORIGIN_URL_SETTING,
+    REMOTE_URL_SCHEME,
+    REMOTE_URL_USER,
+    SUGGESTION_SECTIONS,
+    TOOL_STATE_COLORS,
+    VERSION_GAP,
+} from '#cli/config/commands/reports.ts';
+import { EXIT_FINDINGS } from '#cli/config/engine.ts';
+import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
+import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { readGitSetting } from '#cli/repository/git/run.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { compareText } from '#cli/system/text.ts';
 import { lookUpTool } from '#cli/tools/inspect.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { EXIT_FINDINGS } from '#cli/config/engine.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { runProcess } from '#cli/system/processes.ts';
-import { findMissingEnvironment } from '#cli/tools/uv.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import { selectRuleFiles } from '#cli/generation/rules.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { readGitSetting } from '#cli/repository/git/run.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
-import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
-import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { findMissingBuild, findToolName, getTool, listDistinctTools } from '#cli/tools/pins.ts';
+import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import type { Session, HookStatus, ToolInspection } from '#cli/types/tools.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
-import { getTool, findToolName, findMissingBuild, listDistinctTools } from '#cli/tools/pins.ts';
-import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import type { CiState, DoctorTool, Suggestions, DoctorReport } from '#cli/types/commands/reports.ts';
-
-import {
-    CI_FILES,
-    VERSION_GAP,
-    CI_OFF_NOTES,
-    CI_FILE_NOTES,
-    REMOTE_URL_USER,
-    TOOL_STATE_COLORS,
-    REMOTE_URL_SCHEME,
-    ORIGIN_URL_SETTING,
-    SUGGESTION_SECTIONS,
-} from '#cli/config/commands/reports.ts';
+import type { CiState, DoctorReport, DoctorTool, Suggestions } from '#cli/types/commands/reports.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
 
 const COLUMN_WIDTHS = { label: 9, name: 34 } as const;
 

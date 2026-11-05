@@ -1,17 +1,19 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect, describe } from 'bun:test';
+import { readFile, stat, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { describe, expect, test } from 'bun:test';
+
 import { readCacheFolder } from '#cli/system/environment.ts';
-import { stat, readFile, writeFile } from 'node:fs/promises';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { SWIFT_PACKAGE_CASES, SWIFT_PACKAGE_SANDBOX, XCODE_TOOL_PROJECT } from '#tests/config/integration/swift.ts';
 import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/setup/languages.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { XCODE_TOOL_PROJECT, SWIFT_PACKAGE_CASES, SWIFT_PACKAGE_SANDBOX } from '#tests/config/integration/swift.ts';
+import { hasToolBuild, isMacos } from '#tests/setup/system/platform.ts';
 
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
     await using sandbox = await createGitSandbox({

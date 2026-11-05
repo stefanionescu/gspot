@@ -1,34 +1,34 @@
-import { createRule } from '../../rule.ts';
-import type { FileContext } from '../../types/plugin.ts';
-import { readAssertion } from '../../libraries/assertions.ts';
-import { compareVersions, readPackageFacts } from '../../libraries/packages.ts';
-import type { MatcherSuggestion, ComparisonAssertion } from '../../types/assertions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { VERSION_SPACES, VERSION_PATTERN, VERSION_WILDCARD, VERSION_ALTERNATIVES } from '../../config/libraries.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    VALUE_KINDS,
-    NUMBER_TYPES,
-    NUMERIC_NAME,
-    BOOLEAN_KINDS,
-    NULLISH_KINDS,
-    NUMERIC_SIGNS,
-    OPERAND_KINDS,
-    TEXT_RECEIVER,
+    ASSERT_MESSAGE_INDEX,
     BARE_RECEIVERS,
-    LOCATOR_STATES,
-    LOCATOR_VALUES,
-    TEMPLATE_FIELD,
-    JASMINE_PACKAGES,
-    MATCHER_FAMILIES,
-    NUMERIC_MATCHERS,
-    LOCATOR_FACTORIES,
-    MATCHER_TEMPLATES,
+    BOOLEAN_KINDS,
     EQUALITY_OPERATORS,
     INVERTED_OPERATORS,
-    ASSERT_MESSAGE_INDEX,
+    JASMINE_PACKAGES,
     JASMINE_SIZE_VERSION,
+    LOCATOR_FACTORIES,
+    LOCATOR_STATES,
+    LOCATOR_VALUES,
+    MATCHER_FAMILIES,
+    MATCHER_TEMPLATES,
+    NULLISH_KINDS,
+    NUMBER_TYPES,
+    NUMERIC_MATCHERS,
+    NUMERIC_NAME,
+    NUMERIC_SIGNS,
+    OPERAND_KINDS,
+    TEMPLATE_FIELD,
+    TEXT_RECEIVER,
+    VALUE_KINDS,
 } from '../../config/assertions/matchers.ts';
+import { VERSION_ALTERNATIVES, VERSION_PATTERN, VERSION_SPACES, VERSION_WILDCARD } from '../../config/libraries.ts';
+import { readAssertion } from '../../libraries/assertions.ts';
+import { compareVersions, readPackageFacts } from '../../libraries/packages.ts';
+import { createRule } from '../../rule.ts';
+import type { ComparisonAssertion, MatcherSuggestion } from '../../types/assertions.ts';
+import type { FileContext } from '../../types/plugin.ts';
 
 function getOperand(node: TSESTree.Node, source: TSESLint.SourceCode): string {
     const text = source.getText(node);

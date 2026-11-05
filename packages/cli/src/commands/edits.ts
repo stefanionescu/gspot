@@ -1,32 +1,4 @@
-import { GspotError } from '#cli/system/errors.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
-import { listCheckIds } from '#cli/manifests/read.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { findSetting } from '#cli/settings/inherit.ts';
-import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { PATHS_OPTION } from '#cli/config/commands/help.ts';
-import { buildArgumentPaths } from '#cli/settings/paths.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
-import { listRepositoryFiles } from '#cli/repository/read.ts';
-import type { Session, Generation } from '#cli/types/tools.ts';
-import type { Files, CommandResult } from '#cli/types/system.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
-import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
-import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { selectScope, buildArgumentPath } from '#cli/repository/scopes.ts';
-import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
-import { BASELINE_STAGES, BASELINE_EXEMPT_CHECK } from '#cli/config/engine.ts';
-import { SETTINGS_FILE, BASELINE_FILE } from '#cli/config/repository/files.ts';
-import { compareText, quoteArgument, formatNameList } from '#cli/system/text.ts';
-import { EMPTY_CHECKS_MESSAGE, CHECK_LIST_SEPARATOR } from '#cli/config/commands/reports.ts';
-import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
-import { listInstallNotes, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
-import type { Scope, Settings, TomlTable, SettingsEdit, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
 
 import {
     ADD_REMOVE_MESSAGE,
@@ -34,15 +6,43 @@ import {
     REPAIRED_FILES_MESSAGE,
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
+import { PATHS_OPTION } from '#cli/config/commands/help.ts';
+import { CHECK_LIST_SEPARATOR, EMPTY_CHECKS_MESSAGE } from '#cli/config/commands/reports.ts';
+import { BASELINE_EXEMPT_CHECK, BASELINE_STAGES } from '#cli/config/engine.ts';
+import { BASELINE_FILE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { formatApplyReport, listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
+import { listCheckIds } from '#cli/manifests/read.ts';
+import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/manifests/select.ts';
+import { listRepositoryFiles } from '#cli/repository/read.ts';
+import { buildArgumentPath, selectScope } from '#cli/repository/scopes.ts';
+import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
+import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
+import { findSetting } from '#cli/settings/inherit.ts';
+import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { buildArgumentPaths } from '#cli/settings/paths.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { compareText, formatNameList, quoteArgument } from '#cli/system/text.ts';
 import type {
     CommandOption,
-    IgnoreEditContext,
-    SettingsEditReport,
-    SettingsEditOptions,
     ConfigurationChange,
-    SettingsEditContext,
     ConfigurationsOptions,
+    IgnoreEditContext,
+    SettingsEditContext,
+    SettingsEditOptions,
+    SettingsEditReport,
 } from '#cli/types/commands/edits.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
+import type { AvailableSettings, Scope, SettingMatch, Settings, SettingsEdit, TomlTable } from '#cli/types/settings.ts';
+import type { CommandResult, Files } from '#cli/types/system.ts';
+import type { Generation, Session } from '#cli/types/tools.ts';
 
 async function writeEditedFiles(
     session: Session,

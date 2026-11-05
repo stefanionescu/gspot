@@ -1,29 +1,29 @@
 import { join, relative } from 'node:path';
-import { remember } from '#cli/system/cache.ts';
-import type { Files } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/configurations/language.ts';
-import { prepareBuild, planSwiftBuild, acquireBuildLock } from '#cli/configurations/language/swift/checks/cache.ts';
 
 import {
-    SWIFTC_CALL,
-    RULE_SUFFIX,
     BUILD_LEVELS,
-    MESSAGE_LINE,
     COMPILER_RULE,
-    RESPONSE_FILE,
-    REPORTED_LEVELS,
-    SWIFT_BUILD_NAME,
-    XCODE_CLEAN_ACTION,
     MACOS_PRIVATE_PATH,
+    MESSAGE_LINE,
+    REPORTED_LEVELS,
+    RESPONSE_FILE,
+    RULE_SUFFIX,
+    SWIFT_BUILD_NAME,
+    SWIFTC_CALL,
+    XCODE_CLEAN_ACTION,
 } from '#cli/config/configurations/builds.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { acquireBuildLock, planSwiftBuild, prepareBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { remember } from '#cli/system/cache.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { SwiftBuildOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Files } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const SWIFT_BUILD_OUTPUTS = Symbol('swift build outputs');
 

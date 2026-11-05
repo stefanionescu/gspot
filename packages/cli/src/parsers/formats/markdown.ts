@@ -1,5 +1,6 @@
-import { visit } from 'unist-util-visit';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import { visit } from 'unist-util-visit';
+
 import type { CodeFence, SourceComment } from '#cli/types/parsers.ts';
 
 /**

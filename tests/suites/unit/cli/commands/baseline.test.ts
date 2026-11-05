@@ -1,15 +1,17 @@
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+
+import { expect, test } from 'bun:test';
 import type { TestdirResult } from 'testdirs';
+
 import { compareText } from '#cli/system/text.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { BASELINE_SANDBOX } from '#tests/config/commands/check.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 async function createBaselineSandbox(files: Record<string, string>, tables = ''): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({

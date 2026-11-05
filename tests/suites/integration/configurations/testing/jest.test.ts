@@ -1,20 +1,21 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/engine/run.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+
+import type { RunReport } from '#cli/types/engine/run.ts';
 import {
+    CORRECTED_MATH_TEST_SOURCE,
+    COVERAGE_THRESHOLD_MESSAGE,
+    JEST_COVERAGE_TABLES,
+    JEST_PROJECT_FILES,
     MATH_SOURCE,
     MATH_TEST_SOURCE,
-    JEST_PROJECT_FILES,
-    JEST_COVERAGE_TABLES,
-    COVERAGE_THRESHOLD_MESSAGE,
-    CORRECTED_MATH_TEST_SOURCE,
 } from '#tests/config/integration/testing.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function runJestCoverage(root: string, code: number): Promise<RunReport['checks']> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'jest/tests', '--json']));

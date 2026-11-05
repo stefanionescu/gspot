@@ -1,5 +1,5 @@
+import { YAML_MESSAGES, YAML_RULES } from '#cli/config/configurations/general.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
-import { YAML_RULES, YAML_MESSAGES } from '#cli/config/configurations/general.ts';
 
 export const YAML_EXPLANATIONS = {
     [YAML_RULES.syntax]: {

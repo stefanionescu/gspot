@@ -1,8 +1,8 @@
-import { getLimit } from '#cli/settings/scopes.ts';
+import { BIOME_TYPESCRIPT_FILES } from '#cli/config/configurations/javascript.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { getLimit } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { BIOME_TYPESCRIPT_FILES } from '#cli/config/configurations/javascript.ts';
 
 /**
 Keep Biome limited to cognitive complexity, with the scope's language thresholds.

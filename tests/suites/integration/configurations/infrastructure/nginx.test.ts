@@ -1,15 +1,17 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { compareText } from '#cli/system/text.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { NGINX_INCLUDE_FILES, NGINX_SCOPE_TABLES, NGINX_SERVER } from '#tests/config/integration/infrastructure.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { isLinux, hasToolBuild } from '#tests/setup/system/platform.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { NGINX_SERVER, NGINX_SCOPE_TABLES, NGINX_INCLUDE_FILES } from '#tests/config/integration/infrastructure.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { hasToolBuild, isLinux } from '#tests/setup/system/platform.ts';
 
 test.skipIf(!isLinux || Bun.which('docker') === null)(
     'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',

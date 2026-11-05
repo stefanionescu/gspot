@@ -1,6 +1,7 @@
-import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+
 import { getAttribute, getElementName } from '../../libraries/jsx.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
 
 function isHiddenElement(element: TSESTree.JSXOpeningElement): boolean {
     const type = getAttribute(element, 'type')?.value;

@@ -1,7 +1,8 @@
 import { test } from 'bun:test';
+
+import { DEBUGGER_SAMPLE, ESLINT_SANDBOX } from '#tests/config/integration/javascript.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { ESLINT_SANDBOX, DEBUGGER_SAMPLE } from '#tests/config/integration/javascript.ts';
 
 const eslintSandbox = shareInstalledSandbox({ ...ESLINT_SANDBOX, level: 'basic' });
 

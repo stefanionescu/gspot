@@ -1,19 +1,20 @@
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import type { Files } from '#cli/types/system.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import { join, dirname, relative } from 'node:path';
-import { hasErrorCode } from '#cli/system/errors.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { dirname, join, relative } from 'node:path';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { PackageJson } from '#cli/types/parsers.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { NODE_TOOL } from '#cli/config/tools/installers.ts';
-import type { InstalledDependency } from '#cli/types/tools.ts';
 import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { findProgram } from '#cli/system/programs.ts';
+import type { Tool } from '#cli/types/manifests.ts';
+import type { PackageJson } from '#cli/types/parsers.ts';
+import type { Files } from '#cli/types/system.ts';
+import type { InstalledDependency } from '#cli/types/tools.ts';
 
 /**
 Read and validate an installed package.json through the tool-project boundary.

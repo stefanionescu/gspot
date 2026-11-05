@@ -1,38 +1,39 @@
 import { readFileSync } from 'node:fs';
-import { visit } from 'unist-util-visit';
-import type { Session } from '#cli/types/tools.ts';
-import { listRuleFiles } from '#cli/manifests/read.ts';
-import { getRootScope } from '#cli/settings/scopes.ts';
-import { buildAssetPath } from '#cli/system/assets.ts';
+
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import type { Repository } from '#cli/types/repository.ts';
-import type { Scope, Level } from '#cli/types/settings.ts';
-import type { SourcePosition } from '#cli/types/parsers.ts';
-import { detectConditions } from '#cli/repository/detect.ts';
-import { GROUPS, GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { FIRST_READ } from '#cli/config/settings/validation.ts';
-import { compareText, formatNameList } from '#cli/system/text.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
-import type { ShippedRule, Configuration } from '#cli/types/manifests.ts';
-import type { RuleFile, RuleSection, AgentsBlockContent } from '#cli/types/generation.ts';
+import { visit } from 'unist-util-visit';
 
 import {
+    ALL_LEVEL_MARKER,
     BLANK_LINE,
-    GROUP_LABELS,
-    RULES_HEADING,
+    COMMANDS_HEADING,
     EDIT_KEYS_LINE,
     FIRST_READ_LINE,
-    COMMANDS_HEADING,
-    RULE_INDEX_LINES,
-    ALL_LEVEL_MARKER,
-    MARKDOWN_HEADING,
-    SETTINGS_COMMANDS,
-    RULE_OPENING_PREFIX,
-    GENERATED_FILES_LINE,
     GENERATED_FILES_HEADING,
+    GENERATED_FILES_LINE,
+    GROUP_LABELS,
+    MARKDOWN_HEADING,
+    RULE_INDEX_LINES,
+    RULE_OPENING_PREFIX,
+    RULES_HEADING,
+    SETTINGS_COMMANDS,
 } from '#cli/config/generation.ts';
+import { GROUPS, GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import { FIRST_READ } from '#cli/config/settings/validation.ts';
+import { listRuleFiles } from '#cli/manifests/read.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { detectConditions } from '#cli/repository/detect.ts';
+import { getRootScope } from '#cli/settings/scopes.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
+import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
+import { compareText, formatNameList } from '#cli/system/text.ts';
+import type { AgentsBlockContent, RuleFile, RuleSection } from '#cli/types/generation.ts';
+import type { Configuration, ShippedRule } from '#cli/types/manifests.ts';
+import type { SourcePosition } from '#cli/types/parsers.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import type { Level, Scope } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {
     const conditions = configurations.flatMap((configuration) => Object.values(configuration.rules));

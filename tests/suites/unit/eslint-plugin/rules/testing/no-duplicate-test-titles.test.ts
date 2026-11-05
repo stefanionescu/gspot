@@ -1,6 +1,7 @@
 import { join } from 'node:path';
-import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+
 import { noDuplicateTestTitles } from '#eslint-plugin/rules/testing/no-duplicate-test-titles.ts';
+import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({ mocha: { devDependencies: { mocha: '11.0.0' } }, plain: {} });
 const filename = join(root, 'mocha/a.test.ts');

@@ -1,20 +1,19 @@
-import { splitWords } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
-import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
-import type { Scope, Settings, ScopeSettings } from '#cli/types/settings.ts';
-import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
-
+import { getTable } from '#cli/settings/scopes.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { splitWords } from '#cli/system/text.ts';
 import type {
-    NamingCase,
     BannedWord,
-    NamingSettings,
-    NamingException,
     CompiledException,
+    NamingCase,
+    NamingException,
+    NamingSettings,
     ParsedNamingLanguageFields,
 } from '#cli/types/configurations/general.ts';
+import type { Scope, ScopeSettings, Settings } from '#cli/types/settings.ts';
 
 // JavaScript files follow the naming table of TypeScript, so one set of naming.typescript settings covers both.
 const SHARED_NAMING_LANGUAGES: Readonly<Record<string, string>> = { javascript: 'typescript' };

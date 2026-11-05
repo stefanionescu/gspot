@@ -1,12 +1,13 @@
-import { test, spyOn, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+
 import cliPackage from '#cli-package' with { type: 'json' };
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('unexpected check failures hide their stack until verbose while operational errors stay actionable', async () => {
     await using sandbox = await createGitSandbox({

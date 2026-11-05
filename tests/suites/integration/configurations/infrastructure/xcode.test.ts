@@ -1,16 +1,18 @@
-import { join } from 'node:path';
 import { chmod } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { describe, expect, test } from 'bun:test';
+
 import { planChecks } from '#cli/engine/plan.ts';
-import { test, expect, describe } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import { PLUTIL_UNREADABLE_FILES, XCODE_CASES } from '#tests/config/integration/infrastructure.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { XCODE_CASES, PLUTIL_UNREADABLE_FILES } from '#tests/config/integration/infrastructure.ts';
+import { hasToolBuild, isMacos } from '#tests/setup/system/platform.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 describe.skipIf(!isMacos)('Xcode samples', () => {
     const installedSandbox = shareInstalledSandbox({

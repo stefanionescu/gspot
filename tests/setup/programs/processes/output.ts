@@ -1,4 +1,5 @@
 import { parseArgs } from 'node:util';
+
 import { LARGE_OUTPUT_OPTIONS } from '#tests/config/setup/programs.ts';
 
 const { values } = parseArgs({ options: LARGE_OUTPUT_OPTIONS });

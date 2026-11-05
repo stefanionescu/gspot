@@ -1,21 +1,22 @@
 import { createTwoFilesPatch } from 'diff';
-import { compareText } from '#cli/system/text.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+
+import { BLOCK_ON_DISK_LABEL, DIFF_CONTEXT_LINES, ON_DISK_LABEL } from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { StaleFile } from '#cli/types/engine/run.ts';
-import { isSameContents } from '#cli/system/files/bounded.ts';
-import { listOwnablePaths } from '#cli/generation/pointers.ts';
-import type { Files, FileContents } from '#cli/types/system.ts';
+import { GSPOT_FOLDER, OCTAL_RADIX } from '#cli/config/parsers.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
-import { OCTAL_RADIX, GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { listStrayPaths, hasManagedKeys } from '#cli/repository/writer.ts';
+import { hasManagedKeys, listStrayPaths } from '#cli/repository/writer.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import type { Session, Generation, GeneratedFile } from '#cli/types/tools.ts';
-import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/config/generation.ts';
+import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import type { StaleFile } from '#cli/types/engine/run.ts';
+import type { FileContents, Files } from '#cli/types/system.ts';
+import type { GeneratedFile, Generation, Session } from '#cli/types/tools.ts';
 
 function listStaleOutputs(files: Files, generated: Generation): StaleFile[] {
     return generated.files.flatMap((file): StaleFile[] => {

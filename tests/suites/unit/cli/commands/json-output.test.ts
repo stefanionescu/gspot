@@ -1,29 +1,30 @@
-import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+
+import {
+    changedEditOutputSchema,
+    checkOutputSchema,
+    checkReportSchema,
+    configurationOutputSchema,
+    configurationsListOutputSchema,
+    doctorOutputSchema,
+    initOutputSchema,
+    installOutputSchema,
+    lintRuleOutputSchema,
+    pathOutputSchema,
+    scanOutputSchema,
+    settingOutputSchema,
+    settingsListOutputSchema,
+    unchangedEditOutputSchema,
+} from '#cli/schemas/commands.ts';
 import * as installers from '#cli/tools/installers/install.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    scanOutputSchema,
-    initOutputSchema,
-    pathOutputSchema,
-    checkReportSchema,
-    checkOutputSchema,
-    doctorOutputSchema,
-    installOutputSchema,
-    settingOutputSchema,
-    lintRuleOutputSchema,
-    changedEditOutputSchema,
-    settingsListOutputSchema,
-    unchangedEditOutputSchema,
-    configurationOutputSchema,
-    configurationsListOutputSchema,
-} from '#cli/schemas/commands.ts';
 
 const PAGE = await readFile(join(REPOSITORY_ROOT, 'docs/src/content/docs/reference/json-output.mdx'), 'utf8');
 

@@ -1,34 +1,34 @@
 import { join, relative } from 'node:path';
-import { remember } from '#cli/system/cache.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import { NODE_MODULES } from '#cli/config/system.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { findProgram } from '#cli/system/programs.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { MISE_TOOL } from '#cli/config/tools/installers.ts';
-import { findMisePin, findPackagePin } from '#cli/tools/pins.ts';
-import { PACKAGE_JSON, GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { isInside, listEnclosingFolders } from '#cli/system/paths.ts';
-import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
-import { START_RUNNERS, GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
-import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/packages.ts';
-import { readPackageJson, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/programs.ts';
-import { readToolBinPaths, listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { GSPOT_PACKAGES, START_RUNNERS } from '#cli/config/repository/javascript.ts';
+import { NODE_MODULES } from '#cli/config/system.ts';
+import { MISE_TOOL } from '#cli/config/tools/installers.ts';
+import { AVAILABLE_TOOL_STATES, INSTALL_HELP, MISE_INSTALL_URL } from '#cli/config/tools/programs.ts';
+import { listProjectDependencyNames, readPackageJson } from '#cli/repository/dependencies.ts';
+import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { remember } from '#cli/system/cache.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { isInside, listEnclosingFolders } from '#cli/system/paths.ts';
+import { findProgram } from '#cli/system/programs.ts';
+import { listExecutablePaths, listRepositoryExecutablePaths, readToolBinPaths } from '#cli/tools/locate.ts';
+import { findInstalledDependency, readToolProjectPackage } from '#cli/tools/packages.ts';
+import { findMisePin, findPackagePin } from '#cli/tools/pins.ts';
+import { classifyToolVersion, readToolVersion } from '#cli/tools/versions.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import type {
-    Session,
-    ToolSearch,
-    ScopeCheck,
-    ToolFolders,
     InspectedTool,
-    ToolInspection,
-    ProcessFailure,
-    ToolAvailability,
-    ToolLookupSession,
     InstalledDependency,
+    ProcessFailure,
+    ScopeCheck,
+    Session,
+    ToolAvailability,
+    ToolFolders,
+    ToolInspection,
+    ToolLookupSession,
+    ToolSearch,
 } from '#cli/types/tools.ts';
 
 const TOOL_LOOKUPS = Symbol('tool lookups');

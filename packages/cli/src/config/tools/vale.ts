@@ -1,5 +1,5 @@
-import type { ProseRoute } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { ProseRoute } from '#cli/types/tools.ts';
 
 export const VALE_STYLES_PATH = `${GSPOT_PATHS.configurations}/general/prose/styles`;
 

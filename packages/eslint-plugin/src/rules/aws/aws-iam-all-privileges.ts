@@ -1,7 +1,8 @@
-import { createRule } from '../../rule.ts';
-import { ANY_PRINCIPAL } from '../../config/aws.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { listCdkStrings, getCdkProperty, listAllowStatements } from '../../libraries/aws.ts';
+
+import { ANY_PRINCIPAL } from '../../config/aws.ts';
+import { getCdkProperty, listAllowStatements, listCdkStrings } from '../../libraries/aws.ts';
+import { createRule } from '../../rule.ts';
 
 export const awsIamAllPrivileges = createRule<[], 'allActions'>({
     name: 'aws-iam-all-privileges',

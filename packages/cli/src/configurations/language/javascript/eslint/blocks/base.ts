@@ -1,58 +1,58 @@
 import { basename } from 'node:path/posix';
-import { tryParseFile } from '#cli/system/errors.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
-import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
-import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
-import { SCRIPT_RULES, CONSOLE_RULES, JAVASCRIPT_RULES } from '#cli/config/configurations/eslint.ts';
-import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
-import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { buildLocalPluginBlocks } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
 
 import {
-    splitSettingsBlocks,
+    BOUNDARIES_FILES_SETTING,
+    GSPOT_PRESET_LEVELS,
+    GSPOT_RULE_PREFIX,
+    IMPORT_BOUNDARIES_RULE,
+    IMPORT_LAYOUT_RULES,
+    JAVASCRIPT_CONFIGURATION,
+    NODE_RULES,
+    NODE_RUNTIMES,
+    PACKAGE_JSON_PATTERN,
+    PIN_RANGES_RULE,
+    PRESETS_AFTER_CONFIGURATIONS,
+    PRESETS_BEFORE_CONFIGURATIONS,
+    PRIVATE_PIN_OPTIONS,
+    PUBLISHED_PIN_OPTIONS,
+    RESTRICTED_SYNTAX_RULE,
+    ROOT_PACKAGE_JSON_RULES,
+    RUNTIME_GLOBALS,
+    SCRIPT_NAMES_RULE,
+    TEST_RULES,
+} from '#cli/config/configurations/blocks.ts';
+import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/eslint.ts';
+import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
+import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import {
+    buildImportBoundariesRule,
+    buildImportIgnores,
+    buildImportStyleBlocks,
+    buildNodeScriptBlocks,
+    buildScopeImportBlocks,
+} from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
+import { buildLocalPluginBlocks } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
+import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
+import {
     buildRestrictedImportBlocks,
+    splitSettingsBlocks,
 } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
+import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
+import { escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
 import type {
+    ConfigurationBlocks,
     EslintBlock,
+    EslintBlockFields,
     EslintFiles,
     EslintRuntime,
     ListedPlugins,
-    EslintBlockFields,
     PlannedEslintFile,
-    ConfigurationBlocks,
 } from '#cli/types/configurations/language.ts';
-import {
-    buildImportIgnores,
-    buildNodeScriptBlocks,
-    buildImportStyleBlocks,
-    buildScopeImportBlocks,
-    buildImportBoundariesRule,
-} from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import {
-    NODE_RULES,
-    TEST_RULES,
-    NODE_RUNTIMES,
-    RUNTIME_GLOBALS,
-    PIN_RANGES_RULE,
-    SCRIPT_NAMES_RULE,
-    GSPOT_RULE_PREFIX,
-    GSPOT_PRESET_LEVELS,
-    IMPORT_LAYOUT_RULES,
-    PRIVATE_PIN_OPTIONS,
-    PACKAGE_JSON_PATTERN,
-    PUBLISHED_PIN_OPTIONS,
-    IMPORT_BOUNDARIES_RULE,
-    RESTRICTED_SYNTAX_RULE,
-    ROOT_PACKAGE_JSON_RULES,
-    JAVASCRIPT_CONFIGURATION,
-    BOUNDARIES_FILES_SETTING,
-    PRESETS_AFTER_CONFIGURATIONS,
-    PRESETS_BEFORE_CONFIGURATIONS,
-} from '#cli/config/configurations/blocks.ts';
 
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks {
     const { session, projects } = planned;

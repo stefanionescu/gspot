@@ -1,26 +1,25 @@
-import type { Session } from '#cli/types/tools.ts';
-import type { Level } from '#cli/types/settings.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
-import { docstringStyleSchema } from '#cli/schemas/configurations.ts';
-import { findDocstring, parsePythonModule } from '#cli/parsers/code/python.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
-import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/configurations/language.ts';
-
 import {
-    NUMPY_DOCSTRING,
     GOOGLE_DOCSTRING,
+    NUMPY_DOCSTRING,
+    PYDOCLINT_ALL_LEVEL_OPTIONS,
     PYDOCLINT_COMMAND,
+    PYDOCLINT_DEFAULT_STYLE,
     PYDOCLINT_STYLE_FLAG,
     PYDOCLINT_TYPE_OPTIONS,
-    PYDOCLINT_DEFAULT_STYLE,
-    PYDOCLINT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/configurations/python.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
+import { findDocstring, parsePythonModule } from '#cli/parsers/code/python.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { docstringStyleSchema } from '#cli/schemas/configurations.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/configurations/language.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { Level } from '#cli/types/settings.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
     const module = await parsePythonModule(path, readText(session.cache, path), session);

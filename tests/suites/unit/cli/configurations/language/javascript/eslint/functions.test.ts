@@ -1,11 +1,13 @@
 import { join } from 'node:path';
+
+import { expect, mock, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, mock, expect } from 'bun:test';
+
+import { setImportLookup, setRuntime } from '#cli/configurations/language/javascript/files/eslint-functions.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { setRuntime, setImportLookup } from '#cli/configurations/language/javascript/files/eslint-functions.ts';
 
 test('a runtime that the globals package does not name stops the config', () => {
     expect(() => setRuntime({}, { node: {}, browser: {} }, 'nodejs', 'module')).toThrow(/\bnodejs\b/u);

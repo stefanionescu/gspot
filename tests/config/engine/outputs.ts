@@ -1,4 +1,5 @@
 import { win32 } from 'node:path';
+
 import { TYPO } from '#tests/config/setup/configurations.ts';
 
 export const CHECK_OUTPUTS = [

@@ -1,21 +1,23 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { runChecks } from '#cli/engine/run.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import type { RunOptions } from '#cli/types/engine/run.ts';
+import { join } from 'node:path';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import type { RunOptions } from '#cli/types/engine/run.ts';
 import { FIX_LINTER_CASES } from '#tests/config/engine/run.ts';
+import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
+import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/setup/sandboxes.ts';
+import { listFindingRows, parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/setup/sandboxes.ts';
-import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',

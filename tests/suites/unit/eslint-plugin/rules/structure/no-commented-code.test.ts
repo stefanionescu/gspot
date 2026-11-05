@@ -1,6 +1,7 @@
 import * as parser from '@typescript-eslint/parser';
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+
 import { noCommentedCode } from '#eslint-plugin/rules/structure/no-commented-code.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-commented-code', noCommentedCode, {
     valid: [

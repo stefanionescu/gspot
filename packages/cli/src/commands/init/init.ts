@@ -1,37 +1,37 @@
-import { LEVELS } from '#cli/config/manifests.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { EXIT_FINDINGS } from '#cli/config/engine.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { readTemplate } from '#cli/commands/init/template.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { buildToolProjects } from '#cli/generation/generate.ts';
-import { installTools } from '#cli/tools/installers/install.ts';
-import { formatDetection } from '#cli/commands/init/detection.ts';
 import { InvalidArgumentError } from '@commander-js/extra-typings';
-import { formatInitPlan } from '#cli/generation/setup/file-plan.ts';
-import { print, runCancelableCommand } from '#cli/system/terminal.ts';
-import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
-import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
-import type { CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
-import type { InitOptions, ApplyReport, InitPlanning } from '#cli/types/generation.ts';
-import type { InitJson, InitFlags, CommandDefinition } from '#cli/types/commands/edits.ts';
 
+import { formatDetection } from '#cli/commands/init/detection.ts';
+import { readTemplate } from '#cli/commands/init/template.ts';
 import {
+    CONFIGURATION_LIST_SEPARATOR,
+    CONFIGURATIONS_OPTION,
+    FROM_CONFLICT_MESSAGE,
     FROM_OPTION,
+    INSTALLATION_STOPPED_MESSAGE,
     LEVEL_OPTION,
     NEXT_PIN_MESSAGE,
-    WROTE_PLAN_MESSAGE,
     NEXT_STEPS_MESSAGE,
-    FROM_CONFLICT_MESSAGE,
-    CONFIGURATIONS_OPTION,
-    SETTINGS_EXIST_MESSAGE,
     NO_CONFIGURATIONS_FLAG,
-    INSTALLATION_STOPPED_MESSAGE,
-    CONFIGURATION_LIST_SEPARATOR,
+    SETTINGS_EXIST_MESSAGE,
+    WROTE_PLAN_MESSAGE,
 } from '#cli/config/commands/edits.ts';
+import { EXIT_FINDINGS } from '#cli/config/engine.ts';
+import { LEVELS } from '#cli/config/manifests.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { listHostCheckTools } from '#cli/engine/tools.ts';
+import { buildToolProjects } from '#cli/generation/generate.ts';
+import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
+import { formatInitPlan } from '#cli/generation/setup/file-plan.ts';
+import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { print, runCancelableCommand } from '#cli/system/terminal.ts';
+import { installTools } from '#cli/tools/installers/install.ts';
+import type { CommandDefinition, InitFlags, InitJson } from '#cli/types/commands/edits.ts';
+import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
+import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
 
 const CONFIGURATIONS_CONFLICT_MESSAGE =
     '--configurations cannot run with --no-configurations. Give the names, or select none.';

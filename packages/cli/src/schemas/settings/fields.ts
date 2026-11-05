@@ -1,26 +1,26 @@
 import { z } from 'zod';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
-import type { ReasonedValue, ReasonedSettingDefinition } from '#cli/types/settings.ts';
-import { CASE_NAMES, REASON_DESCRIPTIONS, BOUND_REASON_DESCRIPTION } from '#cli/config/manifests.ts';
 
+import { BOUND_REASON_DESCRIPTION, CASE_NAMES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
 import {
-    INDENT_MAX,
-    PROSE_WRAPS,
     ARROW_PARENS,
-    QUOTE_STYLES,
+    FORMAT_INDENT_STYLES,
+    FORMAT_OVERRIDE_MIN_FIELDS,
     INDENT_DEFAULT,
+    INDENT_MAX,
     MAX_PERCENTAGE,
-    PRINT_WIDTH_MIN,
-    PRINT_WIDTH_MAX,
-    TRAILING_COMMAS,
     NAMING_LANGUAGES,
     PRINT_WIDTH_DEFAULT,
-    FORMAT_INDENT_STYLES,
-    SETTING_ORIGIN_KINDS,
+    PRINT_WIDTH_MAX,
+    PRINT_WIDTH_MIN,
+    PROSE_WRAPS,
+    QUOTE_STYLES,
     RELATIVE_PATH_PATTERN,
     REMOVAL_REASON_DESCRIPTION,
-    FORMAT_OVERRIDE_MIN_FIELDS,
+    SETTING_ORIGIN_KINDS,
+    TRAILING_COMMAS,
 } from '#cli/config/settings/schema.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
+import type { ReasonedSettingDefinition, ReasonedValue } from '#cli/types/settings.ts';
 
 export const nonemptyStringsSchema = nonemptyStringSchema.array();
 

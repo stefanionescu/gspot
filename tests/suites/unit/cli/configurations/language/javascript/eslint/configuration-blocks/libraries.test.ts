@@ -1,19 +1,19 @@
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 
+import { compareText } from '#cli/system/text.ts';
 import {
+    DRIZZLE_SCOPE_SETTINGS,
+    TRPC_FAILURES,
     TRPC_FILES,
-    TRPC_TYPES,
     TRPC_IMPORTS,
     TRPC_MODULES,
-    TRPC_FAILURES,
-    ZUSTAND_FILES,
-    DRIZZLE_SCOPE_SETTINGS,
+    TRPC_TYPES,
     UNCHECKED_ROUTER_FILES,
+    ZUSTAND_FILES,
 } from '#tests/config/configurations/javascript/configuration-blocks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test('Drizzle reports delete and update without where only for its client names', async () => {
     await using sandbox = await testdir({

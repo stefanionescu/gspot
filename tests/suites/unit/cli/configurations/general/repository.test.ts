@@ -1,20 +1,22 @@
-import { test, expect } from 'bun:test';
+import { symlink, unlink, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
-import { planChecks } from '#cli/engine/plan.ts';
-import { compareText } from '#cli/system/text.ts';
-import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runCheckCode, runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { LARGE_FILE_TABLES, LOCAL_FILE_PATHS } from '#tests/config/configurations/general.ts';
+import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
-import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/configurations/general.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
     await using sandbox = await createGitSandbox({});

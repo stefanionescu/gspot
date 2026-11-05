@@ -1,18 +1,18 @@
-import { createRule } from '../../rule.ts';
-import type { MemberCall, FunctionNode } from '../../types/plugin.ts';
-import type { ThenCall, CallbackScope } from '../../types/assertions.ts';
-import { listBodyNodes, isTestRelatedPath } from '../../libraries/testing.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    STRING_CALLS,
+    ASSERTION_DEPTHS,
+    CYPRESS_QUERIES,
     LITERAL_KINDS,
     SAFE_OPERANDS,
     SELECTOR_TEXT,
+    STRING_CALLS,
     THEN_CALLBACK,
-    CYPRESS_QUERIES,
-    ASSERTION_DEPTHS,
 } from '../../config/assertions/evidence.ts';
+import { isTestRelatedPath, listBodyNodes } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { CallbackScope, ThenCall } from '../../types/assertions.ts';
+import type { FunctionNode, MemberCall } from '../../types/plugin.ts';
 
 function getCallKind(node: TSESTree.CallExpression, kinds: ReadonlyMap<string, string>): string | undefined {
     const { callee } = node;

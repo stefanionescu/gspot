@@ -1,27 +1,28 @@
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { join, delimiter } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
-import type { PausedGit } from '#tests/types/setup.ts';
-import { pushOutputSchema } from '#cli/schemas/commands.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { SIGNAL_EXITS, AUTHORED_SCRIPT } from '#tests/config/commands/check.ts';
-import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
-import { waitForExit, waitForFile, captureChild, spawnCommand, limitCommand } from '#tests/setup/system/processes.ts';
+import { delimiter, join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { pushOutputSchema } from '#cli/schemas/commands.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { AUTHORED_SCRIPT, SIGNAL_EXITS } from '#tests/config/commands/check.ts';
+import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 import {
     BASH_SYNTAX_CHECK,
     BASH_SYNTAX_PUSH_CHECK,
     UNIT_TEST_TIMEOUT_MILLISECONDS,
 } from '#tests/config/setup/sandboxes.ts';
+import { CLI_BIN, parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { captureChild, limitCommand, spawnCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import type { PausedGit } from '#tests/types/setup.ts';
 
 async function prepareStagedCancellation(root: string, operation: 'status' | 'init' | 'cat-file') {
     await createFileTree(root, {

@@ -1,16 +1,18 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { compareText } from '#cli/system/text.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { LinkFailure } from '#tests/types/integration.ts';
+import { LINK_PAGE, LINK_SCOPE_TABLES, ROOT_LINK_FILES } from '#tests/config/integration/general.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { LINK_PAGE, ROOT_LINK_FILES, LINK_SCOPE_TABLES } from '#tests/config/integration/general.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import type { LinkFailure } from '#tests/types/integration.ts';
 
 async function assertLinkFailures(root: string, checkId: string, failures: readonly LinkFailure[]): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', checkId, '--json']));

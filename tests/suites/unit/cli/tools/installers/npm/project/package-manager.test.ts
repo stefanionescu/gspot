@@ -1,15 +1,16 @@
-import { test, spyOn, expect } from 'bun:test';
+import { expect, spyOn, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
+import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/tools/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/tools/npm.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('npm in place of Yarn 1 refuses to run without the minimum release age', async () => {
     await using sandbox = await createGitSandbox({

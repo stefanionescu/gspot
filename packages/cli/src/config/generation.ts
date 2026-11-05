@@ -1,11 +1,11 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import type { Group } from '#cli/types/repository.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
+import { PYTHON_FILES, SQL_FILES } from '#cli/config/configurations/python.ts';
 import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { BASELINE_FILE, GENERATED_HEADER_MARK, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
+import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
-import { SQL_FILES, PYTHON_FILES } from '#cli/config/configurations/python.ts';
-import { BASELINE_FILE, GITATTRIBUTES_FILE, GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
+import type { Group } from '#cli/types/repository.ts';
 
 export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 

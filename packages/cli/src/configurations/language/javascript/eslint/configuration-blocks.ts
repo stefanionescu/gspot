@@ -1,33 +1,33 @@
 import { isDeepStrictEqual } from 'node:util';
-import { escapeGlob } from '#cli/system/paths.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { getTable, findParentScope } from '#cli/settings/scopes.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
+
+import { FILE_EXTENSION_RULE, IMPORT_EXTENSIONS } from '#cli/config/configurations/blocks.ts';
+import { PLUGIN_RULE_BLOCKS, SUPABASE_RULES } from '#cli/config/configurations/javascript.ts';
 import { ASTRO_BLOCK_BUILDERS } from '#cli/configurations/framework/astro/generate.ts';
-import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
 import { NESTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nestjs/generate.ts';
 import { NEXTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nextjs/generate.ts';
-import { SVELTE_BLOCK_BUILDERS } from '#cli/configurations/framework/svelte/generate.ts';
-import { DRIZZLE_BLOCK_BUILDERS } from '#cli/configurations/library/drizzle/generate.ts';
-import { ZUSTAND_BLOCK_BUILDERS } from '#cli/configurations/library/zustand/generate.ts';
-import { IMPORT_EXTENSIONS, FILE_EXTENSION_RULE } from '#cli/config/configurations/blocks.ts';
-import { SUPABASE_RULES, PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
 import { REACT_DOM_BLOCK_BUILDERS } from '#cli/configurations/framework/react-dom/generate.ts';
-import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
-import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';
+import { SVELTE_BLOCK_BUILDERS } from '#cli/configurations/framework/svelte/generate.ts';
+import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
-
+import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
+import { DRIZZLE_BLOCK_BUILDERS } from '#cli/configurations/library/drizzle/generate.ts';
+import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';
+import { ZUSTAND_BLOCK_BUILDERS } from '#cli/configurations/library/zustand/generate.ts';
+import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { findParentScope, getTable } from '#cli/settings/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
 import type {
-    EslintScope,
-    PlannedEslintFile,
-    PlannedEslintBlock,
     ConfigurationBlocks,
     ConfigurationBuilder,
     ConfigurationScopeBlocks,
+    EslintScope,
+    PlannedEslintBlock,
+    PlannedEslintFile,
 } from '#cli/types/configurations/language.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { Scope } from '#cli/types/settings.ts';
 
 const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
     ...Object.fromEntries(Object.keys(PLUGIN_RULE_BLOCKS).map((name) => [name, buildPluginRuleBlocks])),

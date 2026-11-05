@@ -1,20 +1,22 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
+import { readFile, rm, unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import type { TomlTable } from '#cli/types/settings.ts';
 import { LITERAL_ROUTE_CASES } from '#tests/config/commands/edits.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { BROKEN_IF_SCRIPT, TERMS_SOURCE } from '#tests/config/setup/languages.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { TERMS_SOURCE, BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('an ignore without paths stops a command check and its fixer until unignore', async () => {
     await using sandbox = await createGitSandbox({});

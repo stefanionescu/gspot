@@ -1,22 +1,24 @@
 import { existsSync } from 'node:fs';
-import { test, expect, describe } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { stringify } from '@decimalturn/toml-patch';
-import { join, dirname, delimiter } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { delimiter, dirname, join } from 'node:path';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import cliPackage from '#cli-package' with { type: 'json' };
-import { LINE_BREAK } from '#tests/config/setup/sandboxes.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import type { CiDocument } from '#tests/types/integration.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import type { ProcessOutput, GithubWorkflow } from '#tests/types/setup.ts';
-import { CLI_BIN, spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/infrastructure.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { LINE_BREAK } from '#tests/config/setup/sandboxes.ts';
+import { CLI_BIN, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import type { CiDocument } from '#tests/types/integration.ts';
+import type { GithubWorkflow, ProcessOutput } from '#tests/types/setup.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     runGitStep(root, ['init', '-q']);

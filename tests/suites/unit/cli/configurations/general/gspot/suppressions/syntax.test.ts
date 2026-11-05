@@ -1,16 +1,16 @@
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
+import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import {
     JSX_COMMENTS,
-    QUOTED_ESLINT_COMMENTS,
     LIMIT_SUPPRESSION_CASES,
+    QUOTED_ESLINT_COMMENTS,
     SUPPRESSION_SYNTAX_CASES,
 } from '#tests/config/configurations/gspot/suppressions.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 describe.each([...SUPPRESSION_SYNTAX_CASES])(
     'suppression comments match $name',

@@ -1,5 +1,5 @@
-import type { PluginRuleBlock } from '#cli/types/configurations/language.ts';
 import { REACT_FILES, REACT_RULES } from '#cli/config/configurations/framework.ts';
+import type { PluginRuleBlock } from '#cli/types/configurations/language.ts';
 
 export const TSC_UNFORMATTED_OUTPUT = ['--pretty', 'false'] as const;
 

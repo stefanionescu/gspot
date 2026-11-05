@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { isTable } from '#cli/system/tables.ts';
+
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { isTable } from '#cli/system/tables.ts';
 
 const taskSchema = z.looseObject({
     alias: z.union([z.string(), z.string().array()]).optional(),

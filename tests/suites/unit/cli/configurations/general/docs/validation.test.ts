@@ -1,34 +1,35 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { README, LICENSE } from '#tests/config/setup/configurations.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-
 import {
-    MDX_GUIDE,
+    COVERAGE_CHECK_TABLES,
+    DOC_FENCE_PATH_CASES,
     DOC_TASK_FILES,
-    DOC_TASK_SCOPES,
     DOC_TASK_FINDINGS,
-    MISE_TASK_SOURCES,
+    DOC_TASK_SCOPES,
     IGNORED_PATH_FILES,
     LICENSE_FILE_CASES,
-    RELATIVE_PATH_FILES,
-    DOC_FENCE_PATH_CASES,
     MALFORMED_TASK_FILES,
-    COVERAGE_CHECK_TABLES,
-    RELATIVE_PATH_FINDINGS,
+    MDX_GUIDE,
     MDX_MISSING_PATH_FINDINGS,
+    MISE_TASK_SOURCES,
+    RELATIVE_PATH_FILES,
+    RELATIVE_PATH_FINDINGS,
 } from '#tests/config/configurations/docs.ts';
+import { LICENSE, README } from '#tests/config/setup/configurations.ts';
+import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('required files run in root and child scopes even without any Markdown file', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { embedAlternativeText } from '#eslint-plugin/rules/accessibility/embed-alternative-text.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('embed-alternative-text', embedAlternativeText, {
     valid: ['const chart = <object data="chart.svg">Sales by month</object>;'],

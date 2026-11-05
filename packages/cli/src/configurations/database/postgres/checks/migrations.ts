@@ -1,28 +1,28 @@
 import { posix } from 'node:path';
-import { remember } from '#cli/system/cache.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { listCheckFiles } from '#cli/engine/files.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { readHead, readCommittedTexts } from '#cli/repository/revisions/files.ts';
-import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
 
 import {
-    parseSqlFile,
-    listSqlTokens,
-    extractMigrationVersion,
-    compareMigrationVersions,
-} from '#cli/parsers/code/sql.ts';
-import {
-    SYNTAX_RULE,
-    SQUAWK_CHECK,
-    SQL_EXTENSION,
+    DOWN_MIGRATION_SUFFIX,
     MIGRATION_DOWN,
     MIGRATION_SYNTAX_SKIP,
-    DOWN_MIGRATION_SUFFIX,
+    SQL_EXTENSION,
+    SQUAWK_CHECK,
+    SYNTAX_RULE,
 } from '#cli/config/configurations/infrastructure.ts';
+import { listCheckFiles } from '#cli/engine/files.ts';
+import {
+    compareMigrationVersions,
+    extractMigrationVersion,
+    listSqlTokens,
+    parseSqlFile,
+} from '#cli/parsers/code/sql.ts';
+import { readCommittedTexts, readHead } from '#cli/repository/revisions/files.ts';
+import { remember } from '#cli/system/cache.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 const MIGRATIONS = Symbol('migrations');
 

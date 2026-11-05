@@ -1,9 +1,11 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { planBlock, planRemovals, writePlans } from '#cli/repository/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { planBlock, writePlans, planRemovals } from '#cli/repository/writer.ts';
 
 test('managed block updates and removal keep your text around the block', async () => {
     await using sandbox = await testdir();

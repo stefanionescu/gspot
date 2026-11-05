@@ -1,17 +1,19 @@
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { getTool } from '#cli/tools/pins.ts';
-import { openSession } from '#cli/engine/session.ts';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { ToolPackageJson } from '#tests/types/setup.ts';
-import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { LICENSE_TOOL_CASES, STYLESHEET_CASES } from '#tests/config/generation/generate.ts';
+import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { STYLESHEET_CASES, LICENSE_TOOL_CASES } from '#tests/config/generation/generate.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import type { ToolPackageJson } from '#tests/types/setup.ts';
 
 test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is selected', async (row) => {
     await using sandbox = await createGitSandbox({

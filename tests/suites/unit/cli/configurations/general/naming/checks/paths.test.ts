@@ -1,22 +1,23 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { runChecks } from '#cli/engine/run.ts';
-import { compareText } from '#cli/system/text.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { rename, writeFile } from 'node:fs/promises';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildFileIdentifier } from '#cli/configurations/general/naming/checks/paths.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { buildFileIdentifier } from '#cli/configurations/general/naming/checks/paths.ts';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
     FILE_NAME_CASES,
     NUMBERED_FILE_FINDINGS,
     NUMBERED_PREFIX_OVERRIDE,
 } from '#tests/config/configurations/naming/validation.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('[slug] path brackets are allowed in every scope and banned file names are reported', async () => {
     await using sandbox = await createGitSandbox({

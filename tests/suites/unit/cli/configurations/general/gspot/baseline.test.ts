@@ -1,10 +1,11 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 const staleCount = { file: 'guide.md', check: 'docs/missing-paths', rule: 'docs/missing-paths', count: 1 };
 

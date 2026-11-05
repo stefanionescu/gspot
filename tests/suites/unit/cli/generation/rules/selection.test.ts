@@ -1,12 +1,13 @@
-import type { Level } from '#cli/types/settings.ts';
+import { beforeAll, describe, expect, test } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { test, expect, describe, beforeAll } from 'bun:test';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import type { Level } from '#cli/types/settings.ts';
 import { RUNTIME_RULE_CASES } from '#tests/config/generation/generate.ts';
+import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {

@@ -1,20 +1,19 @@
 import { CLI_REFERENCE } from '#cli/reference.ts';
+import {
+    COMMANDS_DESCRIPTION,
+    COMMANDS_OPENING,
+    DEFINITION_HEADING,
+    ENVIRONMENT_VARIABLES,
+    ENVIRONMENT_VARIABLES_HEADING,
+    EXAMPLE_MESSAGE,
+    EXIT_CODE_HEADING,
+    EXIT_CODES_HEADING,
+    GLOBAL_OPTIONS_HEADING,
+    PURPOSE_HEADING,
+} from '#docs/config/reference.ts';
+import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
 import { type ReferencePage } from '#docs/types/pages.ts';
 import { type CommandReference } from '#docs/types/reference.ts';
-import { formatText, formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
-
-import {
-    PURPOSE_HEADING,
-    EXAMPLE_MESSAGE,
-    COMMANDS_OPENING,
-    EXIT_CODE_HEADING,
-    DEFINITION_HEADING,
-    EXIT_CODES_HEADING,
-    COMMANDS_DESCRIPTION,
-    ENVIRONMENT_VARIABLES,
-    GLOBAL_OPTIONS_HEADING,
-    ENVIRONMENT_VARIABLES_HEADING,
-} from '#docs/config/reference.ts';
 
 function formatChoices(value: Pick<CommandReference['arguments'][number], 'choices' | 'default'>): string {
     const choices =

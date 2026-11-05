@@ -1,16 +1,18 @@
-import { sep, join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { readFile, symlink, writeFile } from 'node:fs/promises';
+import { join, sep } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { planSwiftBuild, prepareBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
-import { symlink, readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
-import { prepareBuild, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('build cache rejects external output links', async () => {
     await using sandbox = await createGitSandbox({});

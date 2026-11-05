@@ -1,5 +1,6 @@
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+
 import { createRule } from '../../rule.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getBooleanLiteral(statement: TSESTree.Statement | undefined): boolean | undefined {
     if (statement?.type !== AST_NODE_TYPES.ReturnStatement) return undefined;

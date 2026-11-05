@@ -1,21 +1,22 @@
-import { join } from 'node:path';
-import { expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+import { join } from 'node:path';
 
+import { expect } from 'bun:test';
+import { createFileTree, type DirectoryJSON, testdir, type TestdirResult } from 'testdirs';
+
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import {
-    PUSH_CONTENT,
+    BASH_SYNTAX_PUSH_CHECK,
+    CHANGED_CONTEXT,
     HOOKS_SETTINGS,
     LFS_ATTRIBUTES,
-    CHANGED_CONTEXT,
-    TEAMS_TABLE_SQL,
     NESTED_SCOPE_FILES,
+    PUSH_CONTENT,
     TEAMS_MIGRATION_PATH,
-    BASH_SYNTAX_PUSH_CHECK,
+    TEAMS_TABLE_SQL,
 } from '#tests/config/setup/sandboxes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 /**
 Check that a push check left the HEAD commit, the settings, and the working-tree bytes of the push repository alone.

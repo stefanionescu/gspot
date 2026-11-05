@@ -1,25 +1,26 @@
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { runChecks } from '#cli/engine/run.ts';
+import { basename, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { readMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { planChecks } from '#cli/engine/plan.ts';
-import { compareText } from '#cli/system/text.ts';
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { compareText } from '#cli/system/text.ts';
+import {
+    DEFAULT_MIGRATION_FOLDER_FILES,
+    MALFORMED_MIGRATION_PATH,
+    POSTGRES_CHECKS,
+    ROW_SECURITY_SQL,
+} from '#tests/config/configurations/database.ts';
+import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { readMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
-
-import {
-    POSTGRES_CHECKS,
-    ROW_SECURITY_SQL,
-    MALFORMED_MIGRATION_PATH,
-    DEFAULT_MIGRATION_FOLDER_FILES,
-} from '#tests/config/configurations/database.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
     await using sandbox = await createGitSandbox({

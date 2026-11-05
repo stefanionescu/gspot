@@ -1,19 +1,20 @@
-import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { isTable } from '#cli/system/tables.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import { findChildSchema } from '#cli/settings/lookup.ts';
-import type { SettingsError } from '#cli/types/settings.ts';
-import type { Setting, ReasonRequirement } from '#cli/types/manifests.ts';
 
+import type { z } from 'zod';
+
+import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
+    ADD_REASON_MESSAGE,
     EMPTY_REASON,
     REASON_WORDS_MIN,
-    ADD_REASON_MESSAGE,
-    REMOVED_CONFIGURATIONS,
     REMOVAL_REASON_SUGGESTION,
+    REMOVED_CONFIGURATIONS,
 } from '#cli/config/settings/validation.ts';
+import { findChildSchema } from '#cli/settings/lookup.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { ReasonRequirement, Setting } from '#cli/types/manifests.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
+import type { SettingsError } from '#cli/types/settings.ts';
 
 function isLimitWeakening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;

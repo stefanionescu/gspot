@@ -1,6 +1,7 @@
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { haveSameTokens, listChildren } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-import { listChildren, haveSameTokens } from '../../language/syntax.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listAssignedNodes(node: TSESTree.Node): TSESTree.Node[] {
     if (node.type === AST_NODE_TYPES.ObjectPattern)

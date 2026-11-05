@@ -1,6 +1,7 @@
 import { stringify } from '@decimalturn/toml-patch';
+
+import { listChecksById, parseConfigurations, readConfigurations } from '#cli/manifests/read.ts';
 import { type Check, type Configuration } from '#cli/types/manifests.ts';
-import { listChecksById, readConfigurations, parseConfigurations } from '#cli/manifests/read.ts';
 
 export function listAlwaysSelected(): string[] {
     return readConfigurations()

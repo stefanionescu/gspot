@@ -1,6 +1,7 @@
 import { join } from 'node:path';
-import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+
 import { preferMatcherAssertions } from '#eslint-plugin/rules/assertions/prefer-matcher-assertions.ts';
+import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({
     cypress: { devDependencies: { cypress: '15.0.0' } },

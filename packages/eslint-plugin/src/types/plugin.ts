@@ -1,4 +1,4 @@
-import type { TSESLint, TSESTree, ParserServicesWithTypeInformation } from '@typescript-eslint/utils';
+import type { ParserServicesWithTypeInformation, TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 export type RuleDocs = {
     level: 'recommended' | 'all' | 'none';

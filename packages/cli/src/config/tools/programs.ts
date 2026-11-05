@@ -1,4 +1,4 @@
-import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
+import { MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
 
 export const STYLELINT_MANIFEST_TOOL = 'stylelint';
 

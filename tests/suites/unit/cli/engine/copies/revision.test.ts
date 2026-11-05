@@ -1,25 +1,27 @@
 import * as fs from 'node:fs';
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { copyFile, mkdir, readdir, readFile, readlink, rm, symlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { listRevisionFiles, readHead } from '#cli/repository/revisions/files.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { GIT_HOOK_REPORT, SELECTED_SOURCE } from '#tests/config/engine/files.ts';
+import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
-import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/engine/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { rm, mkdir, readdir, symlink, copyFile, readFile, readlink, writeFile } from 'node:fs/promises';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();

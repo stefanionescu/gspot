@@ -1,14 +1,16 @@
+import { realpath, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { symlink, realpath, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a tsconfig can extend a dependency installed above the repository', async () => {
     await using sandbox = await testdir({

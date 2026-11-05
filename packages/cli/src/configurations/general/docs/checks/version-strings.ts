@@ -1,18 +1,19 @@
 import { posix } from 'node:path';
-import { escapeRegExp } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
+
+import { CHANGELOG_FILE, DOCS_RULES, VERSION_STRING_MESSAGE } from '#cli/config/configurations/general.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { pyprojectSchema } from '#cli/schemas/parsers.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { DOCS_RULES, CHANGELOG_FILE, VERSION_STRING_MESSAGE } from '#cli/config/configurations/general.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listScopeVersions(session: Session, scopePath: string): string[] {
     return session.repository.files

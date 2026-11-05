@@ -1,39 +1,39 @@
-import { escapeGlob } from '#cli/system/paths.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { GeneratedFile } from '#cli/types/tools.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { join, dirname, basename, relative } from 'node:path/posix';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
-import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
+import { basename, dirname, join, relative } from 'node:path/posix';
+
 import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/blocks.ts';
+import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
+import {
+    BOUNDARIES_PLUGIN_PACKAGE,
+    CONFIGURATION_BLOCKS_SUFFIX,
+    ESLINT_BASE_LABEL,
+    ESLINT_CONFIG_API,
+    ESLINT_FUNCTIONS_FILE,
+    ESLINT_NAMED_IMPORTS,
+    ESLINT_PLUGIN_PACKAGES,
+    LEVEL_ALL_PLUGIN_PACKAGE,
+} from '#cli/config/configurations/javascript.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
+import { buildBlockLists, buildImportName } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
+import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listLocalPlugins } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
-import { buildBlockLists, buildImportName } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
 import { listConfigurationBlocks } from '#cli/configurations/language/javascript/eslint/configuration-blocks.ts';
-import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
-
+import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
+import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type {
     BlockWriter,
     ConfigOutput,
-    PlannedConfig,
     EslintFileWriter,
+    PlannedConfig,
     PlannedEslintBlock,
 } from '#cli/types/configurations/language.ts';
-import {
-    ESLINT_BASE_LABEL,
-    ESLINT_CONFIG_API,
-    ESLINT_NAMED_IMPORTS,
-    ESLINT_FUNCTIONS_FILE,
-    ESLINT_PLUGIN_PACKAGES,
-    LEVEL_ALL_PLUGIN_PACKAGE,
-    BOUNDARIES_PLUGIN_PACKAGE,
-    CONFIGURATION_BLOCKS_SUFFIX,
-} from '#cli/config/configurations/javascript.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { GeneratedFile } from '#cli/types/tools.ts';
 
 function serializeImports(
     { functions, packages, modules, constants }: EslintFileWriter,

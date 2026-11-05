@@ -1,23 +1,24 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { writeSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/setup/configurations.ts';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { compareText } from '#cli/system/text.ts';
 import {
-    STAGED_FORMAT_PATHS,
-    STAGED_FORMAT_SOURCE,
     EDITORCONFIG_SAMPLES,
     STAGED_FORMAT_CHECK_ARGUMENTS,
+    STAGED_FORMAT_PATHS,
+    STAGED_FORMAT_SOURCE,
 } from '#tests/config/integration/general.ts';
+import { FORMAT_OVERRIDES_SETTINGS, PRETTIER_OPTIONS_BY_FILE } from '#tests/config/setup/configurations.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['format'],

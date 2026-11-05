@@ -1,24 +1,26 @@
-import { z } from 'zod';
 import { existsSync } from 'node:fs';
+import { dirname, join, posix, relative, resolve } from 'node:path';
+
+import { LernaTool, PnpmTool, RushTool } from '@manypkg/tools';
 import { globSync } from 'tinyglobby';
-import { remember } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import { z } from 'zod';
+
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { LERNA_FILE, PNPM_WORKSPACE_FILE, RUSH_FILE } from '#cli/config/repository/javascript.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { PnpmTool, RushTool, LernaTool } from '@manypkg/tools';
-import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { join, posix, dirname, resolve, relative } from 'node:path';
-import { findText, findContainedPath } from '#cli/system/files/reads.ts';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/javascript.ts';
-import { isInScope, convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { remember } from '#cli/system/cache.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import { findContainedPath, findText } from '#cli/system/files/reads.ts';
+import { convertToPosixPath, extractParentFolder, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 const workspaceGlobsSchema = z.object({ packages: z.string().array().optional() });
 

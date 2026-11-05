@@ -1,16 +1,16 @@
-import { createRule } from '../../rule.ts';
-import type { PublicGrant } from '../../types/aws.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
-import { getCdkName, findBucketOption } from '../../libraries/aws.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
+    ACCESS_CONTROL_PREFIX,
+    GRANT_PUBLIC_ACCESS,
+    PUBLIC_ACCESS_CONTROLS,
     S3_BUCKET,
     S3_DEPLOYMENT,
-    GRANT_PUBLIC_ACCESS,
-    ACCESS_CONTROL_PREFIX,
-    PUBLIC_ACCESS_CONTROLS,
 } from '../../config/aws.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { findBucketOption, getCdkName } from '../../libraries/aws.ts';
+import { createRule } from '../../rule.ts';
+import type { PublicGrant } from '../../types/aws.ts';
 
 function getAccessLevel(source: Readonly<TSESLint.SourceCode>, option: TSESTree.Property | null): string | undefined {
     const value = option ? getExpressionValue(option.value, source) : undefined;

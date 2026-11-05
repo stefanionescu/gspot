@@ -1,28 +1,28 @@
-import semver from 'semver';
 import { patch } from '@decimalturn/toml-patch';
-import type { Files } from '#cli/types/system.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { miseToolsSchema } from '#cli/schemas/parsers.ts';
+import { applyEdits, modify } from 'jsonc-parser/lib/esm/main.js';
+import semver from 'semver';
+
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { isTable, findValueAt } from '#cli/system/tables.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
-
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import {
-    GSPOT_MISE_TOOL,
-    SETUP_NODE_VERSION,
-    GSPOT_MISE_OPTIONS,
     DEFAULT_JSON_INDENT,
+    GSPOT_MISE_OPTIONS,
+    GSPOT_MISE_TOOL,
     JSON_INDENT_PATTERN,
+    SETUP_NODE_VERSION,
 } from '#cli/config/repository/javascript.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
+import { miseToolsSchema } from '#cli/schemas/parsers.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { findValueAt, isTable } from '#cli/system/tables.ts';
+import type { Files } from '#cli/types/system.ts';
 
 const MISE_NODE_TOOL = 'node';
 

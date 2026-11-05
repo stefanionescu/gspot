@@ -1,4 +1,5 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { formatDetectionConditions } from '#cli/manifests/reference.ts';
 

@@ -1,19 +1,21 @@
+import { realpathSync } from 'node:fs';
+import { rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { realpathSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import { rm, writeFile } from 'node:fs/promises';
-import type { Tool } from '#cli/types/manifests.ts';
+
+import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 import * as processes from '#cli/system/processes.ts';
+import { formatUnavailableNote, inspectTool } from '#cli/tools/inspect.ts';
+import { listExecutablePaths, readMiseBinPaths } from '#cli/tools/locate.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import type { SpawnOptions } from '#cli/types/system.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { inspectTool, formatUnavailableNote } from '#cli/tools/inspect.ts';
-import { readMiseBinPaths, listExecutablePaths } from '#cli/tools/locate.ts';
-import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 
 test('project pytest is found in its virtual environment, and the global executable only without it', async () => {
     const executable = isWindows ? '.venv/Scripts/pytest.exe' : '.venv/bin/pytest';

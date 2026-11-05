@@ -1,14 +1,16 @@
+import { readFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { unlink, readFile } from 'node:fs/promises';
-import { openSession } from '#cli/engine/session.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { ASSET_REFERENCE_CASES, GLOB_ASSET_CASES, SCOPE_ASSET_FILES } from '#tests/config/configurations/framework.ts';
+import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { GLOB_ASSET_CASES, SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/configurations/framework.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(

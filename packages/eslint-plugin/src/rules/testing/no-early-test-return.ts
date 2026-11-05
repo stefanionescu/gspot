@@ -1,17 +1,17 @@
-import { createRule } from '../../rule.ts';
-import { getTestCall } from '../../libraries/testing.ts';
-import type { FileContext } from '../../types/plugin.ts';
-import type { TestCall, EarlyReturnFramework } from '../../types/testing.ts';
-import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
-    PLAYWRIGHT_MODULE,
+    EARLY_RETURN_DEPENDENCIES,
     EARLY_RETURN_GUARD,
     EARLY_RETURN_IMPORTS,
     EARLY_RETURN_MODIFIERS,
-    EARLY_RETURN_DEPENDENCIES,
+    PLAYWRIGHT_MODULE,
 } from '../../config/testing.ts';
+import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
+import { getTestCall } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { FileContext } from '../../types/plugin.ts';
+import type { EarlyReturnFramework, TestCall } from '../../types/testing.ts';
 
 function selectFramework(context: FileContext): EarlyReturnFramework | undefined {
     const imported = listImportedModules(context.sourceCode);

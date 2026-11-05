@@ -1,30 +1,31 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { planChecks } from '#cli/engine/plan.ts';
-import { stringify } from '@decimalturn/toml-patch';
-import { openSession } from '#cli/engine/session.ts';
-import { runProcess } from '#cli/system/processes.ts';
-import { buildCheckSession } from '#cli/engine/run.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation.ts';
-import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { type CommandArgument } from '#cli/types/engine/tool-runs.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { CAFE_SOURCE_PATH, GENERATE_ARGUMENTS, WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
 
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { GENERATED_HEADER_TEXT } from '#cli/config/generation.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
 import {
+    buildFileCommandLines,
     expandCommand,
     listCopyFiles,
     replacePlaceholders,
-    buildFileCommandLines,
 } from '#cli/engine/tool-runs/placeholders.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { runProcess } from '#cli/system/processes.ts';
+import { type CommandArgument } from '#cli/types/engine/tool-runs.ts';
+import { CAFE_SOURCE_PATH, GENERATE_ARGUMENTS, WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function writeListSetting(root: string, placeholder: string, generateCommand: readonly string[]): Promise<void> {
     const command = [

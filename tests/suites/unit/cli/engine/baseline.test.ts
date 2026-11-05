@@ -1,6 +1,7 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
+import { countFindings, formatBaseline, pruneCounts } from '#cli/engine/baseline.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { pruneCounts, countFindings, formatBaseline } from '#cli/engine/baseline.ts';
 
 test('the counts group by file, check, and rule, a finding with no rule counts under its check, and exempt checks and fixable findings stay out', () => {
     const rows = [

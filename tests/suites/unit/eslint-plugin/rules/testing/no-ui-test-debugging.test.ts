@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noUiTestDebugging } from '#eslint-plugin/rules/testing/no-ui-test-debugging.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-ui-test-debugging', noUiTestDebugging, {
     valid: [

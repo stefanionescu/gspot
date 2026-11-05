@@ -1,14 +1,16 @@
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
-import { join, delimiter } from 'node:path';
-import { runProcess } from '#cli/system/processes.ts';
-import { listExecutableNames } from '#cli/system/paths.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { delimiter, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { listExecutableNames } from '#cli/system/paths.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a program runs its sibling commands before unrelated PATH tools', async () => {
     await using sandbox = await testdir();

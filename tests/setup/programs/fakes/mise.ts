@@ -1,9 +1,10 @@
 import { existsSync } from 'node:fs';
+import { delimiter, dirname } from 'node:path';
 import { parseArgs } from 'node:util';
-import { dirname, delimiter } from 'node:path';
-import { splitProgramArguments } from '#tests/setup/system/programs.ts';
+
 import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
-import { INHERITED_STREAMS, CLI_PACKAGE_REQUEST, FAKE_CI_MISE_OPTIONS } from '#tests/config/setup/programs.ts';
+import { CLI_PACKAGE_REQUEST, FAKE_CI_MISE_OPTIONS, INHERITED_STREAMS } from '#tests/config/setup/programs.ts';
+import { splitProgramArguments } from '#tests/setup/system/programs.ts';
 
 const { own, call } = splitProgramArguments();
 

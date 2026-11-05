@@ -1,5 +1,5 @@
+import { lstat, open, readdir, readlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { open, lstat, readdir, readlink } from 'node:fs/promises';
 
 /**
 Read every path in a repository with its mode and contents, to check that a write kept them.

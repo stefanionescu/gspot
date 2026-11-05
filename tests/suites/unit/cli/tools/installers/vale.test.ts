@@ -1,25 +1,27 @@
+import { existsSync, utimesSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import { join } from 'node:path';
-import { readFile } from 'node:fs/promises';
-import { getTool } from '#cli/tools/pins.ts';
-import { test, spyOn, expect } from 'bun:test';
-import { existsSync, utimesSync } from 'node:fs';
-import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/vale.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { downloadArchive, hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/vale.ts';
-import { downloadArchive, hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
 test('Vale packages are ready only with the generated vale.ini and the installed folders', async () => {
     await using sandbox = await testdir();

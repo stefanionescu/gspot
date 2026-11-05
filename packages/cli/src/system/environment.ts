@@ -1,7 +1,8 @@
 import { homedir } from 'node:os';
-import { join, isAbsolute } from 'node:path';
+import { isAbsolute, join } from 'node:path';
+
+import { CACHE_FOLDER_MESSAGE, CACHE_FOLDER_NAME, OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS, CACHE_FOLDER_MESSAGE } from '#cli/config/system.ts';
 
 /**
 Read the cache folder of this system: LOCALAPPDATA on Windows, ~/Library/Caches on macOS, and ~/.cache elsewhere.

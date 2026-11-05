@@ -1,10 +1,11 @@
-import type { z } from 'zod';
-import { test, expect } from 'bun:test';
-import { Ajv2020 } from 'ajv/dist/2020.js';
 import { stringify } from '@decimalturn/toml-patch';
+import { Ajv2020 } from 'ajv/dist/2020.js';
+import { expect, test } from 'bun:test';
+import type { z } from 'zod';
+
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
-import { validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/validation.ts';
+import { validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 const isPublishedSettings = new Ajv2020({
     strict: true,

@@ -1,27 +1,27 @@
-import { z } from 'zod';
 import semver from 'semver';
-import { isTable } from '#cli/system/tables.ts';
 import parseExpression from 'spdx-expression-parse';
-import { GLOB_EXCLUSION } from '#cli/config/system.ts';
-import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
-import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import type { ImportRule, SettingsError, NamingCategory } from '#cli/types/settings.ts';
-import { nonemptyStringSchema, namingExceptionSchema, operatingSystemSchema } from '#cli/schemas/manifests/tools.ts';
+import { z } from 'zod';
 
-import {
-    allowReasonedValue,
-    relativePathSchema,
-    nonemptyPathsSchema,
-    namingCategorySchema,
-} from '#cli/schemas/settings/fields.ts';
+import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import {
     CI_PINS,
     CI_PROVIDERS,
-    GITHUB_ONLY_CI_KEYS,
     DOCSTRING_CONVENTIONS,
-    NAMING_TABLE_CATEGORIES,
+    GITHUB_ONLY_CI_KEYS,
     NAMING_LANGUAGE_CATEGORIES,
+    NAMING_TABLE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
+import { GLOB_EXCLUSION } from '#cli/config/system.ts';
+import { commandSchema } from '#cli/schemas/manifests/checks.ts';
+import { namingExceptionSchema, nonemptyStringSchema, operatingSystemSchema } from '#cli/schemas/manifests/tools.ts';
+import {
+    allowReasonedValue,
+    namingCategorySchema,
+    nonemptyPathsSchema,
+    relativePathSchema,
+} from '#cli/schemas/settings/fields.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { ImportRule, NamingCategory, SettingsError } from '#cli/types/settings.ts';
 
 const TERM = /^[\p{L}\p{N}]+(?:[ -][\p{L}\p{N}]+)*$/u;
 

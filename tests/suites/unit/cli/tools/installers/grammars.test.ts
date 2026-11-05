@@ -1,16 +1,18 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { installGrammars } from '#cli/tools/installers/grammars.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { SHARED_GRAMMARS } from '#tests/setup/runner/run-folder.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 test('install downloads the grammars of the repository once, and refuses other bytes', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), 'entry.sh': 'echo a\n' });

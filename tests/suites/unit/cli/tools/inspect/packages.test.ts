@@ -1,22 +1,24 @@
+import { mkdir, symlink, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { getTool } from '#cli/tools/pins.ts';
-import { runChecks } from '#cli/engine/run.ts';
-import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
+
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import * as processes from '#cli/system/processes.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { PACKAGE_METADATA_FAILURES, SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools/versions.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/config/tools/versions.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('a library is found only in the tool project', async () => {
     await using sandbox = await testdir({

@@ -1,20 +1,21 @@
-import type { z } from 'zod';
-import type { CST } from 'yaml';
 import type { Node } from 'web-tree-sitter';
+import type { CST } from 'yaml';
+import type { z } from 'zod';
+
+import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
+import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
+import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import type { namingExceptionSchema } from '#cli/schemas/manifests/tools.ts';
+import type { formatSchema } from '#cli/schemas/settings/fields.ts';
+import type { ConfigOutput, FormatSettings, PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
+import type { Finding, Substitutions } from '#cli/types/engine/tool-runs.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
+import type { NumberedLine, ParsedTsconfig, SqlFile } from '#cli/types/parsers.ts';
+import type { Config, TrackedFile } from '#cli/types/repository.ts';
+import type { ImportRule, Level, TableSettings } from '#cli/types/settings.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import type { ProseRoute } from '#cli/types/tools.ts';
-import type { formatSchema } from '#cli/schemas/settings/fields.ts';
-import type { Check, Configuration } from '#cli/types/manifests.ts';
-import type { Config, TrackedFile } from '#cli/types/repository.ts';
-import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
-import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
-import type { namingExceptionSchema } from '#cli/schemas/manifests/tools.ts';
-import type { Finding, Substitutions } from '#cli/types/engine/tool-runs.ts';
-import type { Level, ImportRule, TableSettings } from '#cli/types/settings.ts';
-import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
-import type { SqlFile, NumberedLine, ParsedTsconfig } from '#cli/types/parsers.ts';
-import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
-import type { ConfigOutput, PlannedConfig, FormatSettings } from '#cli/types/configurations/language.ts';
 
 export type GeneratorRun = {
     substitutions: Substitutions;

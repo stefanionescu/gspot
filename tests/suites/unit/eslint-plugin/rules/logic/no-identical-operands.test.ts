@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noIdenticalOperands } from '#eslint-plugin/rules/logic/no-identical-operands.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-identical-operands', noIdenticalOperands, {
     valid: [

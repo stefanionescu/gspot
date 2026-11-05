@@ -1,8 +1,8 @@
-import { getTable, selectFormat } from '#cli/settings/scopes.ts';
+import { SQL_FILE_EXTENSIONS, SQL_FILES, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/python.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { getTable, selectFormat } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { SQL_FILES, SQL_FILE_EXTENSIONS, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/python.ts';
 
 /**
 Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.

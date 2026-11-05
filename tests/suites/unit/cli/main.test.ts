@@ -1,14 +1,15 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
+import { JSON_ARGUMENT_ERRORS, MALFORMED_SETTINGS, VERSION_ARGUMENTS } from '#tests/config/main.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { VERSION_ARGUMENTS, MALFORMED_SETTINGS, JSON_ARGUMENT_ERRORS } from '#tests/config/main.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('gspot without a command prints the help to stderr and exits 2', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });

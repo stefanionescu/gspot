@@ -1,15 +1,16 @@
 import type { z } from 'zod';
+
 import type cliPackage from '#cli-package';
-import type { DOCS_PATHS } from '#cli/config/manifests.ts';
-import type { RuleExplanations } from '#cli/types/tools.ts';
 import type { GROUP_LABELS } from '#cli/config/generation.ts';
-import type { SetupReference } from '#cli/types/repository.ts';
-import type { CheckDescription } from '#cli/types/engine/plan.ts';
-import type { Level, SettingReference } from '#cli/types/settings.ts';
+import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
+import type { DOCS_PATHS } from '#cli/config/manifests.ts';
 import type { START_RUNNERS } from '#cli/config/repository/javascript.ts';
 import type { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
-import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import type { Tool, ConfigurationCheck, ConfigurationReference } from '#cli/types/manifests.ts';
+import type { CheckDescription } from '#cli/types/engine/plan.ts';
+import type { ConfigurationCheck, ConfigurationReference, Tool } from '#cli/types/manifests.ts';
+import type { SetupReference } from '#cli/types/repository.ts';
+import type { Level, SettingReference } from '#cli/types/settings.ts';
+import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export type CommandReference = {
     name: string;

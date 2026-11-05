@@ -1,6 +1,7 @@
-import { createRule } from '../../rule.ts';
-import { buildRegexVisitors } from '../../language/regex.ts';
 import { type AST, visitRegExpAST } from '@eslint-community/regexpp';
+
+import { buildRegexVisitors } from '../../language/regex.ts';
+import { createRule } from '../../rule.ts';
 
 function canMatchEmpty(node: AST.Node): boolean {
     switch (node.type) {

@@ -1,28 +1,29 @@
 import { existsSync } from 'node:fs';
 import * as filesystem from 'node:fs';
-import { join, dirname } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
-import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readFile, realpath, symlink, unlink, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
+import { expect, spyOn, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
 import {
-    VALUE_ONE_LINE,
-    TOOL_PROJECT_FILES,
-    CRLF_PACKAGE_FILES,
     BIN_WORKSPACE_FILES,
-    WORKSPACE_LOCK_FILES,
+    CRLF_PACKAGE_FILES,
     DECLARATION_COPY_FILES,
-    LOCKED_NPM_PROJECT_FILES,
     EXTERNAL_DEPENDENCY_FILES,
+    LOCKED_NPM_PROJECT_FILES,
+    TOOL_PROJECT_FILES,
+    VALUE_ONE_LINE,
+    WORKSPACE_LOCK_FILES,
 } from '#tests/config/engine/files.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 
 test('an index copy links installed packages and redirects workspace links into the copy', async () => {
     await using sandbox = await testdir(WORKSPACE_LOCK_FILES);

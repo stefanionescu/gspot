@@ -1,28 +1,29 @@
-import semver from 'semver';
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { GspotError } from '#cli/system/errors.ts';
-import type { Dependencies } from '#cli/types/parsers.ts';
-import { bunLockfileSchema } from '#cli/schemas/parsers.ts';
+
+import { applyEdits, modify } from 'jsonc-parser/lib/esm/main.js';
+import semver from 'semver';
+
+import { NPM_PACKAGE_FOLDER, PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
+import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { BUN_LOCKFILE, INTEGRITY, LOCKFILE_WORKSPACE_KEYS, NPM_SETTING_PREFIX } from '#cli/config/tools/installers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { isTable, findValueAt } from '#cli/system/tables.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
-import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { PNPM_PEER_START, NPM_PACKAGE_FOLDER, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
-import { INTEGRITY, BUN_LOCKFILE, NPM_SETTING_PREFIX, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/tools/installers.ts';
-
+import { bunLockfileSchema } from '#cli/schemas/parsers.ts';
 import {
     bunPackageSchema,
     npmToolLockSchemas,
     npmToolPackageSchema,
     pnpmToolPackageSchema,
 } from '#cli/schemas/tools.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { findValueAt, isTable } from '#cli/system/tables.ts';
+import type { Dependencies } from '#cli/types/parsers.ts';
 import type {
-    Lockfile,
     BunPackage,
     LockedTarball,
+    Lockfile,
     ToolPackageManagerName,
     ToolProjectLockfileName,
 } from '#cli/types/tools.ts';

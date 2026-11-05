@@ -1,16 +1,18 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { readTree } from '#tests/setup/system/files.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { TOOL_LOCKFILES } from '#cli/config/configurations/structure.ts';
 import { GROUPS, LEVELS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { PROJECT_FILES, SWITCH_CASES } from '#tests/config/generation/generate.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { TOOL_LOCKFILES } from '#cli/config/configurations/structure.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SWITCH_CASES, PROJECT_FILES } from '#tests/config/generation/generate.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 
 /**
 Check that the generated files report only tool lockfiles, and that a second write changes nothing.

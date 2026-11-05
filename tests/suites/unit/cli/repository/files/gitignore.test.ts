@@ -1,7 +1,8 @@
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
+import { buildGitignoreMatcher, listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { listGitignorePatterns, buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 
 test('a path outside the repository is not ignored, and a path that .gitignore names is', async () => {
     await using sandbox = await testdir({ '.gitignore': 'dist/\n' });

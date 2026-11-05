@@ -1,21 +1,22 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
-
 import {
     FRAMEWORK_NAMES,
+    PYTHON_TYPE_SOURCE,
+    REACT_COMPONENT_SOURCE,
+    TEST_FILE_FINDINGS,
     TEST_PATH_FILES,
     TEST_PATH_SETTINGS,
-    PYTHON_TYPE_SOURCE,
-    TEST_FILE_FINDINGS,
-    REACT_COMPONENT_SOURCE,
 } from '#tests/config/configurations/naming/source-names.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...FRAMEWORK_NAMES])(
     `$configuration's allowed function name $name passes only inside its scope`,

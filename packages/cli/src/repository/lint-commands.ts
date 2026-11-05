@@ -1,41 +1,41 @@
 import { posix } from 'node:path';
+
+import { LINE_BREAK, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import {
+    BIN_FOLDER_PREFIX,
+    COMMAND_FILES,
+    COMMAND_KEYS,
+    COMMAND_SEPARATORS,
+    COMMENT_LINE,
+    HOOK_FOLDER_PATH,
+    HOOK_ID_SEPARATOR,
+    LINT_COMMAND_FIXES,
+    LINT_STAGED_KEY,
+    OVERLAPPING_TOOLS,
+    PRE_COMMIT_TOOL,
+    PYGREP_LANGUAGE,
+    QUOTE_MARK,
+    RUN_WORD,
+    RUNNER_NAMES,
+    SIMPLE_GIT_HOOKS_KEY,
+    TASK_AFTER_RUN,
+    YAML_EXTENSIONS,
+} from '#cli/config/repository/setup.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlDocuments, parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { hasToolSection, parseSharedFile } from '#cli/repository/conflicts.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { lintCommandPackageSchema, preCommitConfigSchema } from '#cli/schemas/repository.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { isTable, getRequired } from '#cli/system/tables.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { LINE_BREAK, PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { hasToolSection, parseSharedFile } from '#cli/repository/conflicts.ts';
-import { parseYamlFile, parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
-import { preCommitConfigSchema, lintCommandPackageSchema } from '#cli/schemas/repository.ts';
-
+import { getRequired, isTable } from '#cli/system/tables.ts';
 import type {
-    LintCommand,
     CommandSearch,
+    LintCommand,
+    LintCommandPackage,
     LintCommandPlace,
     LintCommandSearch,
-    LintCommandPackage,
 } from '#cli/types/repository.ts';
-import {
-    RUN_WORD,
-    QUOTE_MARK,
-    COMMENT_LINE,
-    COMMAND_KEYS,
-    RUNNER_NAMES,
-    COMMAND_FILES,
-    TASK_AFTER_RUN,
-    PYGREP_LANGUAGE,
-    PRE_COMMIT_TOOL,
-    LINT_STAGED_KEY,
-    YAML_EXTENSIONS,
-    HOOK_FOLDER_PATH,
-    OVERLAPPING_TOOLS,
-    HOOK_ID_SEPARATOR,
-    BIN_FOLDER_PREFIX,
-    LINT_COMMAND_FIXES,
-    COMMAND_SEPARATORS,
-    SIMPLE_GIT_HOOKS_KEY,
-} from '#cli/config/repository/setup.ts';
 
 function findCalledTool(command: string, search: CommandSearch, seen = new Set<string>()): string | undefined {
     const words = command

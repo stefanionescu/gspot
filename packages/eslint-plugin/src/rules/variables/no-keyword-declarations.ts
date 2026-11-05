@@ -1,6 +1,7 @@
-import { createRule } from '../../rule.ts';
 import type { TSESLint } from '@typescript-eslint/utils';
+
 import { RESERVED_DECLARATION_NAMES } from '../../config/variables.ts';
+import { createRule } from '../../rule.ts';
 
 function listKeywordDeclarations(root: TSESLint.Scope.Scope): Array<TSESLint.ReportDescriptor<'keyword'>> {
     const issues: Array<TSESLint.ReportDescriptor<'keyword'>> = [];

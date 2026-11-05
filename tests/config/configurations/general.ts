@@ -1,4 +1,5 @@
 import { join } from 'node:path/posix';
+
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 

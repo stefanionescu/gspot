@@ -1,20 +1,21 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 
 import {
-    MESSAGE_LAYOUTS,
     MESSAGE_ARGUMENTS,
+    MESSAGE_LAYOUTS,
     TRANSLATION_CASES,
-    TRANSLATION_TABLES,
-    TRANSLATION_SANDBOX,
     TRANSLATION_FINDINGS,
+    TRANSLATION_SANDBOX,
+    TRANSLATION_TABLES,
 } from '#tests/config/configurations/library.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a missing base locale is reported and restoring it enables key comparisons', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,20 +1,20 @@
-import { compareText } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
-import { type ConfigBuilder, type IgnoreSection } from '#cli/types/configurations/general.ts';
-import { convertToGlobs, keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 
 import {
-    TYPOS_CHECK,
-    LOCKFILE_GLOB,
-    TYPOS_FORMAT_GLOBS,
-    LOCKFILE_EXTENSION,
     EXTEND_EXCLUDE_LINE,
-    TYPOS_LOCKFILE_GLOBS,
+    LOCKFILE_EXTENSION,
+    LOCKFILE_GLOB,
+    TYPOS_CHECK,
+    TYPOS_FORMAT_GLOBS,
     TYPOS_IGNORE_PATTERNS,
+    TYPOS_LOCKFILE_GLOBS,
 } from '#cli/config/configurations/prose.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { convertToGlobs, keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { compareText } from '#cli/system/text.ts';
+import { type ConfigBuilder, type IgnoreSection } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
 function buildTyposSections(planned: PlannedConfig): IgnoreSection[] {
     const sections = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK)].map(

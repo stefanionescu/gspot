@@ -1,18 +1,20 @@
-import { join } from 'node:path';
-import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
+
+import { checkReportSchema, pushOutputSchema } from '#cli/schemas/commands.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
-import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
-import { pushOutputSchema, checkReportSchema } from '#cli/schemas/commands.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
 import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { createGitSandbox, assertWorkingTreeKept, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { assertWorkingTreeKept, createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 
 async function runBrokenPushCheck(root: string, base: string, broken: string): Promise<RunReport> {
     const result = await runGspot(

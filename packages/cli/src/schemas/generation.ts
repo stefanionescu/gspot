@@ -1,8 +1,9 @@
 import { z } from 'zod';
+
+import { CONFIGURATION_ORIGINS, LEVELS } from '#cli/config/manifests.ts';
+import { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
-import { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
-import { LEVELS, CONFIGURATION_ORIGINS } from '#cli/config/manifests.ts';
 
 /**
 Read the options of a config that init replaces. An option that gspot does not know, or a value that gspot.toml cannot

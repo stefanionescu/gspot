@@ -1,33 +1,33 @@
 import { statSync } from 'node:fs';
-import { CheckStop } from '#cli/system/errors.ts';
-import { measureSpan } from '#cli/engine/results.ts';
+import { isAbsolute, join, relative } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { join, relative, isAbsolute } from 'node:path';
-import type { SpawnResult } from '#cli/types/system.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { Tool, Check } from '#cli/types/manifests.ts';
-import type { CheckResult } from '#cli/types/engine/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { STACK_FRAME_LINE } from '#cli/config/tools/programs.ts';
-import { parseOutput, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 
 import {
-    TAIL_LINES,
-    OUT_OF_MEMORY,
     FILE_PLACEHOLDER,
-    OUT_OF_MEMORY_MESSAGE,
     NO_ERROR_OUTPUT_MESSAGE,
+    OUT_OF_MEMORY,
+    OUT_OF_MEMORY_MESSAGE,
+    TAIL_LINES,
 } from '#cli/config/engine.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { STACK_FRAME_LINE } from '#cli/config/tools/programs.ts';
+import { OUTPUT_FORMATS, parseOutput } from '#cli/engine/outputs/formats.ts';
+import { measureSpan } from '#cli/engine/results.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
 import type {
-    Finding,
-    CommandRun,
-    OutputPaths,
-    OutputCheck,
     CheckFinding,
-    ParsedFindings,
     CommandLineOutput,
+    CommandRun,
+    Finding,
+    OutputCheck,
+    OutputPaths,
+    ParsedFindings,
 } from '#cli/types/engine/tool-runs.ts';
+import type { Check, Tool } from '#cli/types/manifests.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 
 // Node prints one of these when a module fails to resolve or parse, before the tool runs.
 const MODULE_FAILURE =

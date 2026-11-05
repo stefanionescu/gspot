@@ -1,7 +1,8 @@
-import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { join } from 'node:path';
+
 import { requireTestAssertions } from '#eslint-plugin/rules/assertions/require-test-assertions.ts';
+import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const rule = requireTestAssertions;
 const root = writePackageFolders({

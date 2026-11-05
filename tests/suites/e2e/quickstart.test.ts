@@ -1,20 +1,22 @@
-import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
-import { getTool } from '#cli/tools/pins.ts';
-import { parse } from '@decimalturn/toml-patch';
-import { testdir, createFileTree } from 'testdirs';
-import { UV_TOOL } from '#cli/config/tools/installers.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { dirname, join } from 'node:path';
+
+import { parse } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+
+import cliPackage from '#cli-package' with { type: 'json' };
+import { UV_TOOL } from '#cli/config/tools/installers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/tools/pins.ts';
+import { PYTHON_TUTORIAL, SWIFT_TUTORIAL } from '#tests/config/e2e.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e.ts';
+import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 
 test('a Python project reports its finding through the installed hook and passes after the fix', async () => {
     await runQuickstart(PYTHON_TUTORIAL);

@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
-import { haveSameTokens } from '../../language/syntax.ts';
-import type { FunctionNode } from '../../types/plugin.ts';
 import { type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
 import { DEFAULT_IDENTICAL_LINES, IDENTICAL_FUNCTIONS_OPTIONS_SCHEMA } from '../../config/functions.ts';
+import { haveSameTokens } from '../../language/syntax.ts';
+import { createRule } from '../../rule.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 
 function countBodyLines(body: TSESTree.Node, source: TSESLint.SourceCode): number {
     const tokens = source.getTokens(body);

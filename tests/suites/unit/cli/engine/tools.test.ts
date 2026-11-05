@@ -1,19 +1,21 @@
-import { join } from 'node:path';
-import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
 import { planChecks } from '#cli/engine/plan.ts';
-import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { listCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { compareText } from '#cli/system/text.ts';
 import { getTool, listPackagePins } from '#cli/tools/pins.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { COVERAGE_PROVIDERS, NODE_REQUIREMENTS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { listCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
     await using sandbox = await createGitSandbox({

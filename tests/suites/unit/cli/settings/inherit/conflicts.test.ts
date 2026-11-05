@@ -1,13 +1,14 @@
-import { test, expect } from 'bun:test';
-import { readSettings } from '#cli/settings/read.ts';
-import { getSettingValue } from '#cli/settings/inherit.ts';
+import { expect, test } from 'bun:test';
+
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { validateKeys } from '#cli/settings/validation/keys.ts';
-import type { AvailableSettings } from '#cli/types/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getSettingValue } from '#cli/settings/inherit.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { AvailableSettings } from '#cli/types/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 const sqlConfiguration = readConfigurations().get('sql') as Configuration;
 

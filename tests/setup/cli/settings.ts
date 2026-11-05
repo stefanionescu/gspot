@@ -1,14 +1,15 @@
-import { createFileTree } from 'testdirs';
-import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import type { Level } from '#cli/types/settings.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { createFileTree } from 'testdirs';
+
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import type { WrittenSettings } from '#cli/types/configurations/language.ts';
+import type { Level } from '#cli/types/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 /**
 Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.

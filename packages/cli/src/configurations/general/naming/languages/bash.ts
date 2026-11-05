@@ -1,6 +1,7 @@
 import type { Node } from 'web-tree-sitter';
-import type { Identifier, FileIdentifiers } from '#cli/types/configurations/general.ts';
+
 import { addIdentifier } from '#cli/configurations/general/naming/languages/identifier.ts';
+import type { FileIdentifiers, Identifier } from '#cli/types/configurations/general.ts';
 
 function addFunctions(found: FileIdentifiers, syntaxRoot: Node): void {
     for (const node of syntaxRoot.descendantsOfType('function_definition')) {

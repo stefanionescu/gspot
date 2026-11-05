@@ -1,37 +1,38 @@
-import which from 'which';
-import { remember } from '#cli/system/cache.ts';
-import { statSync, realpathSync } from 'node:fs';
-import { hasErrorCode } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { runProcess } from '#cli/system/processes.ts';
-import { LINE_BREAK, GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { listMisePins, buildMiseInstall } from '#cli/tools/pins.ts';
-import { type Files, type SpawnResult } from '#cli/types/system.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { findProgram, filterOutsidePaths } from '#cli/system/programs.ts';
-import { join, dirname, basename, relative, isAbsolute } from 'node:path';
-import { executableLayout, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
-import type { MiseTrust, MiseBinPaths, ExecutableList, ExecutableSearch, ToolLookupSession } from '#cli/types/tools.ts';
+import { realpathSync, statSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
+import which from 'which';
+
+import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import {
+    MISE_BIN_PATHS_ARGUMENTS,
+    MISE_CEILING_PATHS_VARIABLE,
+    MISE_PROJECT_MESSAGE,
+    MISE_STALE_PROJECT_MESSAGE,
+    MISE_TOOL,
+    MISE_TRUSTED_PATHS_VARIABLE,
+} from '#cli/config/tools/installers.ts';
+import {
+    MISE_CONFIG_NAMES,
+    MISE_CONFIG_PREFIXES,
+    MISE_LAUNCHER_FOLDER,
+    MISE_PROJECT_FILES,
     MISE_WHICH,
     NPM_BIN_FOLDER,
     TOOL_ENVIRONMENT,
-    MISE_CONFIG_NAMES,
-    MISE_PROJECT_FILES,
-    MISE_CONFIG_PREFIXES,
-    MISE_LAUNCHER_FOLDER,
 } from '#cli/config/tools/programs.ts';
-import {
-    MISE_TOOL,
-    MISE_PROJECT_MESSAGE,
-    MISE_BIN_PATHS_ARGUMENTS,
-    MISE_STALE_PROJECT_MESSAGE,
-    MISE_CEILING_PATHS_VARIABLE,
-    MISE_TRUSTED_PATHS_VARIABLE,
-} from '#cli/config/tools/installers.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { remember } from '#cli/system/cache.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath, executableLayout, listExecutableNames } from '#cli/system/paths.ts';
+import { runProcess } from '#cli/system/processes.ts';
+import { filterOutsidePaths, findProgram } from '#cli/system/programs.ts';
+import { buildMiseInstall, listMisePins } from '#cli/tools/pins.ts';
+import { type Files, type SpawnResult } from '#cli/types/system.ts';
+import type { ExecutableList, ExecutableSearch, MiseBinPaths, MiseTrust, ToolLookupSession } from '#cli/types/tools.ts';
 
 const MISE_FOLDERS = Symbol('mise folders');
 

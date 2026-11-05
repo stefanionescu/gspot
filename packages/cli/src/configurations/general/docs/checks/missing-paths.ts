@@ -1,50 +1,51 @@
+import { readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { visit } from 'unist-util-visit';
-import { isTable } from '#cli/system/tables.ts';
-import { statSync, readdirSync } from 'node:fs';
-import type { Session } from '#cli/types/tools.ts';
-import { TRAILING_SLASH } from '#cli/config/system.ts';
+
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
-import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
-import { parseMiseTasks } from '#cli/configurations/general/docs/mise.ts';
-import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import type { PathIndex, TaskNames, ProseLine } from '#cli/types/configurations/general.ts';
-import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
-import { escapeGlob, listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
+import { visit } from 'unist-util-visit';
 
 import {
     BUN_RUN,
-    MISE_RUN,
-    MISE_FILES,
-    DOCS_RULES,
-    RUN_COMMAND,
     COMMAND_FENCES,
+    DOCS_RULES,
     FILE_EXTENSION,
-    PATH_CHARACTERS,
-    TITLE_ATTRIBUTE,
-    MISE_CONFIG_GLOB,
-    PATH_TOKEN_SKIPS,
-    REMOTE_ARGUMENTS,
-    TOKEN_SEPARATORS,
-    MISE_TASK_FOLDERS,
     MARKDOWN_EXTENSIONS,
-    TRAILING_PUNCTUATION,
+    MISE_CONFIG_GLOB,
+    MISE_FILES,
+    MISE_RUN,
+    MISE_TASK_FOLDERS,
+    PATH_CHARACTERS,
+    PATH_TOKEN_SKIPS,
     RELATIVE_PATH_PREFIXES,
+    REMOTE_ARGUMENTS,
+    RUN_COMMAND,
+    TITLE_ATTRIBUTE,
+    TOKEN_SEPARATORS,
+    TRAILING_PUNCTUATION,
 } from '#cli/config/configurations/general.ts';
+import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
+import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import { TRAILING_SLASH } from '#cli/config/system.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
+import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
+import { parseMiseTasks } from '#cli/configurations/general/docs/mise.ts';
+import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { escapeGlob, includeParentFolders, listEnclosingFolders, listExecutableNames } from '#cli/system/paths.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { PathIndex, ProseLine, TaskNames } from '#cli/types/configurations/general.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
+import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];

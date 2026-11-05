@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { preferLiteral } from '#eslint-plugin/rules/variables/prefer-literal.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-object-literal', preferLiteral, {
     valid: [

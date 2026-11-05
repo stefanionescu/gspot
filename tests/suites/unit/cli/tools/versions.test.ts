@@ -1,14 +1,16 @@
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
+import { executableLayout } from '#cli/system/paths.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/manifests.ts';
-import { executableLayout } from '#cli/system/paths.ts';
+import { SYSTEM_BASH_VERSIONS, VERSION_OUTPUTS } from '#tests/config/tools/versions.ts';
+import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
+import { fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
-import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS } from '#tests/config/tools/versions.ts';
-import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();

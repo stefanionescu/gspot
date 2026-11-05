@@ -1,32 +1,33 @@
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { parse } from '@decimalturn/toml-patch';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/engine/run.ts';
-import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import type { LinterJsonFinding } from '#tests/types/integration.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/integration.ts';
-import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
-import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { join } from 'node:path';
 
+import { parse } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+
+import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import type { RunReport } from '#cli/types/engine/run.ts';
 import {
-    RUFF_SANDBOX,
-    PYTEST_SAMPLE,
-    VERSION_SOURCE,
-    RUFF_FORMAT_CASES,
-    RUFF_VERSION_CASES,
     PARAMETER_LIMIT_CASE,
+    PYTEST_SAMPLE,
+    RUFF_FORMAT_CASES,
+    RUFF_SANDBOX,
+    RUFF_VERSION_CASES,
     UNUSED_IMPORT_SOURCE,
+    VERSION_SOURCE,
 } from '#tests/config/integration/python.ts';
+import { ruffConfigurationSchema, ruffRulesSchema } from '#tests/schemas/integration.ts';
+import { listFindingRows, parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
+import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 

@@ -1,21 +1,21 @@
-import { readBytes } from '#cli/system/files/reads.ts';
-import { listReplacedTools } from '#cli/tools/pins.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import { BANNER_BYTES } from '#cli/config/repository/files.ts';
-import { isEditedInPlace } from '#cli/repository/conflicts.ts';
-import { readRepositorySetup } from '#cli/repository/setup.ts';
-import type { Session, Generation } from '#cli/types/tools.ts';
 import { LEVEL_COMMAND } from '#cli/config/commands/reports.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
-import { formatScope, quoteArgument } from '#cli/system/text.ts';
+import { BANNER_BYTES } from '#cli/config/repository/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { isEditedInPlace } from '#cli/repository/conflicts.ts';
+import { detectConfigurations } from '#cli/repository/detect.ts';
+import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { listLintCommands } from '#cli/repository/lint-commands.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
-import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import type { Suggestions, SuggestionRow } from '#cli/types/commands/reports.ts';
-import type { RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
-import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { readRepositorySetup } from '#cli/repository/setup.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
+import { formatScope, quoteArgument } from '#cli/system/text.ts';
+import { listReplacedTools } from '#cli/tools/pins.ts';
+import type { SuggestionRow, Suggestions } from '#cli/types/commands/reports.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { ConflictingConfig, RepositorySetup } from '#cli/types/repository.ts';
+import type { Generation, Session } from '#cli/types/tools.ts';
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'suggested' | 'undetected'> {
     const { repository, settings } = session;

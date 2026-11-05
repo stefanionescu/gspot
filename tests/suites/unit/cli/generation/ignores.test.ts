@@ -1,31 +1,32 @@
-import prettier from 'prettier';
-import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { compareText } from '#cli/system/text.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
-import { parse, stringify } from '@decimalturn/toml-patch';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { buildIgnoreSections } from '#cli/generation/ignores.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import { join } from 'node:path';
 
+import { parse, stringify } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import prettier from 'prettier';
+
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildIgnoreSections } from '#cli/generation/ignores.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
 import {
-    LANGUAGE_IGNORES,
-    PATH_IGNORE_CASES,
     IGNORE_LIST_FILES,
     IGNORE_LIST_SETTINGS,
+    LANGUAGE_IGNORES,
+    PATH_IGNORE_CASES,
     PRETTIER_IGNORE_CASES,
     PRETTIER_IGNORE_SETTINGS,
 } from '#tests/config/generation/files.ts';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
+import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('negative ignores follow positives for ordered tools and stay out of tools without negation', async () => {
     await using sandbox = await createGitSandbox({

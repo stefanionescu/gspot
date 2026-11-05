@@ -1,8 +1,9 @@
-import { createRule } from '../../rule.ts';
-import { getTestCall } from '../../libraries/testing.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
 import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-import { TEST_FRAMEWORK_MODULES, RUNNING_TEST_MODIFIERS } from '../../config/testing.ts';
+
+import { RUNNING_TEST_MODIFIERS, TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
+import { isModuleUsed } from '../../libraries/packages.ts';
+import { getTestCall } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
 
 export const noEmptyTestTitles = createRule<[], 'empty'>({
     name: 'no-empty-test-titles',

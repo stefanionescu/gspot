@@ -1,13 +1,15 @@
 import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+
 import { openSession } from '#cli/engine/session.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildCopyPythonEnvironment, findMissingEnvironment } from '#cli/tools/uv.ts';
 import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { findMissingEnvironment, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 test.each([
     { active: undefined, isFound: false },

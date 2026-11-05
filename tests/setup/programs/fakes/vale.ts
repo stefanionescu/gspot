@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
+
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 
 const [styles = '', version = ''] = process.argv.slice(2);

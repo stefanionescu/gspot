@@ -1,23 +1,25 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
-import { openSession } from '#cli/engine/session.ts';
-import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, type TestdirResult } from 'testdirs';
+
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { installOutputSchema } from '#cli/schemas/commands.ts';
-import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import * as processes from '#cli/system/processes.ts';
 import { FAILED_NPM_VERSION } from '#tests/config/commands/reports.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function createMarkdownSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({

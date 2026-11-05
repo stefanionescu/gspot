@@ -1,9 +1,10 @@
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
+import { getOptionProperties, listOptionLiterals } from '../../language/expressions.ts';
+import { findFunction } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
-import { findFunction } from '../../language/functions.ts';
-import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
-import { listOptionLiterals, getOptionProperties } from '../../language/expressions.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 // The falsy values, which Node reads as a hostname that matches.
 const ACCEPTED_RESULTS: ReadonlySet<unknown> = new Set([undefined, null, false, 0, '']);

@@ -1,20 +1,20 @@
-import { createRule } from '../../rule.ts';
-import { isCallOf } from '../../libraries/testing.ts';
-import { FUNCTION_NODES } from '../../config/plugin.ts';
-import type { MemberCall } from '../../types/plugin.ts';
-import { getModuleName } from '../../language/modules.ts';
-import { unwrapExpression } from '../../language/syntax.ts';
-import type { QueryUse, ExpectSubject } from '../../types/testing.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
+import { FUNCTION_NODES } from '../../config/plugin.ts';
 import {
-    QUERY_METHOD,
-    QUERY_ASSERTION,
     ALL_QUERY_METHOD,
-    REMOVAL_CALLBACK,
     PRESENCE_MATCHERS,
+    QUERY_ASSERTION,
+    QUERY_METHOD,
+    REMOVAL_CALLBACK,
     TESTING_LIBRARY_MODULES,
 } from '../../config/testing.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { unwrapExpression } from '../../language/syntax.ts';
+import { isCallOf } from '../../libraries/testing.ts';
+import { createRule } from '../../rule.ts';
+import type { MemberCall } from '../../types/plugin.ts';
+import type { ExpectSubject, QueryUse } from '../../types/testing.ts';
 
 function isLibraryName(node: TSESTree.Node, name: string, source: TSESLint.SourceCode): boolean {
     const qualified = getModuleName(node, source) ?? '';

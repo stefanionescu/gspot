@@ -1,21 +1,23 @@
-import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
-import { planChecks } from '#cli/engine/plan.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { chmod, copyFile, cp, mkdir, readFile, realpath, unlink, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
+import { planChecks } from '#cli/engine/plan.ts';
+import { buildCheckSession, runCheckCode, runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/configurations/javascript/checks.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runChecks, runCheckCode, buildCheckSession } from '#cli/engine/run.ts';
 import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
-import { cp, chmod, mkdir, unlink, copyFile, readFile, realpath, writeFile } from 'node:fs/promises';
-import { toolModules, linkTypescript, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/configurations/javascript/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { linkInstalledModules, linkTypescript, toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('javascript/biome checks shebang scripts, TypeScript, and component files in each scope', async () => {
     const nested = 'if (value) { if (value.ready) { if (value.id) return 1; } } return 0;';

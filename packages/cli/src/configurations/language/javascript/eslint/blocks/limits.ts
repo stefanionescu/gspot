@@ -1,17 +1,17 @@
 import { isDeepStrictEqual } from 'node:util';
-import { getRequired } from '#cli/system/tables.ts';
-import type { ScopeSettings } from '#cli/types/settings.ts';
-import { getLimit, getTable } from '#cli/settings/scopes.ts';
-import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
-import { ESLINT_CHECK, ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/blocks.ts';
-import type { EslintRuleBlock, EslintLevelRules, PlannedEslintFile } from '#cli/types/configurations/language.ts';
 
+import { ESLINT_CHECK, ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/blocks.ts';
 import {
-    splitGlobs,
-    buildNodePatterns,
     buildExtensionGlob,
+    buildNodePatterns,
     buildScopeOverrideBlocks,
+    splitGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
+import { getLimit, getTable } from '#cli/settings/scopes.ts';
+import { getRequired } from '#cli/system/tables.ts';
+import type { EslintLevelRules, EslintRuleBlock, PlannedEslintFile } from '#cli/types/configurations/language.ts';
+import type { ScopeSettings } from '#cli/types/settings.ts';
 
 function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
     const limitRules = getRequired(LIMIT_RULES_BY_CHECK, ESLINT_CHECK, 'limit rules');

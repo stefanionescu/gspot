@@ -1,46 +1,46 @@
 import { styleText } from 'node:util';
-import { isInScope } from '#cli/system/paths.ts';
-import { getRequired } from '#cli/system/tables.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import type { Generation } from '#cli/types/tools.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import type { Settings } from '#cli/types/settings.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
-import type { Configuration } from '#cli/types/manifests.ts';
-import { formatCount, formatScope } from '#cli/system/text.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
-import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { CARRYOVER_GROUPS, CARRYOVER_HEADING } from '#cli/config/repository/setup.ts';
-import type { InitPlan, InitScan, InitFileRow, CarryoverRow, ConflictingConfigs } from '#cli/types/generation.ts';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import {
-    COLUMN_GAP,
-    ORIGIN_WIDTH,
-    NPM_PIN_NOUN,
+    ADDS_BLOCK_NOTE,
+    ALWAYS_SELECTED_NOUN,
+    ATTRIBUTES_ROW,
+    CHANGE_LATER_MESSAGE,
     CI_FILE_NOTE,
     CI_FILE_NOTES,
-    TOOL_PIN_NOUN,
     CI_OFF_MESSAGE,
-    ATTRIBUTES_ROW,
-    ADDS_BLOCK_NOTE,
-    PYTHON_PIN_NOUN,
-    GSPOT_FOLDER_NOTE,
-    FOREIGN_HOOK_NOTE,
-    DELETED_RULES_NOTE,
-    GENERATED_FILE_NOUN,
+    COLUMN_GAP,
     CONFIGURATION_WIDTH,
-    LINT_FOLDER_MESSAGE,
-    PRETTIER_SCRIPT_NOTE,
-    LINT_FOLDERS_HEADING,
-    CHANGE_LATER_MESSAGE,
-    ALWAYS_SELECTED_NOUN,
-    LINT_COMMANDS_HEADING,
-    INSTALL_LOCKFILE_NOTE,
-    UNREAD_SUBMODULE_MESSAGE,
+    DELETED_RULES_NOTE,
     DROPPED_LINE_SETTINGS_NOTE,
+    FOREIGN_HOOK_NOTE,
+    GENERATED_FILE_NOUN,
+    GSPOT_FOLDER_NOTE,
+    INSTALL_LOCKFILE_NOTE,
+    LINT_COMMANDS_HEADING,
+    LINT_FOLDER_MESSAGE,
+    LINT_FOLDERS_HEADING,
+    NPM_PIN_NOUN,
+    ORIGIN_WIDTH,
+    PRETTIER_SCRIPT_NOTE,
+    PYTHON_PIN_NOUN,
+    TOOL_PIN_NOUN,
+    UNREAD_SUBMODULE_MESSAGE,
 } from '#cli/config/generation.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { CARRYOVER_GROUPS, CARRYOVER_HEADING } from '#cli/config/repository/setup.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { isInScope } from '#cli/system/paths.ts';
+import { getRequired } from '#cli/system/tables.ts';
+import { formatCount, formatScope } from '#cli/system/text.ts';
+import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import type { CarryoverRow, ConflictingConfigs, InitFileRow, InitPlan, InitScan } from '#cli/types/generation.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { Settings } from '#cli/types/settings.ts';
+import type { Generation } from '#cli/types/tools.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
     const pins = listPackagePins(

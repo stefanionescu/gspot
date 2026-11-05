@@ -1,4 +1,5 @@
-import { test, expect } from 'bun:test';
+import { expect, test } from 'bun:test';
+
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 
 test('a path selector crosses folders with ** and negates with !', () => {

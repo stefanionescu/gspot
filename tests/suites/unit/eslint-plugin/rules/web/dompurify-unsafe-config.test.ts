@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { dompurifyUnsafeConfig } from '#eslint-plugin/rules/web/dompurify-unsafe-config.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('dompurify-unsafe-config', dompurifyUnsafeConfig, {
     valid: [

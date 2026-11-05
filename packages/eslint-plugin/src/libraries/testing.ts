@@ -1,24 +1,24 @@
-import { FUNCTION_NODES } from '../config/plugin.ts';
-import type { FileContext } from '../types/plugin.ts';
-import { findFunction } from '../language/functions.ts';
-import { isModuleUsed, getRequiredModule } from './packages.ts';
-import type { TestCall, TableCall, TestCallee, TestOrigin } from '../types/testing.ts';
-import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
+import { FUNCTION_NODES } from '../config/plugin.ts';
 import {
     CALL_STEP,
-    TEST_KINDS,
-    TEST_FOLDERS,
+    PLAYWRIGHT_SUITE_MODES,
+    RUNNING_TEST_MODIFIERS,
+    TABLE_DEPENDENCIES,
     TABLE_MODULES,
     TABLE_ORIGINS,
     TABLE_TEST_NAMES,
-    TEST_FILE_MARKERS,
-    TABLE_DEPENDENCIES,
     TEST_FILE_EXTENSIONS,
-    PLAYWRIGHT_SUITE_MODES,
-    RUNNING_TEST_MODIFIERS,
+    TEST_FILE_MARKERS,
+    TEST_FOLDERS,
     TEST_FRAMEWORK_MODULES,
+    TEST_KINDS,
 } from '../config/testing.ts';
+import { findFunction } from '../language/functions.ts';
+import type { FileContext } from '../types/plugin.ts';
+import type { TableCall, TestCall, TestCallee, TestOrigin } from '../types/testing.ts';
+import { getRequiredModule, isModuleUsed } from './packages.ts';
 
 function getImportedName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, parent } = definition;

@@ -1,25 +1,26 @@
-import { fileURLToPath } from 'node:url';
-import { join, dirname } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import prettierPackage from 'prettier/package.json' with { type: 'json' };
+import { createFileTree, testdir } from 'testdirs';
+
 import type { PackageManager } from '#cli/types/repository.ts';
+import {
+    NPM_PROJECT_FILES,
+    NPM_PROJECT_IGNORES,
+    NPM_PROJECT_ROOT_PACKAGE,
+    NPM_REGISTRY_TOKEN,
+    PNPM_WORKSPACE,
+    REGISTRY_HOST,
+    YARN_VERSION_THRESHOLD,
+} from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { NpmProject, NpmRegistry } from '#tests/types/setup.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import prettierPackage from 'prettier/package.json' with { type: 'json' };
-
-import {
-    REGISTRY_HOST,
-    PNPM_WORKSPACE,
-    NPM_PROJECT_FILES,
-    NPM_REGISTRY_TOKEN,
-    NPM_PROJECT_IGNORES,
-    YARN_VERSION_THRESHOLD,
-    NPM_PROJECT_ROOT_PACKAGE,
-} from '#tests/config/setup/sandboxes.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import type { NpmProject, NpmRegistry } from '#tests/types/setup.ts';
 
 async function writeNpmProject(options: {
     root: string;

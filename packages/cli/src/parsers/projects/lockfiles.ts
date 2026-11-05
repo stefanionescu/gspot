@@ -1,36 +1,37 @@
 import { posix } from 'node:path';
+
 import { parseSyml } from '@yarnpkg/parsers';
-import { isTable } from '#cli/system/tables.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import type { LockfileName } from '#cli/types/parsers.ts';
-import { listEnclosingFolders } from '#cli/system/paths.ts';
+
+import {
+    DEPENDENCY_SECTIONS,
+    type IMPORTER_LOCKFILES,
+    JAVASCRIPT_LOCKFILES,
+    LOCKFILE_URL_FIELDS,
+    NPM_PACKAGE_FOLDER,
+    PACKAGE_JSON,
+    PNPM_PEER_START,
+    PNPM_ROOT_IMPORTER,
+    PYTHON_NAME_SEPARATORS,
+    YARN_CLASSIC_HEADER,
+    YARN_CLASSIC_PROPERTY,
+} from '#cli/config/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
-import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-
 import {
     bunLockfileSchema,
+    dependencySectionsSchema,
     npmLockfileSchema,
-    yarnPackageSchema,
     pnpmLockfileSchema,
     yarnLockfileSchema,
-    dependencySectionsSchema,
+    yarnPackageSchema,
 } from '#cli/schemas/parsers.ts';
-import {
-    PACKAGE_JSON,
-    PNPM_PEER_START,
-    NPM_PACKAGE_FOLDER,
-    PNPM_ROOT_IMPORTER,
-    YARN_CLASSIC_HEADER,
-    LOCKFILE_URL_FIELDS,
-    DEPENDENCY_SECTIONS,
-    JAVASCRIPT_LOCKFILES,
-    YARN_CLASSIC_PROPERTY,
-    PYTHON_NAME_SEPARATORS,
-    type IMPORTER_LOCKFILES,
-} from '#cli/config/parsers.ts';
+import { GspotError, parseFileFields } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { LockfileName } from '#cli/types/parsers.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 function parseNpmVersions(path: string, text: string, folder: string): Map<string, string> {
     const { packages } = parseJsonFile(path, text, npmLockfileSchema);

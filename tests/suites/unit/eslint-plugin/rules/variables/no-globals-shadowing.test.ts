@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noGlobalsShadowing } from '#eslint-plugin/rules/variables/no-globals-shadowing.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester({ languageOptions: { sourceType: 'script' } }).run('no-globals-shadowing', noGlobalsShadowing, {
     valid: [

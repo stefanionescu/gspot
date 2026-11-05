@@ -1,12 +1,14 @@
-import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { readCacheFolder } from '#cli/system/environment.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
+import { join } from 'node:path';
+
+import { expect, spyOn, test } from 'bun:test';
+
 import { acquireBuildLock } from '#cli/configurations/language/swift/checks/cache.ts';
+import { readCacheFolder } from '#cli/system/environment.ts';
+import * as processes from '#cli/system/processes.ts';
+import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 
 async function createLockedFolder(): Promise<string> {
     const folder = join(readCacheFolder(), 'scope');

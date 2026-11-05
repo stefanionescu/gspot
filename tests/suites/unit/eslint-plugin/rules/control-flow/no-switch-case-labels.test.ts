@@ -1,5 +1,5 @@
-import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { noSwitchCaseLabels } from '#eslint-plugin/rules/control-flow/no-switch-case-labels.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-switch-case-labels', noSwitchCaseLabels, {
     valid: [

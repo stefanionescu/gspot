@@ -1,13 +1,15 @@
 import { posix } from 'node:path';
+
 import type { Node } from 'web-tree-sitter';
-import type { Session } from '#cli/types/tools.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
+
+import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/configurations/structure.ts';
+import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
 import type { SwiftModule } from '#cli/types/configurations/general.ts';
-import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
-import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/configurations/structure.ts';
+import type { Session } from '#cli/types/tools.ts';
 
 function findStringArgument(call: Node, label: string): string | undefined {
     const argument = call

@@ -1,20 +1,22 @@
-import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { parse } from '@decimalturn/toml-patch';
+import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
+
+import { MANAGED_KEYS_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { changedEditOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { changedEditOutputSchema } from '#cli/schemas/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { MANAGED_KEYS_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
 
 test('remove deletes settings that only the removed configuration exposes and names the deleted keys', async () => {
     await using sandbox = await createGitSandbox({
