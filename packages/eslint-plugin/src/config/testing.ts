@@ -54,7 +54,7 @@ export const EXCLUSIVE_TEST_NAMES = new Set(['context', 'describe', 'it', 'speci
 export const EXPLANATION_LETTER = /\p{L}/u;
 
 export const SKIP_FRAMEWORKS = [
-    { framework: 'jasmine', dependencies: ['jasmine'] },
+    { framework: 'jasmine', dependencies: ['jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine'] },
     { framework: 'jest', dependencies: ['jest'] },
     { framework: 'vitest', dependencies: ['vitest'] },
     { framework: 'mocha', dependencies: ['mocha', 'cypress'] },
@@ -158,7 +158,7 @@ export const TABLE_TEST_NAMES = new Set(['test', 'it', 'describe', 'suite']);
 
 export const TABLE_MODULES = ['bun:test', 'jest', '@jest/globals', 'vitest'];
 
-export const TABLE_DEPENDENCIES = ['bun:test', 'jest', 'vitest'];
+export const TABLE_DEPENDENCIES = ['jest', 'vitest'];
 
 export const TABLE_ORIGINS: ReadonlySet<string | undefined> = new Set(['bun:test', 'jest', '@jest/globals', 'vitest']);
 
