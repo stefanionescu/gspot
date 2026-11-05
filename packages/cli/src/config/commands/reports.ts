@@ -97,13 +97,6 @@ export const TOOL_STATE_COLORS = {
     system: 'dim',
 } as const;
 
-export const SUGGESTION_SECTIONS = [
-    { key: 'suggested', title: 'suggested, not selected' },
-    { key: 'undetected', title: 'selected, but no files yet' },
-    { key: 'unowned', title: 'your tool configs that gspot does not replace' },
-    { key: 'lintCommands', title: 'old lint commands' },
-] as const;
-
 export const LEVEL_COMMAND = 'gspot set level all';
 
 export const CI_FILES = { github: GITHUB_WORKFLOW, gitlab: GITLAB_WORKFLOW } as const;

@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { styleText } from 'node:util';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import {
     CI_FILE_NOTES,
     CI_FILES,
@@ -10,7 +9,6 @@ import {
     ORIGIN_URL_SETTING,
     REMOTE_URL_SCHEME,
     REMOTE_URL_USER,
-    SUGGESTION_SECTIONS,
     TOOL_STATE_COLORS,
     VERSION_GAP,
 } from '#cli/config/commands/reports.ts';
@@ -32,11 +30,11 @@ import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { findMissingBuild, findToolName, getTool, listDistinctTools } from '#cli/tools/pins.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import type { CiState, DoctorReport, DoctorTool, Suggestions } from '#cli/types/commands/reports.ts';
+import type { CiState, DoctorReport, DoctorTool } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
 
-const COLUMN_WIDTHS = { label: 9, name: 34 } as const;
+const LABEL_WIDTH = 9;
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';
@@ -49,29 +47,11 @@ function formatToolVersion(tool: ToolInspection): string {
 function formatTools(tools: ToolInspection[]): string[] {
     const width = Math.max(...tools.map((tool) => formatToolVersion(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
-        const label = styleText(TOOL_STATE_COLORS[tool.state], tool.state.padEnd(COLUMN_WIDTHS.label), {
+        const label = styleText(TOOL_STATE_COLORS[tool.state], tool.state.padEnd(LABEL_WIDTH), {
             stream: process.stdout,
         });
         return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tool.note ?? ''}`.trimEnd();
     });
-}
-
-function formatSuggestions(suggestions: Suggestions): string[] {
-    const sections = SUGGESTION_SECTIONS.map(({ key, title }) => {
-        const cells = suggestions[key].map((suggestion) => ({
-            name: 'configuration' in suggestion ? suggestion.configuration : suggestion.path,
-            detail: 'evidence' in suggestion ? suggestion.evidence : suggestion.note,
-            command: suggestion.command,
-        }));
-        const nameWidth = Math.max(COLUMN_WIDTHS.name, ...cells.map(({ name }) => name.length));
-        const rows = cells.map(({ name, detail, command }) =>
-            command === undefined
-                ? `  ${name.padEnd(nameWidth)} ${detail}`
-                : `  ${name.padEnd(nameWidth)} ${detail}: ${command}`,
-        );
-        return rows.length === 0 ? [] : [title, ...rows, ''];
-    });
-    return sections.flat();
 }
 
 function listCommandPrograms(session: Session): ReadonlySet<string> {
@@ -206,10 +186,9 @@ function formatDoctorReport(
         `tools: ${String(ready)} ready`,
         ...report.environments.map(
             (path) =>
-                `  ${styleText('red', 'missing'.padEnd(COLUMN_WIDTHS.label), { stream: process.stdout })} ${path}  ${PROJECT_ENVIRONMENT_MESSAGE}`,
+                `  ${styleText('red', 'missing'.padEnd(LABEL_WIDTH), { stream: process.stdout })} ${path}  ${PROJECT_ENVIRONMENT_MESSAGE}`,
         ),
         '',
-        ...formatSuggestions(report.suggestions),
         `hooks: ${states.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${states.ci}`,
@@ -227,7 +206,6 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         submodules: listSubmodulePaths(session.repository.index),
         tools: await inspectScopeTools(session),
         environments: listMissingEnvironments(session),
-        suggestions: await listSuggestions(session),
         hooks,
         ci,
         ruleFileCount: selectRuleFiles(session).length,

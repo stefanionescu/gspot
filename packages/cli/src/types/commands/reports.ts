@@ -16,8 +16,6 @@ import type {
     scanReportSchema,
     settingExplanationSchema,
     settingsListSchema,
-    suggestionRowSchema,
-    suggestionsSchema,
 } from '#cli/schemas/commands.ts';
 import type { CheckDescription, RunSelection, StageFilter } from '#cli/types/engine/plan.ts';
 import type { CheckProgress, PushInput, RunReport } from '#cli/types/engine/run.ts';
@@ -77,10 +75,6 @@ export type CheckCommandJson = RunReport | PushReport | CanceledCommandJson;
 export type ConfigurationsListJson = z.infer<typeof configurationsListSchema>;
 
 export type SettingsListJson = z.infer<typeof settingsListSchema>;
-
-export type SuggestionRow = z.infer<typeof suggestionRowSchema>;
-
-export type Suggestions = z.infer<typeof suggestionsSchema>;
 
 export type DoctorTool = z.infer<typeof doctorToolSchema>;
 

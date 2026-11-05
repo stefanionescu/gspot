@@ -32,25 +32,6 @@ export const installReportSchema = generatedFilesSchema.extend({
     missing: z.string().array(),
 });
 
-const configurationSuggestionSchema = z.strictObject({
-    configuration: z.string(),
-    evidence: z.string(),
-    command: z.string(),
-});
-
-export const suggestionRowSchema = z.strictObject({
-    path: z.string(),
-    note: z.string(),
-    command: z.string().optional(),
-});
-
-export const suggestionsSchema = z.strictObject({
-    suggested: configurationSuggestionSchema.array(),
-    undetected: configurationSuggestionSchema.array(),
-    unowned: suggestionRowSchema.array(),
-    lintCommands: suggestionRowSchema.array(),
-});
-
 export const doctorToolSchema = toolInspectionSchema.extend({ kind: z.enum(TOOL_KINDS) });
 
 export const ciStateSchema = z.strictObject({
@@ -63,7 +44,6 @@ export const doctorReportSchema = z.strictObject({
     submodules: z.string().array(),
     tools: doctorToolSchema.array(),
     environments: z.string().array(),
-    suggestions: suggestionsSchema,
     hooks: hookStatusSchema.omit({ text: true }),
     ci: ciStateSchema,
     ruleFileCount: z.int(),
