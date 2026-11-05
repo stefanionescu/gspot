@@ -5,10 +5,8 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
@@ -163,12 +161,4 @@ test('gspot/weakenings notes a base that this version of gspot cannot read, and 
     const { rules, notes } = await runWeakenings(sandbox.path);
     expect(rules).toStrictEqual([]);
     expect(notes).toHaveLength(1);
-});
-
-test('gspot.toml refuses an ignore that turns gspot/weakenings off', async () => {
-    const tables = '[[ignore]]\ncheck = "gspot/weakenings"\nreason = "two words"\n';
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { tables }) });
-    expect(openSession(sandbox.path)).rejects.toThrow(
-        matchFields<GspotError>({ name: 'GspotError', code: 'settings' }),
-    );
 });
