@@ -41,7 +41,5 @@ Read this rule when you change a GitHub Actions workflow or action.
 
 - Give each workflow one purpose, such as checks, release publication, or deployment.
 - Call existing task-runner commands instead of copying their implementation into a workflow.
-- Keep substantial logic in scripts that run locally through the task runner and in CI without a prompt. Run the checks
-  their language requires.
 - A verification job changes source only when its task requires formatting or code generation.
 - Write logs and reports to predictable artifact paths.
