@@ -106,12 +106,26 @@ export const LINUX_PIPELINE = {
     testChecks: [],
 };
 
+const BIN_FOLDER_START = { program: 'node', launcher: 'node_modules/.bin/gspot', prefix: [] } as const;
+
 export const START_COMMANDS = [
-    ['npm', 'npm@11.10.1', ['exec', '--no', '--', 'gspot']],
-    ['pnpm', 'pnpm@10.32.1', ['exec', 'gspot']],
-    ['yarn', 'yarn@4.13.0', ['exec', '--', 'gspot']],
-    ['bunx', 'bun@1.4.2', ['--no-install', 'gspot']],
-    ['mise', undefined, ['exec', '--', 'gspot']],
+    { manager: 'npm', packageManager: 'npm@11.10.1', ...BIN_FOLDER_START },
+    { manager: 'pnpm', packageManager: 'pnpm@10.32.1', ...BIN_FOLDER_START },
+    { manager: 'bun', packageManager: 'bun@1.4.2', ...BIN_FOLDER_START },
+    {
+        manager: 'yarn',
+        packageManager: 'yarn@4.13.0',
+        program: 'yarn',
+        launcher: 'bin/yarn',
+        prefix: ['exec', '--', 'gspot'],
+    },
+    {
+        manager: 'mise',
+        packageManager: undefined,
+        program: 'mise',
+        launcher: 'bin/mise',
+        prefix: ['exec', '--', 'gspot'],
+    },
 ] as const;
 
 export const HOOK_CASES = [

@@ -74,32 +74,27 @@ export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
 export const START_RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',
-        missing:
-            "npm is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add npm's folder to its PATH.",
+        hasBinFolder: true,
         installCommand: 'npm install --save-dev --save-exact <package>@<version>',
     },
     pnpm: {
         command: 'pnpm exec gspot',
-        missing:
-            "pnpm is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add pnpm's folder to its PATH.",
+        hasBinFolder: true,
         installCommand: 'pnpm add --save-dev --save-exact <package>@<version>',
     },
     yarn: {
         command: 'yarn exec -- gspot',
-        missing:
-            "yarn is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add yarn's folder to its PATH.",
+        hasBinFolder: false,
         installCommand: 'yarn add --dev --exact <package>@<version>',
     },
     bun: {
         command: 'bunx --no-install gspot',
-        missing:
-            "bunx is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add bunx's folder to its PATH.",
+        hasBinFolder: true,
         installCommand: 'bun add --dev --exact <package>@<version>',
     },
     mise: {
         command: 'mise exec -- gspot',
-        missing:
-            "mise is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add mise's folder to its PATH.",
+        hasBinFolder: false,
         installCommand: 'mise use --pin --tool-option allow_low_downloads=true npm:<package>@<version>',
     },
 } as const;

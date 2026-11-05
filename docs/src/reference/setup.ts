@@ -136,9 +136,8 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
 - Before you write code, read \`AGENTS.md\` and the rule files that it lists under \`${GSPOT_PATHS.rules}/\`.
 - When \`gspot check\` or \`gspot doctor\` reports a language or framework that gspot does not check yet, ask the
   user, then run the \`gspot add\` command that it prints, and \`gspot install\`.
-- Commit, and fix what the hook reports. Before you push, run \`gspot check --changed --stage push\`. If the branch
-  has no upstream and the repository has no \`origin/HEAD\`, name the branch to compare with:
-  \`gspot check --base <branch> --stage push\`.
+- Commit, and fix what the hook reports. Before you push, run \`gspot check --base origin/HEAD --only push\`. If the
+  repository has no \`origin/HEAD\`, name the branch to compare with: \`gspot check --base <branch> --only push\`.
 - When each check runs: \`commit\` checks run on the staged files before each commit, \`push\` checks run before each
   push, \`message\` checks run on the commit message, and \`manual\` checks run only with
   \`gspot check --only <check>\`. \`gspot check\` with no options runs the commit and push checks.

@@ -15,6 +15,9 @@ import type { GeneratedFile, HookName } from '#cli/types/tools.ts';
 // Yarn Plug'n'Play keeps packages out of node_modules, so its loader file shows that the project is installed.
 const YARN_PNP_FILE = '.pnp.cjs';
 
+// Starting a package manager costs a hook about 150 ms. This assignment finds gspot and gives a command check the same PATH.
+const BIN_FOLDER_START = { program: 'node', prefix: 'PATH="$PWD/node_modules/.bin:$PATH" ', command: 'gspot' };
+
 function buildInstallGuard(name: Exclude<StartRunner['name'], 'mise'>): string {
     const pnp = name === 'yarn' ? `test -f ${YARN_PNP_FILE} || ` : '';
     const installed = `test -f node_modules/${cliPackage.name}/package.json`;
@@ -23,19 +26,21 @@ function buildInstallGuard(name: Exclude<StartRunner['name'], 'mise'>): string {
 }
 
 function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly string[]): string {
-    const program = runner.command.split(' ', 1)[0] as string;
-    const { missing } = runner;
+    const { program, prefix, command } = runner.hasBinFolder
+        ? BIN_FOLDER_START
+        : { program: runner.command.split(' ', 1)[0] as string, prefix: '', command: runner.command };
+    const missing = `${program} is not on the PATH that this Git client gives hooks (%s). Start the client from a terminal, or add ${program}'s folder to its PATH.\n`;
     const messagePathLines = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
     const isLfs = lfsHooks.includes(name);
-    const check = `${runner.command} ${HOOK_CHECKS[name].arguments}`;
+    const check = `${command} ${HOOK_CHECKS[name].arguments}`;
     const body = [
         ...(isLfs ? [LFS_MISSING_GUARD, PUSH_INPUT_SAVE] : []),
         ...messagePathLines,
-        `command -v ${program} >/dev/null 2>&1 || { printf ${quoteArgument(missing.replace('$PATH', '%s') + '\n')} "$PATH" >&2; exit 2; }`,
+        `command -v ${program} >/dev/null 2>&1 || { printf ${quoteArgument(missing)} "$PATH" >&2; exit 2; }`,
         ...(runner.name === 'mise' ? [] : [buildInstallGuard(runner.name)]),
         ...(isLfs
-            ? [`${PUSH_INPUT_REPLAY}${check} || exit $?`, `${PUSH_INPUT_REPLAY}git lfs ${name} "$@"`]
-            : [`exec ${check}`]),
+            ? [`${PUSH_INPUT_REPLAY}${prefix}${check} || exit $?`, `${PUSH_INPUT_REPLAY}git lfs ${name} "$@"`]
+            : [`${prefix}exec ${check}`]),
         '',
     ].join('\n');
     return `${HOOK_SHEBANG}\n${body}`;

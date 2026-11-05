@@ -96,7 +96,7 @@ test('the AGENTS.md Commands section names its launcher once', () => {
 
 test.each([
     { hooksEnabled: true, commit: 'Commit, and fix what the hook reports.' },
-    { hooksEnabled: false, commit: 'Before you commit, run `gspot check --staged --stage commit`.' },
+    { hooksEnabled: false, commit: 'Before you commit, run `gspot check --staged --only commit`.' },
 ])('with hooks enabled $hooksEnabled, the AGENTS.md block says how to check a commit', ({ hooksEnabled, commit }) => {
     const block = buildAgentsBlock({
         files: [],
@@ -105,7 +105,7 @@ test.each([
         startCommand: 'gspot',
         hooksEnabled,
     });
-    expect(block).toContain(`\n${commit} Before you push, run \`gspot check --changed --stage push\`.\n`);
+    expect(block).toContain(`\n${commit} Before you push, run \`gspot check --base origin/HEAD --only push\`.\n`);
 });
 
 test('the AGENTS.md index keeps a rule opening that wraps onto a second line', () => {

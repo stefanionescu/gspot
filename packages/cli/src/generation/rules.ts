@@ -212,7 +212,7 @@ export function buildAgentsBlock({
         '',
         `The rules write \`gspot\` for \`${startCommand}\`.`,
         '',
-        `${hooksEnabled ? 'Commit, and fix what the hook reports.' : 'Before you commit, run `gspot check --staged --stage commit`.'} Before you push, run \`gspot check --changed --stage push\`.`,
+        `${hooksEnabled ? 'Commit, and fix what the hook reports.' : 'Before you commit, run `gspot check --staged --only commit`.'} Before you push, run \`gspot check --base origin/HEAD --only push\`.`,
         '',
         `To change \`gspot.toml\`, run ${formatSettingsCommands()}.`,
         'When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.',

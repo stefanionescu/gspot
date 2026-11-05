@@ -32,9 +32,9 @@ test('gspot writes check hooks without unused Git LFS hooks', async () => {
     );
 });
 
-test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, packageManager, prefix })))(
-    'each hook script uses the $program start command to run one check, with gspot.toml below the Git top level',
-    async ({ program, packageManager, prefix }) => {
+test.each(START_COMMANDS)(
+    'each $manager hook script starts gspot to run one check, with gspot.toml below the Git top level',
+    async ({ packageManager, launcher, prefix }) => {
         const folder = 'project';
         await using sandbox = await createGitSandbox({
             [join(folder, 'gspot.toml')]: buildSandboxSettings([], { rules: true }),
@@ -60,7 +60,7 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
         );
         await writeProgramCommand(
             sandbox.path,
-            `bin/${program}`,
+            launcher,
             'fakes/tool',
             '--record',
             '-',
@@ -87,7 +87,7 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
             );
             expect(result.code, result.stdout + result.stderr).toBe(0);
             const suffix = name === 'commit-msg' ? [join(cwd, 'message')] : [...commandArguments];
-            const selector = name === 'pre-commit' ? ['--staged', '--stage', 'commit'] : ['--hook', name, '--'];
+            const selector = name === 'pre-commit' ? ['--staged', '--only', 'commit'] : ['--hook', name, '--'];
             expect(JSON.parse(result.stderr)).toStrictEqual({
                 arguments: [...prefix, 'check', ...selector, ...suffix],
                 environment: { GSPOT_HOOK: null },
@@ -98,8 +98,8 @@ test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, 
 );
 
 test.each(START_COMMANDS)(
-    'a hook names %s and the Git client PATH when its runner is missing',
-    async (program, packageManager) => {
+    'a $manager hook names $program and the Git client PATH when $program is missing',
+    async ({ program, packageManager }) => {
         await using sandbox = await createGitSandbox({});
         if (packageManager !== undefined)
             await writeFile(
@@ -126,9 +126,9 @@ test.each(START_COMMANDS)(
     },
 );
 
-test.each(START_COMMANDS.filter(([program]) => program !== 'mise'))(
-    'a %s hook with no gspot in the project names the installation steps before it starts a global gspot',
-    async (program, packageManager) => {
+test.each(START_COMMANDS.filter(({ manager }) => manager !== 'mise'))(
+    'a $manager hook with no gspot in the project names the installation steps before it starts a global gspot',
+    async ({ manager, program, packageManager }) => {
         await using sandbox = await createGitSandbox({
             'package.json': JSON.stringify({ packageManager, devDependencies: { '@gspothq/cli': '0.0.0-test' } }),
         });
@@ -143,8 +143,7 @@ test.each(START_COMMANDS.filter(([program]) => program !== 'mise'))(
             stdin: '',
         });
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        const name = program === 'bunx' ? 'bun' : program;
-        expect(result.stderr).toContain(`${name} install`);
+        expect(result.stderr).toContain(`${manager} install`);
         expect(existsSync(log)).toBe(false);
     },
 );

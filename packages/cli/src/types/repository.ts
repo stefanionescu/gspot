@@ -110,7 +110,7 @@ export type CoveredFilesOptions = {
 export type StartRunner = {
     name: keyof typeof START_RUNNERS;
     command: string;
-    missing: string;
+    hasBinFolder: boolean;
     installCommand: string;
 };
 
