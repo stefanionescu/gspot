@@ -123,6 +123,15 @@ test.each([
     },
 );
 
+test('Ruff keeps no runtime imports without Pydantic or FastAPI', async () => {
+    const ruff = parse(
+        await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
+            'example.py': 'value = 1\n',
+        }),
+    ) as RuffConfig;
+    expect(ruff.lint).not.toHaveProperty('flake8-type-checking');
+});
+
 test('Ruff takes its style from a format override that names every Python file', async () => {
     const tables =
         '[format]\nprint_width = 120\n[[format.override]]\npaths = ["**/*.py"]\nquotes = "single"\nprint_width = 88\n';
