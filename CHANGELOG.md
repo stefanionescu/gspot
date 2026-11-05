@@ -1,8 +1,5 @@
 # Changelog
 
-Each section says what changed in one gspot CLI release, what you see now compared with before, and what to do when you
-upgrade. Sections up to 0.3.9 list commit subjects.
-
 ## 0.3.9
 
 ### Breaking changes
