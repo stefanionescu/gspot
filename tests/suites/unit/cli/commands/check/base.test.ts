@@ -8,7 +8,6 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { CommandFailureJson } from '#cli/types/system.ts';
 import { ALL_FILES_BASES } from '#tests/config/commands/check.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
@@ -23,7 +22,7 @@ async function prepareChangedRepository(root: string, files: Record<string, stri
     await createFileTree(root, { 'gspot.toml': gspotToml, ...files });
 }
 
-test('--changed compares with the merge base, names its base, and a folder argument stays a path', async () => {
+test('--base compares with the merge base, names its base, and a folder argument stays a path', async () => {
     await using sandbox = await testdir();
     await prepareChangedRepository(sandbox.path, {
         '.gitignore': `${GSPOT_FOLDER}/\n`,
@@ -33,47 +32,28 @@ test('--changed compares with the merge base, names its base, and a folder argum
     runGitStep(sandbox.path, ['init', '-b', 'main']);
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['branch', 'base']);
-    runGitStep(sandbox.path, ['branch', '--set-upstream-to=base']);
     await writeFile(join(sandbox.path, 'api/source.txt'), 'committed change');
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'web/source.txt'), 'working change');
-    const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', 'api', '--json']),
+    const narrowed = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', 'base', 'api', '--json']),
     );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(checked.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
-    expect(checked.report.checks[0]?.rerun).toBe('gspot check api --only sandbox/paths --base refs/heads/base');
-    expect(checked.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
+    expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
+    expect(narrowed.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'base' });
+    expect(narrowed.report.checks[0]?.rerun).toBe('gspot check api --only sandbox/paths --base base');
+    expect(narrowed.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
-    const explicit = parseCheckReport(
+    const checked = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', 'base', '--json']),
     );
-    expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
-    expect(explicit.report.checks[0]?.rerun).toBe('gspot check --only sandbox/paths --base base');
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.report.checks[0]?.rerun).toBe('gspot check --only sandbox/paths --base base');
     expect(
-        explicit.report.checks
+        checked.report.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))
             .toSorted(compareText),
     ).toStrictEqual(['api/source.txt', 'web/source.txt']);
-});
-
-test('--changed without an upstream names the replacement command, and uses origin/main without origin/HEAD', async () => {
-    await using sandbox = await testdir();
-    await prepareChangedRepository(sandbox.path, { '.gitignore': `${GSPOT_FOLDER}/\n`, 'api/source.txt': 'before' });
-    runGitStep(sandbox.path, ['init', '-b', 'topic']);
-    commitAll(sandbox.path);
-    const absent = await runGspot(sandbox.path, ['check', '--changed', '--json']);
-    expect(absent.code).toBe(2);
-    expect(JSON.parse(absent.stdout)).toMatchObject({ error: 'git' });
-    expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toContain('gspot check --base <branch>');
-    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
-    await writeFile(join(sandbox.path, 'api/source.txt'), 'changed');
-    const defaultRange = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']),
-    );
-    expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);
-    expect(defaultRange.report.comparison).toMatchObject({ reference: 'refs/remotes/origin/main' });
 });
 
 test.each([...ALL_FILES_BASES])(

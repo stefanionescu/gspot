@@ -7,7 +7,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
 import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { assertCheckExists, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { readChangedPaths, readDefaultRef } from '#cli/repository/revisions/changes.ts';
+import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
@@ -98,17 +98,6 @@ async function warnMissingHooks(session: Session, revision: RevisionSource | und
     for (const line of lines) printWarning(line);
 }
 
-async function readComparedRef(root: string, options: CheckOptions, cancelSignal: AbortSignal): Promise<string> {
-    if (options.base !== undefined) return options.base;
-    const compared = await readDefaultRef(root, cancelSignal);
-    if (compared === '')
-        throw new GspotError(
-            'git',
-            `No upstream, origin/HEAD, origin/main, or origin/master names a branch to compare with. Run gspot check --base <branch> in place of --changed.`,
-        );
-    return compared;
-}
-
 async function readSelection(
     session: Session,
     options: CheckOptions,
@@ -116,9 +105,8 @@ async function readSelection(
 ): Promise<{ selection: RunSelection; note?: string }> {
     if (options.messageFile !== undefined)
         return { selection: { content: 'message', messageFile: options.messageFile } };
-    if (options.base === undefined && options.changed !== true) return { selection: { content: 'working-tree' } };
-    const compared = await readComparedRef(session.root, options, cancelSignal);
-    const changed = await readChangedPaths(session.root, compared, cancelSignal);
+    if (options.base === undefined) return { selection: { content: 'working-tree' } };
+    const changed = await readChangedPaths(session.root, options.base, cancelSignal);
     const note = changed.note === undefined ? {} : { note: changed.note };
     if (changed.paths === undefined) return { selection: { content: 'working-tree' }, ...note };
     const { reference, paths, commits } = changed;

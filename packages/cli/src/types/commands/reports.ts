@@ -34,7 +34,6 @@ export type PushReport = z.infer<typeof pushReportSchema>;
 export type RevisionCheckResult = CommandResult<RunReport> | { skipped: PushedRevisions['skipped'][number]['reason'] };
 
 export type CheckOptions = {
-    changed?: boolean;
     hook?: CheckHook | undefined;
     onProgress?: ((progress: CheckProgress) => void) | undefined;
     cwd: string;
@@ -68,7 +67,6 @@ export type CheckFlags = {
     only?: string[];
     skip?: string[];
     staged?: boolean;
-    changed?: boolean;
     base?: string;
     fix?: boolean;
     hook?: CheckHook;

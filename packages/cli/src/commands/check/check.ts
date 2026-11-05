@@ -8,7 +8,6 @@ import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { parseCheckNames } from '#cli/commands/edits.ts';
 import {
     BASE_OPTION,
-    CHANGED_FLAG,
     CHECK_INPUT_HOOKS,
     CHECK_STAGES,
     CHECK_STOPPED_MESSAGE,
@@ -58,7 +57,6 @@ async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
 function assertPushFlags(flags: CheckFlags): void {
     const conflicts = [
         flags.staged === true ? STAGED_FLAG : undefined,
-        flags.changed === undefined ? undefined : CHANGED_FLAG,
         flags.base === undefined ? undefined : BASE_FLAG,
         flags.fix === true ? FIX_FLAG : undefined,
     ].filter((value) => value !== undefined);
@@ -70,29 +68,21 @@ function assertPushFlags(flags: CheckFlags): void {
     if (process.stdin.isTTY) throw new GspotError('arguments', PUSH_STDIN_MESSAGE);
 }
 
-function assertComparisonFlags(options: CheckOptions, flags: CheckFlags): void {
-    const comparisons = [
-        flags.changed === true ? CHANGED_FLAG : undefined,
-        flags.base === undefined ? undefined : BASE_FLAG,
-    ].filter((flag) => flag !== undefined);
-    if (comparisons.length > 1)
-        throw new GspotError('arguments', '--changed cannot run with --base. Choose one comparison.');
-    if (options.staged && comparisons.length > 0)
+function assertStagedFlags(options: CheckOptions, flags: CheckFlags): void {
+    if (!options.staged) return;
+    if (options.fix)
         throw new GspotError(
             'arguments',
-            `${comparisons.join('')} cannot run with ${STAGED_FLAG}. Choose one file selection.`,
+            `--fix cannot run with ${STAGED_FLAG}: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.`,
         );
+    if (flags.base !== undefined)
+        throw new GspotError('arguments', `${BASE_FLAG} cannot run with ${STAGED_FLAG}. Choose one file selection.`);
 }
 
 function assertCheckSelection(options: CheckOptions, flags: CheckFlags): void {
     const { only, skip } = options;
     if (flags.hook === 'pre-push') assertPushFlags(flags);
-    if (options.staged && options.fix)
-        throw new GspotError(
-            'arguments',
-            `--fix cannot run with ${STAGED_FLAG}: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.`,
-        );
-    assertComparisonFlags(options, flags);
+    assertStagedFlags(options, flags);
     if (only?.every((id) => skip?.includes(id) === true) === true)
         throw new GspotError(
             'arguments',
@@ -152,7 +142,6 @@ function parseCheckFlags(
         verbose: flags.verbose === true,
         paths: hook === 'commit-msg' ? [] : paths,
         hook,
-        changed: flags.changed === true,
         only: onlyStage === undefined ? flags.only : undefined,
         skip: flags.skip,
         base: flags.base,
@@ -257,7 +246,6 @@ export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {
         { flags: ONLY_OPTION, parse: parseCheckNames },
         { flags: SKIP_OPTION, parse: parseCheckNames },
         { flags: STAGED_FLAG },
-        { flags: CHANGED_FLAG },
         { flags: BASE_OPTION },
         { flags: FIX_FLAG },
         { flags: HOOK_OPTION, choices: CHECK_INPUT_HOOKS, hidden: true },

@@ -37,8 +37,6 @@ export const STAGE_SETUP_MESSAGE = `Stage ${SETTINGS_FILE} and ${GSPOT_FOLDER}/.
 
 export const NOTHING_STAGED_MESSAGE = 'Nothing is staged.';
 
-export const CHANGED_FLAG = '--changed';
-
 export const EMPTY_PUSH_MESSAGE = 'The push sends no commits to check.\n';
 
 export const NO_PENDING_REFS = 'none; see canceled checks above';

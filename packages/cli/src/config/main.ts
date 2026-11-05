@@ -5,6 +5,7 @@ export const REMOVED_COMMANDS = { apply: 'gspot install writes the generated fil
 export const REMOVED_OPTIONS: Readonly<Record<string, string>> = {
     '--stage':
         'gspot check --stage was removed. Run gspot check --only <commit|push>. If you did not type this, your hook script is out of date: run gspot install.',
+    '--changed': 'gspot check --changed was removed. Run gspot check --base origin/main, or --base origin/HEAD.',
 };
 
 export const UNKNOWN_OPTION_NAME = /unknown option '([^']+)'/u;
