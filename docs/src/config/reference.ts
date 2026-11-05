@@ -14,7 +14,7 @@ export const SCHEMA_TYPE_LABELS: Readonly<Record<string, string>> = {
 export const CHECK_RUN_LABELS = {
     once: 'once for the repository',
     scope: 'once per scope',
-    files: 'per file',
+    files: 'on the files of the run',
     history: 'once for pushed history',
 } as const;
 
@@ -155,7 +155,7 @@ export const TOOLS_VERSIONS_HEADING = 'Tools and versions';
 
 export const CONFIG_FILES_HEADING = 'Files gspot writes';
 
-export const IGNORED_PATHS_HEADING = 'Kept out of Git';
+export const IGNORED_PATHS_HEADING = 'Paths that must stay out of Git';
 
 export const DEFAULT_OPTION_DESCRIPTION = 'See the example.';
 

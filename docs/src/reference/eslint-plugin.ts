@@ -53,17 +53,17 @@ const TOPIC_LABELS = new Map([
 ]);
 
 function formatPluginPresets(): string {
-    return Object.entries(plugin.configs)
-        .map(([name, config]) => {
-            const enabled = Object.keys(config.rules);
-            const excluded = Object.keys(plugin.rules)
-                .map((rule) => `${PLUGIN_PREFIX}/${rule}`)
-                .filter((rule) => !enabled.includes(rule));
-            if (excluded.length === 0) return `The \`${name}\` config turns on every lint rule.`;
-            const names = CONJUNCTION_FORMAT.format((name === 'all' ? excluded : enabled).map((rule) => `\`${rule}\``));
-            return `The \`${name}\` config turns on ${name === 'all' ? 'every lint rule except ' : ''}${names}.`;
-        })
-        .join('\n\n');
+    const presets = Object.entries(plugin.configs).map(([name, config]) => {
+        const enabled = Object.keys(config.rules);
+        const excluded = Object.keys(plugin.rules)
+            .map((rule) => `${PLUGIN_PREFIX}/${rule}`)
+            .filter((rule) => !enabled.includes(rule));
+        if (excluded.length === 0) return `The \`${name}\` config turns on every lint rule.`;
+        if (name !== 'all') return `The \`${name}\` config turns on ${String(enabled.length)} rules.`;
+        const names = CONJUNCTION_FORMAT.format(excluded.map((rule) => `\`${rule}\``));
+        return `The \`${name}\` config turns on every lint rule except ${names}.`;
+    });
+    return `${presets.join(' ')} Each rule names the configs that turn it on.`;
 }
 
 function formatRuleOptions({
@@ -152,8 +152,8 @@ function formatTopicIndex(topic: string, label: string, names: readonly string[]
     const path = `${PLUGIN_PATH}${topic}/`;
     const links = names.map((name) => `<li id="${name}"><a href="${path}#${name}"><code>${name}</code></a></li>`);
     return formatSection(
-        label,
-        `The [${label} page](${path}) explains these rules:\n\n<ul class="rule-index">\n${links.join('\n')}\n</ul>`,
+        `[${label}](${path})`,
+        `<ul class="rule-index">\n${links.join('\n')}\n</ul>`,
         SUBSECTION_HEADING_LEVEL,
     );
 }

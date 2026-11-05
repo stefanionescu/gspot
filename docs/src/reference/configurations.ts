@@ -1,3 +1,5 @@
+import { posix } from 'node:path';
+
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
     ALL_FILES_LABEL,
@@ -32,6 +34,8 @@ import {
 import { formatSettingLink } from '#docs/reference/settings.ts';
 import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
 import type { CliReference } from '#docs/types/reference.ts';
+
+const LOCAL_FILES_MESSAGE = '`repository/local-files` reports a tracked file at these paths.';
 
 function formatRuleFiles(configuration: CliReference['configurations'][number]): string {
     const rows = configuration.ruleFiles.map(({ path, conditions, exclusions }) => {
@@ -73,18 +77,37 @@ function formatSelection(configuration: CliReference['configurations'][number]):
     );
 }
 
+function formatToolVersion(
+    configuration: CliReference['configurations'][number],
+    tool: CliReference['configurations'][number]['installedTools'][number],
+): string {
+    if (tool.version !== undefined) return `\`${tool.version}\``;
+    const minimum = configuration.tools.find(({ name }) => name === tool.name)?.min_version;
+    return minimum === undefined ? 'Any' : `\`${minimum}\` or later`;
+}
+
+function listWrittenFiles(configuration: CliReference['configurations'][number]): string[] {
+    const pointers = configuration.configs.flatMap(({ pointer }) =>
+        pointer === undefined ? [] : (pointer.folders ?? ['']).map((folder) => posix.join(folder, pointer.path)),
+    );
+    const targets = configuration.configs.map((config) => config.target);
+    return [...new Set([...pointers, ...targets])].map((path) => `\`${path}\``);
+}
+
 function listInstalledSections(configuration: CliReference['configurations'][number]): Array<[string, string]> {
     const tools = configuration.installedTools.map((tool) => [
         tool.name,
-        (tool.version === undefined ? 'Any' : `\`${tool.version}\``) +
-            (tool.source === 'system' ? SELF_INSTALL_LABEL : ''),
+        formatToolVersion(configuration, tool) + (tool.source === 'system' ? SELF_INSTALL_LABEL : ''),
     ]);
-    const targets = [...new Set(configuration.configs.map((config) => `\`${config.target}\``))];
+    const written = listWrittenFiles(configuration);
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
         [TOOLS_VERSIONS_HEADING, formatTable(['Tool', 'Version'], tools)],
-        [CONFIG_FILES_HEADING, targets.length === 0 ? '' : `gspot writes ${CONJUNCTION_FORMAT.format(targets)}.`],
-        [IGNORED_PATHS_HEADING, ignored.length === 0 ? '' : `${CONJUNCTION_FORMAT.format(ignored)}.`],
+        [CONFIG_FILES_HEADING, written.length === 0 ? '' : `gspot writes ${CONJUNCTION_FORMAT.format(written)}.`],
+        [
+            IGNORED_PATHS_HEADING,
+            ignored.length === 0 ? '' : `${CONJUNCTION_FORMAT.format(ignored)}. ${LOCAL_FILES_MESSAGE}`,
+        ],
     ];
 }
 
@@ -107,6 +130,7 @@ function buildConfigurationPage(
     const settings = configuration.settings.map((setting) => [formatSettingLink(setting.name), setting.description]);
 
     const sections: Array<[string, string]> = [
+        [SELECTED_HEADING, selection],
         [
             'Checks',
             CLI_REFERENCE.checks
@@ -115,7 +139,6 @@ function buildConfigurationPage(
                 .join(''),
         ],
         ['Settings', formatTable(['Setting', SETS_HEADING], settings)],
-        [SELECTED_HEADING, selection],
         [RULES_OFF_HEADING, formatLintRulesOff(configuration)],
         [DEFAULTS_HEADING, formatTable(['Setting', 'Value'], defaults)],
         [RULE_FILES_HEADING, formatRuleFiles(configuration)],
@@ -140,9 +163,9 @@ Build the grouped configuration index and its pages.
 @returns the index and each configuration page with a section per check, keyed by path
 */
 export function buildConfigurationPages(guides: Map<string, ConfigurationGuide>): Map<string, ReferencePage> {
-    const selectedRows = CLI_REFERENCE.configurations
+    const alwaysSelected = CLI_REFERENCE.configurations
         .filter(({ always_selected }) => always_selected)
-        .map((configuration) => [formatConfigurationLink(configuration.name), formatSelection(configuration)]);
+        .map(({ name }) => formatConfigurationLink(name));
     const groupSections = Object.entries(CLI_REFERENCE.groups).map(([group, title]) => {
         const rows = CLI_REFERENCE.configurations
             .filter((configuration) => configuration.group === group)
@@ -153,7 +176,10 @@ export function buildConfigurationPages(guides: Map<string, ConfigurationGuide>)
         'Configurations',
         CONFIGURATIONS_DESCRIPTION,
         CONFIGURATIONS_OPENING +
-            formatSection('Always selected', formatTable(['Configuration', SELECTED_HEADING], selectedRows)) +
+            formatSection(
+                'Always selected',
+                `gspot selects these in every repository: ${CONJUNCTION_FORMAT.format(alwaysSelected)}.`,
+            ) +
             groupSections.join(''),
     );
     const pages = new Map<string, ReferencePage>([[`${REFERENCE_FOLDERS.configurations}/index`, index]]);

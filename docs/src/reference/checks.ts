@@ -6,6 +6,7 @@ import {
     CHECK_FIX_MESSAGE,
     CHECK_NEEDS_LABELS,
     CHECK_RUN_LABELS,
+    CHECKS_HEADING,
     CHECKS_OPENING,
     CONJUNCTION_FORMAT,
     HELP_HEADING,
@@ -30,6 +31,8 @@ import {
 import type { ReferencePage } from '#docs/types/pages.ts';
 import type { CliReference, Suppression } from '#docs/types/reference.ts';
 
+const NO_INLINE_CONFIG_FLAG = '--no-inline-config';
+
 function listCheckRequirements(reference: CliReference['checks'][number]): string[] {
     const { programs, systems, needs } = reference;
     return [
@@ -49,9 +52,10 @@ function formatSuppressionComment(suppression: Suppression | undefined): string 
 }
 
 function formatTurnOff(reference: CliReference['checks'][number]): string {
-    const { turnOff, suppression } = reference;
+    const { check, turnOff, suppression } = reference;
     const commands = [turnOff.paths, ...(turnOff.rule === undefined ? [] : [turnOff.rule])];
-    const comment = formatSuppressionComment(suppression);
+    const comment =
+        check.command?.includes(NO_INLINE_CONFIG_FLAG) === true ? '' : formatSuppressionComment(suppression);
     return `Turn it off for some files${turnOff.rule === undefined ? '' : LINT_RULES_MESSAGE}, with a reason:\n\n\`\`\`text\n${commands.join('\n')}\n\`\`\`${comment}`;
 }
 
@@ -60,7 +64,7 @@ function formatRuleTable(reference: CliReference['checks'][number]): string {
     const rules = Object.entries(reference.explanations);
     if (rules.length === 0) return '';
     return formatTable(
-        ['Rule', 'Meaning', 'What to do'],
+        ['Rule', CHECKS_HEADING, HELP_HEADING],
         rules.map(([name, explanation]) => [`\`${name}\``, explanation.description ?? '', explanation.fix ?? '']),
     );
 }
