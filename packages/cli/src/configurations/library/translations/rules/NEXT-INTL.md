@@ -27,6 +27,3 @@ Read this rule when you change next-intl configuration or messages.
 - Handle missing messages through `onError` and choose the visible error text through `getMessageFallback`. The default
   reports an error and returns a key-based fallback. Configure client callbacks in a Client Component because functions
   cannot cross the server boundary.
-
-See [request configuration](https://next-intl.dev/docs/usage/configuration) and
-[Server and Client Components](https://next-intl.dev/docs/environments/server-client-components).
