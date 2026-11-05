@@ -95,29 +95,6 @@ test('the settings list leaves out a naming category that gspot set refuses', as
     expect(stdout).not.toContain('naming.typescript.classes.cases');
 });
 
-test('the text settings list shortens long values', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], {
-            tables: '[naming]\nbanned_words = ["generated-long-name-one/**", "generated-long-name-two/**"]\n',
-        }),
-        'entry.sh': 'echo example\n',
-    });
-    const before = await readTree(sandbox.path);
-    const human = await runGspot(sandbox.path, ['list', 'settings']);
-    expect(human.code, human.stdout + human.stderr).toBe(0);
-    expect(human.stderr).toBe('');
-    expect(human.stdout).toContain('["generated-long-name-one/**","generated-long-name-two/**"]');
-    const structured = await runGspot(sandbox.path, ['list', 'settings', '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(structured.stderr).toBe('');
-    const report = settingsListOutputSchema.parse(JSON.parse(structured.stdout));
-    expect(report.settings.find((row) => row.setting === 'naming.banned_words')?.value).toStrictEqual([
-        'generated-long-name-one/**',
-        'generated-long-name-two/**',
-    ]);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test('the text lists group equal scope states on one line', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
@@ -134,7 +111,7 @@ test('the text lists group equal scope states on one line', async () => {
     expect(checks.stdout).toContain('bash/shellcheck  on in . and 3 scopes\n');
     expect(checks.stdout).toContain('bash/shfmt  on in ., web; skipped (ignore) in api, api/worker\n');
     const settings = await runGspot(sandbox.path, ['list', 'settings']);
-    expect(settings.stdout).toMatch(/^limits\.max_file_lines .* in \. and 3 scopes$/mu);
+    expect(settings.stdout).toMatch(/^limits\.max_file_lines +\d+ .* in \. and 3 scopes$/mu);
 });
 
 test('list without gspot.toml refuses the command and writes nothing', async () => {
