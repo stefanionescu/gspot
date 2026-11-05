@@ -83,13 +83,3 @@ List the default locale, another supported locale, and affected screens for the 
 accuracy, dynamic keys, untranslated text, long translations, other writing systems, plural cases, rich text, form
 errors, locale selection after refresh, localized navigation, and screen-reader labels. A new RTL locale adds its layout
 and mixed-direction text to that list.
-
-## References
-
-Use documentation matching the installed release and enabled features.
-
-| Topic                | Primary source                                                                          |
-| -------------------- | --------------------------------------------------------------------------------------- |
-| ICU MessageFormat    | [ICU MessageFormat](https://unicode-org.github.io/icu/userguide/format_parse/messages/) |
-| next-intl providers  | [next-intl configuration](https://next-intl.dev/docs/usage/configuration)               |
-| BCP 47 language tags | [Request for Comments (RFC) 5646](https://www.rfc-editor.org/rfc/rfc5646)               |
