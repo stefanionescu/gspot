@@ -2555,7 +2555,7 @@ export default setRuleOptions(defineConfig([
     setLevelRules({"rules": {
         "unicorn/prefer-await": "off"
     },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*"], ["**/*.astro", "**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/setup/runner/integration.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/setup/runner/integration.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"], ["**/*.astro", "**/*", "tests/setup/runner/integration.ts"], ["**/*.astro", "**/*", "tests/setup/runner/integration.ts/**"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "no-template-curly-in-string": "off"
     },
@@ -2567,7 +2567,7 @@ export default setRuleOptions(defineConfig([
     setLevelRules({"rules": {
         "unicorn/no-top-level-side-effects": "off"
     },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*.config.*"], ["**/*.astro", "**/*", "**/*.config.*"]]}, gspothqEslintPlugin, "all"),
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "docs/astro.config.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "docs/astro.config.ts/**"], ["**/*.astro", "**/*", "docs/astro.config.ts"], ["**/*.astro", "**/*", "docs/astro.config.ts/**"]]}, gspothqEslintPlugin, "all"),
 ]), [
     {
         "paths": [

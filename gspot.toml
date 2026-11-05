@@ -264,7 +264,7 @@ reason = "This literal supplies a deliberate misspelling to the spelling checks 
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["**/configurations/{database,framework,general,infrastructure,language,library,platform,testing}/*"]
+paths = ["**/configurations/{database,library,platform}/*"]
 reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
 
 [[ignore]]
@@ -275,7 +275,7 @@ reason = "The manifest loader discovers config files in files/ and names each of
 
 [[ignore]]
 check = "structure/pass-through-folders"
-paths = ["**/configurations/{database,framework,general,infrastructure,language,library,platform,testing}"]
+paths = ["**/configurations/database"]
 reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
 
 [[ignore]]
@@ -296,6 +296,7 @@ reason = "It fights gspot/no-trivial-functions: the ternary shrinks a helper to 
 [[ignore]]
 check = "javascript/eslint"
 rule = "unicorn/prefer-await"
+paths = ["packages/cli/src/parsers/code/grammars.ts", "tests/setup/runner/integration.ts"]
 reason = "With no-floating-promises, no-misused-promises, and no-void, a synchronous callback that starts async work has no form that this rule accepts."
 
 [[ignore]]
@@ -313,5 +314,5 @@ reason = "Test samples quote template syntax of other languages as text."
 [[ignore]]
 check = "javascript/eslint"
 rule = "unicorn/no-top-level-side-effects"
-paths = ["**/*.config.*"]
+paths = ["docs/astro.config.ts"]
 reason = "A tool reads the default export of its config file, which the file builds when it loads."
