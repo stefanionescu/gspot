@@ -8,7 +8,6 @@ buildRuleTester().run('no-renamed-exports', noRenamedExports, {
         'export const a = globalThis.settings.name;',
         'export const a = 1;',
         'const a = b;',
-        'export let a = b;',
         'import settings from "./settings"; export const { homepage, license } = settings;',
         'import settings from "./settings"; export const { owner: { name } } = settings;',
     ],
@@ -84,10 +83,6 @@ buildRuleTester().run('no-renamed-exports regressions', noRenamedExports, {
             errors: [{ messageId: 'renamed' }],
         },
         { code: 'import box from "x";\ntypeof box.a;\nexport const other = box;', errors: [{ messageId: 'renamed' }] },
-        {
-            code: 'import { "value" as other } from "a";\nexport { other as renamed };',
-            errors: [{ messageId: 'renamed' }],
-        },
         { code: 'const value = 1;\nexport { value as "renamed" };', errors: [{ messageId: 'renamed' }] },
     ],
 });

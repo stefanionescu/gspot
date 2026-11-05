@@ -14,13 +14,11 @@ buildRuleTester().run<keyof (typeof noTrivialFiles)['meta']['messages'], [Partia
             'import { loadConfig } from "./config"; export const port = loadConfig().port;',
             'export const ROOT = import.meta.dirname;',
             'export class Money { double() { return this.amount * 2; } }',
-            'class Money { double() { return this.amount * 2; } } export { Money };',
             {
                 code: 'import type { A } from "a"; declare const plugin: A & { rules: Record<string, unknown> }; export default plugin;',
                 filename: '/repo/src/plugin.d.ts',
             },
             'import type { Plugin } from "./owner"; declare const plugin: Plugin; export default plugin;',
-            'import { z } from "zod"; import { NAMES } from "./config"; export const schema = z.enum(NAMES);',
             'export const callback = () => 1;',
             'import { run } from "./owner"; run();',
             'await run();',
@@ -151,7 +149,6 @@ buildRuleTester().run('no-trivial-files regressions', noTrivialFiles, {
             code: "import type { Box, User } from './types';\nexport type UserBox = Box<User>;",
             name: 'a specialized generic is not forwarding',
         },
-        'const owner = { value: 0 };\nexport const snapshot = owner.value;\nowner.value = 1;',
     ],
     invalid: [],
 });

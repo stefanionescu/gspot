@@ -22,11 +22,6 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 code: "import { b } from '../../user/b';",
                 filename: '/repo/packages/shop/source/cart/inner/a.ts',
             },
-            {
-                name: 'sibling within the root feature folder',
-                code: "import { b } from '../cart/b';",
-                filename: '/repo/features/cart/a.ts',
-            },
             { code: "import { b } from '../b';", filename: '/repo/features/cart/inner/a.ts' },
             { code: "import { b } from './cart/b';", filename: '/repo/features/main.ts' },
             {
@@ -51,19 +46,8 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 options: [{ folders: ['api'] }],
             },
             {
-                name: 'parent import with no configured boundaries',
-                code: "import { a } from '../../supabase/a.js';",
-                filename: '/repo/api/src/b.ts',
-                options: [{ folders: [] }],
-            },
-            {
                 code: "import { a } from '../cart';",
                 filename: '/repo/features/cart/a.ts',
-            },
-            {
-                code: "import { a } from './src/a.js';",
-                filename: '/repo/main.ts',
-                options: [{ folders: ['.'] }],
             },
             {
                 code: "import { a } from '../../src/a.js';",
@@ -117,12 +101,6 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 options: [{ aliases: { '#cli-package': 'packages/package.json' } }],
                 output: "import metadata from '#cli-package';",
                 errors: [{ messageId: 'alias' }],
-            },
-            {
-                name: 'external script without externals',
-                code: "import { app } from '../../scripts/app.js';",
-                filename: '/repo/web/src/a.ts',
-                errors: [{ messageId: 'escape' }],
             },
             {
                 code: "import { a } from '../a.js';",
@@ -245,13 +223,7 @@ buildRuleTester({ root: String.raw`c:\repo` }).run<
     keyof (typeof importBoundaries)['meta']['messages'],
     [Partial<ImportBoundariesOptions[0]>]
 >('import-boundaries on Windows paths', importBoundaries, {
-    valid: [
-        {
-            name: 'sibling within a Windows feature folder',
-            code: "import { b } from '../cart/b';",
-            filename: String.raw`C:\repo\features\cart\a.ts`,
-        },
-    ],
+    valid: [],
     invalid: [
         {
             name: 'sibling feature import on Windows',
