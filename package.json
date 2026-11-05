@@ -19,6 +19,6 @@
     "overrides": {
         "katex": "0.18.11"
     },
-    "description": "Development workspace for the gspot linting CLI.",
+    "description": "gspot development workspace",
     "type": "module"
 }

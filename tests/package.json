@@ -1,7 +1,7 @@
 {
     "name": "@gspothq/tests",
     "private": true,
-    "description": "Test suites for gspot.",
+    "description": "gspot test suites",
     "type": "module",
     "devDependencies": {
         "@decimalturn/toml-patch": "3.3.2",

@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "description": "ESLint rules for code that AI coding agents often write.",
+    "description": "ESLint rules for AI-generated code",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
