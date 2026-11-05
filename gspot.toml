@@ -65,7 +65,21 @@ ede = "OpenSSL names the Triple DES ciphers des-ede and des-ede3."
 
 [javascript]
 import_extension = "ts"
-entry_files = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/test-tools.ts", "tests/setup/runner/integration.ts", "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/framework/site/files/purgecss.ts", ".mise/release/changelog.ts", ".mise/release/pin-ages.ts"]
+entry_files = [
+    "tests/setup/runner/unit.ts",
+    "tests/setup/programs/**/*.ts",
+    "tests/setup/runner/prepare.ts",
+    "tests/setup/sandboxes/test-tools.ts",
+    "tests/setup/runner/integration.ts",
+    "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts",
+    "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts",
+    "packages/cli/src/bin.ts",
+    "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
+    "packages/cli/src/configurations/framework/site/files/purgecss.ts",
+    ".mise/release/changelog.ts",
+    ".mise/release/notices.ts",
+    ".mise/release/pin-ages.ts",
+]
 
 [tools.eslint.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
