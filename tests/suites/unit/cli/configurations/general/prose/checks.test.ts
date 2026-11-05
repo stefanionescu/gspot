@@ -16,6 +16,7 @@ import {
     VALE_INSTALLED_FILES,
     VALE_SANDBOX_FILES,
 } from '#tests/config/configurations/general.ts';
+import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { getBuiltInCheck, openFakeToolSession, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -175,6 +176,25 @@ test('prose/dates reports dates in Markdown text and code comments, not in code'
     expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'guide.md', line: 4, rule: 'ambiguous-date' },
         { file: 'run.ts', line: 1, rule: 'ambiguous-date' },
+    ]);
+});
+
+test('prose/dates checks a child file once at the root', async () => {
+    const path = 'child/only.md';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'child', configurations: ['prose', 'docs'] }] }),
+        [path]: SCHEDULE_RELEASE_MARKDOWN,
+    });
+    const session = await openSession(sandbox.path);
+    const { report } = await runChecks(
+        session,
+        buildRunOptions({ cwd: sandbox.path, only: ['prose/dates'], pathArguments: [path] }),
+    );
+    expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: 'failed' },
+    ]);
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file, line }) => ({ file, line })))).toStrictEqual([
+        { file: path, line: 3 },
     ]);
 });
 
