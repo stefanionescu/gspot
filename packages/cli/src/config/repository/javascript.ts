@@ -47,7 +47,7 @@ export const CI_NODE = 'node@24.20.0';
 
 export const SETUP_NODE_VERSION = '24';
 
-export const SETUP_NODE = `node@${SETUP_NODE_VERSION}`;
+const SETUP_NODE = `node@${SETUP_NODE_VERSION}`;
 
 export const MISE_NODE_PIN_COMMAND = `mise use --pin ${SETUP_NODE}`;
 
