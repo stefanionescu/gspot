@@ -52,7 +52,7 @@ test.each([
 ])('the last line of init: $name', async ({ manifest, next }) => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'package.json': manifest });
-    const result = await runGspot(sandbox.path, ['init', '--no-configurations']);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'gspot']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.trimEnd().split('\n').at(-1)).toBe(next);
 });

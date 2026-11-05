@@ -162,8 +162,6 @@ export const LINT_RULE_LABELS = [
     ['example', 'Example'],
 ] as const;
 
-export const MARKDOWN_FLAG = '--markdown';
-
 export const GIT_UNBORN_HEAD_ARGUMENTS = ['symbolic-ref', 'HEAD', 'refs/heads/main'] as const;
 
 export const SCAN_SETTINGS_MESSAGE =

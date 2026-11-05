@@ -148,7 +148,7 @@ export async function initSandbox(
 ): Promise<ProcessOutput> {
     const configurations =
         options.configurations.length === 0
-            ? ['--no-configurations']
+            ? ['--configurations', 'gspot']
             : options.configurations.flatMap((configuration) => ['--configurations', configuration]);
     const level = options.level === undefined ? [] : ['--level', options.level];
     const initialized = await runGspotStep(sandbox, ['init', ...configurations, ...level, '--json']);

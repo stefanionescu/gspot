@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 
-import { buildScanReport, formatScanMarkdown, formatScanText } from '#cli/commands/scan/report.ts';
+import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import { compareInstalledRules, readUserRules } from '#cli/commands/scan/rules.ts';
 import {
     GIT_UNBORN_HEAD_ARGUMENTS,
-    MARKDOWN_FLAG,
     SCAN_SETTINGS_MESSAGE,
     SCAN_STOPPED_MESSAGE,
 } from '#cli/config/commands/reports.ts';
@@ -25,7 +24,7 @@ import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import type { ScanFlags, ScanReport } from '#cli/types/commands/reports.ts';
+import type { ScanReport } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -37,11 +36,7 @@ function listCodeRunners(session: Session): string[] {
     return [...new Set(running.map(({ id }) => id))].toSorted(compareText);
 }
 
-async function runScanCommand(
-    root: string,
-    flags: ScanFlags,
-    cancelSignal: AbortSignal,
-): Promise<CommandResult<ScanReport>> {
+async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<CommandResult<ScanReport>> {
     if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SCAN_SETTINGS_MESSAGE);
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
     // With no commit behind the index, Git counts every tracked file as staged, so the secret scan reads every file.
@@ -69,18 +64,11 @@ async function runScanCommand(
     const toolBytes = measureFolder(join(copy.root, GSPOT_FOLDER));
     const ruleRows = await compareInstalledRules(copy.root, userRules);
     const scan = buildScanReport({ planning, session, report, toolBytes, ruleRows, leftOut });
-    return { text: flags.markdown === true ? formatScanMarkdown(scan) : formatScanText(scan), json: scan, exitCode: 0 };
+    return { text: formatScanText(scan), json: scan, exitCode: 0 };
 }
 
-export const SCAN_COMMAND: CommandDefinition<[], ScanFlags> = {
+export const SCAN_COMMAND: CommandDefinition<[]> = {
     name: 'scan',
-    options: [{ flags: MARKDOWN_FLAG }],
-    run: async ({ flags, root }) => {
-        if (flags.markdown === true && flags.json === true)
-            throw new GspotError('arguments', '--markdown cannot run with --json. Choose one format.');
-        return await runCancelableCommand(
-            (cancelSignal) => runScanCommand(root, flags, cancelSignal),
-            SCAN_STOPPED_MESSAGE,
-        );
-    },
+    run: async ({ root }) =>
+        await runCancelableCommand((cancelSignal) => runScanCommand(root, cancelSignal), SCAN_STOPPED_MESSAGE),
 };

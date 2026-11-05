@@ -29,7 +29,6 @@ test.each([...CONFIGURATION_CHOICES])(
             configurations === undefined
                 ? []
                 : configurations.flatMap((configuration) => ['--configurations', configuration]);
-        if ('noConfigurations' in row) flags.push('--no-configurations');
         await using sandbox = await createGitSandbox({
             'package.json': '{"name":"example","private":true,"type":"module"}\n',
             'source.js': 'export const port = 8080;\n',

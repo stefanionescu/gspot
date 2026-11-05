@@ -126,8 +126,6 @@ export type CheckFacts = {
     minVersions: Record<string, string>;
 };
 
-export type ScanFlags = { markdown?: boolean; json?: boolean };
-
 export type ScanCategory = z.infer<typeof scanCategorySchema>;
 
 export type ScanReport = z.infer<typeof scanReportSchema>;

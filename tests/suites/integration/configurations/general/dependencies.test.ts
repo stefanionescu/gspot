@@ -12,7 +12,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 
 async function initAtLevelAll(root: string): Promise<void> {
     commitAll(root);
-    const initialized = await spawnGspot(root, ['init', '--no-configurations', '--level', 'all']);
+    const initialized = await spawnGspot(root, ['init', '--configurations', 'gspot', '--level', 'all']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
 }
 

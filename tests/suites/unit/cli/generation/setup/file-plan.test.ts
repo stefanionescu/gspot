@@ -58,7 +58,7 @@ test('the init plan asks for git add --renormalize when the index holds CRLF fil
 test('init leaves an unsupported CI pipeline in place and names it in the plan', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'bitbucket-pipelines.yml': '{}\n' });
-    const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'gspot', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.keep.map((file) => file.path)).toStrictEqual(['bitbucket-pipelines.yml']);
@@ -74,7 +74,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
     const commitId = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},external project`]);
     await symlink(outside.path, join(sandbox.path, 'external project'), 'dir');
-    const result = await runGspot(sandbox.path, ['init', '--no-configurations', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'gspot', '--json']);
     expect(result.code).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
         plan: { keep: [{ path: 'external project', note: UNREAD_SUBMODULE_MESSAGE }] },
@@ -149,7 +149,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     await using sandbox = await testdir({ 'control.txt': PRESERVE_SOURCE });
 
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--json', '--no-configurations']);
+    const initialized = await runGspot(sandbox.path, ['init', '--json', '--configurations', 'gspot']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(initialized.stderr).toBe('');
     const report = initOutputSchema.parse(JSON.parse(initialized.stdout));

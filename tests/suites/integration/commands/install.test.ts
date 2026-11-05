@@ -39,7 +39,7 @@ test.each([true, false])(
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
         const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
         const head = runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
-        const initialized = await spawnGspot(sandbox.path, ['init', '--json', '--no-configurations']);
+        const initialized = await spawnGspot(sandbox.path, ['init', '--json', '--configurations', 'gspot']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);

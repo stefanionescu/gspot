@@ -41,7 +41,7 @@ export const STYLELINT_REPLACEMENT_CASES = [
         name: 'a scoped package field',
         scope: 'app',
         packageText: STYLELINT_PACKAGE_JSON,
-        command: ['init', '--no-configurations'],
+        command: ['init', '--configurations', 'gspot'],
         changed: ['app/package.json'],
         unchangedFiles: [],
     },
@@ -121,7 +121,6 @@ export const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":
 
 export const CONFIGURATION_CHOICES = [
     { configurations: undefined, selected: ['javascript'] },
-    { configurations: undefined, noConfigurations: true, selected: [] },
     { configurations: ['python'], selected: ['python'] },
 ] as const;
 

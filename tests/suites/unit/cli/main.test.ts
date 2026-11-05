@@ -64,11 +64,15 @@ test('the hook line of 0.3.9 exits 2, and names --only and gspot install', async
     expect(result.stderr).toContain('run gspot install');
 });
 
-test('gspot check --changed exits 2 and names --base', async () => {
+test.each([
+    { commandArguments: ['check', '--changed'], replacement: '--base origin/main' },
+    { commandArguments: ['scan', '--markdown'], replacement: 'gspot scan' },
+    { commandArguments: ['init', '--no-configurations'], replacement: 'gspot init --configurations' },
+])('$commandArguments exits 2 and names $replacement', async ({ commandArguments, replacement }) => {
     await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['check', '--changed']);
+    const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code).toBe(2);
-    expect(result.stderr).toContain('--base origin/main');
+    expect(result.stderr).toContain(replacement);
 });
 
 test('init requires a Git worktree before reading settings or writing, while its help works outside Git', async () => {

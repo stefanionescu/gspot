@@ -10,6 +10,9 @@ export const REMOVED_OPTIONS: Readonly<Record<string, string>> = {
     '--stage':
         'gspot check --stage was removed. Run gspot check --only <commit|push>. If you did not type this, your hook script is out of date: run gspot install.',
     '--changed': 'gspot check --changed was removed. Run gspot check --base origin/main, or --base origin/HEAD.',
+    '--markdown': 'gspot scan --markdown was removed. Run gspot scan, and put its report in a code fence.',
+    '--no-configurations':
+        'gspot init --no-configurations was removed. Run gspot init --configurations <one name>, then gspot remove <each name> --reason "<why>".',
 };
 
 export const UNKNOWN_OPTION_NAME = /unknown option '([^']+)'/u;

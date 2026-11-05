@@ -14,7 +14,6 @@ export const COMMAND_HELP = {
             'Copy the files that Git tracks, as you staged them, into .gspot-copies/. In the copy, gspot writes what init writes, installs the tools, and runs the checks at the default level with no fixes. It deletes the copy at the end. It runs no tests, no build, and no check that loads project code. It still loads your Prettier config, and it runs your installed ESLint, Stylelint, and TypeScript. Run it only on code that you trust.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, how long each tool took on this scan, the plan of init, and the next steps.\n\nscan keeps no cache of its own. npm, uv, and mise keep their download caches, so a second scan downloads no tool again. Each scan still asks GitHub for the pinned releases, so set GITHUB_TOKEN if you scan often. mise installs its tools for the whole machine. After init, run `gspot check` instead.',
         arguments: {},
         options: {
-            '--markdown': 'Print the report as Markdown, to paste into a pull request or a chat',
             '--json': 'Print the report as JSON, with every finding',
         },
         exitCodes: [
@@ -22,7 +21,7 @@ export const COMMAND_HELP = {
             ['2', 'scan could not run.'],
             ['129, 130, 143', 'The scan stopped because of SIGHUP, Ctrl-C, or SIGTERM.'],
         ],
-        example: 'gspot scan --markdown',
+        example: 'gspot scan',
     },
     init: {
         summary: 'Find what this repository needs, write gspot.toml and the generated files, and install the tools',
@@ -34,7 +33,6 @@ export const COMMAND_HELP = {
             '--from <file>': "Start from another repository's gspot.toml",
             '--configurations <names>':
                 'Use these configurations at the root; repeat the flag or separate names with commas',
-            '--no-configurations': 'Select no configurations at the root',
             '--level <level>':
                 'Start at this level. The plan then replaces your tool configs for the checks of this level',
         },

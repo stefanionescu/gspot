@@ -43,7 +43,7 @@ export type ReasonFlags = ScopeFlags & { reason?: string | undefined };
 
 export type IgnoreFlags = { reason: string; rule?: string | undefined; paths?: string[] | undefined };
 
-export type InitFlags = { from?: string; configurations?: string[] | false; level?: Level };
+export type InitFlags = { from?: string; configurations?: string[]; level?: Level };
 
 export type IgnoreOptions = {
     root: string;

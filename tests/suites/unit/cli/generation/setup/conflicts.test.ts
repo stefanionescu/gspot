@@ -176,7 +176,7 @@ test('at level basic, init keeps the config files of checks that are off', async
     await using sandbox = await testdir(INACTIVE_CONFIGURATIONS);
 
     commitAll(sandbox.path);
-    const written = await runGspot(sandbox.path, ['init', '--no-configurations', '--level', 'basic', '--json']);
+    const written = await runGspot(sandbox.path, ['init', '--configurations', 'gspot', '--level', 'basic', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const plan = initOutputSchema.parse(JSON.parse(written.stdout)).plan;
     expect(plan.deleted).toStrictEqual([]);
@@ -248,7 +248,7 @@ test('init replaces an authored Syncpack file and keeps syncpack.config.cts and 
         'syncpack.config.mts': EMPTY_DEFAULT_SOURCE,
     });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--no-configurations', '--level', 'all']);
+    const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'gspot', '--level', 'all']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, SYNCPACK_FILE.file))).toBe(false);
     expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');

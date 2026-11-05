@@ -31,20 +31,6 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test.each([
-    { flags: ['--configurations', 'bash', '--no-configurations'] },
-    { flags: ['--no-configurations', '--configurations', 'bash'] },
-])('init $flags refuses the two selections and writes nothing', async ({ flags }) => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
-    commitAll(sandbox.path);
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', ...flags, '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test('init refuses an unreadable package.json before writing', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'package.json': '{', 'source.ts': 'export {};\n' });

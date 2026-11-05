@@ -211,18 +211,3 @@ export function formatScanText(report: ScanReport): string {
     ]);
     return `${[formatTotals(report), '', ...sections].join('\n').trimEnd()}\n`;
 }
-
-/**
-Format the report as Markdown, to paste into a pull request or a chat.
-
-@param report what the scan found.
-*/
-export function formatScanMarkdown(report: ScanReport): string {
-    const sections = listSections(report).flatMap(({ title, rows, preformatted }) => [
-        `## ${title}`,
-        '',
-        ...(preformatted === true ? ['```text', ...rows, '```'] : rows.map((row) => `- ${row}`)),
-        '',
-    ]);
-    return `${['# gspot scan', '', formatTotals(report), '', ...sections].join('\n').trimEnd()}\n`;
-}

@@ -11,7 +11,6 @@ import {
     LEVEL_OPTION,
     NEXT_PIN_MESSAGE,
     NEXT_STEPS_MESSAGE,
-    NO_CONFIGURATIONS_FLAG,
     SETTINGS_EXIST_MESSAGE,
     WROTE_PLAN_MESSAGE,
 } from '#cli/config/commands/edits.ts';
@@ -32,9 +31,6 @@ import { installTools } from '#cli/tools/installers/install.ts';
 import type { CommandDefinition, InitFlags, InitJson } from '#cli/types/commands/edits.ts';
 import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
 import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
-
-const CONFIGURATIONS_CONFLICT_MESSAGE =
-    '--configurations cannot run with --no-configurations. Give the names, or select none.';
 
 /**
 Install the tools of the settings that init wrote, and turn on the Git hooks, as gspot install does.
@@ -88,22 +84,17 @@ async function runInitCommand(
 }
 
 function parseConfigurationNames(value: string, previous: InitFlags['configurations']): string[] {
-    if (previous === false) throw new GspotError('arguments', CONFIGURATIONS_CONFLICT_MESSAGE);
     const names = value
         .split(CONFIGURATION_LIST_SEPARATOR)
         .map((name) => name.trim())
         .filter((name) => name !== '');
     if (names.length === 0) throw new InvalidArgumentError('Name at least one configuration.');
-    return [...(Array.isArray(previous) ? previous : []), ...names];
+    return [...(previous ?? []), ...names];
 }
 
 function assertTemplateFlags(from: string | undefined, configurations: InitFlags['configurations']): void {
     if (from === undefined || configurations === undefined) return;
-    const flag = configurations === false ? '--no-configurations' : '--configurations';
-    throw new GspotError(
-        'arguments',
-        FROM_CONFLICT_MESSAGE.replace('{flag}', () => flag),
-    );
+    throw new GspotError('arguments', FROM_CONFLICT_MESSAGE);
 }
 
 export const INIT_COMMAND: CommandDefinition<[], InitFlags> = {
@@ -111,24 +102,11 @@ export const INIT_COMMAND: CommandDefinition<[], InitFlags> = {
     options: [
         { flags: FROM_OPTION },
         { flags: CONFIGURATIONS_OPTION, parse: parseConfigurationNames },
-        {
-            flags: NO_CONFIGURATIONS_FLAG,
-            // Commander passes a negated flag through its parser with no value, so the parser sees earlier names.
-            parse: (_value: string | undefined, previous: InitFlags['configurations']): false => {
-                if (Array.isArray(previous)) throw new GspotError('arguments', CONFIGURATIONS_CONFLICT_MESSAGE);
-                return false;
-            },
-        },
         { flags: LEVEL_OPTION, choices: LEVELS },
     ],
     run: async ({ flags: { from, configurations, level }, root, cwd }) => {
         assertTemplateFlags(from, configurations);
         const template = from === undefined ? undefined : readTemplate(from, cwd);
-        return await runInitCommand(root, {
-            cwd,
-            level,
-            template,
-            configurations: configurations === false ? [] : configurations,
-        });
+        return await runInitCommand(root, { cwd, level, template, configurations });
     },
 };

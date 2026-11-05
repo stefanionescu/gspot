@@ -67,26 +67,23 @@ test.each(TEMPLATE_REFUSALS)(
     },
 );
 
-test.each(['--configurations', '--no-configurations'])(
-    'init refuses --from beside %s before it reads anything',
-    async (flag) => {
-        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-        await using sandbox = await createGitSandbox({});
-        const result = await runGspot(sandbox.path, [
-            'init',
-            '--from',
-            'missing.toml',
-            flag,
-            ...(flag === '--configurations' ? ['python'] : []),
-            '--json',
-        ]);
-        expect(result.code).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({
-            error: 'arguments',
-            message: expect.stringContaining(flag) as string,
-        });
-    },
-);
+test('init refuses --from beside --configurations before it reads anything', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
+    await using sandbox = await createGitSandbox({});
+    const result = await runGspot(sandbox.path, [
+        'init',
+        '--from',
+        'missing.toml',
+        '--configurations',
+        'python',
+        '--json',
+    ]);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('--configurations') as string,
+    });
+});
 
 test('init --from adds the detected configurations to the ones of the file', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

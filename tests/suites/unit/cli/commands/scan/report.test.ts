@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { buildScanReport, formatScanMarkdown, formatScanText } from '#cli/commands/scan/report.ts';
+import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
@@ -50,7 +50,6 @@ test('scan prints the commands that would break and what init carries once, befo
     );
     expect(text.match(/Run gspot check once at the repository root/gu)).toHaveLength(1);
     expect(text.indexOf('Commands that would break')).toBeLessThan(text.indexOf('What gspot init would do'));
-    expect(formatScanMarkdown(report)).toContain('## Commands that would break\n\n- package.json:1  eslint .');
 });
 
 test('scan lists real problems first, keeps three examples, and counts formatting apart', async () => {
@@ -147,12 +146,4 @@ test('the text report prints each section with its rows', async () => {
     expect(text).toContain('  eslint  2.0s\n');
     expect(text).toContain('What gspot init would do\n  configurations\n');
     expect(text).toEndWith('  mise exec -- gspot init\n  Commit the setup files.\n  Fix each file as you touch it.\n');
-});
-
-test('the Markdown report uses headings and lists, and fences the plan', async () => {
-    const text = formatScanMarkdown(await buildSampleReport());
-    expect(text).toStartWith('# gspot scan\n\nChecked 2 files');
-    expect(text).toContain('## Secrets: 1 finding\n\n- secrets/gitleaks-staged generic-api-key  1 finding\n');
-    expect(text).toContain('## What gspot init would do\n\n```text\nconfigurations\n');
-    expect(text).toEndWith('- mise exec -- gspot init\n- Commit the setup files.\n- Fix each file as you touch it.\n');
 });
