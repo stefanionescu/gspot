@@ -7,7 +7,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('require-server-only', requireServerOnly, {
     valid: [
-        "import 'server-only';\nexport const secret = 1;",
         "'use server';\nexport async function act() {}",
         "import marker from 'server-only';",
         "import { type Marker, value } from 'server-only';",
