@@ -341,7 +341,7 @@ help = "Run the `fix:` command that the report prints for the rules that fix the
 limits = { "C901" = "max_cyclomatic_complexity", "PLR0915" = "max_function_statements", "PLR0913" = "max_function_parameters", "PLR0912" = "max_function_branches", "PLR0911" = "max_function_returns" }
 limit_languages = ["python"]
 name = "ruff"
-output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
+output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message", fixable = "fix.applicability" } }
 stage = "commit"
 summary = "Lints every Python file with the Ruff rules for the level, security rules included."
 why = "Undefined names, unused code, and insecure calls fail at run time or open a security hole, and a reader misses them."

@@ -53,6 +53,20 @@ test('an outer object without its nested list has no findings, as Trivy reports 
     expect(parseJsonReport('sql/sqlfluff', NESTED_LIST_FORMAT, stdout)).toStrictEqual([]);
 });
 
+test.each([
+    ['safe', true],
+    ['unsafe', false],
+    ['display-only', false],
+])('a JSON finding with a %s fix is fixable: %s', (applicability, expected) => {
+    const output = {
+        format: 'json' as const,
+        fields: { file: 'filename', message: 'message', fixable: 'fix.applicability' },
+    };
+    const stdout = JSON.stringify([{ filename: '/repo/a.py', message: 'A message.', fix: { applicability } }]);
+    const check = { runs: 'files' as const, id: 'python/ruff', help: 'Fix it.', output, fix: ['ruff'] };
+    expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([{ fixable: expected }]);
+});
+
 test.each([...FIX_FIELD_CASES])(
     'a JSON finding is fixable only when the check has a fix command: %s fix field',
     (name, fields, expected) => {
