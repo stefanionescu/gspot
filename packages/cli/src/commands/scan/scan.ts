@@ -22,10 +22,20 @@ import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText, measureFolder } from '#cli/system/files/reads.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { compareText } from '#cli/system/text.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { ScanFlags, ScanReport } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
+import type { Session } from '#cli/types/tools.ts';
+
+const SCAN_LEFT_OUT_NEEDS = new Set(['build', 'project-code']);
+
+function listCodeRunners(session: Session): string[] {
+    const checks = session.scopes.flatMap((scope) => scope.configurations.flatMap(({ checks }) => checks));
+    const running = checks.filter(({ needs }) => needs?.some((need) => SCAN_LEFT_OUT_NEEDS.has(need)) === true);
+    return [...new Set(running.map(({ id }) => id))].toSorted(compareText);
+}
 
 async function runScanCommand(
     root: string,
@@ -52,11 +62,13 @@ async function runScanCommand(
         writer: openFiles(copy.root),
         generated: { files: buildToolProjects(session) },
         checkTools: listHostCheckTools(session.configuredChecks),
+        runsProjectInstall: false,
     });
-    const { report } = await runEveryCheck(session);
+    const leftOut = listCodeRunners(session);
+    const { report } = await runEveryCheck(session, undefined, leftOut);
     const toolBytes = measureFolder(join(copy.root, GSPOT_FOLDER));
     const ruleRows = await compareInstalledRules(copy.root, userRules);
-    const scan = buildScanReport({ planning, session, report, toolBytes, ruleRows });
+    const scan = buildScanReport({ planning, session, report, toolBytes, ruleRows, leftOut });
     return { text: flags.markdown === true ? formatScanMarkdown(scan) : formatScanText(scan), json: scan, exitCode: 0 };
 }
 

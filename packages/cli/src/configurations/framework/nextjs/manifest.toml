@@ -82,6 +82,7 @@ example = "`const count: number = \"one\";` reports an incompatible assignment. 
 help = "Fix the first error tsc prints; later errors often come from the same mistake."
 instead_of = "typescript/tsc"
 name = "tsc"
+needs = ["project-code"]
 runs = "scope"
 stage = "push"
 summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."

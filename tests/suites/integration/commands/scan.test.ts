@@ -19,6 +19,8 @@ test('scan installs the tools in its copy, reports a committed secret and a file
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const report = scanOutputSchema.parse(JSON.parse(result.stdout));
     expect(report.notRun).toStrictEqual([]);
+    expect(report.leftOut).toContain('javascript/knip');
+    expect(report.checks.map(({ check }) => check)).not.toContain('javascript/knip');
     expect(report.categories[0]?.name).toBe('Secrets');
     expect(report.categories[0]?.examples).toMatchObject([
         { check: 'secrets/gitleaks-staged', file: 'credential.txt' },

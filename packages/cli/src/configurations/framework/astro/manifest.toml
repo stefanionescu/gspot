@@ -77,6 +77,7 @@ example = "A component whose frontmatter holds `const count: number = 'three';` 
 exit_codes = [1]
 help = "Fix the first error `astro check` prints; later errors often come from the same mistake."
 name = "astro-check"
+needs = ["project-code"]
 runs = "scope"
 stage = "push"
 summary = "Runs astro check over the scope: the type errors and warnings of every Astro component."

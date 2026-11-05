@@ -39,6 +39,7 @@ example = "Jest reports `coverage threshold for lines (90%) not met: 85%`. Add t
 exit_codes = [1]
 help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower a minimum under `coverage` only with a reason."
 name = "tests"
+needs = ["project-code"]
 runs = "scope"
 stage = "push"
 summary = "Runs Jest with coverage, and fails on a failed test or when lines, branches, functions, or statements fall under their minimums."

@@ -28,6 +28,7 @@ example = "A task with `ansible.builtin.command: systemctl restart nginx` report
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
 help = "Change the task the way the rule says."
 name = "ansible-lint"
+needs = ["project-code"]
 runs = "scope"
 stage = "commit"
 summary = "Runs the moderate ansible-lint profile beside each ansible.cfg or at the scope root."
@@ -41,6 +42,7 @@ help = "Change the task the way the rule says."
 instead_of = "ansible/ansible-lint"
 level = "all"
 name = "ansible-lint-production"
+needs = ["project-code"]
 runs = "scope"
 stage = "commit"
 summary = "Runs the production ansible-lint profile beside each ansible.cfg or at the scope root."

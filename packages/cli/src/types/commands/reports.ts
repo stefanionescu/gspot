@@ -144,6 +144,7 @@ export type ScanInput = {
     report: RunReport;
     toolBytes: number;
     ruleRows: CarryoverRow[];
+    leftOut: string[];
 };
 
 export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };

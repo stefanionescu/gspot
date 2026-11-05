@@ -62,6 +62,7 @@ example = "A component containing `<img src={source} />` reports `a11y_missing_a
 help = "Fix each warning and error svelte-check prints; both fail the check."
 instead_of = "typescript/tsc"
 name = "svelte-check"
+needs = ["project-code"]
 runs = "scope"
 stage = "push"
 summary = "Runs svelte-check over the scope for compiler and accessibility warnings, and the types of every component and TypeScript file."

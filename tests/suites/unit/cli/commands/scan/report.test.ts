@@ -10,7 +10,14 @@ async function buildSampleReport(): Promise<ScanReport> {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n', 'src/a.js': 'export const a = 1;\n' });
     const planning = await planInit(sandbox.path, { cwd: sandbox.path });
     const { session } = planning;
-    return buildScanReport({ planning, session, report: SCAN_RUN_REPORT, toolBytes: 3 * 1024 * 1024, ruleRows: [] });
+    return buildScanReport({
+        planning,
+        session,
+        report: SCAN_RUN_REPORT,
+        toolBytes: 3 * 1024 * 1024,
+        ruleRows: [],
+        leftOut: ['vitest/tests'],
+    });
 }
 
 test('scan prints the commands that would break and what init carries once, before the plan', async () => {
@@ -21,7 +28,14 @@ test('scan prints the commands that would break and what init carries once, befo
     });
     const planning = await planInit(sandbox.path, { cwd: sandbox.path });
     const { session } = planning;
-    const report = buildScanReport({ planning, session, report: SCAN_RUN_REPORT, toolBytes: 0, ruleRows: [] });
+    const report = buildScanReport({
+        planning,
+        session,
+        report: SCAN_RUN_REPORT,
+        toolBytes: 0,
+        ruleRows: [],
+        leftOut: ['vitest/tests'],
+    });
     const text = formatScanText(report);
     expect(text).toContain(
         'Commands that would break\n  package.json:1  eslint .  Run gspot check once at the repository root',
@@ -59,6 +73,7 @@ test.each(['data-files/taplo-format', 'bash/shfmt'])('scan counts a file of %s a
         report: { ...SCAN_RUN_REPORT, checks },
         toolBytes: 0,
         ruleRows: [],
+        leftOut: ['vitest/tests'],
     });
     expect(report.filesToFormat).toBe(1);
     expect(report.categories).toStrictEqual([]);

@@ -9,6 +9,7 @@ import {
     SCAN_EXAMPLES_SHOWN,
     SCAN_FORMAT_CHECKS,
     SCAN_FORMATTING_TITLE,
+    SCAN_LEFT_OUT_TITLE,
     SCAN_NEXT_STEPS,
     SCAN_NEXT_STEPS_TITLE,
     SCAN_NOT_RUN_TITLE,
@@ -82,7 +83,7 @@ function formatTotals({ totals }: ScanReport): string {
 }
 
 function listSections(report: ScanReport): ScanSection[] {
-    const { categories, filesToFormat, notRun, cost, plan, settingsText, nextSteps } = report;
+    const { categories, filesToFormat, notRun, leftOut, cost, plan, settingsText, nextSteps } = report;
     const verb = filesToFormat === 1 ? 'differs' : 'differ';
     return [
         ...categories.map(({ name, count, examples }) => ({
@@ -91,6 +92,7 @@ function listSections(report: ScanReport): ScanSection[] {
         })),
         { title: SCAN_FORMATTING_TITLE, rows: [`${formatCount(filesToFormat, 'file')} ${verb} from your style.`] },
         ...(notRun.length === 0 ? [] : [{ title: SCAN_NOT_RUN_TITLE, rows: notRun }]),
+        ...(leftOut.length === 0 ? [] : [{ title: SCAN_LEFT_OUT_TITLE, rows: leftOut }]),
         {
             title: `Cost: ${formatCount(cost.tools, 'tool')}, ${String(cost.megabytes)} MB in ${GSPOT_FOLDER}/`,
             rows: cost.perTool.map(({ name, seconds }) => `${name}  ${seconds.toFixed(1)}s`),
@@ -145,6 +147,7 @@ export function buildScanReport(input: ScanInput): ScanReport {
         categories: buildCategories(findings.filter(({ check }) => !SCAN_FORMAT_CHECKS.has(check))),
         filesToFormat: new Set(formatting.map(({ file }) => file)).size,
         notRun: listChecksNotRun(report),
+        leftOut: input.leftOut,
         cost: buildCost(input),
         plan: {
             ...planning.plan,

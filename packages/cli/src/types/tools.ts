@@ -169,6 +169,7 @@ export type ToolInstall = {
     tools: Tool[];
     checkTools: Set<string>;
     misePath: string | undefined;
+    runsProjectInstall?: boolean;
     steps: Array<readonly string[]>;
 };
 

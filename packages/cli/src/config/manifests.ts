@@ -128,7 +128,14 @@ export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
 
 export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
 
-export const CHECK_NEEDS = ['build', 'dependencies', 'docker', 'network', 'python-environment'] as const;
+export const CHECK_NEEDS = [
+    'build',
+    'dependencies',
+    'docker',
+    'network',
+    'project-code',
+    'python-environment',
+] as const;
 
 export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
 

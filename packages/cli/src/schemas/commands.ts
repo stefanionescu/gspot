@@ -165,6 +165,7 @@ export const scanReportSchema = z.strictObject({
     categories: scanCategorySchema.array(),
     filesToFormat: z.int(),
     notRun: z.string().array(),
+    leftOut: z.string().array(),
     cost: z.strictObject({ tools: z.int(), megabytes: z.number(), perTool: toolTimeSchema.array() }),
     plan: initPlanSchema,
     settingsText: z.string(),

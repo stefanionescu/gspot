@@ -38,6 +38,7 @@ example = "A committed document that differs from the generator output reports d
 generator_outputs = [{ path = "{setting:openapi.document}" }]
 help = "Run the command and commit the document it writes."
 name = "stale-document"
+needs = ["project-code"]
 runs = "scope"
 stage = "push"
 summary = "Runs `openapi.generate_command` and fails when the document changes."

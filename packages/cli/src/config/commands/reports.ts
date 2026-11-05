@@ -212,6 +212,8 @@ export const SCAN_FORMATTING_TITLE = 'Formatting';
 
 export const SCAN_NOT_RUN_TITLE = 'Could not run';
 
+export const SCAN_LEFT_OUT_TITLE = 'Not run in a scan, because they run your code';
+
 export const SCAN_PLAN_TITLE = 'What gspot init would do';
 
 export const SCAN_COMMANDS_TITLE = 'Commands that would break';

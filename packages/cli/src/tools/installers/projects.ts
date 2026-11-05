@@ -126,7 +126,7 @@ compares them and changes nothing.
 export async function isEveryEnvironmentReady(install: ToolInstall, miseBinPaths: string[]): Promise<boolean> {
     const { root } = install.session;
     const folders = listLockedPythonProjects(install.session);
-    if (folders.length === 0) return true;
+    if (folders.length === 0 || install.runsProjectInstall === false) return true;
     const uvPath = await findUvPath(install, miseBinPaths);
     if (uvPath === undefined) return false;
     const files = openFiles(root);
@@ -203,7 +203,7 @@ export async function installPythonToolProjects(
     writePlans(writer, planReplacements(writer, lockfiles));
     if (listPackagePins(session.toolConfigurations).python.length > 0)
         installed.push(await installPythonTools(install, uvPath));
-    installed.push(...(await installPythonProjects(install, uvPath)));
+    if (install.runsProjectInstall !== false) installed.push(...(await installPythonProjects(install, uvPath)));
     return {
         installed,
         tools: tools.filter((tool) => tool.system !== true && findPackagePin(tool)?.kind === 'python'),

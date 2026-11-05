@@ -117,7 +117,7 @@ Build what every install step reads from the session.
 */
 export async function buildToolInstall(
     session: Session,
-    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools' | 'misePath'>,
+    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools' | 'misePath' | 'runsProjectInstall'>,
 ): Promise<ToolInstall> {
     const configurations = session.toolConfigurations;
     const steps: Array<readonly string[]> = [];
@@ -142,7 +142,7 @@ clone. When every tool already passes, install only adds the Vale packages and g
 */
 export async function installTools(
     session: Session,
-    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools'>,
+    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools' | 'runsProjectInstall'>,
 ): Promise<InstallResult> {
     const context = await buildToolInstall(session, { ...input, misePath: findProgram(MISE_TOOL) });
     const { steps } = context;

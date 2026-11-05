@@ -38,6 +38,7 @@ command = ["drizzle-kit", "generate"]
 example = "A schema change with no new migration reports drift. Run `drizzle-kit generate`, review the migration, and commit it."
 help = "Run `drizzle-kit generate` and commit the migration."
 name = "stale-migrations"
+needs = ["project-code"]
 runs = "scope"
 stage = "push"
 summary = "Runs `drizzle-kit generate` and fails when it creates a migration."
