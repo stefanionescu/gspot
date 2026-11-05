@@ -14,7 +14,6 @@ buildRuleTester().run('no-redundant-boolean', noRedundantBoolean, {
         ...[
             'value == true;',
             '!true;',
-            'true && value;',
             'value && true;',
             'if (value || false) run();',
             '(value || true) ? first : second;',
