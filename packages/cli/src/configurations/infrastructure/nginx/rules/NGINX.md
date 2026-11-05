@@ -24,8 +24,3 @@ Read this rule when you change nginx configuration.
   policy consistent with their update process.
 - Keep configuration in the repository, lint it before commit, and reload it through the deployment flow; never edit it
   on the host.
-
-## Images
-
-- Pin the nginx image to a full version tag of the variant the project uses, never `nginx:alpine` or `latest`.
-- The image copies the configuration and nothing else. No shell in the `ENTRYPOINT`.
