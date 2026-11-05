@@ -12,7 +12,7 @@ import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runTool } from '#cli/tools/run.ts';
-import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/commands.ts';
+import { PACKAGE_MANAGERS } from '#tests/config/integration/commands.ts';
 import {
     AUTHENTICATION_REQUIRED_MESSAGE,
     NPM_REGISTRY_TOKEN,
@@ -62,7 +62,7 @@ async function assertFreshClone(
 }
 
 test.concurrent('a write of the generated files keeps a stale npm lockfile and install repairs it', async () => {
-    await using sandbox = await createNpmProject('npm', 'package.json');
+    await using sandbox = await createNpmProject('npm');
     const { root } = sandbox;
     await runGspotStep({ root, run: spawnGspot }, ['install']);
     const { lockfilePath, lockfile } = await readToolProjectFiles(root, 'npm');
@@ -91,10 +91,10 @@ test.concurrent('a write of the generated files keeps a stale npm lockfile and i
     expect(parseCheckReport(repaired).report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
-test.concurrent.each([...PACKAGE_MANAGER_CASES])(
-    '%s from %s keeps the authored package files and the lockfile, a reinstall follows the tool manager, and a fresh clone installs the committed lockfile twice',
-    async (packageManager, projectPath) => {
-        await using sandbox = await createNpmProject(packageManager, projectPath);
+test.concurrent.each([...PACKAGE_MANAGERS])(
+    '%s keeps the authored package files and the lockfile, a reinstall follows the tool manager, and a fresh clone installs the committed lockfile twice',
+    async (packageManager) => {
+        await using sandbox = await createNpmProject(packageManager);
         const { root, rootPackage, registry } = sandbox;
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
@@ -112,18 +112,17 @@ test.concurrent.each([...PACKAGE_MANAGER_CASES])(
             { code: repeated.code, installed: installOutputSchema.parse(JSON.parse(repeated.stdout)).installed },
             repeated.stdout + repeated.stderr,
         ).toStrictEqual({ code: 0, installed: [] });
-        const workspace = join(root, 'pnpm-workspace.yaml');
         const attributes = await stat(lockfilePath);
         expect({
-            authored: await readFile(join(root, projectPath), 'utf8'),
-            workspace: existsSync(workspace) ? await readFile(workspace, 'utf8') : undefined,
+            authored: await readFile(join(root, 'package.json'), 'utf8'),
+            workspace: await readFile(join(root, 'pnpm-workspace.yaml'), 'utf8'),
             dependencies: await readFile(join(root, 'node_modules/authored.txt'), 'utf8'),
             lockfile: await readFile(lockfilePath),
             mode: attributes.mode,
             projectFile: await readFile(join(root, GSPOT_PATHS.npmProject)),
         }).toStrictEqual({
             authored: rootPackage,
-            workspace: projectPath === 'package.json' ? PNPM_WORKSPACE : undefined,
+            workspace: PNPM_WORKSPACE,
             dependencies: 'keep project dependencies',
             lockfile: Buffer.from(lockfile),
             mode,

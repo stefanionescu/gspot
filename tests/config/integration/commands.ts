@@ -75,9 +75,4 @@ export const VALE_INSTALL_FAILURES = [
     },
 ] as const;
 
-export const PACKAGE_MANAGER_CASES = [
-    ['npm', 'package.json'],
-    ['bun', 'package.json'],
-    ['pnpm', 'package.json'],
-    ['npm', 'apps/web/package.json'],
-] as const;
+export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm'] as const;

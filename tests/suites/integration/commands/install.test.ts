@@ -40,7 +40,7 @@ test.each([true, false])(
 );
 
 test('a repeated npm install keeps the lockfile and the modules with the registry offline', async () => {
-    await using sandbox = await createNpmProject('npm', 'package.json');
+    await using sandbox = await createNpmProject('npm');
     const { root, registry } = sandbox;
     const first = await spawnGspot(root, ['install']);
     expect(first.code, first.stdout + first.stderr).toBe(0);

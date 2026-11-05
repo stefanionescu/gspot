@@ -25,9 +25,8 @@ async function writeNpmProject(options: {
     artifacts: string;
     registry: NpmRegistry;
     packageManager: ToolPackageManager['name'];
-    projectPath: string;
 }): Promise<string> {
-    const { root, artifacts, registry, packageManager, projectPath } = options;
+    const { root, artifacts, registry, packageManager } = options;
     const version = await runCommand([packageManager, '--version'], { cwd: artifacts });
     if (version.code !== 0) throw new Error(`Package manager version failed: ${version.stdout}${version.stderr}`);
     const rootPackage = JSON.stringify({
@@ -35,8 +34,8 @@ async function writeNpmProject(options: {
         packageManager: `${packageManager}@${version.stdout.trim()}`,
     });
     await createFileTree(root, {
-        [projectPath]: rootPackage,
-        ...(projectPath === 'package.json' && { 'pnpm-workspace.yaml': PNPM_WORKSPACE }),
+        'package.json': rootPackage,
+        'pnpm-workspace.yaml': PNPM_WORKSPACE,
         '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${NPM_REGISTRY_TOKEN}\n`,
         'gspot.toml': buildSandboxSettings(['format'], {
             ignore: {
@@ -54,10 +53,7 @@ async function writeNpmProject(options: {
 /**
 Create an authenticated registry and an authored project for a package manager.
 */
-export async function createNpmProject(
-    packageManager: ToolPackageManager['name'],
-    projectPath: string,
-): Promise<NpmProject> {
+export async function createNpmProject(packageManager: ToolPackageManager['name']): Promise<NpmProject> {
     await using resources = new AsyncDisposableStack();
     const folder = resources.use(await testdir());
     const root = join(folder.path, 'repository');
@@ -76,7 +72,7 @@ export async function createNpmProject(
         token: NPM_REGISTRY_TOKEN,
     };
     const registry = resources.use(await startNpmRegistry(artifacts, installPlan));
-    const rootPackage = await writeNpmProject({ root, artifacts, registry, packageManager, projectPath });
+    const rootPackage = await writeNpmProject({ root, artifacts, registry, packageManager });
     await applyGeneratedFiles(root);
     const owned = resources.move();
     return {

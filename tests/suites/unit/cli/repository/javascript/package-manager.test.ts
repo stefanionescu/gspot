@@ -121,6 +121,17 @@ test('a lockfile beside a later nested package selects its manager', async () =>
     });
 });
 
+test('the first nested package by name selects the package manager, in any order of the tracked paths', async () => {
+    await using sandbox = await testdir({
+        'apps/web/package.json': '{"private":true,"packageManager":"npm@11.19.0"}',
+        'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
+    });
+    expect(detectPackageManager(sandbox.path, ['other/package.json', 'apps/web/package.json'])).toMatchObject({
+        name: 'npm',
+        version: '11.19.0',
+    });
+});
+
 test('Yarn uses npm without querying Yarn', async () => {
     await using sandbox = await testdir();
     using run = spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: '11.19.0\n' }));
