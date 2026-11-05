@@ -3,7 +3,6 @@ import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { removeFromList, removeKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, ScopeFlags, SettingsEditOptions, UnsetOptions } from '#cli/types/commands/edits.ts';
@@ -61,7 +60,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
 export const UNSET_COMMAND: CommandDefinition<[string, string[]], ScopeFlags> = {
     name: 'unset',
     arguments: [{ term: '<setting>' }, { term: '[items...]' }],
-    options: [{ flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
+    options: [{ flags: SCOPE_OPTION }],
     run: async ({ arguments: commandArguments, flags: { scope: scopePath }, root, cwd }) => {
         const [key, keys] = commandArguments;
         return await runUnsetCommand({ root, cwd, key, keys, scopePath });

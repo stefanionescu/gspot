@@ -15,7 +15,6 @@ import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { findToolName } from '#cli/tools/pins.ts';
@@ -225,7 +224,7 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
 export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags> = {
     name: 'set',
     arguments: [{ term: '<setting>' }, { term: '<values...>' }],
-    options: [{ flags: REASON_OPTION }, { flags: SCOPE_OPTION, parse: stripTrailingSlashes }],
+    options: [{ flags: REASON_OPTION }, { flags: SCOPE_OPTION }],
     run: async ({ arguments: commandArguments, flags: { reason, scope: scopePath }, root, cwd }) => {
         const [key, values] = commandArguments;
         return await runSetCommand({ root, cwd, key, values, reason, scopePath });
