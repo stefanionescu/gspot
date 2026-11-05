@@ -18,7 +18,6 @@ Read `POSTGRES.md` beside this file too. Supabase uses the API roles `anon`, `au
 - Roles Supabase creates for auth, cron, or storage stay scoped to the functions and schemas they need.
 - A table can skip the foreign key to `auth.users` so its history survives account deletion.
 - Check the `error` field of a Supabase call that returns `{ data, error }` before using `data`.
-- Keep `[api].max_rows` conservative to bound accidental or malicious payloads.
 
 ## Direct database connections
 
@@ -75,9 +74,6 @@ tool. See [migration history](https://supabase.com/docs/guides/local-development
   user.
 - A service-role client serves only admin operations that cannot run as a user. Keep it on a path that code and tests
   make explicit.
-- Keep handlers small: parsing, validation, responses, provider calls, and database operations move into local modules
-  as complexity grows. JSON responses, `OPTIONS`, and Cross-Origin Resource Sharing (CORS) go through one helper in
-  `functions/_shared/`.
 - Functions have runtime, CPU, memory, bundle-size, and log-rate limits, so long CPU-heavy work runs elsewhere. Raw
   Supabase errors that expose credentials stay out of logs.
 - When you write tests, cover function logic at the unit level. Integration tests against a local database and function
