@@ -134,7 +134,6 @@ export const VALE_MESSAGE_RULES = [
     'gspot.modals',
     'gspot.hedging',
     'gspot.marketing',
-    'gspot.history',
     'gspot.future',
     'gspot.contractions',
     'gspot.since',
