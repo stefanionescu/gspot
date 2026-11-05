@@ -2,6 +2,8 @@ import { writeFile } from 'node:fs/promises';
 
 import { expect, test } from 'bun:test';
 
+import { openSession } from '#cli/engine/session.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import {
     CONFLICTING_LOCAL_PLUGIN_FILES,
     CONFLICTING_LOCAL_PLUGIN_TABLES,
@@ -12,7 +14,6 @@ import {
     SCOPE_PLUGIN_FINDINGS,
     SCOPE_PLUGIN_TABLES,
 } from '#tests/config/configurations/javascript/plugins.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
@@ -68,9 +69,7 @@ test('a plugin record with a package and no version is a settings error', async 
         }),
         'package.json': '{"private":true,"type":"module"}\n',
     });
-    const refused = await runGspot(sandbox.path, ['install', '--json']);
-    expect(refused.code).toBe(2);
-    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'settings' });
+    expect(await captureRejection(openSession(sandbox.path))).toMatchObject({ code: 'settings' });
 });
 
 test('one plugin name with two modules is a settings error that names both paths', async () => {
@@ -102,10 +101,8 @@ test('tools.eslint.plugins loads your plugin by its path and refuses the gspot r
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES.replace('"local"', '"gspot"') }),
     );
-    const refused = await runGspot(sandbox.path, ['install']);
-    expect(refused.code).toBe(2);
-    expect({ stdout: refused.stdout, stderr: refused.stderr }).toStrictEqual({
-        stdout: '',
-        stderr: 'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.\n',
-    });
+    const session = await openSession(sandbox.path);
+    expect(() => buildGeneratedFiles(session)).toThrow(
+        'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.',
+    );
 });

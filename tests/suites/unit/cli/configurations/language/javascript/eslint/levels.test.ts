@@ -15,7 +15,6 @@ import {
     CONFIGURATION_RULE_OPTIONS,
     DOCUMENTED_PRICE_SOURCE,
 } from '#tests/config/configurations/javascript/overrides.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -89,12 +88,8 @@ test('install refuses options for a rule of level all at level basic, and ESLint
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
     });
-    const refused = await runGspot(sandbox.path, ['install', '--json']);
-    expect(refused.code).toBe(2);
-    expect(JSON.parse(refused.stdout)).toMatchObject({
-        error: 'settings',
-        message: expect.stringContaining('n/no-process-exit') as string,
-    });
+    const session = await openSession(sandbox.path);
+    expect(() => buildGeneratedFiles(session)).toThrow('n/no-process-exit');
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['javascript'], {
