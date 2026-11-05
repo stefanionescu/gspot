@@ -20,5 +20,4 @@ Read this rule when you change Tailwind CSS classes or configuration.
   stylesheet.
 - Use the project's adopted class-merging function when conditional utilities conflict. Do not introduce a separate
   merging implementation.
-- Avoid handwritten CSS that duplicates an existing utility without a component requirement.
 - Follow the syntax of the installed Tailwind version for custom utilities, variants, and plugins.
