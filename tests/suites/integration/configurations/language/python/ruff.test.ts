@@ -16,9 +16,9 @@ import {
     VERSION_SOURCE,
 } from '#tests/config/integration/python.ts';
 import { ruffConfigurationSchema, ruffRulesSchema } from '#tests/schemas/integration.ts';
-import { listFindingRows, parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -273,14 +273,19 @@ function listScopeRules(
     );
 }
 
-test('Ruff counts parameters with maximum default', async () => {
+test('Ruff reports a function past the default parameter limit', async () => {
     const scenario = PARAMETER_LIMIT_CASE;
-    await using sandbox = await createGitSandbox({});
-    const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, 'default');
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
+    const { root } = installedSandbox();
+    await using _sourceChange = await writeSandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(RUFF_SANDBOX.files, {
+            'gspot.toml': buildSandboxSettings([scenario.language], { level: 'all' }),
+            [scenario.file]: scenario.source,
+        }),
+    );
     const result = runBlockingCommand(
         [
-            buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff'),
+            buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
             'check',
             '--config',
             getManifestTarget('python', 'ruff.toml'),
@@ -288,13 +293,11 @@ test('Ruff counts parameters with maximum default', async () => {
             'json',
             scenario.file,
         ],
-        { cwd: sandbox.path },
+        { cwd: root },
     );
     const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
-    expect(result.code, result.stdout + result.stderr).toBe(maximum === defaultMaximum ? scenario.failureStatus : 0);
-    expect(findings.filter((finding) => finding.code === 'PLR0913')).toMatchObject(
-        maximum === defaultMaximum ? [scenario.finding] : [],
-    );
+    expect(result.code, result.stdout + result.stderr).toBe(scenario.failureStatus);
+    expect(findings.filter((finding) => finding.code === 'PLR0913')).toMatchObject([scenario.finding]);
 });
 
 test('--fix keeps a side-effect import, and a suppression at level basic', async () => {
