@@ -4,6 +4,7 @@ import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
+import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 
 function listCheckSystems(check: Check, tool: Tool | undefined): string[] | undefined {
@@ -15,13 +16,27 @@ function listCheckSystems(check: Check, tool: Tool | undefined): string[] | unde
           ).map(({ label }) => label);
 }
 
+function formatRuleIgnore(check: Check, explanations: CheckCode['explanations']): string | undefined {
+    const rule = explanations === undefined ? undefined : Object.keys(explanations).at(0);
+    if (rule !== undefined)
+        return `gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(rule)} --reason "<why>"`;
+    return OUTPUT_FORMATS[check.output.format].namesRules(check.output)
+        ? `gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`
+        : undefined;
+}
+
 /**
 Collect tool requirements, supported systems, suppression syntax, and ignore commands for a shipped check.
 
 @param check the manifest check.
 @param configurations the available tools across configurations.
+@param explanations the rule explanations in the code of the check, whose first rule the ignore command names.
 */
-export function describeCheck(check: Check, configurations: Configuration[]): CheckDescription {
+export function describeCheck(
+    check: Check,
+    configurations: Configuration[],
+    explanations: CheckCode['explanations'],
+): CheckDescription {
     const toolName = findToolName(check);
     const tool = toolName === undefined ? undefined : getTool(configurations, toolName);
     const tools = [toolName, ...(check.secondary_tools ?? [])].filter((name): name is string => name !== undefined);
@@ -41,9 +56,7 @@ export function describeCheck(check: Check, configurations: Configuration[]): Ch
         ),
         turnOff: {
             paths: `gspot ignore ${quoteArgument(check.id)} --paths "<path>" --reason "<why>"`,
-            rule: OUTPUT_FORMATS[check.output.format].namesRules(check.output)
-                ? `gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`
-                : undefined,
+            rule: formatRuleIgnore(check, explanations),
         },
         suppression: tool?.suppression,
     };

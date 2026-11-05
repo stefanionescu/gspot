@@ -49,7 +49,11 @@ function buildCheckFacts(
     configuration: Configuration | undefined,
     session: Session | undefined,
 ): CheckFacts {
-    const reference = describeCheck(check, readConfigurations().values().toArray());
+    const reference = describeCheck(
+        check,
+        readConfigurations().values().toArray(),
+        selectCheckCode(check)?.explanations,
+    );
     const toolName = reference.toolName;
     const installedRules = new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path));
     const settings = (configuration === undefined ? [] : (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []))
@@ -117,15 +121,6 @@ function formatCheckExplanation(facts: CheckExplanation): string {
         ...formatRepositoryUse(facts),
     ];
     return `${lines.join('\n')}\n`;
-}
-
-function formatBuiltinRuleIgnore(check: Check): string | undefined {
-    const explanations = selectCheckCode(check)?.explanations;
-    if (explanations === undefined) return undefined;
-    const rule = Object.keys(explanations).at(0);
-    return rule === undefined
-        ? undefined
-        : `gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(rule)} --reason "<why>"`;
 }
 
 function formatRuleOptions(
@@ -211,7 +206,7 @@ function buildCheckExplanation(
         crashPattern: described.crashPattern,
         runInCopy: check.run_in_copy,
         minVersions: described.minVersions,
-        turnOff: { ...described.turnOff, rule: described.turnOff.rule ?? formatBuiltinRuleIgnore(check) },
+        turnOff: described.turnOff,
         settingNames: described.settings,
         ruleFiles: described.ruleFiles,
         ...(selected !== undefined && { selected }),

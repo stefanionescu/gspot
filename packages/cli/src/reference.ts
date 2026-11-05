@@ -17,10 +17,10 @@ import { buildSetupReference } from '#cli/repository/javascript/setup.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { buildSettingsReference } from '#cli/settings/reference.ts';
-import { compareText, quoteArgument } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
-import type { CheckReference, CliReference, CommandReference } from '#cli/types/main.ts';
-import type { Configuration, ConfigurationCheck, ConfigurationReference } from '#cli/types/manifests.ts';
+import type { CliReference, CommandReference } from '#cli/types/main.ts';
+import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
 
 function buildCommandReference(command: ReturnType<typeof buildProgram>['commands'][number]): CommandReference {
     const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];
@@ -69,29 +69,6 @@ function buildConfigurationsReference(shipped: Configuration[]): ConfigurationRe
     }));
 }
 
-function buildCheckReference(
-    { check, configuration }: ConfigurationCheck,
-    configurations: Configuration[],
-): CheckReference {
-    const description = describeCheck(check, configurations);
-    const explanations = selectCheckCode(check)?.explanations;
-    if (explanations === undefined) return { check, configuration, ...description, explanations };
-    const firstRule = Object.keys(explanations)[0];
-    return {
-        check,
-        configuration,
-        ...description,
-        explanations,
-        turnOff: {
-            ...description.turnOff,
-            rule:
-                firstRule === undefined
-                    ? description.turnOff.rule
-                    : `gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(firstRule)} --reason "<why>"`,
-        },
-    };
-}
-
 /**
 Read the public facts that the documentation shows. This opens no repository and starts no tool.
 */
@@ -103,7 +80,10 @@ export function readCliReference(): CliReference {
     const configurations = buildConfigurationsReference(shipped);
     const checks = listChecksById(configurations)
         .values()
-        .map((reference) => buildCheckReference(reference, configurations))
+        .map(({ check, configuration }) => {
+            const explanations = selectCheckCode(check)?.explanations;
+            return { check, configuration, ...describeCheck(check, configurations, explanations), explanations };
+        })
         .toArray();
     const minimumLevelTools = new Set(
         checks.filter(({ check }) => check.level === 'basic').flatMap(({ tools }) => tools),
