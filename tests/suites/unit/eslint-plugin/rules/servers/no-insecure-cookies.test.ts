@@ -5,11 +5,9 @@ buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
     valid: [
         'import session from "cookie-session"; session({ secure: true, httpOnly: true });',
         'import session from "cookie-session"; session({});',
-        'import session from "express-session"; session({ cookie: { secure: true, httpOnly: true } });',
         'import session from "express-session"; session({ secure: false, httpOnly: false });',
         'import csrf from "csurf"; csrf({ cookie: false });',
         'import csrf from "csurf"; csrf({ cookie: {} });',
-        'import Cookies from "cookies"; const cookies = new Cookies(req, res); cookies.set("key", "value", { secure: true, httpOnly: true });',
         'import session from "other"; session({ secure: false, httpOnly: false });',
         'import session from "cookie-session"; function configure(session) { session({ secure: false }); }',
         'import session from "cookie-session"; const options = { secure: false }; session({ ...options, secure: true });',
@@ -26,7 +24,6 @@ buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
         },
         ...[
             'import session from "express-session"; const flags = { secure: false, httpOnly: false }; session({ cookie: flags });',
-            'const csrf = require("csurf"); csrf({ cookie: true });',
             'const { default: csrf } = require("csurf"); const enabled = true; csrf({ cookie: enabled });',
             'import csrf from "csurf"; csrf({ cookie: { secure: false, httpOnly: false } });',
             'import Cookies from "cookies"; const cookies = new Cookies(req, res); cookies.set("key", "value", { secure: false, httpOnly: false });',

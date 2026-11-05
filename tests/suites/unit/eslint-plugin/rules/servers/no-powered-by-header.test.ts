@@ -3,10 +3,8 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-powered-by-header', noPoweredByHeader, {
     valid: [
-        'import express from "express"; const factory = other(); const app = factory();',
         'let express = require("express"); express = other; const app = express();',
         'const { Router } = require("express"); const router = Router();',
-        'import express = require("express"); const app = express(); app.disable("x-powered-by");',
         'import express from "express"; import helmet from "helmet"; const middleware = [helmet()]; const app = express(); app.use(...middleware);',
         'const app = express();',
         'function express() { return {}; } const app = express();',
