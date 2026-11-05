@@ -229,6 +229,7 @@ export const FENCE_GRAMMARS = ['bash', 'typescript', 'tsx', 'javascript', 'pytho
 export const CONFIGURATION_GRAMMARS: Readonly<Record<string, ReadonlyArray<(typeof GRAMMAR_NAMES)[number]>>> = {
     bash: ['bash'],
     css: ['css'],
+    gspot: ['html'],
     html: ['html'],
     javascript: ['javascript', 'typescript', 'tsx', 'html'],
     markdown: FENCE_GRAMMARS,
