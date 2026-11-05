@@ -293,3 +293,14 @@ test('missing-paths: a generator output named by a setting counts as present bef
         }),
     ]);
 });
+
+test.each(['CHANGELOG.md', 'docs/HISTORY.md'])(
+    'missing-paths leaves %s out, because it names files that are gone',
+    async (path) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
+            [path]: '# Notes\n\nThis release removed `src/gone.ts`.\n',
+        });
+        expect(await runSandboxCheck(sandbox.path, 'docs/missing-paths')).toStrictEqual([]);
+    },
+);

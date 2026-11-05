@@ -189,7 +189,7 @@ export const DOCS_RULES = {
     missingPath: 'missing-path',
 } as const;
 
-export const CHANGELOG_FILE = /(?:^|\/)CHANGELOG[^/]*$/u;
+export const CHANGELOG_FILE = /(?:^|\/)(?:CHANGELOG|HISTORY)[^/]*$/u;
 
 export const VERSION_STRING_MESSAGE = 'This copy of the package version goes stale. Read it from the manifest.';
 

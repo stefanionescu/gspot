@@ -6,6 +6,7 @@ import { visit } from 'unist-util-visit';
 
 import {
     BUN_RUN,
+    CHANGELOG_FILE,
     COMMAND_FENCES,
     DOCS_RULES,
     FILE_EXTENSION,
@@ -252,7 +253,10 @@ Reports each path that names no tracked file, and each run command that names no
 */
 function checkMissingPaths(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     const files = planned.files.filter(
-        (file) => file.kind === 'source' && MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
+        (file) =>
+            file.kind === 'source' &&
+            !CHANGELOG_FILE.test(file.path) &&
+            MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
     const repositoryPaths = listRepositoryPaths(session, planned);
     const isIgnored = buildGitignoreMatcher(
