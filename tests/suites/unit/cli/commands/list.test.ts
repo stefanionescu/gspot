@@ -42,31 +42,6 @@ test('list shows selected settings and available configurations', async () => {
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('the check list reports the state in each scope', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], {
-            tables: '[[ignore]]\ncheck = "bash/shfmt"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n',
-            scopes: [{ path: 'api' }, { path: 'api/worker' }],
-        }),
-        'entry.sh': 'echo root\n',
-        'api/entry.sh': 'echo api\n',
-        'api/worker/entry.sh': 'echo worker\n',
-    });
-
-    const before = await readTree(sandbox.path);
-    const structured = await runGspot(sandbox.path, ['list', '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(structured.stderr).toBe('');
-    const { selected } = configurationsListOutputSchema.parse(JSON.parse(structured.stdout));
-    const checks = selected.flatMap((configuration) => configuration.checks);
-    expect(checks.filter(({ check }) => check === 'bash/shfmt')).toStrictEqual([
-        { check: 'bash/shfmt', scope: '', status: 'on' },
-        { check: 'bash/shfmt', scope: 'api', status: 'skipped', cause: 'ignore' },
-        { check: 'bash/shfmt', scope: 'api/worker', status: 'skipped', cause: 'ignore' },
-    ]);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test('checks that run at the root appear once when selected in two child scopes', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {

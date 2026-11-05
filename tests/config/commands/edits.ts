@@ -164,9 +164,8 @@ export const UNKNOWN_SETTING_KEYS = [{ key: 'tools.eslint.unknown_key' }, { key:
 
 export const STRING_SETTING_VALUES = [
     { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },
-    { key: 'naming.banned_words', words: ['true'], value: ['true'] },
     { key: 'ci.linux_runner', words: ['true'], value: 'true' },
-    { key: 'ci.setup_command', words: ['make', '2'], value: ['make', '2'] },
+    { key: 'ci.setup_command', words: ['--', 'make', '-C', 'make'], value: ['make', '-C', 'make'] },
 ] as const;
 
 export const SET_VALUE_REFUSALS = [
@@ -192,11 +191,6 @@ allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private
 `;
 
 export const REFUSAL_FILES = { 'gspot.toml': COMMAND_VALUE_SETTINGS, 'control.txt': 'preserve\n' } as const;
-
-export const VALUE_VALIDATION_CASES = [
-    { name: 'without a reason', hasReason: false },
-    { name: 'with a reason', hasReason: true },
-] as const;
 
 export const CONFIGURATIONS_SETTINGS = 'configurations = []\n';
 

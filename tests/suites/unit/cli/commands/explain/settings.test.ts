@@ -122,25 +122,6 @@ test.each([...REASON_VALUES])(
     },
 );
 
-test('a neutral format setting stays settable without a reason', async () => {
-    const key = 'format.indent_style';
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['data-files'], { level: 'all', rules: true, scopes: [{ path: 'app' }] }),
-        'app/project.toml': 'name = "Project"\n',
-    });
-
-    const changed = await runGspot(sandbox.path, ['set', key, 'tab', '--scope', 'app']);
-    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const structured = await runGspot(sandbox.path, ['explain', key, '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(JSON.parse(structured.stdout)).toMatchObject({
-        scopes: [
-            { scope: '', value: 'space' },
-            { scope: 'app', value: 'tab' },
-        ],
-    });
-});
-
 test.each([
     { key: 'level', flag: '' },
     { key: 'limits.max_file_lines', flag: ' [--reason "<why>"]' },

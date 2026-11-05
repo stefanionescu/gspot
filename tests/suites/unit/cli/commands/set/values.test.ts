@@ -244,15 +244,6 @@ test('--json after the value separator stays a setup command argument', async ()
     expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['echo', '--json']);
 });
 
-test('set preserves repeated command arguments', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const first = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'make', '-C', 'make']);
-    expect(first.code, first.stdout + first.stderr).toBe(0);
-    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    const contents = findValueAt(written, ['ci', 'setup_command']);
-    expect(contents).toStrictEqual(['make', '-C', 'make']);
-});
-
 test('set replaces the written values of an ordinary list', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const first = await runGspot(sandbox.path, ['set', 'naming.banned_words', 'firstword']);

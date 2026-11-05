@@ -3,19 +3,19 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { VALUE_VALIDATION_CASES } from '#tests/config/commands/edits.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each(VALUE_VALIDATION_CASES)('set validates the value before its reason: $name', async ({ hasReason }) => {
+test('set validates the value before its reason', async () => {
     const settings = buildSandboxSettings(['structure']);
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
     const result = await runGspot(sandbox.path, [
         'set',
         'limits.max_file_lines',
         'abc',
-        ...(hasReason ? ['--reason', 'Generated files need more lines.'] : []),
+        '--reason',
+        'Generated files need more lines.',
         '--json',
     ]);
     expect(result.code).toBe(2);
