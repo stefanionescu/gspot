@@ -177,17 +177,17 @@ Validate every written key against the known settings and the weakening rule.
 @param availableSettings the settings and defaults of the selected configurations.
 @param settings the parsed gspot.toml.
 @param scopeAvailable the settings of each scope by path, which its own table uses.
-@param general the settings of general configurations that repository evidence can select.
+@param automatic the settings of the configurations that gspot selects in every repository.
 @returns empty when the settings pass validation.
 */
 export function validateKeys(
     availableSettings: AvailableSettings,
     settings: Settings,
     scopeAvailable: Map<string, AvailableSettings>,
-    general: AvailableSettings,
+    automatic: AvailableSettings,
 ): SettingsError[] {
     const errors = listUnsettledConflicts(availableSettings, settings, scopeAvailable);
-    const later = [availableSettings, ...scopeAvailable.values(), general].toReversed();
+    const later = [availableSettings, ...scopeAvailable.values(), automatic].toReversed();
     const everywhere: AvailableSettings = {
         settings: new Map(later.flatMap((scopeSettings) => scopeSettings.settings.entries().toArray())),
         defaults: new Map(later.flatMap((scopeSettings) => scopeSettings.defaults.entries().toArray())),
@@ -197,8 +197,8 @@ export function validateKeys(
     for (const { table, scopePath, path } of listSettingsTables(settings)) {
         const active = scopePath === '' ? everywhere : getRequired(scopeAvailable, scopePath, 'scope settings');
         const selectedAvailable: AvailableSettings = {
-            settings: new Map([...general.settings, ...active.settings]),
-            defaults: new Map([...general.defaults, ...active.defaults]),
+            settings: new Map([...automatic.settings, ...active.settings]),
+            defaults: new Map([...automatic.defaults, ...active.defaults]),
             errors: active.errors,
         };
         const found = listWrittenKeys(table, selectedAvailable).flatMap((key) =>

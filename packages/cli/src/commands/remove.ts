@@ -40,15 +40,15 @@ function assertRemovable(names: string[], kept: string[]): void {
 
 function removeUnusedSettings(table: TomlTable, scopePath: string): string {
     const edited = buildSettings(settingsSchema.parse(table), table);
-    const general = readConfigurations()
+    const automatic = readConfigurations()
         .values()
-        .filter((configuration) => configuration.group === 'general')
+        .filter((configuration) => configuration.always_selected)
         .toArray();
     const removed: string[] = [];
     const affected = listSettingsTables(edited).filter((written) => isInScope(written.scopePath, scopePath));
     for (const written of affected) {
         const selected = selectConfigurationsForScope(edited, written.scopePath);
-        const available = buildAvailableSettings([...general, ...selected], edited.level);
+        const available = buildAvailableSettings([...automatic, ...selected], edited.level);
         const keys = listWrittenKeys(written.table, available).filter(
             (key) => findSetting(available, key) === undefined,
         );

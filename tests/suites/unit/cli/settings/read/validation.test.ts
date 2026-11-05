@@ -51,13 +51,23 @@ test.each([...DUPLICATED_REASON_ERRORS])('an invalid $key reason is reported onc
 });
 
 test.each(INVALID_LICENSES)('licenses.allowed refuses %s before running a check', (license) => {
-    expect(validateSettingsText(stringify({ licenses: { allowed: [license] } }))).toStrictEqual([
-        'gspot.toml:2: licenses.allowed.0',
-    ]);
+    expect(
+        validateSettingsText(stringify({ configurations: ['licenses'], licenses: { allowed: [license] } })),
+    ).toStrictEqual(['gspot.toml:4: licenses.allowed.0']);
 });
 
 test.each(VALID_LICENSES)('licenses.allowed accepts one SPDX license: %s', (license) => {
-    expect(validateSettingsText(stringify({ licenses: { allowed: [license] } }))).toStrictEqual([]);
+    expect(
+        validateSettingsText(stringify({ configurations: ['licenses'], licenses: { allowed: [license] } })),
+    ).toStrictEqual([]);
+});
+
+test('a licenses table with no licenses configuration stops with the command that adds it', () => {
+    using sandbox = createTemporaryFolder();
+    const text = '[licenses]\nallowed = ["MIT"]\n';
+    expect(validateSettingsText(text)).toStrictEqual(['gspot.toml:2: licenses.allowed']);
+    expect(() => readSettings(text, sandbox.path)).toThrow('Run gspot add licenses.');
+    expect(validateSettingsText(`configurations = ["licenses"]\n${text}`)).toStrictEqual([]);
 });
 
 test('two import rules cannot share a name', () => {

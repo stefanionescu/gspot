@@ -39,6 +39,25 @@ test('remove deletes settings that only the removed configuration exposes and na
     expect(written['limits']).toStrictEqual({ max_file_lines: 250 });
 });
 
+test('remove licenses deletes its table and its records and names the deleted keys', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['licenses', 'bash'], {
+            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "example"\nversion = "1.0.0"\nreason = "Reviewed by legal."\n',
+        }),
+        'source.sh': 'echo example\n',
+    });
+    const result = await runGspot(sandbox.path, [
+        'remove',
+        'licenses',
+        '--reason',
+        'The legal review moved elsewhere.',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('Removed settings licenses.allowed, licenses.allowed_package.');
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['licenses']).toBeUndefined();
+});
+
 test('remove names only removed configurations in a mixed request', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),

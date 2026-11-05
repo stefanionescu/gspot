@@ -153,9 +153,9 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
             ]),
     );
     const rootKeys = buildAvailableSettings(selectConfigurationsForScope(settings, ''), settings.level);
-    const general = readConfigurations()
+    const automatic = readConfigurations()
         .values()
-        .filter((configuration) => configuration.group === 'general')
+        .filter((configuration) => configuration.always_selected)
         .toArray();
     const errors: SettingsError[] = [
         ...listRemovedSelections(settings),
@@ -166,7 +166,7 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
         ...validateRuleExcludes(settings.rule_files.exclude),
         ...validateScopePaths(root, settings),
         ...validateRuleFilePaths(root, settings),
-        ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(general, settings.level)),
+        ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(automatic, settings.level)),
     ];
     return errors;
 }
