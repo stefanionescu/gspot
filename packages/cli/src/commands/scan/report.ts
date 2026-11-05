@@ -21,6 +21,7 @@ import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { listPinPrerequisites } from '#cli/repository/javascript/gspot-pin.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
 import type { ScanCategory, ScanInput, ScanReport, ScanSection } from '#cli/types/commands/reports.ts';
@@ -90,9 +91,10 @@ function listChecksNotRun({ checks }: RunReport): string[] {
 }
 
 function listNextSteps({ pinPath, session }: ScanInput['planning']): string[] {
-    const { command, installCommand } = session.startRunner;
+    const { name, command, installCommand } = session.startRunner;
     const add = installCommand.replace('<version>', () => cliPackage.version);
-    return [...(pinPath === undefined ? [] : [add]), `${command} init`, ...SCAN_NEXT_STEPS];
+    const pin = pinPath === undefined ? [] : [...listPinPrerequisites(session.root, name), add];
+    return [...pin, `${command} init`, ...SCAN_NEXT_STEPS];
 }
 
 function formatExample({ file, line, check, rule, message }: Finding): string {

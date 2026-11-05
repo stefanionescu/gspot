@@ -49,6 +49,8 @@ export const SETUP_NODE_VERSION = '24';
 
 export const SETUP_NODE = `node@${SETUP_NODE_VERSION}`;
 
+export const MISE_NODE_PIN_COMMAND = `mise use --pin ${SETUP_NODE}`;
+
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
 export const YARN_BERRY_MAJOR = 2;

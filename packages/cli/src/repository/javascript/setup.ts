@@ -4,8 +4,8 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import {
     FROZEN_INSTALLS,
     LOCKFILES,
+    MISE_NODE_PIN_COMMAND,
     PACKAGE_MANAGER_LABELS,
-    SETUP_NODE,
     START_RUNNERS,
     YARN_BERRY_INSTALL,
     YARN_BERRY_MAJOR,
@@ -34,7 +34,7 @@ export function buildSetupReference(): SetupReference[] {
     return Object.entries(PACKAGE_MANAGER_LABELS).map(([name, label]) => {
         const runner = START_RUNNERS[name as keyof typeof START_RUNNERS];
         const lockfile = LOCKFILES.find((file) => file.packageManager === name && 'copied' in file)?.file;
-        const prerequisites = name === 'mise' ? [`mise use --pin ${SETUP_NODE}`] : [];
+        const prerequisites = name === 'mise' ? [MISE_NODE_PIN_COMMAND] : [];
         const add = runner.installCommand.replace('<package>@<version>', () => cliPackage.name);
         const frozen =
             lockfile === undefined

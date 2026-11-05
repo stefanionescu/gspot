@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
+import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/javascript.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
@@ -121,6 +122,24 @@ test.each(['data-files/taplo-format', 'bash/shfmt'])('scan counts a file of %s a
     });
     expect(report.filesToFormat).toBe(1);
     expect(report.categories).toStrictEqual([]);
+});
+
+test.each([
+    { name: 'pins Node.js first when mise.toml names none', files: {}, pinsNode: true },
+    { name: 'leaves a Node.js pin alone', files: { 'mise.toml': '[tools]\nnode = "22"\n' }, pinsNode: false },
+])('the next steps of a mise repository $name', async ({ files, pinsNode }) => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n', ...files });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const { nextSteps } = buildScanReport({
+        planning,
+        session: planning.session,
+        report: SCAN_RUN_REPORT,
+        toolBytes: 0,
+        ruleRows: [],
+        leftOut: [],
+    });
+    expect(nextSteps.includes(MISE_NODE_PIN_COMMAND)).toBe(pinsNode);
+    expect(nextSteps.findIndex((step) => step.includes('@gspothq/cli'))).toBe(pinsNode ? 1 : 0);
 });
 
 test('scan sums the seconds of each tool, slowest tool first', async () => {

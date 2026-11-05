@@ -10,6 +10,7 @@ import {
     GSPOT_MISE_OPTIONS,
     GSPOT_MISE_TOOL,
     JSON_INDENT_PATTERN,
+    MISE_NODE_PIN_COMMAND,
     SETUP_NODE_VERSION,
 } from '#cli/config/repository/javascript.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
@@ -24,6 +25,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
+import type { StartRunner } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';
 
 const MISE_NODE_TOOL = 'node';
@@ -76,6 +78,19 @@ function writeMisePin(writer: Files): void {
         bytes: Buffer.from(patched.endsWith('\n') ? patched : `${patched}\n`),
         mode: tools?.mode ?? OWNER_WRITABLE_FILE,
     });
+}
+
+/**
+List the commands that a mise pin needs before it. Without a Node.js pin, mise starts gspot with the Node.js of the
+system, which can be too old to run it.
+
+@param root the repository root.
+@param runner the program that starts gspot.
+*/
+export function listPinPrerequisites(root: string, runner: StartRunner['name']): string[] {
+    if (runner !== 'mise') return [];
+    const { tools } = parseTomlFile(MISE_CONFIG_FILE, findText(root, MISE_CONFIG_FILE) ?? '', miseToolsSchema);
+    return tools[MISE_NODE_TOOL] === undefined ? [MISE_NODE_PIN_COMMAND] : [];
 }
 
 /**
