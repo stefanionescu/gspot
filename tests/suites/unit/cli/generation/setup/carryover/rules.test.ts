@@ -28,6 +28,27 @@ test('init adds the Ruff rules that gspot does not run, and carries each rule th
     });
 });
 
+test('init lists Ruff I as dropped, because gspot sets the import order', async () => {
+    await using sandbox = await createGitSandbox({
+        'ruff.toml': '[lint]\nselect = ["F", "I"]\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    const { plan, settings } = await runInit(sandbox.path, ['--configurations', 'python']);
+    expect(settings['tools']).toBeUndefined();
+    expect(plan.carryover.find(({ path }) => path === 'ruff.toml')).toMatchObject({ carried: [], dropped: ['I'] });
+});
+
+test('init lists a format script that calls a formatter it does not know, with the way to keep it', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"scripts":{"format":"oxfmt .","test":"true"}}',
+        'main.ts': 'export {};\n',
+    });
+    const { plan } = await runInit(sandbox.path, []);
+    expect(plan.lintCommands.filter(({ command }) => command === 'oxfmt .')).toMatchObject([
+        { file: 'package.json', line: 1, fix: expect.stringContaining('gspot ignore format/prettier') as string },
+    ]);
+});
+
 test('init lists the Ruff format options it carries in the Ruff row', async () => {
     await using sandbox = await createGitSandbox({
         'ruff.toml': 'line-length = 79\n[format]\nquote-style = "single"\n',

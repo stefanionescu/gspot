@@ -80,6 +80,11 @@ export const COMMAND_FILES = [
     { path: /^(?:\.gitlab-ci\.yml|\.gitlab\/ci\/.+\.ya?ml|\.github\/workflows\/.+\.ya?ml)$/u, source: 'ci' },
 ] as const;
 
+export const FORMAT_SCRIPT = /^(?:format|fmt)(?::.*)?$/u;
+
+export const OTHER_FORMATTER_MESSAGE =
+    'This script also formats these files. To keep it, run gspot ignore format/prettier --reason "<why>".';
+
 export const LINT_COMMAND_NAMES = {
     script: 'This script',
     ci: 'This CI step',

@@ -13,7 +13,7 @@ import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { buildStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
-import { listLintCommands } from '#cli/repository/lint-commands.ts';
+import { listLintCommands, listOtherFormatScripts } from '#cli/repository/lint-commands.ts';
 import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
@@ -118,7 +118,10 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         conflicts,
         template: options.template,
         pinPath,
-        lintCommands: listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
+        lintCommands: [
+            ...listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
+            ...listOtherFormatScripts({ root, ...listReplacedTools(applicable) }),
+        ],
         carryover: carryover.rows,
         crlfPaths: await listCrlfIndexPaths(root),
     };

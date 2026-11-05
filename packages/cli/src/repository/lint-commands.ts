@@ -7,10 +7,12 @@ import {
     COMMAND_KEYS,
     COMMAND_SEPARATORS,
     COMMENT_LINE,
+    FORMAT_SCRIPT,
     HOOK_FOLDER_PATH,
     HOOK_ID_SEPARATOR,
     LINT_COMMAND_FIXES,
     LINT_STAGED_KEY,
+    OTHER_FORMATTER_MESSAGE,
     OVERLAPPING_TOOLS,
     PRE_COMMIT_TOOL,
     PYGREP_LANGUAGE,
@@ -174,6 +176,34 @@ function listPackageRows({ place, manifest }: LintCommandPackage, search: Comman
         ...Object.values(manifest.scripts).flatMap((command) => buildRow(place, command, search)),
         ...Object.values(manifest[SIMPLE_GIT_HOOKS_KEY]).flatMap((command) => buildRow(hook, command, search)),
     ];
+}
+
+/**
+List the format scripts of the root package that call a tool gspot does not know. It stays out of listLintCommands,
+because a row there fails a commit, and gspot cannot tell what such a tool formats.
+
+@param input what the search reads.
+@param input.root the repository root.
+@param input.tools the replaced tools.
+*/
+export function listOtherFormatScripts({ root, tools }: Pick<LintCommandSearch, 'root' | 'tools'>): LintCommand[] {
+    const text = findText(root, PACKAGE_JSON);
+    if (text === undefined) return [];
+    const manifest = tryParseFile(() => parseJsonFile(PACKAGE_JSON, text, lintCommandPackageSchema));
+    if (manifest === undefined) return [];
+    const scripts = new Map(Object.entries(manifest.scripts));
+    return Object.entries(manifest.scripts)
+        .filter(
+            ([name, command]) => FORMAT_SCRIPT.test(name) && findCalledTool(command, { tools, scripts }) === undefined,
+        )
+        .map(([name, command]) => ({
+            file: PACKAGE_JSON,
+            line: findLine(text, `"${name}"`),
+            source: 'script' as const,
+            command,
+            tool: name,
+            fix: OTHER_FORMATTER_MESSAGE,
+        }));
 }
 
 /**

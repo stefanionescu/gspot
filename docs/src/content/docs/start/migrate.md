@@ -47,8 +47,9 @@ The plan has these sections:
 
 ## Formatting that init carries over
 
-`gspot init` reads the options of your formatters and copies them into the `[format]` table of `gspot.toml`. Code that
-passes your formatter today then passes the gspot format check too:
+`gspot init` reads the options of the formatters below and copies them into the `[format]` table of `gspot.toml`. Code
+that passes one of them today then passes the gspot format check too. A `format` script that calls another formatter
+stays in place, and the plan lists it, because the two formatters can disagree on the same file:
 
 - Prettier: the indent style, indent width, line width, quotes, semicolons, trailing commas, `bracketSpacing`,
   `arrowParens`, and `proseWrap`, from a JSON, YAML, or TOML file, the `prettier` key of `package.json`, or a JavaScript
