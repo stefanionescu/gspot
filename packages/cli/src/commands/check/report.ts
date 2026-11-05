@@ -246,9 +246,7 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
                   .map((line) => '  ' + line)
                   .join('\n')
             : '';
-        printWarning(
-            `The ${result.check} fixer failed: ${failure}. Run gspot check --only ${quoteArgument(result.check)} --fix --verbose.${toolOutput}`,
-        );
+        printWarning(`The ${result.check} fixer failed: ${failure}.${toolOutput}`);
     }
 }
 
