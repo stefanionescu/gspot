@@ -27,5 +27,5 @@ unmount.
 Use a placeholder for display data, never as a record ready for editing. Reset placeholders and pagination when identity
 or filters change.
 
-Choose freshness from the resource's risk. Never disable refetching globally to hide duplicate requests. Keep permission
-and account state out of static caches. Preserve both `pages` and `pageParams` when changing an infinite query.
+Never disable refetching globally to hide duplicate requests. Keep permission and account state out of static caches.
+Preserve both `pages` and `pageParams` when changing an infinite query.
