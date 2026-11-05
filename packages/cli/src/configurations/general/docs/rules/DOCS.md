@@ -4,8 +4,7 @@ Read this rule when you write or change documentation.
 
 ## Before you write
 
-Read the existing pages. Identify the reader, their task, starting state, permissions, and risks. Describe supported
-behavior. Before the install steps, state limitations that rule out use.
+Read the existing pages. Describe supported behavior. Before the install steps, state limitations that rule out use.
 
 Keep durable product information in its documentation. Link to its reference instead of copying procedures or
 configuration tables. When behavior changes, update the reference and examples.
@@ -19,7 +18,7 @@ shortest successful path in the README and link to specialist guides. Document r
 when the reader must use it.
 
 Use the renderer's Markdown. Keep routine pages free of custom layout HTML or CSS. A component that some viewers cannot
-show needs a text alternative. Use paragraphs, lists, and tables to match what readers need to compare.
+show needs a text alternative.
 
 Use inline code for exact commands, values, fields, and identifiers. Bold names an interface control. Blockquotes hold
 attributed source text.
