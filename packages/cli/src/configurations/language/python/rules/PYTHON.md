@@ -18,8 +18,9 @@ Break an import cycle by moving shared data or interfaces into a lower-level mod
 
 ## Docstrings
 
-Write docstrings in the style that `python.docstring_convention` names; Ruff and pydoclint both check it. Each
-docstring matches its signature and behavior. The examples here use Google style.
+Write docstrings in the style that `python.docstring_convention` names; Ruff and pydoclint both check it. Each docstring
+matches its signature and behavior. When the setting is unset, use the style the file already uses, or Google style in a
+new file. pydoclint checks Google and NumPy styles.
 
 ## Constants, globals, and mutable state
 
