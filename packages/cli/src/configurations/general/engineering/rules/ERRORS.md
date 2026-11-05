@@ -28,6 +28,6 @@ A developer tool may name the file, line, and setting that the user must fix. Ke
 output.
 
 - Make messages actionable: tell the user what went wrong, not how the system works.
-- Put the failing value in its own field, not in the message text.
+- In an API error response or a log entry, put the failing value in its own field.
 - Keep message text stable so readers can search for it.
 - Convert technical errors to user-facing messages in the code that displays them.
