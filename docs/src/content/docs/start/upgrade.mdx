@@ -7,33 +7,49 @@ import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { setup } from '#docs/reference/setup.ts';
 
 Commit your work first, so that you can go back. The [releases page](https://github.com/stefanionescu/gspot/releases)
-lists the gspot versions. Put the version that you want in place of `<version>`:
+lists the gspot versions, and the [changelog](/reference/changelog/) says what each one changes. Put the version that you
+want in place of `<version>`:
 
 <Tabs syncKey="package-manager">
     {setup.map(({ label, start, add }) => (
         <TabItem label={label}>
-            <Code
-                lang="shell"
-                code={[`${add}@<version>`, `${start} install`, `${start} check --fix`, `${start} check`].join('\n')}
-            />
+            <Code lang="shell" code={[`${add}@<version>`, `${start} install`, `${start} check`].join('\n')} />
         </TabItem>
     ))}
 </Tabs>
 
-`gspot install` writes the generated files again and installs the tool versions of the new release. If it rejects a setting
-in `gspot.toml`, the message names the valid settings with similar names. Fix `gspot.toml`, then run `gspot install` again.
-A new release can pin newer formatters that format code in a new way, so run `gspot check --fix` before
-`gspot check`.
+`gspot install` writes the generated files again and installs the tool versions of the new release. If it rejects a
+setting in `gspot.toml`, the message names the line and what to write instead, so fix it and run `gspot install` again.
+If it says `gspot did not overwrite these files`, the new release writes a file at a path where you have a file of your
+own. Move each one out of the way, then run it again.
 
-When `gspot install` succeeds, review the diff and fix the findings. Then commit these files together: the generated
-files that changed, in `.gspot/` and outside it, and either `package.json` with its lockfile or `mise.toml`. If you
-changed `gspot.toml` to fix findings, commit it too. Then run `gspot install` in each other clone, as
+A new release can pin tools that format or report code in a new way, and `gspot check` lists what they find in the whole
+repository. If your repository had no findings before the upgrade, run `gspot check --fix`, then fix or ignore the rest.
+If it still has old findings, leave them, because a commit checks what you stage, and fix each file as you touch it.
+
+Commit these files together: the generated files that changed, in `.gspot/` and outside it, `gspot.toml` if you changed
+it, and either `package.json` with its lockfile or `mise.toml`. The next push runs the push checks with the new tools,
+and `gspot check --only push` shows the result first. Then run `gspot install` in each other clone, as
 [Set up a clone](/start/install/#set-up-a-clone) describes.
 
-If `gspot install` says `gspot did not overwrite these files`, those files do not come from gspot, so gspot leaves them
-alone. Move each one out of the way, then run `gspot install` again.
+To go back to the older gspot version, check out the commit from before the upgrade. An upgrade can leave older tool
+versions and download caches on your machine, outside your repository. When the new version works,
+[Free disk space](/reference/generated-files/#free-disk-space) shows how to delete them.
 
-To go back to the older gspot version, check out the commit from before the upgrade.
+## Upgrade from 0.3.9
 
-An upgrade can leave older tool versions and download caches on your machine, outside your repository. When the new
-version works, [Free disk space](/reference/generated-files/#free-disk-space) shows how to delete them.
+This release removes commands, flags, and settings, so a repository on 0.3.9 needs these steps as well. The
+[changelog](/reference/changelog/) lists every change.
+
+1. Replace the old flags in your scripts and CI steps. `gspot check --stage <stage>` becomes
+   `gspot check --only <stage>`, and `gspot check --changed` becomes `gspot check --base origin/HEAD`.
+2. Delete `gspot.baseline.json` and each `[[ignore]]` of `gspot/baseline`. Its old findings come back in the files that
+   you touch and at the next push, so follow
+   [Clean up the first findings](/start/quickstart/#clean-up-the-first-findings).
+3. Run the commands above. `gspot install` stops on each setting that this release refuses, such as
+   `limits.min_function_statements`, and its message names the fix. It also writes new Git hooks, because a hook from
+   0.3.9 stops on its old flag.
+4. Drop the group folder from each path that you wrote by hand, such as in an editor setting or a CI script.
+   `.gspot/configurations/<group>/<configuration>/` becomes `.gspot/configurations/<configuration>/`.
+5. If a script reads the JSON output, `gspot doctor --json` has no `suggestions`, and `gspot check --json` prints
+   `checks[].command` only with `--verbose`.
