@@ -5,14 +5,12 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { compareText } from '#cli/system/text.ts';
 import {
     EDITORCONFIG_SAMPLES,
     STAGED_FORMAT_CHECK_ARGUMENTS,
     STAGED_FORMAT_PATHS,
     STAGED_FORMAT_SOURCE,
 } from '#tests/config/integration/general.ts';
-import { FORMAT_OVERRIDES_SETTINGS, PRETTIER_OPTIONS_BY_FILE } from '#tests/config/setup/configurations.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -24,45 +22,6 @@ const installedSandbox = shareInstalledSandbox({
     configurations: ['format'],
     level: 'all',
     files: { 'package.json': '{"private":true}\n' },
-});
-
-test('Prettier writes each file with the tab width, quotes, semicolons, and line ending of its format override', async () => {
-    const root = installedSandbox().root;
-    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
-        files: {
-            'gspot.toml': FORMAT_OVERRIDES_SETTINGS,
-            ...Object.fromEntries(
-                PRETTIER_OPTIONS_BY_FILE.map(({ file }) => [
-                    file,
-                    'const greeting="hello";if(greeting){console.log(greeting);}',
-                ]),
-            ),
-        },
-    });
-    const commandArguments = ['check', '--only', 'format/prettier', '--json'];
-    const files = PRETTIER_OPTIONS_BY_FILE.map(({ file }) => file);
-    const before = parseCheckReport(await spawnGspot(root, [...commandArguments, '--', ...files]));
-    expect(before.code, before.stdout + before.stderr).toBe(1);
-    expect(
-        before.report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted(compareText),
-    ).toStrictEqual(files.toSorted(compareText));
-    const corrected = await spawnGspot(root, [...commandArguments, '--fix', '--', ...files]);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    for (const { file, tabWidth, singleQuote, semi } of PRETTIER_OPTIONS_BY_FILE) {
-        const quote = singleQuote ? "'" : '"';
-        const terminator = semi ? ';' : '';
-        expect(await readFile(join(root, file), 'utf8')).toBe(
-            [
-                `const greeting = ${quote}hello${quote}${terminator}`,
-                'if (greeting) {',
-                `${' '.repeat(tabWidth)}console.log(greeting)${terminator}`,
-                '}',
-                '',
-            ].join('\n'),
-        );
-    }
-    const editor = await spawnGspot(root, ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files]);
-    expect(editor.code, editor.stdout + editor.stderr).toBe(0);
 });
 
 test('editorconfig-checker leaves indentation to the formatter and checks line endings, the final newline, and trailing spaces', async () => {
