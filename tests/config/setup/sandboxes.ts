@@ -43,8 +43,6 @@ export const INIT_FILES = {
 
 export const CANCELED_CHECK_NOTE = 'The check was canceled.';
 
-export const MISE_LOCK_ENVIRONMENT = { MISE_GITHUB_ATTESTATIONS: 'false', MISE_SLSA: 'false' } as const;
-
 export const GIT_ISOLATION_ENVIRONMENT = {
     GIT_CONFIG_NOSYSTEM: '1',
     GIT_CONFIG_GLOBAL: '',

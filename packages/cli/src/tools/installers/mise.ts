@@ -16,12 +16,14 @@ import {
     MISE_FORCE_FLAG,
     MISE_INSTALL_ARGUMENTS,
     MISE_LOCK_ARGUMENTS,
+    MISE_LOCK_ENVIRONMENT,
     MISE_LOCKED_ENVIRONMENT,
     MISE_PLATFORM_PREFIX,
     MISE_RELEASE_HOSTS,
     MISE_RELEASE_PROTOCOL,
     MISE_TOOL_NOUN,
     MISE_TRUSTED_PATHS_VARIABLE,
+    NETWORK_ADVICE,
     UV_TOOL,
 } from '#cli/config/tools/installers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -36,6 +38,7 @@ import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { findMisePin, findMissingBuild, listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 import type { GeneratedFile, MiseInstall, MiseLockfile, MiseToolPin, ToolInstall } from '#cli/types/tools.ts';
 
 function selectMiseTools(install: ToolInstall) {
@@ -54,6 +57,10 @@ function selectMiseTools(install: ToolInstall) {
     return { pins, hookTools, toolNamesByPin };
 }
 
+function isGithubLimit(result: Pick<SpawnResult, 'stdout' | 'stderr'>): boolean {
+    return GITHUB_RATE_LIMIT.test(`${result.stdout}\n${result.stderr}`);
+}
+
 async function runMiseInstall(install: ToolInstall, command: string[]): Promise<void> {
     const { root } = install.session;
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
@@ -64,6 +71,7 @@ async function runMiseInstall(install: ToolInstall, command: string[]): Promise<
         env: { ...MISE_LOCKED_ENVIRONMENT, ...trust.variables },
         step: `installing mise tools from ${GSPOT_PATHS.miseProject}`,
         name: `The command ${command.join(' ')}`,
+        readAdvice: (result) => (isGithubLimit(result) ? GITHUB_TOKEN_MESSAGE : NETWORK_ADVICE),
     });
 }
 
@@ -120,12 +128,13 @@ async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): 
         step: `locking the mise tools in ${GSPOT_PATHS.miseLockfile}`,
         cwd: scratch.path,
         env: {
+            ...MISE_LOCK_ENVIRONMENT,
             [MISE_TRUSTED_PATHS_VARIABLE]: scratch.path,
             [MISE_CEILING_PATHS_VARIABLE]: dirname(scratch.path),
         },
     });
     const output = redactInstallOutput(result, []);
-    const tokenAdvice = GITHUB_RATE_LIMIT.test(output) ? `\n${GITHUB_TOKEN_MESSAGE}` : '';
+    const tokenAdvice = isGithubLimit(result) ? `\n${GITHUB_TOKEN_MESSAGE}` : '';
     if (result.code !== 0)
         throw new GspotError(
             'install',

@@ -7,7 +7,12 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { MISE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
+import {
+    GITHUB_TOKEN_MESSAGE,
+    MISE_LOCK_ENVIRONMENT,
+    MISE_PROJECT_MESSAGE,
+    NETWORK_ADVICE,
+} from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installMiseTools, isMiseLockfileFresh, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
@@ -218,6 +223,39 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
     for (const value of named) expect(error.message).toContain(value);
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
+});
+
+test('mise lock skips the provenance lookups that use up the GitHub limit', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    install.misePath = 'mise';
+    using commands = fakeCommands('mise', async (_command, options) => {
+        await writeFile(join(options.cwd, 'mise.lock'), '[tools]\n');
+        return buildProcessResult({});
+    });
+    await captureRejection(installMiseTools(install));
+    const [, options] = commands.mock.calls.find(([command]) => command[1] === 'lock')!;
+    expect(options.env).toMatchObject(MISE_LOCK_ENVIRONMENT);
+});
+
+test('a GitHub limit named before the output is cut names the token, and not the network', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
+    const session = await openSession(sandbox.path);
+    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    install.misePath = 'mise';
+    const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
+    await createFileTree(sandbox.path, { [project.path]: project.content });
+    const lockfile = buildToolLockfiles(session.toolConfigurations)[GSPOT_PATHS.miseLockfile]!;
+    using _commands = fakeCommands('mise', async (command, options) => {
+        if (command[1] === 'lock') await writeFile(join(options.cwd, 'mise.lock'), lockfile);
+        return buildProcessResult({
+            code: command[1] === 'install' ? 1 : 0,
+            stderr: `No lockfile URL found for the tool\n${'progress\n'.repeat(1000)}`,
+        });
+    });
+    const { message } = await captureRejection(installMiseTools(install));
+    expect(message).toContain(GITHUB_TOKEN_MESSAGE);
+    expect(message).not.toContain(NETWORK_ADVICE);
 });
 
 test.each(['tools = [', '<<<<<<< HEAD\n[tools]\n=======\n[tools]\n>>>>>>> branch\n'])(

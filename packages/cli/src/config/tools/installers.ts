@@ -64,7 +64,9 @@ export const MISE_PROJECT_MESSAGE =
 export const MISE_STALE_PROJECT_MESSAGE =
     'gspot runs mise in .gspot only while .gspot/mise.toml is the file that gspot generates. Run gspot install.';
 
-export const GITHUB_RATE_LIMIT = /rate limit/iu;
+export const GITHUB_RATE_LIMIT = /rate limit|No lockfile URL found/iu;
+
+export const MISE_LOCK_ENVIRONMENT = { MISE_GITHUB_ATTESTATIONS: 'false', MISE_SLSA: 'false' } as const;
 
 export const GITHUB_TOKEN_MESSAGE =
     'GitHub limits the release lookups of mise without a token. Set GITHUB_TOKEN to a GitHub token, then run gspot install again.';

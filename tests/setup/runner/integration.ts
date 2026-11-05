@@ -9,7 +9,6 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import {
     GSPOT_LAUNCHER_PATH,
     LINE_BREAK,
-    MISE_LOCK_ENVIRONMENT,
     PACKED_PACKAGES_FILE,
     TOOL_PATHS_FILE,
 } from '#tests/config/setup/sandboxes.ts';
@@ -57,7 +56,6 @@ const launcherFolder = dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH));
 
 resources.use(
     overrideEnvironment({
-        ...MISE_LOCK_ENVIRONMENT,
         GITHUB_ACTIONS: undefined,
         MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
         MISE_CACHE_DIR: join(TEST_RUN_FOLDER, 'mise-cache'),

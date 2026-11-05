@@ -71,19 +71,26 @@ Record and run one install command, and stop when it exits with an error.
 @param options.env variable overrides for the child process.
 @param options.step what the command does, which gspot prints as it starts.
 @param options.name how the error names the command.
+@param options.readAdvice what the error tells the user to do, when the output says more than a network failure.
 */
 export async function runRequiredInstallStep(
     install: ToolInstall,
     command: readonly string[],
-    options: { cwd: string; env?: Record<string, string | undefined>; step: string; name: string },
+    options: {
+        cwd: string;
+        env?: Record<string, string | undefined>;
+        step: string;
+        name: string;
+        readAdvice?: (result: SpawnResult) => string;
+    },
 ): Promise<SpawnResult> {
-    const { name, ...spawn } = options;
+    const { name, readAdvice = () => NETWORK_ADVICE, ...spawn } = options;
     const result = await runInstallStep(install, command, spawn);
     const exit = result.signal === undefined ? `exit ${String(result.code)}` : `stopped by ${result.signal}`;
     if (result.code !== 0)
         throw new GspotError(
             'install',
-            `${name} failed (${exit}):\n${redactInstallOutput(result, [])}\n${NETWORK_ADVICE}`,
+            `${name} failed (${exit}):\n${redactInstallOutput(result, [])}\n${readAdvice(result)}`,
         );
     return result;
 }
