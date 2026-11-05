@@ -84,7 +84,7 @@ test('remove --scope writes removed_configurations with its reason and applies t
     expect(saved.scopes.get('api')!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
     const contents = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope'];
-    expect(contents).toStrictEqual([{ path: 'api', configurations: [], removed_configurations: { bash: reason } }]);
+    expect(contents).toStrictEqual([{ path: 'api', removed_configurations: { bash: reason } }]);
     await applyGeneratedFiles(sandbox.path);
     expect(existsSync(generated)).toBe(false);
 });

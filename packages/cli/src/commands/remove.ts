@@ -8,7 +8,7 @@ import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { listDetectedAdditions, selectProposedConfigurations } from '#cli/repository/proposals.ts';
+import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { addScopeTable, removeKey } from '#cli/settings/edit.ts';
@@ -23,7 +23,6 @@ import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function assertRemovable(names: string[], kept: string[]): void {
     for (const configuration of names) {
@@ -58,16 +57,6 @@ function removeUnusedSettings(table: TomlTable, scopePath: string): string {
     return removed.length === 0 ? '' : ` Removed settings ${removed.join(', ')}.`;
 }
 
-function listReturningConfigurations(
-    session: Session,
-    removal: { scopePath: string; removed: string[]; written: string[] },
-): string[] {
-    const { scopePath, removed, written } = removal;
-    const proposed = selectProposedConfigurations({ repository: session.repository, options: {} });
-    const detected = scopePath === '' ? proposed.rootNames : (proposed.scopeConfigurations.get(scopePath) ?? []);
-    return removed.filter((name) => detected.includes(name) || !written.includes(name));
-}
-
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
     const {
         root,
@@ -90,14 +79,13 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     }
     const previous = scopeTable['removed_configurations'];
     const removed = options.configurations.filter((name) => selected.includes(name));
-    const written = scopeSettings.configurations;
-    const returning = listReturningConfigurations(context.session, { scopePath, removed, written });
-    scopeTable['configurations'] = written.filter((name) => !removed.includes(name));
-    const reasons = {
+    const remaining = scopeSettings.configurations.filter((name) => !removed.includes(name));
+    if (remaining.length > 0) scopeTable['configurations'] = remaining;
+    else delete scopeTable['configurations'];
+    scopeTable['removed_configurations'] = {
         ...(isTable(previous) && previous),
-        ...Object.fromEntries(returning.map((name) => [name, options.reason])),
+        ...Object.fromEntries(removed.map((name) => [name, options.reason])),
     };
-    if (Object.keys(reasons).length > 0) scopeTable['removed_configurations'] = reasons;
     const where = scopePath === '' ? '' : ` from scope ${scopePath}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =

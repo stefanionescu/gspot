@@ -42,11 +42,11 @@ test('remove keeps the reason of each removed configuration, and add takes a nam
     expect(restoredSettings).not.toHaveProperty('removed_configurations');
 });
 
-test('remove records no removal of a configuration that detection does not select', async () => {
+test('remove stores the reason of a configuration that detection does not select, and leaves no empty list', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--reason', 'The scripts moved elsewhere.']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(written['configurations']).toStrictEqual([]);
-    expect(written['removed_configurations']).toBeUndefined();
+    expect(written['configurations']).toBeUndefined();
+    expect(written['removed_configurations']).toStrictEqual({ bash: 'The scripts moved elsewhere.' });
 });
