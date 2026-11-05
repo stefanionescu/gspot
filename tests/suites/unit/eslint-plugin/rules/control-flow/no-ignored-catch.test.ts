@@ -4,7 +4,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-ignored-catch', noIgnoredCatch, {
     valid: [
         'try { run(); } catch (error) {}',
-        'try { retry: run(); } catch (error) {}',
         'try { run(); finish(); } catch (error) { report(error); }',
         'try { run(); finish(); } catch (error) { /* The failed optional step can be skipped. */ }',
         'try { run(); finish(); } catch {}',

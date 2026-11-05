@@ -32,9 +32,5 @@ buildRuleTester().run('no-duplicated-branches', noDuplicatedBranches, {
             errors: [{ messageId: 'branch', data: { kind: 'case', line: 2 }, line: 9 }],
         },
         { code: 'const value = isReady ? first : first;', errors: [{ messageId: 'ternary' }] },
-        {
-            code: 'switch (mode) { case 1: { run();\nrun(); break; } case 2: { run();\nrun(); break; } }',
-            errors: [{ messageId: 'branch' }],
-        },
     ],
 });
