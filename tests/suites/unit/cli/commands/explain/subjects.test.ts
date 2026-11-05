@@ -101,6 +101,16 @@ test('a configuration name stays a name, and a tracked or ./ path explains the f
     const tracked = await runGspot(sandbox.path, ['explain', 'shellcheck/run.sh', '--json']);
     expect(tracked.code, tracked.stdout + tracked.stderr).toBe(0);
     expect(JSON.parse(tracked.stdout)).toMatchObject({ kind: 'path', subject: 'shellcheck/run.sh' });
+    const script = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
+    expect(script.code, script.stdout + script.stderr).toBe(0);
+    expect(pathOutputSchema.parse(JSON.parse(script.stdout))).toMatchObject({
+        kind: 'path',
+        subject: 'api/build.sh',
+        path: 'api/build.sh',
+        scope: 'api',
+        fileKind: 'source',
+        ignores: [...PATH_IGNORES],
+    });
 });
 
 test.each(['run.sh', './run.sh'])('explain resolves %s from its calling folder', async (subject) => {
@@ -117,26 +127,6 @@ test.each(['run.sh', './run.sh'])('explain resolves %s from its calling folder',
     const after = await runGspot(cwd, ['explain', subject, '--json']);
     expect(after.code, after.stdout + after.stderr).toBe(0);
     expect(JSON.parse(after.stdout)).toStrictEqual(JSON.parse(before.stdout));
-});
-
-test('a file path reports its scope, checks, and ignores', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': EXPLAIN_SETTINGS,
-        'api/build.sh': CLEAN_BASH_SCRIPT,
-    });
-
-    commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const explanation = pathOutputSchema.parse(JSON.parse(result.stdout));
-    expect(explanation).toMatchObject({
-        kind: 'path',
-        subject: 'api/build.sh',
-        path: 'api/build.sh',
-        scope: 'api',
-        fileKind: 'source',
-        ignores: [...PATH_IGNORES],
-    });
 });
 
 test.each([...UNKNOWN_SUBJECT_CASES])(
