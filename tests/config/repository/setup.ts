@@ -64,6 +64,7 @@ export const PROJECT_SCOPES: string[][] = [
     ['api', 'project'],
     ['apps/web', 'project'],
     ['ios', 'project'],
+    ['mobile', 'project'],
     ['services/billing', 'project'],
 ];
 
@@ -74,6 +75,7 @@ export const PROJECT_SCOPE_FILES = {
     'api/src/index.js': 'export {};\n',
     'ios/App.xcodeproj/project.pbxproj': '// !$*UTF8*$!\n',
     'ios/Sources/App.swift': 'import Foundation\n',
+    'mobile/Package.swift': '// swift-tools-version:6.0\n',
     'services/billing/pyproject.toml': '[project]\nname = "billing"\n',
     'tools/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
     'apps/web/supabase/config.toml': 'project_id = "web"\n',

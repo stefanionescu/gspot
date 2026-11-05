@@ -2,23 +2,14 @@ import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { parse } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
-import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { initOutputSchema } from '#cli/schemas/commands.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
-import {
-    CONFIGURATION_CHOICES,
-    NEXTJS_LOCALE_CASES,
-    PLATFORM_PROJECT_FILES,
-    TOOL_ONLY_PACKAGE,
-} from '#tests/config/generation/plan.ts';
+import { CONFIGURATION_CHOICES, NEXTJS_LOCALE_CASES, TOOL_ONLY_PACKAGE } from '#tests/config/generation/plan.ts';
 import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -132,21 +123,6 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         const generated = join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs'));
         expect(existsSync(generated)).toBe(true);
     }
-});
-
-test('init proposes a scope for a Swift package, not for a lint-only package, and says that its eslint pin moved to .gspot/package.json', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await testdir(PLATFORM_PROJECT_FILES);
-
-    commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const output = initOutputSchema.parse(JSON.parse(result.stdout));
-    const proposed = settingsSchema.parse(parse(output.settingsText) as TomlTable);
-    expect(proposed.scope!.map(({ path }) => path)).toStrictEqual(['ios']);
-    expect(proposed.scope!.find(({ path }) => path === 'ios')?.configurations).toStrictEqual(['swift']);
-    expect(output.plan.lintFolders).toStrictEqual([]);
-    expect(output.plan.change.filter(({ path }) => path === 'tools/lint/package.json')).toStrictEqual([]);
 });
 
 test.each([...NEXTJS_LOCALE_CASES])(

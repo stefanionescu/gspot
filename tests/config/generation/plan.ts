@@ -125,17 +125,6 @@ export const CONFIGURATION_CHOICES = [
     { configurations: ['python'], selected: ['python'] },
 ] as const;
 
-export const PLATFORM_PROJECT_FILES = {
-    'package.json': '{"name":"app","private":true,"type":"module"}\n',
-    'supabase/config.toml': 'project_id = "example"\n',
-    'ios/Package.swift': `// swift-tools-version:6.0
-import PackageDescription
-let package = Package(name: "App")
-`,
-    'ios/Sources/App/App.swift': 'let answer = 42\n',
-    'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
-} as const;
-
 export const NEXTJS_LOCALE_CASES = [
     { dependency: true, named: false, isSelected: false },
     { dependency: false, named: true, isSelected: true },
