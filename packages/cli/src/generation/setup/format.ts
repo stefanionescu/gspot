@@ -20,6 +20,7 @@ import {
 } from '#cli/config/generation.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { PRETTIER_ROOT_FILES, UNREADABLE_CONFIG_MESSAGE } from '#cli/config/repository/setup.ts';
+import { detectScriptIndent } from '#cli/generation/setup/script-indent.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
@@ -48,6 +49,8 @@ import type {
 } from '#cli/types/generation.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 import type { ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
+
+const SCRIPT_FILES = ['**/*.sh', '**/*.bash'];
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;
@@ -80,18 +83,23 @@ function convertPrettierFormat(options: PrettierStyle): TomlTable {
     };
 }
 
+function keepDiffering(paths: readonly string[], format: TomlTable, fields: TomlTable): TomlTable[] {
+    const differing = Object.entries(format).filter(([key, value]) => fields[key] !== value);
+    return differing.length === 0 ? [] : [{ paths: [...paths], ...Object.fromEntries(differing) }];
+}
+
 function buildFormatterOverrides(fields: TomlTable, repository: Repository): TomlTable[] {
     const tags = new Set(repository.files.filter((file) => file.kind === 'source').flatMap((file) => file.tags));
     const ruff = readRuffOptions(repository.root)?.options;
     const printWidth = readEditorconfig(repository.root)?.printWidth;
     const written = printWidth === undefined ? {} : { print_width: printWidth };
-    return FORMATTER_DEFAULTS.filter(({ tag }) => tags.has(tag)).flatMap(({ tag, paths, format }) => {
-        const carried = tag === PYTHON_TAG && ruff !== undefined ? convertRuffFormat(ruff) : {};
-        const differing = Object.entries({ ...format, ...written, ...carried }).filter(
-            ([key, value]) => fields[key] !== value,
-        );
-        return differing.length === 0 ? [] : [{ paths: [...paths], ...Object.fromEntries(differing) }];
-    });
+    return [
+        ...FORMATTER_DEFAULTS.filter(({ tag }) => tags.has(tag)).flatMap(({ tag, paths, format }) => {
+            const carried = tag === PYTHON_TAG && ruff !== undefined ? convertRuffFormat(ruff) : {};
+            return keepDiffering(paths, { ...format, ...written, ...carried }, fields);
+        }),
+        ...keepDiffering(SCRIPT_FILES, detectScriptIndent(repository), fields),
+    ];
 }
 
 function listLineSettings(files: string, fields: Record<string, string>): string[] {

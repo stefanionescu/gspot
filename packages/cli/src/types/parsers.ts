@@ -28,7 +28,7 @@ type CommandCall = {
     forwards: boolean;
 };
 
-export type ScriptFunction = {
+type ScriptFunction = {
     name: string;
     start: number;
     end: number;

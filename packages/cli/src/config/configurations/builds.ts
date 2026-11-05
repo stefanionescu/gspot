@@ -128,8 +128,6 @@ export const SWIFT_TESTING_FAILURE_LINE =
 
 export const FAILED_TEST_RULE = 'failed-test';
 
-export const COMMENT_NODES: ReadonlySet<string> = new Set(['comment', 'multiline_comment']);
-
 export const PERIPHERY_TOOL = 'periphery';
 
 export const PERIPHERY_COMMAND = [

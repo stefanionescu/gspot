@@ -14,9 +14,8 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
-import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import {
@@ -33,50 +32,6 @@ const SHFMT_CONFIGURATION = 'bash';
 
 // shfmt reads these keys, and no other tool does. They sit under [*] because shell scripts may have no extension.
 const SHFMT_EDITORCONFIG_OPTIONS = { switch_case_indent: true, simplify: true } as const;
-
-const SCRIPT_SECTION = '*.{sh,bash}';
-
-const SCRIPT_EXTENSIONS: ReadonlySet<string> = new Set(['.sh', '.bash']);
-
-const TAB_STEP = 'tab';
-
-/**
-List how far each indented line of a script steps in from the line above it, and the tab step for a line that a tab
-indents.
-
-@param text the script.
-*/
-function listIndentSteps(text: string): string[] {
-    let previousWidth = 0;
-    return text.split('\n').flatMap((line) => {
-        const indent = line.slice(0, line.length - line.trimStart().length);
-        if (indent.length === line.length) return [];
-        if (indent.includes('\t')) return [TAB_STEP];
-        const step = indent.length - previousWidth;
-        previousWidth = indent.length;
-        return step > 0 ? [String(step)] : [];
-    });
-}
-
-/**
-Find the indent that most lines of the .sh and .bash files use, so shfmt keeps the style of the scripts.
-
-@param planned the config file, whose session lists and reads the files.
-@returns undefined when no script line is indented.
-*/
-function detectScriptIndent(planned: PlannedConfig): Record<string, string | number> | undefined {
-    const { cache, repository } = planned.session;
-    const steps = repository.files
-        .filter((file) => file.kind === 'source' && SCRIPT_EXTENSIONS.has(extractExtension(file.path)))
-        .flatMap((file) => listIndentSteps(findText(cache, file.path) ?? ''));
-    const [step] =
-        [...Map.groupBy(steps, (each) => each)].toSorted(
-            ([firstStep, firstLines], [secondStep, secondLines]) =>
-                secondLines.length - firstLines.length || compareText(firstStep, secondStep),
-        )[0] ?? [];
-    if (step === undefined) return undefined;
-    return step === TAB_STEP ? { indent_style: 'tab' } : { indent_style: 'space', indent_size: Number(step) };
-}
 
 function buildSectionPath(pattern: string, scopePath: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))
@@ -151,7 +106,6 @@ function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
 
 /**
 Build .editorconfig: the EditorConfig sections of this repository, and the shfmt layout when a scope selects Bash.
-The indent of .sh and .bash files follows the scripts, and a format override still wins over it.
 
 @param planned the config file to build.
 */
@@ -161,7 +115,6 @@ function buildEditorconfigFile(planned: PlannedConfig): string {
     const hasBash = planned.session.scopes.some(({ configurations }) =>
         configurations.some(({ name }) => name === SHFMT_CONFIGURATION),
     );
-    const scriptIndent = hasBash ? detectScriptIndent(planned) : undefined;
     const sections = [
         {
             path: '*',
@@ -175,7 +128,6 @@ function buildEditorconfigFile(planned: PlannedConfig): string {
         ...Object.entries(EDITORCONFIG_FIXED_SECTIONS)
             .filter(([path]) => path !== '*')
             .map(([path, options]) => ({ path, options })),
-        ...(scriptIndent === undefined ? [] : [{ path: SCRIPT_SECTION, options: scriptIndent }]),
         ...listScopeFormats(settings).flatMap(({ scopePath, paths, format }) => {
             const options = {
                 ...(format.indent_style !== undefined && { indent_style: format.indent_style }),

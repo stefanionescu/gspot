@@ -231,6 +231,26 @@ test('init gives code without a style config the defaults of each formatter', as
     });
 });
 
+test.each([
+    { indent: ' '.repeat(4), written: { indent_width: 4 } },
+    { indent: '\t', written: { indent_style: 'tab' } },
+])('init records the indent of the scripts when it differs: $written', async ({ indent, written }) => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
+    await using sandbox = await testdir({
+        'run.sh': `main() {\n${indent}if true; then\n${indent}${indent}echo ready\n${indent}fi\n}\n`,
+        'tools/build.bash': `for name in a b; do\n${indent}echo "$name"\ndone\n`,
+        hook: '#!/bin/sh\nif true; then\n  echo ready\nfi\n',
+        'source.ts': 'export {};\n',
+    });
+    commitAll(sandbox.path);
+    const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
+    expect(parse(settingsText) as TomlTable).toHaveProperty('format.override', [
+        { paths: ['**/*.sh', '**/*.bash'], ...written },
+    ]);
+});
+
 test('init writes the formatter defaults once, for the Python files of every scope', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await testdir(WORKSPACE_PYTHON_FILES);

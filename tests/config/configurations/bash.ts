@@ -1,14 +1,5 @@
 import { BASH_HEADER } from '#tests/config/setup/languages.ts';
 
-export const SHEBANG_DOC_SCRIPT = String.raw`#!/usr/bin/env bash
-# log_line: print a timestamped message to standard error.
-# Arguments:
-#   Message text.
-log_line() {
-    printf '%s\n' "$1" >&2
-}
-`;
-
 export const BASH_SIZE_CASES = [
     {
         file: 'scripts/tall.sh',

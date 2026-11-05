@@ -209,8 +209,8 @@ test.each([
         fixed: '#!/bin/sh\nif true; then\n\techo ready\nfi\n',
     },
     {
-        name: 'the indent of the .sh files over the indent of every file',
-        tables: '[format]\nindent_width = 2\n',
+        name: 'the indent of a format override over the indent of every file',
+        tables: '[format]\nindent_width = 2\n\n[[format.override]]\npaths = ["**/*.sh", "**/*.bash"]\nindent_width = 4\n',
         path: 'example.sh',
         source: 'if true; then\n    echo ready\nfi\ncase "$1" in\nup) echo up ;;\nesac\n',
         fixed: 'if true; then\n    echo ready\nfi\ncase "$1" in\n    up) echo up ;;\nesac\n',

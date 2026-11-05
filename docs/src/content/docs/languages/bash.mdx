@@ -57,9 +57,9 @@ failed   bash/safety  2 findings
 
 ## Settings
 
-shfmt reads its layout options from `.editorconfig`, which gspot writes from the `format` settings. For `.sh` and
-`.bash` files, gspot sets the indent that most lines of your scripts already use. A `[[format.override]]` record takes
-priority over that indent. The same `.editorconfig` turns on the shfmt options `switch_case_indent` and `simplify`.
+shfmt reads its layout options from `.editorconfig`, which gspot writes from the `format` settings. When most lines of
+your `.sh` and `.bash` files use another indent, `gspot init` writes a `[[format.override]]` record for them, and you
+change the indent in that record. The same `.editorconfig` turns on the shfmt options `switch_case_indent` and `simplify`.
 
 `bash/function-size` reads four limits: `limits.bash.max_function_lines`, `max_function_branches`,
 `max_block_nesting`, and `max_function_assignments`. By default, a shell function may have 40 lines of code. To raise a
