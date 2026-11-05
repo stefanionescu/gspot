@@ -186,6 +186,8 @@ export function buildPluginPages(): Map<string, ReferencePage> {
     });
     const readme = readFileSync(new URL('../../../packages/eslint-plugin/README.md', import.meta.url), 'utf8');
     const requirements = `Requires Node.js \`${pluginPackage.engines.node}\` and ESLint \`${pluginPackage.peerDependencies.eslint}\`. The optional magic-numbers rule needs \`@typescript-eslint/eslint-plugin\` \`${pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin']}\`.`;
+    for (const heading of ['## Install\n', '## Use\n', '## Rule reference'])
+        if (!readme.includes(heading)) throw new Error(`The plugin README lost its heading ${heading.trim()}.`);
     const introduction = readme
         .slice(readme.indexOf('\n'), readme.indexOf('## Rule reference'))
         .trim()
