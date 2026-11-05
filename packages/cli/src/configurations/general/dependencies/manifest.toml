@@ -65,7 +65,7 @@ help = "Install the package again from an allowed registry, or add the host to `
 name = "lockfiles"
 runs = "scope"
 stage = "commit"
-summary = "Checks that npm, pnpm, Yarn, and text Bun lockfile downloads in each scope use HTTPS and an allowed registry host, and that the scope holds the lockfiles of one package manager."
+summary = "Checks that lockfile downloads use HTTPS and an allowed registry host, and that each scope holds the lockfiles of one package manager."
 why = "A lockfile line from another host installs code nobody chose, and reviewers rarely read those files."
 
 [[check]]

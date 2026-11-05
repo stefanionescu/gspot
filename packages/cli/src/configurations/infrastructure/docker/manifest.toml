@@ -75,7 +75,7 @@ files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*
 help = "Apply the fix that the message names."
 name = "instructions"
 stage = "commit"
-summary = "Reads `RUN`, `FROM`, and `ENTRYPOINT`: an install that can rewrite the lockfile, a download piped into a shell, an nginx tag that is not a full version, and a shell as the first `ENTRYPOINT` element."
+summary = "Finds `RUN` lines that can rewrite the lockfile or pipe a download into a shell, an nginx tag with no full version, and a shell as the `ENTRYPOINT`."
 why = "A build that rewrites its lockfile or runs a downloaded script ships code that nobody reviewed, and a shell as process 1 swallows the stop signal."
 
 [[check]]
@@ -85,7 +85,7 @@ help = "Add a .dockerignore beside the Dockerfile with the paths the message nam
 name = "dockerignore"
 runs = "once"
 stage = "commit"
-summary = "Checks that an ignore file sits beside every Dockerfile and keeps the `.git` folder, installed dependencies, and environment files out of the build, and that no `COPY` source sits in that file."
+summary = "Checks that an ignore file beside every Dockerfile keeps `.git`, installed dependencies, and environment files out of the build, and that no `COPY` source sits in it."
 why = "Without it, the daemon receives the whole folder, and a `COPY` of it puts the history and secrets into the image."
 
 [[check]]

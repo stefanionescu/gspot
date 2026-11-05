@@ -54,6 +54,6 @@ help = "Run the `fix:` command that the report prints for the rules that fix the
 name = "stylelint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }
 stage = "commit"
-summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
+summary = "Lints every stylesheet with the standard stylelint rules, and refuses left and right properties and values, `outline: none`, and a `font-size` outside `rem`, `em`, and `%`."
 tool = ["stylelint", "stylelint-config-standard", "postcss-html"]
 why = "A browser silently skips a declaration it cannot parse, so a typo in a property ships as a missing style."

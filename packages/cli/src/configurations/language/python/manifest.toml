@@ -429,7 +429,7 @@ limits = ["max_function_lines"]
 limit_languages = ["python"]
 name = "function-size"
 stage = "commit"
-summary = "Checks the code line count of each Python function against `limits.max_function_lines`."
+summary = "Checks the code line count of each Python function against `limits.python.max_function_lines`."
 why = "A long function does more than one job, and a reader has to hold all of it at once."
 
 [[check]]

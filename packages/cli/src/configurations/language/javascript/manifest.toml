@@ -291,7 +291,7 @@ exit_codes = [1]
 help = "Move the code that both files share to a module that imports neither of them."
 name = "import-cycles"
 stage = "push"
-summary = "Runs `import-x/no-cycle` alone, because it walks the whole import graph and is too slow for a commit."
+summary = "Reports import cycles between modules."
 tool = ["eslint", "node"]
 why = "A cycle makes the start order of a module depend on which file loads first."
 
@@ -353,7 +353,7 @@ limits = { "complexity/noExcessiveCognitiveComplexity" = "max_cognitive_complexi
 limit_languages = ["javascript", "typescript"]
 name = "biome"
 stage = "commit"
-summary = "Checks cognitive complexity against the scope's language limits."
+summary = "Checks the cognitive complexity of each function against `limits.javascript.max_cognitive_complexity` and `limits.typescript.max_cognitive_complexity`."
 why = "Nested control flow makes a function harder to follow and change."
 output = { format = "json", list = "diagnostics", fields = { file = "location.path", line = "location.range.start.line", column = "location.range.start.column", rule = "code.value", message = "message" } }
 

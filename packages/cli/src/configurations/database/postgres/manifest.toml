@@ -67,7 +67,7 @@ name = "row-level-security"
 when = { setting = "postgres.client_schemas" }
 runs = "scope"
 stage = "commit"
-summary = "Checks that every table in a client schema turns on row-level security and that client views keep it. In migrations after the frozen ones, checks that each policy names its roles, wraps identity calls in a subquery, and has a comment on `USING (true)`."
+summary = "Checks that client tables turn on row-level security, client views keep it, and policies after the frozen migrations name their roles and explain `USING (true)`."
 why = "A client that reaches the schema reads and writes every row of a table without row security."
 
 [[check]]

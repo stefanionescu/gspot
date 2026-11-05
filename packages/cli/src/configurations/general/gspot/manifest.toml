@@ -19,7 +19,7 @@ help = "Delete the file or the line that the message names, or replace the line 
 name = "conflicting-configs"
 runs = "once"
 stage = "commit"
-summary = "Finds a tool config that a generated config file replaces, such as `.commitlintrc.json` while commitlint runs, and what still calls or repeats such a tool: package scripts, lint-staged entries, hook lines, pre-commit entries, CI steps, repeated devDependencies, and the settings of black, flake8, isort, and mypy."
+summary = "Finds a tool config that a generated config file replaces, and the scripts, hooks, CI steps, and devDependencies that still call or repeat such a tool."
 why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing, and an lint command fails or runs a second lint stack beside gspot."
 
 [[check]]
@@ -64,5 +64,5 @@ help = "Give the change a reason, or undo it. Each message names the setting or 
 name = "weakenings"
 runs = "once"
 stage = "push"
-summary = "Lists each weakening of `gspot.toml` against the base revision: an added or wider ignore, a removed configuration, a lower level, a looser setting, and hooks or rule files turned off. A weakening with no reason is a finding, and one with a reason prints as a note."
+summary = "Reports a `gspot.toml` change with no reason that adds or widens an ignore, removes a configuration, lowers the level, loosens a setting, or turns off hooks or rule files."
 why = "A change to the settings is the easiest way to pass a check, and only its reason tells a reviewer that someone chose it."

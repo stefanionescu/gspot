@@ -21,10 +21,10 @@ tool = "lychee"
 [[check]]
 command = ["lychee", "--config", "{config_file:lychee}", "--root-dir", "{root}/.gspot/root-links", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 example = "The link `[Setup](missing.md)` reports a broken link when no `missing.md` exists. Point it at the setup guide, or add that file."
-help = "Point the link at the file or heading that exists, or delete it."
+help = "Point the link at the file or heading that exists, or delete it. A link that starts with `/` starts at the repository root."
 name = "lychee"
 stage = "commit"
-summary = "Checks that local documentation links reach existing files and valid anchor or text fragments. A link that starts with `/` starts at the repository root, as on GitHub; a scope that selects `site` leaves it to `site/lychee`."
+summary = "Checks that local documentation links reach existing files and valid anchor or text fragments."
 why = "A dead link inside the repository breaks silently, and readers hit it first."
 
 [[check]]
@@ -45,7 +45,7 @@ name = "missing-paths"
 reads_deleted_paths = true
 runs = "once"
 stage = "commit"
-summary = "Checks that documented paths point to tracked files, and that each `mise run`, `npm run`, `pnpm run`, `yarn run`, and `bun run` command names a task or script of its project. It leaves the targets of inline Markdown links to lychee."
+summary = "Checks that documented paths point to tracked files, and that each documented `run` command of mise or a package manager names a task or script."
 why = "A stale path in the docs sends the reader to a deleted file."
 
 [[check]]
