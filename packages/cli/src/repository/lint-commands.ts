@@ -57,12 +57,6 @@ function findCalledTool(command: string, search: CommandSearch, seen = new Set<s
         .find((tool) => tool !== undefined);
 }
 
-function findLine(text: string, needle: string, from = 1): number {
-    const lines = text.split(LINE_BREAK);
-    const index = lines.findIndex((line, lineIndex) => lineIndex >= from - 1 && line.includes(needle));
-    return index === -1 ? from : index + 1;
-}
-
 function buildRow(place: LintCommandPlace, command: string, search: CommandSearch, words = command): LintCommand[] {
     const tool = findCalledTool(words, search);
     if (tool === undefined) return [];
@@ -135,7 +129,7 @@ function readDependencyRows({ root, pins }: LintCommandSearch): LintCommand[] {
         return [
             {
                 file: PACKAGE_JSON,
-                line: findLine(text, `"${name}"`),
+                line: findLine(text, `"${name}"`, findLine(text, '"devDependencies"')),
                 source: 'dependency' as const,
                 command: `${name} ${version}, and gspot pins ${shipped}`,
                 tool: name,
@@ -176,6 +170,20 @@ function listPackageRows({ place, manifest }: LintCommandPackage, search: Comman
         ...Object.values(manifest.scripts).flatMap((command) => buildRow(place, command, search)),
         ...Object.values(manifest[SIMPLE_GIT_HOOKS_KEY]).flatMap((command) => buildRow(hook, command, search)),
     ];
+}
+
+/**
+Find the line of a text in a file, for an instruction that a person follows by its line number.
+
+@param text the file text.
+@param needle what the line holds.
+@param from the first line to search.
+@returns the line, or `from` when no line holds it.
+*/
+export function findLine(text: string, needle: string, from = 1): number {
+    const lines = text.split(LINE_BREAK);
+    const index = lines.findIndex((line, lineIndex) => lineIndex >= from - 1 && line.includes(needle));
+    return index === -1 ? from : index + 1;
 }
 
 /**

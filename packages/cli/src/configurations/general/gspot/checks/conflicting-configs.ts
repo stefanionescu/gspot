@@ -5,7 +5,8 @@ import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gsp
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { listLintCommands } from '#cli/repository/lint-commands.ts';
+import { findLine, listLintCommands } from '#cli/repository/lint-commands.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
@@ -27,7 +28,7 @@ function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck):
         .filter(({ tool, path, pointer }) => tools.has(tool) && !generated.has(path) && pointer !== true)
         .map(({ tool, path, shared, table, key }) => ({
             file: path,
-            line: 1,
+            line: table === undefined ? 1 : findLine(findText(session.root, path) ?? '', `[${table}`),
             rule: GSPOT_RULES.conflictingConfig,
             message: shared
                 ? `gspot writes the settings for ${tool}, so ${table ?? key ?? tool} in ${path} no longer applies. Delete the section, and move any rule you need into gspot.toml.`

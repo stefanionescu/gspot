@@ -114,6 +114,18 @@ test('lint commands: a hook id or a pygrep pattern that only names a tool gives 
     expect(await listRows(sandbox.path)).toStrictEqual([]);
 });
 
+test('lint commands: a devDependency names its own line, and not a script that calls the same tool', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify(
+            { scripts: { lint: 'eslint' }, devDependencies: { eslint: '^8.57.0' } },
+            null,
+            2,
+        ),
+    });
+    const rows = await listRows(sandbox.path);
+    expect(rows.filter(({ source }) => source === 'dependency').map(({ line }) => line)).toStrictEqual([6]);
+});
+
 test('lint commands: a root devDependency that gspot pins names both versions', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': JSON.stringify({ devDependencies: { eslint: '^8.57.0', vitest: '^3.0.0' } }, null, 2),

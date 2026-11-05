@@ -58,8 +58,8 @@ test('gspot/conflicting-configs reports a tool section that no generated file ed
         'a.css': 'a { color: red; }\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'gspot/conflicting-configs');
-    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-        { file: 'pyproject.toml', rule: 'conflicting-config' },
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'pyproject.toml', line: 4, rule: 'conflicting-config' },
     ]);
 });
 
