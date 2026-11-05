@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
+import { parseArgs } from 'node:util';
 
 import { parse } from '@decimalturn/toml-patch';
-import { expect, spyOn } from 'bun:test';
+import { expect } from 'bun:test';
 import type { z } from 'zod';
 
+import { planInit } from '#cli/generation/setup/planner.ts';
 import { runProgram } from '#cli/main.ts';
-import { checkReportSchema, initOutputSchema } from '#cli/schemas/commands.ts';
-import * as installers from '#cli/tools/installers/install.ts';
-import type { InitJson } from '#cli/types/commands/edits.ts';
+import { checkReportSchema } from '#cli/schemas/commands.ts';
 import type { CheckResult, RunReport } from '#cli/types/engine/run.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
+import type { InitPlanning } from '#cli/types/generation.ts';
+import type { Level, TomlTable } from '#cli/types/settings.ts';
 import type { CancelableSpawnOptions, CommandFailureJson, ErrorCode } from '#cli/types/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { readTree } from '#tests/setup/system/files.ts';
@@ -63,18 +63,23 @@ export async function runGspot(
 }
 
 /**
-Commit a folder and run init on it with --json, with an install of the tools that installs nothing. The result holds
-the plan and the settings that init writes.
+Commit a folder and plan init on it, with the --configurations and --level arguments of the command. It writes nothing.
+The result holds the plan and the settings that init writes.
 */
 export async function runInit(
     root: string,
     commandArguments: readonly string[] = [],
-): Promise<Required<Pick<InitJson, 'plan'>> & { settings: TomlTable }> {
+): Promise<Pick<InitPlanning, 'plan'> & { settings: TomlTable }> {
     commitAll(root);
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    const result = await runGspot(root, ['init', '--json', ...commandArguments]);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan, settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
+    const { values } = parseArgs({
+        args: [...commandArguments],
+        options: { configurations: { type: 'string', multiple: true }, level: { type: 'string' } },
+    });
+    const { plan, settingsText } = await planInit(root, {
+        cwd: root,
+        configurations: values.configurations,
+        level: values.level as Level | undefined,
+    });
     return { plan, settings: parse(settingsText) as TomlTable };
 }
 
