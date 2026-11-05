@@ -104,8 +104,4 @@ Do not let a final message, a false condition, or an optional cleanup check set 
 
 <!-- level: all -->
 
-### Script and function names
-
-- Executable scripts use `.sh` when invoked through a task runner or build rules.
-- Omit the extension on an executable script only when users invoke it as a command on `PATH`.
-- Do not name scripts or functions after shell builtins or common commands.
+Do not name scripts or functions after shell builtins or common commands.
