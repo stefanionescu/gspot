@@ -1,11 +1,18 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
+import { createFileTree } from 'testdirs';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+async function listDetectedNames(root: string): Promise<Array<string | undefined>> {
+    const findings = await runSandboxCheck(root, 'gspot/detected-configurations');
+    return findings.map(({ message }) => /Run gspot add (\S+?)[,\s]/u.exec(message)?.[1]);
+}
 
 test.each([
     {
@@ -92,4 +99,32 @@ test('gspot/detected-configurations says that a configuration with no check chan
     expect(findings.map(({ message }) => message)).toContainEqual(
         expect.stringContaining('zustand changes the lint rules for this code') as string,
     );
+});
+
+test('detection leaves the tool projects in .gspot out, and reads your pyproject.toml', async () => {
+    await using sandbox = await createGitSandbox({});
+    const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings([]),
+        [GSPOT_PATHS.pythonProject]: python,
+        [GSPOT_PATHS.npmProject]: '{"dependencies":{"react":"19.1.1"}}',
+    });
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual([]);
+    await writeFile(join(sandbox.path, 'pyproject.toml'), python);
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['pytest', 'python']);
+});
+
+test('detection names each test framework that the package installs', async () => {
+    const dependencies = { '@nestjs/core': '11.2.3', jest: '30.2.0' };
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['nestjs']),
+        'package.json': JSON.stringify({ name: 'service', private: true, dependencies }),
+        'src/server.ts': 'export const port = 3000;\n',
+    });
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['jest']);
+    await writeFile(
+        join(sandbox.path, 'package.json'),
+        JSON.stringify({ name: 'service', private: true, dependencies: { ...dependencies, vitest: '4.1.11' } }),
+    );
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['jest', 'vitest']);
 });
