@@ -11,6 +11,7 @@ import {
     detectPackageManager,
     readPackageManagerVersion,
     readToolPackageManager,
+    selectStartRunner,
 } from '#cli/repository/javascript/package-manager.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
@@ -28,6 +29,19 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+test('the pnpm install of gspot names the workspace root, because pnpm refuses a plain add there', async () => {
+    await using sandbox = await testdir({
+        'package.json': JSON.stringify({
+            packageManager: 'pnpm@10.16.0',
+            devDependencies: { '@gspothq/cli': '0.0.0-test' },
+        }),
+        'pnpm-workspace.yaml': 'packages:\n  - packages/*\n',
+    });
+    expect(selectStartRunner(sandbox.path).installCommand).toBe(
+        'pnpm add --workspace-root --save-dev --save-exact @gspothq/cli@<version>',
+    );
+});
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
     await using sandbox = await createGitSandbox({});

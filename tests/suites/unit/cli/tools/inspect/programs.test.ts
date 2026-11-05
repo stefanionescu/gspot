@@ -271,3 +271,14 @@ test('a project tool names the install command of its package manager, or the mi
     const inProject = await inspectTool(buildToolSearch(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
     expect(inProject.help).toBe('Install the project dependencies first: node_modules is missing in app.');
 });
+
+test('at a pnpm workspace root, a project tool names the install command that pnpm accepts there', async () => {
+    const tool = getTool(readConfigurations().values(), 'vitest');
+    using _which = fakeExecutableLookup(null);
+    await using sandbox = await testdir({
+        'package.json': '{"packageManager":"pnpm@10.0.0"}',
+        'pnpm-workspace.yaml': 'packages:\n  - app\n',
+    });
+    const inspected = await inspectTool(buildToolSearch(sandbox.path), tool);
+    expect(inspected.help).toBe('Run pnpm add --workspace-root --save-dev --save-exact vitest.');
+});

@@ -56,7 +56,7 @@ function choosePin(root: string, planned: Session): Pick<InitPlanning, 'session'
             planned.repository.files.some(({ tags }) => CODE_LANGUAGES.some((tag) => tags.includes(tag))));
     const runner = hasManifest ? detectPackageManager(root, []).name : 'mise';
     return {
-        session: { ...planned, startRunner: buildStartRunner(runner) },
+        session: { ...planned, startRunner: buildStartRunner(runner, root) },
         pinPath: hasManifest ? PACKAGE_JSON : MISE_CONFIG_FILE,
     };
 }

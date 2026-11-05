@@ -106,6 +106,8 @@ export const START_RUNNERS = {
 
 export const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
+export const PNPM_WORKSPACE_INSTALL = 'pnpm add --workspace-root --save-dev --save-exact <package>@<version>';
+
 export const LERNA_FILE = 'lerna.json';
 
 export const RUSH_FILE = 'rush.json';

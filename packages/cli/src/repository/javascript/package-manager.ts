@@ -11,6 +11,8 @@ import {
     NPM_TOOL,
     PACKAGE_MANAGER_HASH_SUFFIX,
     PACKAGE_MANAGERS,
+    PNPM_WORKSPACE_FILE,
+    PNPM_WORKSPACE_INSTALL,
     START_RUNNERS,
     VERSION_FLAG,
 } from '#cli/config/repository/javascript.ts';
@@ -189,17 +191,30 @@ export function selectStartRunner(root: string): StartRunner {
         packageJson?.dependencies?.[cliPackage.name] !== undefined ||
         packageJson?.devDependencies?.[cliPackage.name] !== undefined;
     const packageManager = hasDependency ? detectPackageManager(root, []) : undefined;
-    return buildStartRunner(packageManager === undefined ? 'mise' : packageManager.name);
+    return buildStartRunner(packageManager === undefined ? 'mise' : packageManager.name, root);
+}
+
+/**
+Select the command that adds a package. pnpm refuses a plain add in the folder that holds its workspace file.
+
+@param name the program that adds the package.
+@param folder the folder that runs the command.
+*/
+export function selectInstallCommand(name: StartRunner['name'], folder: string): string {
+    return name === 'pnpm' && existsSync(join(folder, PNPM_WORKSPACE_FILE))
+        ? PNPM_WORKSPACE_INSTALL
+        : START_RUNNERS[name].installCommand;
 }
 
 /**
 Build the runner of a package manager or of mise.
 
 @param name the program that starts gspot.
+@param root the repository root.
 */
-export function buildStartRunner(name: StartRunner['name']): StartRunner {
-    const runner = START_RUNNERS[name];
-    return { name, ...runner, installCommand: runner.installCommand.replace('<package>', () => cliPackage.name) };
+export function buildStartRunner(name: StartRunner['name'], root: string): StartRunner {
+    const installCommand = selectInstallCommand(name, root).replace('<package>', () => cliPackage.name);
+    return { name, ...START_RUNNERS[name], installCommand };
 }
 
 /**
