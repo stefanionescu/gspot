@@ -133,15 +133,6 @@ function buildFrozenInstall(session: Session, scopePath: string, lockfile: Froze
     return buildPackageManagerCommand(runner, buildFrozenInstallArguments(lockfile, runner.version));
 }
 
-function listProjectLockfiles(session: Session): string[] {
-    const tracked = new Set(session.repository.files.map((file) => file.path));
-    return session.scopes.flatMap(({ path: scopePath }) =>
-        (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
-            .map((lockfile) => joinScope(scopePath, lockfile))
-            .filter((path) => tracked.has(path)),
-    );
-}
-
 /**
 Build one lint job for each system, each with one mise setup. With test checks, each system also gets a tests job,
 and its lint job leaves them out. Refuse a command from the repository that holds a GitHub expression: GitHub expands
@@ -224,10 +215,10 @@ Next.js project, which typed lint rules read.
 @returns the lines, each run from the repository root.
 */
 export function listProjectInstallLines(session: Session): string[] {
-    const lockfiles = new Set(listProjectLockfiles(session));
+    const tracked = new Set(session.repository.files.map((file) => file.path));
     return session.scopes.flatMap(({ path: scopePath, configurations }) => {
         const installs = (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
-            .filter((lockfile) => lockfiles.has(joinScope(scopePath, lockfile)))
+            .filter((lockfile) => tracked.has(joinScope(scopePath, lockfile)))
             .map((lockfile) => quoteCommand(buildFrozenInstall(session, scopePath, lockfile)));
         const setup = configurations.flatMap((configuration) => configuration.ci_setup);
         const lines = [
