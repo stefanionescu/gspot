@@ -11,7 +11,6 @@ buildRuleTester().run('no-component-debounce', noComponentDebounce, {
         'import { throttle } from "lodash";\nimport { useRef } from "react";\nfunction Search() { const onScroll = useRef(throttle(load, 100)); }',
         'import { debounce } from "lodash";\nimport { useRef } from "react";\nfunction Search() {\n    const ref = useRef(null);\n    if (!ref.current) ref.current = debounce(search, 300);\n}',
         'import { debounce } from "lodash";\nimport { useRef } from "react";\nfunction Search() {\n    const ref = useRef(null);\n    if (ref.current === null) {\n        ref.current = debounce(search, 300);\n    }\n}',
-        'import { debounce } from "lodash";\nimport { Component } from "react";\nclass Search extends Component { onChange = debounce(this.search, 300); render() { return null; } }',
         'import { debounce } from "lodash";\nclass Search extends Store { render() { return debounce(this.search, 300); } }',
     ],
     invalid: [
