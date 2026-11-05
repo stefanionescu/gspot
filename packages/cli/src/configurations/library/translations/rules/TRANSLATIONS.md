@@ -54,7 +54,6 @@ empty, error, and loading states.
   the scoped messages its interactive children need. Never send every locale, and never send the whole catalog.
 - Format numbers, currencies, dates, relative times, and time zones through locale-aware APIs. Never infer currency or
   time zone from language alone.
-- Use an explicit product time-zone policy. Define when relative timestamps refresh.
 - Give localized public routes localized metadata, and point each alternate link to the matching resource in that
   locale, including a resource missing in some languages. Never generate an alternate URL that redirects forever or
   describes missing content.
