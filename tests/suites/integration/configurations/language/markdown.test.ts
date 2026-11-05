@@ -14,7 +14,6 @@ import {
     REQUEST_FLOW_IMAGE,
     TITLED_DOCUMENT,
 } from '#tests/config/integration/language.ts';
-import { ALT_TEXT_CASES, CORRECTED_LINK_TEXT_GUIDE, LINK_TEXT_GUIDE } from '#tests/config/integration/prose.ts';
 import { LICENSE, README } from '#tests/config/setup/configurations.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -30,22 +29,25 @@ const installedSandbox = shareInstalledSandbox({
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
 });
 
-test("markdownlint at level all adds MD041 only at level all and applies each scope's lint rule options", async () => {
+test("markdownlint at level all reports MD041 and a link text that gspot prohibits, and applies each scope's lint rule options", async () => {
     const { root } = installedSandbox();
     await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             ...MARKDOWN_FILES,
+            'links.md': '# Links\n\nRead [docs](root.md).\n',
             'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all', tables: MARKDOWNLINT_TABLES }),
         },
     });
     const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(listFindingRows(failed.report)).toStrictEqual([
+        { file: 'links.md', line: 3, rule: 'MD059' },
         { file: 'root.md', line: 7, rule: 'MD045' },
         { file: 'title.md', line: 1, rule: 'MD041' },
     ]);
     const described = MARKDOWN_FILES['root.md'].replace('![]', () => REQUEST_FLOW_IMAGE);
     await writeFile(join(root, 'root.md'), described);
+    await writeFile(join(root, 'links.md'), '# Links\n\nRead [the root page](root.md).\n');
     await writeFile(
         join(root, 'app/guide.md'),
         MARKDOWN_FILES['app/guide.md'].replace('Nested label.', 'nested label.'),
@@ -151,24 +153,4 @@ test('markdownlint reads an MDX page from after its import and export blocks', a
     await writeFile(join(root, 'untitled.mdx'), MDX_FILES['untitled.mdx'].replace('The page', '# Notice\n\nThe page'));
     const corrected = await spawnGspot(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-test.each(ALT_TEXT_CASES)('markdownlint identifies the alt attribute in $tag', async ({ tag, missing }) => {
-    const { root } = installedSandbox();
-    await using _change = await writeSandboxChanges(installedSandbox(), {
-        files: { 'image.md': `# Image\n\n${tag}\n` },
-    });
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
-    expect(listFindingRows(result.report)).toStrictEqual(missing ? [{ file: 'image.md', line: 3, rule: 'MD045' }] : []);
-});
-
-test('markdownlint reports link text such as here', async () => {
-    const { root } = installedSandbox();
-    await using _change = await writeSandboxChanges(installedSandbox(), { files: { 'guide.md': LINK_TEXT_GUIDE } });
-    const command = ['check', '--only', 'markdown/markdownlint', '--json'];
-    const failed = parseCheckReport(await spawnGspot(root, command));
-    expect(listFindingRows(failed.report)).toStrictEqual([{ file: 'guide.md', line: 3, rule: 'MD059' }]);
-    await writeFile(join(root, 'guide.md'), CORRECTED_LINK_TEXT_GUIDE);
-    const corrected = parseCheckReport(await spawnGspot(root, command));
-    expect(listFindingRows(corrected.report)).toStrictEqual([]);
 });

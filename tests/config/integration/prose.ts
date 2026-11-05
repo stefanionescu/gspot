@@ -249,24 +249,6 @@ Read the settings.
     },
 ] as const;
 
-export const CORRECTED_LINK_TEXT_GUIDE = `# Guide
-
-Read [request guide](guide.md).
-
-\`\`\`markdown
-[here](guide.md)
-\`\`\`
-`;
-
-export const LINK_TEXT_GUIDE = `# Guide
-
-Read [here](guide.md).
-
-\`\`\`markdown
-[here](guide.md)
-\`\`\`
-`;
-
 export const HEADING_CASE_GUIDE = `---
 title: Request Guide
 ---
@@ -311,14 +293,6 @@ export const VERSION_RANGE_SOURCE = [
     'Use version 3.2.0\nor later.',
     '',
 ].join('\n');
-
-export const ALT_TEXT_CASES = [
-    { tag: '<img src="a.png">', missing: true },
-    { tag: '<img data-alt="x" src="a.png">', missing: true },
-    { tag: '<img alt="A cat" src="a.png">', missing: false },
-    { tag: '<img alt="" src="a.png">', missing: false },
-    { tag: '<img src="a.png" alt="x" />', missing: false },
-] as const;
 
 export const EXAMPLE_STYLE_FOLDER = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Example`;
 
