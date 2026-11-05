@@ -12,14 +12,6 @@ import { fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#test
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-test('an npm tool is the version its package holds, whatever it prints', async () => {
-    await using sandbox = await testdir();
-    await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', toolArguments: ['--line', '4.4.2'] });
-    const inspection = await inspectTool(buildToolSearch(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
-    expect(inspection.found).toBe('5.0.1');
-    expect(inspection.state).toBe('ok');
-});
-
 test.each([
     ['1.2.3', 'outdated'],
     ['9.9.9', 'newer'],

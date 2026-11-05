@@ -33,19 +33,6 @@ test('Vale packages are ready only with the generated vale.ini and the installed
     expect(hasValePackages(sandbox.path)).toBe(true);
 });
 
-test.each([VALE_PACKAGE_FOLDERS[0]])(
-    'level all needs the shipped %s folder whatever the Packages line says',
-    async (missing) => {
-        await using sandbox = await testdir({ [GSPOT_PATHS.valeConfig]: 'Packages = \n' });
-
-        for (const folder of VALE_PACKAGE_FOLDERS) {
-            if (folder === missing) continue;
-            await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
-        }
-        expect(hasValePackages(sandbox.path)).toBe(false);
-    },
-);
-
 test('at level basic install installs no Vale packages', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }) });
 

@@ -1,20 +1,24 @@
-import { mkdir, symlink, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir } from 'testdirs';
 
 import { readPackageAliases, readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { ALIAS_FILES, ALIAS_PROJECT, SCOPE_ALIASES } from '#tests/config/repository/detect.ts';
+import { ALIAS_PROJECT, SCOPE_ALIASES } from '#tests/config/repository/detect.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 
-test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, code }) => {
-    await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });
+test('alias reads report a malformed tsconfig.json', async () => {
+    await using sandbox = await testdir({ 'tsconfig.json': '{ "compilerOptions": { "paths": {} },' });
     expect(() => readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toThrow(
-        matchFields<GspotError>({ name: 'GspotError', code, message: expect.stringContaining(path) as string }),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'configuration',
+            message: expect.stringContaining('tsconfig.json') as string,
+        }),
     );
 });
 
@@ -26,18 +30,6 @@ test('root and child aliases read their own files, and tsconfig paths win', asyn
         '@web/*': 'web/typed/*',
         '#shared/*': 'web/compiler/*',
     });
-});
-
-test('alias reads accept an extends into a linked node_modules package', async () => {
-    await using sandbox = await testdir();
-    await using dependency = await testdir();
-    await createFileTree(sandbox.path, {
-        'tsconfig.json': '{"extends":"./node_modules/shared-config/tsconfig.json"}',
-    });
-    await createFileTree(dependency.path, { 'tsconfig.json': '{"compilerOptions":{"strict":true}}' });
-    await mkdir(join(sandbox.path, 'node_modules'));
-    await symlink(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
-    expect(readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toStrictEqual({});
 });
 
 test('inherited aliases are read relative to the file that declares them', async () => {

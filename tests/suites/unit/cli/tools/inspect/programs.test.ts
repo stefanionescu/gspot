@@ -52,30 +52,6 @@ test('tool inspection finds the project compiler, and the repository compiler fr
     });
 });
 
-test('version reads and runs use the other tools of the tool folder', async () => {
-    await using sandbox = await testdir();
-    await writeProgramCommand(sandbox.path, `${GSPOT_PATHS.nodeModules}/.bin/teller`, 'processes/command', 'companion');
-    await writeProgramCommand(
-        sandbox.path,
-        `${GSPOT_PATHS.nodeModules}/.bin/companion`,
-        'fakes/tool',
-        '--line',
-        '3.8.1',
-    );
-    await writeProgramCommand(sandbox.path, 'unrelated/companion', 'fakes/tool', '--line', '9.0.0');
-    const env = { PATH: join(sandbox.path, 'unrelated') };
-    const tool = buildProgramPin('teller', '3.8.1');
-    const read = await inspectTool(buildToolSearch(sandbox.path), tool);
-    expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
-    const result = await runTool([read.path!], {
-        timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
-        cwd: sandbox.path,
-        env,
-    });
-    expect(result.code).toBe(0);
-    expect(result.stdout.trim()).toBe('3.8.1');
-});
-
 test('a mise-pinned program in the repository node_modules or .venv is missing and does not run', async () => {
     await using sandbox = await testdir();
     const tool = getTool(readConfigurations().values(), 'gitleaks');

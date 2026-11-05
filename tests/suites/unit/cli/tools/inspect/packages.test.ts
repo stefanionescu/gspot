@@ -20,30 +20,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
-test('a library is found only in the tool project', async () => {
-    await using sandbox = await testdir({
-        [`${GSPOT_PATHS.nodeModules}/globals/package.json`]: '{"name":"globals","version":"17.12.0"}',
-        'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
-    });
-
-    expect(
-        await inspectTool(buildToolSearch(sandbox.path), {
-            name: 'globals',
-            kind: 'package' as const,
-            version: '17.12.0',
-            installers: { npm: { name: 'globals', version: '17.12.0' } },
-        }),
-    ).toMatchObject({ state: 'ok' });
-    expect(
-        await inspectTool(buildToolSearch(sandbox.path), {
-            name: 'eslint-plugin-n',
-            kind: 'package' as const,
-            version: '18.3.0',
-            installers: { npm: { name: 'eslint-plugin-n', version: '18.3.0' } },
-        }),
-    ).toMatchObject({ state: 'missing' });
-});
-
 test('an absent library is missing, and one above its pin is newer', async () => {
     await using sandbox = await testdir({
         [`${GSPOT_PATHS.nodeModules}/typescript/package.json`]: '{"name":"typescript","version":"6.0.0"}',

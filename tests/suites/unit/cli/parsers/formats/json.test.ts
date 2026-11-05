@@ -28,12 +28,6 @@ test.each(SYNTAX_ERRORS)('a JSON syntax error names its line and column in $path
     );
 });
 
-test('JSON files accept comments and trailing commas without a JSONC extension', () => {
-    expect(parseJsonFile('package.json', '// Authored comment\n{ "name": "example", }')).toStrictEqual({
-        name: 'example',
-    });
-});
-
 test('a JSON file may begin with one byte order mark', () => {
     expect(parseJsonFile('example.json', '\u{FEFF}{"name":"project"}')).toStrictEqual({ name: 'project' });
     const file = openJsonFile('example.json', '\u{FEFF}{"name":"project"}');

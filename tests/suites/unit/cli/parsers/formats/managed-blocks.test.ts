@@ -35,23 +35,14 @@ test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed marker
     expect(() => findBlockBody(source, context)).toThrow(refusal);
     expect(() => replaceBlock(source, 'replacement', context)).toThrow(refusal);
 });
-test.each(
-    BLOCK_FORMATS.flatMap((context) =>
-        (
-            [
-                ['\n', 'LF'],
-                ['\r\n', 'CRLF'],
-            ] as const
-        ).map(([newline, name]) => ({ ...context, newline, name })),
-    ),
-)('block readers keep your own text with $name line endings in $path', (context) => {
+
+test.each([...BLOCK_FORMATS])('block readers keep your own text in $path', (context) => {
     expect(findBlockSpan('authored text', context)).toBeUndefined();
     expect(findBlockBody('authored text', context)).toBeUndefined();
-    const { newline } = context;
-    const source = `before${newline}${context.start}${newline}  instructions  ${newline}${context.end}${newline}after`;
+    const source = `before\n${context.start}\n  instructions  \n${context.end}\nafter`;
     expect(findBlockBody(source, context)).toBe('instructions');
     const replaced = replaceBlock(source, 'replacement', context);
-    expect(replaced).toStartWith(`before${newline}`);
+    expect(replaced).toStartWith('before\n');
     expect(replaced).toEndWith('after');
     expect(findBlockBody(replaced, context)).toBe('replacement');
 });

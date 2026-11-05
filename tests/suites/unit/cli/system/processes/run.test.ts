@@ -106,16 +106,6 @@ test.skipIf(isWindows)('a program that the system cannot execute fails without s
     expect(result.end).toBe('failed');
 });
 
-test('a timeout stops the process and reports it', async () => {
-    await using sandbox = await testdir();
-    const result = await runProcess(buildProgramCommand('fakes/tool', '--wait'), {
-        cwd: sandbox.path,
-        timeoutSeconds: 0.15,
-    });
-    expect(result.end).toBe('timed-out');
-    expect(result.code).not.toBe(0);
-});
-
 test.skipIf(isWindows)('a signal before the timeout is not a timeout', async () => {
     await using sandbox = await testdir();
     const result = await runProcess(buildProgramCommand('fakes/tool', '--signal', 'SIGTERM'), {

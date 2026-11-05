@@ -182,11 +182,6 @@ export const RUNTIME_DETECTION_CASES = [
     },
 ];
 
-export const ALIAS_FILES = [
-    { path: 'package.json', code: 'parse' },
-    { path: 'tsconfig.json', code: 'configuration' },
-] as const;
-
 export const ALIAS_PROJECT = {
     'package.json': '{"imports":{"#app/*":"./src/*","#root/*":"./root/*","#shared/*":"./package/*"}}',
     'tsconfig.json': '{"compilerOptions":{"paths":{"@root/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',

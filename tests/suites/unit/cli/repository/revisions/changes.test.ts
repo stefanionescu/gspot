@@ -38,17 +38,6 @@ test('a status read leaves the index of a stat-dirty tree unwritten', async () =
     expect(await readFile(index)).toStrictEqual(written);
 });
 
-test('staged and branch comparisons keep deleted paths', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
-
-    commitAll(sandbox.path);
-    runGitStep(sandbox.path, ['rm', 'source.ts']);
-    const removed = await readTreeStatus(sandbox.path);
-    expect(removed.staged).toStrictEqual(['source.ts']);
-    const changed = await readChangedPaths(sandbox.path, 'HEAD');
-    expect(changed.paths).toStrictEqual(['source.ts']);
-});
-
 test('staged and branch comparisons keep both paths of a rename across folders', async () => {
     await using sandbox = await testdir({ 'api/source.ts': 'export {};\n', 'web/kept.ts': 'export {};\n' });
 

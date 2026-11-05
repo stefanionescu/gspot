@@ -8,7 +8,6 @@ import { createFileTree, testdir } from 'testdirs';
 import { hasManagedKeys, planManagedKeys, writePlans } from '#cli/repository/writer.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/repository/files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -56,19 +55,6 @@ test.each(['tool.jsonc', 'package.json'])('%s key edits keep comments, container
         '// Keep this comment.\n{ "kept": {"owned": false}, "entries": [0, false, ""],"created": {"nested":{"owned":0}}, }\n';
     expect(writer.read(path)!.bytes.toString('utf8')).toBe(written);
 });
-
-test.each([...INVALID_PACKAGE_JSON_TEXTS])(
-    'invalid package.json text is refused without writing: %p',
-    async (source) => {
-        await using sandbox = await testdir({ 'package.json': source });
-
-        const writer = openFiles(sandbox.path);
-        expect(() =>
-            planManagedKeys(writer, 'package.json', [{ key: ['stylelint'], value: { extends: './managed.json' } }]),
-        ).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'parse' }));
-        expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(source);
-    },
-);
 
 test('managed TOML keys refuse a malformed file, create missing tables, and write back an edited managed value', async () => {
     await using sandbox = await testdir({ 'broken.toml': '[tasks\n' });

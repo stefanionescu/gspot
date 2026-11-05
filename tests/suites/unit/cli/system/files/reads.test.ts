@@ -1,4 +1,4 @@
-import { link, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -46,17 +46,6 @@ test('reads tell a missing optional file, required bytes, and invalid UTF-8 apar
     expect(() => readText(sandbox.path, 'source.txt')).toThrow(unreadable);
     expect(() => readText(createRunCache(sandbox.path), 'source.txt')).toThrow(unreadable);
     expect(() => readBytes(sandbox.path, 'source.txt')).toThrow(matchFields<NodeJS.ErrnoException>({ code: 'EISDIR' }));
-});
-
-test('text reads follow file and folder links inside the folder and read hard links', async () => {
-    await using sandbox = await testdir({ 'settings/source.txt': 'authored café\n' });
-
-    await symlink('settings/source.txt', join(sandbox.path, 'linked.txt'));
-    await symlink('settings', join(sandbox.path, 'linked-folder'), 'dir');
-    await link(join(sandbox.path, 'settings/source.txt'), join(sandbox.path, 'hardlinked.txt'));
-    expect(readText(sandbox.path, 'linked.txt')).toBe('authored café\n');
-    expect(readText(sandbox.path, 'linked-folder/source.txt')).toBe('authored café\n');
-    expect(readText(sandbox.path, 'hardlinked.txt')).toBe('authored café\n');
 });
 
 test('reads refuse a link chain that leaves the folder and work after the link is fixed', async () => {

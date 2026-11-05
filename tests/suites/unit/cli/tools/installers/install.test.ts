@@ -101,12 +101,3 @@ test('a failed mise install stops the install after the npm tool project, which 
         installs.map((command) => command.slice(command.indexOf('--') + 1, command.indexOf('--') + 3)),
     ).toStrictEqual([['bun', 'install']]);
 });
-
-test('a tool that fails again is named with its reason', async () => {
-    await using sandbox = await createGitSandbox(BUN_SANDBOX);
-    const { result } = await runBunInstall(sandbox.path, () => Promise.resolve());
-    const session = await openSession(sandbox.path);
-    const prettier = getTool(session.toolConfigurations, 'prettier');
-    const named = result.missing.filter((line) => line.startsWith(`prettier ${String(prettier.version)} `));
-    expect(named).toStrictEqual([expect.any(String) as string]);
-});

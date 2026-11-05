@@ -238,5 +238,3 @@ export const ROOT_DISCOVERY_CASES = [
     },
     { name: 'the requested folder when no gspot.toml exists', files: {}, start: '' },
 ] as const;
-
-export const INVALID_PACKAGE_JSON_TEXTS = ['', '[]'] as const;
