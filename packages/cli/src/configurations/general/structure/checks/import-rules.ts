@@ -21,6 +21,7 @@ import {
     UNCOVERED_FILE_MESSAGE,
 } from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
+import { listRefusedSwiftTypes } from '#cli/configurations/general/structure/checks/refused-types.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
@@ -187,7 +188,7 @@ async function validateSwiftImports(
             ),
         ),
     );
-    return findings.flat();
+    return [...findings.flat(), ...(await listRefusedSwiftTypes(session, planned, lookup))];
 }
 
 function findModuleFile(folder: string, dotted: string, files: ReadonlySet<string>): string | undefined {
@@ -264,8 +265,8 @@ function listPythonImports(syntaxRoot: Node, file: string, search: PythonSearch)
 }
 
 /**
-Applies [[import_rule]] to Python and Swift imports, and reports the code files of every language that no rule covers.
-ESLint applies the rules to JavaScript and TypeScript imports.
+Applies [[import_rule]] to Python and Swift imports and to the types that Swift files name, and reports the code files
+of every language that no rule covers. ESLint applies the rules to JavaScript and TypeScript imports.
 
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.

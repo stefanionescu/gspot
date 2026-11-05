@@ -135,8 +135,9 @@ A Swift import names a module, not a file, so gspot finds the folder of each mod
 `Package.swift`, with their `path:` or the default folders `Sources/<name>` and `Tests/<name>`. It reads the Xcode
 targets from the project file. The check skips a module from outside the repository, such as `Foundation`.
 
-A Swift rule reads `import` lines only, so it catches a crossing between modules and not one inside a target, where
-files use each other with no `import`. Separate Swift packages are the only enforcement inside an app today.
+A Swift rule reads `import` lines and the types that each file names, because files of one target use each other with no
+`import`. The check looks for a type that exactly one rule declares at the top level of a file. It reports the first use
+of that type in each file whose rule may not import the declaring rule.
 
 ```toml
 [[import_rule]]
@@ -147,6 +148,20 @@ paths = ["Sources/Models/**"]
 name = "views"
 paths = ["Sources/Views/**"]
 ```
+
+With these rules, a file of `models` that names a `CartView` struct from a file of `views` gets a finding, with or
+without an `import` line.
+
+The check matches names and does not resolve types, so it has these limits:
+
+- It does not see a type that a file reaches only through inference, such as `let total = cart.summary.total`.
+- It skips a name that several rules declare.
+- It skips a name that a nested type or generic parameter declares in the rule of the file or in a rule that it may
+  import.
+- It does not see a type whose declaration the Swift parser cannot read.
+- It reports a use of a framework type when one of your rules declares the same name.
+
+Separate Swift packages add what names cannot: the compiler refuses a use that a target does not import.
 
 ## Replace import-linter contracts
 

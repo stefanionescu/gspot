@@ -35,7 +35,7 @@ help = "Move the code into a rule that may import it, move that rule above, list
 name = "import-rules"
 runs = "scope"
 stage = "commit"
-summary = "Applies `[[import_rule]]` to Python and Swift imports, and reports code files that no import rule covers. ESLint applies the rules to JavaScript and TypeScript imports."
+summary = "Applies `[[import_rule]]` to Python and Swift imports and to the types that Swift files name, and reports code files that no import rule covers. ESLint applies the rules to JavaScript and TypeScript imports."
 when = { setting = "import_rule" }
 why = "An import that crosses the layers that the rules describe, or a file outside every rule, breaks the structure that the rules promise."
 
