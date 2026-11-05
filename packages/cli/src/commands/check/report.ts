@@ -117,6 +117,8 @@ function formatFindings(result: CheckResult, { verbose }: { verbose: boolean }):
         const message = `and ${String(hidden)} more (--verbose prints every finding)`;
         lines.push(`  ${styleText('dim', message, { stream: process.stdout })}`);
     }
+    if (result.note !== undefined)
+        lines.push(`  ${styleText('dim', 'note:', { stream: process.stdout })} ${result.note}`);
     return [...lines, ...formatHelpLines(shown, result)];
 }
 

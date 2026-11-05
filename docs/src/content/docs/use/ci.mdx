@@ -166,6 +166,8 @@ Let the pipeline fail when gspot exits with a code other than 0. Exit code `1` m
 means that the run did not finish. A missing tool gives exit code 2, and the report names the tool.
 `gspot check --json` prints the report as JSON.
 
+In a monorepo, run your build before the checks, because `tsc` reads the types of a workspace package from its build.
+
 Do not cache or upload credentials. To cache downloads and installed tools, build the cache key from the gspot version,
 the files in `.gspot/` that pin the tools, and your lockfiles.
 

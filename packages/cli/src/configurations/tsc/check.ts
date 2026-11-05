@@ -1,11 +1,14 @@
 import { dirname, join, relative } from 'node:path';
 
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { listCompilerFiles, runTsc, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -13,6 +16,27 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+const MISSING_MODULE_RULE = 'TS2307';
+
+const QUOTED_MODULE = /'(?<name>[^']+)'/u;
+
+function addUnbuiltPackageNote(session: CheckSession, result: CheckResult): CheckResult {
+    const missing = result.findings.flatMap(({ rule, message }) =>
+        rule === MISSING_MODULE_RULE ? (QUOTED_MODULE.exec(message)?.groups?.['name'] ?? []) : [],
+    );
+    if (missing.length === 0) return result;
+    const packages = listWorkspaceFolders(session.root).flatMap(
+        (folder) => readPackageJson(session.root, join(folder, PACKAGE_JSON))?.name ?? [],
+    );
+    const name = packages.find((each) => missing.some((module) => module === each || module.startsWith(`${each}/`)));
+    return name === undefined
+        ? result
+        : {
+              ...result,
+              note: `${name} is a package of this repository, and its types may need a build. Run your build, then check again.`,
+          };
+}
 
 function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
     const checked = new Set(
@@ -76,7 +100,10 @@ async function checkTsc(session: CheckSession, planned: PlannedCheck): Promise<C
         scratch.path,
         session.root,
     );
-    return references === undefined ? result : removeChildScopeFindings(session, planned, result);
+    return addUnbuiltPackageNote(
+        session,
+        references === undefined ? result : removeChildScopeFindings(session, planned, result),
+    );
 }
 
 export const TSC_CHECKS: Readonly<Record<string, CheckCode>> = {
