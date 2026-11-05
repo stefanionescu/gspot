@@ -27,8 +27,8 @@ extensions rather than scattering them across files. Group SwiftUI dynamic prope
 ## Practices
 
 Use `let` by default and `var` for required mutation. Use an optional, not a sentinel, for a value that the program can
-omit. Compare it to `nil` when only presence matters, bind it when the code uses the value, and chain it for one-off
-access.
+omit, except a collection or a `Bool`, which takes an empty or default value. Compare it to `nil` when only presence
+matters, bind it when the code uses the value, and chain it for one-off access.
 
 A force unwrap or cast needs a proven invariant. Avoid global mutable state: prefer `static let` or a computed
 `static var` to a stored one.
