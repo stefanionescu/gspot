@@ -26,13 +26,13 @@ Do not repeat context the enclosing type, module, folder, or package already sup
 detail: `Car.make`, not `Car.carMake`.
 
 Give each concept one word across the repository, and each word one meaning. Before you give a word to a new concept,
-search the code for it. When the word already names another concept, choose a different one. Add the synonyms you reject
-to `naming.banned_words`, so the naming check reports them.
+search the code for it. When the word already names another concept, choose a different one.
 
 Pick one word for each concept the program shows, and use it everywhere.
 
-Add each word you reject to `naming.terms` with its replacement, such as `"config file" = "generated file"`. The naming
-check then reports the word in identifiers, and the prose check in documentation, code comments, and commit messages.
+Ask the user before you add a rejected word to `naming.terms` with its replacement, such as
+`"config file" = "generated file"`. The naming check then reports the word in identifiers, and the prose check in
+documentation, code comments, and commit messages.
 
 ## Functions and methods
 
