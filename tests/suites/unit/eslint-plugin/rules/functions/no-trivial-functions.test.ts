@@ -62,8 +62,11 @@ buildRuleTester().run<keyof (typeof noTrivialFunctions)['meta']['messages'], [Pa
                     { messageId: 'trivial', column: 88 },
                 ],
             },
+            {
+                code: 'function empty() {}',
+                errors: [{ messageId: 'trivial', data: { name: "function 'empty'", statements: '0 statements' } }],
+            },
             ...[
-                'function empty() {}',
                 '(() => work())();',
                 '(ready ? (() => work()) : fallback)();',
                 '(function () { work(); })();',
