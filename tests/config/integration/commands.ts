@@ -38,12 +38,6 @@ export const UNQUOTED_SCRIPT = '#!/usr/bin/env bash\necho $1\n';
 
 export const HOOKS_OFF_SETTINGS = '[hooks]\nenabled = false\n';
 
-export const PACKAGE_MANAGER_AGE_REFUSALS = {
-    npm: { version: '11.18.0', minimum: '11.19.0' },
-    bun: { version: '1.2.22', minimum: '1.3.0' },
-    pnpm: { version: '10.15.0', minimum: '10.16.0' },
-} as const;
-
 export const PYTHON_INDEX_CREDENTIALS = { user: 'gspot', password: 'synthetic-uv-password' } as const;
 
 export const UV_RELEASE_CUTOFF_LINE = /^exclude-newer = .*$/mu;

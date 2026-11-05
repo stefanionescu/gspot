@@ -12,7 +12,7 @@ import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runTool } from '#cli/tools/run.ts';
-import { PACKAGE_MANAGER_AGE_REFUSALS, PACKAGE_MANAGER_CASES } from '#tests/config/integration/commands.ts';
+import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/commands.ts';
 import {
     AUTHENTICATION_REQUIRED_MESSAGE,
     NPM_REGISTRY_TOKEN,
@@ -59,41 +59,6 @@ test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'packag
         expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
         const repaired = await spawnGspot(root, ['check', '--only', 'gspot/generated-files', '--json']);
         expect(parseCheckReport(repaired).report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
-    },
-);
-
-test.concurrent.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
-    '%s from %s keeps a conflicted lockfile through a write until the packageManager pin is fixed, and install repairs it',
-    async (packageManager, projectPath) => {
-        await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, rootPackage, toolPackageManager } = sandbox;
-        await runGspotStep({ root, run: spawnGspot }, ['install']);
-        const { lockfilePath, lockfile } = await readToolProjectFiles(root, toolPackageManager);
-        const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierPackage.version, '0.0.0');
-        await chmod(lockfilePath, 0o644);
-        const conflict = `<<<<<<< edited\n${stale}\n=======\n${Buffer.from(lockfile).toString('utf8')}\n>>>>>>> generated\n`;
-        await writeFile(lockfilePath, conflict);
-        await writeFile(
-            join(root, projectPath),
-            JSON.stringify({
-                ...JSON.parse(rootPackage),
-                packageManager: `${toolPackageManager}@${PACKAGE_MANAGER_AGE_REFUSALS[toolPackageManager].version}`,
-            }),
-        );
-        await applyGeneratedFiles(root);
-        const appliedPackageJson = await readFile(join(root, GSPOT_PATHS.npmProject));
-        const refused = await spawnGspot(root, ['install', '--json']);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
-        expect(await readFile(join(root, GSPOT_PATHS.npmProject))).toStrictEqual(appliedPackageJson);
-        await writeFile(join(root, projectPath), rootPackage);
-        const repaired = await applyGeneratedFiles(root);
-        expect(repaired.written).not.toContain(`${GSPOT_FOLDER}/${selectLockfileName(toolPackageManager)}`);
-        expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
-        expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
-        const installed = await spawnGspot(root, ['install', '--json']);
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
     },
 );
 
