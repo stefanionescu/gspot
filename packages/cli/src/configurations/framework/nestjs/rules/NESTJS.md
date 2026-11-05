@@ -39,6 +39,3 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 - Use `Test.createTestingModule` and `overrideProvider` to isolate service dependencies.
 - Exercise HTTP behavior with the real pipes, guards, and filters.
 - Close test applications in teardown.
-
-See the NestJS [response handling](https://docs.nestjs.com/controllers) and
-[authorization guidance](https://docs.nestjs.com/security/authorization).
