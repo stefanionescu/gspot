@@ -22,6 +22,14 @@ Read this rule when you change an HTTP service.
   storage, unless the public interface explicitly exposes the provider format.
 - Escape HTML for its rendering context, and never pre-escape JSON field values.
 
+### Keep out of public responses
+
+- Schema names, table names, column names, or function names.
+- Internal identifiers such as row IDs, user IDs, or session tokens.
+- Stack traces or file paths.
+- Raw upstream, provider, or database errors.
+- Implementation details such as trigger and policy names, or internal state like "deleted" flags.
+
 ## Sessions and transport
 
 - Terminate TLS at the proxy, and trust forwarding headers only from it.
@@ -42,6 +50,10 @@ Read this rule when you change an HTTP service.
 
 ## Operations
 
+- A startup failure stops the process before it accepts work.
+- On shutdown, set readiness to false, stop accepting work, drain in-flight work for a bounded time, close resources,
+  and exit.
+- A fatal runtime error stops new work, reports the failure, and exits.
 - Keep health and readiness endpoints cheap. Call no provider from them.
 - Broad rate limits sit at the edge, application limits in middleware, and route limits beside the route.
 - Either the proxy or the application compresses responses, not both. Under heavy traffic, the reverse proxy does it.

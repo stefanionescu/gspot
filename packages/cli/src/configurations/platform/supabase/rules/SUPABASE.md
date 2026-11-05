@@ -17,6 +17,7 @@ Read `POSTGRES.md` beside this file too. Supabase uses the API roles `anon`, `au
   clients must not read.
 - Roles Supabase creates for auth, cron, or storage stay scoped to the functions and schemas they need.
 - A table can skip the foreign key to `auth.users` so its history survives account deletion.
+- Check the `error` field of a Supabase call that returns `{ data, error }` before using `data`.
 - Keep `[api].max_rows` conservative to bound accidental or malicious payloads.
 
 ## Direct database connections
