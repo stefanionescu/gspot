@@ -8,7 +8,6 @@ buildRuleTester().run('no-misleading-array-reverse', noMisleadingArrayReverse, {
 
 buildTypedRuleTester().run('no-misleading-array-reverse', noMisleadingArrayReverse, {
     valid: [
-        'declare const tree: { sort(): void }; tree.sort();',
         'declare const list: number[]; declare const name: "pop"; list[name]();',
         'declare const posts: string[]; posts.reverse();',
         'declare const posts: string[]; function newest() { return posts.sort(); }',

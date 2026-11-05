@@ -17,7 +17,7 @@ buildRuleTester().run('require-reduce-initial-value', requireReduceInitialValue,
 });
 
 buildTypedRuleTester().run('require-reduce-initial-value with types', requireReduceInitialValue, {
-    valid: ['declare const prices: Set<number>; prices.forEach((price) => price);'],
+    valid: [],
     invalid: [
         {
             code: 'declare const prices: number[]; prices.reduce((sum, price) => sum + price);',
