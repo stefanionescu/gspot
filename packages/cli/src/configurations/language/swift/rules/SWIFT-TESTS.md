@@ -15,21 +15,7 @@ These rules cover XCTest, Swift Testing, and snapshot tests.
 - Test invalid payload mapping and validate external data when it enters the program.
 - Test cancellation and stale results for asynchronous operations.
 - Do not mock SwiftUI.
-- Do not test trivial getters, setters, or framework behavior.
 - Do not add a protocol only to make a mock when the code already accepts the network or database client as an argument.
-
-## Coverage by layer
-
-- Domain tests cover value validation, invariants, domain errors, and computed business properties.
-- Use case tests cover success, repository failure, validation failure, cancellation, and policy decisions.
-- Repository tests cover record mapping and error translation.
-- Network client tests cover the URL, the method, the headers, and the encoded body.
-- Network client tests also cover a non-HTTP response, a status outside 200 to 299, a decoding failure, and
-  cancellation.
-- When the project uses view models, test initial, loading, success, empty, and error states, then retry and stale
-  results.
-- When the project uses coordinators, test route stack changes, modal state, dismissal, root resets, and deep link
-  translation.
 
 ## Test data
 
