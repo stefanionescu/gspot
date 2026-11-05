@@ -52,11 +52,11 @@ and format on save then writes text that the check rejects. Give the extension t
 
 | Tool                 | Config file in `.gspot/configurations/` | VS Code setting                                                                                                           |
 | -------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Taplo                | `taplo.toml` in `general/data-files/`   | `evenBetterToml.taplo.configFile.path` of [Even Better TOML](https://github.com/tamasfe/taplo/tree/master/editors/vscode) |
-| typos                | `typos.toml` in `general/spelling/`     | `typos.config` of [typos-lsp](https://github.com/tekumara/typos-lsp)                                                      |
-| Vale, at level `all` | `vale.ini` in `general/prose/`          | `vale.valeCLI.config` of [Vale VSCode](https://github.com/chrischinchilla/vale-vscode)                                    |
-| SQLFluff             | `sqlfluff.cfg` in `language/sql/`       | `sqlfluff.config` of [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                                       |
-| SwiftFormat          | `swiftformat` in `language/swift/`      | `swiftformat.configSearchPaths` of [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)                    |
+| Taplo                | `taplo.toml` in `data-files/`           | `evenBetterToml.taplo.configFile.path` of [Even Better TOML](https://github.com/tamasfe/taplo/tree/master/editors/vscode) |
+| typos                | `typos.toml` in `spelling/`             | `typos.config` of [typos-lsp](https://github.com/tekumara/typos-lsp)                                                      |
+| Vale, at level `all` | `vale.ini` in `prose/`                  | `vale.valeCLI.config` of [Vale VSCode](https://github.com/chrischinchilla/vale-vscode)                                    |
+| SQLFluff             | `sqlfluff.cfg` in `sql/`                | `sqlfluff.config` of [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                                       |
+| SwiftFormat          | `swiftformat` in `swift/`               | `swiftformat.configSearchPaths` of [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)                    |
 
 These paths are the files of the root.
 

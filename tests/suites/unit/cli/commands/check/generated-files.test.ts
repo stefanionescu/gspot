@@ -123,7 +123,7 @@ test('generated-files reports absent files and tool lockfiles without writing th
     expect(checked.code).toBe(1);
     const findings = checked.report.checks.flatMap(({ findings }) => findings);
     expect(findings.every(({ rule }) => rule === 'absent')).toBe(true);
-    expect(findings.find(({ file }) => file === '.gspot/configurations/language/bash/shellcheckrc')).toMatchObject({
+    expect(findings.find(({ file }) => file === '.gspot/configurations/bash/shellcheckrc')).toMatchObject({
         rule: 'absent',
         help: 'Run gspot install.',
     });

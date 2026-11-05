@@ -35,7 +35,7 @@ test('long files checks authored covered languages and leaves generated, vendore
             tables: '[limits]\nmax_file_lines = 2\n',
         }),
         'source.py': LONG_PYTHON_FILE,
-        '.gspot/configurations/language/javascript/eslint/eslint.mjs': LONG_JAVASCRIPT_FILE,
+        '.gspot/configurations/javascript/eslint/eslint.mjs': LONG_JAVASCRIPT_FILE,
         '.gspot/generated.py': LONG_PYTHON_FILE,
         'vendor/copied.py': LONG_PYTHON_FILE,
         'source.js': LONG_JAVASCRIPT_FILE,

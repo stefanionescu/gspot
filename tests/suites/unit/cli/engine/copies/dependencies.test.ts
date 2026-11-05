@@ -133,7 +133,7 @@ test.each(['', 'nested/'])('revision copies link the installed Vale packages und
     const config = `${prefix}${GSPOT_PATHS.valeConfig}`;
     const packagePath = `${GSPOT_PATHS.valePackages}/Example/rule.yml`;
     await createFileTree(sandbox.path, {
-        [config]: 'StylesPath = ../../../vale\nPackages = Example\n',
+        [config]: 'StylesPath = ../../vale\nPackages = Example\n',
         [packagePath]: 'extends: existence\n',
         '.gitignore': `${GSPOT_PATHS.valePackages}/\n`,
     });

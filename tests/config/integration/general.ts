@@ -132,7 +132,7 @@ export const STAGED_FORMAT_SOURCE = {
 
 export const STAGED_FORMAT_PATHS = {
     source: 'app/value.js',
-    scopeConfig: `${GSPOT_PATHS.configurations}/general/format/scopes/app/prettier.json`,
+    scopeConfig: `${GSPOT_PATHS.configurations}/format/scopes/app/prettier.json`,
 } as const;
 
 export const STAGED_FORMAT_CHECK_ARGUMENTS = [

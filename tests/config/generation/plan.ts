@@ -16,7 +16,7 @@ export const REPLACED_PYPROJECT_TABLES = [
         table: 'tool.sqlfluff',
         text: '[tool.sqlfluff.core]\ndialect = "postgres"\n',
         source: { file: 'query.sql', text: 'SELECT 1;\n' },
-        generated: `${GSPOT_PATHS.configurations}/language/sql/sqlfluff.cfg`,
+        generated: `${GSPOT_PATHS.configurations}/sql/sqlfluff.cfg`,
     },
 ] as const;
 

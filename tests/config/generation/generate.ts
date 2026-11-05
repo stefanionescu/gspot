@@ -14,13 +14,13 @@ export const XCTEST_LINK_FILE_CASES = [
     {
         scope: '',
         pointers: {
-            '.swiftlint.yml': { parent: './.gspot/configurations/language/swift/swiftlint.yml', overrides: false },
+            '.swiftlint.yml': { parent: './.gspot/configurations/swift/swiftlint.yml', overrides: false },
             'AppTests/.swiftlint.yml': {
-                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                parent: '../.gspot/configurations/swift/swiftlint.yml',
                 overrides: true,
             },
             'ChildTests/.swiftlint.yml': {
-                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                parent: '../.gspot/configurations/swift/swiftlint.yml',
                 overrides: true,
             },
         },
@@ -29,15 +29,15 @@ export const XCTEST_LINK_FILE_CASES = [
         scope: 'ios # app',
         pointers: {
             'ios # app/.swiftlint.yml': {
-                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                parent: '../.gspot/configurations/swift/swiftlint.yml',
                 overrides: false,
             },
             'ios # app/AppTests/.swiftlint.yml': {
-                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
+                parent: '../../.gspot/configurations/swift/swiftlint.yml',
                 overrides: true,
             },
             'ios # app/ChildTests/.swiftlint.yml': {
-                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
+                parent: '../../.gspot/configurations/swift/swiftlint.yml',
                 overrides: true,
             },
         },
@@ -46,11 +46,11 @@ export const XCTEST_LINK_FILE_CASES = [
         scope: 'AppTests',
         pointers: {
             'AppTests/.swiftlint.yml': {
-                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                parent: '../.gspot/configurations/swift/swiftlint.yml',
                 overrides: true,
             },
             'AppTests/ChildTests/.swiftlint.yml': {
-                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
+                parent: '../../.gspot/configurations/swift/swiftlint.yml',
                 overrides: true,
             },
         },
@@ -106,10 +106,10 @@ export const IGNORED_CHECK_FILES = [
         name: 'ignoring SwiftLint and Periphery keeps SwiftFormat',
         settings: SWIFT_FORMAT_SETTINGS,
         files: { 'main.swift': 'let value = 1\n' },
-        kept: [`${GSPOT_PATHS.configurations}/language/swift/swiftformat`],
+        kept: [`${GSPOT_PATHS.configurations}/swift/swiftformat`],
         dropped: [
-            `${GSPOT_PATHS.configurations}/language/swift/swiftlint.yml`,
-            `${GSPOT_PATHS.configurations}/language/swift/periphery.yml`,
+            `${GSPOT_PATHS.configurations}/swift/swiftlint.yml`,
+            `${GSPOT_PATHS.configurations}/swift/periphery.yml`,
             GSPOT_PATHS.npmProject,
         ],
     },
@@ -118,7 +118,7 @@ export const IGNORED_CHECK_FILES = [
         settings: EDITORCONFIG_SETTINGS,
         files: { 'sample.json': '{"value":1}\n' },
         kept: ['.editorconfig'],
-        dropped: [`${GSPOT_PATHS.configurations}/general/format/prettier.json`, '.prettierignore'],
+        dropped: [`${GSPOT_PATHS.configurations}/format/prettier.json`, '.prettierignore'],
     },
 ] as const;
 
@@ -150,17 +150,17 @@ export const STYLELINT_PACKAGE_FIELDS = {
             keys: [
                 {
                     key: ['stylelint'],
-                    value: { extends: '../../.gspot/configurations/language/css/stylelint.json' },
+                    value: { extends: '../../.gspot/configurations/css/stylelint.json' },
                 },
             ],
         },
         {
             path: 'app/package.json',
-            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/language/css/stylelint.json' } }],
+            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/css/stylelint.json' } }],
         },
         {
             path: 'other/package.json',
-            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/language/css/stylelint.json' } }],
+            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/css/stylelint.json' } }],
         },
     ],
 };

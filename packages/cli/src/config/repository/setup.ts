@@ -256,9 +256,9 @@ export const CARRIED_TOOLS: ReadonlySet<string> = new Set([
     'commitlint',
 ]);
 
-export const MARKDOWNLINT_TARGET = `${GSPOT_PATHS.configurations}/language/markdown/markdownlint.jsonc`;
+export const MARKDOWNLINT_TARGET = `${GSPOT_PATHS.configurations}/markdown/markdownlint.jsonc`;
 
-export const COMMITLINT_TARGET = `${GSPOT_PATHS.configurations}/general/commits/commitlint.json`;
+export const COMMITLINT_TARGET = `${GSPOT_PATHS.configurations}/commits/commitlint.json`;
 
 export const MARKDOWNLINT_RUNNER_FILE = /cli2/u;
 
@@ -378,6 +378,6 @@ export const PRINTED_RULE_TOOLS = [
         check: 'css/stylelint',
         sample: /\.css$/u,
         hasSeverity: false,
-        gspotArguments: ['--config', '.gspot/configurations/language/css/stylelint.json'],
+        gspotArguments: ['--config', '.gspot/configurations/css/stylelint.json'],
     },
 ] as const;

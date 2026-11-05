@@ -22,8 +22,8 @@ export const GSPOT_PATHS = {
     uvLockfile: `${GSPOT_FOLDER}/${UV_LOCKFILE}`,
     valePackages: `${GSPOT_FOLDER}/vale`,
     valeReleases: `${GSPOT_FOLDER}/vale/releases.json`,
-    valeConfig: `${GSPOT_FOLDER}/configurations/general/prose/vale.ini`,
-    valeMessageConfig: `${GSPOT_FOLDER}/configurations/general/prose/commit-message.ini`,
+    valeConfig: `${GSPOT_FOLDER}/configurations/prose/vale.ini`,
+    valeMessageConfig: `${GSPOT_FOLDER}/configurations/prose/commit-message.ini`,
 } as const;
 
 export const FILE_KINDS = ['source', 'generated', 'vendored', 'binary'] as const;

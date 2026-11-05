@@ -143,7 +143,7 @@ test('at level basic, gspot removes the Vale configuration and the installed sty
     const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(existsSync(join(sandbox.path, '.gspot/vale'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot/configurations/prose/vale.ini'))).toBe(false);
 });
 
 test('writing the generated files preserves a copied header example and removes an obsolete scoped pointer file', async () => {

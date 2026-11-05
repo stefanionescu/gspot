@@ -163,4 +163,4 @@ export const NEXT_MESSAGES = {
     'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
 } as const;
 
-export const VALE_PACKAGES_INI = `StylesPath = ../../../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;
+export const VALE_PACKAGES_INI = `StylesPath = ../../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;

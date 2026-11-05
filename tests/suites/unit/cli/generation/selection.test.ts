@@ -53,8 +53,8 @@ test('a Ruff-only Python scope gets no type checker file or pointer file', async
 
     const paths = buildGeneratedFiles(await openSession(sandbox.path)).files.map((file) => file.path);
     expect(paths.filter((path) => /ruff\.toml|pyright/u.test(path))).toStrictEqual([
-        '.gspot/configurations/language/python/basedpyright.json',
-        '.gspot/configurations/language/python/ruff.toml',
+        '.gspot/configurations/python/basedpyright.json',
+        '.gspot/configurations/python/ruff.toml',
         'linted/ruff.toml',
         'typed/pyrightconfig.json',
         'typed/ruff.toml',
@@ -126,7 +126,7 @@ test('an ignore whose reason equals a built-in section title keeps its paths in 
     const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
     const content = files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content;
     const jsconfig: unknown = JSON.parse(content);
-    expect(findValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
+    expect(findValueAt(jsconfig, ['exclude'])).toContain('../../../legacy/**');
 });
 
 function parseJson(text: string, path: string): void {

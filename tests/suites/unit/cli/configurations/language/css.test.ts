@@ -28,7 +28,7 @@ test('a Stylelint plugin record names its module and turns its rule on', async (
     const target = getConfigPath(session, 'stylelint', '');
     const generated = buildGeneratedFiles(session).files.find(({ path }) => path === target)!;
     const config = JSON.parse(generated.content) as Config;
-    expect(config.plugins).toStrictEqual(['../../../../tools/plugin.mjs']);
+    expect(config.plugins).toStrictEqual(['../../../tools/plugin.mjs']);
     expect(config.rules?.['acme/no-red']).toBe(true);
 });
 

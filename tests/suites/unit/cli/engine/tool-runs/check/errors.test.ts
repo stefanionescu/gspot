@@ -102,7 +102,7 @@ test('a command check whose config file is missing errors before it runs and nam
     });
     expect(result).toMatchObject({
         status: 'error',
-        note: expect.stringContaining('.gspot/configurations/general/format/prettier.json') as string,
+        note: expect.stringContaining('.gspot/configurations/format/prettier.json') as string,
         findings: [],
     });
 });

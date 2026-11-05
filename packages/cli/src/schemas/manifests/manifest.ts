@@ -289,12 +289,7 @@ export const manifestSchema = z
             ...config,
             target: config.root
                 ? config.file
-                : posix.join(
-                      GSPOT_PATHS.configurations,
-                      rest.configuration.group,
-                      rest.configuration.name,
-                      config.file,
-                  ),
+                : posix.join(GSPOT_PATHS.configurations, rest.configuration.name, config.file),
         })),
         checks: check.map(({ name, ...fields }) => ({ ...fields, id: `${rest.configuration.name}/${name}` })),
     }));

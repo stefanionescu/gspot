@@ -64,7 +64,7 @@ test('explain reads installed rule metadata without executing generated configur
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'css']),
         'source.ts': 'export const value = 1;\n',
-        '.gspot/configurations/language/javascript/eslint/eslint.mjs': 'throw new Error("Generated config executed");',
+        '.gspot/configurations/javascript/eslint/eslint.mjs': 'throw new Error("Generated config executed");',
     });
     await writeRulePackages(sandbox.path);
     for (const [check, rule, page] of RULE_PAGES) {

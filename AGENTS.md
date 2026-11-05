@@ -170,7 +170,7 @@ four shipped rules:
   per check, named after it, or per input that several checks read.
 - A configuration keeps its generators in `generate.ts`, or in one file for each file it writes, named for that file,
   such as `knip.ts` and `swiftlint.ts`.
-- `files/` holds the files that gspot copies or transpiles into `.gspot/configurations/<group>/<configuration>/`. A
+- `files/` holds the files that gspot copies or transpiles into `.gspot/configurations/<configuration>/`. A
   TypeScript module in `files/` runs in the user's repository, so it imports only Node built-ins and, with
   `import type`, types.
 - Code that several configurations share sits at the top of `configurations/`, such as `registry.ts`, `syntax.ts`, and

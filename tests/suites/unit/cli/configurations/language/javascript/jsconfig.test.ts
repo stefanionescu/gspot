@@ -39,9 +39,9 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
     const jsconfig = JSON.parse(
         files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content,
     ) as { files: string[]; exclude: string[] };
-    expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
-    expect(jsconfig.exclude).toContain('../../../../vendor');
-    expect(jsconfig.exclude).toContain(`../../../../${GSPOT_FOLDER}/**`);
+    expect(jsconfig.files).toStrictEqual(['../../../cloudflare-env.d.ts']);
+    expect(jsconfig.exclude).toContain('../../../vendor');
+    expect(jsconfig.exclude).toContain(`../../../${GSPOT_FOLDER}/**`);
 });
 
 test.each([

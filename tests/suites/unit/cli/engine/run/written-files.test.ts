@@ -14,7 +14,7 @@ test.each([
     ['only the files that gspot writes', [], 'passed'],
 ])('a check that reports %s keeps the findings outside the gspot files', async (_name, sources, status) => {
     const lines = [
-        '.gspot/configurations/language/javascript/eslint/functions.mjs:1: A type error.',
+        '.gspot/configurations/javascript/eslint/functions.mjs:1: A type error.',
         'eslint.config.mjs:1: A type error.',
         ...sources.map((source) => `${source}:1: A type error.`),
     ];

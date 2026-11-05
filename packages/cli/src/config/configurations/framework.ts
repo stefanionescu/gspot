@@ -2,7 +2,7 @@ import { TYPE } from '@formatjs/icu-messageformat-parser';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 
-export const TSCONFIG_COPY_FOLDER = `${GSPOT_PATHS.configurations}/language/typescript`;
+export const TSCONFIG_COPY_FOLDER = `${GSPOT_PATHS.configurations}/typescript`;
 
 export const TYPESCRIPT_TAG = 'typescript';
 

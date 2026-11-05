@@ -14,7 +14,7 @@ test('python.import_folders reach the basedpyright search paths', async () => {
             { 'main.py': 'VALUE = 1\n' },
         ),
     ) as { extraPaths: string[] };
-    expect(config.extraPaths).toStrictEqual(['../../../..', '../../../../vendor/host']);
+    expect(config.extraPaths).toStrictEqual(['../../..', '../../../vendor/host']);
 });
 
 test('basedpyright takes the lowest Python of requires-python, and leaves a nested scope out', async () => {
@@ -30,7 +30,7 @@ test('basedpyright takes the lowest Python of requires-python, and leaves a nest
         ),
     ) as { pythonVersion?: string; exclude: string[] };
     expect(config.pythonVersion).toBe('3.8');
-    expect(config.exclude).toContain('../../../../docs/source');
+    expect(config.exclude).toContain('../../../docs/source');
 });
 
 test('basedpyright reads the uv environment of a project with a tracked uv.lock, whether .venv exists yet or not', async () => {
@@ -42,7 +42,7 @@ test('basedpyright reads the uv environment of a project with a tracked uv.lock,
         }),
     ) as { venv?: string; venvPath?: string };
     expect(locked.venv).toBe('.venv');
-    expect(locked.venvPath).toBe('../../../..');
+    expect(locked.venvPath).toBe('../../..');
     const unlocked = JSON.parse(
         await buildGeneratedFile(buildSandboxSettings(['python']), basedpyrightPath, {
             'example.py': 'value = 1\n',
@@ -62,7 +62,7 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
             { 'example.py': 'value = 1\n' },
         ),
     ) as RuffConfig;
-    expect(ignored.lint['per-file-ignores']?.['../../../../**/test_*.py']).toStrictEqual(['S101', 'D102', 'D103']);
+    expect(ignored.lint['per-file-ignores']?.['../../../**/test_*.py']).toStrictEqual(['S101', 'D102', 'D103']);
 });
 
 test('tools.ruff.rules adds selectors to the rules of the level', async () => {
@@ -84,11 +84,11 @@ test('Ruff accepts an assert in the Python test paths and no other file', async 
         }),
     ) as RuffConfig;
     expect(ruff.lint['per-file-ignores']).toStrictEqual({
-        '../../../../**/test_*.py': ['S101'],
-        '../../../../**/*_test.py': ['S101'],
-        '../../../../**/tests/**': ['S101'],
-        '../../../../**/conftest.py': ['S101'],
-        '../../../../**/__main__.py': ['T20'],
+        '../../../**/test_*.py': ['S101'],
+        '../../../**/*_test.py': ['S101'],
+        '../../../**/tests/**': ['S101'],
+        '../../../**/conftest.py': ['S101'],
+        '../../../**/__main__.py': ['T20'],
     });
 });
 
@@ -99,7 +99,7 @@ test('Ruff accepts print in a module that pyproject.toml names as a console scri
             'pyproject.toml': '[project]\nname = "sample"\n[project.scripts]\nsample = "sample.cli:main"\n',
         }),
     ) as RuffConfig;
-    expect(ruff.lint['per-file-ignores']?.['../../../../**/sample/cli.py']).toStrictEqual(['T20']);
+    expect(ruff.lint['per-file-ignores']?.['../../../**/sample/cli.py']).toStrictEqual(['T20']);
 });
 
 test.each([

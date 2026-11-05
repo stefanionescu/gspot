@@ -11,7 +11,7 @@ import type {
     JavascriptBlock,
 } from '#cli/types/configurations/language.ts';
 
-export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
+export const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 
 const importLookups = new WeakMap<object, unknown>();
 

@@ -58,12 +58,7 @@ function buildConfigurationFiles(
 ): Array<{ importName: string; module: string; file: GeneratedFile }> {
     const folder = dirname(planned.targetPath);
     return [...blocks].map(([configuration, configurationBlocks]) => {
-        const path = join(
-            GSPOT_PATHS.configurations,
-            configuration.group,
-            configuration.name,
-            basename(planned.targetPath),
-        );
+        const path = join(GSPOT_PATHS.configurations, configuration.name, basename(planned.targetPath));
         const fileWriter = {
             ...writer,
             functions: new Set<string>(),

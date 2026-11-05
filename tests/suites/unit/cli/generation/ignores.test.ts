@@ -62,7 +62,7 @@ test('negative ignores follow positives for ordered tools and stay out of tools 
     const jsconfig = JSON.parse(output.files.find(({ path }) => path.endsWith('/jsconfig.json'))!.content) as {
         exclude: string[];
     };
-    expect(jsconfig.exclude).toContain('../../../../src/**');
+    expect(jsconfig.exclude).toContain('../../../src/**');
     expect(jsconfig.exclude.some((path) => path.includes('!'))).toBe(false);
     const jscpd = JSON.parse(output.files.find(({ path }) => path.endsWith('/jscpd.json'))!.content) as {
         ignore: string[];
@@ -218,8 +218,8 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     expect(listed.toSorted(compareText)).toStrictEqual([...written, '.gspot-copies/**'].toSorted(compareText));
     const ruff = files.find(({ path }) => path.startsWith(`${GSPOT_FOLDER}/`) && path.endsWith('ruff.toml'))!;
     const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
-    expect(excluded).toContain('../../../../.gspot/**');
-    expect(excluded).toContain('../../../../.gspot-copies/**');
+    expect(excluded).toContain('../../../.gspot/**');
+    expect(excluded).toContain('../../../.gspot-copies/**');
     expect(excluded.filter((pattern) => !pattern.endsWith('/**') && !pattern.endsWith('.py'))).toStrictEqual([]);
 });
 
@@ -292,7 +292,7 @@ test('the generated tool configs leave out what the tracked .gitignore files ign
     const pyright = JSON.parse(files.find(({ path }) => path.endsWith('/basedpyright.json'))!.content) as {
         exclude: string[];
     };
-    expect(pyright.exclude).toContain('../../../../**/other/**');
+    expect(pyright.exclude).toContain('../../../**/other/**');
     const typos: unknown = parse(files.find(({ path }) => path.endsWith('/typos.toml'))!.content);
     expect(findValueAt(typos, ['files', 'extend-exclude'])).toContain('**/other/**');
 });
