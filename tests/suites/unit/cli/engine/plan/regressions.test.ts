@@ -20,7 +20,15 @@ test('a shared function coverage limit enables Jest coverage without enabling py
     });
     const pytestPlan = plans.find(({ check }) => check.id === 'pytest/tests')!;
     const jestPlan = plans.find(({ check }) => check.id === 'jest/tests')!;
-    expect(stripCoverageArguments(pytestPlan, {})!.some((argument) => argument.startsWith('--cov'))).toBe(false);
+    expect(stripCoverageArguments(pytestPlan, {})).toStrictEqual([
+        'pytest',
+        '-q',
+        '--strict-markers',
+        '--strict-config',
+        '--no-header',
+        '-p',
+        'no:cacheprovider',
+    ]);
     expect(stripCoverageArguments(jestPlan, {})).toContain('--coverage');
 });
 

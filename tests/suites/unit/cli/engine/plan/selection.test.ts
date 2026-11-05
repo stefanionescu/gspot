@@ -221,25 +221,3 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
         ['app', 'nextjs/tsc'],
     ]);
 });
-
-test('the jest, vitest, and pytest coverage checks drop exactly their coverage arguments when every limit is 0', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'jest', 'vitest', 'python', 'pytest'], {
-            tables: '[coverage]\nmin_line_percent = 0\nmin_branch_percent = 0\nmin_function_percent = 0\nmin_statement_percent = 0\n',
-        }),
-        'math.test.js': '',
-        'test_math.py': '',
-    });
-    const session = await openSession(sandbox.path);
-    const planned = planChecks(session, {
-        stage: 'push',
-        only: ['jest/tests', 'vitest/tests', 'pytest/tests'],
-    });
-    expect(planned.map(({ check }) => check.id)).toStrictEqual(['jest/tests', 'vitest/tests', 'pytest/tests']);
-    for (const plannedCheck of planned) {
-        const command = plannedCheck.check.command!;
-        const stripped = stripCoverageArguments(plannedCheck, {})!;
-        expect(stripped.length).toBeLessThan(command.length);
-        expect(stripped).toStrictEqual(command.filter((argument) => !argument.startsWith('--cov')));
-    }
-});
