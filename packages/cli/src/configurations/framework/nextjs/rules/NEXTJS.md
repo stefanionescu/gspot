@@ -18,8 +18,6 @@ Validate and authorize every mutation at its server entry point. Routes, actions
 operation. Do not HTTP-fetch the application's own Route Handler for an initial server read. Rendering, `GET` requests,
 and prefetching perform no writes.
 
-See [Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components).
-
 ## Loading and failures
 
 Put a loading boundary around the section that waits. Start independent work early without moving protected reads
@@ -28,8 +26,6 @@ before authorization.
 Decide status, headers, cookies, redirects, and not-found behavior before streaming commits the response. Preserve
 framework control-flow exceptions. Check direct load, client navigation, refresh, Back, and failed prefetch; those paths
 may differ in state.
-
-See [streaming](https://nextjs.org/docs/app/guides/streaming).
 
 ## Cache contracts
 
@@ -40,6 +36,3 @@ affect results; session tokens stay out of keys.
 Default private data to uncached until an isolation design exists. Never let a cached decision retain revoked access.
 Clear private browser caches on logout. Invalidate after the write commits and before a terminating redirect; a failed
 refresh must not retry it.
-
-See [caching](https://nextjs.org/docs/app/getting-started/caching) and
-[revalidation](https://nextjs.org/docs/app/getting-started/revalidating).
