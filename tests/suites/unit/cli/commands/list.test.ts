@@ -113,6 +113,13 @@ test('the settings list reports inherited values and their source scope', async 
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
+test('the settings list leaves out a naming category that gspot set refuses', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['typescript']) });
+    const { stdout } = await runGspot(sandbox.path, ['list', 'settings']);
+    expect(stdout).toContain('naming.typescript.types.cases');
+    expect(stdout).not.toContain('naming.typescript.classes.cases');
+});
+
 test('the text settings list shortens long values', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {

@@ -13,6 +13,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
+import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { formatCount, formatScope } from '#cli/system/text.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
@@ -128,13 +129,16 @@ function buildConfigurationsResult(session: Session): CommandResult {
 function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson['settings'] {
     return scopes.flatMap((scope) => {
         const scopePath = scope.path;
-        return listInheritedSettings(scope.availableSettings, settings, scopePath).map((row) => ({
-            setting: row.key,
-            value: row.value,
-            source: row.origin,
-            reasonFor: row.setting.reason_for,
-            scope: scopePath,
-        }));
+        const rows = listInheritedSettings(scope.availableSettings, settings, scopePath);
+        return rows
+            .filter(({ key }) => findSettingSchema(key) !== undefined)
+            .map((row) => ({
+                setting: row.key,
+                value: row.value,
+                source: row.origin,
+                reasonFor: row.setting.reason_for,
+                scope: scopePath,
+            }));
     });
 }
 

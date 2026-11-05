@@ -233,3 +233,11 @@ test('explain reads a shipped default before init and prints plain command examp
     expect(rules.stdout).toContain('gspot ignore javascript/eslint --rule <rule> --reason "<why>"');
     expect(rules.stdout).not.toContain('`');
 });
+
+test('explain sends a naming category that follows its parent to the setting that set takes', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['typescript']) });
+    const result = await runGspot(sandbox.path, ['explain', 'naming.typescript.classes.cases']);
+    expect(result.stdout).toContain('Change it: gspot set naming.typescript.types.cases\n');
+    expect(result.stdout).not.toContain('gspot unset naming.typescript.classes.cases');
+    expect(result.stdout).toContain('No selected check reads naming.typescript.classes.cases at level basic.');
+});

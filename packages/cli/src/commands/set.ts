@@ -3,7 +3,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
 import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import { listSettingReaders } from '#cli/engine/skips.ts';
+import { isSettingUnread } from '#cli/engine/skips.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
@@ -161,11 +161,9 @@ function buildSettingChange(
     const shippedDefault = findSettingDefault(availableSettings, settings, match, edit.scopePath)?.value;
     const joined = joinSettingPaths(options.key, change.value, edit.scopePath);
     assertReason({ options, setting, change, joined, previous, shippedDefault });
-    const readers = listSettingReaders(settings, scope, options.key);
-    const notes =
-        options.key.startsWith('limits.') && readers.every((reader) => !reader.enabled)
-            ? [`No selected check reads ${options.key} at level ${settings.level}.`]
-            : [];
+    const notes = isSettingUnread(settings, scope, options.key)
+        ? [`No selected check reads ${options.key} at level ${settings.level}.`]
+        : [];
     const summary = formatSettingChange(change, { setting, options, scopePath: edit.scopePath, previous });
     return { setting, change, summary, notes };
 }
