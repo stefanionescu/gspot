@@ -10,9 +10,6 @@ Read this rule when you change Tailwind CSS classes or configuration.
 - Preserve the application's configured dark-mode strategy.
 - When the project configures a formatter plugin that sorts classes, let it own the order.
 
-Use the [source detection documentation](https://tailwindcss.com/docs/detecting-classes-in-source-files) for the
-installed major version.
-
 ## Styling conventions
 
 <!-- level: all -->
