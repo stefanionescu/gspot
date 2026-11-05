@@ -65,8 +65,8 @@ code. Do not add a guard for it.
 Keep one implementation of each concept, and one copy of each table of values, in the module that uses it. Extract
 shared code only when two or more callers need the same behavior now.
 
-- Inline a function of `{setting:limits.trivial_function_statements}` statements or fewer that has one caller, and delete
-  it. When one must stay, such as a method that an interface requires, ask the user. Then suppress it with the reason,
+- Inline a function of `{setting:limits.trivial_function_statements}` statements or fewer that has at most one caller, and
+  delete it. When one must stay, such as a method that an interface requires, ask the user. Then suppress it with the reason,
   or run `gspot ignore` for a gspot check.
 - Keep a function with one caller when it names a step and holds more statements than that limit. Do not split code into
   functions only to pass a size or complexity limit. Split it by the steps it performs.
