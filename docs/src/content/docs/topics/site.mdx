@@ -1,0 +1,37 @@
+---
+title: Static sites
+description: Check a built site, including sites deployed below a URL path.
+configurations: [site]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+gspot turns on `site` for Astro with `@astrojs/sitemap`, Starlight, VitePress, Docusaurus, Eleventy, or a repository with
+a `sitemap.xml`. A scope that depends on a server framework, such as Next.js, stays out. For another static site, run
+`gspot add site`, then `gspot install`.
+
+Before each push, gspot builds the site, then runs these checks:
+
+<ChecksTable guide="topics/site" />
+
+`gspot init` and `gspot add` write the command that runs your `build` script into `site.build_command`.
+`site.build_folder`, the folder of the built files, is `dist` by default. Set either one when it does not fit your
+project.
+
+Run `gspot check --only site/sitemap,site/lychee` to build the site and check its sitemap and internal links. The checks
+read the built files without starting a server, and the link check makes no network requests.
+
+## Sites below a URL path
+
+When your site deploys below a path such as `/docs/`, gspot reads that path from your sitemap index, and checks links and
+the sitemap against the built files. Without a sitemap index, gspot assumes the site deploys at `/`.
+
+## Unused styles
+
+`site/purgecss` reports each selector in the built styles that no built page uses, when the selector also appears in the
+style sheets or component style blocks of the scope. When a script adds a class at run time, no built page holds it, so
+the check reports it. List such classes with a reason:
+
+```shell
+gspot set site.allowed_classes menu-open --reason "The menu script adds it."
+```

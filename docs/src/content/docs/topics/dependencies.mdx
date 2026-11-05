@@ -1,0 +1,87 @@
+---
+title: Dependencies and licenses
+description: Check vulnerable packages, dependency licenses, and registry hosts.
+configurations: [dependencies, licenses]
+---
+
+import ChecksTable from '#docs/components/ChecksTable.astro';
+
+gspot checks your dependencies for known vulnerabilities, and the registry hosts that your lockfiles download from. It
+can also check their licenses. The `dependencies` and `licenses` configurations run these checks:
+
+<ChecksTable guide="topics/dependencies" />
+
+## Vulnerabilities
+
+Before each push that changes a lockfile, `dependencies/osv-scanner` reads your lockfiles and reports each package with a
+known vulnerability. Each run sends the names and versions of the locked packages to the Open Source Vulnerabilities (OSV)
+service. To fix a finding, update the package, then check again. To keep a package that has an advisory,
+[ignore the advisory](/use/ignore/#ignore-a-dependency-advisory) with a reason.
+
+The check does not read the lockfiles in `.gspot/`. To get fixes for the tools of gspot, upgrade gspot.
+
+A push that changes no lockfile skips this check, so a new advisory on a version you already locked stays unreported until
+a push changes a lockfile. gspot adds no scheduled job to your CI. To scan on a schedule, add a workflow of your own next
+to `.github/workflows/gspot.yml`. Copy its steps up to and including `Install gspot tools`, set `on.schedule`, and end
+with this step, which reads every lockfile:
+
+```yaml
+- run: gspot check --only dependencies/osv-scanner
+```
+
+## Lockfiles and package managers
+
+When a lockfile is out of date, run the install command of your package manager, such as `bun install`, and commit the
+lockfile.
+
+## Registry hosts
+
+By default, lockfile downloads may come from `registry.npmjs.org` and `registry.yarnpkg.com`. To allow another host, list
+every host, because `gspot set` replaces the whole list:
+
+```shell
+gspot set dependencies.allowed_registries registry.npmjs.org registry.yarnpkg.com npm.example.com --reason "<why>"
+```
+
+Downloads must still use HTTPS. A host allowed in a scope counts for that folder and the folders inside it.
+
+## Licenses
+
+`gspot add licenses` turns on the `licenses` configuration, and its check runs before each push. The check sends the names
+and versions of your locked packages to the deps.dev service, so it needs network access and a lockfile.
+
+gspot does not choose the allowed licenses for you, so the check skips until you set `licenses.allowed`. Decide which
+licenses your project accepts, then list them:
+
+```shell
+gspot set licenses.allowed MIT Apache-2.0 BSD-3-Clause
+gspot check --only licenses/allowed
+```
+
+The check reads the lockfiles of each scope, such as `uv.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, and
+`bun.lock`.
+
+## Allow a license or one package
+
+To allow every package under a license, add the license to `licenses.allowed`. To allow one package version whose license
+you reviewed, add a `[[licenses.allowed_package]]` record, and name the license in the reason:
+
+```toml
+[[licenses.allowed_package]]
+name = "colorama"
+version = "0.4.6"
+reason = "BSD. Installed metadata reports the reviewed BSD license in its short form."
+```
+
+`version` takes an exact version, a version range such as `^1.2.0`, or `*` for any version. For a package with one build
+for each platform, `name` takes a glob pattern:
+
+```toml
+[[licenses.allowed_package]]
+name = "@img/sharp-libvips-*"
+version = "*"
+reason = "LGPL-3.0-or-later. sharp loads the library as a separate file."
+```
+
+gspot reports a record that matches no package in the lockfile. Python package names match the way pip matches them:
+letter case and runs of `.`, `_`, and `-` do not matter.
