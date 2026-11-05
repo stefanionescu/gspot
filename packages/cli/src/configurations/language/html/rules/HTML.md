@@ -6,19 +6,10 @@ Read this rule when you change HTML or an HTML template.
 
 - `<html lang="...">` names the page language; set `dir` for right-to-left text.
 - One `<title>` that names the page, a `<meta name="viewport">`, and a `<meta charset="utf-8">` first in `<head>`.
-- Landmarks such as `header`, `nav`, `main`, `footer`, and `aside` structure the page. One `main`.
-
-## Elements
-
-- Use the element that means the thing: `button` for actions, `a` with a real `href` for links, and `nav` for
-  navigation. Use `ul` and `ol` for lists, `table` for data, `time` with `datetime` for dates, and `figure` and
-  `figcaption` for captioned media.
 
 ## Scripts
 
 - Use `defer` or `type="module"` for scripts that do not need to block parsing.
-- Load scripts from files. Write no inline `<script>` code, `on*` event handler attributes, or `javascript:` URLs.
-  Structured data in `<script type="application/ld+json">` stays inline.
 
 ## Templates and copy
 
