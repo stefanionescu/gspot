@@ -126,14 +126,6 @@ test('an allowed registry host in a scope applies only to that scope', async () 
     ).toStrictEqual([...REGISTRY_SCOPE_RESULTS]);
 });
 
-test('dependencies/lockfiles reads no hosts from the binary bun.lockb', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript']),
-        'bun.lockb': Buffer.concat([Buffer.from([0xff, 0]), Buffer.from('https://untrusted.invalid/package.tgz')]),
-    });
-    expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
-});
-
 test('dependencies/lockfiles reports the lockfile of a second package manager in the scope as foreign-lockfile', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),

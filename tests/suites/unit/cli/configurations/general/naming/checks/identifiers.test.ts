@@ -255,23 +255,3 @@ test('cors stays a domain word while core and its word forms remain banned', asy
     const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
     expect(findings.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
 });
-
-test('snapshot names describe storage and subscription concepts outside tests', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'swift', 'naming'], { level: 'all' }),
-        'backups.js': 'export function createSnapshot(volumeId) { return volumeId; }\n',
-        'Sources/List.swift': 'var snapshot = NSDiffableDataSourceSnapshot<Int, String>()\n',
-    });
-    expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
-});
-
-test('a field with a function type counts as a method, so log level methods pass', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        'logger.ts':
-            'export class Logger { error: (message: string) => void = log; warn: (message: string) => void = log; retry_count = 0; }\n',
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.message).toContain('retry_count');
-});

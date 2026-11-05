@@ -10,18 +10,6 @@ export const DEPTRY_SCOPE_PATHS = {
     other: { excluded: ['.gspot/tool.py'], kept: ['main.py'] },
 } as const;
 
-export const FUNCTION_SIZE_SOURCE = `def short():
-    # A comment.
-
-    return 1
-
-
-def long(value):
-    first = value
-    second = first
-    return second
-`;
-
 export const LOCKED_SCOPE_SETTINGS = {
     level: 'all',
     scopes: [
