@@ -93,6 +93,20 @@ test.each(['ordinary', 'constructor'])(
 );
 
 test.each([
+    { table: 'limits', key: 'limits.min_function_statements', renamed: 'limits.trivial_function_statements' },
+    {
+        table: 'limits.python',
+        key: 'limits.python.min_function_statements',
+        renamed: 'limits.python.trivial_function_statements',
+    },
+])('$key names $renamed', ({ table, key, renamed }) => {
+    using sandbox = createTemporaryFolder();
+    const text = `[${table}]\nmin_function_statements = 3\n`;
+    expect(validateSettingsText(text)).toStrictEqual([`gspot.toml:2: ${key}`]);
+    expect(() => readSettings(text, sandbox.path)).toThrow(`${key} is now ${renamed}, with the same value.`);
+});
+
+test.each([
     { rule: 'type-enum', setting: 'commits.types' },
     { rule: 'scope-enum', setting: 'commits.scopes' },
 ])('tools.commitlint.rules refuses $rule and names $setting', ({ rule, setting }) => {

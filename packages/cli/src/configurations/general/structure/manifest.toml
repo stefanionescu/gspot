@@ -97,11 +97,11 @@ example = "A Bash function that only calls another, and that one place calls, re
 files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
 help = "Inline the function at its call and delete it, or import from the module that defines the code and delete the forwarding file."
 level = "all"
-limits = ["min_function_statements"]
+limits = ["trivial_function_statements"]
 limit_languages = ["python", "swift", "bash"]
 name = "trivial-functions"
 stage = "commit"
-summary = "Finds named Python, Swift, and Bash functions at or under `limits.min_function_statements` that one place in the scope calls at most, methods included, the accessors at that limit, and files whose statements are only imports, re-exports, and aliases."
+summary = "Finds named Python, Swift, and Bash functions at or under `limits.trivial_function_statements` that one place in the scope calls at most, methods included, the accessors at that limit, and files whose statements are only imports, re-exports, and aliases."
 why = "A function of one statement that one place calls makes the reader jump for nothing."
 
 [[check]]

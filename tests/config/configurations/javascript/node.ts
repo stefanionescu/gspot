@@ -151,7 +151,7 @@ export const NODE_SCRIPT_TABLES = `[javascript]
 script_files = { value = ["scripts/**", "child/scripts/**", "build.config.ts"], reason = "This test sets the allowed locations explicitly." }
 
 [limits.javascript]
-min_function_statements = 3
+trivial_function_statements = 3
 max_function_parameters = 2
 
 [limits.typescript]
@@ -162,7 +162,7 @@ path = "child"
 configurations = ["javascript"]
 
 [scope.limits.javascript]
-min_function_statements = { value = 1, reason = "The child exercises the scoped structural limit." }
+trivial_function_statements = { value = 1, reason = "The child exercises the scoped structural limit." }
 `;
 
 export const EXTENSIONLESS_SCRIPT_CASES = [

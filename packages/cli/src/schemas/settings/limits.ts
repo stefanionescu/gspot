@@ -98,10 +98,11 @@ export const limitFields = addLimitLanguages({
         description: 'The most re-exports one index file may hold.',
         default: 20,
     }),
-    min_function_statements: allowReasonedValue(z.int().min(1).max(Number.MAX_SAFE_INTEGER), {
+    trivial_function_statements: allowReasonedValue(z.int().min(1).max(Number.MAX_SAFE_INTEGER), {
         configurations: ['structure'],
         description:
-            'Functions with this many statements or fewer are reported, nested functions included. A higher number reports more functions.',
+            'A function with this many statements or fewer, nested functions included, is reported when at most one place calls it.',
+        reason_for: 'lowering',
         default: 2,
     }),
     min_shared_prefix_files: allowReasonedValue(z.int().min(0).max(Number.MAX_SAFE_INTEGER), {

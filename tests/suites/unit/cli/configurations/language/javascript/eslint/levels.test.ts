@@ -63,7 +63,7 @@ test('all applies your rule options except in script and test files', async () =
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[limits.javascript]\nmin_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n',
+            tables: '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',

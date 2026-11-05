@@ -21,7 +21,7 @@ export const IMPORT_EXPLANATIONS = {
 export const TRIVIAL_FUNCTION_EXPLANATIONS = {
     [TRIVIAL_FUNCTION_RULES.trivialFunction]: {
         description:
-            'A named function has `limits.<language>.min_function_statements` statements or fewer, and one place in the scope calls it at most.',
+            'A named function has `limits.<language>.trivial_function_statements` statements or fewer, and one place in the scope calls it at most.',
         why: 'A function of one or two statements adds a name to read and hides the code that it calls.',
         fix: 'Move the body into its caller, and delete the function. When a framework calls it by name, ignore the finding.',
         example: 'A Python `def full_name(user): return user.name` that one line calls reports `trivial-function`.',

@@ -154,7 +154,7 @@ function formatTrivialFunction(node: Node, count: number, limit: number): string
 }
 
 function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): TrivialFunction[] {
-    const limit = getLimit(planned.scope.settings, 'min_function_statements', source.language);
+    const limit = getLimit(planned.scope.settings, 'trivial_function_statements', source.language);
     const functions = (source.captures.get(FUNCTION_LABEL) ?? []).filter(
         (node) => node.parent?.type !== DECORATED_PYTHON_NODE,
     );

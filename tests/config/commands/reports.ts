@@ -78,7 +78,7 @@ export const REASON_VALUES = [
         needsReason: true,
     },
     {
-        key: 'limits.min_function_statements',
+        key: 'limits.trivial_function_statements',
         root: '3',
         child: '1',
         value: [3, 1],

@@ -257,7 +257,7 @@ example = "The declaration `const unused = 1;` reports no-unused-vars. Delete th
 exit_codes = [1]
 fix = ["eslint", "--fix", "--config", "{config_file:eslint}", "{files}"]
 help = "Run the `fix:` command that the report prints for the rules that fix themselves, then read each remaining line; `gspot explain javascript/eslint <rule>` links the rule documentation."
-limits = { "max-lines" = "max_file_lines", "max-lines-per-function" = "max_function_lines", "max-params" = "max_function_parameters", "max-statements" = "max_function_statements", "max-depth" = "max_block_nesting", "max-nested-callbacks" = "max_callback_nesting", "complexity" = "max_cyclomatic_complexity", "gspot/no-trivial-files" = "max_index_exports", "gspot/no-trivial-functions" = "min_function_statements" }
+limits = { "max-lines" = "max_file_lines", "max-lines-per-function" = "max_function_lines", "max-params" = "max_function_parameters", "max-statements" = "max_function_statements", "max-depth" = "max_block_nesting", "max-nested-callbacks" = "max_callback_nesting", "complexity" = "max_cyclomatic_complexity", "gspot/no-trivial-files" = "max_index_exports", "gspot/no-trivial-functions" = "trivial_function_statements" }
 limit_languages = ["javascript", "typescript"]
 name = "eslint"
 needs = ["dependencies"]
