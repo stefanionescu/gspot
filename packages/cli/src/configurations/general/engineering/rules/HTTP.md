@@ -26,6 +26,12 @@ Read this rule when you change an HTTP service.
 
 - Terminate TLS at the proxy, and trust forwarding headers only from it.
 - When the service issues tokens, a revocation reaches every instance.
+- Cookies that carry sessions: `HttpOnly`, `Secure`, `SameSite`, explicit `Max-Age`, and a non-default name. Writes
+  never happen on `GET`. A cookie session needs cross-site request forgery (CSRF) protection on every state-changing
+  request.
+- Send security headers: HTTP Strict Transport Security (HSTS), `X-Content-Type-Options: nosniff`, frame policy,
+  referrer policy, and a Content Security Policy that the application's own scripts satisfy.
+- Never pair a wildcard Cross-Origin Resource Sharing (CORS) origin with credentials.
 
 ## Wire names
 
