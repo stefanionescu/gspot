@@ -1,6 +1,6 @@
 ---
 title: Concepts
-description: What configurations, checks, findings, levels, stages, and scopes mean, and which code gspot runs on your machine.
+description: Configurations, checks, findings, levels, stages, scopes, and the code that gspot runs on your machine.
 ---
 
 import InlineText from '#docs/components/InlineText.astro';
@@ -8,30 +8,31 @@ import { buildLevelRows } from '#docs/reference/levels.ts';
 
 ## Configurations
 
-A configuration is the gspot support for one language, framework, library, platform, or topic, such as `python` or
-`nextjs`. It holds the checks, the config files of the tools, and the rules for coding agents. `gspot init` turns on
-the configurations that match the files and dependencies it finds. Some configurations are on in every repository,
-such as `secrets` and `spelling`. The [configuration reference](/reference/configurations/) lists them all.
+A configuration is everything gspot knows about one language, framework, tool, or topic: which checks to run, how to set
+up each tool, and what to tell coding agents. `python`, `nextjs`, and `secrets` are configurations. `gspot init` turns on the
+configurations that match your files and dependencies, and some, such as `secrets` and `spelling`, are on in every
+repository. The [configuration reference](/reference/configurations/) lists them all.
 
-gspot reads your settings from `gspot.toml`. From those settings, it writes the config file of each tool and the rule
-files in `.gspot/rules/`. These are the [generated files](/reference/generated-files/). To change a setting, follow
-[Change settings](/configure/gspot-toml/).
+Your settings live in `gspot.toml`, and gspot writes each tool's config file and the rule files in `.gspot/rules/` from
+them. These are the [generated files](/reference/generated-files/), so to change one, you change its setting, as
+[Change settings](/configure/gspot-toml/) shows.
 
 ## Checks and findings
 
-A check runs one tool, such as ESLint, or code that ships with gspot. Each check has an ID of the form
-`<configuration>/<name>`, such as `python/ruff`. `gspot check --only`, `gspot ignore`, and `gspot explain` take that
-ID. A [command check](/configure/command-checks/) runs a command that you write, under an ID that you choose.
+A check runs one tool, such as ESLint, or code that ships with gspot, and reports each problem as a finding. Most findings
+name a file, a line, and a lint rule, which is one rule of a linter, such as `no-console` in ESLint. A check fails when it
+reports a finding.
 
-A finding is one message that a check reports. Most findings name a file, a line, and a lint rule. A lint rule is one
-rule of a linter, such as `no-console` in ESLint. A check fails when it reports a finding.
+Each check has an ID of the form `<configuration>/<name>`, such as `python/ruff`, and `gspot check --only`,
+`gspot ignore`, and `gspot explain` take that ID. A [command check](/configure/command-checks/) runs a command that you
+write, under an ID that you choose.
 
 `gspot doctor` reports problems with the setup itself, such as a missing tool or a Git hook that does not run. These
-problems are not findings. They have no check ID, and `gspot ignore` cannot turn them off.
+problems are not findings, so they have no check ID, and `gspot ignore` cannot turn them off.
 
 ## Levels
 
-The level decides how strict the checks are. gspot has two levels:
+The level decides how strict the checks are:
 
 <table>
     <thead>
@@ -57,9 +58,7 @@ The level decides how strict the checks are. gspot has two levels:
     </tbody>
 </table>
 
-The counts include the checks of every configuration that gspot ships. Your repository runs fewer: only the checks of
-the configurations that it uses, and only the checks that apply to it. Ruff runs with its preview rules turned on, but
-a Ruff preview rule runs only when a level names it, such as `PLW1514` at level `basic`.
+The counts cover every configuration that gspot ships, so your repository runs fewer.
 
 To change the level, run `gspot set level all`, then `gspot install`. To go back to `basic`, run `gspot unset level`.
 
@@ -67,24 +66,14 @@ To change the level, run `gspot set level all`, then `gspot install`. To go back
 
 The stage of a check decides when it runs:
 
-| Stage     | The check runs                           |
-| --------- | ---------------------------------------- |
-| `commit`  | Before each commit, on the staged files. |
-| `push`    | Before each push, on the pushed files.   |
-| `message` | On each new commit message.              |
-| `manual`  | Only when `gspot check --only` names it. |
+| Stage     | The check runs                                                     |
+| --------- | ------------------------------------------------------------------ |
+| `commit`  | Before each commit, in the `pre-commit` hook, on the staged files. |
+| `push`    | Before each push, in the `pre-push` hook, on the pushed files.     |
+| `message` | On each new commit message, in the `commit-msg` hook.              |
+| `manual`  | Only when `gspot check --only` names it.                           |
 
-Git runs the `commit` checks in the `pre-commit` hook, the `push` checks in the `pre-push` hook, and the `message`
-checks in the `commit-msg` hook. No hook runs the `manual` checks. CI runs the `commit` and `push` checks, and so does
-`gspot check` without `--stage`.
-
-```mermaid
-flowchart LR
-    accTitle: The checks of a commit and a push
-    accDescr: git commit runs the commit checks in the pre-commit hook and the message checks in the commit-msg hook. git push runs the push checks in the pre-push hook. CI runs the commit and push checks on the pushed branch.
-    commit["git commit"] --> precommit["pre-commit hook: commit checks"] --> message["commit-msg hook: message checks"]
-    push["git push"] --> prepush["pre-push hook: push checks"] --> ci["CI: commit and push checks"]
-```
+`gspot check` and CI run the `commit` and `push` checks, and `gspot check --only commit` or `--only push` runs one stage.
 
 [Git hooks](/use/hooks/) lists what each hook checks, and [CI](/use/ci/) lists what the CI job checks.
 
@@ -107,6 +96,3 @@ else wrote, review the code that gspot runs:
 - Tools in `node_modules/.bin`, `.venv/bin`, and the same folders under `.gspot/`.
 - Install settings: `.npmrc`, `uv.toml`, `[tool.uv]` in `pyproject.toml`, and the lockfiles in `.gspot/`.
 - Git hooks in `.gspot/hooks/`. After `gspot install`, Git runs them on commit, push, and checkout.
-
-gspot lets mise use `.gspot/mise.toml` only when the file matches what gspot wrote and no other mise file sits beside
-it. A `mise.local.toml` in `.gspot/` stops mise from running there.
