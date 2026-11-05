@@ -36,8 +36,7 @@
             "stylelint": [
                 "./node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
                 "./node_modules/.test-tools/node_modules/stylelint/lib/index.mjs"
-            ],
-            "typescript": ["./node_modules/.test-tools/node_modules/typescript"]
+            ]
         }
     },
     "include": ["tests/**/*.ts", ".mise/release/*.ts", "packages/cli/src/types/**/*.d.ts"]

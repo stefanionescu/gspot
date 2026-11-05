@@ -76,8 +76,7 @@ const gspotImportBoundariesList = [
             "html-validate": "node_modules/.test-tools/node_modules/html-validate",
             "prettier": "node_modules/.test-tools/node_modules/prettier/index.d.ts",
             "prettier/*": "node_modules/.test-tools/node_modules/prettier/*",
-            "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts",
-            "typescript": "node_modules/.test-tools/node_modules/typescript"
+            "stylelint": "node_modules/.test-tools/node_modules/stylelint/types/stylelint/index.d.ts"
         }
     }
 ];
