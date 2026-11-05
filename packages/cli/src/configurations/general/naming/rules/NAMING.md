@@ -77,9 +77,9 @@ When none fits, pick another plain one that names the act.
 
 <!-- level: all -->
 
-Name stored boolean columns and direct domain mappings as concise positive states without a prefix: `enabled`, `active`,
-`retryable`, and `webSearchEnabled`. Predicates, including computed ones, and presentation-state assertions start with
-`is`, `has`, or `can`. Name an action for what it does even when it returns a boolean, such as `sendInvite`.
+A stored field or column takes no prefix, such as `enabled` or `webSearchEnabled`. A boolean variable or parameter, and
+a predicate, starts with `is`, `has`, or `can`. Name an action for what it does even when it returns a boolean, such as
+`sendInvite`.
 
 ## Files and folders
 
