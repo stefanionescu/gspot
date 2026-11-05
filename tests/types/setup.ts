@@ -17,18 +17,14 @@ export type SandboxWrite = {
 
 type WorkflowStep = {
     name?: string;
-    id?: string;
     run?: string;
     uses?: string;
     if?: string;
     env?: Record<string, string>;
-    with?: Record<string, string>;
 };
 
 export type GithubWorkflow = {
-    name: string;
-    permissions: Record<string, string>;
-    jobs: Record<string, { name?: string; if?: string; 'runs-on': string; steps: WorkflowStep[] }>;
+    jobs: Record<string, { name?: string; 'runs-on': string; steps: WorkflowStep[] }>;
 };
 
 export type GitlabPipeline = { gspot: { script: string[] } };
@@ -162,10 +158,7 @@ export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; li
 
 export type EslintConfiguration = {
     rules: Record<string, [Linter.Severity, ...unknown[]]>;
-    languageOptions: { globals: Record<string, string | boolean>; sourceType: string };
-    plugins: Record<string, unknown>;
     settings: { next?: { rootDir: string } | undefined } & Record<string, unknown>;
-    linterOptions: { reportUnusedDisableDirectives: Linter.Severity };
 };
 
 export type PackageFieldScenario = {
