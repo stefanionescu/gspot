@@ -4,8 +4,8 @@ Read this rule when you change JavaScript or TypeScript code.
 
 ## Modules
 
-Do not convert existing CommonJS modules unless the task includes migrating them. Keep side-effect imports rare and
-explain what each one does. Browser code imports no server implementation.
+Do not convert existing CommonJS modules unless the task includes migrating them. Browser code imports no server
+implementation.
 
 ### Module conventions
 
@@ -26,8 +26,7 @@ explain what each one does. Browser code imports no server implementation.
 
 ## Objects and functions
 
-Use object literals for grouped arguments, and destructure fields when that makes the code clearer. A function that
-mutates its input names and documents that effect.
+A function that mutates its input names and documents that effect.
 
 Write a JSDoc comment as `/**` on its own line, then lines with no leading `*`, then `*/`.
 
