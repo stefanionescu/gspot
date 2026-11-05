@@ -4,24 +4,14 @@ Read this rule when you change a React Native or Expo app.
 
 Read `REACT.md` beside this file first.
 
-## Components and touch
+## Components
 
-- Give every touch target a size of at least 44 points on iOS or 48 dp on Android, with `hitSlop` where the drawing
-  takes less space.
-- Do not read `Dimensions` at module load. Use `useWindowDimensions`, which follows rotation and split view.
 - Respect the safe area on every screen, through the safe area context.
-
-### Touch conventions
-
-<!-- level: all -->
-
-- Use `Pressable` for a touch target, not a `Touchable` component.
 
 ## Lists
 
 - Keep `renderItem` and the row component stable: define them outside the render, or memoize them.
 - Give a list of fixed row height `getItemLayout`, so it scrolls to an index without measuring.
-- Render a list that can grow with `FlatList` or `SectionList`, never with `.map` inside a `ScrollView`.
 
 ## Styles
 
@@ -41,7 +31,7 @@ Read `REACT.md` beside this file first.
 
 ## Native data and secrets
 
-- The bundle holds no secret. A key that ships in the app belongs to everyone who downloads it.
+- The bundle holds no secret.
 - Keep a token, a password, or another secret in the secure store of the platform, never in `AsyncStorage`.
 - Ask for a permission at the moment the feature needs it, and handle the refusal.
 - Validate a deep link before it navigates or acts. A link supplies input from outside.
