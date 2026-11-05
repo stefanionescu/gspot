@@ -37,7 +37,7 @@ export const REDUNDANT_TYPE_KEYWORDS: ReadonlySet<string> = new Set([
     AST_NODE_TYPES.TSVoidKeyword,
 ]);
 
-export const READONLY_STATIC_FILES = /\.tsx?$/iu;
+export const READONLY_STATIC_FILES = /\.(?:[cm]ts|tsx?)$/iu;
 
 export const NULLISH_TYPE_KEYWORDS: ReadonlySet<string> = new Set(['TSNullKeyword', 'TSUndefinedKeyword']);
 
