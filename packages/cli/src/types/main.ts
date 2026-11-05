@@ -22,7 +22,7 @@ export type CommandReference = {
     example: string;
 };
 
-export type CheckReference = ConfigurationCheck & CheckDescription & { explanations: RuleExplanations | undefined };
+type CheckReference = ConfigurationCheck & CheckDescription & { explanations: RuleExplanations | undefined };
 
 export type CliReference = {
     package: typeof cliPackage;
