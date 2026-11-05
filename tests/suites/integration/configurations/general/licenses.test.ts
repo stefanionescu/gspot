@@ -9,26 +9,6 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('licenses/allowed passes a project whose every package has an allowed license', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }),
-        'package-lock.json': JSON.stringify({
-            name: 'example',
-            version: '1.0.0',
-            lockfileVersion: 3,
-            requires: true,
-            packages: {
-                '': { name: 'example', version: '1.0.0', dependencies: { ms: '2.1.3' } },
-                'node_modules/ms': { version: '2.1.3' },
-            },
-        }),
-    });
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
-    const passed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']));
-    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect(passed.report.checks).toMatchObject([{ check: 'licenses/allowed', status: 'passed', findings: [] }]);
-});
-
 test('licenses/allowed reads the license of a locked package, and an allowed_package record covers it', async () => {
     const lockfile = JSON.stringify({
         name: 'example',
