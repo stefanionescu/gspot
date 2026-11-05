@@ -81,3 +81,15 @@ test.each([
     );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
+
+test('gspot/detected-configurations says that a configuration with no check changes lint rules', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        'package.json': '{"private":true,"dependencies":{"zustand":"5.0.0"}}',
+        'store.ts': 'export const value = 1;\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/detected-configurations');
+    expect(findings.map(({ message }) => message)).toContainEqual(
+        expect.stringContaining('zustand changes the lint rules for this code') as string,
+    );
+});
