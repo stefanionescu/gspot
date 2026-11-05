@@ -18,7 +18,7 @@ a budget for one suite or system, an environment switch, and an option for one c
 Treat stored data and wire formats as contracts. Rename a stored key together with a migration of the stored data.
 During a rolling deploy, readers accept both shapes until no old writer runs.
 
-Before you add a module, folder, or helper, find the code that will call it. When you add a file, tell the user why that
+Delete a folder once neither it nor its subfolders hold a file. Before you add a module, folder, or helper, find the code that will call it. When you add a file, tell the user why that
 code needs a new file.
 
 ## Open questions

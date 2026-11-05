@@ -34,6 +34,7 @@ import { REPOSITORY_CHECKS } from '#cli/configurations/general/repository/checks
 import { SECRETS_CHECKS } from '#cli/configurations/general/secrets/checks.ts';
 import { SECURITY_CHECKS } from '#cli/configurations/general/security/checks.ts';
 import { STRUCTURE_BARE_BLOCKS_CHECKS } from '#cli/configurations/general/structure/checks/bare-blocks.ts';
+import { STRUCTURE_EMPTY_FOLDERS_CHECKS } from '#cli/configurations/general/structure/checks/empty-folders.ts';
 import { ENVIRONMENT_READERS_CHECKS } from '#cli/configurations/general/structure/checks/environment-readers.ts';
 import { FILE_FOLDER_CLASHES_CHECKS } from '#cli/configurations/general/structure/checks/file-folder-clashes.ts';
 import { STRUCTURE_FUNCTION_ORDER_CHECKS } from '#cli/configurations/general/structure/checks/function-order.ts';
@@ -149,6 +150,7 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...STRUCTURE_FUNCTION_ORDER_CHECKS,
     ...STRUCTURE_IMPORT_RULES_CHECKS,
     ...STRUCTURE_JSCPD_CHECKS,
+    ...STRUCTURE_EMPTY_FOLDERS_CHECKS,
     ...STRUCTURE_LONE_FILES_CHECKS,
     ...STRUCTURE_LONG_FILES_CHECKS,
     ...PASS_THROUGH_FOLDERS_CHECKS,

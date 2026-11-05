@@ -40,6 +40,16 @@ when = { setting = "import_rule" }
 why = "An import that crosses the layers that the rules describe, or a file outside every rule, breaks the structure that the rules promise."
 
 [[check]]
+example = "An empty `src/old/`, or a `src/old/` that holds only an empty `src/old/tmp/`, reports `empty-folder`, and so does a `logs/` that holds only `.gitkeep`. Delete the folder."
+files = { paths = ["**"] }
+help = "Delete the folder."
+name = "empty-folders"
+runs = "once"
+stage = "commit"
+summary = "Finds a folder that holds no files, directly or through its subfolders, and a folder that holds only `.gitkeep` or `.keep`."
+why = "An empty folder promises code that is not there, and Git does not keep it, so it exists on one machine only."
+
+[[check]]
 example = "With TypeScript at level `all`, a `feature/only.ts` alone in its folder reports `lone-file`. Move it up beside related code, and update its imports."
 help = "Move the file up beside its neighbors."
 level = "all"
