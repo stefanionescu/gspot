@@ -12,7 +12,7 @@ jobs:
         defaults:
             run:
                 shell: bash
-        name: ${{ matrix.suite }} (${{ matrix.os }})
+        name: ${{ matrix.suite }} (${{ matrix.os }}${{ matrix.node && ', Node floor' || '' }})
         strategy:
             fail-fast: false
             matrix:
