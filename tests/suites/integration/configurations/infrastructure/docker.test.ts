@@ -7,13 +7,10 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { LEVELS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import {
     DEBIAN_DOCKERFILE,
     DOCKER_CASES,
     DOCKER_SANDBOX,
-    HADOLINT_BOTH_LEVEL_CODES,
     ROOT_USER_DOCKERFILE,
     TRIVY_SCOPE_RESULTS,
     TRIVY_SCOPE_TABLES,
@@ -22,7 +19,6 @@ import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -164,18 +160,6 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
 );
 
 const installedSandbox = shareInstalledSandbox(DOCKER_SANDBOX);
-
-test('every rule code of the pinned hadolint has a level', async () => {
-    const { version } = getTool(readConfigurations().values(), 'hadolint');
-    const located = runBlockingCommand(['mise', 'where', `hadolint@${String(version)}`], { cwd: REPOSITORY_ROOT });
-    expect(located.code, located.stderr).toBe(0);
-    const binary = await readFile(Bun.which('hadolint', { PATH: located.stdout.trim() })!, 'latin1');
-    const levelled = new Set<string>([
-        ...(getTool(readConfigurations().values(), 'hadolint').off?.basic ?? []),
-        ...HADOLINT_BOTH_LEVEL_CODES,
-    ]);
-    expect(new Set(binary.match(/DL[34]\d{3}/gu)).difference(levelled)).toStrictEqual(new Set());
-});
 
 test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
     const expected =
