@@ -28,14 +28,6 @@ hadolint and Trivy report tags, pins, cache cleanup, and command form. Also appl
 - Refresh base images for operating-system fixes. A targeted package upgrade needs an explicit dependency change, never
   an unbounded distribution upgrade in every build.
 
-### Dockerfile organization
-
-<!-- level: all -->
-
-Put stable build inputs before frequently changing application source when that improves cache reuse. Put substantial
-shell behavior in an existing script. Keep the final image's user, working folder, environment, and startup command in
-documented locations. Do not add a wrapper script for a command the container can run directly.
-
 ## Build context and ignore files
 
 The context holds only the files the build needs, and `.dockerignore` changes with every Dockerfile that uses it.
