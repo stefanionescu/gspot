@@ -130,14 +130,14 @@ test('a staged check with unstaged work reuses the locked dependencies and isola
         }),
     });
     runGitStep(sandbox.path, ['add', '-A']);
-    await writeFile(join(sandbox.path, 'notes.txt'), 'unstaged\n');
+    await writeFile(join(sandbox.path, 'source.txt'), 'unstaged edit');
     const commandArguments = ['check', '--staged', '--only', 'project/dependencies', '--json'];
     const first = await runGspot(sandbox.path, commandArguments);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'node_modules/dependency/stamp.txt'), 'utf8')).toBe(
         'authored dependency data',
     );
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('authored input');
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('unstaged edit');
 });
 
 test('a staged check keeps each Python scope config and reports the installed dependency note for an unstaged pyproject.toml change', async () => {

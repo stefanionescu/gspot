@@ -24,6 +24,7 @@ import {
     STAGE_SETUP_MESSAGE,
 } from '#cli/config/commands/reports.ts';
 import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { buildEmptyRunReport, printProgress } from '#cli/engine/report.ts';
@@ -195,12 +196,13 @@ async function runStagedCheck(
         paths: stagedPaths,
         unstagedChanges: stagedPaths.filter((path) => unstagedPaths.has(path)).length,
     } as const;
-    if (stagedPaths.length === 0 || (unstaged.length === 0 && untracked.paths.length === 0))
+    // The disk holds the staged bytes, so checks run in place, unless gspot.toml has edits that the commit leaves out.
+    if (selection.unstagedChanges === 0 && !unstagedPaths.has(SETTINGS_FILE))
         return await runTreeCheck(root, options, cancelSignal, {
             toolsRoot: root,
             started,
             selection: { ...selection, reference: await readIndexTree(root, cancelSignal) },
-            untracked,
+            untracked: { paths: [], unreadablePaths: untracked.unreadablePaths },
         });
     using copy = await copyRevision(root, { kind: 'index', status, paths: stagedPaths }, cancelSignal);
     return await runTreeCheck(copy.root, options, cancelSignal, {
