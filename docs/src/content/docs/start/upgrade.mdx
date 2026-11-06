@@ -5,9 +5,8 @@ title: Upgrade
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { setup } from '#docs/reference/setup.ts';
 
-Commit your work first, so that you can go back. The [releases page](https://github.com/stefanionescu/gspot/releases)
-lists the gspot versions, and the [changelog](/reference/changelog/) says what each one changes. Put the version that you
-want in place of `<version>`:
+Commit your work first, so that you can go back. Read the [changelog](/reference/changelog/), then take a version from the
+[releases page](https://github.com/stefanionescu/gspot/releases) and put it in place of `<version>`:
 
 <Tabs syncKey="package-manager">
     {setup.map(({ label, start, add }) => (
@@ -22,8 +21,9 @@ setting in `gspot.toml`, the message names the line and what to write instead. I
 `gspot did not overwrite these files`, the new release writes a file where you have one of your own, so move yours out of
 the way and run it again.
 
-It also stops and names the tool if a pinned tool is newer than `dependencies.min_release_age_days`, 7 by default, so wait
-or lower the setting. A clone that installs from the committed tool lockfiles does not wait.
+When you upgrade gspot, or run `gspot init` in a new repository, `gspot install` stops if a pinned tool is newer than
+`dependencies.min_release_age_days`, 7 by default, and names the tool. Wait, or lower the setting. A clone that installs
+from the committed tool lockfiles does not wait.
 
 A new release can pin tools that format or report code in a new way, and `gspot check` lists what they find in the whole
 repository. If your repository had no findings before the upgrade, run `gspot check --fix`, then fix or ignore the rest.
@@ -39,11 +39,11 @@ outside your repository, and [Free disk space](/reference/generated-files/#free-
 
 ## Upgrade from 0.3.9
 
-This release removes commands, flags, and settings, so a repository on 0.3.9 also follows these steps. The
-[changelog](/reference/changelog/) lists every change.
+This release removes commands, flags, and settings, so a repository on 0.3.9 also follows these steps.
 
 1. Replace the old flags in your scripts and CI steps. `gspot check --stage <stage>` becomes
-   `gspot check --only <stage>`, and `gspot check --changed` becomes `gspot check --base origin/HEAD`.
+   `gspot check --only <stage>`, and `gspot check --changed` becomes `gspot check --base origin/main`, with your default
+   branch in place of `main`.
 2. Delete `gspot.baseline.json` and each `[[ignore]]` of `gspot/baseline`. Its old findings come back in the files that
    you touch and at the next push, so follow
    [Clean up the first findings](/start/quickstart/#clean-up-the-first-findings).
@@ -54,8 +54,18 @@ This release removes commands, flags, and settings, so a repository on 0.3.9 als
    `.gspot/configurations/<group>/<configuration>/` becomes `.gspot/configurations/<configuration>/`.
 5. Delete `bash/doc-comments` and `swift/doc-comments` from each `[[ignore]]`, `--only`, and `--skip`. This release does
    not have these checks, so a command that names one exits with code 2.
-6. `.editorconfig` takes its indent from the `format` settings alone, so `bash/shfmt` reports shell scripts that use
+6. Doc comment rules are off at every level. Delete `jsdoc/require-jsdoc` and `jsdoc/require-description` from
+   `tools.eslint.rules`, or the next check exits with code 2. To keep them, add a
+   [`[[tools.eslint.plugins]]` record](/configure/lint-rules/#plugins) with `package = "eslint-plugin-jsdoc"`. To keep
+   Ruff's docstring rules, name each code from `D100` to `D107` in `tools.ruff.rules`.
+7. A `swiftlint:disable` of `cyclomatic_complexity` now counts as a suppressed limit, so `gspot/suppressions` reports it.
+   At level `all`, the limit of 8 applies to that rule, where SwiftLint's default of 10 applied before. Level `basic`
+   still uses SwiftLint's default.
+8. `.editorconfig` takes its indent from the `format` settings alone, so `bash/shfmt` reports shell scripts that use
    another indent. Write a `[[format.override]]` with the extensions you have, such as `paths = ["**/*.sh"]`, or run
    `gspot check --fix --only bash/shfmt`.
-7. If a script reads the JSON output, `gspot doctor --json` has no `suggestions`, and `gspot check --json` prints
+9. If a script reads the JSON output, `gspot doctor --json` has no `suggestions`, and `gspot check --json` prints
    `checks[].command` only with `--verbose`.
+
+The first CI run after the upgrade commit reads every file and lists every old finding, because that commit changes
+`gspot.toml` or a file in `.gspot/`.
