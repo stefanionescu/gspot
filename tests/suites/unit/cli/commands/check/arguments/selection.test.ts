@@ -13,6 +13,20 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
+function buildFakeCheckTables(id: string, path: string, stdout: string): string {
+    return stringify({
+        command_check: [
+            {
+                id,
+                paths: [path],
+                stage: 'commit',
+                command: buildProgramCommand('fakes/tool', '--stdout', stdout, '--exit', '1'),
+                output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
+            },
+        ],
+    });
+}
+
 test('file and folder arguments narrow the files each check gets', async () => {
     await using sandbox = await createGitSandbox({});
     const checks = ['one', 'two', 'three'].map((name) =>
@@ -93,23 +107,11 @@ test('--only repeats and leaves the paths after it as paths', async () => {
 });
 
 test.each([false, true])('path arguments narrow project-wide findings (staged: %p)', async (staged) => {
-    const tables = stringify({
-        command_check: [
-            {
-                id: 'sandbox/project',
-                paths: ['src/**'],
-                stage: 'commit',
-                command: buildProgramCommand(
-                    'fakes/tool',
-                    '--stdout',
-                    'src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless\nnode_modules/pkg/index.d.ts:demo:installed\n',
-                    '--exit',
-                    '1',
-                ),
-                output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
-            },
-        ],
-    });
+    const tables = buildFakeCheckTables(
+        'sandbox/project',
+        'src/**',
+        'src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless\nnode_modules/pkg/index.d.ts:demo:installed\n',
+    );
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
         '.gitignore': 'node_modules/\n',
@@ -142,23 +144,7 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
 });
 
 test('a named folder keeps the finding of an ignored file in it, and a named file passes without it', async () => {
-    const tables = stringify({
-        command_check: [
-            {
-                id: 'sandbox/site',
-                paths: ['web/**'],
-                stage: 'commit',
-                command: buildProgramCommand(
-                    'fakes/tool',
-                    '--stdout',
-                    'web/dist/page.html:demo:built\n',
-                    '--exit',
-                    '1',
-                ),
-                output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
-            },
-        ],
-    });
+    const tables = buildFakeCheckTables('sandbox/site', 'web/**', 'web/dist/page.html:demo:built\n');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
         '.gitignore': 'dist/\n',
