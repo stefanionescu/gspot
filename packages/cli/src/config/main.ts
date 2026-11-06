@@ -24,7 +24,7 @@ export const REMOVED_OPTIONS: Readonly<Record<string, string>> = {
         'gspot init --no-configurations was removed. Run gspot init --configurations <one name>, then gspot remove <each name> --reason "<why>".',
 };
 
-export const UNKNOWN_OPTION_NAME = /unknown option '([^']+)'/u;
+export const UNKNOWN_OPTION_NAME = /unknown option '([^'=]+)/u;
 
 export const PROCESS_ARGUMENTS_START = 2;
 

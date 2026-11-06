@@ -75,6 +75,28 @@ test.each([
     expect(result.stderr).toContain(replacement);
 });
 
+test.each([
+    { plain: ['check', '--stage', 'push'], joined: ['check', '--stage=push'] },
+    { plain: ['check', '--changed'], joined: ['check', '--changed=origin/main'] },
+    { plain: ['scan', '--markdown'], joined: ['scan', '--markdown=true'] },
+    { plain: ['init', '--no-configurations'], joined: ['init', '--no-configurations=true'] },
+])('$joined prints the same line as $plain', async ({ plain, joined }) => {
+    await using sandbox = await testdir();
+    expect(await runGspot(sandbox.path, joined)).toStrictEqual(await runGspot(sandbox.path, plain));
+});
+
+test.each([
+    { commandArguments: ['baseline', '--help'], removed: 'baseline' },
+    { commandArguments: ['baseline', '-h'], removed: 'baseline' },
+    { commandArguments: ['apply', '--help'], removed: 'apply' },
+    { commandArguments: ['--verbose', 'baseline', '--help'], removed: 'baseline' },
+])('$commandArguments prints the line of the removed command and exits 2', async ({ commandArguments, removed }) => {
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, commandArguments);
+    expect(result.code).toBe(2);
+    expect(result).toStrictEqual(await runGspot(sandbox.path, [removed]));
+});
+
 test('init requires a Git worktree before reading settings or writing, while its help works outside Git', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
     const before = await readTree(sandbox.path);

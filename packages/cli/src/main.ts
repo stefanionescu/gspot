@@ -80,16 +80,13 @@ function readCorrection(message: string): string {
     return suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
 }
 
-function formatUnknownCommand(message: string): string {
-    const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
-    if (Object.hasOwn(REMOVED_COMMANDS, name)) return REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS];
-    return `There is no command called ${name}.${readCorrection(message)} ${COMMANDS_HELP_MESSAGE}`;
-}
-
 function formatArgumentError(error: CommanderError, program: Command, command: string | undefined): string {
     const { message } = error;
     if (error.code === HELP_ERROR_CODE) return formatProgramHelp(program);
-    if (error.code === UNKNOWN_COMMAND_ERROR_CODE) return formatUnknownCommand(message);
+    if (error.code === UNKNOWN_COMMAND_ERROR_CODE) {
+        const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
+        return `There is no command called ${name}.${readCorrection(message)} ${COMMANDS_HELP_MESSAGE}`;
+    }
     const removed = REMOVED_OPTIONS[UNKNOWN_OPTION_NAME.exec(message)?.[1] ?? ''];
     if (removed !== undefined) return removed;
     const helpLine =
@@ -283,6 +280,9 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
         if (command.name() === 'check') endReport = beginCheckReport();
     });
     try {
+        const [name = ''] = program.parseOptions(commandArguments).operands;
+        if (Object.hasOwn(REMOVED_COMMANDS, name))
+            throw new GspotError('arguments', REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS]);
         await program.parseAsync(commandArguments, { from: 'user' });
         return exitCode;
     } catch (error) {
