@@ -9,11 +9,11 @@ import {
     ESLINT_FIX_MESSAGE,
     HELP_HEADING,
     NO_CONFIG_MESSAGE,
-    NO_OPTIONS_MESSAGE,
     PURPOSE_HEADING,
     REFERENCE_FOLDERS,
     REFERENCE_PATH,
     SCHEMA_TYPE_LABELS,
+    SENTENCE_END,
     SUBSECTION_HEADING_LEVEL,
     TABLE_HEADING_LEVEL,
     TYPE_INFORMATION_MESSAGE,
@@ -63,7 +63,7 @@ function formatPluginPresets(): string {
         const names = CONJUNCTION_FORMAT.format(excluded.map((rule) => `\`${rule}\``));
         return `The \`${name}\` config turns on every lint rule except ${names}.`;
     });
-    return `${presets.join(' ')} Each rule names the configs that turn it on.`;
+    return presets.join(' ');
 }
 
 function formatRuleOptions({
@@ -97,11 +97,11 @@ function formatRuleOptions({
                 const type = typeof option.type === 'string' ? option.type : 'Value';
                 const description = option.description ?? SCHEMA_TYPE_LABELS[type] ?? type;
                 const value = defaultOptions?.[index];
+                const end = SENTENCE_END.test(description) ? '' : '.';
                 const defaultText = value === undefined ? '' : ` Default: \`${JSON.stringify(value)}\`.`;
-                return `Option ${String(index + 1)}: ${formatText(description)}.${defaultText}`;
+                return `Option ${String(index + 1)}: ${formatText(description)}${end}${defaultText}`;
             })
-            .join('\n\n') ||
-        NO_OPTIONS_MESSAGE
+            .join('\n\n')
     );
 }
 
@@ -111,8 +111,7 @@ function formatRuleConfigs(name: string): string {
         .map(([config]) => config);
     if (configs.length === 0) return NO_CONFIG_MESSAGE;
     const names = CONJUNCTION_FORMAT.format(configs.map((config) => `\`${config}\``));
-    const rule = `\`${PLUGIN_PREFIX}/${name}\``;
-    return configs.length === 1 ? `The ${names} config turns on ${rule}.` : `The ${names} configs turn on ${rule}.`;
+    return configs.length === 1 ? `On in the ${names} config.` : `On in the ${names} configs.`;
 }
 
 function formatRuleSection(name: string, rule: (typeof plugin.rules)[keyof typeof plugin.rules]): string {

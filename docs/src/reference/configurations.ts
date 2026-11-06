@@ -10,6 +10,7 @@ import {
     CONFIGURATIONS_OPENING,
     CONJUNCTION_FORMAT,
     DEFAULTS_HEADING,
+    DISJUNCTION_FORMAT,
     IGNORED_PATHS_HEADING,
     INSTALLED_HEADING,
     LINT_RULES_HEADING,
@@ -62,17 +63,13 @@ function formatLintRulesOff(configuration: CliReference['configurations'][number
 
 function formatSelection(configuration: CliReference['configurations'][number]): string {
     if (configuration.always_selected) return ALWAYS_SELECTED_MESSAGE;
-    const { conditions, exclusions } = configuration.selection;
+    const { conditions, exclusions, requiredBy } = configuration.selection;
     const unless = exclusions.length === 0 ? '' : ', ' + exclusions.join(', ');
-    const selected =
-        conditions.length === 0
-            ? ''
-            : `gspot selects it in a scope with ${conditions.join(CONDITION_SEPARATOR)}${unless}.`;
-    const requiredBy = configuration.selection.requiredBy.map((name) => formatConfigurationLink(name)).join(', ');
+    const selected = conditions.length === 0 ? '' : `A scope has ${conditions.join(CONDITION_SEPARATOR)}${unless}.`;
+    const owners = DISJUNCTION_FORMAT.format(requiredBy.map((name) => formatConfigurationLink(name)));
     return (
-        [selected, requiredBy === '' ? '' : `A configuration that requires it selects it too: ${requiredBy}.`]
-            .filter(Boolean)
-            .join(' ') || `Select explicitly with \`gspot add ${configuration.name}\`.`
+        [selected, owners === '' ? '' : `Also when ${owners} requires it.`].filter(Boolean).join(' ') ||
+        `You run \`gspot add ${configuration.name}\`.`
     );
 }
 
@@ -102,7 +99,7 @@ function listInstalledSections(configuration: CliReference['configurations'][num
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
         [TOOLS_VERSIONS_HEADING, formatTable(['Tool', 'Version'], tools)],
-        [CONFIG_FILES_HEADING, written.length === 0 ? '' : `gspot writes ${CONJUNCTION_FORMAT.format(written)}.`],
+        [CONFIG_FILES_HEADING, CONJUNCTION_FORMAT.format(written)],
         [
             IGNORED_PATHS_HEADING,
             ignored.length === 0 ? '' : `${CONJUNCTION_FORMAT.format(ignored)}. ${LOCAL_FILES_MESSAGE}`,

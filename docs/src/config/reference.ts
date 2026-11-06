@@ -134,7 +134,7 @@ export const ALL_FILES_LABEL = 'All files in the scope';
 
 export const LINT_RULES_HEADING = 'Lint rules';
 
-export const ALWAYS_SELECTED_MESSAGE = 'Always selected.';
+export const ALWAYS_SELECTED_MESSAGE = 'Always.';
 
 export const CONDITION_SEPARATOR = ', or ';
 
@@ -148,14 +148,11 @@ export const IGNORED_PATHS_HEADING = 'Paths that must stay out of Git';
 
 export const DEFAULT_OPTION_DESCRIPTION = 'See the example.';
 
-export const NO_OPTIONS_MESSAGE = 'This rule has no options.';
-
 export const NO_CONFIG_MESSAGE = 'No config turns it on; turn it on in your ESLint config.';
 
 export const ESLINT_FIX_MESSAGE = ' `eslint --fix` fixes it.';
 
-export const TYPE_INFORMATION_MESSAGE =
-    ' The rule needs the type information of a TypeScript project, and reports nothing without it.';
+export const TYPE_INFORMATION_MESSAGE = ' It reports nothing without the type information of a TypeScript project.';
 
 export const BANNED_NAME_MESSAGE =
     'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name exception.\n\n';
