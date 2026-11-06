@@ -6,6 +6,29 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { CONFIGURATION_CONFLICTS, UNKNOWN_TABLE_FIELDS } from '#tests/config/settings/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+function captureSettingsError(text: string, root: string): string {
+    try {
+        readSettings(text, root);
+    } catch (error) {
+        return (error as Error).message;
+    }
+    throw new Error('The settings passed validation.');
+}
+
+test.each([
+    { name: 'a value that is not valid', text: 'level = "x"\n', named: ['level'] },
+    { name: 'a weaker value', text: 'configurations = ["bash"]\n[limits]\nmax_file_lines = 1000\n', named: ['limits'] },
+    { name: 'an unknown key', text: 'nope = 1\n', named: ['nope'] },
+    { name: 'an unknown tools table', text: '[tools.nope]\nrules = []\n', named: ['tools.nope'] },
+    { name: 'two bad keys', text: 'level = "x"\nnope = 1\n', named: ['level', 'nope'] },
+])('an unreadable gspot.toml with $name ends with the page of the settings, once', ({ text, named }) => {
+    using sandbox = createTemporaryFolder();
+    const lines = captureSettingsError(text, sandbox.path).split('\n');
+    expect(lines.at(-1)).toEndWith('/reference/gspot-toml/ lists every setting.');
+    expect(lines.filter((line) => line.includes('/reference/gspot-toml/'))).toHaveLength(1);
+    for (const key of named) expect(lines.join('\n')).toContain(key);
+});
+
 test('a generator command must declare at least one output', () => {
     using sandbox = createTemporaryFolder();
     const text = buildSandboxSettings([], {

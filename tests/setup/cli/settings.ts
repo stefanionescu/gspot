@@ -53,7 +53,10 @@ export function validateSettingsText(text: string, root?: string): string[] {
         return [];
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings')
-            return error.message.split('\n').map((line) => line.split(': ', 2).join(': '));
+            return error.message
+                .split('\n')
+                .slice(0, -1)
+                .map((line) => line.split(': ', 2).join(': '));
         throw error;
     }
 }

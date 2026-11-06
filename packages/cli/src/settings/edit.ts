@@ -2,6 +2,7 @@ import { SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
+import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { addTable, findValueAt, isTable } from '#cli/system/tables.ts';
@@ -27,7 +28,9 @@ export function buildEditedSettings(root: string, edit: SettingsEdit): EditedSet
     if (Array.isArray(settings))
         throw new GspotError(
             'arguments',
-            settings.map((error) => `${error.path.join('.')}: ${error.message}`).join('\n'),
+            [...settings.map((error) => `${error.path.join('.')}: ${error.message}`), SETTINGS_PAGE_SENTENCE].join(
+                '\n',
+            ),
         );
     return { text: next, settings, changed: next !== text };
 }

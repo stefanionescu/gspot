@@ -38,7 +38,8 @@ test.each([...UNKNOWN_SETTING_KEYS])(
             'settings.toml': 'enabled = true\n',
         });
 
-        await assertRefusalWithoutWrites(sandbox.path, ['set', key, '{ enabled = true }'], 'arguments');
+        const refusal = await assertRefusalWithoutWrites(sandbox.path, ['set', key, '{ enabled = true }'], 'arguments');
+        expect(refusal.message).toEndWith('/reference/gspot-toml/ lists every setting.');
     },
 );
 

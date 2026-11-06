@@ -1,11 +1,14 @@
 import { z } from 'zod';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import type { SettingsError } from '#cli/types/settings.ts';
+
+export const SETTINGS_PAGE_SENTENCE = `${cliPackage.homepage}/reference/gspot-toml/ lists every setting.`;
 
 function formatValueAdvice(
     schema: z.ZodType | undefined,
@@ -70,16 +73,20 @@ export function formatFileValueError(schema: z.ZodType | undefined, issue: z.cor
 }
 
 /**
-Locate a settings error at its written key, array item, or nearest enclosing table.
+Locate each settings error at its written key, array item, or nearest enclosing table, and end with the page that lists
+the settings.
 
-@param error the key and its validation sentence.
+@param errors the keys and their validation sentences.
 @param syntax the source keys and their positions.
-@param file the path that the message starts with.
+@param file the path that each line starts with.
 */
-export function formatSettingsError(error: SettingsError, syntax: TomlSyntax, file: string): string {
-    const source = syntax.pathNodes
-        .filter((node) => node.path.every((key, index) => key === error.path[index]))
-        .toSorted((left, right) => right.path.length - left.path.length)[0];
-    const line = source?.node.loc.start.line ?? 1;
-    return `${file}:${String(line)}: ${error.path.map(String).join('.')}: ${error.message}`;
+export function formatSettingsErrors(errors: readonly SettingsError[], syntax: TomlSyntax, file: string): string {
+    const lines = errors.map((error) => {
+        const source = syntax.pathNodes
+            .filter((node) => node.path.every((key, index) => key === error.path[index]))
+            .toSorted((left, right) => right.path.length - left.path.length)[0];
+        const line = source?.node.loc.start.line ?? 1;
+        return `${file}:${String(line)}: ${error.path.map(String).join('.')}: ${error.message}`;
+    });
+    return [...lines, SETTINGS_PAGE_SENTENCE].join('\n');
 }

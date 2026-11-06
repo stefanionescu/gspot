@@ -27,6 +27,7 @@ import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -262,10 +263,8 @@ export function selectSettingToEdit(
                 `A configuration has the setting ${key} in the scope ${selectedScope}; add --scope ${quoteArgument(selectedScope)}.`,
             );
         const offered = new Set(session.scopes.flatMap((each) => each.availableSettings.settings.keys().toArray()));
-        throw new GspotError(
-            'arguments',
-            formatUnknownSetting(key, { available: availableSettings.settings.keys().toArray(), offered }),
-        );
+        const unknown = formatUnknownSetting(key, { available: availableSettings.settings.keys().toArray(), offered });
+        throw new GspotError('arguments', `${unknown} ${SETTINGS_PAGE_SENTENCE}`);
     }
     return { availableSettings, match, scope: selected };
 }

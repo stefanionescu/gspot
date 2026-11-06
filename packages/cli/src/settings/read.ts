@@ -2,7 +2,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { COMMAND_CHECK_DEFAULTS, COMMAND_CHECK_HELP, COMMAND_CHECK_WHY } from '#cli/config/settings/validation.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { formatSettingsError } from '#cli/settings/validation/messages.ts';
+import { formatSettingsErrors } from '#cli/settings/validation/messages.ts';
 import { formatSettingsIssue, validateSettings } from '#cli/settings/validation/schema.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
@@ -63,10 +63,7 @@ export function readSettings(text: string, root: string): Settings {
     const result = parseSettings(text, root);
     if (!Array.isArray(result)) return result;
     const syntax = parseTomlSyntax(text, parseTomlFile(SETTINGS_FILE, text));
-    throw new GspotError(
-        'settings',
-        result.map((error) => formatSettingsError(error, syntax, SETTINGS_FILE)).join('\n'),
-    );
+    throw new GspotError('settings', formatSettingsErrors(result, syntax, SETTINGS_FILE));
 }
 
 /**

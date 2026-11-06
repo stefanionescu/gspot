@@ -10,7 +10,7 @@ import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import { formatSettingsError } from '#cli/settings/validation/messages.ts';
+import { formatSettingsErrors } from '#cli/settings/validation/messages.ts';
 import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
@@ -132,14 +132,13 @@ export function readTemplate(file: string, cwd: string): Template {
     const written = parseTomlFile(file, text);
     const result = settingsSchema.safeParse(written);
     const syntax = parseTomlSyntax(text, written);
-    const lines = result.success
+    const errors = result.success
         ? listUnknownConfigurations(
               result.data.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
-          ).map((error) => formatSettingsError(error, syntax, file))
-        : result.error.issues
-              .flatMap((issue) => formatSettingsIssue(issue, syntax))
-              .map((error) => formatSettingsError(error, syntax, file));
-    if (!result.success || lines.length > 0) throw new GspotError('settings', lines.join('\n'));
+          )
+        : result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax));
+    if (!result.success || errors.length > 0)
+        throw new GspotError('settings', formatSettingsErrors(errors, syntax, file));
     return {
         file,
         text,
