@@ -147,7 +147,7 @@ function listDocumentFindings(text: string, document: Document.Parsed): YamlFind
 }
 
 /**
-Report YAML syntax, ambiguous values, unused anchors, and the file conventions from YAML.md.
+Report YAML syntax, ambiguous values, unused anchors, and file conventions.
 
 @param session the repository's cached source files.
 @param planned the YAML files selected for this scope.

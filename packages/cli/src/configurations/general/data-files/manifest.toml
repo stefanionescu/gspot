@@ -57,7 +57,7 @@ files = { extensions = [".yaml", ".yml"] }
 help = "Fix the reported YAML value or layout."
 name = "yaml"
 stage = "commit"
-summary = "Checks YAML syntax, duplicate keys, anchors, ambiguous scalar values, and the conventions in YAML.md."
+summary = "Checks YAML syntax, duplicate keys, anchors, ambiguous scalar values, and file conventions."
 why = "A YAML file that parses differently between consumers can silently change the values that the program reads."
 
 [[check]]
