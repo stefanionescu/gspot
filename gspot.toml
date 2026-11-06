@@ -310,7 +310,7 @@ reason = "It fights gspot/no-trivial-functions: the ternary shrinks a helper to 
 [[ignore]]
 check = "javascript/eslint"
 rule = "unicorn/prefer-await"
-paths = ["packages/cli/src/parsers/code/grammars.ts", "tests/setup/runner/integration.ts"]
+paths = ["packages/cli/src/parsers/code/grammars.ts"]
 reason = "With no-floating-promises, no-misused-promises, and no-void, a synchronous callback that starts async work has no form that this rule accepts."
 
 [[ignore]]

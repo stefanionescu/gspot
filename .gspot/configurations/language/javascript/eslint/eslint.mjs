@@ -2552,7 +2552,7 @@ export default setRuleOptions(defineConfig([
     setLevelRules({"rules": {
         "unicorn/prefer-await": "off"
     },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/setup/runner/integration.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/setup/runner/integration.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"], ["**/*.astro", "**/*", "tests/setup/runner/integration.ts"], ["**/*.astro", "**/*", "tests/setup/runner/integration.ts/**"]]}, gspothqEslintPlugin, "all"),
+    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
         "no-template-curly-in-string": "off"
     },
