@@ -16,7 +16,8 @@ import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import { MISE_TOOL } from '#cli/config/tools/installers.ts';
+import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
@@ -25,15 +26,26 @@ import { findGspotPinMismatch, readGspotPin } from '#cli/repository/javascript/g
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { runProcess } from '#cli/system/processes.ts';
+import { findProgram } from '#cli/system/programs.ts';
 import { compareText } from '#cli/system/text.ts';
 import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { findMissingBuild, findToolName, getTool, listDistinctTools } from '#cli/tools/pins.ts';
+import { findMisePin, findMissingBuild, findToolName, getTool, listDistinctTools } from '#cli/tools/pins.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { CiState, DoctorReport, DoctorTool } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
+
+type DoctorStates = {
+    hooks: string;
+    ci: string;
+    broken: DoctorTool[];
+    commandPrograms: ReadonlySet<string>;
+    systemTools: ReadonlySet<string>;
+    toolsWithoutMise: ReadonlySet<string>;
+    pinNotes: string[];
+};
 
 const LABEL_WIDTH = 9;
 
@@ -164,22 +176,32 @@ function listMissingEnvironments(session: Session): string[] {
     return [...new Set(scopes)].toSorted((left, right) => compareText(left, right));
 }
 
-function formatDoctorReport(
-    report: DoctorReport,
-    states: {
-        hooks: string;
-        ci: string;
-        broken: DoctorTool[];
-        commandPrograms: ReadonlySet<string>;
-        systemTools: ReadonlySet<string>;
-        pinNotes: string[];
-    },
-): string {
-    const programs = states.broken.filter((tool) => tool.kind === 'program');
-    const systemTools = states.broken.filter((tool) => states.systemTools.has(tool.name));
+function listToolsWithoutMise(session: Session): ReadonlySet<string> {
+    if (findProgram(MISE_TOOL) !== undefined) return new Set();
+    const tools = listDistinctTools(session.toolConfigurations);
+    return new Set(tools.filter((tool) => findMisePin(tool) !== undefined).map(({ name }) => name));
+}
+
+function listInstallLines(programs: DoctorTool[], states: DoctorStates): string[] {
     const installable = programs.filter(
         (tool) => !states.commandPrograms.has(tool.name) && !states.systemTools.has(tool.name),
     );
+    const withoutMise = installable.filter((tool) => states.toolsWithoutMise.has(tool.name)).map(({ name }) => name);
+    return [
+        ...(withoutMise.length === 0
+            ? []
+            : [
+                  `mise is not on PATH. Install mise (${MISE_INSTALL_URL}), or install these tools yourself: ${withoutMise.join(', ')}.`,
+              ]),
+        ...(installable.length === withoutMise.length
+            ? []
+            : ['Run gspot install to install the missing or outdated tools.']),
+    ];
+}
+
+function formatDoctorReport(report: DoctorReport, states: DoctorStates): string {
+    const programs = states.broken.filter((tool) => tool.kind === 'program');
+    const systemTools = states.broken.filter((tool) => states.systemTools.has(tool.name));
     const aheadOfPin = report.tools.filter((tool) => tool.kind === 'program' && tool.state === 'newer');
     const packages = states.broken.filter(
         (tool) => tool.kind === 'package' && !states.systemTools.has(tool.name),
@@ -187,7 +209,7 @@ function formatDoctorReport(
     const ready = report.tools.filter((tool) => tool.kind === 'program').length - programs.length;
     const lines = [
         ...formatTools([...programs, ...aheadOfPin]),
-        ...(installable.length === 0 ? [] : ['Run gspot install to install the missing or outdated tools.']),
+        ...listInstallLines(programs, states),
         ...systemTools.flatMap((tool) => tool.help ?? []),
         ...(packages === 0 ? [] : [`missing npm packages: ${String(packages)} (run gspot install)`]),
         `tools: ${String(ready)} ready`,
@@ -233,6 +255,7 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
                     tools.filter((tool) => tool.system === true).map((tool) => tool.name),
                 ),
             ),
+            toolsWithoutMise: listToolsWithoutMise(session),
             pinNotes: notes,
         }),
         json: { ...report, notes },

@@ -50,6 +50,18 @@ test('tool lockfiles report missing and changed projects and omit current projec
     expect(listStaleLockfiles(session, generated)).toStrictEqual(paths.map((path) => ({ path, kind: 'changed' })));
 });
 
+test('with no mise on PATH, the mise lockfile counts as current, because gspot install cannot write it', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
+    });
+    const session = await openSession(sandbox.path);
+    using _lookup = fakeExecutableLookup((name) => (name === 'mise' ? null : undefined));
+    expect(listStaleLockfiles(session, buildGeneratedFiles(session).files)).toStrictEqual([
+        { path: '.gspot/bun.lock', kind: 'absent' },
+    ]);
+});
+
 test('a changed npm tool lockfile installs into an empty node_modules, and a current one keeps it', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),

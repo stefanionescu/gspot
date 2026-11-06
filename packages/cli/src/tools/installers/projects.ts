@@ -5,10 +5,11 @@ import which from 'which';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG, UV_TOOL } from '#cli/config/tools/installers.ts';
+import { MISE_TOOL, UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG, UV_TOOL } from '#cli/config/tools/installers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { findProgram } from '#cli/system/programs.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import {
@@ -143,7 +144,8 @@ export async function isEveryEnvironmentReady(install: ToolInstall, miseBinPaths
 
 /**
 List the state of each tool project lockfile: whether it exists and names every pin at its version. It resolves and
-writes nothing, and it reads no package manager settings.
+writes nothing, and it reads no package manager settings. With no mise on PATH, gspot install cannot write the mise
+lockfile, so that lockfile counts as current.
 
 @param session the repository, its tool configurations, and its package manager.
 @param generated the tool project files that install writes.
@@ -156,7 +158,8 @@ export function listStaleLockfiles(
     const projects = new Set(generated.map((file) => file.path));
     const files = openFiles(root);
     const lockfiles: Array<StaleLockfile | undefined> = [];
-    if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(findStaleMiseLockfile(files, toolConfigurations));
+    if (projects.has(GSPOT_PATHS.miseProject) && findProgram(MISE_TOOL) !== undefined)
+        lockfiles.push(findStaleMiseLockfile(files, toolConfigurations));
     if (toolPackageManager !== undefined && projects.has(GSPOT_PATHS.npmProject))
         lockfiles.push(findStaleNpmLockfile(files, toolPackageManager, session));
     if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(findStalePythonLockfile(files, toolConfigurations));
