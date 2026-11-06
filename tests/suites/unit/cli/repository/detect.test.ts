@@ -175,6 +175,26 @@ test('a package.json with no dependency selects no JavaScript in a shell reposit
     expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('javascript');
 });
 
+test.each([
+    ['vitest', ['typescript', 'vitest']],
+    ['vitest', ['vitest']],
+    ['jest', ['typescript', 'jest']],
+    ['cloudflare', ['wrangler']],
+])('a package.json with a dependency that %s detects selects it and javascript: %j', async (configuration, names) => {
+    const devDependencies = Object.fromEntries(names.map((name) => [name, '0.0.0-test']));
+    await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify({ devDependencies }) });
+    const proposed = await detectSandboxConfigurations(sandbox.path);
+    expect(proposed).toContain(configuration);
+    expect(proposed).toContain('javascript');
+});
+
+test('a package.json with only gspot, its tools, and a hook manager selects no javascript', async () => {
+    const names = ['@gspothq/cli', 'prettier', 'eslint', 'typescript', 'husky'];
+    const devDependencies = Object.fromEntries(names.map((name) => [name, '0.0.0-test']));
+    await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify({ devDependencies }) });
+    expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('javascript');
+});
+
 test('a .vue file proposes vue and css', async () => {
     await using sandbox = await createGitSandbox({ 'src/Greeting.vue': '<template><p>Hello</p></template>\n' });
     const proposed = await detectSandboxConfigurations(sandbox.path);

@@ -16,19 +16,15 @@ import type { TrackedFile } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
 
 /**
-List the exact npm package names that the configurations declare.
+List the exact npm package names of the tools that the configurations declare. A package that a configuration detects
+as a dependency, such as vitest, is left out: the project uses it, so it marks a real project.
 
 @param configurations the configurations in use.
 */
 function listNpmToolNames(configurations: Iterable<Configuration>): Set<string> {
-    return new Set(
-        [...configurations].flatMap((configuration) =>
-            configuration.tools.flatMap((tool) => {
-                const npm = tool.installers['npm'];
-                return npm === undefined ? [] : npm.name;
-            }),
-        ),
-    );
+    const selected = [...configurations];
+    const toolNames = selected.flatMap(({ tools }) => tools.flatMap((tool) => tool.installers['npm']?.name ?? []));
+    return new Set(toolNames).difference(new Set(selected.flatMap(({ detect }) => detect.dependencies)));
 }
 
 async function readDependencyFile(cache: RunCache, file: TrackedFile): Promise<DependencyFile | undefined> {
