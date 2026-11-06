@@ -1,6 +1,5 @@
 ---
 title: Upgrade
-description: Install a new gspot version and write the generated files again.
 ---
 
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
@@ -19,13 +18,12 @@ want in place of `<version>`:
 </Tabs>
 
 `gspot install` writes the generated files again and installs the tool versions of the new release. If it rejects a
-setting in `gspot.toml`, the message names the line and what to write instead, so fix it and run `gspot install` again.
-If it says `gspot did not overwrite these files`, the new release writes a file at a path where you have a file of your
-own. Move each one out of the way, then run it again.
+setting in `gspot.toml`, the message names the line and what to write instead. If it says
+`gspot did not overwrite these files`, the new release writes a file where you have one of your own, so move yours out of
+the way and run it again.
 
-`gspot install` also stops if a pinned tool is newer than `dependencies.min_release_age_days`, 7 by default, and names the
-tool, as it does when you run `gspot init` in a new repository. Wait, or lower the setting. A clone that installs from
-the committed tool lockfiles does not wait.
+It also stops and names the tool if a pinned tool is newer than `dependencies.min_release_age_days`, 7 by default, so wait
+or lower the setting. A clone that installs from the committed tool lockfiles does not wait.
 
 A new release can pin tools that format or report code in a new way, and `gspot check` lists what they find in the whole
 repository. If your repository had no findings before the upgrade, run `gspot check --fix`, then fix or ignore the rest.
@@ -36,13 +34,12 @@ it, and either `package.json` with its lockfile or `mise.toml`. The next push ru
 and `gspot check --only push` shows the result first. Then run `gspot install` in each other clone, as
 [Set up a clone](/start/install/#set-up-a-clone) describes.
 
-To go back to the older gspot version, check out the commit from before the upgrade. An upgrade can leave older tool
-versions and download caches on your machine, outside your repository. When the new version works,
-[Free disk space](/reference/generated-files/#free-disk-space) shows how to delete them.
+To go back, check out the commit from before the upgrade. An upgrade can leave older tool versions and download caches
+outside your repository, and [Free disk space](/reference/generated-files/#free-disk-space) shows how to delete them.
 
 ## Upgrade from 0.3.9
 
-This release removes commands, flags, and settings, so a repository on 0.3.9 needs these steps as well. The
+This release removes commands, flags, and settings, so a repository on 0.3.9 also follows these steps. The
 [changelog](/reference/changelog/) lists every change.
 
 1. Replace the old flags in your scripts and CI steps. `gspot check --stage <stage>` becomes
@@ -55,5 +52,10 @@ This release removes commands, flags, and settings, so a repository on 0.3.9 nee
    0.3.9 stops on its old flag.
 4. Drop the group folder from each path that you wrote by hand, such as in an editor setting or a CI script.
    `.gspot/configurations/<group>/<configuration>/` becomes `.gspot/configurations/<configuration>/`.
-5. If a script reads the JSON output, `gspot doctor --json` has no `suggestions`, and `gspot check --json` prints
+5. Delete `bash/doc-comments` and `swift/doc-comments` from each `[[ignore]]`, `--only`, and `--skip`. This release does
+   not have these checks, so a command that names one exits with code 2.
+6. `.editorconfig` takes its indent from the `format` settings alone, so `bash/shfmt` reports shell scripts that use
+   another indent. Write a `[[format.override]]` with the extensions you have, such as `paths = ["**/*.sh"]`, or run
+   `gspot check --fix --only bash/shfmt`.
+7. If a script reads the JSON output, `gspot doctor --json` has no `suggestions`, and `gspot check --json` prints
    `checks[].command` only with `--verbose`.

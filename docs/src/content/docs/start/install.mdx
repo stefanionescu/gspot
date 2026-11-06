@@ -1,6 +1,5 @@
 ---
 title: Install
-description: What gspot needs, how to add it with your package manager, how to set up a clone, and how to remove it.
 ---
 
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -16,10 +15,9 @@ import {
 
 gspot runs on macOS, Linux, and Windows. It needs Git, {`Node.js ${runtimeMinimums.node} or newer`},
 {`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`},
-and [mise](https://mise.jdx.dev/). With an older Node.js, gspot stops with exit code 2 and prints the version it found,
-and with an older package manager, `gspot init` and `gspot install` stop. Node.js 22 comes with an older npm, so run
-`npm install --global npm@latest` there. Without mise, install each tool at its pinned version yourself, because a
-missing tool stops every commit.
+and [mise](https://mise.jdx.dev/). With an older Node.js, gspot stops with exit code 2, and with an older package manager,
+`gspot init` and `gspot install` stop. Node.js 22 comes with an older npm, so run `npm install --global npm@latest` there.
+Without mise, install each tool at its pinned version yourself, because a missing tool stops every commit.
 
 Run gspot inside a Git working tree, because outside one only `--help` and `--version` work. gspot does not support
 sparse checkouts, so run `git sparse-checkout disable` first. gspot runs your tests, your tool configs, and other code
@@ -35,7 +33,7 @@ Each kind of tool needs its own programs:
 | Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                                                                                                                                          |
 | Some checks                                              | The Swift toolchain, a running Docker daemon, or network access. The [configuration reference](/reference/configurations/) says what each check needs.                                                                          |
 
-`gspot install` downloads from these hosts:
+`gspot install` downloads from these hosts, which a firewall must allow:
 
 - the npm registry, or the registry that `.npmrc` names, for the npm tools
 - `github.com` and `api.github.com`, for the mise tools, the tree-sitter grammars, and the Vale packages
@@ -70,8 +68,8 @@ records the gspot version in `mise.toml`.
     </tbody>
 </table>
 
-Then run `gspot init`, as the [Quickstart](/start/quickstart/#set-up-gspot) shows. The mise command pins the exact gspot
-version in `mise.toml`, and `allow_low_downloads=true` skips the mise prompt for a package with few downloads.
+Then run `gspot init`, as the [Quickstart](/start/quickstart/#set-up-gspot) shows. In the mise command,
+`allow_low_downloads=true` skips the mise prompt for a package with few downloads.
 
 ## Set up a clone
 
@@ -131,14 +129,12 @@ When gspot installs its tools with npm, pnpm, or Bun, it reads the registry sett
 environment. A Yarn project installs them with npm, so gspot reads `.npmrc`, not `.yarnrc.yml`. uv reads the Python
 package indexes from `uv.toml` or from `[tool.uv]` in `pyproject.toml`.
 
-Keep credentials in environment variables or in your user settings. Never put them in `gspot.toml` or in a lockfile.
+Keep credentials in environment variables or in your user settings, not in `gspot.toml` or a lockfile.
 
 ## Uninstall
 
-To keep gspot and stop checking one language or framework, remove its configuration instead:
-[Add or remove a configuration](/configure/gspot-toml/#add-or-remove-a-configuration) shows how.
-
-Otherwise, commit first, so that you can go back.
+To stop checking one language or framework, [remove its configuration](/configure/gspot-toml/#add-or-remove-a-configuration)
+instead. To remove gspot, commit first, so that you can go back, then follow these steps:
 
 1. Turn off the rules for coding agents and the CI job. gspot then deletes the rule files, its block in `AGENTS.md`,
    and the CI workflow:

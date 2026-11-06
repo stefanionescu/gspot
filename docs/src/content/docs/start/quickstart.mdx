@@ -14,14 +14,13 @@ import {
 
 {import.meta.env.PUBLIC_GSPOT_README_OPENING}
 
-gspot picks linters and formatters for the languages and frameworks in your repository, and pins each tool to one
-version. Git hooks run the tools before each commit and push, and a problem stops the commit or push. gspot also writes
+gspot picks linters and formatters for the languages and frameworks in your repository, and pins each tool that it
+installs. Git hooks run the tools before each commit and push, and a problem stops the commit or push. gspot also writes
 `AGENTS.md` and rule files that tell coding agents how to write code that passes the checks.
 
 gspot supports JavaScript, TypeScript, Python, Swift, shell scripts, CSS, HTML, SQL, and Markdown. Files in other
-languages, such as Go, Rust, or Java, get only the checks that run in every repository, such as the
-secret scan and the spell check. The [configuration reference](/reference/configurations/) lists every language,
-framework, and tool that gspot supports.
+languages, such as Go, Rust, or Java, get only the checks that run in every repository, such as the secret scan. The
+[configuration reference](/reference/configurations/) lists every language, framework, and tool.
 
 You need Git, {`Node.js ${runtimeMinimums.node} or newer`},
 {`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`},
@@ -38,29 +37,23 @@ npx @gspothq/cli scan
 ```
 
 `gspot scan` sets gspot up in a temporary copy of the files that you committed or staged, and runs the level `basic`
-checks there. It fixes nothing, and it leaves out your tests, your build, and each check that loads your code, which the
-report lists. Your files do not change, but mise installs the tools for your whole machine.
+checks there. Your files do not change, but mise installs the tools for your whole machine. The scan skips your tests,
+your build, and other checks that run your code. It still loads your Prettier config and runs your installed ESLint,
+Stylelint, and TypeScript, so run it only on code that you trust.
 
-The report counts the findings of each kind, such as `Code` or `Secrets`, and shows examples of each. It also shows what
-`gspot init` will do: the files it writes and deletes, and the settings it copies from your old tool configs. It names
-the scripts and CI steps that still call the old tools. Add `--json` to get every finding.
-
-The scan still loads your Prettier config and runs your installed ESLint, Stylelint, and TypeScript, so run it only on
-code that you trust.
+The report counts the findings of each kind, such as `Code` or `Secrets`, with examples of each. It lists the files that
+`gspot init` writes and deletes, the settings it copies from your old configs, and the scripts and CI steps that call the
+old tools. Add `--json` to get every finding.
 
 ## Set up gspot
 
 Commit your work first. `gspot init` deletes the tool config files that it replaces, such as `.eslintrc.json`, and runs
-only when Git holds each one unchanged, so you can restore it.
-
-A finding is one problem that a check reports. In an existing repository, the setup commit passes once you delete the
-old tool settings that gspot reports as conflicts. After that, a commit fails on the old findings of each file that it
-touches, and the first push fails until the checks that read the whole project pass.
-[Clean up the first findings](#clean-up-the-first-findings) shows what to do.
+only when Git holds each one unchanged, so you can restore it. Old findings in an existing repository then fail the first
+commit and push, as [Clean up the first findings](#clean-up-the-first-findings) shows.
 
 gspot starts at level `basic`, which checks for bugs, security problems, code style, broken docs and config, formatting,
-and a reason on each suppression. For stricter rules, add `--level all` to the `gspot init` line. To change the level
-later, run `gspot set level all`, then `gspot install`. [Levels](/start/concepts/#levels) compares the two levels.
+and a reason on each suppression. For stricter rules, add `--level all` to the `gspot init` line, or run
+`gspot set level all`, then `gspot install`, later. [Levels](/start/concepts/#levels) compares the two.
 
 Run these commands in the root folder of your repository:
 
@@ -72,51 +65,44 @@ Run these commands in the root folder of your repository:
     ))}
 </Tabs>
 
-1. The first line adds gspot to your project, pinned to one exact version. In the mise tab, the first line pins Node.js
-   in `mise.toml`, and the second adds gspot.
-2. `gspot init` prints a plan, then carries it out without asking. It writes `gspot.toml`, a `.gspot/` folder that you
-   commit, small config files such as `eslint.config.mjs`, and a block in `AGENTS.md`. It deletes the old tool configs
-   that it replaces, installs the tools, and turns on the Git hooks.
+`gspot init` prints a plan, then carries it out without asking. It writes `gspot.toml`, a `.gspot/` folder that you
+commit, small config files such as `eslint.config.mjs`, and a block in `AGENTS.md`. It also deletes the old tool configs
+that it replaces, installs the tools, and turns on the Git hooks. CI stays off until you
+[turn it on](/use/ci/#turn-ci-on).
 
 Start each later gspot command the same way as `gspot init`, such as `bunx --no-install gspot check`. These docs write it
 as `gspot check`.
 
-From then on, the pre-commit hook checks the staged files before each commit, and the pre-push hook checks the pushed
-files before each push. CI stays off until you [turn it on](/use/ci/#turn-ci-on).
-
 ## Clean up the first findings
 
 Commit the setup files, then fix each file as you touch it. The setup commit passes once you delete what
-`gspot/conflicting-configs` reports: old tool settings, and scripts, hook lines, and CI steps that still call the old
-tools.
-
-After you edit `package.json`, run the install command of your package manager and `gspot install`, then stage the
-result. The hook still reports the findings of each file that the setup stages, such as a version range in
-`package.json`. A CI file that you edit also fails on its old findings. Fix them, or ignore the rule.
-[Files to commit](/reference/generated-files/#files-to-commit) lists the setup files.
+`gspot/conflicting-configs` reports and fix or ignore the findings of the files that it stages, such as `package.json` or
+an edited CI file. `gspot/conflicting-configs` reports old tool settings, and the scripts, hook lines, and CI steps that
+still call the old tools. After you edit `package.json`, run the install command of your package manager and
+`gspot install`, then stage the result. [Files to commit](/reference/generated-files/#files-to-commit) lists the setup
+files.
 
 A later commit checks what you stage, and what your staged change breaks in other files, so touching an old file fails
 the commit on that file's old findings. The hook prints a `fix:` line for what a fixer can change. Run the fixers only on
 the files that you touch, with `gspot check --fix <file>`, because a repository-wide `gspot check --fix` rewrites many
 files, and each then fails on its old lint findings.
 
-Fix the rest, or ignore the rule. On an existing repository, some findings are a matter of taste: `gspot ignore` takes
-the rule and a reason.
+On an existing repository, some findings are a matter of taste: `gspot ignore` takes the rule and a reason.
 
 ```shell
 gspot ignore javascript/eslint --rule no-console --paths "src/legacy/**" --reason "Old code from before gspot."
 ```
 
-An ignore also hides new findings of that rule in those paths, so name the rule and the paths. After you fix the old
-code, remove the ignore with `gspot unignore`.
+An ignore also hides new findings of that rule in those paths, so name the rule and the paths, and remove the ignore with
+`gspot unignore` after you fix the old code.
 
-The first push fails because the push checks read the whole project. `typescript/tsc`, `python/basedpyright`,
-`javascript/knip`, and your tests fail every push until you fix or ignore their old findings, and
-`gspot check --only push` shows them before you push.
+The first push fails until you fix or ignore the old findings of the checks that read the whole project, such as
+`typescript/tsc`, `python/basedpyright`, `javascript/knip`, and your tests. `gspot check --only push` shows them before
+you push.
 
 `gspot check` lists every old finding in the repository. Turn on CI after you clear them, because a pull request that
-changes `gspot.toml` checks every file. Level `all` adds checks of the whole repository, such as `structure/lone-files`,
-which fail the setup commit until you fix or ignore their findings, so start an existing repository at `basic`.
+changes `gspot.toml` checks every file. Start an existing repository at `basic`, because level `all` adds checks of the
+whole repository, such as `structure/lone-files`, which fail the setup commit until you fix or ignore their findings.
 
 ## Set up gspot with a coding agent
 
@@ -128,8 +114,8 @@ The agent reads the setup steps from `llms.txt`. It runs `gspot scan`, asks you 
 answer. Then it runs `gspot init`, deletes the old tool settings that gspot reports, commits the setup, and lists the
 remaining findings and what it ignored.
 
-To have the agent show you what gspot finds before it sets anything up, paste this prompt instead. The agent runs
-`gspot scan`, reports what it found, and changes nothing until you answer:
+To see what gspot finds before the agent sets anything up, paste this prompt instead, and the agent changes nothing until
+you answer:
 
 <Code code={EVALUATION_PROMPT} lang="text" />
 

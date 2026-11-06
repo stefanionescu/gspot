@@ -1,6 +1,5 @@
 ---
 title: Concepts
-description: Configurations, checks, findings, levels, stages, scopes, and the code that gspot runs on your machine.
 ---
 
 import InlineText from '#docs/components/InlineText.astro';
@@ -9,9 +8,9 @@ import { buildLevelRows } from '#docs/reference/levels.ts';
 ## Configurations
 
 A configuration is everything gspot knows about one language, framework, tool, or topic: which checks to run, how to set
-up each tool, and what to tell coding agents. `python`, `nextjs`, and `secrets` are configurations. `gspot init` turns on the
-configurations that match your files and dependencies, and some, such as `secrets` and `spelling`, are on in every
-repository. The [configuration reference](/reference/configurations/) lists them all.
+up each tool, and what to tell coding agents. `gspot init` turns on the configurations that match your files and
+dependencies, and some, such as `secrets` and `spelling`, are on in every repository. The
+[configuration reference](/reference/configurations/) lists them all.
 
 Your settings live in `gspot.toml`, and gspot writes each tool's config file and the rule files in `.gspot/rules/` from
 them. These are the [generated files](/reference/generated-files/), so to change one, you change its setting, as
@@ -19,9 +18,8 @@ them. These are the [generated files](/reference/generated-files/), so to change
 
 ## Checks and findings
 
-A check runs one tool, such as ESLint, or code that ships with gspot, and reports each problem as a finding. Most findings
-name a file, a line, and a lint rule, which is one rule of a linter, such as `no-console` in ESLint. A check fails when it
-reports a finding.
+A check runs one tool, such as ESLint, or code that ships with gspot, and fails when it reports a problem, which gspot
+calls a finding. Most findings name a file, a line, and a lint rule, such as `no-console`.
 
 Each check has an ID of the form `<configuration>/<name>`, such as `python/ruff`, and `gspot check --only`,
 `gspot ignore`, and `gspot explain` take that ID. A [command check](/configure/command-checks/) runs a command that you
@@ -32,7 +30,8 @@ problems are not findings, so they have no check ID, and `gspot ignore` cannot t
 
 ## Levels
 
-The level decides how strict the checks are:
+The level decides how strict the checks are. The counts cover every configuration that gspot ships, so your repository
+runs fewer.
 
 <table>
     <thead>
@@ -58,8 +57,6 @@ The level decides how strict the checks are:
     </tbody>
 </table>
 
-The counts cover every configuration that gspot ships, so your repository runs fewer.
-
 To change the level, run `gspot set level all`, then `gspot install`. To go back to `basic`, run `gspot unset level`.
 
 ## Stages
@@ -74,8 +71,6 @@ The stage of a check decides when it runs:
 | `manual`  | Only when `gspot check --only` names it.                           |
 
 `gspot check` and CI run the `commit` and `push` checks, and `gspot check --only commit` or `--only push` runs one stage.
-
-[Git hooks](/use/hooks/) lists what each hook checks, and [CI](/use/ci/) lists what the CI job checks.
 
 ## Scopes
 
@@ -95,4 +90,4 @@ else wrote, review the code that gspot runs:
   plugins, and Xcode run scripts.
 - Tools in `node_modules/.bin`, `.venv/bin`, and the same folders under `.gspot/`.
 - Install settings: `.npmrc`, `uv.toml`, `[tool.uv]` in `pyproject.toml`, and the lockfiles in `.gspot/`.
-- Git hooks in `.gspot/hooks/`. After `gspot install`, Git runs them on commit, push, and checkout.
+- Git hooks in `.gspot/hooks/`, which Git runs on commit and push.

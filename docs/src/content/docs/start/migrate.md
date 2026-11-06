@@ -6,18 +6,19 @@ description: See which settings gspot copies from your tool configs, which rules
 gspot replaces the config files of the tools that it runs, and `gspot.toml` then holds the settings of all those tools.
 To move your repository to gspot, follow these steps:
 
-1. Install your project's dependencies, then run `gspot scan`, which works on a copy of your files. Only the scan
-   compares your ESLint and Stylelint rules, and it loads those configs to read them.
-2. Commit your tool config files. `gspot init` deletes the ones that it replaces, and it refuses to run until Git holds
-   each of them unchanged at `HEAD`.
-3. Run `gspot init`. It makes the changes in the plan, installs the tools, and turns on the Git hooks, or prints a line
-   for your [hook manager](/use/hooks/#existing-hook-managers). To start at level `all`, add `--level all`. To choose
-   the configurations yourself, add `--configurations typescript,react`.
-4. Read two sections of the scan report: `What gspot init would carry over and drop` and `Commands that would break`.
+1. Install your project's dependencies, then run `npx @gspothq/cli scan`, which works on a copy of your files. Only the
+   scan compares your ESLint and Stylelint rules, and it loads those configs to read them.
+2. Read two sections of the scan report: `What gspot init would carry over and drop` and `Commands that would break`.
    [Lint rules](#lint-rules) and [Commands that still call your old tools](#commands-that-still-call-your-old-tools) say
    what to do with each line.
-5. Delete the old tool settings that gspot reports as conflicts, commit the setup files, then fix each file as you touch
-   it, as [Clean up the first findings](/start/quickstart/#clean-up-the-first-findings) shows.
+3. Commit your tool config files. `gspot init` deletes the ones that it replaces, and it refuses to run until Git holds
+   each of them unchanged at `HEAD`.
+4. Add gspot and run `gspot init`, as the [Quickstart](/start/quickstart/#set-up-gspot) shows. It makes the changes in
+   the plan, installs the tools, and turns on the Git hooks, or prints a line for your
+   [hook manager](/use/hooks/#existing-hook-managers). To start at level `all`, add `--level all`. To choose the
+   configurations yourself, add `--configurations typescript,react`.
+5. Commit the setup files, as [Clean up the first findings](/start/quickstart/#clean-up-the-first-findings) shows, then
+   fix each file as you touch it.
 
 The scan shows the plan for level `basic`. Level `all` also replaces the configs of the tools that it adds, such as
 `.commitlintrc.json`.
@@ -39,10 +40,10 @@ The scan shows the plan for level `basic`. Level `all` also replaces the configs
 
 ## Formatting that init carries over
 
-`gspot init` reads the options of the formatters below and copies them into the `[format]` table of `gspot.toml`.
-`what init carries` marks an option that init cannot copy as dropped, and the format check then expects the format that
-gspot writes. A `format` script that calls another formatter stays in place, and the plan lists it, because the two
-formatters can disagree on the same file.
+`gspot init` copies the options of these formatters into the `[format]` table of `gspot.toml`. `what init carries` marks
+an option that init cannot copy as dropped, and the format check then expects the format that gspot writes. A `format`
+script that calls another formatter stays in place, and the plan lists it, because the two formatters can disagree on
+the same file.
 
 - Prettier: the indent style, indent width, line width, quotes, semicolons, trailing commas, `bracketSpacing`,
   `arrowParens`, and `proseWrap`, from a JSON, YAML, or TOML file, the `prettier` key of `package.json`, or a JavaScript
@@ -54,9 +55,8 @@ formatters can disagree on the same file.
 
 `gspot init` reads Prettier settings in the root folder and in each scope. To read a JavaScript or TypeScript config, it
 loads the file the way Prettier does, so the code in that file runs. When the file fails to load, the plan says so, and
-you set `format.indent_width` and `format.print_width` yourself. `what init carries` marks as dropped each Prettier
-option that `gspot.toml` has no setting for, such as `quoteProps`, and each value that it cannot hold, such as the Ruff
-quote style `preserve`.
+you set `format.indent_width` and `format.print_width` yourself. `gspot.toml` has no setting for some Prettier options,
+such as `quoteProps`, and cannot hold some values, such as the Ruff quote style `preserve`, so init drops them.
 
 In a repository that has code, gspot fills in each width or quote style that no config sets, with the Prettier defaults:
 2 spaces, 80 columns, and double quotes. Python files get the Ruff defaults through a `[[format.override]]` record: 4
@@ -106,8 +106,8 @@ of either in a subfolder.
 
 ## Commands that still call your old tools
 
-gspot does not edit your scripts, Git hooks, or CI files. Instead, the plan and `gspot scan` list each place that still
-calls a replaced tool or repeats it:
+gspot does not edit your scripts, Git hooks, or CI files. The plan and `gspot scan` list each place that still calls a
+replaced tool or repeats it:
 
 - `package.json` scripts, `lint-staged` entries, and hook lines
 - `.pre-commit-config.yaml` entries and CI steps
@@ -130,8 +130,8 @@ gspot init --from ../api/gspot.toml
 `gspot init` turns on the configurations that the file lists, and the configurations that it detects in the new
 repository. It copies the settings that fit any repository: the level, the limits with their reasons, naming, formatting,
 prose, coverage, the lint rule lists, and the word lists. It also copies each ignore that covers a whole check or lint
-rule. `init --from` keeps copying `hooks.enabled` and `rule_files.enabled`, so a repository that turned off its Git hooks
-or its rule files passes that on. A `--level` option overrides the level of the file.
+rule. It also copies `hooks.enabled` and `rule_files.enabled`, so a repository that turned off its Git hooks or its rule files
+passes that on. A `--level` option overrides the level of the file.
 
 The plan lists under `left out of <file>` each setting that fits only the other repository:
 
@@ -145,10 +145,9 @@ When the new repository has code, init takes the indentation, line width, and qu
 EditorConfig, or Ruff file, or else from the Prettier defaults. The `[format]` table of the file sets only the other
 formatting keys.
 
-`gspot init` turns on each configuration of the file, even when the new repository has none of its files yet. Your coding
-agent then gets the rules of that configuration before it writes the first file. Until such files exist, the checks of
-that configuration report `skipped (no-files)`. To turn off a configuration that you do not need, run
-`gspot remove <name> --reason "<why>"`.
+`gspot init` turns on each configuration of the file, even with none of its files in the new repository, so your coding
+agent gets its rules before the first file. Until such files exist, its checks report `skipped (no-files)`. To turn off
+a configuration that you do not need, run `gspot remove <name> --reason "<why>"`.
 
 `gspot init` copies the file once, so later changes to it do not reach the new repository. To share one setup with a
 team, keep the shared `gspot.toml` in a repository that everyone clones. To use the file without a clone, download it at
@@ -165,6 +164,6 @@ and command check scripts, copy each file together with its lines in `gspot.toml
 
 ## Old tool configs found after init
 
-When you later raise the level or add a configuration, a tool starts to run and can find an old config file of its own.
-The check `gspot/conflicting-configs` reports such a file, such as `.commitlintrc.json` once commitlint runs, so delete
-the file and move each rule that you need into `gspot.toml`.
+When you raise the level or add a configuration, a tool that starts to run can find an old config file of its own, such
+as `.commitlintrc.json` for commitlint. `gspot/conflicting-configs` reports the file, so delete it and move each rule
+that you need into `gspot.toml`.

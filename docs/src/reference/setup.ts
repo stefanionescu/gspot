@@ -45,7 +45,7 @@ const REPLACED_TOOLS = [
 export const AGENT_FACTS = `## What gspot does
 
 gspot sets up linters, formatters, and type checkers for the languages and frameworks in a repository, and pins each
-tool to one version. It writes the config files of those tools from one settings file, \`gspot.toml\`. It runs the
+tool that it installs. It writes the config files of those tools from one settings file, \`gspot.toml\`. It runs the
 tools before each commit and push, through Git hooks, and in CI. It also writes \`AGENTS.md\` and rule files that tell
 coding agents how to write code that passes the checks.
 
@@ -125,9 +125,9 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
    \`gspot init\` says what to do. After you edit \`package.json\`, run the install command of the package manager and
    \`gspot install\`. Do not run \`gspot check --fix\` on the whole repository, because it rewrites many files, and each
    then fails on its old lint findings.
-6. Commit the setup files with the hooks on, then fix each file as you touch it. A commit checks what you stage, and
-   what your staged change breaks in other files, so the setup commit passes once the conflicts are gone. Fix what the
-   hook reports, and commit again.
+6. Commit the setup files with the hooks on, then fix each file as you touch it. The setup commit passes once you delete
+   what \`gspot/conflicting-configs\` reports and fix or ignore the findings of the files that it stages, such as
+   \`package.json\`. Fix what the hook reports, and commit again.
 7. Run \`gspot check\`, and show the user the line that starts with \`Failed:\` or \`Passed:\`. Each old finding fails the
    commit that touches its file, and the first push fails until the checks that read the whole project pass, which
    \`gspot check --only push\` shows. For each of these, ask the user whether to fix it or ignore it with
