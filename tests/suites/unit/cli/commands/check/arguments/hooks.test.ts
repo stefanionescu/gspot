@@ -54,6 +54,25 @@ test('a failed commit-msg check prints its rerun line with the message file as t
     expect(result.stdout).not.toContain(sandbox.path);
 });
 
+test('the rerun line prints the absolute path of the commit-msg hook relative to the current folder', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['commits']),
+        'notes/message.txt': 'fix(cli): retain the argument of C3-BUG-019\n',
+    });
+    runGitStep(sandbox.path, ['add', 'gspot.toml']);
+    const result = await runGspot(join(sandbox.path, 'notes'), [
+        'check',
+        '--hook',
+        'commit-msg',
+        '--only',
+        'commits/references',
+        '--',
+        join(sandbox.path, 'notes/message.txt'),
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.stdout).toContain('--hook commit-msg -- message.txt\n');
+});
+
 test('an unreadable commit message file is named as typed', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
     const result = await runGspot(sandbox.path, ['check', '--hook', 'commit-msg', '--json', '--', 'gone.txt']);

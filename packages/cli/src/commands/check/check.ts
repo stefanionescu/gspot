@@ -1,5 +1,5 @@
-import { accessSync, constants, existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 
 import { runPushCheck } from '#cli/commands/check/push.ts';
@@ -33,6 +33,7 @@ import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readIndexTree } from '#cli/repository/revisions/files.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
@@ -127,6 +128,13 @@ function readOnlyStage({ only, hook }: CheckFlags): CheckOptions['stage'] {
     return stage;
 }
 
+// The commit-msg hook passes an absolute path, and its `$PWD` may reach the repository through a symlink.
+function formatMessageArgument(typed: string, { root, cwd }: CommandLocation): string {
+    if (!isAbsolute(typed) || !existsSync(typed)) return typed;
+    const path = realpathSync(typed);
+    return isInside(relative(root, path)) ? convertToPosixPath(relative(realpathSync(cwd), path)) : typed;
+}
+
 function parseCheckFlags(
     paths: string[],
     flags: CheckFlags,
@@ -135,6 +143,7 @@ function parseCheckFlags(
     const { cwd } = location;
     const { hook } = flags;
     const onlyStage = readOnlyStage(flags);
+    const messagePath = hook === 'commit-msg' ? paths[0] : undefined;
     const options: CheckOptions = {
         cwd,
         staged: flags.staged === true,
@@ -145,8 +154,8 @@ function parseCheckFlags(
         only: onlyStage === undefined ? flags.only : undefined,
         skip: flags.skip,
         base: flags.base,
-        messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
-        messageArgument: hook === 'commit-msg' ? paths[0] : undefined,
+        messageFile: messagePath === undefined ? undefined : resolve(cwd, messagePath),
+        messageArgument: messagePath === undefined ? undefined : formatMessageArgument(messagePath, location),
         stage: hook === undefined ? onlyStage : HOOK_CHECKS[hook].stages[0],
         onProgress: printProgress,
     };
