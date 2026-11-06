@@ -2,6 +2,7 @@ import { isAbsolute, posix, sep } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { FILE_GROUP, MISSING_RULE_HELP, MISSING_RULE_MESSAGE, RULE_GROUP, TAPLO_OUTPUTS } from '#cli/config/engine.ts';
+import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { DRIVE_LETTER } from '#cli/config/system.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
@@ -10,16 +11,30 @@ import { findCanonicalPath, parseGroupedFindings, parseRegexFindings } from '#cl
 import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
 import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import type { CheckOutput, Finding, OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
+
+const COPY_ROOT = new RegExp(`^(?<repository>.*)/${escapeRegExp(COPIES_FOLDER)}/[^/]+(?<folder>/.*)?$`, 'u');
+
+/**
+List the forms of a folder path. A copy lists the folder of the repository too, because a tool that follows a link to an
+installed package reports the path in the repository.
+
+@param root the folder, with forward slashes.
+*/
+function listRootForms(root: string): string[] {
+    const forms = [root, findCanonicalPath(root) ?? root];
+    const copied = COPY_ROOT.exec(root)?.groups;
+    return copied === undefined ? forms : [...forms, `${copied['repository'] ?? ''}${copied['folder'] ?? ''}`];
+}
 
 function stripRoot(root: string, file: string): string {
     const prefix = `${root}/`;
     if (file.startsWith(prefix)) return file.slice(prefix.length);
     if (!isAbsolute(file)) return file;
-    const canonicalRoot = findCanonicalPath(root);
-    const canonicalFile = findCanonicalPath(file);
-    if (canonicalRoot === undefined || canonicalFile === undefined) return file;
-    return canonicalFile.startsWith(`${canonicalRoot}/`) ? canonicalFile.slice(canonicalRoot.length + 1) : file;
+    const canonicalFile = findCanonicalPath(file) ?? file;
+    const form = listRootForms(root).find((each) => canonicalFile.startsWith(`${each}/`));
+    return form === undefined ? posix.relative(root, canonicalFile) : canonicalFile.slice(form.length + 1);
 }
 
 function buildRootRelativePath(path: string, cwd: string, posixRoot: string): string {
@@ -34,9 +49,8 @@ List the forms of a folder path that start a path below it, the longest first.
 @param root the folder, with forward slashes.
 */
 export function listRootPrefixes(root: string): string[] {
-    const roots = [root, findCanonicalPath(root) ?? root];
     const prefixes = new Set(
-        roots.flatMap((form) => {
+        listRootForms(root).flatMap((form) => {
             const native = form.replaceAll('/', () => sep);
             return [`${form}/`, `${native}${sep}`, `${native}/`];
         }),

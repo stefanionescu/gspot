@@ -195,7 +195,7 @@ test.skipIf(isLinux)('an absolute path that names the root in another case is st
 });
 
 test.each([...ESLINT_PATH_CASES])(
-    'ESLint paths are relative to the root only inside it: %s, %s',
+    'ESLint paths are relative to the root, inside it and outside it: %s, %s',
     (root, path, expected) => {
         const check = getShippedCheck('javascript/eslint');
         const stdout = JSON.stringify([

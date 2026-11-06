@@ -96,7 +96,7 @@ export const FIXABLE_FORMAT_CASES = [
 
 export const ESLINT_PATH_CASES: Array<[root: string, path: string, expected: string]> = [
     ['/repo', '/repo/a.js', 'a.js'],
-    ['/repo', '/repository/a.js', '/repository/a.js'],
+    ['/repo', '/repository/a.js', '../repository/a.js'],
     [
         win32.normalize('C:/repo'),
         win32.normalize('C:/repo/café file.js'),
