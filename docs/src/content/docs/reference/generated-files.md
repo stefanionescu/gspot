@@ -53,12 +53,12 @@ which stay open in review.
 
 `gspot install` installs the tools, and a `.gitignore` in `.gspot/` and in `.gspot-copies/` keeps these folders out of Git.
 
-| Path                   | Holds                                                                           | To clear it                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `.gspot/node_modules/` | The npm tools.                                                                  | Delete it, then run `gspot install`.                                                          |
-| `.gspot/.venv/`        | The Python tools. It is separate from the `.venv/` of your project.             | Delete it, then run `gspot install`.                                                          |
-| `.gspot/vale/`         |                                                                                 | Delete it, then run `gspot install`.                                                          |
-| `.gspot-copies/`       | Temporary copies of your files for `gspot scan` and for checks of staged files. | gspot deletes each copy after its run. If a copy stays behind, delete it while no check runs. |
+| Path                   | Holds                                                                                                                                    | To clear it                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `.gspot/node_modules/` | The npm tools.                                                                                                                           | Delete it, then run `gspot install`.                                                          |
+| `.gspot/.venv/`        | The Python tools. It is separate from the `.venv/` of your project.                                                                      | Delete it, then run `gspot install`.                                                          |
+| `.gspot/vale/`         |                                                                                                                                          | Delete it, then run `gspot install`.                                                          |
+| `.gspot-copies/`       | Temporary copies for `gspot scan`, a commit of a partly staged file, a push from a tree with other changes, and checks that write files. | gspot deletes each copy after its run. If a copy stays behind, delete it while no check runs. |
 
 Do not delete the tool pins, their lockfiles, or the other files in `.gspot/`.
 
