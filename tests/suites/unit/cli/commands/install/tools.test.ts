@@ -45,7 +45,7 @@ test('writing the generated files starts no npm, and install reports a failed np
     expect(JSON.parse(structured.stdout)).toMatchObject({
         error: 'install',
         message:
-            'Cannot determine the npm version for the tool project. Check that npm --version runs in the repository, then run gspot install again.',
+            'Cannot determine the npm version for the tool project. Check that npm --version runs in the repository, then run the command again.',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
