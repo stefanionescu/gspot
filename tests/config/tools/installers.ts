@@ -14,7 +14,6 @@ export const HOOK_REPOSITORIES = [
     {
         name: 'another hooks folder',
         location: '.githooks',
-        startProgram: 'mise',
         files: { '.githooks/pre-commit': '#!/bin/sh\n' },
         setting: ['config', 'core.hooksPath', '.githooks'],
         gitHook: false,
@@ -22,7 +21,6 @@ export const HOOK_REPOSITORIES = [
     {
         name: 'a Husky folder',
         location: '.husky',
-        startProgram: 'npm',
         files: {
             'package.json': NPM_PROJECT_PACKAGE,
             '.husky/pre-commit': 'npm test\n',
@@ -33,7 +31,6 @@ export const HOOK_REPOSITORIES = [
     {
         name: 'a Husky 9 folder',
         location: '.husky',
-        startProgram: 'npm',
         files: {
             'package.json': NPM_PROJECT_PACKAGE,
             '.husky/pre-commit': 'npm test\n',
@@ -45,7 +42,6 @@ export const HOOK_REPOSITORIES = [
     {
         name: 'a script in the Git hooks folder',
         location: '.git/hooks',
-        startProgram: 'npm',
         files: {
             'package.json': NPM_PROJECT_PACKAGE,
         },
