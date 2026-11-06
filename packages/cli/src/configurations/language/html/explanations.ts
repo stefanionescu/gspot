@@ -4,7 +4,7 @@ import type { RuleExplanations } from '#cli/types/tools.ts';
 export const HTML_EXPLANATIONS = {
     [HTML_RULES.inlineScript]: {
         description: 'No `<script>` element holds executable code inline.',
-        why: 'A Content Security Policy without `unsafe-inline` blocks inline code, and a script file can be cached and checked.',
+        why: 'A Content Security Policy without `unsafe-inline` blocks inline code that has no nonce or hash, and a script file can be cached and checked.',
         fix: 'Put the code in a `.js` file, and load it with `<script src="...">`.',
         example: '`<script>start();</script>` reports `inline-script`; `<script src="/start.js"></script>` does not.',
     },

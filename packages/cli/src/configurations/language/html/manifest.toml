@@ -36,4 +36,4 @@ help = "Move the script into its own file, and attach the handler there. Structu
 name = "inline-scripts"
 stage = "commit"
 summary = "Reports inline scripts, event handler attributes, and executable URLs in HTML files."
-why = "A content security policy can block injected code only when the pages carry no inline script."
+why = "A content security policy blocks injected code only when it leaves out `unsafe-inline`, and each inline script then needs a nonce or a hash."

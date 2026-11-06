@@ -4,7 +4,7 @@ import type { RuleExplanations } from '#cli/types/tools.ts';
 export const IMPORT_EXPLANATIONS = {
     [IMPORT_RULE_CHECK_RULES.refusedImport]: {
         description:
-            'A Python or Swift file imports only from the import rules that its own rule lists in `can_import`. A Swift file also names only the types of those rules, because files of one target use each other with no `import`.',
+            'A Python or Swift file imports only from its own import rule and from those that `can_import` lists, or every rule above it when the rule has no `can_import`. A Swift file also names only the types of those rules, because files of one target use each other with no `import`.',
         why: 'An import or a type from a higher layer breaks the order that the import rules describe.',
         fix: 'Move the code into a layer that the file may import, or move the importing code up a layer.',
         example:

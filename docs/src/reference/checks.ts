@@ -30,7 +30,7 @@ import {
 import type { ReferencePage } from '#docs/types/pages.ts';
 import type { CliReference, Suppression } from '#docs/types/reference.ts';
 
-const NO_INLINE_CONFIG_FLAG = '--no-inline-config';
+const COMMENT_BLIND_ARGUMENTS = new Set(['--no-inline-config', 'format']);
 
 function formatCheckRequirements(needs: CliReference['checks'][number]['needs']): string {
     const resources = needs.flatMap((need) => (need === 'project-code' ? [] : [CHECK_NEEDS_LABELS[need]]));
@@ -72,7 +72,9 @@ function formatTurnOff(reference: CliReference['checks'][number]): string {
         ...(turnOff.rule === undefined ? [] : [turnOff.rule]),
     ];
     const comment =
-        check.command?.includes(NO_INLINE_CONFIG_FLAG) === true ? '' : formatSuppressionComment(suppression);
+        check.command?.some((argument) => COMMENT_BLIND_ARGUMENTS.has(argument)) === true
+            ? ''
+            : formatSuppressionComment(suppression);
     return `\`\`\`text\n${commands.join('\n')}\n\`\`\`${comment}`;
 }
 

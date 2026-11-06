@@ -43,7 +43,7 @@ why = "A reader of the history cannot open a chat session, a private finding, or
 [[check]]
 command = ["commitlint", "--config", "{config_file:commitlint}", "--edit", "{message_file}"]
 example = "A commit with the message `changed stuff` in the push fails. Reword it as `fix(cli): report missing configuration`, and coordinate first when others share that history."
-help = "Reword the commits that fail with `git rebase -i`, or change the rule with `gspot set tools.commitlint.rules`."
+help = "Reword the commits that fail with `git rebase -i`, or change the rule with `gspot set tools.commitlint.rules`. To accept a finding, this check needs its own `[[ignore]]` record, because one for `commits/commitlint` does not cover it."
 level = "all"
 name = "commitlint-pushed"
 runs = "history"
