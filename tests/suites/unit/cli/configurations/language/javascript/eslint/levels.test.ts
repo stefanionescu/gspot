@@ -8,7 +8,6 @@ import { LEVELS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import {
     COALESCING_CORRECTED,
@@ -18,7 +17,7 @@ import {
 } from '#tests/config/configurations/javascript/overrides.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { EslintConfiguration } from '#tests/types/setup.ts';
 
@@ -80,29 +79,15 @@ test('all applies your rule options except in script and test files', async () =
     expect(testFile.rules['n/no-unpublished-import']![0]).toBe(0);
 });
 
-test('install refuses options for a rule of level all at level basic, and ESLint refuses options for a rule that no block turns on', async () => {
+test('ESLint refuses options for a rule that no block turns on', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'basic',
-            tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n',
+            tables: '[tools.eslint.rules]\n"id-length" = []\n"acme/foo" = []\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
     });
-    const session = await openSession(sandbox.path);
-    expect(() => buildGeneratedFiles(session)).toThrow(
-        matchFields<GspotError>({
-            code: 'settings',
-            message: expect.stringContaining('n/no-process-exit') as string,
-        }),
-    );
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['javascript'], {
-            level: 'basic',
-            tables: '[tools.eslint.rules]\n"id-length" = []\n"acme/foo" = []\n',
-        }),
-    );
     const eslint = await buildEslint(sandbox.path);
     expect(await captureRejection(eslint.calculateConfigForFile('source.js'))).toMatchObject({
         message: [

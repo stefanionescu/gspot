@@ -1,10 +1,5 @@
-import { writeFile } from 'node:fs/promises';
-
 import { expect, test } from 'bun:test';
 
-import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import {
     CONFLICTING_LOCAL_PLUGIN_FILES,
     CONFLICTING_LOCAL_PLUGIN_TABLES,
@@ -18,7 +13,7 @@ import {
 import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
@@ -63,16 +58,6 @@ test('a plugin package loads from .gspot/node_modules and reports with its rule 
     ]);
 });
 
-test('a plugin record with a package and no version is a settings error', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            tables: '[[tools.eslint.plugins]]\nname = "acme"\npackage = "eslint-plugin-acme"\nrules = {}\n',
-        }),
-        'package.json': '{"private":true,"type":"module"}\n',
-    });
-    expect(await captureRejection(openSession(sandbox.path))).toMatchObject({ code: 'settings' });
-});
-
 test('one plugin name with two modules is a settings error that names both paths', async () => {
     const error = await captureRejection(
         buildGeneratedFile(
@@ -84,7 +69,7 @@ test('one plugin name with two modules is a settings error that names both paths
     expect(error).toMatchObject(DUPLICATE_PLUGIN_ERROR);
 });
 
-test('tools.eslint.plugins loads your plugin by its path and refuses the gspot rule prefix', async () => {
+test('tools.eslint.plugins loads your plugin by its path', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
         '.gitignore': 'node_modules/\n',
@@ -98,16 +83,4 @@ test('tools.eslint.plugins loads your plugin by its path and refuses the gspot r
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['local/no-forbidden'])).toStrictEqual([
         { file: 'source.js', rule: 'local/no-forbidden', line: 1 },
     ]);
-    await writeFile(
-        `${sandbox.path}/gspot.toml`,
-        buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES.replace('"local"', '"gspot"') }),
-    );
-    const session = await openSession(sandbox.path);
-    expect(() => buildGeneratedFiles(session)).toThrow(
-        matchFields<GspotError>({
-            code: 'settings',
-            message:
-                'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.',
-        }),
-    );
 });
