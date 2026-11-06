@@ -6,8 +6,7 @@ configurations: [prose, spelling]
 
 gspot turns on two configurations for the words of every repository:
 
-- `spelling` runs the typos spell checker on code, comments, and docs. It skips `gspot.toml`, which holds globs and tool
-  names.
+- `spelling` runs the typos spell checker on code, comments, and docs.
 - `prose/dates` reports a date such as `03/04/2026`, which some readers take as March 4 and others as April 3. Write
   `March 4, 2026` or `2026-03-04`.
 
