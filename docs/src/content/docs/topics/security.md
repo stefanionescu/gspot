@@ -1,11 +1,10 @@
 ---
 title: Security and secrets
-description: What to do when gspot finds a secret, and the security checks that gspot runs.
 configurations: [security, docker, github-actions, secrets]
 ---
 
-gspot scans each commit for secrets. Before each push, it checks your dependencies and your code for known security
-problems.
+gspot scans each commit and each push for secrets. A push that changes a lockfile also looks up the locked packages for
+known vulnerabilities, and Semgrep runs when a configuration or your settings give it rules.
 
 ## When gspot finds a secret
 
@@ -33,11 +32,9 @@ gspot ignore secrets/gitleaks-pushed --paths "tests/fixtures/keys.json" --reason
 
 ## Semgrep
 
-Semgrep runs before each push, on macOS and Linux, when a configuration ships Semgrep rules, as FastAPI does, or when
-you add your own. To add your own, list their files, and gspot rejects a path that names no file:
+Semgrep runs before each push, on macOS and Linux, when a configuration ships Semgrep rules, as FastAPI does, or when you
+list rule files of your own. With neither, gspot does not install it, and gspot rejects a path that names no file:
 
 ```shell title="example"
 gspot set security.semgrep_rules rules/semgrep.yml
 ```
-
-With neither, gspot does not install Semgrep.

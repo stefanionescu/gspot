@@ -19,8 +19,8 @@ Adding `mermaid-isomorphic` 3.1.0 to draw diagrams pulled in `katex` 0.16.47:
 }
 ```
 
-Before each push, `dependencies/osv-scanner` looks up every locked package in the Open Source Vulnerabilities (OSV)
-database, at both levels. The advisory for `katex` stopped the push:
+Before each push that changes a lockfile, `dependencies/osv-scanner` looks up every locked package in the
+Open Source Vulnerabilities (OSV) database, at both levels. The advisory for `katex` stopped the push:
 
 ```text
 bun.lock  GHSA-238p-pmpm-9mq7  katex: 0.16.47: Existing prototype pollution can bypass trust restrictions
@@ -88,12 +88,10 @@ const folder = '/srv/$$app';
 ```
 
 The rule `unicorn/no-unsafe-string-replacement` reports a replacement value that is not a literal, and it runs in
-`javascript/eslint`:
+`javascript/eslint` at level `all`:
 
 ```text
 src/paths.js:2:50  unicorn/no-unsafe-string-replacement  Do not use a non-literal replacement value with `String#replaceAll()`.
 ```
-
-The `replace` rule runs only at level `all`. To turn it on, run `gspot set level all`, then `gspot install`.
 
 [Fixed in commit 651f85309](https://github.com/stefanionescu/gspot/commit/651f85309).

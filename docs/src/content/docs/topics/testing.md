@@ -4,19 +4,17 @@ description: Run your tests before every push and fail when coverage drops under
 configurations: [jest, vitest, pytest]
 ---
 
-gspot runs your tests as a check before each push. The check fails when a test fails, or when the coverage falls below
-its minimum. Install the test runner in your own project. For a test runner that gspot has no configuration for, write a
-[command check](/configure/command-checks/).
+gspot runs your tests as a check before each push, and the check fails when a test fails, or when the coverage falls below
+its minimum. For a test runner that gspot has no configuration for, write a [command check](/configure/command-checks/).
 
-| Runner | gspot turns it on when the project has                            | Check          | Coverage minimums                      | Install in your project                                    |
-| ------ | ----------------------------------------------------------------- | -------------- | -------------------------------------- | ---------------------------------------------------------- |
-| Jest   | a `jest` dependency or a `jest.config.*` file                     | `jest/tests`   | lines, branches, functions, statements | `jest`                                                     |
-| Vitest | a `vitest` dependency, `vitest.config.*`, or `vitest.workspace.*` | `vitest/tests` | lines, branches, functions, statements | `vitest`, plus `@vitest/coverage-v8` for a minimum above 0 |
-| pytest | a `pytest` dependency, `conftest.py`, or `pytest.ini`             | `pytest/tests` | lines                                  | `pytest`, plus `pytest-cov` for a minimum above 0          |
-| Swift  | the `swift` configuration                                         | `swift/tests`  | lines, also per target                 | the Swift toolchain                                        |
+| Runner | Check          | Coverage minimums                      | Install in your project                                    |
+| ------ | -------------- | -------------------------------------- | ---------------------------------------------------------- |
+| Jest   | `jest/tests`   | lines, branches, functions, statements | `jest`                                                     |
+| Vitest | `vitest/tests` | lines, branches, functions, statements | `vitest`, plus `@vitest/coverage-v8` for a minimum above 0 |
+| pytest | `pytest/tests` | lines                                  | `pytest`, plus `pytest-cov` for a minimum above 0          |
+| Swift  | `swift/tests`  | lines, also per target                 | the Swift toolchain                                        |
 
-When gspot does not detect your runner, run `gspot add <runner>`, such as `gspot add vitest`. To run one test suite, run
-`gspot check --only <check>`.
+When gspot does not detect your runner, run `gspot add <runner>`, such as `gspot add vitest`.
 
 ## Coverage minimums
 
@@ -31,21 +29,16 @@ The settings are `coverage.min_line_percent`, `coverage.min_branch_percent`, `co
 a minimum for one scope, add `--scope <path>`. [Swift](/languages/swift/#coverage) shows how to set a minimum for one
 Swift target.
 
-## Jest
+## Lint rules for tests
 
-At both levels, the `jest` configuration also reports tests marked `.only`, skipped tests, and broken test calls. These
-rules also work when a file imports `test` and `expect` from `@jest/globals`.
-
-## Vitest
-
-At both levels, the `vitest` configuration also reports tests marked `.only` and skipped tests.
+The `jest` and `vitest` configurations also report tests marked `.only` and skipped tests at both levels, and `jest`
+reports broken test calls, also when a file imports `test` and `expect` from `@jest/globals`.
 
 ## pytest
 
 Install pytest in the `.venv` of your project. An unregistered marker or an unknown pytest setting fails the check, and
 the check skips a scope without test files. The coverage settings that gspot writes leave out the files of
-[`test_files`](#test-files), so the tests themselves do not raise the measured coverage. When the project has its own
-coverage settings, they decide which files to leave out.
+[`test_files`](#test-files), and your own coverage settings take their place when the project has them.
 
 ## Test files
 

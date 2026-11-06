@@ -4,16 +4,12 @@ description: Check spelling at every level, and prose style at level all.
 configurations: [prose, spelling]
 ---
 
-gspot turns on two configurations for the words of every repository:
-
-- `spelling` runs the typos spell checker on code, comments, and docs.
-- `prose/dates` reports a date such as `03/04/2026`, which some readers take as March 4 and others as April 3. Write
-  `March 4, 2026` or `2026-03-04`.
+In every repository, gspot checks the spelling of code, comments, and docs, and reports ambiguous dates.
 
 ## Spelling
 
-`spelling.locale` is `en` by default, which accepts the spellings of every English dialect. To require one dialect,
-choose `en-us`, `en-gb`, `en-ca`, or `en-au`:
+The typos spell checker accepts the spellings of every English dialect, because `spelling.locale` is `en` by default. To
+require one dialect, choose `en-us`, `en-gb`, `en-ca`, or `en-au`:
 
 ```shell
 gspot set spelling.locale en-gb
@@ -27,6 +23,11 @@ To accept a word, such as a product name, add it with a reason, and Vale then ac
 ```shell
 gspot set spelling.allowed_words Acmeflow --reason "Acmeflow is our product name."
 ```
+
+## Dates
+
+`prose/dates` reports a date such as `03/04/2026`, which some readers take as March 4 and others as April 3. Write
+`March 4, 2026` or `2026-03-04`.
 
 ## Prose style
 
