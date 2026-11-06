@@ -5,6 +5,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { openSession } from '#cli/engine/session.ts';
+import { planInit } from '#cli/generation/setup/planner.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installGrammars } from '#cli/tools/installers/grammars.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -16,10 +17,27 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 function serveGrammar(request: Parameters<typeof fetch>[0]): Promise<Response> {
     const address = request instanceof Request ? request.url : request.toString();
-    const name = address.includes('html') ? 'html.wasm' : 'bash.wasm';
-    const bytes = readFileSync(join(SHARED_GRAMMARS, name));
+    const name = ['html', 'swift'].find((grammar) => address.includes(grammar)) ?? 'bash';
+    const bytes = readFileSync(join(SHARED_GRAMMARS, `${name}.wasm`));
     return Promise.resolve(new Response(bytes));
 }
+
+test.each([
+    { command: 'gspot check', read: (path: string) => openSession(path) },
+    { command: 'gspot init', read: (path: string) => planInit(path, { cwd: path }) },
+])('$command downloads the Swift grammar before it reads a Swift file', async ({ read }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'App.swift': 'import Foo\n',
+    });
+    await using cache = await testdir();
+    using _environment = overrideEnvironment({ XDG_CACHE_HOME: cache.path });
+    using _request = spyOn(globalThis, 'fetch').mockImplementation(
+        Object.assign(serveGrammar, { preconnect: fetch.preconnect }),
+    );
+    await read(sandbox.path);
+    expect(existsSync(join(cache.path, 'gspot/grammars/swift.wasm'))).toBe(true);
+});
 
 test('install downloads the grammars of the repository once, and refuses other bytes', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), 'entry.sh': 'echo a\n' });

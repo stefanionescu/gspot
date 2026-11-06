@@ -9,6 +9,7 @@ import { readSettingsText } from '#cli/settings/file.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { buildScopeSettings, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import { downloadSwiftGrammar } from '#cli/tools/installers/grammars.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -41,14 +42,17 @@ async function readSessionRepository({
     listing,
     untracked,
     unreadablePaths,
+    cancelSignal,
 }: {
     settings: Settings;
     cache: RunCache;
     listing: RepositoryListing | undefined;
     untracked: UntrackedFiles | undefined;
     unreadablePaths: string[];
+    cancelSignal: AbortSignal | undefined;
 }): Promise<Repository> {
     const listed = listing ?? (await listRepositoryFiles(cache, untracked));
+    await downloadSwiftGrammar(listed, { settings, cancelSignal });
     const selected = new Map(
         ['', ...settings.scopes.keys()].map((path) => [path, selectConfigurationsForScope(settings, path)]),
     );
@@ -106,7 +110,14 @@ export async function openSession(
         cancelSignal,
     }: SessionOptions = {},
 ): Promise<Session> {
-    const repository = await readSessionRepository({ settings, cache, listing, untracked, unreadablePaths });
+    const repository = await readSessionRepository({
+        settings,
+        cache,
+        listing,
+        untracked,
+        unreadablePaths,
+        cancelSignal,
+    });
     const scopes = buildScopes(settings, repository);
     const configuredChecks = listEnabledChecks(scopes, settings);
     const base: SessionBase = {

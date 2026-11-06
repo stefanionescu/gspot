@@ -19,12 +19,14 @@ import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
+import { downloadSwiftGrammar } from '#cli/tools/installers/grammars.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type {
@@ -35,8 +37,9 @@ import type {
     PlannedSettings,
     SettingsDraft,
 } from '#cli/types/generation.ts';
-import type { ConflictingConfig, Repository } from '#cli/types/repository.ts';
+import type { ConflictingConfig, Repository, RepositoryListing } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 type SettingsPlan = {
@@ -88,6 +91,14 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings & Pick<
     };
 }
 
+async function readPlannedRepository(cache: RunCache): Promise<{ listing: RepositoryListing; repository: Repository }> {
+    const listing = await listRepositoryFiles(cache);
+    await downloadSwiftGrammar(listing, {
+        settings: { tool_timeout_seconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined) },
+    });
+    return { listing, repository: await readRepository(cache, listing, { generatedPaths: [], scopes: [] }) };
+}
+
 /**
 Read the repository and work out what init writes, replaces, and leaves. It changes no file.
 
@@ -97,8 +108,7 @@ Read the repository and work out what init writes, replaces, and leaves. It chan
 */
 export async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const cache = createRunCache(root);
-    const listing = await listRepositoryFiles(cache);
-    const repository = await readRepository(cache, listing, { generatedPaths: [], scopes: [] });
+    const { listing, repository } = await readPlannedRepository(cache);
     const proposed = selectProposedConfigurations({ repository, options });
     const repositorySetup = await readRepositorySetup(cache, repository);
     const prettierScripts = await readPrettierScripts(root, repository.files, proposed.scopes);

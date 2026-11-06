@@ -7,6 +7,7 @@ import {
     GRAMMAR_ARCHIVE_LIMIT,
     GRAMMAR_NAMES,
     GRAMMAR_RELEASES,
+    SWIFT_EXTENSION,
     TAG_GRAMMARS,
 } from '#cli/config/parsers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
@@ -18,6 +19,7 @@ import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { downloadArchive } from '#cli/tools/installers/vale.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
+import type { RepositoryListing } from '#cli/types/repository.ts';
 import type { DownloadSession, ToolInstall } from '#cli/types/tools.ts';
 
 function listRepositoryGrammars(install: ToolInstall): GrammarName[] {
@@ -53,6 +55,16 @@ export async function downloadGrammar(grammar: GrammarName, session: DownloadSes
     mkdirSync(dirname(path), { recursive: true });
     replaceBoundedFile({ root: dirname(path) }, basename(path), { bytes, mode: OWNER_WRITABLE_FILE });
     return true;
+}
+
+/**
+Download the Swift grammar when the listing holds a Swift file, because a read of the repository parses each one.
+
+@param listing the files that the read takes.
+@param session the time limit and the cancel signal of the download.
+*/
+export async function downloadSwiftGrammar(listing: RepositoryListing, session: DownloadSession): Promise<void> {
+    if (listing.files.some(({ path }) => path.endsWith(SWIFT_EXTENSION))) await downloadGrammar('swift', session);
 }
 
 /**
