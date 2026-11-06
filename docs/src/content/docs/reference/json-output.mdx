@@ -155,15 +155,15 @@ fields:
 | `canceled` | Was stopped by a signal, and the run exits with the code of that signal. |
 | `skipped`  | Did not run, for the reason in `cause`.                                  |
 
-| `cause`     | The check did not run because                                                        |
-| ----------- | ------------------------------------------------------------------------------------ |
-| `system`    | The operating system cannot run it.                                                  |
-| `replaced`  | Another check runs in its place, such as `nextjs/tsc` for `typescript/tsc`.          |
-| `setting`   | A setting that it needs is empty.                                                    |
-| `condition` | The repository does not meet its condition, such as no TypeScript for `vue/vue-tsc`. |
-| `level`     | It runs only at level `all`.                                                         |
-| `ignore`    | An ignore turns it off.                                                              |
-| `no-files`  | No file of the run matches it.                                                       |
+| `cause`     | The check did not run because                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `system`    | The operating system cannot run it.                                                                                     |
+| `replaced`  | Another check runs in its place, such as `nextjs/tsc` for `typescript/tsc`, or the run of an enclosing scope covers it. |
+| `setting`   | A setting that it needs is empty.                                                                                       |
+| `condition` | The repository does not meet its condition, such as no TypeScript for `vue/vue-tsc`.                                    |
+| `level`     | It runs only at level `all`.                                                                                            |
+| `ignore`    | An ignore turns it off.                                                                                                 |
+| `no-files`  | No file of the run matches it.                                                                                          |
 
 Each finding has `check`, `file`, `message`, `fixable`, and `explain`, which holds the command that explains its check or
 lint rule. It can also have these fields, and a finding without a place in a file can have an empty `file`:
