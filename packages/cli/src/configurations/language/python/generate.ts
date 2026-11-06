@@ -29,7 +29,7 @@ import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
-import { getLimit, getTable, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
+import { getLimit, getTable, listIgnoredRules, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
@@ -133,7 +133,6 @@ function buildRuffFile(planned: PlannedConfig): string {
         ...configuration.ruff.basic,
         ...(planned.level === 'all' ? configuration.ruff.all : []),
     ]);
-    const scopePath = planned.scope.path;
     const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
         (each) => each.rule !== undefined && each.paths !== undefined,
     );
@@ -148,9 +147,11 @@ function buildRuffFile(planned: PlannedConfig): string {
         (ignore.paths ?? []).map((path) => ({ path, rule: ignore.rule as string })),
     );
     for (const { path, rule } of pathRules) {
-        const target = `${pythonScopePath}/${relative(scopePath, path)}`;
+        const target = `${pythonScopePath}/${relative(planned.scope.path, path)}`;
         byPath.set(target, [...(byPath.get(target) ?? []), rule]);
     }
+    const written = getTable(planned.scope.settings, 'tools.ruff').rules;
+    const ignored = listIgnoredRules(planned.scope, RUFF_CHECK);
     const convention = getTable(planned.scope.settings, 'python').docstring_convention;
     const document = {
         'line-length': format.print_width,
@@ -165,8 +166,8 @@ function buildRuffFile(planned: PlannedConfig): string {
         lint: {
             preview: true,
             'explicit-preview-rules': true,
-            select: [...ruffRules, ...getTable(planned.scope.settings, 'tools.ruff').rules],
-            ignore: listDisabledRules(planned),
+            select: [...ruffRules, ...written],
+            ignore: listDisabledRules(planned).filter((rule) => ignored.includes(rule) || !written.includes(rule)),
             unfixable: RUFF_UNFIXABLE,
             isort: RUFF_ISORT,
             'flake8-tidy-imports': RUFF_TIDY_IMPORTS,
