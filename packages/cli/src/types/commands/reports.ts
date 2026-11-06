@@ -134,4 +134,4 @@ export type ScanInput = {
     leftOut: string[];
 };
 
-export type ScanSection = { title: string; rows: string[]; preformatted?: boolean };
+export type ScanSection = { title: string; rows: string[] };

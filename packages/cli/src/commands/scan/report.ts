@@ -163,7 +163,6 @@ function listSections(report: ScanReport): ScanSection[] {
             rows: formatInitPlan({ ...plan, lintCommands: [], carryover: [] }, settingsText)
                 .trimEnd()
                 .split('\n'),
-            preformatted: true,
         },
         { title: SCAN_NEXT_STEPS_TITLE, rows: nextSteps },
     ];

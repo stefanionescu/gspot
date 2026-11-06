@@ -64,7 +64,7 @@ help = "Read the SC code in the finding; `gspot explain bash/shellcheck SC2086` 
 name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
 stage = "commit"
-summary = "Runs ShellCheck over shell scripts and sourced files, with its stable optional rules at level all."
+summary = "Runs ShellCheck over shell scripts, with its stable optional rules at level all."
 why = "Quoting, globbing, and exit-status mistakes pass on normal input, and fail on the first file name with a space."
 
 [[check]]
