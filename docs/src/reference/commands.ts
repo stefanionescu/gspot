@@ -1,6 +1,5 @@
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
-    COMMANDS_DESCRIPTION,
     COMMANDS_OPENING,
     DEFINITION_HEADING,
     ENVIRONMENT_VARIABLES,
@@ -66,16 +65,13 @@ export function buildCommandPage(): ReferencePage {
     const exitCodes = CLI_REFERENCE.exitCodes.map(([codes, meaning]) => [`\`${codes}\``, meaning]);
     return buildReferencePage(
         'Commands',
-        COMMANDS_DESCRIPTION,
+        undefined,
         COMMANDS_OPENING +
             formatTable(['Command', PURPOSE_HEADING], commandRows) +
             '\n' +
             commands.map((command) => formatCommand(command)).join('') +
             formatSection(GLOBAL_OPTIONS_HEADING, formatTable(['Option', PURPOSE_HEADING], globalOptions)) +
-            formatSection(
-                EXIT_CODES_HEADING,
-                `Every command exits with one of these codes.\n\n${formatTable([EXIT_CODE_HEADING, 'Meaning'], exitCodes)}`,
-            ) +
+            formatSection(EXIT_CODES_HEADING, formatTable([EXIT_CODE_HEADING, 'Meaning'], exitCodes)) +
             formatSection(
                 ENVIRONMENT_VARIABLES_HEADING,
                 formatTable(['Variable', PURPOSE_HEADING], ENVIRONMENT_VARIABLES),

@@ -121,7 +121,7 @@ export function buildCheckIndex(): ReferencePage {
     const { checks } = CLI_REFERENCE;
     return buildReferencePage(
         'Checks',
-        `${String(checks.length)} checks declared by shipped configurations.`,
+        undefined,
         CHECKS_OPENING +
             Object.entries(CLI_REFERENCE.groups)
                 .map(([group, title]) => {

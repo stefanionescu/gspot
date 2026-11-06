@@ -7,7 +7,6 @@ import {
     CHECKS_HEADING,
     CONDITION_SEPARATOR,
     CONFIG_FILES_HEADING,
-    CONFIGURATIONS_DESCRIPTION,
     CONFIGURATIONS_OPENING,
     CONJUNCTION_FORMAT,
     DEFAULTS_HEADING,
@@ -174,12 +173,9 @@ export function buildConfigurationPages(guides: Map<string, ConfigurationGuide>)
     });
     const index = buildReferencePage(
         'Configurations',
-        CONFIGURATIONS_DESCRIPTION,
+        undefined,
         CONFIGURATIONS_OPENING +
-            formatSection(
-                'Always selected',
-                `gspot selects these in every repository: ${CONJUNCTION_FORMAT.format(alwaysSelected)}.`,
-            ) +
+            formatSection('Always selected', CONJUNCTION_FORMAT.format(alwaysSelected)) +
             groupSections.join(''),
     );
     const pages = new Map<string, ReferencePage>([[`${REFERENCE_FOLDERS.configurations}/index`, index]]);

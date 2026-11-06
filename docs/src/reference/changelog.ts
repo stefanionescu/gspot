@@ -27,11 +27,7 @@ export function buildChangelogPage(): ReferencePage {
             return subject === undefined ? line : `- ${formatText(subject)}`;
         })
         .join('\n');
-    const page = buildReferencePage(
-        'Changelog',
-        'The features, fixes, and performance changes of each gspot CLI release.',
-        body,
-    );
+    const page = buildReferencePage('Changelog', undefined, body);
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };
     return page;
 }

@@ -14,8 +14,6 @@ import {
     REFERENCE_PATH,
     SCHEMA_TYPE_LABELS,
     SENTENCE_END,
-    SETTINGS_DESCRIPTION,
-    SETTINGS_OPENING,
     TABLE_HEADING_LEVEL,
     TOP_LEVEL_HEADING,
 } from '#docs/config/reference.ts';
@@ -205,9 +203,8 @@ export function buildSettingsPage(): ReferencePage {
         );
     const page = buildReferencePage(
         'gspot.toml settings',
-        SETTINGS_DESCRIPTION,
-        SETTINGS_OPENING +
-            `The [JSON Schema](${CLI_REFERENCE.docs.schema}) describes every key.\n` +
+        undefined,
+        `[gspot.toml](/configure/gspot-toml/) says how to change these settings, and the [JSON Schema](${CLI_REFERENCE.docs.schema}) gives your editor the same keys.\n` +
             formatSection(
                 TOP_LEVEL_HEADING,
                 formatSettingKeys(topLevelKeys, TABLE_HEADING_LEVEL + 1),

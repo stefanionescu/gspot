@@ -79,13 +79,11 @@ export const CONJUNCTION_FORMAT = new Intl.ListFormat('en', { type: 'conjunction
 export const DISJUNCTION_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });
 
 export const CHECKS_OPENING =
-    'Each check ID is `<configuration>/<name>`. The [stage](' +
+    'The [stage](' +
     DOCS_PATHS.stage +
-    ') says when it runs, and the ' +
-    '[level](' +
+    ') says when a check runs, and the [level](' +
     DOCS_PATHS.levels +
-    ') says which setting of `level` turns it on. ' +
-    '`gspot explain <check>` shows its state in your repository.\n';
+    ') says which setting of `level` turns it on. `gspot explain <check>` shows its state in your repository.\n';
 
 export const PURPOSE_HEADING = 'What it does';
 
@@ -111,8 +109,6 @@ export const EXIT_CODE_HEADING = 'Exit code';
 
 export const EXAMPLE_MESSAGE = 'For example:';
 
-export const COMMANDS_DESCRIPTION = 'Every gspot command, its options, and its exit codes.';
-
 export const GLOBAL_OPTIONS_HEADING = 'Global options';
 
 export const EXIT_CODES_HEADING = 'Exit codes';
@@ -128,8 +124,6 @@ export const RULES_OFF_HEADING = 'Lint rules turned off';
 export const DEFAULTS_HEADING = 'Defaults set for other configurations';
 
 export const RULE_FILES_HEADING = 'Rules for coding agents';
-
-export const CONFIGURATIONS_DESCRIPTION = 'Choose configurations by the files and tools they check.';
 
 export const CONFIGURATIONS_OPENING =
     'gspot selects configurations from the files of each scope. `gspot add <name>` and ' +
@@ -173,16 +167,11 @@ export const BANNED_NAME_MESSAGE =
 
 export const MONOREPOS_SCOPE_MESSAGE = 'See [Monorepos](/configure/monorepos/) for how a scope inherits settings.\n\n';
 
-export const SETTINGS_DESCRIPTION = 'Every key, accepted value, and default of gspot.toml.';
-
-export const SETTINGS_OPENING =
-    'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n';
-
 export const TOP_LEVEL_HEADING = 'Top-level settings';
 
 export const SENTENCE_END = /[.\n]$/u;
 
-export const COMMANDS_OPENING = `Run gspot from any folder of the repository; it uses the \`gspot.toml\` at the top of the Git repository. Start each command the way your repository runs gspot, such as \`bunx --no-install gspot\` or \`mise exec -- gspot\`. See [Install](/start/install/#add-gspot). Commands that change settings write generated files too.\n\n`;
+export const COMMANDS_OPENING = `gspot reads the \`gspot.toml\` at the top of the Git repository, so you can run it from any folder. Start each command the way [your repository installs gspot](/start/install/#add-gspot), such as \`bunx --no-install gspot\` or \`mise exec -- gspot\`.\n\n`;
 
 export const SUBSECTION_HEADING_LEVEL = 3;
 

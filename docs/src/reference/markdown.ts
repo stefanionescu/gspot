@@ -41,11 +41,15 @@ function formatHeadingHtml(title: string, level: number, anchor: string): string
 Build a reference page with no edit link or empty table of contents.
 
 @param title the visible heading
-@param description the one-line summary
+@param description the one-line summary, when it says more than the title
 @param body the Markdown text
 */
-export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
-    const frontmatter: ReferencePage['data'] = { title, description, editUrl: false };
+export function buildReferencePage(title: string, description: string | undefined, body: string): ReferencePage {
+    const frontmatter: ReferencePage['data'] = {
+        title,
+        editUrl: false,
+        ...(description !== undefined && { description }),
+    };
     if (!SECTION_HEADING.test(body)) frontmatter.tableOfContents = false;
     return { data: frontmatter, body: `\n${body}` };
 }
