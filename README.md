@@ -9,7 +9,7 @@ write code that passes the checks.
 
 ## Try it
 
-To see what gspot finds and what `gspot init` changes, run this in the root folder of any Git repository:
+Install your project's dependencies and commit your lockfile, then run this in the root folder of your Git repository:
 
 ```shell
 npx @gspothq/cli scan
@@ -22,12 +22,13 @@ trust.
 ## Set up
 
 You need Git, Node.js, and npm, pnpm, or Bun, as well as mise or each tool that it installs, because a missing tool stops
-every commit. Node.js 22 comes with an npm that is too old, so run `npm install --global npm@latest`.
+every commit. A `packageManager` field in `package.json` needs mise, because gspot runs that version through it. Node.js
+22 comes with an npm that is too old, so run `npm install --global npm@latest`.
 [Install](https://generativespotting.com/start/install/) lists the versions, and the commands for npm, pnpm, Yarn, and a
 repository without a `package.json`.
 
-`gspot init` deletes the tool config files that gspot replaces, such as `.eslintrc.json`, so commit your work first and
-Git keeps a copy. Then run these commands in the root folder of your repository:
+`gspot init` deletes the tool config files that gspot replaces, such as `.eslintrc.json`, and it runs only when Git holds
+each of them unchanged, so commit your work first. Then run these commands in the root folder of your repository:
 
 ```shell
 bun add --dev --exact @gspothq/cli
@@ -41,7 +42,8 @@ init command.
 
 Commit the setup files, then fix each file as you touch it. In an existing repository, a commit fails on the old findings
 of the files that it touches, the setup commit included. The first push fails until the checks that read the whole
-project pass. Some findings are a matter of taste, so `gspot ignore` takes the rule and a reason.
+project pass, and `dependencies/osv-scanner` also runs, because the setup commit changes the lockfile. Some findings are
+a matter of taste, so `gspot ignore` takes the rule and a reason.
 [Clean up the first findings](https://generativespotting.com/start/quickstart/#clean-up-the-first-findings) shows both.
 
 CI stays off until you run `gspot set ci.enabled true`, and each new clone needs its dependencies installed, then
@@ -51,7 +53,7 @@ CI stays off until you run `gspot set ci.enabled true`, and each new clone needs
 ## Documentation
 
 - [Run checks](https://generativespotting.com/use/run-checks/): read a finding, explain it, and fix it.
-- [Change settings](https://generativespotting.com/configure/gspot-toml/): what you can change in `gspot.toml`.
+- [Change settings](https://generativespotting.com/configure/gspot-toml/)
 - [Checks](https://generativespotting.com/reference/checks/): what each check finds, and how to fix its findings.
 - [Commands](https://generativespotting.com/reference/commands/)
 - [ESLint plugin](https://generativespotting.com/reference/eslint-plugin/): rules that also work in ESLint without gspot.

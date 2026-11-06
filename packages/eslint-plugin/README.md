@@ -54,8 +54,7 @@ export default [
 
 ## Rule reference
 
-The [rule reference](https://generativespotting.com/reference/eslint-plugin/) lists each rule, its options, the configs
-that turn it on, and the supported Node.js and ESLint versions.
+[Rule reference](https://generativespotting.com/reference/eslint-plugin/)
 
 ## License
 
