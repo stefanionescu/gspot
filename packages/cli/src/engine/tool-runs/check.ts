@@ -5,7 +5,12 @@ import { createCopy } from '#cli/engine/copies/files.ts';
 import { stripCoverageArguments } from '#cli/engine/plan.ts';
 import { buildBaseResult, measureSpan, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
-import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import {
+    addCommandLine,
+    buildCheckResult,
+    clearOutsideLinkExit,
+    parseCommandFindings,
+} from '#cli/engine/tool-runs/output.ts';
 import {
     buildFileCommandLines,
     expandCommand,
@@ -52,7 +57,7 @@ async function runCommands(
     const state: CommandRun = { root: launch.root, cwd, findings: [], failed: false };
     const slot: { start?: number } = {};
     for (const commandLine of launch.commandLines) {
-        const { result, failure } = await session.limitProcess(() => {
+        const { result: finished, failure } = await session.limitProcess(() => {
             slot.start ??= performance.now();
             return runToolProcess(commandLine.commandArguments, {
                 ...launch,
@@ -69,6 +74,7 @@ async function runCommands(
                 command: commandArguments,
                 findings: state.findings,
             };
+        const result = clearOutsideLinkExit(check, finished, state.root);
         const parsed = parseCommandFindings(planned, result, { cwd, root: state.root }, { verbose });
         if (parsed.findings === undefined)
             return {

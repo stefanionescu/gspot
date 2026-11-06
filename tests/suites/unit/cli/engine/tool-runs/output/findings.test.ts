@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
@@ -18,6 +19,10 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+function buildLinkReport(line: string): string[] {
+    return buildProgramCommand('fakes/tool', '--line', 'Errors in guide.md', '--line', line, '--exit', '2', '{files}');
+}
 
 test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
     await using sandbox = await testdir({ 'source.txt': 'source' });
@@ -106,6 +111,37 @@ test.each(['{file}', '{files}'])(
         expect(fatal.note).toContain(located);
     },
 );
+
+test('a run that exits nonzero only on file links that leave the root passes, and another failure stays an error', async () => {
+    const link = pathToFileURL(resolve('/v0.1.0/README.md')).href;
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/links',
+                command: buildLinkReport(`[ERROR] ${link} | File not found`),
+                paths: ['guide.md'],
+                stage: 'commit',
+                output: {
+                    format: 'grouped',
+                    file_pattern: '^Errors in (?<file>.+)$',
+                    pattern: String.raw`^\[(?<rule>[A-Z]+)\] (?<message>\S+ \| .*)$`,
+                },
+            },
+        ],
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
+        'guide.md': '# Guide\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planChecks(session, { stage: 'all', only: ['project/links'] })[0]!;
+    planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
+    const passed = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
+    expect(passed).toMatchObject({ status: 'passed', findings: [] });
+    planned.check = { ...planned.check, command: buildLinkReport('The config file cannot load') };
+    const crashed = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
+    expect(crashed.status).toBe('error');
+});
 
 test('per-file failures drop only the header lines the tool declares', async () => {
     const command = buildProgramCommand(

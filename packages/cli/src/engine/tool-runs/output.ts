@@ -12,6 +12,7 @@ import {
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { STACK_FRAME_LINE } from '#cli/config/tools/programs.ts';
 import { OUTPUT_FORMATS, parseOutput } from '#cli/engine/outputs/formats.ts';
+import { hasOnlyOutsideLinks } from '#cli/engine/outputs/text.ts';
 import { measureSpan } from '#cli/engine/results.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -119,6 +120,20 @@ function formatReportRefusal(
             ? `${name} exited ${String(result.code)} without a JSON report:`
             : refusal;
     return `${opening}\n${tail}`;
+}
+
+/**
+Clear the exit code of a run that failed only on file links that leave the root, so that the check passes.
+
+@param check how to read the output of the run.
+@param result what the process returned.
+@param root the repository, or the copy of it that the tool ran in.
+*/
+export function clearOutsideLinkExit(check: Pick<Check, 'output'>, result: SpawnResult, root: string): SpawnResult {
+    const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`);
+    const isCleared =
+        result.code !== 0 && check.output.format === 'grouped' && hasOnlyOutsideLinks(check.output, text, root);
+    return isCleared ? { ...result, code: 0 } : result;
 }
 
 /**

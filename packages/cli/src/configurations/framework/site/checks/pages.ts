@@ -35,7 +35,7 @@ import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitem
 import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
+import { assertToolFindings, clearOutsideLinkExit } from '#cli/engine/tool-runs/output.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
@@ -115,7 +115,8 @@ async function checkLychee(session: CheckSession, planned: PlannedCheck): Promis
     ];
     const findings: CheckFinding[] = [];
     for (const batch of splitFileArguments(paths, command, process.platform)) {
-        const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: build.folder });
+        const finished = await runCheckTool(session, planned, [...command, ...batch], { cwd: build.folder });
+        const result = clearOutsideLinkExit(planned.check, finished, build.root);
         const parsed = assertToolFindings(
             result,
             parseOutput(planned.check, result.stdout, result.stderr, { root: build.root, cwd: build.folder }),

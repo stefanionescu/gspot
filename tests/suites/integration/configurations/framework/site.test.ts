@@ -108,3 +108,20 @@ test('HTML Validate reports all 400 missing alt attributes in a built page', asy
         last: { file: 'dist/index.html', rule: 'wcag/h37', line: 1 },
     });
 });
+
+test('site/lychee passes when the only broken link of a page leaves the repository root', async () => {
+    const { root } = installedSandbox();
+    const buildCommand = buildProgramCommand('fakes/site-build', '--copy', 'pages=dist');
+    const outside = '../'.repeat(30);
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
+        files: {
+            'gspot.toml': buildSandboxSettings(['site'], {
+                tables: `[site]\nbuild_command = ${JSON.stringify(buildCommand)}\n`,
+            }),
+            'pages/index.html': `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><a href="${outside}v0.1.0/index.html">Old</a></body></html>`,
+        },
+    });
+
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'site/lychee', '--json']));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+});

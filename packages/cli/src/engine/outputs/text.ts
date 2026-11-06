@@ -6,7 +6,7 @@ import { LEADING_DOT_SLASH, MISSING_PATH_CODES } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
-import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { CheckOutput, Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 const FILE_LINK = /^file:\/\/\/[^\s#?]+/u;
 
@@ -64,6 +64,19 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
         return [setMatchedFields(finding, groups)];
     });
     return new Map(findings.map((finding) => [JSON.stringify(finding), finding])).values().toArray();
+}
+
+/**
+Tell whether grouped output reports only file links that leave the root, which report nothing.
+
+@param output how to read the output.
+@param text the tool output to read.
+@param root the repository, or the copy of it that the tool ran in.
+*/
+export function hasOnlyOutsideLinks(output: CheckOutput, text: string, root: string): boolean {
+    const pattern = new RegExp(output.pattern as string, 'u');
+    const messages = text.split(LINE_BREAK).flatMap((line) => pattern.exec(line)?.groups?.['message'] ?? []);
+    return messages.length > 0 && messages.every((message) => !isLinkInRoot(message, root));
 }
 
 /**

@@ -101,3 +101,20 @@ test('docs/lychee reads a root-relative link from the repository root, and leave
         matchFields({ file: 'root.md', line: 3, column: 6 }),
     ]);
 });
+
+test('docs/lychee passes a link that leaves the repository root, and still reports a broken link beside it', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: LINK_SCOPE_TABLES }),
+        'root.md': '# Links\n\nRead [the old version](../../../v0.1.0/README.md).\n',
+        'app/guide.md': '# Guide\n',
+    });
+    commitAll(sandbox.path);
+    await applyGeneratedFiles(sandbox.path);
+    await assertLinkFailures(sandbox.path, 'docs/lychee', []);
+    await writeFile(
+        join(sandbox.path, 'root.md'),
+        '# Links\n\nRead [gone](gone.md) and [old](../../../v0.1.0/README.md).\n',
+    );
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'docs/lychee', '--json']));
+    expect(checked.report.checks.flatMap(({ findings }) => findings)).toMatchObject([{ file: 'root.md', line: 3 }]);
+});
