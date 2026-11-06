@@ -121,6 +121,8 @@ You can edit the other keys of that file.
   configuration. The manifest names it as the `source` of its config file, and gspot transpiles it.
 - Write `the user's repository`, not `this repository` or `a repository`, whenever more than one repository fits the
   sentence.
+- Write the `CHANGELOG.md` section of each release by hand. Each entry says what changed after the last release and what
+  to do about it, and it cites its commits by hash.
 - Keep the owner's descriptions word for word: the first sentence of `README.md`, and the `description` in
   `packages/cli/package.json`.
 

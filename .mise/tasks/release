@@ -83,6 +83,24 @@ print_changelog_section() {
     fi
 }
 
+# assert_changelog_written: Refuses a section that lists commit subjects, or that gives no upgrade steps.
+# Arguments:
+#   CLI version.
+#   Text of the section.
+assert_changelog_written() {
+    local version="$1"
+    local notes="$2"
+
+    if grep -Eq '^- [a-z-]+(\([^)]*\))?!?: ' <<<"${notes}"; then
+        printf 'The %s section of CHANGELOG.md lists a commit subject. Say what changed and what a user does.\n' "${version}" >&2
+        return 1
+    fi
+    if ! grep -q '^### Upgrade from ' <<<"${notes}"; then
+        printf 'The %s section of CHANGELOG.md has no ### Upgrade from heading.\n' "${version}" >&2
+        return 1
+    fi
+}
+
 # create_release: Creates the GitHub release of a CLI tag unless it exists.
 # Arguments:
 #   CLI tag.
@@ -114,6 +132,7 @@ main() {
     assert_version_raised packages/eslint-plugin "${plugin_spec}" "${plugin_tag}"
     assert_version_raised packages/cli "${cli_spec}" "${cli_tag}"
     notes=$(print_changelog_section "${cli_spec##*@}")
+    assert_changelog_written "${cli_spec##*@}" "${notes}"
     bun .mise/release/pin-ages.ts || exit 1
     push_tag "${plugin_tag}"
     push_tag "${cli_tag}"
