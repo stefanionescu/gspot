@@ -14,8 +14,7 @@ require one dialect, choose `en-us`, `en-gb`, `en-ca`, or `en-au`:
 gspot set spelling.locale en-gb
 ```
 
-typos then also reports the spellings of the other dialects. `gspot check --fix` corrects misspellings in Markdown and
-text files, and it never changes the spelling of one dialect into another.
+typos then also reports the spellings of the other dialects.
 
 To accept a word, such as a product name, add it with a reason, and Vale then accepts the word too:
 

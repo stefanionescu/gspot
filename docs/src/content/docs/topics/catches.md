@@ -93,4 +93,6 @@ The rule `unicorn/no-unsafe-string-replacement` reports a replacement value that
 src/paths.js:2:50  unicorn/no-unsafe-string-replacement  Do not use a non-literal replacement value with `String#replaceAll()`.
 ```
 
+To turn it on, run `gspot set level all`, then `gspot install`.
+
 [Fixed in commit 651f85309](https://github.com/stefanionescu/gspot/commit/651f85309).
