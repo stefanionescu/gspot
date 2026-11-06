@@ -1,24 +1,19 @@
 # Tests
 
-The test suites cover source behavior, installed tools, and the packed CLI and ESLint plugin.
-
-With mise installed, run these commands from the repository root to install the pinned runtimes, the locked dependencies, and the npm tools of the
-manifests:
+With mise installed, run these commands from the repository root to install the pinned runtimes, the locked dependencies,
+and the npm tools of the manifests:
 
 ```bash
 mise install
 mise run setup
 ```
 
-The setup installs the test tools from `tests/setup/sandboxes/test-tools.lock`. When an npm pin of a manifest changes, the
-setup stops at that lockfile. Then update the lockfile:
+When an npm pin of a manifest changes, the setup stops at `tests/setup/sandboxes/test-tools.lock`, so update that lockfile:
 
 ```bash
 bun install --cwd node_modules/.test-tools --linker isolated
 cp node_modules/.test-tools/bun.lock tests/setup/sandboxes/test-tools.lock
 ```
-
-Choose a suite:
 
 | Command                     | Coverage                                                                                                                                          |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -26,10 +21,9 @@ Choose a suite:
 | `mise run test integration` | Tool installation, registry access, and checks against installed tools.                                                                           |
 | `mise run test e2e`         | Packed packages installed into fresh projects, including a Python and a Swift project through the installed hook, and the documented quickstarts. |
 
-`mise run test` runs the unit suite. Each command builds the CLI and the ESLint plugin, creates a temporary test folder,
-and removes it when the run ends, and it sets the time limit of each test. Integration and end-to-end runs also pack the
-packages. Integration runs install pinned tools, and end-to-end runs get their tools from `gspot install`. These suites
-need network access and take longer than the unit suite.
+`mise run test` runs the unit suite. Each command builds the CLI and the ESLint plugin, and runs in a temporary test folder
+that it removes at the end. Integration and end-to-end runs also pack the packages and need network access. Integration
+runs install pinned tools, and end-to-end runs get their tools from `gspot install`.
 
 To run one test file, or the tests whose name matches, put the files after the suite, then any `bun test` options:
 
@@ -41,5 +35,6 @@ mise run test unit tests/suites/unit/cli/main.test.ts -t "version"
 A direct `bun test` run needs `TEST_RUN_FOLDER`, a `--preload` file from `tests/setup/runner/`, and the `--timeout` of
 its suite from `.mise/tasks/test`.
 
-When adding a test, follow the suite boundaries and file placement rules in [repository rules](../AGENTS.md). Shared setup, with the
-output schemas, lives in `tests/setup`; test values and types live in `tests/config` and `tests/types`.
+When you add a test, follow the suite boundaries and file placement rules in [repository rules](../AGENTS.md). Shared
+setup, with the output schemas, lives in `tests/setup`, and test values and types live in `tests/config` and
+`tests/types`.
