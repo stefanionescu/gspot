@@ -266,6 +266,28 @@ test('unset says when an empty list turns a check off, and unset of a shipped va
     expect(again.stdout).not.toContain('This turns off');
 });
 
+test('an edit in one scope does not say it turns off a check that the other scope leaves empty', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: [
+                '[[scope]]',
+                'path = "api"',
+                'configurations = ["openapi"]',
+                'openapi = { document = "openapi.yaml" }',
+                '[[scope]]',
+                'path = "web"',
+                'configurations = ["openapi"]',
+                '',
+            ].join('\n'),
+        }),
+        'api/openapi.yaml': 'openapi: 3.1.0\n',
+        'web/page.md': '# Page\n',
+    });
+    const result = await runGspot(sandbox.path, ['set', 'limits.max_file_lines', '100']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).not.toContain('This turns off');
+});
+
 test('set takes a rule of a tool that lists no rules', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
     const value = '{ subject-case = ["never", ["start-case"]] }';

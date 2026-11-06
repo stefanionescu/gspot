@@ -62,30 +62,22 @@ function assertSettingEditable(key: string, scopePath: string): void {
         throw new GspotError('arguments', `${key} applies to the whole repository. Leave out --scope.`);
 }
 
-function listTurnedOffNotes(previous: Session | undefined, session: Session): string[] {
+function listEmptySettingNotes(previous: Session | undefined, session: Session): string[] {
     if (previous === undefined) return [];
-    const turnedOff = previous.configuredChecks.filter(({ check, scope }) => {
-        const next = session.scopes.find(({ path }) => path === scope.path);
-        const isSelected = next?.configurations.some(({ checks }) => checks.includes(check)) === true;
-        return next !== undefined && isSelected && findEmptySetting(session.settings, next, check) !== undefined;
-    });
-    return [...new Set(turnedOff.map(({ check }) => `This turns off ${check.id}.`))];
-}
-
-function listStaysOffNotes(previous: Session | undefined, session: Session): string[] {
-    if (previous === undefined) return [];
-    const before = new Set(
+    const selected = new Set(
         previous.scopes.flatMap(({ configurations }) => configurations.flatMap(({ checks }) => checks)),
     );
-    const notes = session.scopes.flatMap((scope) =>
-        scope.configurations
+    const notes = session.scopes.flatMap((scope) => {
+        const configured = previous.configuredChecks.filter((each) => each.scope.path === scope.path);
+        return scope.configurations
             .flatMap(({ checks }) => checks)
-            .filter((check) => !before.has(check))
             .flatMap((check) => {
                 const setting = findEmptySetting(session.settings, scope, check);
-                return setting === undefined ? [] : [`${check.id} stays off until you set ${setting}.`];
-            }),
-    );
+                if (setting === undefined) return [];
+                if (!selected.has(check)) return [`${check.id} stays off until you set ${setting}.`];
+                return configured.some((each) => each.check === check) ? [`This turns off ${check.id}.`] : [];
+            });
+    });
     return [...new Set(notes)];
 }
 
@@ -313,8 +305,7 @@ export async function writeSettingsEdit(
     report.notes.push(
         ...(await listInstallNotes(session, generated, report)),
         ...(options.notes ?? []),
-        ...listTurnedOffNotes(context.session, session),
-        ...listStaysOffNotes(context.session, session),
+        ...listEmptySettingNotes(context.session, session),
     );
     const written = report.written.length + report.updated.length + report.deleted.length;
     if (written === 0 && !result.changed)
