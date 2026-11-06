@@ -97,8 +97,7 @@ function formatHelpLines(findings: readonly Finding[], result: Pick<CheckResult,
             command !== undefined && others.length === 0
                 ? command
                 : `gspot explain ${quoteArgument(result.check)} <rule>`;
-        const explainText = explain === '' ? '' : `Details: ${explain}`;
-        const text = `${help} ${explainText}`.trim();
+        const text = `${help} Details: ${explain}`.trim();
         return `  ${styleText('dim', 'help:', { stream: process.stdout })} ${text}`;
     });
 }

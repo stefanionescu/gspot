@@ -110,6 +110,6 @@ test('an ESLint comment for a rule that no plugin holds says to delete the comme
     ]);
     const check = { runs: 'files' as const, id: 'javascript/eslint', help: 'Fix it.', output };
     expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([
-        { help: expect.stringContaining('Delete the comment.') as string, explain: '' },
+        { help: expect.stringContaining('Delete the comment.') as string },
     ]);
 });

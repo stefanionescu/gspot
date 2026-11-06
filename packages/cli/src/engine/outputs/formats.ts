@@ -116,7 +116,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
             ...finding,
             message,
             fixable: check.fix !== undefined && finding.fixable,
-            ...(MISSING_RULE_MESSAGE.test(message) && { help: MISSING_RULE_HELP, explain: '' }),
+            ...(MISSING_RULE_MESSAGE.test(message) && { help: MISSING_RULE_HELP }),
         };
         if (check.runs === 'history' || finding.file === '') return formatted;
         formatted.file = buildRootRelativePath(finding.file, cwd, posixRoot);

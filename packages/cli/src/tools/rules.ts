@@ -203,7 +203,7 @@ function readValeRule(root: string, identifier: string): RuleExplanation | undef
         const text = findText(root, path);
         if (text !== undefined) {
             const { message, link } = parseYamlFile(path, text, valeRuleSchema);
-            return { description: message, ...(link !== undefined && { url: link }) };
+            return { description: message.replaceAll('%s', '<text>'), ...(link !== undefined && { url: link }) };
         }
     }
     return undefined;

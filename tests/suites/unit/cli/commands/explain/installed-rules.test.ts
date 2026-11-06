@@ -161,12 +161,12 @@ test('Vale reads a rule from the style files that Vale loads, and gspot ignore t
     await createFileTree(sandbox.path, {
         ...VALE_INSTALLED_FILES,
         [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
-        [`${VALE_STYLES_PATH}/gspot/home-paths.yml`]: 'message: "Write a path that every reader has."\n',
+        [`${VALE_STYLES_PATH}/gspot/home-paths.yml`]: 'message: "Write a path that every reader has, not \'%s\'."\n',
         [`${GSPOT_PATHS.valePackages}/Google/Passive.yml`]:
             'message: "Use active voice."\nlink: https://example.com/voice\n',
     });
     for (const [rule, docs] of [
-        ['gspot.home-paths', { description: 'Write a path that every reader has.', page: null }],
+        ['gspot.home-paths', { description: "Write a path that every reader has, not '<text>'.", page: null }],
         ['Google.Passive', { description: 'Use active voice.', page: 'https://example.com/voice' }],
     ] as const) {
         const described = await runGspot(sandbox.path, ['explain', 'prose/vale', rule, '--json']);

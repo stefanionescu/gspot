@@ -45,12 +45,12 @@ test('scan prints the commands that would break and what init carries once, befo
     });
     const text = formatScanText(report);
     expect(text).toContain(
-        'Commands that would break\n  package.json:1  eslint .  Run gspot check once at the repository root',
+        'Commands that would break\n  package.json:1  eslint .  Replace the lint and format parts of this script with gspot check.',
     );
     expect(text).toContain(
         'What gspot init would carry over and drop\n  .prettierrc.json  carried over: semi; dropped: quoteProps',
     );
-    expect(text.match(/Run gspot check once at the repository root/gu)).toHaveLength(1);
+    expect(text.match(/Replace the lint and format parts/gu)).toHaveLength(1);
     expect(text.indexOf('Commands that would break')).toBeLessThan(text.indexOf('What gspot init would do'));
 });
 
