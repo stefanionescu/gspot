@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
 
-import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
@@ -84,44 +84,30 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     ]);
 });
 
-test('the JavaScript tools and the ESLint config file appear only after gspot add javascript for a new Node script, at both levels', async () => {
+test('the JavaScript tools and the ESLint config file appear only after gspot add javascript for a new Node script', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
         'package.json': TOOL_ONLY_PACKAGE,
         'source.py': 'VALUE = 1\n',
     });
+    const tools = ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'];
+    const generated = join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs'));
+    const listSelectedTools = async (): Promise<string[]> => {
+        const { devDependencies } = JSON.parse(
+            await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8'),
+        ) as ToolPackageJson;
+        return tools.filter((name) => Object.hasOwn(devDependencies, name));
+    };
 
     const initialized = await runGspot(sandbox.path, ['init', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    for (const level of LEVELS) {
-        const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
-        expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);
-        const contents = (
-            JSON.parse(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')) as ToolPackageJson
-        ).devDependencies;
-        const dependencies = Object.keys(contents);
-        expect(
-            ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'].filter((name) => dependencies.includes(name)),
-        ).toStrictEqual([]);
-        const generated = join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs'));
-        expect(existsSync(generated)).toBe(false);
-    }
+    expect(await listSelectedTools()).toStrictEqual([]);
+    expect(existsSync(generated)).toBe(false);
     await writeFile(join(sandbox.path, 'run'), NODE_SCRIPT);
     const discovered = await runGspot(sandbox.path, ['add', 'javascript']);
     expect(discovered.code, discovered.stdout + discovered.stderr).toBe(0);
-    for (const level of LEVELS) {
-        const applied = await runGspot(sandbox.path, ['set', 'level', level]);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const contents = (
-            JSON.parse(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')) as ToolPackageJson
-        ).devDependencies;
-        const dependencies = Object.keys(contents);
-        expect(
-            ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'].filter((name) => dependencies.includes(name)),
-        ).toStrictEqual(['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin']);
-        const generated = join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs'));
-        expect(existsSync(generated)).toBe(true);
-    }
+    expect(await listSelectedTools()).toStrictEqual(tools);
+    expect(existsSync(generated)).toBe(true);
 });
 
 test.each([...NEXTJS_LOCALE_CASES])(

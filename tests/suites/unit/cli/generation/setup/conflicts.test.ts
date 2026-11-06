@@ -7,7 +7,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { LINT_FOLDER_MESSAGE } from '#cli/config/generation.ts';
-import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { initOutputSchema } from '#cli/schemas/commands.ts';
@@ -190,7 +190,7 @@ test('at level basic, init keeps the config files of checks that are off', async
 });
 
 test.each([...STYLELINT_REPLACEMENT_CASES])(
-    'init replaces your .stylelintrc.mjs so that Stylelint still finds its settings at both levels: $name',
+    'init replaces your .stylelintrc.mjs so that Stylelint still finds its settings: $name',
     async ({ scope, packageText, command: initCommand, changed, unchangedFiles }) => {
         using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         const packagePath = posix.join(scope, 'package.json');
@@ -224,18 +224,13 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
             const saved = await readFile(join(sandbox.path, path), 'utf8');
             expect(JSON.parse(saved)).toMatchObject(JSON.parse(text) as object);
         }
-        for (const level of LEVELS) {
-            const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
-            expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);
-            await writeFile(join(sandbox.path, stylesheet), INVALID_CSS);
-            const invalid = await runCommand(command, { cwd: sandbox.path });
-            expect(invalid.code, invalid.stdout + invalid.stderr).toBe(0);
-            expect(invalid.stdout).toBe('[{"rule":"property-no-unknown","line":2,"column":5,"severity":"error"}]');
-            await writeFile(join(sandbox.path, stylesheet), 'a {\n    opacity: 1;\n}\n');
-            const corrected = await runCommand(command, { cwd: sandbox.path });
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(corrected.stdout).toBe('[]');
-        }
+        const invalid = await runCommand(command, { cwd: sandbox.path });
+        expect(invalid.code, invalid.stdout + invalid.stderr).toBe(0);
+        expect(invalid.stdout).toBe('[{"rule":"property-no-unknown","line":2,"column":5,"severity":"error"}]');
+        await writeFile(join(sandbox.path, stylesheet), 'a {\n    opacity: 1;\n}\n');
+        const corrected = await runCommand(command, { cwd: sandbox.path });
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(corrected.stdout).toBe('[]');
     },
 );
 

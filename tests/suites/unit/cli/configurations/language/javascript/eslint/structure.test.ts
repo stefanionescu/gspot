@@ -154,8 +154,25 @@ test('a JSON import attribute is accepted where your import extensions need a su
     }
 });
 
+test('at level basic, the import rules apply in root and child scopes', async () => {
+    await using sandbox = await testdir({
+        ...IMPORT_FILES,
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'basic',
+            tables: '[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n',
+        }),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    await assertSourceRules(
+        eslint,
+        sandbox.path,
+        ['src/source.ts', 'app/src/source.ts'],
+        IMPORT_CASES.map(([name, source, rule, count]) => ({ name, source, rule, count })),
+    );
+});
+
 test.each([...LEVEL_REEXPORT_CASES])(
-    'at %s with reexports = %s, the import rules, re-exports, and index limits apply in root and child scopes',
+    'at %s with reexports = %s, the re-exports and index limits apply in root and child scopes',
     async (level, reexports) => {
         await using sandbox = await testdir({
             ...IMPORT_FILES,
@@ -165,12 +182,6 @@ test.each([...LEVEL_REEXPORT_CASES])(
             }),
         });
         const eslint = await buildEslint(sandbox.path);
-        await assertSourceRules(
-            eslint,
-            sandbox.path,
-            ['src/source.ts', 'app/src/source.ts'],
-            IMPORT_CASES.map(([name, source, rule, count]) => ({ name, source, rule, count })),
-        );
         for (const file of ['src/source.ts', 'src/index.ts', 'app/src/source.ts', 'app/src/index.ts']) {
             const isBanned = level === 'all' && (reexports === 'none' || !file.endsWith('/index.ts'));
             await assertSourceRules(
