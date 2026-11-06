@@ -16,21 +16,26 @@ import { compareText } from '#cli/system/text.ts';
 import { type ConfigBuilder, type IgnoreSection } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
+// gspot writes most of gspot.toml, and it holds globs and tool names that read as misspelled words.
+const SETTINGS_SECTION: IgnoreSection = { key: 'settings', title: 'The settings of gspot', patterns: ['gspot.toml'] };
+
 function buildTyposSections(planned: PlannedConfig): IgnoreSection[] {
-    const sections = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK)].map(
-        (section) => {
-            if (section.key === 'lockfiles')
-                return {
-                    ...section,
-                    patterns: [...section.patterns, ...TYPOS_LOCKFILE_GLOBS].filter(
-                        (path) => path === LOCKFILE_GLOB || !path.endsWith(LOCKFILE_EXTENSION),
-                    ),
-                };
-            return section.key === 'generators'
-                ? { ...section, patterns: [...section.patterns, ...TYPOS_FORMAT_GLOBS] }
-                : section;
-        },
-    );
+    const sections = [
+        SETTINGS_SECTION,
+        ...planned.ignoreSections,
+        ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK),
+    ].map((section) => {
+        if (section.key === 'lockfiles')
+            return {
+                ...section,
+                patterns: [...section.patterns, ...TYPOS_LOCKFILE_GLOBS].filter(
+                    (path) => path === LOCKFILE_GLOB || !path.endsWith(LOCKFILE_EXTENSION),
+                ),
+            };
+        return section.key === 'generators'
+            ? { ...section, patterns: [...section.patterns, ...TYPOS_FORMAT_GLOBS] }
+            : section;
+    });
     return keepFirstPatterns(
         sections.map((section) => ({
             ...section,

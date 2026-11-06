@@ -93,6 +93,14 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
+test('typos leaves gspot.toml out, so a glob or a tool name in a setting reports nothing', async () => {
+    const checked = await runTyposCheck({
+        'gspot.toml': `${buildSandboxSettings(['spelling'])}# ${TYPO.the}\n`,
+        'sample.txt': 'the\n',
+    });
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+});
+
 async function runTyposCheck(files: Record<string, string>) {
     const sandbox = installedSandbox();
     await using _sourceChange = await writeSandboxChanges(sandbox, buildSandboxChanges(SPELLING_SANDBOX.files, files));

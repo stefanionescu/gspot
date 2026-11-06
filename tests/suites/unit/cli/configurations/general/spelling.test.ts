@@ -36,4 +36,5 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     expect(otherFiles).toStrictEqual({});
     expect(excluded.slice(-paths.length)).toStrictEqual(paths);
     expect(excluded).not.toContain('**');
+    expect(excluded).toContain('**/gspot.toml');
 });
