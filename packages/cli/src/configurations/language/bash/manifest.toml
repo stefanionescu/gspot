@@ -72,7 +72,7 @@ command = ["shfmt", "-d", "{files}"]
 example = "`if true;then echo hello;fi` differs from the shfmt output. Run `gspot check --fix` to add the spacing and line breaks."
 files = { tags = ["bash", "sh", "bats"] }
 fix = ["shfmt", "-w", "{files}"]
-help = "Run the `fix:` command that the report prints, or `shfmt -w` on one file."
+help = "Run the `fix:` command that the report prints."
 name = "shfmt"
 output = { format = "regex", pattern = "^(?:--- )?(?<file>.+?)(?:\\.orig$|:(?<line>\\d+):(?<column>\\d+): (?<message>.+)$)", message = "This script is not formatted the way shfmt formats it.", fixable = "^--- " }
 stage = "commit"

@@ -250,6 +250,24 @@ test('a staged report with unstaged changes names their count once', async () =>
     ]);
 });
 
+test.each([
+    {
+        fixCommand: 'gspot check --fix --only bash/shellcheck',
+        help: 'Run the fix: command that the report prints. Quote it.',
+    },
+    { fixCommand: undefined, help: 'Quote it.' },
+])('a fixable finding prints the fix sentence only with a fix line: $help', ({ fixCommand, help }) => {
+    const [check] = FAILED_CHECK_REPORT.checks;
+    const findings = check.findings.map((finding) => ({
+        ...finding,
+        fixable: true,
+        help: 'Run the `fix:` command that the report prints. Quote it.',
+    }));
+    const report = { ...FAILED_CHECK_REPORT, checks: [{ ...check, findings, ...(fixCommand && { fixCommand }) }] };
+    const text = stripVTControlCharacters(formatRunReport(report, { verbose: false }));
+    expect(text).toContain(`  help: ${help} Details: `);
+});
+
 test('a finding message occupies one report line', () => {
     const report = {
         ...FAILED_CHECK_REPORT,

@@ -85,13 +85,17 @@ Print each help text once after the findings of a check. The explain command nam
 that help shares one, and a rule placeholder when they name several.
 
 @param findings the findings that the report shows.
-@param result the check, and its help that a finding of its own help replaces.
+@param result the check, its help that a finding of its own help replaces, and its fix line, which the fix sentence
+points at.
 */
-function formatHelpLines(findings: readonly Finding[], result: Pick<CheckResult, 'check' | 'help'>): string[] {
+function formatHelpLines(
+    findings: readonly Finding[],
+    result: Pick<CheckResult, 'check' | 'help' | 'fixCommand'>,
+): string[] {
     const groups = Map.groupBy(findings, (finding) => (finding.help ?? result.help ?? '').replaceAll(CODE_MARK, ''));
     return [...groups].map(([written, group]) => {
         const rest = written.replace(FIX_SENTENCE, '');
-        const help = group.some(({ fixable }) => fixable) ? written : `${rest.charAt(0).toUpperCase()}${rest.slice(1)}`;
+        const help = result.fixCommand === undefined ? `${rest.charAt(0).toUpperCase()}${rest.slice(1)}` : written;
         const [command, ...others] = new Set(group.map((finding) => finding.explain));
         const explain =
             command !== undefined && others.length === 0
