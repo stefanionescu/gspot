@@ -239,7 +239,8 @@ export const DEFAULT_EXPORT_NAME = 'default';
 
 export const PRIVATE_SWIFT_VISIBILITIES: ReadonlySet<string> = new Set(['private', 'fileprivate']);
 
-export const IMPORT_RULE_CATEGORY = 'import-rule:';
+// ESLint's message template prints a category whole, so a category opens the quote that formatRefusedImport closes.
+export const IMPORT_RULE_CATEGORY = 'rule "';
 
 export const TOOL_LOCKFILES = new Set([
     ...LOCKFILES.map(({ file }) => `${GSPOT_FOLDER}/${file}`),

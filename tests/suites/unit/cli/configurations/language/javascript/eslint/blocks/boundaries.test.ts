@@ -254,14 +254,14 @@ test('each file holds one import rule, the tRPC category comes first, and a refu
     expect(files.map(({ category, stopMatching }) => ({ category, stopMatching }))).toStrictEqual([
         { category: 'tests', stopMatching: true },
         { category: 'trpc:server', stopMatching: undefined },
-        { category: 'import-rule:app', stopMatching: true },
-        { category: 'import-rule:storage', stopMatching: true },
+        { category: 'rule "app', stopMatching: true },
+        { category: 'rule "storage', stopMatching: true },
         { category: 'other', stopMatching: undefined },
     ]);
     const [result] = await eslint.lintFiles(['app/source.ts']);
     expect(
         result?.messages.filter(({ ruleId }) => ruleId === 'boundaries/dependencies').map(({ message }) => message),
     ).toStrictEqual([
-        'Import rule "app" may import only its own files, not ../storage/value.js from import-rule:storage. Move the code, move that rule above this one, or list the rules it may import in can_import.',
+        'Import rule "app" may import only its own files, not ../storage/value.js from rule "storage". Move the code, move that rule above this one, or list the rules it may import in can_import.',
     ]);
 });

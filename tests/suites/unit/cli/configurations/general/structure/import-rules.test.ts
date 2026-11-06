@@ -128,7 +128,7 @@ test('a Swift file reports the first use of each type from a rule it may not imp
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/import-rules');
     const refused = (name: string): string =>
-        expect.stringMatching(new RegExp(String.raw`"core".+\b${name} from .+:app\b`, 'u')) as string;
+        expect.stringMatching(new RegExp(String.raw`"core".+\b${name} from rule "app"`, 'u')) as string;
     expect(
         findings.map(({ file, line, column, rule, message }) => ({ file, line, column, rule, message })),
     ).toStrictEqual([
@@ -179,7 +179,7 @@ test('a Swift name that the rules declare for a narrower reach reports nothing, 
             file: 'Core/Names.swift',
             line: 12,
             rule: 'refused-import',
-            message: expect.stringMatching(/\bReal from .+:app\b/u) as string,
+            message: expect.stringMatching(/\bReal from rule "app"/u) as string,
         },
     ]);
 });
@@ -226,7 +226,7 @@ test('a Swift identifier that names no type reports nothing, and a real use besi
             file: 'Core/Names.swift',
             line: 7,
             rule: 'refused-import',
-            message: expect.stringMatching(/\bReal from .+:app\b/u) as string,
+            message: expect.stringMatching(/\bReal from rule "app"/u) as string,
         },
     ]);
 });

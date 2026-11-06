@@ -30,7 +30,7 @@ A file may import the files of its own rule and of each rule listed before it, s
 `app` may import both. When a `core` file imports a `features` file, the finding names the rule that refused the import:
 
 ```text
-Import rule "core" may import only its own files, not ../features/cart.ts from import-rule:features. Move the code, move that rule above this one, or list the rules it may import in can_import.
+Import rule "core" may import only its own files, not ../features/cart.ts from rule "features". Move the code, move that rule above this one, or list the rules it may import in can_import.
 ```
 
 Each file belongs to the first rule whose paths match it. gspot rejects a path that starts with `!`, except an extglob
