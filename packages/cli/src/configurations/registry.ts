@@ -80,7 +80,9 @@ import { TYPESCRIPT_CHECKS } from '#cli/configurations/language/typescript/check
 import { TRANSLATIONS_CHECKS } from '#cli/configurations/library/translations/checks.ts';
 import { CLOUDFLARE_CHECKS } from '#cli/configurations/platform/cloudflare/checks.ts';
 import { SUPABASE_CHECKS } from '#cli/configurations/platform/supabase/checks.ts';
+import { JEST_CHECKS } from '#cli/configurations/testing/jest/checks.ts';
 import { PYTEST_CHECKS } from '#cli/configurations/testing/pytest/checks.ts';
+import { VITEST_CHECKS } from '#cli/configurations/testing/vitest/checks.ts';
 import { TSC_CHECKS } from '#cli/configurations/tsc/check.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { Check } from '#cli/types/manifests.ts';
@@ -116,6 +118,7 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...GSPOT_WEAKENINGS_CHECKS,
     ...HTML_CHECKS,
     ...JAVASCRIPT_CHECKS,
+    ...JEST_CHECKS,
     ...LICENSES_CHECKS,
     ...MARKDOWN_CHECKS,
     ...NAMING_ALLOWED_NAMES_CHECKS,
@@ -167,6 +170,7 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...TRANSLATIONS_CHECKS,
     ...TSC_CHECKS,
     ...TYPESCRIPT_CHECKS,
+    ...VITEST_CHECKS,
     ...XCODE_CHECKS,
 };
 

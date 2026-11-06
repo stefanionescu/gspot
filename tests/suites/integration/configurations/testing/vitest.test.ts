@@ -78,6 +78,25 @@ test('vitest/tests reports coverage under its limit and passes after the fix, in
     ]);
 });
 
+test('vitest/tests at the root leaves out a nested scope with its own config that a root project also reads', async () => {
+    await using sandbox = await createGitSandbox({
+        ...vitestProjectFiles,
+        'gspot.toml': buildSandboxSettings(['vitest'], {
+            scopes: [{ path: 'packages/a', configurations: ['vitest'] }],
+        }),
+        'vitest.config.mjs': "export default { test: { projects: ['packages/*'] } };\n",
+        'packages/a/vitest.config.mjs': 'export default {};\n',
+        'packages/a/a.test.js':
+            "import { expect, test } from 'vitest';\ntest('fails', () => { expect(1).toBe(2); });\n",
+    });
+    await linkInstalledModules(join(sandbox.path, 'node_modules'));
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/tests', '--json']));
+    expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: 'passed' },
+        { scope: 'packages/a', status: 'failed' },
+    ]);
+});
+
 test('vitest/tests at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
     await using sandbox = await createVitestProject(
         COVERAGE_ZERO_LIMITS.replace(/^min_line_percent = .*$/mu, 'min_line_percent = 80'),

@@ -39,6 +39,13 @@ function holdsTestConfig(session: Session, scopePath: string, configuration: Con
     );
 }
 
+function runsTestsItself(session: Session, scope: Scope, configuration: Configuration): boolean {
+    return (
+        scope.configurations.some(({ name }) => name === configuration.name) &&
+        holdsTestConfig(session, scope.path, configuration)
+    );
+}
+
 /**
 Vitest and Jest read the config in their working folder and none above it. So a nested scope with no test config
 leaves its tests to an enclosing scope that holds one, and a root with no config leaves them to the nested scopes that
@@ -48,11 +55,10 @@ function isRunElsewhere(session: Session, scopePath: string, configuration: Conf
     if (configuration === undefined || !CONFIG_BOUND_RUNNERS.has(configuration.name)) return false;
     if (holdsTestConfig(session, scopePath, configuration)) return false;
     return session.scopes.some(
-        ({ path, configurations }) =>
-            path !== scopePath &&
-            (scopePath === '' || path === '' || scopePath.startsWith(`${path}/`)) &&
-            configurations.some(({ name }) => name === configuration.name) &&
-            holdsTestConfig(session, path, configuration),
+        (scope) =>
+            scope.path !== scopePath &&
+            (scopePath === '' || scope.path === '' || scopePath.startsWith(`${scope.path}/`)) &&
+            runsTestsItself(session, scope, configuration),
     );
 }
 
@@ -163,6 +169,20 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
         );
         return options.keepLevelOff === true ? checks : checks.filter(({ skip }) => skip?.cause !== 'level');
     });
+}
+
+/**
+List the nested scopes that run a Vitest or Jest check themselves, so that the run of this scope can leave them out.
+
+@param session the scopes and files of the repository.
+@param planned the check and the scope that runs it.
+*/
+export function listOwnTestScopes(session: Session, planned: PlannedCheck): string[] {
+    const configuration = planned.configuration as Configuration;
+    return listNestedScopes(
+        session.scopes.filter((scope) => runsTestsItself(session, scope, configuration)).map(({ path }) => path),
+        planned.scope.path,
+    );
 }
 
 /**

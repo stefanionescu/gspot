@@ -60,6 +60,30 @@ test("jest/tests at level all uses the scope's coverage limits and runs only tha
     expect(passing).toMatchObject([{ check: 'jest/tests', scope: 'app', status: 'passed', findings: [] }]);
 });
 
+test("jest/tests leaves out a nested scope with its own config, and keeps the project's ignore patterns", async () => {
+    const failing = 'test("fails", () => { expect(1).toBe(2); });\n';
+    await using sandbox = await createGitSandbox({
+        ...JEST_PROJECT_FILES,
+        'gspot.toml': buildSandboxSettings(['jest'], {
+            scopes: [
+                { path: 'packages/a', configurations: ['jest'] },
+                { path: 'packages/a/b', configurations: ['jest'] },
+            ],
+        }),
+        'jest.config.cjs': 'module.exports = { testPathIgnorePatterns: ["/ignored/"] };\n',
+        'ignored/ignored.test.cjs': failing,
+        'packages/a/jest.config.cjs': 'module.exports = {};\n',
+        'packages/a/b/jest.config.cjs': 'module.exports = {};\n',
+        'packages/a/b/b.test.cjs': failing,
+    });
+    const checks = await runJestCoverage(sandbox.path, 1);
+    expect(checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: 'passed' },
+        { scope: 'packages/a', status: 'passed' },
+        { scope: 'packages/a/b', status: 'failed' },
+    ]);
+});
+
 test('jest/tests at level all reports failed tests and keeps the authored files', async () => {
     await using sandbox = await createGitSandbox({
         ...JEST_PROJECT_FILES,
