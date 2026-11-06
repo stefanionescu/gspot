@@ -14,8 +14,9 @@ that nothing uses:
 framework configurations add their own. Level `all` adds sorted imports, size limits, and no default exports.
 `gspot explain javascript/eslint <rule>` explains one rule.
 
-A `package.json` that lists a package other than the tools gspot pins turns on `javascript`, and declaration files alone
-do not turn on `typescript`.
+A `package.json` turns on `javascript` when it lists a package other than the tools that gspot runs itself, such as
+`eslint` or `typescript`. A dependency on `vitest` or `wrangler` counts. Declaration files alone do not turn on
+`typescript`.
 
 ## JavaScript runtimes
 

@@ -53,7 +53,8 @@ Paths and `--staged` or `--base` choose the files, and `--only` and `--skip` cho
 | `gspot check --skip jest/tests`                       | Every check except the ones that you name.                                        |
 
 To see the result of both hooks before you push, run `gspot check --base origin/HEAD`. A clone has `origin/HEAD`. In a
-repository that added its remote later, run `git remote set-head origin --auto` first, or name the branch.
+repository that added its remote later, run `git remote set-head origin --auto` first, or name the branch. Before the
+first push to an empty remote, run `gspot check --only push`, because the remote has no `HEAD` yet.
 
 `--only` and `--skip` take several check IDs: separate them with commas, or repeat the option. A path after `--only` is a
 file to check, not another check. `--only` can also run a check that your [level](/start/concepts/#levels) turns off, with
