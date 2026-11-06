@@ -10,7 +10,7 @@ ESLint plugin reference pages from the implementation, and `src/config/site.ts` 
 
 ## Deployment
 
-Run `mise run docs:deploy` to build and deploy the site to the `gspot-docs` Worker at `generativespotting.com`, with
+Run `mise run docs:deploy` to build and deploy the site to the `gspot` Worker at `generativespotting.com`, with
 your Wrangler login. No workflow deploys the site.
 
 ## Asset licenses

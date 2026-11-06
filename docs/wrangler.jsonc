@@ -1,5 +1,5 @@
 {
-    "name": "gspot-docs",
+    "name": "gspot",
     "compatibility_date": "2026-10-02",
     "workers_dev": false,
     "routes": [{ "pattern": "generativespotting.com", "custom_domain": true }],
