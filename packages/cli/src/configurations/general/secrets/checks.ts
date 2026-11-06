@@ -73,12 +73,7 @@ function listMissingEnvironmentKeys(
 function removeIgnoredFindings(session: CheckSession, result: CheckResult): CheckResult {
     const paths = session.repository.files.map(({ path }) => path);
     const isIgnored = buildGitignoreMatcher(session.cache, paths);
-    const findings = result.findings.filter(({ file }) => !isIgnored(file));
-    return {
-        ...result,
-        findings,
-        status: findings.length === 0 && result.status === 'failed' ? 'passed' : result.status,
-    };
+    return { ...result, findings: result.findings.filter(({ file }) => !isIgnored(file)) };
 }
 
 /**
