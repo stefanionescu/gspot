@@ -230,6 +230,26 @@ test.skipIf(isWindows)('explain refuses an installed plugin symlink that leaves 
     });
 });
 
+test.each([
+    { check: 'css/stylelint', rule: 'color-no-invalid-hex', configuration: 'css', file: 'style.css' },
+    { check: 'python/ruff', rule: 'E501', configuration: 'python', file: 'app.py' },
+])(
+    'explain $check names gspot add when no scope selects $configuration, and only the install once one does',
+    async ({ check, rule, configuration, file }) => {
+        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['markdown']), [file]: '' });
+        const unselected = await runGspot(sandbox.path, ['explain', check, rule]);
+        expect(unselected.code).toBe(2);
+        expect(unselected.stderr).toContain(
+            `${configuration} is not selected. Run gspot add ${configuration}, then gspot install.`,
+        );
+        await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([configuration]) });
+        const selected = await runGspot(sandbox.path, ['explain', check, rule]);
+        expect(selected.code).toBe(2);
+        expect(selected.stderr).toContain('Run gspot install.');
+        expect(selected.stderr).not.toContain('gspot add');
+    },
+);
+
 test('explain requires installed tools and refuses rules of checks with no rule explanations', async () => {
     await using sandbox = await createGitSandbox({});
     const missing = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-var', '--json']);
