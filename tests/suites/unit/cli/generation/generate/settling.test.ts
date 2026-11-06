@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { TOOL_LOCKFILES } from '#cli/config/configurations/structure.ts';
-import { GROUPS, LEVELS } from '#cli/config/manifests.ts';
+import { LEVELS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { PROJECT_FILES, SWITCH_CASES } from '#tests/config/generation/generate.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
@@ -29,24 +29,20 @@ async function expectSettled(root: string): Promise<void> {
     expect(await readTree(root)).toStrictEqual(before);
 }
 
-test.each(GROUPS.flatMap((group) => LEVELS.map((level) => ({ group, level }))))(
-    '$group configurations at level $level settle in one write',
-    async ({ group, level }) => {
-        const names = readConfigurations()
-            .values()
-            .filter((configuration) => configuration.group === group && !configuration.always_selected)
-            .map(({ name }) => name)
-            .toArray();
-        expect(names.length).toBeGreaterThan(0);
-        await using sandbox = await createGitSandbox({
-            ...PROJECT_FILES,
-            'gspot.toml': buildSandboxSettings(names, { level, rules: true }),
-        });
-        const first = await applyGeneratedFiles(sandbox.path);
-        expect(first.written.length).toBeGreaterThan(0);
-        await expectSettled(sandbox.path);
-    },
-);
+test.each([...LEVELS])('every configuration at level %s settles in one write', async (level) => {
+    const names = readConfigurations()
+        .values()
+        .filter((configuration) => !configuration.always_selected)
+        .map(({ name }) => name)
+        .toArray();
+    await using sandbox = await createGitSandbox({
+        ...PROJECT_FILES,
+        'gspot.toml': buildSandboxSettings(names, { level, rules: true }),
+    });
+    const first = await applyGeneratedFiles(sandbox.path);
+    expect(first.written.length).toBeGreaterThan(0);
+    await expectSettled(sandbox.path);
+});
 
 test.each(SWITCH_CASES)('turning $name on and off settles in one write', async ({ name, path }) => {
     await using sandbox = await createGitSandbox({ 'source.js': PROJECT_FILES['source.js'] });
