@@ -364,7 +364,7 @@ ESLint plugin 0.2.4:
 - New guides cover Bash, HTML, Markdown, and SQL, and a new Frameworks group covers Astro, Expo, Express, FastAPI,
   NestJS, Next.js, React, React Native, Svelte, and Vue. (fdba592, 6012f27, 8808aef, c2b4384, 9848f94, e1ce6eb, 9684caa,
   b60dbb3, 28f12a3, 670c885, 902bf53, a614aae, 8537ade, 5ae8b23, 2ed7a2c, fe3105a)
-- New pages: [Baseline](https://generativespotting.com/use/baseline/) and
+- New pages: Baseline and
   [Mistakes that gspot catches](https://generativespotting.com/topics/real-catches/). The
   [changelog page](https://generativespotting.com/reference/changelog/) renders from `CHANGELOG.md`, and each ESLint
   plugin topic has its own page. (680a994, ac55cdd, 1588eae, 99c2a95)
@@ -991,7 +991,7 @@ At level `all`:
 
 #### Documentation
 
-- [Footprint](https://generativespotting.com/start/footprint/) and the [site
+- Footprint and the [site
   guide](https://generativespotting.com/topics/site/) are new. The topic guides move from `/checks/` to `/topics/`, and
   Customize merges into the `gspot.toml` guide. (87e4a3d, 8afc591, f886b69, 9d0470a)
 - Each check is a section of its configuration page, and each plugin rule a section of one page. (aad8f35)
@@ -1332,7 +1332,7 @@ ESLint plugin 0.2.2:
 
 #### Documentation
 
-- [Customize gspot](https://generativespotting.com/configure/customize/) lists each thing you can change and the command
+- Customize gspot lists each thing you can change and the command
   or setting that changes it. (5bfd901)
 - The Share settings page is gone, and `gspot.toml` has a section on starting from another repository. (c8e2ba0)
 - The npm page of `@gspothq/cli` shows the banner of the GitHub README. (c40a4cc)
