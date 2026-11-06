@@ -176,12 +176,14 @@ function formatDoctorReport(
     },
 ): string {
     const programs = states.broken.filter((tool) => tool.kind === 'program');
-    const systemTools = programs.filter((tool) => states.systemTools.has(tool.name));
+    const systemTools = states.broken.filter((tool) => states.systemTools.has(tool.name));
     const installable = programs.filter(
         (tool) => !states.commandPrograms.has(tool.name) && !states.systemTools.has(tool.name),
     );
     const aheadOfPin = report.tools.filter((tool) => tool.kind === 'program' && tool.state === 'newer');
-    const packages = states.broken.length - programs.length;
+    const packages = states.broken.filter(
+        (tool) => tool.kind === 'package' && !states.systemTools.has(tool.name),
+    ).length;
     const ready = report.tools.filter((tool) => tool.kind === 'program').length - programs.length;
     const lines = [
         ...formatTools([...programs, ...aheadOfPin]),

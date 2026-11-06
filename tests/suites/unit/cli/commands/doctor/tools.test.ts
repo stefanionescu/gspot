@@ -278,7 +278,7 @@ test.each([
 
 test('doctor prints the install help of a missing system tool, because gspot install cannot install it', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['pytest']),
+        'gspot.toml': buildSandboxSettings(['pytest'], { tables: '[coverage]\nmin_line_percent = 80\n' }),
         'test_main.py': 'def test_value():\n    assert True\n',
     });
     const { listExecutablePaths } = locate;
@@ -287,4 +287,10 @@ test('doctor prints the install help of a missing system tool, because gspot ins
     );
     const result = await runGspot(sandbox.path, ['doctor']);
     expect(result.stdout).toContain('Run python -m pip install pytest.');
+    expect(result.stdout).toContain('Install pytest-cov in the Python environment used by pytest.');
+    const report = await runGspot(sandbox.path, ['doctor', '--json']);
+    const npmPackages = doctorOutputSchema
+        .parse(JSON.parse(report.stdout))
+        .tools.filter(({ kind, name }) => kind === 'package' && name !== 'pytest-cov');
+    expect(result.stdout).toContain(`missing npm packages: ${String(npmPackages.length)} (run gspot install)`);
 });
