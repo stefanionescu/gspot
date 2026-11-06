@@ -20,7 +20,18 @@ import type { TypeScriptProject } from '#cli/types/parsers.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-function readAuthoredTypes(authored: TypeScriptProject, folder: string): { files: string[]; types?: string[] } {
+/**
+Resolve each `types` entry from the folder of the authored project, because TypeScript looks from the generated
+config, and the packages that the project installed are out of reach from there.
+
+@param authored the authored config and its path.
+@param folder the folder of the generated config.
+@returns the resolved files, relative to that folder, and the entries that stay for TypeScript to report.
+*/
+export function readAuthoredTypes(
+    authored: Pick<TypeScriptProject, 'path' | 'config'>,
+    folder: string,
+): { files: string[]; types?: string[] } {
     const ts = requireTypescript();
     const { options } = authored.config;
     if (options.types === undefined) return { files: [] };

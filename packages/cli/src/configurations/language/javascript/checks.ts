@@ -9,6 +9,7 @@ import {
 import { JSCONFIG_FILE, RAN_STATUSES } from '#cli/config/engine.ts';
 import { DECLARATION_EXTENSIONS, PRIVATE_FILE } from '#cli/config/system.ts';
 import { addTsbuildinfoFlag, listCompilerFiles } from '#cli/configurations/tsc/compiler.ts';
+import { readAuthoredTypes } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { createCheckCopy, createCopy } from '#cli/engine/copies/files.ts';
 import { extractConfigName, listCheckedFiles } from '#cli/engine/files.ts';
 import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
@@ -78,6 +79,10 @@ async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck):
     using folder = await createCheckCopy(session, planned, [target, ...prerequisites]);
     const generatedPath = join(folder.path, target);
     chmodSync(generatedPath, PRIVATE_FILE);
+    const { files, types } = readAuthoredTypes(
+        { path: join(session.root, scopePath, JSCONFIG_FILE), config: project },
+        dirname(generatedPath),
+    );
     writeFileSync(
         generatedPath,
         JSON.stringify({
@@ -85,11 +90,15 @@ async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck):
             compilerOptions: {
                 ...generated.raw.compilerOptions,
                 typeRoots: project.options.typeRoots?.map((path) => join(folder.path, relative(session.root, path))),
+                ...(types !== undefined && { types }),
             },
-            files: project.fileNames.map((path) => {
-                const copied = join(folder.path, relative(session.root, path));
-                return convertToPosixPath(relative(dirname(generatedPath), copied));
-            }),
+            files: [
+                ...project.fileNames.map((path) => {
+                    const copied = join(folder.path, relative(session.root, path));
+                    return convertToPosixPath(relative(dirname(generatedPath), copied));
+                }),
+                ...files,
+            ],
             include: [],
             exclude: [],
         }),

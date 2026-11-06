@@ -102,6 +102,20 @@ export const total = accepted;
     expect(existsSync(join(sandbox.path, 'jsconfig.json'))).toBe(false);
 });
 
+test('javascript/tsc resolves a types entry from the folder of the tsconfig of a scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { scopes: [{ path: 'site' }] }),
+        '.gitignore': 'node_modules/\n',
+        'site/tsconfig.json': '{"compilerOptions":{"strict":true,"types":["local-types/client"]}}',
+        'site/node_modules/local-types/client.d.ts': 'declare const fromTypes: number;\n',
+        'site/entry.js': 'export const copy = fromTypes;\n',
+    });
+    await linkTypescript(join(sandbox.path, 'node_modules'));
+    await applyGeneratedFiles(sandbox.path);
+    const results = await listTscResults(sandbox.path);
+    expect(results.find(({ scope }) => scope === 'site')).toMatchObject({ status: 'passed', findings: [] });
+});
+
 async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {
     const settings = buildSandboxSettings(['javascript'], {
         scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],
