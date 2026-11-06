@@ -48,7 +48,7 @@ import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-const TASK_FILE = /(?:^|\/)(?:package\.json|\.?mise(?:\.local)?\.toml)$|(?:^|\/)\.?mise\//u;
+const TASK_FILE = /(?:^|\/)(?:package\.json|\.?mise(?:\.local)?\.toml)$|(?:^|\/)\.?mise(?:-tasks)?\//u;
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];
