@@ -49,7 +49,6 @@ export const SWIFTLINT_ANALYZER: ReadonlySet<string> = new Set([
 ]);
 
 export const SWIFTLINT_OPT_IN: ReadonlySet<string> = new Set([
-    'missing_docs',
     'no_extension_access_modifier',
     'fatal_error_message',
     'first_where',

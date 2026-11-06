@@ -52,7 +52,6 @@ function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
             type_level: { warning: 1, error: 1 },
             function_level: { warning: SWIFTLINT_FUNCTION_NESTING, error: SWIFTLINT_FUNCTION_NESTING },
         },
-        missing_docs: { error: ['open', 'public'] },
         unused_import: { always_keep_imports: getTable(planned.scope.settings, 'swift').allowed_unused_imports },
     };
     const enabled = Object.entries(options).filter(([rule]) => !offSet.has(rule));

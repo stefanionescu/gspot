@@ -52,7 +52,7 @@ When the analyzer reports an unused import that your code needs, list that impor
 
 ## Lint rules in test folders
 
-gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder, which turns off `force_unwrapping`, `missing_docs`,
+gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder, which turns off `force_unwrapping`
 and `no_magic_numbers` in tests. Your source files keep those lint rules. When an editor extension passes `--config` to
 SwiftLint, SwiftLint ignores these test-folder files, so set the extension to run SwiftLint without `--config`.
 

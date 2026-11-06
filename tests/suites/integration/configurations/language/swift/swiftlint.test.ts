@@ -37,7 +37,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         expect(listFindingRows(broken.report)).toStrictEqual([
             { file: `${prefix}Sources/Value.swift`, line: 2, rule: 'force_unwrapping' },
-            { file: `${prefix}Sources/Value.swift`, line: 1, rule: 'missing_docs' },
             { file: `${prefix}Sources/Value.swift`, line: 2, rule: 'no_magic_numbers' },
         ]);
         await writeFile(join(root, `${prefix}Sources/Value.swift`), CORRECTED_PARSER_SOURCE);
