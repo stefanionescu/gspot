@@ -31,7 +31,7 @@ test('a finding in a check copy that names an installed package or a file outsid
         'repository/node_modules/vite/index.d.ts': '',
         'repository/.gspot-copies/1-copy/src/app.ts': '',
     });
-    const output = outputSchema.parse({ format: 'regex', pattern: '^(?<file>[^:]+):(?<message>.+)$' });
+    const output = outputSchema.parse({ format: 'regex', pattern: '^(?<file>(?:[A-Za-z]:)?[^:]+):(?<message>.+)$' });
     const check = { runs: 'files' as const, id: 'typescript/tsc', help: 'Fix it.', output };
     const repository = join(sandbox.path, 'repository');
     const root = join(repository, '.gspot-copies/1-copy');
