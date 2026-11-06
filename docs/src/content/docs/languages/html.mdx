@@ -6,15 +6,13 @@ configurations: [html]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot validates HTML files with html-validate, and its own check reports inline scripts and event handler attributes.
-Prettier formats `.html` files. The `html` configuration runs these checks:
+gspot validates HTML files with html-validate, its own check reports inline scripts and event handler attributes, and
+Prettier formats them:
 
 <ChecksTable guide="languages/html" />
 
-## When gspot turns it on
-
-gspot turns on `html` in a scope that has a file ending in `.html` or `.htm`. The `site` configuration also turns on
-`html`, and checks the pages that your build writes, as [Static sites](/topics/site/) describes.
+The `site` configuration also turns on `html`, and checks the pages that your build writes, as
+[Static sites](/topics/site/) describes.
 
 ## Validation
 
@@ -33,8 +31,8 @@ or a `div` with `role="button"` gets a finding.
 
 ## Inline scripts
 
-A content security policy can block injected code only when the pages hold no inline scripts, so `html/inline-scripts`
-reports three kinds of code in the HTML:
+A strict content security policy blocks event handlers and any inline script without a nonce or a hash, so
+`html/inline-scripts` reports three kinds of code in the HTML:
 
 - `inline-script`: a `<script>` element whose body holds code that runs. A script with a `src` attribute, and a data
   block such as `application/ld+json`, pass.
@@ -45,11 +43,9 @@ Move the code into a script file, and attach each handler with `addEventListener
 
 ## Turn off a rule
 
-To turn off one html-validate rule, ignore it with a reason:
+To turn off one html-validate rule, ignore it with a reason, or allow one element with a comment above it, such as
+`<!-- [html-validate-disable-next no-inline-style -- reason: the email client strips classes] -->`:
 
 ```shell
 gspot ignore html/html-validate --rule no-inline-style --reason "The email template needs inline styles."
 ```
-
-To allow one element, write a comment with a reason above it, such as
-`<!-- [html-validate-disable-next no-inline-style -- reason: the email client strips classes] -->`.

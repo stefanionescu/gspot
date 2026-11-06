@@ -1,45 +1,32 @@
 ---
 title: Python
-description: Lint, format, type-check, and test Python projects.
+description: Ruff, basedpyright, pydoclint, and deptry.
 configurations: [python]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 gspot checks Python code with Ruff, which lints and formats it, with basedpyright for types, with pydoclint for
-docstrings, and with deptry for dependencies. The `python` configuration runs these checks:
+docstrings, and with deptry for dependencies:
 
 <ChecksTable guide="languages/python" />
 
 To limit which module may import which, see [Import rules](/configure/import-rules/#python). For pytest, see
 [Tests and coverage](/topics/testing/).
 
-## When gspot turns it on
-
-gspot turns on `python` in a scope that has a `.py` file, a `pyproject.toml`, a `requirements*.txt`, or a `Pipfile`, or a
-script with a Python shebang.
-
 ## Before you start
 
 In a repository without a `package.json`, install gspot with mise, as the [Quickstart](/start/quickstart/) shows.
 basedpyright and pytest read the `.venv` of the project, so manage the project with uv, and run `uv sync` before
-`gspot init` and again after each new clone:
-
-```shell
-uv sync
-```
+`gspot init` and again after each new clone.
 
 If you add `uv.lock` after `gspot init`, run `gspot install` so that basedpyright finds `.venv`. gspot runs Ruff and its
 other Python tools on its own Python, so they work whatever Python version your project uses.
 
 ## Quotes
 
-Ruff formats Python strings with double quotes. To keep single quotes in Python, set `format.quotes`, which applies to
-every language:
-
-```shell
-gspot set format.quotes single
-```
+Ruff formats Python strings with double quotes. To keep single quotes, run `gspot set format.quotes single`, which applies
+to every language.
 
 ## Modules from outside the project
 

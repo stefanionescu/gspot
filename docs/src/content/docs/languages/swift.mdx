@@ -7,16 +7,11 @@ configurations: [swift, xcode]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 gspot checks Swift packages and Xcode projects. SwiftLint and SwiftFormat run before each commit. Before each push, gspot
-builds the package or the Xcode scheme, finds declarations that nothing uses, and measures test coverage. The `swift` and
-`xcode` configurations run these checks:
+builds the package or the Xcode scheme, finds declarations that nothing uses, and measures test coverage:
 
 <ChecksTable guide="languages/swift" />
 
 To limit which module may import which, see [Import rules](/configure/import-rules/#swift).
-
-## When gspot turns it on
-
-gspot turns on `swift` in a scope that has a `.swift` file or a `Package.swift`, and `xcode` when it has an `.xcodeproj`.
 
 ## Before you start
 
@@ -52,14 +47,13 @@ When the analyzer reports an unused import that your code needs, list that impor
 
 ## Lint rules in test folders
 
-gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder, which turns off `force_unwrapping`
-and `no_magic_numbers` in tests. Your source files keep those lint rules. When an editor extension passes `--config` to
-SwiftLint, SwiftLint ignores these test-folder files, so set the extension to run SwiftLint without `--config`.
+gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder, which turns off `force_unwrapping` and
+`no_magic_numbers` in tests. When an editor extension passes `--config` to SwiftLint, SwiftLint ignores these
+test-folder files, so set the extension to run SwiftLint without `--config`.
 
 ## Coverage
 
-To set a minimum line coverage for one Swift target, write a `[[coverage.swift_target]]` record by hand, because
-`gspot set` cannot write these records:
+To set a minimum line coverage for one Swift target, write a `[[coverage.swift_target]]` record by hand:
 
 ```toml title="gspot.toml"
 [[coverage.swift_target]]
@@ -67,10 +61,5 @@ name = "Orders"
 min_line_percent = 80
 ```
 
-Replace `Orders` with the name of a target in the coverage report. When `min_line_percent` is lower than
-`coverage.min_line_percent`, add a `reason`. Then write the generated files and run the check:
-
-```shell
-gspot install
-gspot check --only swift/tests
-```
+`name` is a target in the coverage report. When `min_line_percent` is lower than `coverage.min_line_percent`, add a
+`reason`. Then run `gspot install` and `gspot check --only swift/tests`.

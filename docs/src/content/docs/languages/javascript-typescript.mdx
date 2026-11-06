@@ -1,25 +1,21 @@
 ---
 title: JavaScript and TypeScript
-description: Lint, type-check, and find unused code in JavaScript and TypeScript.
+description: ESLint, the TypeScript compiler, and Knip, which finds unused code.
 configurations: [javascript, typescript]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 gspot checks JavaScript and TypeScript code with ESLint, with the TypeScript compiler, and with Knip, which finds code
-that nothing uses. The `javascript` and `typescript` configurations run these checks:
+that nothing uses:
 
 <ChecksTable guide="languages/javascript-typescript" />
 
-`javascript/eslint` runs rules from ESLint, unicorn, security, import-x, regexp, n, jsdoc, and the gspot plugin. Level
-`all` adds sorted imports, size limits, and no default exports. `gspot explain javascript/eslint <rule>` explains one
-rule. Framework configurations add their own lint rules, and the pages under Frameworks describe them.
+`javascript/eslint` runs rules from ESLint, unicorn, security, import-x, regexp, n, jsdoc, and the gspot plugin, and
+framework configurations add their own. Level `all` adds sorted imports, size limits, and no default exports.
+`gspot explain javascript/eslint <rule>` explains one rule.
 
-## When gspot turns it on
-
-gspot turns on `javascript` in a scope that has a `.js`, `.jsx`, `.mjs`, or `.cjs` file, a Node.js shebang, or a
-`package.json`. It turns on `typescript` in a scope that has a `.ts`, `.tsx`, `.mts`, or `.cts` file, or a
-`tsconfig.json`. Declaration files alone do not count.
+A `package.json` alone turns on `javascript`, and declaration files alone do not turn on `typescript`.
 
 ## JavaScript runtimes
 
@@ -34,8 +30,8 @@ without an import.
 | React Native sources                                                                 | Native globals                                            |
 | Next.js sources                                                                      | Node.js built-ins, because server components can use them |
 
-To give some files another runtime, add a `[[tools.eslint.override]]` record. Write the paths from the root folder of
-the repository. When two records match a file, the later record wins.
+To give some files another runtime, add a `[[tools.eslint.override]]` record, with paths from the root folder of the
+repository. When two records match a file, the later record wins.
 
 ```toml title="gspot.toml"
 [[tools.eslint.override]]
@@ -67,8 +63,8 @@ no `jsconfig.json` exists. With neither file, gspot writes a jsconfig for the ch
 
 ## Import extensions
 
-`javascript.import_extension` sets how a relative import of a code file ends: `js`, `ts`, or `extensionless`, which
-means no extension. `gspot init` picks the value from the project:
+`javascript.import_extension` sets how a relative import of a code file ends: `js`, `ts`, or `extensionless`. `gspot init`
+picks the value from the project:
 
 | Project                                                                                                             | Style           |
 | ------------------------------------------------------------------------------------------------------------------- | --------------- |

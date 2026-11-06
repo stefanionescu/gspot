@@ -6,33 +6,26 @@ configurations: [markdown, mkdocs]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot lints Markdown files, and Markdown with JSX (MDX) files, with markdownlint, and its own check parses the code
-blocks inside them. Prettier formats `.md` and `.mdx` files. The `markdown` and `mkdocs` configurations run these
-checks:
+gspot lints `.md` and `.mdx` files with markdownlint, its own check parses the code blocks inside them, and Prettier
+formats them:
 
 <ChecksTable guide="languages/markdown" />
 
-The `prose` and `spelling` configurations check the words of the same files, and
-[Spelling and prose](/topics/prose/) describes them.
-
-## When gspot turns it on
-
-gspot turns on `markdown` in a scope that has a file ending in `.md` or `.mdx`.
+[Spelling and prose](/topics/prose/) covers the words of the same files.
 
 ## Lint rules
 
 gspot starts from the Prettier style of markdownlint, which turns off the rules that Prettier already handles, such as
 line length and list indentation. Then gspot changes these rules:
 
-| Rule    | Setting                                                                                                                         |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `MD018` | On: a heading needs a space after its `#`.                                                                                      |
-| `MD020` | On: a closed heading needs spaces inside its `#` marks.                                                                         |
-| `MD024` | Two headings with the same text get a finding only when they share a parent heading.                                            |
-| `MD026` | A heading may not end in `.`, `,`, `;`, `:`, `!`, or `?`, or their full-width forms.                                            |
-| `MD033` | Off: inline HTML is allowed.                                                                                                    |
-| `MD046` | Code blocks must be fenced, not indented.                                                                                       |
-| `MD059` | Link text of `here`, `this`, `this page`, `read more`, `more`, `click here`, `link`, `documentation`, or `docs` gets a finding. |
+| Rule                | Setting                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `MD018` and `MD020` | On: a heading needs spaces around its `#` marks.                                                                                |
+| `MD024`             | Two headings with the same text get a finding only when they share a parent heading.                                            |
+| `MD026`             | A heading may not end in `.`, `,`, `;`, `:`, `!`, or `?`, or their full-width forms.                                            |
+| `MD033`             | Off: inline HTML is allowed.                                                                                                    |
+| `MD046`             | Code blocks must be fenced, not indented.                                                                                       |
+| `MD059`             | Link text of `here`, `this`, `this page`, `read more`, `more`, `click here`, `link`, `documentation`, or `docs` gets a finding. |
 
 Level `all` adds `MD041`, which asks for a top-level heading on the first line, and `MD025`, which allows one top-level
 heading per file. For `MD025`, gspot sets `front_matter_title` to an empty string, so a `title` in the front matter does
@@ -43,8 +36,8 @@ markdownlint skips the front matter of a file. In an `.mdx` file, the rules star
 
 ## Code blocks
 
-`markdown/fences` parses the code blocks of these languages: JSON, JSON with comments (JSONC), TOML, YAML, Bash,
-JavaScript, JSX, TypeScript, TSX, and Python. It reports each syntax error at its line:
+`markdown/fences` parses code blocks in JSON, `jsonc`, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python, and
+reports each syntax error at its line:
 
 ```text
 failed   markdown/fences  2 findings
@@ -52,9 +45,9 @@ failed   markdown/fences  2 findings
   README.md:14  syntax  Fix this code example: Syntax error.
 ```
 
-The check accepts these shortcuts, which documentation often uses:
+The check accepts these shortcuts:
 
-- The check skips a block with a line of only `...`.
+- It skips a block with a line of only `...`.
 - `(...)` reads as an empty argument list.
 - A placeholder such as `<name>` in a Bash block reads as a word.
 - A JavaScript or TypeScript block may hold an expression or object members instead of a whole program, and a
@@ -64,21 +57,13 @@ Label a block `text` when it holds no code.
 
 ## Settings
 
-`tools.markdownlint.rules` sets the options of a rule that your level runs, and each entry takes an option table:
+`tools.markdownlint.rules` sets the options of a rule that your level runs, and each entry takes an option table. To turn
+a rule off, ignore it with a reason:
 
 ```shell
 gspot set tools.markdownlint.rules '{ MD024 = { siblings_only = false } }'
-```
-
-gspot rejects options for a rule that your level does not run, and names the level that runs it. To turn a rule off,
-ignore it with a reason:
-
-```shell
 gspot ignore markdown/markdownlint --rule MD046 --reason "The changelog quotes indented code from old releases."
 ```
-
-gspot writes `.markdownlint.jsonc`, which loads the gspot settings, so the markdownlint extension of your editor reports
-the same findings.
 
 ## Admonitions and content tabs
 

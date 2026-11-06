@@ -6,15 +6,11 @@ configurations: [css]
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot checks style sheets, and the style blocks inside Vue, Svelte, and Astro components, with Stylelint. gspot writes
-the Stylelint options from `gspot.toml`, and [Lint rules](/configure/lint-rules/#stylelint) shows how to change them.
+gspot checks style sheets, and the style blocks inside Vue, Svelte, and Astro components, with Stylelint.
+[Lint rules](/configure/lint-rules/#stylelint) shows how to change its options. Prettier formats `.scss` files, and
+Stylelint does not lint them.
 
 <ChecksTable guide="languages/css" />
-
-## When gspot turns it on
-
-gspot turns on `css` in a scope that has a `.css` file, or a Vue, Svelte, or Astro component. Prettier formats `.scss`
-files, and Stylelint does not lint them.
 
 ## What gspot adds to Stylelint
 
@@ -32,7 +28,7 @@ gspot adds these rules to the standard Stylelint rules, so a first commit can fa
 
 Stylelint accepts the special selectors of each kind of component: `:deep`, `:slotted`, and `:global` in Vue, and
 `:global` in Svelte and Astro. In a Vue component, it also accepts `v-bind()` in a value, such as
-`color: v-bind(themeColor)`. Other CSS keywords must be lowercase.
+`color: v-bind(themeColor)`.
 
 ## Tailwind
 
