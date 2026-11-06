@@ -265,3 +265,10 @@ test('unset says when an empty list turns a check off, and unset of a shipped va
     const again = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
     expect(again.stdout).not.toContain('This turns off');
 });
+
+test('set takes a rule of a tool that lists no rules', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
+    const value = '{ subject-case = ["never", ["start-case"]] }';
+    const result = await runGspot(sandbox.path, ['set', 'tools.commitlint.rules', value]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+});

@@ -18,6 +18,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { findToolName } from '#cli/tools/pins.ts';
+import { canReadRuleExplanations } from '#cli/tools/rules.ts';
 import type {
     CommandDefinition,
     ParsedSettingValue,
@@ -194,9 +195,11 @@ function findRulesCheck(edit: SettingsEditContext, key: string, change: ParsedSe
 
 async function assertLintRules(edit: SettingsEditContext, key: string, change: ParsedSettingValue): Promise<void> {
     const check = findRulesCheck(edit, key, change);
-    if (check === undefined) return;
+    const tool = check === undefined ? undefined : findToolName(check);
+    if (check === undefined || tool === undefined) return;
     const { session } = edit;
     for (const rule of Object.keys(change.value as TomlTable)) {
+        if (!canReadRuleExplanations(tool, rule)) continue;
         const docs = await readCheckRuleExplanation(session.root, check, rule, session).catch((error: unknown) => {
             if (error instanceof GspotError) return { unread: true };
             throw error;
