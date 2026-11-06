@@ -25,7 +25,6 @@ import { findGspotPinMismatch, readGspotPin } from '#cli/repository/javascript/g
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { runProcess } from '#cli/system/processes.ts';
-import { fillNull } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
@@ -213,13 +212,12 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
         submodules: listSubmodulePaths(session.repository.index),
         tools: await inspectScopeTools(session),
         environments: listMissingEnvironments(session),
-        hooks: { ready: hooks.ready, tool: fillNull(hooks.tool), lines: hooks.lines ?? [] },
+        hooks: { ready: hooks.ready, tool: hooks.tool ?? null, lines: hooks.lines ?? [] },
         ci,
         ruleFileCount: selectRuleFiles(session).length,
-        pin: fillNull(readGspotPin(root)),
+        pin: readGspotPin(root) ?? null,
     };
-    const mismatch = findGspotPinMismatch(root);
-    const notes = mismatch === undefined ? [] : [mismatch];
+    const notes = [findGspotPinMismatch(root)].filter((note) => note !== undefined);
     const broken = report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
     const hasFindings = !hooks.ready || report.environments.length > 0 || broken.length > 0 || notes.length > 0;
     return {

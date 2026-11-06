@@ -8,7 +8,6 @@ import { findSetting, findSettingDefault, getSettingValue } from '#cli/settings/
 import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { fillNull } from '#cli/system/tables.ts';
 import { formatNameList, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { ExplainedSetting, Explanation, SettingScope } from '#cli/types/commands/reports.ts';
 import type { Setting } from '#cli/types/manifests.ts';
@@ -151,10 +150,10 @@ export function explainSetting(session: Session | undefined, key: string): Expla
             setting: key,
             type: setting.type,
             description: setting.description,
-            default: fillNull(setting.default),
-            defaultAll: fillNull(setting.default_all),
-            languageDefaults: fillNull(setting.language_defaults),
-            reasonFor: fillNull(setting.reason_for),
+            default: setting.default ?? null,
+            defaultAll: setting.default_all ?? null,
+            languageDefaults: setting.language_defaults ?? null,
+            reasonFor: setting.reason_for ?? null,
             scopes,
         },
     };

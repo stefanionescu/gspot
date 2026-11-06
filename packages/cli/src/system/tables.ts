@@ -8,15 +8,6 @@ export function isTable(value: unknown): value is Record<string, unknown> {
 }
 
 /**
-Give an absent value the null that JSON keeps, so that a report holds the same keys in every run.
-
-@param value the value, which can be absent.
-*/
-export function fillNull<Value>(value: Value | undefined): Value | null {
-    return value ?? null;
-}
-
-/**
 Get the value at a key path in a parsed object.
 
 @param value the parsed object.

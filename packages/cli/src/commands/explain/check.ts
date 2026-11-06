@@ -17,7 +17,6 @@ import { listChecksById, listRuleFiles, readConfigurations } from '#cli/manifest
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { fillNull } from '#cli/system/tables.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
 import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type {
@@ -28,7 +27,7 @@ import type {
     LintRuleExplanation,
 } from '#cli/types/commands/reports.ts';
 import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
-import type { ScopeCheck, Session } from '#cli/types/tools.ts';
+import type { RuleExplanation, ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
     return (session?.settings.ignore ?? [])
@@ -168,6 +167,22 @@ async function readRuleDocs(
     return hasRuleExplanations(check, selectCheckCode(check)) ? undefined : { fix: check.help };
 }
 
+function buildRuleDocFacts(
+    docs: RuleExplanation,
+    { verbose }: { verbose: boolean | undefined },
+): Pick<LintRuleExplanation, 'page' | 'description' | 'why' | 'fix' | 'example' | 'explanation'> {
+    const { url, description, why, fix, example } = docs;
+    const explanation = verbose === true ? (docs.explanation ?? null) : null;
+    return {
+        page: url ?? null,
+        description: description ?? null,
+        why: why ?? null,
+        fix: fix ?? null,
+        example: example ?? null,
+        explanation,
+    };
+}
+
 function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
     const found = listChecksById(readConfigurations().values()).get(checkId);
     if (
@@ -182,6 +197,15 @@ function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
     return found;
 }
 
+function buildCheckOrigin(
+    check: Check,
+    configuration: Configuration | undefined,
+): Pick<CheckExplanation, 'configuration' | 'command' | 'paths'> {
+    if (configuration !== undefined) return { configuration: configuration.name, command: null, paths: null };
+    const paths = check.files?.paths ?? null;
+    return { configuration: null, command: check.command ?? null, paths };
+}
+
 function buildCheckExplanation(
     found: Pick<ScopeCheck, 'check' | 'configuration'>,
     session: Session | undefined,
@@ -194,19 +218,17 @@ function buildCheckExplanation(
             : isConfigurationSelected(session.scopes, configuration.name);
     return {
         check: check.id,
-        ...(configuration === undefined
-            ? { configuration: null, command: fillNull(check.command), paths: fillNull(check.files?.paths) }
-            : { configuration: configuration.name, command: null, paths: null }),
+        ...buildCheckOrigin(check, configuration),
         stage: check.stage,
         level: check.level,
         summary: check.summary,
         why: check.why,
         help: check.help,
-        condition: fillNull(check.when),
-        crashPattern: fillNull(described.crashPattern),
-        runInCopy: fillNull(check.run_in_copy),
+        condition: check.when ?? null,
+        crashPattern: described.crashPattern ?? null,
+        runInCopy: check.run_in_copy ?? null,
         minVersions: described.minVersions,
-        turnOff: { ...described.turnOff, rule: fillNull(described.turnOff.rule) },
+        turnOff: { ...described.turnOff, rule: described.turnOff.rule ?? null },
         settingNames: described.settings,
         ruleFiles: described.ruleFiles,
         selected,
@@ -260,20 +282,15 @@ export async function explainLintRule(
     if (docs === undefined) return undefined;
     const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;
     const facts: LintRuleExplanation = {
-        tool: fillNull(tool),
+        tool: tool ?? null,
         rule: identifier,
         check: found.check.id,
-        page: fillNull(docs.url),
-        description: fillNull(docs.description),
-        why: fillNull(docs.why),
-        fix: fillNull(docs.fix),
-        example: fillNull(docs.example),
-        explanation: verbose === true ? fillNull(docs.explanation) : null,
+        ...buildRuleDocFacts(docs, { verbose }),
         turnOff: {
             everywhere: `${ignore} --reason "<why>"`,
             paths: `${ignore} --paths "<path>" --reason "<why>"`,
         },
-        changeOptions: fillNull(formatRuleOptions(tool, identifier, found.configuration)),
+        changeOptions: formatRuleOptions(tool, identifier, found.configuration) ?? null,
     };
     return {
         kind: 'lint-rule',
