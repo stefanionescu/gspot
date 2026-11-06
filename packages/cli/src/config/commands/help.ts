@@ -62,7 +62,7 @@ export const COMMAND_HELP = {
         summary: 'Run the checks and print the findings',
         group: 'Run the checks:',
         description:
-            'Run the checks and print each finding with its file, line, lint rule, and help.\n\nWithout options, gspot runs the commit and push checks on the working tree. Checks of commit messages run in the commit-msg hook. Some slow checks run only when you name them with --only; gspot explain names their stage.',
+            'Run the checks and print each finding with its file and message, and its line and lint rule when the tool reports them.\n\nWithout options, gspot runs the commit and push checks on the working tree. Checks of commit messages run in the commit-msg hook. Some slow checks run only when you name them with --only; gspot explain names their stage.',
         arguments: {
             '[paths...]': 'Files or folders to check, relative to the current folder (default: the whole repository)',
         },
@@ -84,7 +84,7 @@ export const COMMAND_HELP = {
         example: 'gspot check --staged',
     },
     add: {
-        summary: 'Add configurations',
+        summary: 'Turn on the checks of a language, framework, or tool',
         group: 'Change gspot.toml:',
         description:
             'Select configurations in gspot.toml, then write the generated files again. gspot also turns on the configurations that these need. gspot.toml lists only the names you typed.\n\nTo find the configurations that new code needs, run `gspot check --only gspot/detected-configurations`. It prints the `gspot add` line to run for each scope.\n\nRun `gspot install` next when the configurations need new tools.',
@@ -101,12 +101,12 @@ export const COMMAND_HELP = {
         example: 'gspot add pytest --scope services/api',
     },
     remove: {
-        summary: 'Remove configurations, with a reason',
+        summary: 'Turn off the checks of a language, framework, or tool, with a reason',
         group: 'Change gspot.toml:',
         description:
             'Remove configurations, then write the generated files again. gspot.toml keeps your reason, so gspot does not suggest them again. `gspot add` undoes it.\n\ngspot refuses to remove a configuration that another selected configuration needs.',
         arguments: {
-            '<configuration...>': 'Configuration names',
+            '<configuration...>': 'Names from gspot list',
         },
         options: {
             '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
@@ -119,7 +119,7 @@ export const COMMAND_HELP = {
         example: 'gspot remove nextjs --scope apps/web --reason "The site is a static export."',
     },
     set: {
-        summary: 'Change a setting',
+        summary: 'Write one setting to gspot.toml, and rewrite the files that read it',
         group: 'Change gspot.toml:',
         description:
             'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\nFor a list, give every item, because gspot replaces the whole list. To remove single items, run `gspot unset <setting> <items...>`. For a setting that holds a table, such as tools.eslint.rules, give one TOML inline table, and gspot adds its keys. spelling.allowed_words takes its words and one --reason instead.\n\nFor an ignore, run `gspot ignore <check> --reason "<why>"`. Write other records, such as [[command_check]], by hand.',
@@ -177,7 +177,7 @@ export const COMMAND_HELP = {
             'gspot ignore javascript/eslint --rule no-console --paths "scripts/**" \\\n    --reason "Scripts print their results."',
     },
     unignore: {
-        summary: 'Remove ignores',
+        summary: 'Remove an ignore, so that its check or lint rule reports again',
         group: 'Change gspot.toml:',
         description:
             'Remove the ignores of a check from gspot.toml, then write the generated files again.\n\nWith --rule, remove only the ignores of that lint rule. With --paths, take those paths out of the ignores. An ignore without paths covers every path, so --paths cannot narrow it. unignore keeps that ignore and says so.',
