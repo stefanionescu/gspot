@@ -1,7 +1,6 @@
 ---
 title: Mistakes that gspot catches
 slug: topics/real-catches
-description: A vulnerable package that a dependency pulled in, a font size that ignores zoom, and a replacement string that changes itself.
 ---
 
 These mistakes came up in the gspot repository, and the checks that caught them run in your repository too.

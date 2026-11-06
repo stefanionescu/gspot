@@ -1,6 +1,5 @@
 ---
 title: Monorepos
-description: Give each project of a repository its own configurations and settings, and run gspot once at the root.
 ---
 
 `gspot init` plans a [scope](/start/concepts/#scopes) for each folder with a tracked project file, such as `package.json`,

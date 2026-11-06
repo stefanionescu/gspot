@@ -1,6 +1,5 @@
 ---
 title: Command checks
-description: Run a command of your own as a check, with its findings in the same report as every other check.
 ---
 
 A command check runs a command of your own on the files that you choose, and gspot reads its output as findings in the

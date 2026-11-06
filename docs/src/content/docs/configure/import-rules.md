@@ -1,6 +1,5 @@
 ---
 title: Import rules
-description: Keep the layers of your code apart in JavaScript, TypeScript, Python, and Swift.
 ---
 
 Import rules keep the layers of your code apart, so that code in `src/core/` cannot import code from `src/app/`. You

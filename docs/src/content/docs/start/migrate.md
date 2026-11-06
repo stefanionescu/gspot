@@ -1,6 +1,5 @@
 ---
 title: Migrate your linters
-description: See which settings gspot copies from your tool configs, which rules need a reason, and which commands to change.
 ---
 
 gspot replaces the config files of the tools that it runs, and `gspot.toml` then holds the settings of all those tools.

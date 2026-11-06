@@ -1,6 +1,5 @@
 ---
 title: Lint rules
-description: Set the options of a lint rule in gspot.toml, and add rules from a plugin.
 ---
 
 Set the options of lint rules in `gspot.toml`, and gspot writes them into the config file of each tool. The level

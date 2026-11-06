@@ -1,6 +1,5 @@
 ---
 title: Editors
-description: Make your editor run the same tools, with the same settings, as gspot.
 ---
 
 Editor extensions read the same generated config files as gspot. The ESLint and Prettier extensions run the packages of

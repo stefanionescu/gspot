@@ -1,6 +1,5 @@
 ---
 title: Spelling and prose
-description: Check spelling at every level, and prose style at level all.
 configurations: [prose, spelling]
 ---
 
