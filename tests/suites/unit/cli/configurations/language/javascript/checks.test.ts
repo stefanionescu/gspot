@@ -19,6 +19,28 @@ import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
+test('javascript/knip keeps only the findings of the files that Git lists', async () => {
+    await using sandbox = await createGitSandbox({
+        '.gitignore': 'ignored/\n',
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'source.js': 'export const value = 1;\n',
+        'ignored/copy.js': 'export const value = 1;\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    await fakeNpmTool(sandbox.path, 'knip');
+    const exports = [{ name: 'value', line: 1, col: 14 }];
+    const stdout = JSON.stringify({
+        issues: [
+            { file: 'source.js', exports },
+            { file: 'ignored/copy.js', exports },
+        ],
+    });
+    using _boundary = fakeCommands().mockResolvedValue(buildProcessResult({ code: 1, stdout }));
+    const findings = await runSandboxCheck(sandbox.path, 'javascript/knip');
+    expect(findings.map(({ file }) => file)).toStrictEqual(['source.js']);
+});
+
 test('javascript/biome checks shebang scripts, TypeScript, and component files in each scope', async () => {
     const nested = 'if (value) { if (value.ready) { if (value.id) return 1; } } return 0;';
     const typed = `function count(value: { ready: boolean; id: number }) { ${nested} }`;

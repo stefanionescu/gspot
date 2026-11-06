@@ -133,7 +133,21 @@ async function checkJavascriptBiome(session: CheckSession, planned: PlannedCheck
     });
 }
 
+/**
+Run Knip and keep the findings of the files that Git lists. Knip can read a folder that Git ignores, such as a worktree
+inside the repository, and each file there reports as unused.
+
+@param session the repository and installed tools.
+@param planned the scope and selected files.
+*/
+async function checkJavascriptKnip(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+    const result = await runCommandCheck(session, planned);
+    const listed = new Set(session.repository.files.map(({ path }) => path));
+    return { ...result, findings: result.findings.filter(({ file }) => listed.has(file)) };
+}
+
 export const JAVASCRIPT_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'javascript/knip': { run: checkJavascriptKnip },
     'javascript/tsc': { run: checkJavascriptTsc },
     'javascript/biome': { run: checkJavascriptBiome },
 };
