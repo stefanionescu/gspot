@@ -42,6 +42,8 @@ const RULE_READER_TOOLS: ReadonlySet<string> = new Set([
     STYLELINT_MANIFEST_TOOL,
 ]);
 
+const RUFF_SUMMARY_FIELD = /\{(\w+)?(?::[^{}]*)?\}/gu;
+
 /**
 Read the longest declared plugin prefix of a qualified lint rule.
 
@@ -57,6 +59,20 @@ function extractRulePrefix(rule: string): string | undefined {
         .toArray();
     prefixes.sort((first, second) => second.length - first.length);
     return prefixes[0];
+}
+
+/**
+Tell whether a tool reports this name from outside the rules that gspot reads: a rule of a plugin that gspot does not
+ship, a rule built into Vale, or a syntax error.
+
+@param tool the manifest tool name.
+@param rule the name that the tool reported.
+*/
+function isUnlistedRule(tool: string, rule: string): boolean {
+    if (tool === VALE_TOOL) return rule.startsWith('Vale.');
+    if (tool === 'biome') return !rule.startsWith('lint/');
+    if (tool !== ESLINT_MANIFEST_TOOL && tool !== STYLELINT_MANIFEST_TOOL) return false;
+    return rule === 'CssSyntaxError' || (rule.includes('/') && extractRulePrefix(rule) === undefined);
 }
 
 /**
@@ -206,7 +222,10 @@ async function readRuffRule(
     if (result.code !== 0) return undefined;
     const rule = parseJsonFile('ruff rule output', result.stdout, ruffRuleSchema);
     return {
-        description: rule.summary,
+        description: rule.summary.replaceAll(
+            RUFF_SUMMARY_FIELD,
+            (_, name: string | undefined = 'value') => `<${name}>`,
+        ),
         explanation: rule.explanation,
         url: `https://docs.astral.sh/ruff/rules/${rule.name}/`,
     };
@@ -240,12 +259,14 @@ function getRuleMetadata(rule: unknown, page: string | undefined): RuleExplanati
 }
 
 /**
-Tell whether gspot reads the rules of this tool: through a reader of its own, or through the rule page address in its
+Tell whether gspot reads this rule of this tool: through a reader of its own, or through the rule page address in its
 manifest. Without either, gspot has no list of the rules to explain or to check an ignore against.
 
 @param tool the manifest tool name.
+@param rule the name that the tool reported.
 */
-export function canReadRuleExplanations(tool: string): boolean {
+export function canReadRuleExplanations(tool: string, rule: string): boolean {
+    if (isUnlistedRule(tool, rule)) return false;
     if (RULE_READER_TOOLS.has(tool)) return true;
     return getTool(readConfigurations().values(), tool).rule_url !== undefined;
 }

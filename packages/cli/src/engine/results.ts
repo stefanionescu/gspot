@@ -49,16 +49,17 @@ export function canIgnoreRule(check: Check, code: CheckCode | undefined): boolea
 }
 
 /**
-Tell whether a check has a rule catalog: rule explanations in its code, or a tool whose rules gspot reads. Only then
-can gspot explain one of its rules, or check a rule of an ignore against the rules that exist.
+Tell whether a check has a rule catalog that covers a rule: rule explanations in its code, or a tool whose rules gspot
+reads. Only then can gspot explain the rule, or check it against the rules that exist.
 
 @param check the check that reports the rules.
 @param code the implementation of the check, if it has one.
+@param rule the name that the check reported.
 */
-export function hasRuleExplanations(check: Check, code: CheckCode | undefined): boolean {
+export function hasRuleExplanations(check: Check, code: CheckCode | undefined, rule: string): boolean {
     if (code?.explanations !== undefined) return true;
     const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
-    return tool !== undefined && canReadRuleExplanations(tool);
+    return tool !== undefined && canReadRuleExplanations(tool, rule);
 }
 
 /**
@@ -77,7 +78,7 @@ export function formatExplainCommand(
     if (
         found !== undefined &&
         finding.rule !== undefined &&
-        hasRuleExplanations(found.check, code) &&
+        hasRuleExplanations(found.check, code, finding.rule) &&
         (code?.explanations === undefined || Object.hasOwn(code.explanations, finding.rule))
     )
         argumentsList.push(finding.rule);

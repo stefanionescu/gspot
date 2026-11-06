@@ -43,7 +43,7 @@ async function assertDocumentedRule(
     { checkId, rule }: { checkId: string; rule: string },
 ): Promise<void> {
     const check = findRuleCheck(session, checkId);
-    if (!hasRuleExplanations(check, selectCheckCode(check))) return;
+    if (!hasRuleExplanations(check, selectCheckCode(check), rule)) return;
     if (findToolName(check) === 'ruff' && RUFF_RULE_PREFIX.test(rule)) return;
     const docs = await readCheckRuleExplanation(session.root, check, rule, session);
     if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);

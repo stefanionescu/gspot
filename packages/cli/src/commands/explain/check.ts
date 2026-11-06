@@ -124,16 +124,16 @@ function formatCheckExplanation(facts: CheckExplanation): string {
 }
 
 function formatRuleOptions(
+    { check, configuration }: ConfigurationCheck,
     tool: string | undefined,
     identifier: string,
-    configuration: Configuration,
 ): string | undefined {
-    if (tool === undefined) return undefined;
+    if (tool === undefined || !hasRuleExplanations(check, selectCheckCode(check), identifier)) return undefined;
     const owner = { ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] }[identifier];
     if (owner !== undefined) return `gspot set ${owner} <value>`;
     const key = `tools.${tool}.rules`;
-    const settings = SETTINGS_BY_CONFIGURATION.get(configuration.name);
-    if (settings?.some((setting) => setting.name === key) !== true) return undefined;
+    const setting = SETTINGS_BY_CONFIGURATION.get(configuration.name)?.find(({ name }) => name === key);
+    if (setting?.type !== 'table') return undefined;
     const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
     return `gspot set ${quoteArgument(key)} ${ruleExample}`;
 }
@@ -162,9 +162,8 @@ async function readRuleDocs(
     identifier: string,
     session: Session | undefined,
 ): Promise<Awaited<ReturnType<typeof readCheckRuleExplanation>>> {
-    const docs = await readCheckRuleExplanation(root, check, identifier, session);
-    if (docs !== undefined) return docs;
-    return hasRuleExplanations(check, selectCheckCode(check)) ? undefined : { fix: check.help };
+    if (!hasRuleExplanations(check, selectCheckCode(check), identifier)) return { fix: check.help };
+    return await readCheckRuleExplanation(root, check, identifier, session);
 }
 
 function buildRuleDocFacts(
@@ -263,8 +262,8 @@ options.
 @param options the detail level and the session.
 @param options.verbose whether to include the full explanation.
 @param options.session the repository settings and tool project, when available.
-@returns undefined when no check runs the tool, or when the tool lists its rules and this is not one. A tool that lists
-none gets the help of its check.
+@returns undefined when no check runs the tool, or when the tool lists its rules and this is not one. A name outside the
+rules that gspot reads gets the help of its check.
 @throws GspotError when gspot cannot name one lint rule of the check.
 */
 export async function explainLintRule(
@@ -290,7 +289,7 @@ export async function explainLintRule(
             everywhere: `${ignore} --reason "<why>"`,
             paths: `${ignore} --paths "<path>" --reason "<why>"`,
         },
-        changeOptions: formatRuleOptions(tool, identifier, found.configuration) ?? null,
+        changeOptions: formatRuleOptions(found, tool, identifier) ?? null,
     };
     return {
         kind: 'lint-rule',

@@ -52,6 +52,11 @@ test.each([
     ['repository/encoding', 'path-encoding', 'gspot explain repository/encoding path-encoding'],
     ['repository/encoding', 'unlisted', 'gspot explain repository/encoding'],
     ['typescript/tsc', 'TS2322', 'gspot explain typescript/tsc'],
+    ['javascript/eslint', 'no-var', 'gspot explain javascript/eslint no-var'],
+    ['javascript/eslint', 'import-lite/no-default-export', 'gspot explain javascript/eslint'],
+    ['css/stylelint', 'CssSyntaxError', 'gspot explain css/stylelint'],
+    ['prose/vale', 'Vale.Repetition', 'gspot explain prose/vale'],
+    ['javascript/biome', 'parse', 'gspot explain javascript/biome'],
 ] as const)(
     'the explain command of %s for %s names the rule only when the check has it listed',
     (check, rule, command) => {

@@ -58,7 +58,6 @@ export const RULE_PAGES = [
 export const UNKNOWN_RULES = [
     ['javascript/eslint', 'no-consolee'],
     ['javascript/eslint', 'n/no-such-rule'],
-    ['javascript/eslint', 'unknown/no-such-rule'],
     ['css/stylelint', 'no-such-rule'],
 ] as const;
 

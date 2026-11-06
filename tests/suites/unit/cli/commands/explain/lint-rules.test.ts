@@ -12,6 +12,7 @@ import { findValueAt, isTable } from '#cli/system/tables.ts';
 import plugin from '#eslint-plugin/plugin.ts';
 import { RULE_PAGE_SETTINGS, RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/reports.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -103,6 +104,59 @@ test('explain offers the setting that writes the options of a rule, and the rule
         expect(result.code, result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toMatchObject({ rule, changeOptions });
     }
+});
+
+test.each([
+    { check: 'javascript/eslint', rule: 'import-lite/no-default-export' },
+    { check: 'css/stylelint', rule: 'CssSyntaxError' },
+    { check: 'prose/vale', rule: 'Vale.Repetition' },
+    { check: 'javascript/biome', rule: 'parse' },
+    { check: 'commits/commitlint', rule: 'subject-case' },
+])('explain and ignore take $rule, which a report of $check prints', async ({ check, rule }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'css', 'prose', 'markdown']),
+        'source.js': 'export const value = 1;\n',
+        'theme.css': 'a { color: #fff; }\n',
+        'guide.md': '# Guide\n',
+    });
+    await writeRulePackages(sandbox.path);
+    const explained = await runGspot(sandbox.path, ['explain', check, rule, '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(JSON.parse(explained.stdout)).toMatchObject({
+        check,
+        rule,
+        fix: getShippedCheck(check).help,
+        changeOptions: null,
+    });
+    const ignored = await runGspot(sandbox.path, [
+        'ignore',
+        check,
+        '--rule',
+        rule,
+        '--reason',
+        'The team reads this one by hand.',
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+});
+
+test.each([
+    {
+        summary: 'Add `from __future__ import annotations` to simplify `{name}`',
+        description: 'Add `from __future__ import annotations` to simplify `<name>`',
+    },
+    { summary: 'Unused {}', description: 'Unused <value>' },
+    { summary: 'Expected {count:?} blank lines', description: 'Expected <count> blank lines' },
+])('explain writes the fields of the Ruff summary "$summary" as placeholders', async ({ summary, description }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        [`.gspot/.venv/${executableLayout.environmentFolder}/ruff${isWindows ? '.exe' : ''}`]: '',
+    });
+    using _commands = fakeCommands().mockResolvedValue(
+        buildProcessResult({ stdout: JSON.stringify({ name: 'a-rule', summary, explanation: '' }) }),
+    );
+    const result = await runGspot(sandbox.path, ['explain', 'python/ruff', 'FA100', '--json']);
+    expect(result.code, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ description, changeOptions: null });
 });
 
 test('explain gives Ruff summaries and reserves its full explanation for verbose output', async () => {
