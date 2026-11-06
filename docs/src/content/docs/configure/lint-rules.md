@@ -42,8 +42,9 @@ set its options or ignore it. Run `gspot install` first. Stylelint rules work th
 summary, and `--verbose` adds its full explanation.
 
 The table holds only options, for a rule that runs at your level. `gspot set` rejects a severity, such as
-`eqeqeq = "off"`, and at level `basic`, a rule that runs only at level `all`. A rule that gspot runs at no level, such as
-`id-length`, stops the next ESLint run, and `javascript/eslint` reports `error`. Each message says what to do instead.
+`eqeqeq = "off"`, and at level `basic`, a rule that gspot itself sets only at level `all`, such as
+`import-x/no-default-export`. Any other rule that your level does not run, such as `id-length`, stops the next ESLint
+run, and `javascript/eslint` reports `error`. Each message says what to do instead.
 
 ## Settings that set rule options
 
@@ -91,7 +92,8 @@ rules = { "no-legacy-api" = [] }
 ```
 
 The module must be a `.js` or `.mjs` file that Git tracks, and the `name` cannot be the prefix of a plugin that gspot
-loads itself. With this record, ESLint reports the findings of the rule as `local/no-legacy-api`.
+loads itself. With this record, ESLint reports the findings of the rule as `local/no-legacy-api`. At level `all`, ignore
+`import-x/no-default-export` for this file, because gspot loads its default export.
 
 For an npm package, set `package` and `version` in place of `path`:
 

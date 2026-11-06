@@ -15,7 +15,8 @@ JavaScript or TypeScript project, `@types/node` in `devDependencies`, so that `j
 import { readFile } from 'node:fs/promises';
 
 for (const path of process.argv.slice(2)) {
-    const lines = (await readFile(path, 'utf8')).split('\n');
+    const text = await readFile(path, 'utf8');
+    const lines = text.split('\n');
     for (const [index, line] of lines.entries()) {
         if (!line.includes('FIXME')) continue;
         console.log(`${path}:${index + 1}: ${line}`);

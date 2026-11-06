@@ -3,8 +3,8 @@ title: Change settings
 ---
 
 gspot writes every generated file from `gspot.toml`, so to change how a tool runs, change `gspot.toml`, not the config
-file of the tool. Each command on this page edits `gspot.toml` and writes the generated files again, and it keeps your
-comments and the order of your settings.
+file of the tool. `gspot add`, `remove`, `set`, `unset`, `ignore`, and `unignore` edit `gspot.toml` and write the
+generated files again, and they keep your comments and the order of your settings.
 
 ## See the current settings
 
@@ -114,8 +114,8 @@ The rules are `level`, `hooks`, and `rule-files`. gspot rejects an ignore of the
 
 ## Edit records by hand
 
-`gspot ignore` writes `[[ignore]]`, and `--scope` adds a `[[scope]]` for a folder that holds a project file. Write the
-rest yourself, then run `gspot install`:
+`gspot ignore` writes `[[ignore]]`. `gspot set`, `unset`, `add`, and `remove` with `--scope` add a `[[scope]]` for a
+folder that holds a project file. Write the rest yourself, then run `gspot install`:
 
 | Record                          | Holds                                                        |
 | ------------------------------- | ------------------------------------------------------------ |

@@ -37,7 +37,7 @@ pattern such as `!(generated)/**`. To keep some files out of a rule, put a narro
 they may import in its `can_import`.
 
 After you write the rules, run `gspot install`, because JavaScript and TypeScript import rules need an ESLint plugin
-that it adds. Until you run it, `javascript/eslint` reports `missing`.
+that it adds. Until you run it, `javascript/eslint` reports `missing`, or at level `all`, runs without the import rules.
 
 ## Every code file belongs to a rule
 
