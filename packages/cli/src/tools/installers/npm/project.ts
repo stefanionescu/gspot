@@ -43,10 +43,17 @@ import type {
     PackageManagerRequest,
     PackageManagerRun,
     ToolInstall,
+    ToolPackageManagerName,
     ToolRelease,
 } from '#cli/types/tools.ts';
 
 const LOCK_ONLY_FLAG = '--package-lock-only';
+
+const PACKAGE_MANAGER_UPGRADES: Record<ToolPackageManagerName, string> = {
+    npm: 'npm install --global npm@latest',
+    pnpm: 'pnpm self-update',
+    bun: 'bun upgrade',
+};
 
 const DELETED_LOCKFILE_MESSAGE =
     'npm wrote registry credentials into the lockfile of the tool project, so gspot deleted that lockfile. Remove the credentials from the registry URL, then run gspot install again.';
@@ -136,11 +143,16 @@ export async function assertPackageManagerVersion(install: ToolInstall): Promise
     const found = version.stdout.trim();
     if (version.code === 0 && semver.satisfies(found, requirement, { includePrerelease: true })) {
         const minimum = RELEASE_AGE_VERSIONS[packageManager.name];
-        if (semver.lt(found, minimum))
+        if (semver.lt(found, minimum)) {
+            const fix =
+                packageManager.command.version === undefined
+                    ? `Run ${PACKAGE_MANAGER_UPGRADES[packageManager.name]}.`
+                    : `Change the ${packageManager.name} version that package.json pins.`;
             throw new GspotError(
                 'install',
-                `gspot install needs ${packageManager.name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${found}.`,
+                `gspot needs ${packageManager.name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${found}. ${fix}`,
             );
+        }
         return;
     }
     const result =

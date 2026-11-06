@@ -1,5 +1,6 @@
 import { expect, spyOn, test } from 'bun:test';
 
+import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -12,20 +13,40 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
-test('npm in place of Yarn 1 refuses to run without the minimum release age', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}',
-    });
-    using _npm = fakeCommands('npm', () => Promise.resolve(buildProcessResult({ stdout: '11.18.0\n' })));
+test.each([
+    {
+        name: 'npm in place of Yarn 1',
+        manager: 'npm',
+        files: { 'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}' },
+        found: '11.18.0',
+        fix: 'Run npm install --global npm@latest.',
+    },
+    {
+        name: 'pnpm with no pin',
+        manager: 'pnpm',
+        files: { 'package.json': '{"private":true}', 'pnpm-lock.yaml': '' },
+        found: '10.15.0',
+        fix: 'Run pnpm self-update.',
+    },
+    {
+        name: 'Bun with no pin',
+        manager: 'bun',
+        files: { 'package.json': '{"private":true}', 'bun.lock': '' },
+        found: '1.2.0',
+        fix: 'Run bun upgrade.',
+    },
+] as const)('$name below the release age floor names its upgrade command', async ({ manager, files, found, fix }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), ...files });
+    using _manager = fakeCommands(manager, () => Promise.resolve(buildProcessResult({ stdout: `${found}\n` })));
     const session = await openSession(sandbox.path);
     const owner = openFiles(sandbox.path);
     const versionError = await captureRejection(
         assertPackageManagerVersion(await buildSandboxToolInstall(session, owner)),
     );
     expect(versionError).toMatchObject({ name: 'GspotError', code: 'install' });
-    expect(versionError.message).toContain('npm 11.19.0');
-    expect(versionError.message).toContain('11.18.0');
+    expect(versionError.message).toBe(
+        `gspot needs ${manager} ${RELEASE_AGE_VERSIONS[manager]} or later, which holds back new releases for dependencies.min_release_age_days. Found ${found}. ${fix}`,
+    );
 });
 
 test.each(PACKAGE_MANAGER_AGE_CASES)(
@@ -46,6 +67,7 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
             expect(checkedError).toMatchObject({ name: 'GspotError', code: 'install' });
             expect(checkedError.message).toContain(`${name} ${minimum}`);
             expect(checkedError.message).toContain(version);
+            expect(checkedError.message).toContain(`Change the ${name} version that package.json pins.`);
         }
     },
 );
