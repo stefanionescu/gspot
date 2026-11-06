@@ -61,7 +61,7 @@ function choosePin(root: string, planned: Session): Pick<InitPlanning, 'session'
     };
 }
 
-async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
+async function planSettings(plan: SettingsPlan): Promise<PlannedSettings & Pick<SettingsDraft, 'template'>> {
     const { root, draft, repository, conflictingConfigs, sessionOptions } = plan;
     const first = readSettings(buildInitSettings(draft, repository), root);
     const session = await openSession(root, { settings: first, ...sessionOptions });
@@ -79,7 +79,13 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings> {
     });
     const settingsText = buildInitSettings({ ...draft, carried: carryover.settings }, repository);
     const settings = readSettings(settingsText, root);
-    return { carryover, settingsText, settings, planned: await openSession(root, { settings, ...sessionOptions }) };
+    return {
+        carryover,
+        settingsText,
+        settings,
+        planned: await openSession(root, { settings, ...sessionOptions }),
+        template: draft.template,
+    };
 }
 
 /**
@@ -97,7 +103,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     const repositorySetup = await readRepositorySetup(cache, repository);
     const prettierScripts = await readPrettierScripts(root, repository.files, proposed.scopes);
     const trackedPaths = [...includeParentFolders(repository.files.map(({ path }) => path))];
-    const { carryover, settingsText, settings, planned } = await planSettings({
+    const { carryover, settingsText, settings, planned, template } = await planSettings({
         root,
         draft: buildSettingsDraft(proposed, options, { prettierScripts, trackedPaths }),
         repository,
@@ -121,7 +127,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         scopes: session.scopes,
         everySelected: listSelectedConfigurations(session.scopes),
         conflicts,
-        template: options.template,
+        template,
         pinPath,
         lintCommands: [
             ...listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),

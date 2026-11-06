@@ -67,6 +67,50 @@ test.each(TEMPLATE_REFUSALS)(
     },
 );
 
+test('init --from lists each setting that no selected configuration reads, and writes the rest', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
+    await using team = await testdir({
+        'gspot.toml': `configurations = ["markdown"]
+
+[limits]
+max_file_lines = 250
+
+[licenses]
+allowed = ["MIT"]
+
+[tools.ruff]
+rules = ["ANN"]
+`,
+    });
+    await using sandbox = await createGitSandbox({});
+    const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as {
+        plan: { from: { leftOutSettings: Array<{ key: string; note: string }> } };
+    };
+    const note = 'no selected configuration reads it';
+    expect(plan.from.leftOutSettings).toStrictEqual([
+        { key: 'licenses.allowed', note },
+        { key: 'tools.ruff.rules', note },
+    ]);
+    const written = parseTomlFile('gspot.toml', await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
+    expect(written).not.toHaveProperty('licenses');
+    expect(written).not.toHaveProperty('tools');
+    expect(written['limits']).toStrictEqual({ max_file_lines: 250 });
+});
+
+test('init --from keeps a setting of a configuration that the new repository selects by its files', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
+    await using team = await testdir({
+        'gspot.toml': 'configurations = ["markdown"]\n[tools.ruff]\nrules = ["ANN"]\n',
+    });
+    await using sandbox = await createGitSandbox({ 'main.py': 'PORT = 8080\n' });
+    const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const written = parseTomlFile('gspot.toml', await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
+    expect(written['tools']).toMatchObject({ ruff: { rules: ['ANN'] } });
+});
+
 test('init refuses --from beside --configurations before it reads anything', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({});

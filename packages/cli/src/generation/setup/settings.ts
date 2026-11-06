@@ -1,13 +1,21 @@
 import { LEADING_COMMENTS } from '#cli/config/generation.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
+import { selectConfigurations } from '#cli/manifests/select.ts';
+import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
-import { overlayTable } from '#cli/settings/edit.ts';
+import { overlayTable, removeKey } from '#cli/settings/edit.ts';
+import { findSetting, listWrittenKeys } from '#cli/settings/inherit.ts';
+import { buildSettings } from '#cli/settings/read.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
+import type { InitOptions, SettingsDraft, Template } from '#cli/types/generation.ts';
 import type { ProposedConfigurations, Repository } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
+
+const UNREAD_SETTING_NOTE = 'no selected configuration reads it';
 
 function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlTable {
     const selected = {
@@ -35,6 +43,26 @@ function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlT
         ...draft.carried,
         ...(scope.length > 0 && { scope }),
     });
+}
+
+function leaveOutUnreadSettings(template: Template, configurations: ProposedConfigurations): Template {
+    const offered = buildAvailableSettings(
+        selectConfigurations([
+            ...configurations.rootNames,
+            ...configurations.scopeConfigurations.values().toArray().flat(),
+            ...listAutomaticConfigurations(),
+        ]),
+        'basic',
+    );
+    const table = structuredClone(template.table);
+    const written = buildSettings(settingsSchema.parse(table), table);
+    const unread = listWrittenKeys(written, offered).filter((key) => findSetting(offered, key) === undefined);
+    for (const key of unread) removeKey(table, key);
+    return {
+        ...template,
+        table,
+        leftOut: [...template.leftOut, ...unread.map((key) => ({ key, note: UNREAD_SETTING_NOTE }))],
+    };
 }
 
 /**
@@ -68,15 +96,17 @@ export function buildSettingsDraft(
     { prettierScripts, trackedPaths }: Pick<SettingsDraft, 'prettierScripts' | 'trackedPaths'>,
 ): SettingsDraft {
     const scopes = configurations.scopes.filter((scope) => scope.path !== '');
+    const template =
+        options.template === undefined ? undefined : leaveOutUnreadSettings(options.template, configurations);
     return {
-        base: options.template?.text.replace(LEADING_COMMENTS, '') ?? '',
+        base: template?.text.replace(LEADING_COMMENTS, '') ?? '',
         configurations: configurations.rootNames,
         scopes: scopes.map((scope) => ({
             ...scope,
             configurations: configurations.scopeConfigurations.get(scope.path) ?? [],
         })),
         level: options.level,
-        template: options.template,
+        template,
         prettierScripts,
         trackedPaths,
     };
