@@ -7,14 +7,10 @@ configurations: [nextjs]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `nextjs` configuration type-checks the app after Next.js writes its route types, and adds the Next.js lint rules, a
-rule for server modules, and two rules for `next.config`. It runs these checks:
+rule for server modules, and two rules for `next.config`. It needs `typescript`, `react`, and `react-dom`, so the
+[React](/frameworks/react/) rules also run.
 
 <ChecksTable guide="frameworks/nextjs" />
-
-## When gspot turns it on
-
-gspot turns on `nextjs` in a scope whose `package.json` depends on `next`. The configuration needs `typescript`, `react`,
-and `react-dom`, so gspot turns those on too, and the [React](/frameworks/react/) rules also run.
 
 ## Type check
 
@@ -27,14 +23,13 @@ check stops and prints the cause. CI needs no extra step, because the gspot work
 
 ## ESLint rules
 
-`javascript/eslint` adds these rules:
+`javascript/eslint` adds the `core-web-vitals` preset of `@next/eslint-plugin-next`, the `next` preset of
+eslint-plugin-react-refresh, and `@next/next/no-async-client-component`. `@next/next/no-html-link-for-pages` runs only
+when the project has a `pages` or `src/pages` folder. Level `all` adds rules for Google Analytics scripts, `<img>`
+elements, and custom fonts in a single page.
 
-- The `core-web-vitals` preset of `@next/eslint-plugin-next`, and the `next` preset of eslint-plugin-react-refresh.
-- `@next/next/no-async-client-component`.
-- `@next/next/no-html-link-for-pages`, only when the project has a `pages` or `src/pages` folder.
-- `gspot/require-server-only` for files under a `server` folder and files named `*.server.*`. Each such module must
-  import `server-only` or declare `"use server"`, so that a client bundle never includes it.
-- At level `all`: `@next/next/next-script-for-ga`, `@next/next/no-img-element`, and `@next/next/no-page-custom-font`.
+`gspot/require-server-only` makes a file under a `server` folder, or named `*.server.*`, import `server-only` or declare
+`"use server"`, so that a client bundle never includes it.
 
 In `next.config.*` files, the `gspot/restricted-syntax` rule reports two patterns at both levels:
 
@@ -42,8 +37,6 @@ In `next.config.*` files, the `gspot/restricted-syntax` rule reports two pattern
 | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `ignoreBuildErrors: true` or `ignoreDuringBuilds: true`                                       | This option lets next build pass with errors. Remove it.                           |
 | A key under `env` whose name holds `SECRET`, `TOKEN`, `PASSWORD`, `PRIVATE_KEY`, or `API_KEY` | A key under env is written into the client bundle. Read this secret on the server. |
-
-## What gspot accepts
 
 gspot accepts the file names, folder layouts, default exports, and export names that Next.js requires, such as
 `page.tsx`, `not-found.tsx`, and `generateMetadata`. It treats `next-env.d.ts` as a generated file, and most checks skip

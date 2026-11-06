@@ -1,6 +1,5 @@
 ---
 title: Vue
-description: Lint and type-check Vue single-file components.
 configurations: [vue]
 ---
 
@@ -8,31 +7,21 @@ import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `vue` configuration lints Vue components with eslint-plugin-vue and eslint-plugin-vuejs-accessibility, and
 type-checks them with vue-tsc. Prettier formats `.vue` files, and the [CSS guide](/languages/css/#component-styles)
-covers the style blocks of components. The configuration runs these checks:
+covers the style blocks of components.
 
 <ChecksTable guide="frameworks/vue" />
 
-## When gspot turns it on
-
-gspot turns on `vue` in a scope that has a `.vue` file, or whose `package.json` depends on `vue`.
-
 ## Type check
 
-When the scope uses `typescript`, `vue/vue-tsc` runs in place of `typescript/tsc`, before each push. It checks the types
-of every component and TypeScript file of the scope with the strict compiler options of the level. A scope without
-`typescript` runs no type check of its components.
+When the scope uses `typescript`, `vue/vue-tsc` runs in place of `typescript/tsc`, before each push, and checks every
+component and TypeScript file with the strict compiler options of the level. A scope without `typescript` runs no type
+check of its components.
 
 ## ESLint rules
 
-`javascript/eslint` reads `.vue` files with vue-eslint-parser. When the scope uses `typescript`, it reads their scripts
-with the TypeScript parser. It adds these rules:
-
-- The `flat/recommended` presets of eslint-plugin-vue and eslint-plugin-vuejs-accessibility.
-- `vue/no-setup-props-reactivity-loss`, `vue/no-ref-object-reactivity-loss`, `vue/no-unused-refs`,
-  `vue/require-typed-ref`, `vue/html-button-has-type`, and `vue/no-template-target-blank`.
-- At level `all`: `vue/component-api-style` with `script-setup` only, `vue/no-useless-v-bind`, and
-  `vue/prefer-true-attribute-shorthand`. When the scope uses `typescript`, also `vue/define-props-declaration` and
-  `vue/define-emits-declaration`.
-
-Level `basic` turns off the style, naming, and ordering rules of the eslint-plugin-vue preset, and level `all` runs them.
+`javascript/eslint` runs the `flat/recommended` presets of eslint-plugin-vue and eslint-plugin-vuejs-accessibility. It also
+reports lost reactivity, unused and untyped refs, a button without a `type`, and an unsafe `target="_blank"` link.
 `vue/require-default-prop` is off at both levels, so an optional prop needs no default value.
+
+Level `basic` turns off the style, naming, and ordering rules of the eslint-plugin-vue preset. Level `all` runs them, allows
+only `<script setup>`, and when the scope uses `typescript`, requires the type form of `defineProps` and `defineEmits`.

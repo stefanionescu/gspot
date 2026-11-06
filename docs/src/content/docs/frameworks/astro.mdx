@@ -1,42 +1,31 @@
 ---
 title: Astro
-description: The lint rules and the type check for Astro components.
 configurations: [astro]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `astro` configuration lints Astro components with eslint-plugin-astro and its accessibility rules, and type-checks
-them with `astro check`. Prettier formats `.astro` files. The configuration runs these checks:
+them with `astro check`. Prettier formats `.astro` files.
 
 <ChecksTable guide="frameworks/astro" />
 
-## When gspot turns it on
-
-gspot turns on `astro` in a scope that has a `.astro` file, or whose `package.json` depends on `astro`. When the project
-also uses `@astrojs/sitemap` or Starlight, gspot turns on `site`, which builds the site and checks the pages, as
-[Static sites](/topics/site/) describes.
+When the project also uses `@astrojs/sitemap` or Starlight, gspot turns on `site`, which builds the site and checks the
+pages, as [Static sites](/topics/site/) describes.
 
 ## Type check
 
-Before each push, `astro/astro-check` runs `astro check`, which covers the `.astro` files that `tsc` cannot read. A
-warning fails the check, as an error does. When the scope uses `typescript`, `typescript/tsc` still checks your `.ts`
-files.
+Before each push, `astro/astro-check` runs `astro check`, which covers the `.astro` files that `tsc` cannot read, and fails
+on a warning as it does on an error. When the scope uses `typescript`, `typescript/tsc` still checks your `.ts` files.
 
 ## ESLint rules
 
-`javascript/eslint` checks each component, and the scripts inside it, with these rules:
-
-- The `flat/recommended` preset of eslint-plugin-astro.
-- The `flat/jsx-a11y-recommended` preset, which applies the jsx-a11y accessibility rules to the markup.
-- `astro/no-set-html-directive`, `astro/no-exports-from-components`, and `astro/no-prerender-export-outside-pages`.
-- At level `all`: `astro/no-unused-css-selector`, `astro/prefer-class-list-directive`, `astro/prefer-object-class-list`,
-  and `astro/prefer-split-class-list`.
+`javascript/eslint` checks each component, and the scripts inside it, with the `flat/recommended` and
+`flat/jsx-a11y-recommended` presets of eslint-plugin-astro. It also reports `set:html`, exports from a component, and a
+`prerender` export outside a page. Level `all` adds rules for unused CSS selectors and for how to write `class:list`.
 
 The `<script>` blocks of a component run in the browser, so in them `gspot/no-client-environment` allows only the
 environment variables that start with `PUBLIC_`, and `NODE_ENV`, `SITE`, and `ASSETS_PREFIX`.
 
-## What gspot accepts
-
-At level `all`, gspot reports files that only forward to another module. An Astro component never counts as one, even
+At level `all`, gspot reports files that only forward to another module, but an Astro component never counts as one, even
 when its script only imports a module.

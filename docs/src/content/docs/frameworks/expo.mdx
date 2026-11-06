@@ -7,33 +7,23 @@ configurations: [expo]
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
 The `expo` configuration runs Expo Doctor, and adds the lint rules of eslint-plugin-expo for public environment
-variables and DOM components. It runs these checks:
+variables and DOM components. It needs `react-native`, so the [React Native](/frameworks/react-native/) and
+[React](/frameworks/react/) rules also run.
 
 <ChecksTable guide="frameworks/expo" />
 
-## When gspot turns it on
-
-gspot turns on `expo` in a scope whose `package.json` depends on `expo`. The configuration needs `react-native`, so
-gspot turns that on too, and the [React Native](/frameworks/react-native/) and [React](/frameworks/react/) rules also
-run.
-
 ## Doctor check
 
-Before each push, `expo/expo-doctor` runs Expo Doctor and reports each problem that it finds. Expo Doctor needs network
-access and the installed dependencies of the project, so when `expo` is not installed in the scope, the check stops and
-asks you to install them.
+Before each push, `expo/expo-doctor` runs Expo Doctor and reports each problem that it finds. It needs network access and
+the installed dependencies of the project, and it stops when the scope has no installed `expo`.
 
 A Doctor test fails, for example, when the installed `react-native` version differs from the one that the Expo SDK
 needs. Run `npx expo install --check` to install the matching version.
 
 ## ESLint rules
 
-`javascript/eslint` adds these rules of eslint-plugin-expo to the JavaScript and TypeScript files of the scope:
-
-- `expo/no-env-var-destructuring` and `expo/no-dynamic-env-var`, which report a destructured or computed read of
-  `process.env`.
-- `expo/use-dom-exports`, for components that render with the `"use dom"` directive.
-- At level `all`: `expo/prefer-box-shadow`.
+`javascript/eslint` reports a destructured or computed read of `process.env`, and `expo/use-dom-exports` checks components
+that render with the `"use dom"` directive. Level `all` adds `expo/prefer-box-shadow`.
 
 The app runs on the device, so `gspot/no-client-environment` allows the app only the environment variables that start
 with `EXPO_PUBLIC_`. API routes that end in `+api.js` or `+api.ts`, config files such as `app.config.ts`, and files

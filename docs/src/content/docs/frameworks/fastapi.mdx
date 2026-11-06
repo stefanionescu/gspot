@@ -5,13 +5,8 @@ configurations: [fastapi]
 ---
 
 The `fastapi` configuration adds the FastAPI rules of Ruff, and three Semgrep rules for the settings and errors of a
-FastAPI application. The Ruff rules run in `python/ruff`, and the Semgrep rules in `security/semgrep`.
-
-## When gspot turns it on
-
-gspot turns on `fastapi` in a scope whose project depends on `fastapi`, for example through the `dependencies` of
-`pyproject.toml`. The Python checks also run, and the [Python guide](/languages/python/) describes them. To check an
-OpenAPI description of the service, add the [`openapi` configuration](/reference/configurations/openapi/).
+FastAPI application. To check an OpenAPI description of the service, add the
+[`openapi` configuration](/reference/configurations/openapi/).
 
 ## Ruff rules
 

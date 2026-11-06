@@ -5,21 +5,16 @@ configurations: [react-native]
 ---
 
 The `react-native` configuration adds the rules of `@react-native/eslint-plugin`, and patterns for lists, touch targets,
-the window size, and secrets in AsyncStorage. Its rules run in `javascript/eslint`.
-
-## When gspot turns it on
-
-gspot turns on `react-native` in a scope whose `package.json` depends on `react-native`, and the
-[React](/frameworks/react/) rules also run there. The browser accessibility rules of `react-dom` stay off. Expo apps get
-these rules too, and the [Expo](/frameworks/expo/) page covers the rest.
+the window size, and secrets in AsyncStorage. Its rules run in `javascript/eslint`, along with the
+[React](/frameworks/react/) rules, and the browser accessibility rules of `react-dom` stay off.
 
 React Native sources get the React Native globals, with `process` and `require` but no other Node.js globals, such as
 `Buffer` and `__dirname`, as [JavaScript runtimes](/languages/javascript-typescript/#javascript-runtimes) describes.
 
 ## ESLint rules
 
-`javascript/eslint` adds `@react-native/platform-colors` and `@react-native/no-deep-imports` to the JavaScript and
-TypeScript files of the scope. The `gspot/restricted-syntax` rule reports these patterns:
+`javascript/eslint` adds `@react-native/platform-colors` and `@react-native/no-deep-imports`, and the
+`gspot/restricted-syntax` rule reports these patterns:
 
 | Pattern                                                                                                         | Level | Message                                                                                      |
 | --------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------------------- |
