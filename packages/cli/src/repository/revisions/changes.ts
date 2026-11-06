@@ -56,7 +56,7 @@ const UNTRACKED_STATUS = '?';
 const REMOTE_HEAD = 'origin/HEAD';
 
 const REMOTE_HEAD_HELP =
-    ' A clone sets origin/HEAD, and git remote add does not, so run git remote set-head origin --auto.';
+    ' A clone sets origin/HEAD, and git remote add does not, so run git remote set-head origin --auto. Before the first push to an empty remote, that command fails, so run gspot check --only push.';
 
 async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
     if (COMMIT_HASH_PATTERN.test(compared)) {

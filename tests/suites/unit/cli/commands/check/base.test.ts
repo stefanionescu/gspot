@@ -121,4 +121,5 @@ test('--base origin/HEAD in a repository that never set it names the fix', async
     const result = await runGspot(sandbox.path, ['check', '--base', 'origin/HEAD']);
     expect(result.code).toBe(2);
     expect(result.stderr).toContain('git remote set-head origin --auto');
+    expect(result.stderr).toContain('Before the first push to an empty remote');
 });
