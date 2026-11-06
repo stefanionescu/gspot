@@ -63,7 +63,8 @@ export const ignoreSchema = z
             description: 'One lint rule of that check, or the fingerprint of one finding.',
         }),
         paths: nonemptyPathsSchema.optional().meta({
-            description: 'Where the ignore applies.',
+            description:
+                'Where the ignore applies. A path that starts with `!` puts files back for Prettier, typos, Knip, and tsc, and for ESLint when the path before it ends in `/**/*`, such as `src/**/*`.',
         }),
         reason: z.string({ error: 'needs a reason. Add reason = "..." to this record.' }).meta({
             description: 'Why you ignore the findings.',
