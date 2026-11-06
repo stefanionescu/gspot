@@ -1,4 +1,4 @@
-# GitHub workflows
+# GitHub Actions
 
 Read this rule when you change a GitHub Actions workflow or action.
 

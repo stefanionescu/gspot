@@ -2,85 +2,54 @@
 
 # Rules
 
-Read these rules first:
-
-- `.gspot/rules/WORKING.md`
-- `.gspot/rules/WRITING.md`
-- `.gspot/rules/TALKING.md`
-
+Read `.gspot/rules/WORKING.md` and `.gspot/rules/WRITING.md` first.
 Read a rule below when its sentence fits your task.
 A rule marked `in <folder>/` applies only to files in that folder.
 A more specific rule wins over a general one.
 
-## Languages
-
+- `.gspot/rules/ACCESSIBILITY.md`: when you change a user interface.
+- `.gspot/rules/ASTRO.md` in `docs/`: when you change Astro components, pages, or content collections.
 - `.gspot/rules/BASH.md`: when you write or change a shell script.
-- `.gspot/rules/BUN.md`: when code runs on Bun.
+- `.gspot/rules/CLI.md`: when you change a command-line program that the project ships.
+- `.gspot/rules/CLOUDFLARE.md` in `docs/`: when code runs on Cloudflare Workers or Pages, or when you change a Wrangler file, `_headers`, or `_redirects`.
+- `.gspot/rules/COMMENTS.md`: when you write or change a comment.
 - `.gspot/rules/COMPONENTS.md`: when you change an Astro, Svelte, Vue, or React component.
 - `.gspot/rules/CSS.md` in `docs/`: when you change a stylesheet or the style block of a component.
-- `.gspot/rules/HTML.md` in `docs/`: when you change HTML or an HTML template.
-- `.gspot/rules/JAVASCRIPT.md`: when you change JavaScript or TypeScript code.
-- `.gspot/rules/NODE.md`: when code runs on Node.
-- `.gspot/rules/OPERATIONS.md`: when you write a deployment, publishing, or remote shell script.
-- `.gspot/rules/PLAYWRIGHT.md`: when you write or change a Playwright test.
-- `.gspot/rules/SAFETY.md`: when a shell script deletes files, downloads, uses `sudo`, starts background jobs, or parses JSON or YAML.
-- `.gspot/rules/TYPESCRIPT.md`: when you change TypeScript code.
-
-## Frameworks
-
-- `.gspot/rules/ASTRO.md` in `docs/`: when you change Astro components, pages, or content collections.
-- `.gspot/rules/SITE.md` in `docs/`: when you change a site that a build turns into static HTML.
-
-## Platforms
-
-- `.gspot/rules/CLOUDFLARE.md` in `docs/`: when code runs on Cloudflare Workers or Pages, or when you change a Wrangler file, `_headers`, or `_redirects`.
-
-## Infrastructure
-
-- `.gspot/rules/GITHUB-ACTIONS.md`: when you change a GitHub Actions workflow or action.
-
-## Libraries
-
-- `.gspot/rules/ZOD.md` in `packages/cli/`, `tests/`: when you write or change a Zod schema.
-
-## General
-
-- `.gspot/rules/ACCESSIBILITY.md`: when you change a user interface.
-- `.gspot/rules/CLI.md`: when you change a command-line program that the project ships.
-- `.gspot/rules/COMMENTS.md`: when you write or change a comment.
 - `.gspot/rules/DEPENDENCIES.md`: before you add, upgrade, or remove a dependency.
 - `.gspot/rules/DOCS.md`: when you write or change documentation.
 - `.gspot/rules/ERRORS.md`: when you write code that raises, catches, or reports an error.
 - `.gspot/rules/GENERATED.md`: when you change a generated file, or the code that writes one.
 - `.gspot/rules/GIT.md`: before you commit, push, tag, or open a pull request.
+- `.gspot/rules/GITHUB-ACTIONS.md`: when you change a GitHub Actions workflow or action.
+- `.gspot/rules/HTML.md` in `docs/`: when you change HTML or an HTML template.
+- `.gspot/rules/JAVASCRIPT.md`: when you change JavaScript or TypeScript code.
 - `.gspot/rules/NAMING.md`: when you name a file, folder, type, function, or variable.
+- `.gspot/rules/OPERATIONS.md`: when you write a deployment, publishing, or remote shell script.
 - `.gspot/rules/PLANNING.md`: before you write a plan.
+- `.gspot/rules/PLAYWRIGHT.md`: when you write or change a Playwright test.
+- `.gspot/rules/SAFETY.md`: when a shell script deletes files, downloads, uses `sudo`, starts background jobs, or parses JSON or YAML.
 - `.gspot/rules/SECRETS.md`: when code reads, stores, or logs a secret.
-- `.gspot/rules/SECURITY.md`: when code handles input, authentication, redirects, or downloads.
+- `.gspot/rules/SECURITY.md`: when code takes input from outside the program, or handles authentication, redirects, or downloads.
 - `.gspot/rules/SETTINGS.md`: when you change how a program reads its settings or environment.
+- `.gspot/rules/SITE.md` in `docs/`: when you change a site that a build turns into static HTML.
 - `.gspot/rules/SUPPRESSIONS.md`: before you add a suppression comment or run `gspot ignore`.
 - `.gspot/rules/TASKS.md`: when you change `mise` tasks, `package.json` scripts, a `Makefile`, or another task runner.
 - `.gspot/rules/TESTING.md`: when you write or change a test.
-- `.gspot/rules/YAML.md`: when you change a `.yml` or `.yaml` file.
+- `.gspot/rules/TYPESCRIPT.md`: when you change TypeScript code.
+- `.gspot/rules/ZOD.md` in `packages/cli/`, `tests/`: when you write or change a Zod schema.
 
 ## Commands
 
 The rules write `gspot` for `mise exec -- gspot`.
 
-Commit, and fix what the hook reports. Before you push, run `gspot check --changed --stage push`.
+Before you finish a change, stage it and run `gspot check --staged --only commit`. When you commit, fix what the hook reports.
 
-To change `gspot.toml`, run `gspot set`, `unset`, or `unignore`.
-When `gspot check` or `gspot doctor` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.
+Change a setting with `gspot set`, `unset`, or `unignore`. Write the other `[[...]]` records by hand, after the user agrees, then run `gspot install`.
+When `gspot check` names a new configuration, ask the user, then run the `gspot add` line it prints and `gspot install`.
 Run `gspot ignore` or `gspot remove` only after the user agrees, with a reason.
-After you edit `gspot.toml`, a package manifest, or a tsconfig, run `gspot install`.
+After you edit a package manifest or a tsconfig, run `gspot install`.
 
-## Generated files
-
-`.gitattributes` marks each file that gspot writes `linguist-generated`, in the block between the gspot markers.
-Do not edit these files. Change `gspot.toml`, then run `gspot install`.
-
-gspot also sets one key in `bunfig.toml`: `install.security.scanner`.
-You can edit the other keys of that file.
+Do not edit the files that gspot writes. `gspot/generated-files` reports an edit. Change `gspot.toml`, then run `gspot install`.
 
 <!-- <<< gspot managed <<< -->
 
@@ -129,11 +98,10 @@ You can edit the other keys of that file.
 ## Folders
 
 These rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/`. Here they override
-four shipped rules:
+three shipped rules:
 
 - NAMING.md says "Prefer feature folders to top-level type buckets."
 - ZOD.md says "Put a runtime schema with the feature that owns the contract."
-- TYPESCRIPT.md asks for a module-level constant per number.
 - TESTING.md says "Put builders, fakes, servers, and database code in one folder beside the tests." Here they sit in
   `tests/setup/`, one subfolder per job.
 

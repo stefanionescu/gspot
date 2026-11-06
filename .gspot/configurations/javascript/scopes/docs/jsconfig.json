@@ -1,0 +1,36 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "strict": true,
+        "allowImportingTsExtensions": true,
+        "maxNodeModuleJsDepth": 0,
+        "noImplicitAny": true
+    },
+    "extends": "../../../../../docs/tsconfig.json",
+    "exclude": [
+        "../../../../../docs/worker-configuration.d.ts",
+        "../../../../../docs/cloudflare-env.d.ts",
+        "../../../../../docs/**/node_modules/**",
+        "../../../../../docs/**/bower_components/**",
+        "../../../../../docs/**/coverage/**",
+        "../../../../../docs/**/.env",
+        "../../../../../docs/**/.env.*",
+        "../../../../../docs/**/.dev.vars",
+        "../../../../../docs/**/.dev.vars.*",
+        "../../../../../docs/**/.wrangler/**",
+        "../../../../../docs/**/bun.lock",
+        "../../../../../docs/**/*.log",
+        "../../../../../docs/dist/**",
+        "../../../../../docs/.astro/**",
+        "../../../../../docs/.wrangler/**",
+        "../../../../../docs/**/eslint.config.mjs",
+        "../../../../../docs/**/eslint.config.js",
+        "../../../../../docs/**/eslint.config.cjs",
+        "../../../../../docs/dist"
+    ],
+    "files": [
+        "../../../../../packages/cli/src/types/global.d.ts",
+        "../../../../../packages/cli/src/types/npmcli.d.ts",
+        "../../../../../packages/cli/src/types/spdx.d.ts"
+    ]
+}

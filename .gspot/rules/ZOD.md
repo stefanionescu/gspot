@@ -16,20 +16,14 @@ Choose thrown or returned validation issues to match the boundary. Async checks 
 not catch exceptions thrown by custom code or transport decoding. Keep resource limits on collections and nesting.
 Preserve original bytes when signatures depend on them.
 
-See [parsing and inferred types](https://zod.dev/basics).
-
 ## Patches and normalization
 
 Derive a patch from fields the caller may edit, not the whole persistence row. Keep omission, undefined, null, and empty
 input distinct. Defaults do not silently turn absence into a write. Normalize only where the contract permits it; never
 trim signed values, passwords, or exact-byte identifiers. Do not let coercion turn an empty required number into zero.
-`z.coerce.boolean()` runs `Boolean(input)`, so the string `"false"` becomes `true`; parse flag strings with
-`z.stringbool()`.
 
 Select response fields before returning them. A loose object schema does not protect private data. Pass request-specific
 state to validation. Do not capture it in a process-wide schema.
-
-See [schema APIs](https://zod.dev/api).
 
 ## Errors and published contracts
 
@@ -41,17 +35,3 @@ A JSON Schema projection cannot represent every runtime contract. Keep runtime v
 dialect against meaningful examples. Use an explicit transport schema for non-JSON values instead of allowing anything
 in the projection. Regenerate consumers when the contract changes, and check omitted fields, defaults, patches, and date
 handling after an upgrade.
-
-See [error customization](https://zod.dev/error-customization) and [JSON Schema](https://zod.dev/json-schema).
-
-## Schema conventions
-
-- Never call `z.promise()`, or `z.custom()` without a check function.
-- Return `false` from a `.refine()` check; never throw in it.
-- Give `.brand()` a type, such as `.brand<'UserId'>()`.
-- Write `z.strictObject()`, not `z.object().strict()`, and `z.enum()`, not `z.nativeEnum()`.
-- Never use `z.any()`. Describe the shape the value has.
-
-### Schema chains
-
-- Call `.meta()` last in a schema chain.

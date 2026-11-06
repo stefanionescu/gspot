@@ -4,8 +4,8 @@ tests/setup/sandboxes/test-tools.lock linguist-generated
 # >>> gspot managed >>>
 * text=auto eol=lf
 .gspot/** linguist-generated
+.gspot/hooks/** linguist-generated=false
 /.editorconfig linguist-generated
-/.github/workflows/gspot.yml linguist-generated
 /.markdownlint.jsonc linguist-generated
 /.prettierignore linguist-generated
 /.stylelintrc.yml linguist-generated

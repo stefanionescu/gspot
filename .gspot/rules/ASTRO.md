@@ -4,8 +4,8 @@ Read this rule when you change Astro components, pages, or content collections.
 
 ## Components
 
-- Keep the frontmatter to data: read the props, load what the page needs, and compute values. Move a helper longer than
-  a few lines into a module.
+- Keep the frontmatter to data: read the props, load what the page needs, and compute values. Move a helper of more than
+  `2` statements into a module.
 
 ## Frontmatter and props
 
@@ -31,9 +31,3 @@ Read this rule when you change Astro components, pages, or content collections.
 - Load content through a content collection with a schema, so a missing field fails the build.
 - Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor can read a `PUBLIC_`
   variable.
-
-## References
-
-- [Astro components](https://docs.astro.build/en/basics/astro-components/).
-- [Client directives](https://docs.astro.build/en/reference/directives-reference/#client-directives).
-- [Content collections](https://docs.astro.build/en/guides/content-collections/).

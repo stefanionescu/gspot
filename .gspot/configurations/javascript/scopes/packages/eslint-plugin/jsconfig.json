@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "strict": true,
+        "allowImportingTsExtensions": true,
+        "maxNodeModuleJsDepth": 0,
+        "jsx": "preserve",
+        "noImplicitAny": true
+    },
+    "include": [
+        "../../../../../../packages/eslint-plugin/**/*.js",
+        "../../../../../../packages/eslint-plugin/**/*.mjs",
+        "../../../../../../packages/eslint-plugin/**/*.cjs",
+        "../../../../../../packages/eslint-plugin/**/*.jsx"
+    ],
+    "extends": "../../../../../../packages/eslint-plugin/tsconfig.json",
+    "exclude": [
+        "../../../../../../packages/eslint-plugin/**/node_modules/**",
+        "../../../../../../packages/eslint-plugin/**/bower_components/**",
+        "../../../../../../packages/eslint-plugin/**/coverage/**",
+        "../../../../../../packages/eslint-plugin/**/.env",
+        "../../../../../../packages/eslint-plugin/**/.env.*",
+        "../../../../../../packages/eslint-plugin/**/.dev.vars",
+        "../../../../../../packages/eslint-plugin/**/.dev.vars.*",
+        "../../../../../../packages/eslint-plugin/**/.wrangler/**",
+        "../../../../../../packages/eslint-plugin/**/bun.lock",
+        "../../../../../../packages/eslint-plugin/**/*.log",
+        "../../../../../../packages/eslint-plugin/**/eslint.config.mjs",
+        "../../../../../../packages/eslint-plugin/**/eslint.config.js",
+        "../../../../../../packages/eslint-plugin/**/eslint.config.cjs"
+    ],
+    "files": [
+        "../../../../../../packages/eslint-plugin/plugin.d.ts"
+    ]
+}

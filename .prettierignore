@@ -12,7 +12,6 @@ build/
 /.stylelintrc.yml
 /eslint.config.mjs
 /prettier.config.mjs
-gspot.baseline.json
 
 # Generator outputs
 docs/cloudflare-env.d.ts

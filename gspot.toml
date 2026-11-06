@@ -84,9 +84,6 @@ entry_files = [
 [tools.eslint.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 "unicorn/consistent-boolean-name" = [{ checkFunctions = "never", ignore = ["^_", "^(?:enabled|active|retryable)$"] }]
-"jsdoc/require-jsdoc" = [
-    { enableFixer = false, publicOnly = true, require = { FunctionDeclaration = true, MethodDefinition = true }, contexts = [":matches(VariableDeclarator, AssignmentExpression, ExportDefaultDeclaration, PropertyDefinition) > :matches(ArrowFunctionExpression, FunctionExpression)"] },
-]
 
 [[scope]]
 path = "docs"
@@ -333,10 +330,5 @@ reason = "A tool reads the default export of its config file, which the file bui
 
 [[ignore]]
 check = "prose/vale"
-paths = ["CHANGELOG.md"]
-reason = "Release notes name removed files and cite commits."
-
-[[ignore]]
-check = "docs/missing-paths"
 paths = ["CHANGELOG.md"]
 reason = "Release notes name removed files and cite commits."
