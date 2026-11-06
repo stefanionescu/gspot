@@ -65,6 +65,22 @@ test('checks that run at the root appear once when selected in two child scopes'
     ]);
 });
 
+test('a nested scope that leaves its tests to the root run shows as replaced, because the level does not skip it', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': 'configurations = ["vitest"]\n\n[[scope]]\npath = "a"\nconfigurations = ["vitest"]\n',
+        'vitest.config.mjs': '',
+        'a/a.test.js': '',
+    });
+    const listed = await runGspot(sandbox.path, ['list', '--json']);
+    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
+    const { selected } = configurationsListOutputSchema.parse(JSON.parse(listed.stdout));
+    const checks = selected.flatMap((configuration) => configuration.checks);
+    expect(checks.filter(({ check }) => check === 'vitest/tests')).toStrictEqual([
+        { check: 'vitest/tests', scope: '', status: 'on' },
+        { check: 'vitest/tests', scope: 'a', status: 'skipped', cause: 'replaced' },
+    ]);
+});
+
 test('the settings list reports inherited values and their source scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': LIST_SCOPE_SETTINGS,

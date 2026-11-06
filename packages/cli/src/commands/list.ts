@@ -100,7 +100,7 @@ function formatCheckStates(checks: ConfigurationsListJson['selected'][number]['c
 function buildConfigurationsResult(session: Session): CommandResult {
     const configurations = listSelectedConfigurations(session.scopes);
     const names = new Set(configurations.map((configuration) => configuration.name));
-    const planned = Map.groupBy(planChecks(session, { stage: 'any' }), (check) => check.scope.path);
+    const planned = Map.groupBy(planChecks(session, { stage: 'any', keepLevelOff: true }), (check) => check.scope.path);
     const selected = configurations.map((configuration) => ({
         name: configuration.name,
         checks: listCheckStates(session, configuration, planned),

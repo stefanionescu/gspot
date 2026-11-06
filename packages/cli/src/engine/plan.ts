@@ -203,10 +203,10 @@ export function isActive(planned: PlannedCheck, selection?: RunSelection): boole
 /**
 Build the state of a planned check for list and explain: on, or skipped with the cause that check --json names.
 
-@param planned the plan of the check, or undefined when the level leaves it out of the plan.
+@param planned the plan of the check, or undefined when the run of another scope covers its tests.
 */
 export function buildCheckState(planned: PlannedCheck | undefined): CheckState {
-    if (planned === undefined) return { status: 'skipped', cause: 'level' };
+    if (planned === undefined) return { status: 'skipped', cause: 'replaced' };
     if (planned.skip !== undefined) return { status: 'skipped', cause: planned.skip.cause };
     return isActive(planned) ? { status: 'on' } : { status: 'skipped', cause: 'no-files' };
 }
