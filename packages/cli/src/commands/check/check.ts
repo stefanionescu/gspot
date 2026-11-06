@@ -204,7 +204,7 @@ async function runStagedCheck(
             selection: { ...selection, reference: await readIndexTree(root, cancelSignal) },
             untracked: { paths: [], unreadablePaths: untracked.unreadablePaths },
         });
-    using copy = await copyRevision(root, { kind: 'index', status, paths: stagedPaths }, cancelSignal);
+    using copy = await copyRevision(root, { kind: 'index', paths: stagedPaths }, cancelSignal);
     return await runTreeCheck(copy.root, options, cancelSignal, {
         toolsRoot: root,
         started,

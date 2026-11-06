@@ -15,7 +15,7 @@ export const AUTHORED_SCRIPT = 'echo authored\n';
 
 export const SIGNAL_EXITS = [
     { operation: 'init', signal: 'SIGINT', exitCode: 130 },
-    { operation: 'cat-file', signal: 'SIGTERM', exitCode: 143 },
+    { operation: 'checkout-index', signal: 'SIGTERM', exitCode: 143 },
 ] as const;
 
 export const CANCELLATION_REPORT_CASES = [

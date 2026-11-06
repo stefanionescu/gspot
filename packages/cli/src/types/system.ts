@@ -39,7 +39,6 @@ export type ErrorCode =
     | 'configuration'
     | 'arguments'
     | 'git'
-    | 'copy'
     | 'writing'
     | 'install'
     | 'tool';

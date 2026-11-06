@@ -14,7 +14,7 @@ import {
 } from '#cli/config/repository/git.ts';
 import { readGitListing } from '#cli/repository/files/tracked.ts';
 import { parseGitBlobs, parseListingLine, parseTreeFiles, stripIndexStages } from '#cli/repository/git/output.ts';
-import { readGitLines, readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
+import { readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -24,12 +24,6 @@ import type { GitFile, Revision } from '#cli/types/repository.ts';
 const GIT_INDEX_PATH_ARGUMENTS = ['rev-parse', '--path-format=absolute', '--git-path', 'index'] as const;
 
 const PRIVATE_INDEX_FILE = 'index';
-
-const GIT_BLOB_SIZES_ARGUMENTS = ['cat-file', '--batch-check=%(objectname) %(objectsize)'] as const;
-
-const BLOB_SIZE = /^\d+$/u;
-
-const BLOB_SIZE_FIELDS = 2;
 
 const GIT_LINE_ENDINGS_ARGUMENTS = ['ls-files', '--eol', '-z'] as const;
 
@@ -95,7 +89,7 @@ Read each raw blob once, and visit it before the next blob loads.
 @param visit reads one validated object.
 @param cancelSignal stops the command.
 */
-export async function visitGitBlobs(
+async function visitGitBlobs(
     root: string,
     requested: string[],
     visit: (blobs: AsyncIterable<readonly [string, Buffer]>) => Promise<void>,
@@ -116,33 +110,6 @@ export async function visitGitBlobs(
     );
     if (result.code !== 0)
         throw new GspotError('git', `Git could not read the objects of this revision: ${result.stderr.trim()}`);
-}
-
-/**
-Read the size of each blob with one Git process.
-
-@param root the folder where Git runs.
-@param hashes full blob object IDs.
-@param cancelSignal stops the command.
-@returns the size of each blob that Git holds, by object ID.
-*/
-export async function readBlobSizes(
-    root: string,
-    hashes: string[],
-    cancelSignal?: AbortSignal,
-): Promise<Map<string, number>> {
-    const requested = [...new Set(hashes)];
-    if (requested.length === 0) return new Map();
-    const lines = await readGitLines(root, GIT_BLOB_SIZES_ARGUMENTS, {
-        cancelSignal,
-        stdin: `${requested.join('\n')}\n`,
-    });
-    return new Map(
-        lines.flatMap((line): Array<[string, number]> => {
-            const [hash = '', size = ''] = line.split(' ', BLOB_SIZE_FIELDS);
-            return BLOB_SIZE.test(size) ? [[hash, Number(size)]] : [];
-        }),
-    );
 }
 
 /**

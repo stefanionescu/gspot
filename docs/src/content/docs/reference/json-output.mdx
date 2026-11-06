@@ -19,21 +19,20 @@ When a command fails, its object has `error` and `message` instead of the fields
 failure and what to do. For an unexpected failure, only `--verbose` adds `stack`, which holds the error message and its
 stack trace. `error` holds one of these codes:
 
-| Code            | What failed                                                                                                           |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `arguments`     | Command arguments or flags, or a command that does not fit the repository, such as `init` where `gspot.toml` exists.  |
-| `git`           | A Git operation.                                                                                                      |
-| `copy`          | gspot could not make the temporary copy of your files that `gspot scan` and some checks run in. The message says why. |
-| `writing`       | Writing `gspot.toml` or a generated file.                                                                             |
-| `filesystem`    | A repository file is missing, unreadable, or at a path that gspot rejects.                                            |
-| `parse`         | A file has invalid syntax or structure, including malformed TOML in `gspot.toml`.                                     |
-| `settings`      | A parsed setting has an invalid name, value, or combination.                                                          |
-| `configuration` | A tsconfig or jsconfig that gspot cannot read, such as one that extends a package that is not installed.              |
-| `install`       | Installing tools.                                                                                                     |
-| `tool`          | Finding or running a tool.                                                                                            |
-| `runtime`       | The running Node.js or Bun version is older than the minimum of the package.                                          |
-| `unexpected`    | An unexpected error. The message names it.                                                                            |
-| `canceled`      | A signal stopped the command. `exitCode` holds the exit code of the signal.                                           |
+| Code            | What failed                                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `arguments`     | Command arguments or flags, or a command that does not fit the repository, such as `init` where `gspot.toml` exists. |
+| `git`           | A Git operation.                                                                                                     |
+| `writing`       | Writing `gspot.toml` or a generated file.                                                                            |
+| `filesystem`    | A repository file is missing, unreadable, or at a path that gspot rejects.                                           |
+| `parse`         | A file has invalid syntax or structure, including malformed TOML in `gspot.toml`.                                    |
+| `settings`      | A parsed setting has an invalid name, value, or combination.                                                         |
+| `configuration` | A tsconfig or jsconfig that gspot cannot read, such as one that extends a package that is not installed.             |
+| `install`       | Installing tools.                                                                                                    |
+| `tool`          | Finding or running a tool.                                                                                           |
+| `runtime`       | The running Node.js or Bun version is older than the minimum of the package.                                         |
+| `unexpected`    | An unexpected error. The message names it.                                                                           |
+| `canceled`      | A signal stopped the command. `exitCode` holds the exit code of the signal.                                          |
 
 ## Generated files
 

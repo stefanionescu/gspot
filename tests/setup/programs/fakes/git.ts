@@ -6,7 +6,7 @@ import { splitProgramArguments } from '#tests/setup/system/programs.ts';
 
 const { own, call } = splitProgramArguments();
 const { values } = parseArgs({ args: own, options: PAUSING_GIT_OPTIONS });
-const checkouts: Record<string, string | undefined> = { init: call.at(-1), 'cat-file': process.cwd() };
+const checkouts: Record<string, string | undefined> = { init: call.at(-1), 'checkout-index': process.cwd() };
 if (call[0] === values.operation) {
     const counter = Bun.file(values.counter ?? '');
     const count = ((await counter.exists()) ? Number(await counter.text()) : 0) + 1;

@@ -1,10 +1,9 @@
-import * as fs from 'node:fs';
 import { existsSync } from 'node:fs';
 import { copyFile, mkdir, readdir, readFile, readlink, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { copyRevision } from '#cli/engine/copies/revision.ts';
@@ -18,6 +17,7 @@ import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -171,30 +171,6 @@ test.skipIf(isWindows)('a revision copy keeps a committed link', async () => {
     expect(await readlink(join(copy.root, 'linked.txt'))).toBe('target.txt');
 });
 
-test.skipIf(!isWindows)('a revision copy on Windows without link rights writes the link target as a file', async () => {
-    await using sandbox = await testdir({ 'target.txt': SELECTED_SOURCE });
-    await symlink('target.txt', join(sandbox.path, 'linked.txt'));
-    commitAll(sandbox.path);
-    using _links = spyOn(fs, 'symlinkSync').mockImplementation(() => {
-        throw Object.assign(new Error('Operation not permitted'), { code: 'EPERM' });
-    });
-    using copy = await copyRevision(sandbox.path, { kind: 'index' });
-    expect(await readFile(join(copy.root, 'linked.txt'), 'utf8')).toBe('target.txt');
-});
-
-test('an index copy clones the files that match the index, and takes a changed file from its blob', async () => {
-    await using sandbox = await testdir({ 'kept.txt': SELECTED_SOURCE, 'edited.txt': 'staged\n' });
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'edited.txt'), 'unstaged\n');
-    const clone = spyOn(fs, 'copyFileSync');
-    using copy = await copyRevision(sandbox.path, { kind: 'index' });
-    const cloned = clone.mock.calls.map(([source]) => String(source));
-    clone.mockRestore();
-    expect(cloned.some((source) => source.endsWith('kept.txt'))).toBe(true);
-    expect(cloned.some((source) => source.endsWith('edited.txt'))).toBe(false);
-    expect(await readFile(join(copy.root, 'edited.txt'), 'utf8')).toBe('staged\n');
-});
-
 test('an index copy holds the LF bytes of the index for a file that core.autocrlf checks out with CRLF', async () => {
     await using sandbox = await testdir({ 'source.txt': 'one\ntwo\n', 'kept.txt': 'kept' });
     commitAll(sandbox.path);
@@ -205,6 +181,21 @@ test('an index copy holds the LF bytes of the index for a file that core.autocrl
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
     expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe('one\ntwo\n');
     expect(await readFile(join(copy.root, 'kept.txt'), 'utf8')).toBe('kept');
+});
+
+test('a copy runs no global Git filter or line conversion, and its checks read the attributes of the revision', async () => {
+    await using sandbox = await testdir({
+        '.gitattributes': 'large.bin filter=lfs\n',
+        'large.bin': 'pointer\n',
+        'notes.txt': 'one\ntwo\n',
+        'settings/global': '[filter "lfs"]\n\tsmudge = false\n\trequired = true\n[core]\n\tautocrlf = true\n',
+    });
+    commitAll(sandbox.path);
+    using _environment = overrideEnvironment({ GIT_CONFIG_GLOBAL: join(sandbox.path, 'settings/global') });
+    using copy = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(await readFile(join(copy.root, 'large.bin'), 'utf8')).toBe('pointer\n');
+    expect(await readFile(join(copy.root, 'notes.txt'), 'utf8')).toBe('one\ntwo\n');
+    expect(runGitStep(copy.root, ['check-attr', 'filter', 'large.bin'])).toContain('lfs');
 });
 
 test('a copy with checked paths clones the ignored declarations of only the tsconfig files whose folder holds one', async () => {

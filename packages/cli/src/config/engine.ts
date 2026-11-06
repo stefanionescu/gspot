@@ -44,8 +44,6 @@ export const DEPENDENCY_FILES: ReadonlySet<string> = new Set([PACKAGE_JSON, PYPR
 
 export const GIT_HASH_ARGUMENTS = ['hash-object', '--stdin-paths'] as const;
 
-export const OWNER_WRITABLE_FOLDER = 0o755;
-
 export const GIT_SET_HEAD_ARGUMENTS = ['update-ref', '--no-deref', 'HEAD'] as const;
 
 export const GIT_EMPTY_INDEX_ARGUMENTS = ['read-tree', '--empty'] as const;
@@ -64,6 +62,13 @@ export const DEPENDENCY_REVISION_NOTE =
     'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.';
 
 export const GIT_ALTERNATES_PATH = '.git/objects/info/alternates';
+
+export const GIT_RAW_ATTRIBUTES_PATH = '.git/info/attributes';
+
+// Git writes the bytes of each blob, with no line-ending conversion and no filter such as LFS.
+export const RAW_BLOB_ATTRIBUTES = '* -text -filter -ident -working-tree-encoding\n';
+
+export const GIT_CHECKOUT_ARGUMENTS = ['checkout-index', '--all', '--force'] as const;
 
 export const GIT_SHALLOW_PATH = '.git/shallow';
 

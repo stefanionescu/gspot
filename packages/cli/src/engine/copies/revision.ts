@@ -1,4 +1,4 @@
-import { copyFileSync, lstatSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, lstatSync, mkdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, posix, relative } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 
@@ -7,22 +7,24 @@ import {
     DEPENDENCY_FILES,
     DEPENDENCY_REVISION_NOTE,
     GIT_ALTERNATES_PATH,
+    GIT_CHECKOUT_ARGUMENTS,
     GIT_EMPTY_INDEX_ARGUMENTS,
     GIT_HASH_ARGUMENTS,
     GIT_HASH_FORMAT_ARGUMENTS,
     GIT_INIT_ARGUMENTS,
     GIT_PATH_ARGUMENTS,
+    GIT_RAW_ATTRIBUTES_PATH,
     GIT_SET_HEAD_ARGUMENTS,
     GIT_SHALLOW_PATH,
     GIT_UPDATE_INDEX_ARGUMENTS,
     GIT_VERIFY_HEAD_ARGUMENTS,
+    RAW_BLOB_ATTRIBUTES,
 } from '#cli/config/engine.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { copyDependencies, readDeclarationDependencies, readIgnoredPaths } from '#cli/engine/copies/dependencies.ts';
-import { writeRevisionFiles } from '#cli/engine/copies/files.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { copyValePackages } from '#cli/engine/copies/vale.ts';
 import { readGitText, runGit } from '#cli/repository/git/run.ts';
@@ -151,15 +153,22 @@ async function initializeRevisionCopy(
         await readGitText(copyRoot, [...GIT_SET_HEAD_ARGUMENTS, source.hash], { cancelSignal });
 }
 
+// The attributes last only for this checkout, because checks of the copy read the ones that the revision sets.
+async function checkOutRawFiles(copyRoot: string, cancelSignal: AbortSignal | undefined): Promise<void> {
+    const attributes = join(copyRoot, GIT_RAW_ATTRIBUTES_PATH);
+    mkdirSync(dirname(attributes), { recursive: true });
+    writeFileSync(attributes, RAW_BLOB_ATTRIBUTES);
+    await readGitText(copyRoot, GIT_CHECKOUT_ARGUMENTS, { cancelSignal });
+    rmSync(attributes);
+}
+
 /**
-Writes a Git revision into a private copy and leaves the authored files alone. The copy clones each file that matches
-the index from the working tree, and takes every other file from its Git blob. The copy has its own Git directory, so
+Writes a Git revision into a private copy and leaves the authored files alone. The copy has its own Git directory, so
 Git commands use the copied revision.
 
 @param root the checkout with the Git objects and installed dependencies.
-@param source the revision to copy. A staged check passes the status that sent it to a copy of the index, which saves
-a second read. The paths that the run checks, when the source names them, limit the ignored declaration files that the
-copy reads to the tsconfig files whose folder holds one of them.
+@param source the revision to copy. The paths that the run checks, when the source names them, limit the ignored
+declaration files that the copy reads to the tsconfig files whose folder holds one of them.
 @param cancelSignal stops the copy.
 */
 export async function copyRevision(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<RevisionCopy> {
@@ -176,7 +185,7 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
         await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });
         const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
         const tree = treeLine.replace(TRAILING_NEWLINE, '');
-        await writeRevisionFiles(toplevel, copy.path, { indexFiles, source }, cancelSignal);
+        await checkOutRawFiles(copy.path, cancelSignal);
         copyValePackages(toplevel, copy.path);
         const selected = await selectRevisionDependencies(
             toplevel,

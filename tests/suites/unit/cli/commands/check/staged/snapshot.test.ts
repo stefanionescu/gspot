@@ -197,20 +197,6 @@ test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep 
     ).toStrictEqual({ 'docs/Notes.md': NOTES_MARKDOWN, 'docs/NOTES.md': UPPERCASE_NOTES_MARKDOWN });
 });
 
-test.skipIf(!isCaseFolding())(
-    'staged paths that differ only by letter case are refused on a case-folding disk',
-    async () => {
-        await using sandbox = await createCaseClashingSandbox();
-        const result = await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
-        expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({
-            error: 'copy',
-            message:
-                'Git holds docs/NOTES.md and docs/Notes.md, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.',
-        });
-    },
-);
-
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK });

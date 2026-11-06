@@ -214,7 +214,7 @@ export type ConfigurationSelection = {
     };
 };
 
-export type Revision = ({ kind: 'index'; status?: TreeStatus } | { kind: 'commit'; hash: string }) & {
+export type Revision = ({ kind: 'index' } | { kind: 'commit'; hash: string }) & {
     paths?: string[] | undefined;
 };
 

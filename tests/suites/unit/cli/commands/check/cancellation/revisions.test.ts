@@ -20,7 +20,7 @@ import { captureChild, limitCommand, spawnCommand, waitForExit, waitForFile } fr
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import type { PausedGit } from '#tests/types/setup.ts';
 
-async function prepareStagedCancellation(root: string, operation: 'status' | 'init' | 'cat-file') {
+async function prepareStagedCancellation(root: string, operation: 'status' | 'init' | 'checkout-index') {
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'source.sh': 'echo indexed\n',
@@ -208,7 +208,7 @@ test.skipIf(isWindows)(
 
 async function fakePausingGit(
     folder: string,
-    options: { operation: 'status' | 'init' | 'cat-file'; marker: string; pauseOnCall: number },
+    options: { operation: 'status' | 'init' | 'checkout-index'; marker: string; pauseOnCall: number },
 ): Promise<Record<string, string>> {
     const executable = Bun.which('git');
     if (executable === null) throw new Error('The pausing Git fake requires Git on PATH.');
