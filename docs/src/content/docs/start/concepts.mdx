@@ -30,27 +30,24 @@ problems are not findings, so they have no check ID, and `gspot ignore` cannot t
 
 ## Levels
 
-The level decides how strict the checks are. The counts cover every configuration that gspot ships, so your repository
-runs fewer.
+The level decides how strict the checks are.
 
 <table>
     <thead>
         <tr>
             <th>Level</th>
             <th>What it checks</th>
-            <th>Shipped checks</th>
             <th>Tools it adds</th>
         </tr>
     </thead>
     <tbody>
-        {buildLevelRows().map(({ level, description, count, tools }) => (
+        {buildLevelRows().map(({ level, description, tools }) => (
             <tr>
                 <td>
                     <code>{level}</code>
                     {level === 'basic' && ' (default)'}
                 </td>
                 <td><InlineText text={description} /></td>
-                <td>{count}</td>
                 <td>{tools}</td>
             </tr>
         ))}

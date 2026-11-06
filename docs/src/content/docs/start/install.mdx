@@ -17,7 +17,8 @@ gspot runs on macOS, Linux, and Windows. It needs Git, {`Node.js ${runtimeMinimu
 {`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`},
 and [mise](https://mise.jdx.dev/). With an older Node.js, gspot stops with exit code 2, and with an older package manager,
 `gspot init` and `gspot install` stop. Node.js 22 comes with an older npm, so run `npm install --global npm@latest` there.
-Without mise, install each tool at its pinned version yourself, because a missing tool stops every commit.
+Without mise, install each tool at its pinned version yourself, because a missing tool stops every commit. A
+`packageManager` field in `package.json` needs mise, because gspot runs that version through it.
 
 Run gspot inside a Git working tree, because outside one only `--help` and `--version` work. gspot does not support
 sparse checkouts, so run `git sparse-checkout disable` first. gspot runs your tests, your tool configs, and other code
@@ -38,6 +39,9 @@ Each kind of tool needs its own programs:
 - the npm registry, or the registry that `.npmrc` names, for the npm tools
 - `github.com` and `api.github.com`, for the mise tools, the tree-sitter grammars, and the Vale packages
 - `pypi.org` and `files.pythonhosted.org`, for the Python tools
+
+`gspot install` stops when a pinned tool came out less than `dependencies.min_release_age_days` days ago, as
+[Upgrade](/start/upgrade/) describes.
 
 ## Add gspot
 

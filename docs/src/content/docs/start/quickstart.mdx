@@ -25,20 +25,23 @@ You need Git, {`Node.js ${runtimeMinimums.node} or newer`},
 {`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`},
 and [mise](https://mise.jdx.dev/). A Yarn project needs npm too. Node.js 22 comes with an npm that is too old, so run
 `npm install --global npm@latest`. Without mise, install each tool that `gspot init` names yourself, because a missing
-tool stops every commit.
+tool stops every commit. A `packageManager` field in `package.json` needs mise, because gspot runs that version through
+it.
 
 ## Try gspot on a copy
 
-To see what gspot finds and what `gspot init` changes, run this command in the root folder of a Git repository:
+Install your project's dependencies and commit your lockfile, then run this command in the root folder of your Git
+repository:
 
 ```shell
 npx @gspothq/cli scan
 ```
 
 `gspot scan` sets gspot up in a temporary copy of the files that you committed or staged, and runs the level `basic`
-checks there. Your files do not change, but mise installs the tools for your whole machine. The scan skips your tests,
-your build, and other checks that run your code. It still loads your Prettier config and runs your installed ESLint,
-Stylelint, and TypeScript, so run it only on code that you trust.
+checks there, with no fixes. Your files do not change, but mise installs the tools for your whole machine. The scan skips
+your tests, your build, and other checks that run your code. The report lists the checks that it left out. The scan still
+loads your Prettier config and runs your installed ESLint, Stylelint, and TypeScript, so run it only on code that you
+trust.
 
 The report counts the findings of each kind, such as `Code` or `Secrets`, with examples of each. It lists the files that
 `gspot init` writes and deletes, the settings it copies from your old configs, and the scripts and CI steps that call the
@@ -76,15 +79,16 @@ as `gspot check`.
 
 Commit the setup files, then fix each file as you touch it. The setup commit passes once you delete what
 `gspot/conflicting-configs` reports and fix or ignore the findings of the files that it stages, such as `package.json` or
-an edited CI file. `gspot/conflicting-configs` reports old tool settings, and the scripts, hook lines, and CI steps that
-still call the old tools. After you edit `package.json`, run the install command of your package manager and
-`gspot install`, then stage the result. [Files to commit](/reference/generated-files/#files-to-commit) lists the setup
-files.
+an edited CI file. With Bun, pnpm, or Yarn, `dependencies/package-manager-pin` asks for a `packageManager` field in
+`package.json`, such as `"packageManager": "bun@<version>"`. `gspot/conflicting-configs` reports old tool settings, and
+the scripts, hook lines, and CI steps that still call the old tools. After you edit `package.json`, run the install
+command of your package manager and `gspot install`, then stage the result.
+[Files to commit](/reference/generated-files/#files-to-commit) lists the setup files.
 
 A later commit checks what you stage, and what your staged change breaks in other files, so touching an old file fails
-the commit on that file's old findings. The hook prints a `fix:` line for what a fixer can change. Run the fixers only on
-the files that you touch, with `gspot check --fix <file>`, because a repository-wide `gspot check --fix` rewrites many
-files, and each then fails on its old lint findings.
+the commit on that file's old findings. The hook prints a `fix:` line for what a fixer can change. `gspot check --fix` runs
+the formatters and the lint fixers. Run them only on the files that you touch, with `gspot check --fix <file>`, because a
+repository-wide run rewrites many files, and each then fails on its old lint findings.
 
 On an existing repository, some findings are a matter of taste: `gspot ignore` takes the rule and a reason.
 
@@ -96,8 +100,8 @@ An ignore also hides new findings of that rule in those paths, so name the rule 
 `gspot unignore` after you fix the old code.
 
 The first push fails until you fix or ignore the old findings of the checks that read the whole project, such as
-`typescript/tsc`, `python/basedpyright`, `javascript/knip`, and your tests. `gspot check --only push` shows them before
-you push.
+`typescript/tsc`, `python/basedpyright`, `javascript/knip`, and your tests. `dependencies/osv-scanner` also runs, because
+the setup commit changes the lockfile. `gspot check --only push` shows these findings before you push.
 
 `gspot check` lists every old finding in the repository. Turn on CI after you clear them, because a pull request that
 changes `gspot.toml` checks every file. Start an existing repository at `basic`, because level `all` adds checks of the
