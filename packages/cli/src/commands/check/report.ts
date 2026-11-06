@@ -188,13 +188,11 @@ function formatSummary(report: RunReport): string {
     const passed = worst.filter((status) => status === 'passed').length;
     const skipped = Object.values(report.skippedCount).reduce((total, count) => total + count, 0);
     const findings = report.checks.flatMap((check) => (check.status === 'failed' ? check.findings : [])).length;
-    const scopes = new Set(report.checks.filter(({ status }) => status !== 'skipped').map(({ scope }) => scope)).size;
     const text = [
         ...(failed === 0 ? [] : [`Failed: ${formatCount(failed, 'check')} with ${formatCount(findings, 'finding')}.`]),
         ...formatIncompleteCounts(report, worst),
         `Passed: ${formatCount(passed, 'check')}.`,
         `Skipped: ${formatCount(skipped, 'check')}.`,
-        ...(scopes > 1 ? [`Scopes: ${String(scopes)}.`] : []),
     ].join(' ');
     return report.exitCode === 0 ? text : styleText('red', text, { stream: process.stdout });
 }

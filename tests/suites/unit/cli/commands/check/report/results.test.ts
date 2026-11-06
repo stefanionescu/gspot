@@ -157,7 +157,7 @@ test('the summary counts a check once under its worst result, and names the scop
         skippedCount: { 'no-files': 3 },
     };
     expect(stripVTControlCharacters(formatRunReport(report, { verbose: false }))).toContain(
-        'Failed: 1 check with 2 findings. Passed: 1 check. Skipped: 3 checks. Scopes: 3.\n',
+        'Failed: 1 check with 2 findings. Passed: 1 check. Skipped: 3 checks.\n',
     );
 });
 
