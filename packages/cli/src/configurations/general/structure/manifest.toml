@@ -37,7 +37,7 @@ runs = "scope"
 stage = "commit"
 summary = "Applies `[[import_rule]]` to Python and Swift imports and to the types that Swift files name, and reports code files that no import rule covers. ESLint applies the rules to JavaScript and TypeScript imports."
 when = { setting = "import_rule" }
-why = "An import that crosses the layers that the rules describe, or a file outside every rule, breaks the structure that the rules promise."
+why = "An import across the layers, or a file outside every rule, breaks the structure that the rules describe."
 
 [[check]]
 example = "An empty `src/old/`, or a `src/old/` that holds only an empty `src/old/tmp/`, reports `empty-folder`, and so does a `logs/` that holds only `.gitkeep`. Delete the folder."

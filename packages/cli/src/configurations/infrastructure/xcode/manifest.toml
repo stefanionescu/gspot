@@ -29,7 +29,7 @@ name = "plutil"
 output = { format = "regex", pattern = "^(?<file>[^:]+): \\(?(?<message>(?!OK$).+?)\\)?$" }
 stage = "commit"
 summary = "Parses every property list and entitlements file with plutil."
-why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
+why = "A broken plist fails the build, or ships an app whose settings fell back to their defaults."
 
 [[check]]
 example = "A run-script phase that calls `swiftlint` reports `lint-script`. Delete the phase: gspot runs SwiftLint before each commit."

@@ -65,7 +65,7 @@ name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
 stage = "commit"
 summary = "Runs ShellCheck over shell scripts and sourced files, with its stable optional rules at level all."
-why = "ShellCheck catches the quoting, globbing, and exit-status mistakes that make a script fail on the one input nobody tested."
+why = "Quoting, globbing, and exit-status mistakes pass on normal input, and fail on the first file name with a space."
 
 [[check]]
 command = ["shfmt", "-d", "{files}"]
@@ -86,7 +86,7 @@ level = "all"
 name = "script-layout"
 stage = "commit"
 summary = "Checks each Bash script for a shebang, strict mode, a final `main` call when it defines functions, declarative libraries, and removed temporary files."
-why = "A script that skips strict mode or hides its runtime fails silently on the machine that matters."
+why = "A script without strict mode runs on after a failed command, and one without a shebang runs in whichever shell starts it."
 
 [[check]]
 example = "A private function `_orphan` that no script calls reports a finding. Delete it, or record a hook that needs it with `gspot ignore` and a reason."
@@ -133,4 +133,4 @@ help = "Stop one process by its ID, delete only paths the script created, handle
 name = "safety"
 stage = "commit"
 summary = "Finds broad process kills, recursive deletes outside traps that remove mktemp paths, and the syntax that BASH.md forbids."
-why = "Each of these lets a script silently destroy something by mistake."
+why = "A broad kill or a recursive delete can destroy more than the script meant to."

@@ -1,7 +1,7 @@
 allowed_words = ["Zustand"]
 
 [configuration]
-description = "Zustand: state lives in store files, and components read it through a selector."
+description = "State lives in store files, and components read it through a selector."
 requires = ["javascript"]
 title = "Zustand"
 

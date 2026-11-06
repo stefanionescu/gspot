@@ -33,7 +33,7 @@ name = "gixy"
 output = { format = "json", fields = { file = "path", line = "line", rule = "plugin", message = "summary" } }
 stage = "commit"
 summary = "Checks every nginx file for mistakes that expose a server: request forgery, path traversal through alias, header injection, and a disclosed version."
-why = "These mistakes parse, serve traffic, and look like any other location block until somebody uses them."
+why = "These mistakes parse and serve traffic, so they look like any other location block until an attacker uses them."
 
 [[check]]
 example = "The line `invalid_directive on;` fails `nginx -T`. Remove it, or replace it with a known directive such as `listen 443 ssl;`."

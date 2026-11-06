@@ -38,9 +38,9 @@ why = "A file with conflict markers holds both sides of a merge, and a fixer can
 binary_files = true
 example = "A tracked Latin-1 notes.md reports encoding. Save the file as UTF-8."
 files = { paths = ["**"], kinds = ["source", "generated", "vendored", "binary"] }
-help = "Save the reported file as UTF-8, then run the check again."
+help = "Save the reported file as UTF-8."
 name = "encoding"
 runs = "files"
 stage = "commit"
 summary = "Checks that tracked text files use UTF-8."
-why = "Every text check must read the same characters."
+why = "A text check reads the wrong characters in a file that is not UTF-8."

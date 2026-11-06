@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Documentation: links that reach their files, anchors, and sites, and paths and commands that exist. Level all requires a README in every scope and a LICENSE at the root."
+description = "Links that reach their files, anchors, and sites, and paths and commands that exist. Level all requires a README in every scope and a LICENSE at the root."
 title = "Docs"
 
 [files]
@@ -35,7 +35,7 @@ name = "lychee-external"
 needs = ["network"]
 stage = "manual"
 summary = "Checks every external link over the network."
-why = "External links break over time; this check reports which ones did."
+why = "A site that moves or closes breaks a link with no change in the repository."
 
 [[check]]
 example = "A path in the docs that points to a deleted file reports a stale reference. Update the path and any command that uses it."

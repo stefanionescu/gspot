@@ -5,7 +5,7 @@ export const YAML_EXPLANATIONS = {
     [YAML_RULES.syntax]: {
         description: 'YAML must parse without syntax errors.',
         why: 'A consumer cannot read malformed YAML.',
-        fix: 'Fix the syntax at the reported line, then check the file again.',
+        fix: 'Fix the syntax at the reported line.',
         example: '`items: [` needs a closing bracket, such as `items: []`.',
     },
     [YAML_RULES.duplicate]: {

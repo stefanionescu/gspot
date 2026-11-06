@@ -3,7 +3,7 @@ ignored_paths = ["**/coverage/**"]
 
 [configuration]
 always_selected = true
-description = "gspot itself: path patterns in gspot.toml that match files, current generated files, no config files that conflict with the generated ones, a reason on each suppression, and a reason for each setting made weaker."
+description = "Path patterns in gspot.toml that match files, current generated files, no config files that conflict with the generated ones, a reason on each suppression, and a reason for each setting made weaker."
 title = "gspot"
 
 [[tool]]

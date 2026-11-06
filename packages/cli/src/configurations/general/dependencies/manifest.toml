@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Dependencies: known advisories, allowed registries, one package manager, a lockfile that matches its dependency file, and one package manager version. Level all adds one version of each package across a workspace."
+description = "Known advisories, allowed registries, one package manager, a lockfile that matches its dependency file, and one package manager version. Level all adds one version of each package across a workspace."
 title = "Dependencies"
 
 [files]
@@ -43,7 +43,7 @@ command = ["osv-scanner", "scan", "source", "--config", "{config_file:osv-scanne
 help = "Upgrade the package the finding names."
 output = { format = "json", list = "results", children = ["packages", "vulnerabilities"], fields = { file = "source.path", rule = "id", message = ["package.name", "package.version", "summary"] } }
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
-why = "An advisory identifies a vulnerability in a dependency version."
+why = "A locked version with an advisory ships a vulnerability that attackers can look up."
 
 [[check]]
 command = ["syncpack", "lint", "--config", "{config_file:syncpack}"]

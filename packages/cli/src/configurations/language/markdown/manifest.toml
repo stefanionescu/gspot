@@ -38,7 +38,7 @@ name = "markdownlint"
 output = { format = "json", fields = { file = "fileName", line = "lineNumber", column = "errorRange.0", rule = "ruleNames.0", message = ["ruleDescription", "errorDetail", "errorContext"], fixable = "fixInfo" } }
 run_in_copy = true
 stage = "commit"
-summary = "Checks every Markdown file against markdownlint."
+summary = "Checks the headings, lists, and spacing of every Markdown file."
 why = "Consistent Markdown renders the same in every viewer."
 
 [[check]]

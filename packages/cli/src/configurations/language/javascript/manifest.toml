@@ -337,7 +337,7 @@ runs = "scope"
 stage = "push"
 summary = "Finds files, exports, and dependencies nothing uses."
 when = { filenames = ["package.json"] }
-why = "Teams read, maintain, and ship dead code for nobody."
+why = "Code that nothing uses still gets read, maintained, and shipped."
 
 [check.output]
 format = "knip"

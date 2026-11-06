@@ -379,7 +379,7 @@ output = { format = "json", list = "generalDiagnostics", line_base = 0, fields =
 runs = "scope"
 stage = "push"
 summary = "Type checks the project. At level `all`, it also requires annotations."
-why = "Each type error found here becomes a crash that never reaches a user."
+why = "The type checker finds a wrong type before a user hits the crash."
 
 [[check]]
 cwd = "scope"

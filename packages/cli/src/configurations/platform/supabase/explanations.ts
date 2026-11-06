@@ -6,7 +6,7 @@ export const DENO_CHECK_EXPLANATIONS = {
     [SUPABASE_CHECK_RULES.typeError]: {
         description: 'The entry file of each edge function passes `deno check`.',
         why: 'A type error in an edge function fails when the function deploys or runs.',
-        fix: 'Fix the type error at the reported line, then run the check again.',
+        fix: 'Fix the type error at the reported line.',
         example: 'Passing a number where the handler expects a `Request` reports `type-error`.',
     },
     ...SYNTAX_EXPLANATIONS,

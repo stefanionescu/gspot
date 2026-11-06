@@ -1,7 +1,7 @@
 allowed_words = ["Drizzle"]
 
 [configuration]
-description = "Drizzle: no update or delete without a where clause, and migrations that match the schema."
+description = "No update or delete without a where clause, and migrations that match the schema."
 requires = ["javascript"]
 title = "Drizzle"
 

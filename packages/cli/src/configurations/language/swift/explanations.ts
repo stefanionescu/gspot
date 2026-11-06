@@ -39,7 +39,7 @@ export const SWIFT_TEST_EXPLANATIONS = {
     [FAILED_TEST_RULE]: {
         description: 'Each Swift test passes.',
         why: 'A failing test shows a behavior that the change broke.',
-        fix: 'Fix the code or the test at the reported line, then run the tests again.',
+        fix: 'Fix the code or the test at the reported line.',
         example: 'An `XCTAssertEqual` that fails reports `failed-test` at its line.',
     },
     [COVERAGE_RULE]: {

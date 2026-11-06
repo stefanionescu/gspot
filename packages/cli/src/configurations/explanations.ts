@@ -6,7 +6,7 @@ export const SYNTAX_EXPLANATIONS = {
     [SYNTAX_RULE]: {
         description: 'A file that the check reads parses without errors.',
         why: 'The check cannot judge a file that it cannot parse.',
-        fix: 'Fix the syntax at the reported line, then run the check again.',
+        fix: 'Fix the syntax at the reported line.',
         example: 'A JSON file that ends after `{ "name": "app"` reports `syntax`.',
     },
 } as const satisfies RuleExplanations;

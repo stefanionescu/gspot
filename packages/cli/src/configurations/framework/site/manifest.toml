@@ -92,7 +92,7 @@ needs = ["build"]
 runs = "scope"
 stage = "push"
 summary = "Compares the sitemap with the built pages, and reports a listed route with no page or a page left out."
-why = "Search engines find an unlisted page late, and a listed route with nothing behind it costs their trust."
+why = "Search engines find an unlisted page late, and get an error for a listed route with no page."
 
 [[check]]
 example = "An image that no built page or stylesheet references reports an unused asset. Delete it from the source assets, and rebuild."
@@ -102,4 +102,4 @@ name = "unused-assets"
 runs = "scope"
 stage = "push"
 summary = "Finds files under an assets folder that no page, stylesheet, or script names."
-why = "An unreferenced asset ships with every deploy, and nobody dares to delete it."
+why = "An asset that no page names still ships with every deploy."
