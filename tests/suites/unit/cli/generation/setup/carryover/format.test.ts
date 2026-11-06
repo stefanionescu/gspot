@@ -46,7 +46,7 @@ test('init reads the EditorConfig quote type, as Prettier does', async () => {
     });
     const { plan, settings } = await runInit(sandbox.path);
     expect((settings['format'] as TomlTable)['quotes']).toBe('single');
-    expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.carried).toContain('singleQuote');
+    expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.carried).toContain('quote_type');
 });
 
 test('init names an EditorConfig line width of off, which gspot.toml cannot hold', async () => {
@@ -56,7 +56,7 @@ test('init names an EditorConfig line width of off, which gspot.toml cannot hold
         'source.js': 'export const value = 1;\n',
     });
     const { plan } = await runInit(sandbox.path);
-    expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['printWidth']);
+    expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['max_line_length']);
 });
 
 test('init names an EditorConfig line setting that differs from what gspot writes', async () => {

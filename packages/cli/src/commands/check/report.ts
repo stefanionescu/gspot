@@ -25,7 +25,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { print, printWarning } from '#cli/system/terminal.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { CheckCommandJson } from '#cli/types/commands/reports.ts';
-import type { CheckResult, FixReport, RunReport } from '#cli/types/engine/run.ts';
+import type { CheckResult, CheckStatus, FixReport, RunReport } from '#cli/types/engine/run.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 
 const GITHUB_ANNOTATION_LIMIT = 10;
@@ -43,6 +43,8 @@ const ANNOTATION_MESSAGE_CHARACTERS = /[%\r\n]/gu;
 const ANNOTATION_PROPERTY_CHARACTERS = /[%\r\n:,]/gu;
 
 const FIX_SENTENCE = /^Run the fix: command that the report prints[^.,;]*(?:\.|, then |; )\s*/u;
+
+const SUMMARY_STATUSES: readonly CheckStatus[] = ['failed', 'error', 'canceled', 'missing', 'passed', 'skipped'];
 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
@@ -157,15 +159,22 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     });
 }
 
-function formatIncompleteCounts({ checks }: RunReport): string[] {
+function listWorstStatuses(checks: readonly CheckResult[]): Array<CheckStatus | undefined> {
+    return Map.groupBy(checks, ({ check }) => check)
+        .values()
+        .map((rows) => SUMMARY_STATUSES.find((status) => rows.some((row) => row.status === status)))
+        .toArray();
+}
+
+function formatIncompleteCounts({ checks }: RunReport, worst: Array<CheckStatus | undefined>): string[] {
     const missing = checks.filter((check) => check.status === 'missing');
     const environments = missing.filter((check) => check.note === PROJECT_ENVIRONMENT_MESSAGE);
     const tools = new Set(
         missing.filter((check) => check.note !== PROJECT_ENVIRONMENT_MESSAGE).map(({ note }) => note),
     );
     const hasInstallNote = [...tools].some((note) => note?.endsWith(STANDARD_INSTALL_HELP) === true);
-    const errors = checks.filter((check) => check.status === 'error').length;
-    const canceled = checks.filter((check) => check.status === 'canceled').length;
+    const errors = worst.filter((status) => status === 'error').length;
+    const canceled = worst.filter((status) => status === 'canceled').length;
     return [
         ...(tools.size === 0 ? [] : [`Missing tools: ${String(tools.size)}${hasInstallNote ? INSTALL_REMINDER : ''}.`]),
         ...(environments.length === 0 ? [] : [`Missing environments: ${String(environments.length)}.`]),
@@ -175,17 +184,18 @@ function formatIncompleteCounts({ checks }: RunReport): string[] {
 }
 
 function formatSummary(report: RunReport): string {
-    const failed = report.checks.filter((check) => check.status === 'failed');
-    const passed = report.checks.filter((check) => check.status === 'passed').length;
+    const worst = listWorstStatuses(report.checks);
+    const failed = worst.filter((status) => status === 'failed').length;
+    const passed = worst.filter((status) => status === 'passed').length;
     const skipped = Object.values(report.skippedCount).reduce((total, count) => total + count, 0);
-    const findings = failed.reduce((count, check) => count + check.findings.length, 0);
+    const findings = report.checks.flatMap((check) => (check.status === 'failed' ? check.findings : [])).length;
+    const scopes = new Set(report.checks.filter(({ status }) => status !== 'skipped').map(({ scope }) => scope)).size;
     const text = [
-        ...(failed.length === 0
-            ? []
-            : [`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`]),
-        ...formatIncompleteCounts(report),
+        ...(failed === 0 ? [] : [`Failed: ${formatCount(failed, 'check')} with ${formatCount(findings, 'finding')}.`]),
+        ...formatIncompleteCounts(report, worst),
         `Passed: ${formatCount(passed, 'check')}.`,
         `Skipped: ${formatCount(skipped, 'check')}.`,
+        ...(scopes > 1 ? [`Scopes: ${String(scopes)}.`] : []),
     ].join(' ');
     return report.exitCode === 0 ? text : styleText('red', text, { stream: process.stdout });
 }

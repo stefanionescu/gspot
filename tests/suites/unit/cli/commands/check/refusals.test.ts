@@ -96,7 +96,7 @@ test('a staged check after a write of the generated files names the setup files 
     });
 });
 
-test('a staged check that a folder without a lockfile refuses names the unstaged files and the stash that avoids the copy', async () => {
+test('a staged check that a folder without a lockfile refuses names the one fix and the unstaged files', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'app/package.json': '{}',
@@ -109,7 +109,9 @@ test('a staged check that a folder without a lockfile refuses names the unstaged
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     const { message } = JSON.parse(refused.stdout) as CommandFailureJson;
     expect(message).toContain('app');
-    expect(message).toContain('git stash push --keep-index --include-untracked');
+    expect(message).toEndWith(
+        'Commit a lockfile. The staged check runs in a copy of the index because the working tree holds unstaged or untracked files.',
+    );
 });
 
 test('a staged check during a merge conflict exits 2, names the conflict, and leaves no copy behind', async () => {

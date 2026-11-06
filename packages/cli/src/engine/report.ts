@@ -110,8 +110,13 @@ export function buildRunReport(run: FinishedRun): RunReport {
             { help: check.check.help, selectCheckCode: options.selectCheckCode },
         ),
     );
+    const ranChecks = new Set(checks.filter(({ status }) => status !== 'skipped').map(({ check }) => check));
     const skipped = Map.groupBy(
-        checks.filter(({ status }) => status === 'skipped'),
+        new Map(
+            checks
+                .filter(({ check, status }) => status === 'skipped' && !ranChecks.has(check))
+                .map((row) => [row.check, row]),
+        ).values(),
         ({ cause = 'no-files' }) => cause,
     );
     const failed = listFailedChecks(checks, fixes);
@@ -133,9 +138,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
                 ...check,
                 ...(options.verbose === true && command !== undefined && { command }),
             })),
-        skippedCount: Object.fromEntries(
-            [...skipped].map(([cause, group]) => [cause, new Set(group.map(({ check }) => check)).size]),
-        ),
+        skippedCount: Object.fromEntries([...skipped].map(([cause, group]) => [cause, group.length])),
         ignores: session.settings.ignore,
         unstagedChanges: options.selection?.unstagedChanges ?? 0,
         partial: options.selection?.paths !== undefined || options.paths !== undefined,

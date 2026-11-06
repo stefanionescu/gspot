@@ -29,7 +29,12 @@ import {
 } from '#cli/config/repository/setup.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildPrettierOverrides, readPrettierOptions, readRuffOptions } from '#cli/generation/setup/format.ts';
+import {
+    buildPrettierOverrides,
+    parsePrettierFile,
+    readPrettierOptions,
+    readRuffOptions,
+} from '#cli/generation/setup/format.ts';
 import { convertIgnorePattern, readIgnoreFiles } from '#cli/generation/setup/ignore-files.ts';
 import { compareRuffRules, compareRules, convertRule, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
 import { readPyrightCarryover } from '#cli/generation/setup/pyright.ts';
@@ -51,6 +56,14 @@ import type {
     RuleTable,
     ToolCarryoverInput,
 } from '#cli/types/generation.ts';
+
+const EDITORCONFIG_WORDS: Readonly<Record<string, string>> = {
+    tabWidth: 'indent_size',
+    printWidth: 'max_line_length',
+    useTabs: 'indent_style',
+    singleQuote: 'quote_type',
+    [PRETTIER_OVERRIDES_KEY]: 'sections',
+};
 
 function readRuffCarryover(input: CarryoverInput): CarryoverSection {
     const { repository, tools, configurations, level } = input;
@@ -198,17 +211,32 @@ function listUncomparedRows({ conflictingConfigs, tools }: CarryoverInput): Carr
     );
 }
 
-function listUnreadRows({ conflictingConfigs, tools }: CarryoverInput, rows: CarryoverRow[]): CarryoverRow[] {
+function listUnreadRows(input: CarryoverInput, rows: CarryoverRow[]): CarryoverRow[] {
+    const { conflictingConfigs, tools, repository, prettierScripts } = input;
     const read = new Set(rows.map(({ path }) => path));
     const unread = conflictingConfigs.filter(
         ({ path, tool }) => CARRIED_TOOLS.has(tool) && tools.has(tool) && !read.has(path),
     );
-    return [...new Map(unread.map(({ path, tool }) => [path, tool]))].map(([path, tool]) => ({
-        ...CARRYOVER_ROW_START,
-        path,
-        tool,
-        dropped: [UNREAD_CONFIG_MESSAGE],
-    }));
+    return [...new Map(unread.map(({ path, tool }) => [path, tool]))].map(([path, tool]) => {
+        const isUnreadable =
+            tool === 'prettier' &&
+            parsePrettierFile(path, findText(repository.root, path) ?? '', prettierScripts) === undefined;
+        return {
+            ...CARRYOVER_ROW_START,
+            path,
+            tool,
+            dropped: [isUnreadable ? UNREADABLE_CONFIG_MESSAGE : UNREAD_CONFIG_MESSAGE],
+        };
+    });
+}
+
+function useEditorconfigWords(row: CarryoverRow): CarryoverRow {
+    if (posix.basename(row.path) !== EDITORCONFIG_FILE) return row;
+    return {
+        ...row,
+        carried: row.carried.map((key) => EDITORCONFIG_WORDS[key] ?? key),
+        dropped: row.dropped.map((key) => EDITORCONFIG_WORDS[key] ?? key),
+    };
 }
 
 function listPrettierRows({
@@ -237,13 +265,13 @@ function listPrettierRows({
             );
             const isOverridden =
                 held.has(PRETTIER_OVERRIDES_KEY) && buildPrettierOverrides(options, scopePath, trackedPaths).length > 0;
-            return {
+            return useEditorconfigWords({
                 ...CARRYOVER_ROW_START,
                 path,
                 tool: 'prettier',
                 carried: [...keys.filter((key) => held.has(key)), ...(isOverridden ? [PRETTIER_OVERRIDES_KEY] : [])],
                 dropped: [...new Set([...dropped, ...inOverrides, ...keys.filter((key) => !held.has(key))])],
-            };
+            });
         });
     });
 }

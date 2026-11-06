@@ -143,6 +143,24 @@ test('the report prints planned skips once with their reason only in verbose out
     expect(formatRunReport(skipped, { verbose: true })).toContain('skipped (condition)  bash/shellcheck  disabled');
 });
 
+test('the summary counts a check once under its worst result, and names the scopes that ran', () => {
+    const [failed, passed] = FAILED_CHECK_REPORT.checks;
+    const report: RunReport = {
+        ...FAILED_CHECK_REPORT,
+        checks: [
+            { ...failed, scope: 'api' },
+            { ...failed, scope: 'web' },
+            { ...passed, check: failed.check, scope: 'docs' },
+            { ...passed, scope: 'api' },
+            { ...passed, scope: 'web' },
+        ],
+        skippedCount: { 'no-files': 3 },
+    };
+    expect(stripVTControlCharacters(formatRunReport(report, { verbose: false }))).toContain(
+        'Failed: 1 check with 2 findings. Passed: 1 check. Skipped: 3 checks. Scopes: 3.\n',
+    );
+});
+
 test('terminal progress rewrites one status line, and a log prints only what runs past the interval', () => {
     const terminal: string[] = [];
     const log: string[] = [];

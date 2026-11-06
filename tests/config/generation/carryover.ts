@@ -144,13 +144,32 @@ export const CARRYOVER_ROW_CASES = [
             'source.js': 'export const value = 1;\n',
         },
         path: '.editorconfig',
-        row: { carried: ['printWidth'], dropped: ['tabWidth'] },
+        row: { carried: ['max_line_length'], dropped: ['indent_size'] },
     },
     {
         name: 'an EditorConfig width that gspot.toml cannot hold',
         files: { '.editorconfig': '[*]\nmax_line_length = 9999\n', 'source.js': 'export const value = 1;\n' },
         path: '.editorconfig',
-        row: { dropped: ['printWidth'] },
+        row: { dropped: ['max_line_length'] },
+    },
+    {
+        name: 'an EditorConfig indent and section',
+        files: {
+            '.editorconfig': '[*]\nindent_style = tab\n[*.md]\nindent_size = 4\n',
+            'README.md': '# Example\n',
+            'source.js': 'export const value = 1;\n',
+        },
+        path: '.editorconfig',
+        row: { carried: ['indent_style', 'sections'], dropped: [] },
+    },
+    {
+        name: 'a Prettier script that does not load',
+        files: {
+            'prettier.config.mjs': "import missing from './missing.mjs';\nexport default missing;\n",
+            'source.js': 'export const value = 1;\n',
+        },
+        path: 'prettier.config.mjs',
+        row: { dropped: ['the whole file, which gspot could not read'] },
     },
 ] as const;
 

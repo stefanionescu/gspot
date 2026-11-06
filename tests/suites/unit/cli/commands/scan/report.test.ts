@@ -4,6 +4,7 @@ import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/javascript.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
 import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import { SCAN_RUN_REPORT } from '#tests/config/commands/check.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -65,6 +66,24 @@ test('scan lists real problems first, keeps three examples, and counts formattin
     expect(report.totals).toMatchObject({ checks: 5, findings: 8, filesFlagged: 4, seconds: 4.2 });
     expect(report.notRun).toStrictEqual(['python/ruff: ruff is not installed.']);
     expect(report.checks).toBe(SCAN_RUN_REPORT.checks);
+});
+
+test('scan counts a check once, however many scopes ran it', async () => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const [check] = SCAN_RUN_REPORT.checks as [CheckResult];
+    const report = buildScanReport({
+        planning,
+        session: planning.session,
+        report: {
+            ...SCAN_RUN_REPORT,
+            checks: [check, { ...check, scope: 'api' }, { ...check, scope: 'web', status: 'passed', findings: [] }],
+        },
+        toolBytes: 0,
+        ruleRows: [],
+        leftOut: [],
+    });
+    expect(report.totals.checks).toBe(1);
 });
 
 test('scan names the largest rules, takes examples from the largest, and groups what did not run by cause', async () => {

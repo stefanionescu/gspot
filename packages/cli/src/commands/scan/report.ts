@@ -182,7 +182,11 @@ export function buildScanReport(input: ScanInput): ScanReport {
     return {
         totals: {
             files: planning.session.repository.files.length,
-            checks: report.checks.filter(({ status }) => status === 'passed' || status === 'failed').length,
+            checks: new Set(
+                report.checks
+                    .filter(({ status }) => status === 'passed' || status === 'failed')
+                    .map(({ check }) => check),
+            ).size,
             findings: findings.length,
             filesFlagged: new Set(findings.map(({ file }) => file).filter((file) => file !== '')).size,
             seconds: report.duration / MILLISECONDS_PER_SECOND,

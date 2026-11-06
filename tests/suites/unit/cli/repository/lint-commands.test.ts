@@ -31,6 +31,19 @@ test('lint commands: a script names its line, and a hook or CI step that runs th
     ]);
 });
 
+test('lint commands: a CI step that only installs a tool gets a fix that holds for such a line', async () => {
+    await using sandbox = await createGitSandbox({
+        '.github/workflows/check.yml': 'jobs:\n  lint:\n    steps:\n      - run: sudo apt-get install eslint\n',
+    });
+    const rows = await listRows(sandbox.path);
+    expect(rows.map(({ command, fix }) => [command, fix])).toStrictEqual([
+        [
+            'sudo apt-get install eslint',
+            'gspot check installs and runs this tool. Run gspot check in CI instead of this line.',
+        ],
+    ]);
+});
+
 test('lint commands: a lint-staged entry counts, and so does the hook line that starts lint-staged', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': JSON.stringify({ 'lint-staged': { '*.ts': ['eslint --fix', 'vitest related'] } }),

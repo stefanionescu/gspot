@@ -97,7 +97,7 @@ export const LINT_COMMAND_NAMES = {
 
 export const LINT_COMMAND_FIXES = {
     script: 'Run gspot check once at the repository root instead.',
-    ci: 'Replace this line with gspot check.',
+    ci: 'gspot check installs and runs this tool. Run gspot check in CI instead of this line.',
     hook: 'Delete this line: the hooks of gspot run the checks.',
     'lint-staged': 'Delete this entry: the hooks of gspot run the checks.',
     'pre-commit': 'Delete this entry: the hooks of gspot run the checks.',

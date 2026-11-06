@@ -37,7 +37,7 @@ import type { GitFile, Revision } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';
 
 const UNSTAGED_COPY_CAUSE =
-    ' The staged check runs in a copy of the index because the working tree holds unstaged or untracked files. Stashing them with git stash push --keep-index --include-untracked also lets it run.';
+    ' The staged check runs in a copy of the index because the working tree holds unstaged or untracked files.';
 
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
