@@ -138,7 +138,8 @@ export const VENDORED_ELIGIBLE_MESSAGE = 'vendored: eligible for secrets, licens
 
 export const UNCHECKED_REASON = 'no selected check reads this file';
 
-export const IGNORED_FILE_MESSAGE = 'An ignore in gspot.toml covers this file. To check it, run gspot unignore.';
+export const IGNORED_FILE_MESSAGE =
+    'An ignore in gspot.toml covers this file. To check it, run gspot unignore --paths <path> with the path that the ignore names.';
 
 export const MARK_GENERATED_MESSAGE =
     'Mark generated or copied files linguist-generated or linguist-vendored in .gitattributes, or run gspot add <configuration>.';

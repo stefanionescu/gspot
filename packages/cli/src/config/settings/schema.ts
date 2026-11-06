@@ -239,7 +239,7 @@ export const LEVEL_SUMMARY =
     'Level basic checks for bugs, security problems, code style, broken docs and config, formatting, and a reason on each suppression.';
 
 export const ALL_LEVEL_SUMMARY =
-    'Level all adds stricter rules that sometimes flag correct code or enforce a style preference.';
+    'Level all adds stricter rules, which can flag correct code or enforce a style preference.';
 
 export const ESLINT_SEVERITIES = ['off', 'warn', 'error'] as const;
 

@@ -64,5 +64,5 @@ help = "Give the change a reason, or undo it. Each message names the setting or 
 name = "weakenings"
 runs = "once"
 stage = "push"
-summary = "Reports a `gspot.toml` change with no reason that adds or widens an ignore, removes a configuration, lowers the level, loosens a setting, or turns off hooks or rule files."
+summary = "Reports a `gspot.toml` change with no reason that adds or widens an ignore, removes a configuration, lowers the level, makes a setting weaker, or turns off hooks or rule files."
 why = "A change to the settings is the easiest way to pass a check, and only its reason tells a reviewer that someone chose it."
