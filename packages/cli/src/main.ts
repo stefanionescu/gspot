@@ -97,10 +97,6 @@ function formatArgumentError(error: CommanderError, program: Command, command: s
 function printFailure(error: unknown, program: Command, options: string[]): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
-        if (error.code === HELP_ERROR_CODE && program.getOptionValue('version') === true) {
-            printResult({ text: cliPackage.version, json: {}, exitCode: 0 });
-            return 0;
-        }
         const command = program.commands.find((each) => each.name() === options[0])?.name();
         printError({ error: 'arguments', message: formatArgumentError(error, program, command) });
         return EXIT_ERROR;
@@ -194,6 +190,11 @@ function addCommandDefinition(program: Command, definition: CommandDefinition, h
     return command;
 }
 
+function isVersionRun(program: Command, name: string): boolean {
+    if (program.getOptionValue('version') !== true) return false;
+    return name === '' || program.commands.some((command) => command.name() === name);
+}
+
 /**
 Build the CLI with every command.
 
@@ -283,6 +284,10 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
         const [name = ''] = program.parseOptions(commandArguments).operands;
         if (Object.hasOwn(REMOVED_COMMANDS, name))
             throw new GspotError('arguments', REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS]);
+        if (isVersionRun(program, name)) {
+            printResult({ text: cliPackage.version, json: {}, exitCode: 0 });
+            return 0;
+        }
         await program.parseAsync(commandArguments, { from: 'user' });
         return exitCode;
     } catch (error) {
