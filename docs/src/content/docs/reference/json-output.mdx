@@ -1,14 +1,9 @@
 ---
 title: JSON output
-description: The JSON object that every gspot command prints under `--json`.
 ---
 
 Add `--json` to any command to print its result as one JSON object on standard output. Progress messages still go to
 standard error.
-
-```shell
-gspot check --json
-```
 
 ## Fields of every object
 
@@ -18,7 +13,7 @@ gspot check --json
 | `exitCode` | The process exit code. See [Exit codes](/reference/commands/#exit-codes). |
 | `notes`    | Lines of text for you to read, such as the next command to run.           |
 
-The other fields depend on the command. Within a command and mode, a command that finishes keeps the same keys.
+The other fields depend on the command.
 
 ## Command errors
 
@@ -82,12 +77,10 @@ The object of `gspot init --json` also has the [generated-file fields](#generate
 | `missing`      | What stays missing after the install, with what to do about it.          |
 | `steps`        | The commands that the install ran, as argument lists.                    |
 
-`plan` describes what `gspot init` will do: the level, the configurations it selects, and the files it writes, deletes,
-keeps, or changes. Each file row has a `path` and a `note`.
+`plan` holds the `level` and these fields, and each file row has a `path` and a `note`:
 
 | Field of `plan`  | Holds                                                                                                                  |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `level`          | The level.                                                                                                             |
 | `configurations` | One row per configuration: `configuration`, `origin`, `scopes`, and the counts `checks` and `checksOff`.               |
 | `write`          | The files that init writes.                                                                                            |
 | `deleted`        | The tool configs that init deletes, and the tool that replaces each one.                                               |
@@ -122,8 +115,6 @@ The object of `gspot install --json` also has the [generated-file fields](#gener
 `notes` holds what you still have to do, such as the lines to add to hooks that another tool manages.
 
 ## `gspot check`
-
-`gspot check --json` returns the report of the run, and `exitCode` says whether the checks passed.
 
 | Field             | Meaning                                                                                                                                       |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -185,9 +176,10 @@ lint rule. It can also have these fields, and a finding without a place in a fil
 | `help`             | How to fix this finding, when it differs from the `help` of its check.                                         |
 | `diff`             | With `--verbose`, the unified diff of a `gspot/generated-files` finding.                                       |
 
-`gspot check --hook pre-push --json` checks the tree of each pushed commit. It returns these fields:
+`gspot check --hook pre-push --json` checks the newest commit of each pushed ref. It returns these fields:
 
-- `revisions`: one item for each tree, with `hash`, `refs`, `commits`, `shallow`, and its `report`.
+- `revisions`: one item for each commit that it checks, with `hash`, `refs`, the pushed `commits`, `shallow`, and its
+  `report`.
 - `skipped`: the pushed refs that gspot did not check, with `ref`, `hash`, and `reason`.
 - `canceled`: `pendingRefs` when a signal stopped the run, and otherwise `null`.
 
@@ -207,7 +199,7 @@ still rewrite generated files that are out of date.
 
 ## `gspot list`
 
-`gspot list --json` and `gspot list configurations --json` return these fields.
+`gspot list configurations --json` returns the same fields.
 
 | Field       | Meaning                                                             |
 | ----------- | ------------------------------------------------------------------- |
@@ -244,7 +236,7 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 
 | Field           | Meaning                                                                                      |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| `check`         | The check ID.                                                                                |
+| `check`         | The ID, such as `python/ruff`.                                                               |
 | `configuration` | The configuration of a shipped check, or `null`.                                             |
 | `command`       | The command of a `[[command_check]]`, or `null`.                                             |
 | `paths`         | The paths of a `[[command_check]]`, or `null`.                                               |
@@ -268,10 +260,10 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 | Field           | Meaning                                                                      |
 | --------------- | ---------------------------------------------------------------------------- |
 | `tool`          | The tool that reports the rule, or `null`.                                   |
-| `rule`          | The rule ID.                                                                 |
+| `rule`          | The ID, such as `no-console`.                                                |
 | `check`         | The check that runs the rule.                                                |
-| `page`          | The rule's documentation link, or `null`.                                    |
-| `description`   | The rule's description, or `null`.                                           |
+| `page`          | The link to its documentation, or `null`.                                    |
+| `description`   | What the rule looks for, or `null`.                                          |
 | `why`           | Why the rule matters, or `null`.                                             |
 | `fix`           | How to fix a finding, or `null`.                                             |
 | `example`       | An example, or `null`.                                                       |
@@ -283,9 +275,9 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 
 | Field            | Meaning                                                                        |
 | ---------------- | ------------------------------------------------------------------------------ |
-| `name`           | The configuration name.                                                        |
-| `group`          | Its group.                                                                     |
-| `title`          | Its title.                                                                     |
+| `name`           | The name that `gspot add` takes, such as `nextjs`.                             |
+| `group`          | The kind of configuration, such as `framework`.                                |
+| `title`          | The display name, such as `Next.js`.                                           |
 | `description`    | What it covers.                                                                |
 | `requires`       | The configurations that it needs.                                              |
 | `tools`          | Its tools and their versions.                                                  |
@@ -299,12 +291,12 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 
 | Field              | Meaning                                                                                                                       |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `setting`          | The setting name.                                                                                                             |
-| `type`             | Its type.                                                                                                                     |
+| `setting`          | The key, such as `limits.max_file_lines`.                                                                                     |
+| `type`             | The kind of value, such as `number`.                                                                                          |
 | `description`      | What it does.                                                                                                                 |
-| `default`          | Its default, or `null`.                                                                                                       |
-| `defaultAll`       | Its default at level `all`, or `null`.                                                                                        |
-| `languageDefaults` | Its default per language, or `null`.                                                                                          |
+| `default`          | The default, or `null`.                                                                                                       |
+| `defaultAll`       | The default at level `all`, or `null`.                                                                                        |
+| `languageDefaults` | The default per language, or `null`.                                                                                          |
 | `reasonFor`        | The change that needs a reason, or `null`.                                                                                    |
 | `scopes`           | Each scope, with `scope`, `default`, `value`, `source` as in `gspot list settings`, and, when present, `readBy` and `reason`. |
 
@@ -313,9 +305,9 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 | Field            | Meaning                                                                       |
 | ---------------- | ----------------------------------------------------------------------------- |
 | `path`           | The path from the root of the repository.                                     |
-| `scope`          | Its scope.                                                                    |
-| `fileKind`       | Its kind: `source`, `generated`, `vendored`, or `binary`.                     |
-| `fileKindOrigin` | What set the kind.                                                            |
+| `scope`          | The scope that holds the path.                                                |
+| `fileKind`       | `source`, `generated`, `vendored`, or `binary`.                               |
+| `fileKindOrigin` | What set `fileKind`.                                                          |
 | `tags`           | The file types that gspot reads the file as, such as `typescript` or `shell`. |
 | `configurations` | The selected configurations that check it.                                    |
 | `checks`         | The checks that read it.                                                      |
@@ -325,8 +317,8 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 
 ## `gspot doctor`
 
-`gspot doctor --json` returns the state of the setup. `exitCode` holds `1` when a tool, an environment, or a hook needs
-you to act, or when the repository pins another gspot version.
+`exitCode` holds `1` when a tool, an environment, or a hook needs you to act, or when the repository pins another gspot
+version.
 
 | Field           | Meaning                                                                                                                   |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------- |

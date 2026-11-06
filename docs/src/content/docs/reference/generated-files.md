@@ -1,6 +1,5 @@
 ---
 title: Files and caches
-description: The files gspot writes in your repository, the tools it installs, and the caches it keeps.
 ---
 
 gspot writes its files from the settings in `gspot.toml`. To change a generated file, change the setting with `gspot set`,
@@ -48,12 +47,11 @@ which stay open in review.
 ## Do not edit generated files
 
 `gspot install` overwrites each generated file, and with it any local edit or merge conflict marker, so make the change in
-`gspot.toml` first. `gspot install` names each file that it removes.
+`gspot.toml` first.
 
 ## Installed tools
 
-In a new clone, run `gspot install` to install the tools. `.gspot/.gitignore` keeps `node_modules/`, `.venv/`, and `vale/`
-out of Git, and `.gspot-copies/` holds its own `.gitignore`.
+`gspot install` installs the tools, and a `.gitignore` in `.gspot/` and in `.gspot-copies/` keeps these folders out of Git.
 
 | Path                   | Holds                                                                           | To clear it                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -62,8 +60,7 @@ out of Git, and `.gspot-copies/` holds its own `.gitignore`.
 | `.gspot/vale/`         | The Vale packages.                                                              | Delete it, then run `gspot install`.                                                          |
 | `.gspot-copies/`       | Temporary copies of your files for `gspot scan` and for checks of staged files. | gspot deletes each copy after its run. If a copy stays behind, delete it while no check runs. |
 
-Do not delete the tool pins, their lockfiles, or the other files in `.gspot/`. To remove gspot itself, follow
-[Uninstall](/start/install/#uninstall).
+Do not delete the tool pins, their lockfiles, or the other files in `.gspot/`.
 
 ## Caches outside the repository
 
