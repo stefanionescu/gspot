@@ -27,6 +27,7 @@ export const SIDEBAR = [
             { slug: 'start/concepts' },
             { slug: 'start/install' },
             { slug: 'start/migrate' },
+            { slug: 'start/copy-settings' },
             { slug: 'start/upgrade' },
         ],
     },
