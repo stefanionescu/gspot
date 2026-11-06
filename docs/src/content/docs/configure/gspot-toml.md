@@ -1,11 +1,10 @@
 ---
 title: Change settings
-description: The commands that change gspot.toml, the records you write by hand, and the changes that need a reason.
 ---
 
-`gspot.toml` holds your configurations, your level, your settings, and your ignores, and gspot writes every generated
-file from it. To change how a tool runs, change `gspot.toml`, not the config file of the tool. Each command on this page
-edits `gspot.toml` and then writes the generated files again, and it keeps your comments and the order of your settings.
+gspot writes every generated file from `gspot.toml`, so to change how a tool runs, change `gspot.toml`, not the config
+file of the tool. Each command on this page edits `gspot.toml` and writes the generated files again, and it keeps your
+comments and the order of your settings.
 
 ## See the current settings
 
@@ -16,13 +15,11 @@ gspot explain limits.max_file_lines
 ```
 
 `gspot list` prints the configurations in use and the state of each check. `gspot list settings` prints each setting,
-its value, when it needs a reason, and where the value comes from. `gspot explain <setting>` prints one setting, its
-default, and the command that changes it. Add `--json` for the full values, and read the
-[settings reference](/reference/gspot-toml/) for every key.
+its value, when it needs a reason, and where the value comes from, and `--json` adds the full values.
+`gspot explain <setting>` prints one setting, its default, and the command that changes it. The
+[settings reference](/reference/gspot-toml/) lists every key.
 
 ## Add or remove a configuration
-
-Give the name of the configuration, and a reason when you remove it:
 
 ```shell
 gspot add vitest
@@ -32,20 +29,12 @@ gspot remove nextjs --reason "The app does not use Next.js."
 `gspot remove` saves the name and your reason under `removed_configurations`, so gspot stops suggesting that
 configuration, and `gspot add nextjs` undoes the removal. gspot refuses to remove a configuration that another
 configuration in use needs. You cannot add or remove a configuration that is always on, such as `spelling`, so ignore
-its checks instead. The [configuration reference](/reference/configurations/) lists them. When the configurations need
-new tools, run `gspot install`.
-
-In `gspot.toml`, the configurations and the level look like this:
-
-```toml title="gspot.toml"
-configurations = ["bash"]
-level = "basic"
-```
+its checks instead. When the configurations need new tools, run `gspot install`.
 
 ## When files of a language appear or go
 
-When you add files of a language or framework that no configuration in use covers, the check
-`gspot/detected-configurations` fails and names the command to run:
+When you add files of a language or framework that no configuration in use covers, `gspot/detected-configurations` fails
+and names the command to run:
 
 ```text
 gspot.toml:1  detected-configuration  No check reads bash (1 .sh file). Run gspot add bash, or gspot remove bash --reason "<why>".
@@ -54,8 +43,8 @@ gspot.toml:1  detected-configuration  No check reads bash (1 .sh file). Run gspo
 Run that `gspot add` command, then `gspot install`. The check does not suggest a configuration in
 `removed_configurations`.
 
-When you delete all the files of a configuration, its checks find no files, and gspot skips them. The configuration, its
-settings, its ignores, and its command checks stay in `gspot.toml`.
+When you delete all the files of a configuration, gspot skips its checks, and the configuration, its settings, its
+ignores, and its command checks stay in `gspot.toml`.
 
 ## Change a setting
 
@@ -83,13 +72,13 @@ gspot set ci.setup_command -- bun install --frozen-lockfile
 
 To change a setting for one folder only, add `--scope <path>`, as
 [Settings in a scope](/configure/monorepos/#settings-in-a-scope) shows. When a change empties a setting that a check
-needs, `gspot set` and `gspot unset` print `This turns off <check>.`, and the Git diff shows the change.
+needs, `gspot set` and `gspot unset` print `This turns off <check>.`
 
 ## Changes that need a reason
 
-A value weaker than the shipped default needs `--reason`, such as a raised limit, a lower coverage minimum, or a new
-entry in an allow list. A reason has two or more words. `gspot set` takes `--reason` on every key that holds one, and
-the column `needs a reason when` of `gspot list settings` shows when it needs one:
+A value weaker than the shipped default needs `--reason`, such as a raised limit, a lower coverage minimum, or a new entry
+in an allow list. A reason has two or more words. `gspot set` takes `--reason` on every key that holds one, and the
+column `needs a reason when` of `gspot list settings` shows when it needs one:
 
 ```shell
 gspot set limits.max_function_lines 80 --reason "The parser is one state machine."
@@ -102,7 +91,7 @@ max_function_lines = { value = 80, reason = "The parser is one state machine." }
 
 `gspot unset` takes no reason, so to give one, run `gspot set <setting> <value> --reason "<why>"`.
 
-The check `gspot/weakenings` runs before each push and in CI, and lists each change that makes the checks less strict:
+`gspot/weakenings` runs before each push and in CI, and lists each change that makes the checks less strict:
 
 - a new ignore, or an ignore that covers more
 - a removed configuration
@@ -152,8 +141,7 @@ gspot install
 ```
 
 `gspot.toml` uses TOML 1.0, so keep each inline table on one line. [Editors](/use/editors/#validate-gspottoml) shows how
-to validate the file as you type. A key that gspot cannot read stops every command that reads the file, `gspot explain`
-and `gspot list settings` too, so fix the line by hand. The error names each bad key and what it accepts.
+to validate the file as you type.
 
 ## Accept a banned name
 

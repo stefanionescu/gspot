@@ -1,6 +1,6 @@
 ---
 title: Import rules
-description: Describe the layers of your code once in gspot.toml, and check every import in JavaScript, TypeScript, Python, and Swift against them.
+description: Keep the layers of your code apart in JavaScript, TypeScript, Python, and Swift.
 ---
 
 Import rules keep the layers of your code apart, so that code in `src/core/` cannot import code from `src/app/`. You
@@ -10,8 +10,7 @@ files.
 
 ## Write the rules in order
 
-Each `[[import_rule]]` record names its files in `paths`. List the lowest layer first, the code that the other layers
-build on:
+Each `[[import_rule]]` record names its files in `paths`, with the code that the other layers build on first:
 
 ```toml
 [[import_rule]]
@@ -60,9 +59,8 @@ gspot ignore structure/import-rules --paths "tools/**" --reason "Release tools r
 
 ## Allow a rule that comes later
 
-To let a rule import a rule that comes after it, move the imported rule before it, or give the exact list of rules that
-it may import in `can_import`. That list takes the place of the rules that come before it, and each name in it must be
-the name of an import rule. This rule lets the plugins import only the `sdk` rule:
+To let a rule import a rule that comes after it, move the imported rule before it, or list what it may import in
+`can_import`. That list replaces the rules that come before it, so this rule lets the plugins import only `sdk`:
 
 ```toml
 [[import_rule]]
@@ -73,8 +71,8 @@ can_import = ["sdk"]
 
 ## Modules that the host provides
 
-Code that runs inside another application imports modules that the application provides when it runs, and these modules
-are not in your repository. List them in `externals`, so that the checks skip them:
+Code that runs inside another application imports modules that your repository does not hold. List them in `externals`,
+so that the checks skip them:
 
 ```toml
 [javascript]
@@ -144,7 +142,7 @@ Separate Swift packages add what names cannot: the compiler refuses a use that a
 gspot does not run import-linter. Write a layers contract as import rules, with the lowest layer first, and an
 independence contract as rules whose `can_import` lists leave each other out. To keep a contract that import rules
 cannot express, run `lint-imports` as a command check. [Import rule settings](/reference/gspot-toml/#import_rule) lists
-the accepted fields.
+every field.
 
 ## Keep relative imports inside a folder
 

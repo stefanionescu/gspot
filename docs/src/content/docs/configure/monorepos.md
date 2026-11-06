@@ -3,13 +3,14 @@ title: Monorepos
 description: Give each project of a repository its own configurations and settings, and run gspot once at the root.
 ---
 
-In a repository that holds several projects, each project folder can be a [scope](/start/concepts/#scopes). `gspot init`
-plans a scope for each folder with a tracked project file, such as `package.json`, `pyproject.toml`, or `Package.swift`.
-Before you run init, read the path and the configurations of each scope in the plan that `gspot scan` prints.
+`gspot init` plans a [scope](/start/concepts/#scopes) for each folder with a tracked project file, such as `package.json`,
+`pyproject.toml`, or `Package.swift`. Before you run init, read the path and the configurations of each scope in the plan
+that `gspot scan` prints.
 
 ## Declare scopes
 
-This `gspot.toml` has two scopes and no configurations in the root folder:
+This `gspot.toml` has two scopes, each with settings that apply only to its folder, and no configurations in the root
+folder:
 
 ```toml
 [[scope]]
@@ -22,8 +23,7 @@ path = "ios"
 configurations = ["swift", "xcode"]
 ```
 
-Each `[[scope]]` names its folder in `path`, and its settings apply only to that folder. After you change the scopes,
-write the generated files, install the tools, and check one scope:
+After you change the scopes, write the generated files, install the tools, and check one scope:
 
 ```shell
 gspot install
@@ -32,15 +32,14 @@ gspot check api
 
 To add a configuration that init did not find, run `gspot add zod --scope api`.
 
-`--scope` takes the path of the scope from the root folder of the repository, in any folder. At the root, `--scope .`
+From any folder, `--scope` takes the path of the scope from the root folder of the repository. At the root, `--scope .`
 names the root, and from a subfolder, gspot refuses a value that starts with `.`. `gspot check` and `--paths` read each
 path from your current folder, and `gspot check` with no path checks the whole repository, from any folder.
 
 ## Which scope a file belongs to
 
-A file belongs to the deepest scope that contains it, and a file outside every scope belongs to the root. A
-whole-project check, such as a type check, reads its whole project, even when you name one file, and each scope runs its
-own copy of the check.
+A file belongs to the deepest scope that contains it, and a file outside every scope belongs to the root. Each scope runs
+its own copy of a whole-project check, such as a type check, which reads its whole project even when you name one file.
 
 To see the scope and the checks of a file, run `gspot explain` with its path. When the path is also the name of a
 configuration or a check, start it with `./`, because `gspot explain bash` describes the configuration.
@@ -67,7 +66,7 @@ in a scope, replaces the default that gspot ships:
 | A single value, a command such as `site.build_command`, or record lists | Replaces the value of the parent.                             |
 
 When several configurations give defaults for one list, gspot joins the lists.
-[Scope settings](/reference/gspot-toml/#scope) lists the settings and the values that they accept.
+[Scope settings](/reference/gspot-toml/#scope) lists every setting.
 
 ## Monorepo task runners
 

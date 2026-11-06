@@ -12,8 +12,6 @@ This check reports each line with `FIXME` in the files under `notes/`. It needs 
 JavaScript or TypeScript project, `@types/node` in `devDependencies`, so that `javascript/tsc` knows the types of
 `process` and `node:fs`.
 
-Save this script under the file name at the top of the block:
-
 ```javascript title="scripts/check-notes.mjs"
 import { readFile } from 'node:fs/promises';
 
@@ -40,7 +38,7 @@ help = "Replace each FIXME note with the finished instruction."
 output = { format = "regex", pattern = '^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$' }
 ```
 
-Save this note the same way:
+Given this note:
 
 ```text title="notes/deploy.txt"
 FIXME: document the deployment command.
@@ -53,12 +51,8 @@ gspot install
 gspot check --only notes
 ```
 
-`gspot check` exits with `1` and reports a finding on line 1 of the note. Replace that line with the finished text, and
-the same command exits with `0`:
-
-```text
-Run the deployment command documented in the release guide.
-```
+`gspot check` exits with `1` and reports a finding on line 1 of the note. After you replace that line with the finished
+text, the same command exits with `0`.
 
 ## How the command runs
 
@@ -74,17 +68,8 @@ exits with `2`, even when the tool printed findings first.
 
 `output.format` sets how gspot reads the output, and
 [the format list](/reference/gspot-toml/#command_check.output.format) says what each format reads. With
-`format = "regex"`, the named groups of the pattern mean:
-
-| Group     | Meaning                                                              |
-| --------- | -------------------------------------------------------------------- |
-| `file`    | The path of the file, relative to the folder where the command runs. |
-| `line`    | The line number.                                                     |
-| `column`  | The column number.                                                   |
-| `rule`    | The name of the lint rule.                                           |
-| `message` | The text of the finding.                                             |
-
-With `format = "json"`, name the field of the report that holds each value:
+`format = "regex"`, the pattern names its groups `file`, `line`, `column`, `rule`, and `message`, and `file` holds a path
+relative to the folder where the command runs. With `format = "json"`, name the field of the report that holds each value:
 
 ```toml
 output = { format = "json", fields = { message = "message" } }
@@ -101,4 +86,4 @@ again. The fix commands change the files in your working tree, not the staged fi
 If the fix command exits with one of the `exit_codes`, gspot reports the findings that remain, and any other non-zero
 code stops the run with an error.
 
-[Command check settings](/reference/gspot-toml/#command_check) lists the settings and the values that they accept.
+[Command check settings](/reference/gspot-toml/#command_check) lists every setting.

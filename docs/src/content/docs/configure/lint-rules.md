@@ -42,24 +42,9 @@ set its options or ignore it. Run `gspot install` first. Stylelint rules work th
 `gspot explain css/stylelint color-no-invalid-hex`. For a Ruff rule, `gspot explain python/ruff E501` prints its
 summary, and `--verbose` adds its full explanation.
 
-The table holds only options, for a rule that runs at your level, and gspot says so in three cases. A severity, such as
-`eqeqeq = "off"`, stops `gspot set`:
-
-```text
-This table holds options only, without a severity; the level decides which rules run. To ignore eqeqeq, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".
-```
-
-At level `basic`, `gspot set` also rejects a rule that runs only at level `all`:
-
-```text
-n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.
-```
-
-A rule that gspot runs at no level stops the next ESLint run, and `javascript/eslint` reports `error`:
-
-```text
-gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.
-```
+The table holds only options, for a rule that runs at your level. `gspot set` rejects a severity, such as
+`eqeqeq = "off"`, and at level `basic`, a rule that runs only at level `all`. A rule that gspot runs at no level, such as
+`id-length`, stops the next ESLint run, and `javascript/eslint` reports `error`. Each message says what to do instead.
 
 ## Settings that set rule options
 
@@ -144,26 +129,20 @@ Ruff rule off, ignore it by its code: `gspot ignore python/ruff --rule <code> --
 
 ## Stylelint
 
-Stylelint options go in `tools.stylelint.rules`. This setting requires the long form of hexadecimal colors, such as
-`#ffffff`:
+These settings require the long form of hexadecimal colors, such as `#ffffff`, and allow the at-rule `@container`:
 
 ```toml
 [tools.stylelint.rules]
 color-hex-length = "long"
-```
-
-To allow a property with a `-webkit-` prefix that your project needs, use the `ignoreProperties` option of
-`property-no-vendor-prefix`. To allow an at-rule, use the `ignoreAtRules` option of `at-rule-no-unknown`:
-
-```toml
-[tools.stylelint.rules]
 at-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]
 ```
 
+To allow a property with a `-webkit-` prefix, use the `ignoreProperties` option of `property-no-vendor-prefix`.
+
 ## markdownlint
 
-Each markdownlint entry takes a table of options, with no `true` or `false` value and no `default` key. With this
-option, MD024 reports a repeated heading anywhere in a document, not only under the same parent heading:
+Each entry takes a table of options, with no `true` or `false` value and no `default` key. With this option, MD024 reports
+a repeated heading anywhere in a document, not only under the same parent heading:
 
 ```toml
 [tools.markdownlint.rules]
