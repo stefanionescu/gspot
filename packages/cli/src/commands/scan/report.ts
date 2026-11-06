@@ -133,7 +133,10 @@ function listSections(report: ScanReport): ScanSection[] {
             title: `${name}: ${formatCount(count, 'finding')}`,
             rows: [...formatRuleRows(rules), ...examples.map((finding) => formatExample(finding))],
         })),
-        { title: SCAN_FORMATTING_TITLE, rows: [`${formatCount(filesToFormat, 'file')} ${verb} from your style.`] },
+        {
+            title: SCAN_FORMATTING_TITLE,
+            rows: [`${formatCount(filesToFormat, 'file')} ${verb} from the format that gspot uses.`],
+        },
         ...(notRun.length === 0 ? [] : [{ title: SCAN_NOT_RUN_TITLE, rows: notRun }]),
         ...(leftOut.length === 0 ? [] : [{ title: SCAN_LEFT_OUT_TITLE, rows: leftOut }]),
         {

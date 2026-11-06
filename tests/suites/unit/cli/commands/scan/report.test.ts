@@ -213,10 +213,12 @@ test('scan sums the seconds of each tool, slowest tool first', async () => {
 test('the text report prints each section with its rows', async () => {
     const report = await buildSampleReport();
     const text = formatScanText(report);
-    expect(formatScanText({ ...report, filesToFormat: 1 })).toContain('  1 file differs from your style.\n');
+    expect(formatScanText({ ...report, filesToFormat: 1 })).toContain(
+        '  1 file differs from the format that gspot uses.\n',
+    );
     expect(text).toStartWith('Checked 2 files with 5 checks in 4.2s: 8 findings in 4 files.\n\nSecrets: 1 finding\n');
     expect(text).toContain('  src/key.ts:2  secrets/gitleaks-staged generic-api-key  Detected a key.\n');
-    expect(text).toContain('Formatting\n  2 files differ from your style.\n');
+    expect(text).toContain('Formatting\n  2 files differ from the format that gspot uses.\n');
     expect(text).toContain('Could not run\n  python/ruff: ruff is not installed.\n');
     expect(text).toContain('  eslint  2.0s\n');
     expect(text).toContain('What gspot init would do\n  configurations\n');
