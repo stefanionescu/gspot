@@ -172,7 +172,7 @@ export function buildConfigurationPages(guides: Map<string, ConfigurationGuide>)
         'Configurations',
         undefined,
         CONFIGURATIONS_OPENING +
-            formatSection('Always selected', CONJUNCTION_FORMAT.format(alwaysSelected)) +
+            formatSection('Core checks', CONJUNCTION_FORMAT.format(alwaysSelected)) +
             groupSections.join(''),
     );
     const pages = new Map<string, ReferencePage>([[`${REFERENCE_FOLDERS.configurations}/index`, index]]);
