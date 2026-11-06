@@ -179,7 +179,7 @@ Validate every written key against the known settings and the weakening rule.
 @param availableSettings the settings and defaults of the selected configurations.
 @param settings the parsed gspot.toml.
 @param scopeAvailable the settings of each scope by path, which its own table uses.
-@param automatic the settings of the configurations that gspot selects in every repository.
+@param automatic the settings of the configurations that gspot selects in every repository or is about to select.
 @returns empty when the settings pass validation.
 */
 export function validateKeys(

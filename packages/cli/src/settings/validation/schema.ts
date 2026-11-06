@@ -131,8 +131,9 @@ Return what makes the configuration lists, tool options, ignores, or paths inval
 
 @param settings the parsed gspot.toml.
 @param root the folder for checking declared scope paths.
+@param selecting the configurations that the running command is about to select, whose settings count as selected.
 */
-export function validateSettings(settings: Settings, root: string): SettingsError[] {
+export function validateSettings(settings: Settings, root: string, selecting: readonly string[] = []): SettingsError[] {
     const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
         ...settings.scopes.values().flatMap((scope, scopeIndex) =>
@@ -155,7 +156,7 @@ export function validateSettings(settings: Settings, root: string): SettingsErro
     const rootKeys = buildAvailableSettings(selectConfigurationsForScope(settings, ''), settings.level);
     const automatic = readConfigurations()
         .values()
-        .filter((configuration) => configuration.always_selected)
+        .filter((configuration) => configuration.always_selected || selecting.includes(configuration.name))
         .toArray();
     const errors: SettingsError[] = [
         ...listRemovedSelections(settings),

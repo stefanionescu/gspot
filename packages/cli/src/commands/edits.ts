@@ -140,12 +140,13 @@ function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): 
 Read and parse gspot.toml and list the repository, without a session.
 
 @param root the validated repository root.
+@param selecting the configurations that the command is about to select.
 */
-export async function readIgnoreEditContext(root: string): Promise<IgnoreEditContext> {
+export async function readIgnoreEditContext(root: string, selecting?: readonly string[]): Promise<IgnoreEditContext> {
     const edit = readSettingsFile(root);
     const cache = createRunCache(root);
     cache.sources.set(SETTINGS_FILE, Buffer.from(edit.text));
-    const settings = readSettings(edit.text, root);
+    const settings = readSettings(edit.text, root, selecting);
     const listing = await listRepositoryFiles(cache);
     return { root, edit, settings, cache, listing };
 }
@@ -158,14 +159,16 @@ writes into.
 @param location.root the validated repository root.
 @param location.cwd the calling folder.
 @param scopePath the --scope path relative to the repository root, or absent for the top level.
+@param selecting the configurations that the command is about to select.
 */
 export async function readSettingsEditContext(
     { root, cwd }: CommandLocation,
     scopePath?: string,
+    selecting?: readonly string[],
 ): Promise<SettingsEditContext> {
     if (scopePath?.startsWith('.') === true && relative(root, cwd) !== '')
         throw new GspotError('arguments', '--scope takes the path from the repository root, such as services/b.');
-    const context = await readIgnoreEditContext(root);
+    const context = await readIgnoreEditContext(root, selecting);
     const { edit: input, settings, cache, listing } = context;
     const session = await openSession(root, { settings, cache, listing });
     const path = scopePath === undefined ? '' : buildArgumentPath(root, root, scopePath);
@@ -199,14 +202,18 @@ export function buildIgnorePaths(
 Validate the configuration names and the scope for add and remove before either command edits a list.
 
 @param options where the command starts, the configurations, and the scope.
+@param selecting the configurations that the command is about to select.
 */
-export async function readConfigurationEditContext(options: ConfigurationsOptions): Promise<
+export async function readConfigurationEditContext(
+    options: ConfigurationsOptions,
+    selecting?: readonly string[],
+): Promise<
     SettingsEditContext & {
         scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
         selected: string[];
     }
 > {
-    const context = await readSettingsEditContext(options, options.scopePath);
+    const context = await readSettingsEditContext(options, options.scopePath, selecting);
     const { settings, scopePath } = context;
     assertConfigurationsExist(options.configurations);
     assertConfigurationsEditable(options.configurations);

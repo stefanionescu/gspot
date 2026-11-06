@@ -37,6 +37,17 @@ test('add --scope writes the scope list and applies the generated files', async 
     expect(existsSync(generated)).toBe(true);
 });
 
+test('add selects a configuration whose table stops every other command', async () => {
+    const text = '[licenses]\nallowed = ["MIT"]\n';
+    await using sandbox = await createGitSandbox({ 'gspot.toml': text });
+    const refused = await runGspot(sandbox.path, ['list']);
+    expect(refused.stderr).toContain('Run gspot add licenses.');
+    const result = await runGspot(sandbox.path, ['add', 'licenses']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    expect(saved.configurations).toContain('licenses');
+});
+
 test('add security exits 2, names gspot set level, and writes nothing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true }),

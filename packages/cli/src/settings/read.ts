@@ -37,14 +37,15 @@ Parse gspot.toml and return its validated settings or field errors.
 
 @param text the gspot.toml contents.
 @param root the folder for validating declared scope paths.
+@param selecting the configurations that the running command is about to select.
 */
-export function parseSettings(text: string, root: string): Settings | SettingsError[] {
+export function parseSettings(text: string, root: string, selecting?: readonly string[]): Settings | SettingsError[] {
     const written = parseTomlFile(SETTINGS_FILE, text);
     const result = settingsSchema.safeParse(written);
     let parsed: Settings | SettingsError[];
     if (result.success) {
         const settings = buildSettings(result.data, written);
-        const errors = validateSettings(settings, root);
+        const errors = validateSettings(settings, root, selecting);
         parsed = errors.length === 0 ? settings : errors;
     } else {
         const syntax = parseTomlSyntax(text, written);
@@ -58,9 +59,10 @@ Read settings and report every invalid field at its source line.
 
 @param text the settings file contents.
 @param root the repository root.
+@param selecting the configurations that the running command is about to select.
 */
-export function readSettings(text: string, root: string): Settings {
-    const result = parseSettings(text, root);
+export function readSettings(text: string, root: string, selecting?: readonly string[]): Settings {
+    const result = parseSettings(text, root, selecting);
     if (!Array.isArray(result)) return result;
     const syntax = parseTomlSyntax(text, parseTomlFile(SETTINGS_FILE, text));
     throw new GspotError('settings', formatSettingsErrors(result, syntax, SETTINGS_FILE));
