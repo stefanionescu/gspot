@@ -132,5 +132,5 @@ example = "`killall worker` reports `broad-kill`. Stop the one process by its ID
 help = "Stop one process by its ID, delete only paths the script created, handle each failure, and write the form that the message names."
 name = "safety"
 stage = "commit"
-summary = "Finds broad process kills, recursive deletes outside traps that remove mktemp paths, and the syntax that BASH.md forbids."
+summary = "Finds broad process kills, recursive deletes outside traps that remove mktemp paths, and unsafe shell forms such as `typeset`, `eval`, and `curl` without `--fail`."
 why = "A broad kill or a recursive delete can destroy more than the script meant to."

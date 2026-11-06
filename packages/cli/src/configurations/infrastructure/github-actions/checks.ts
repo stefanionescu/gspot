@@ -186,8 +186,8 @@ async function checkActionlint(session: CheckSession, planned: PlannedCheck): Pr
 }
 
 /**
-Reports each workflow that breaks the shape rules of GITHUB-ACTIONS.md: job limits, runners, concurrency, comments on
-`continue-on-error`, expressions in `run:`, and artifact retention.
+Reports a job with no `timeout-minutes` or on a `-latest` runner, a pull-request workflow with no `concurrency` group,
+a `continue-on-error` with no reason above it, an expression in `run:`, and an upload with no `retention-days`.
 
 @param session the repository file cache.
 @param planned the selected workflow files.
