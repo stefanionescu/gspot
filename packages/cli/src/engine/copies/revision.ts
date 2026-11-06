@@ -16,7 +16,6 @@ import {
     GIT_SHALLOW_PATH,
     GIT_UPDATE_INDEX_ARGUMENTS,
     GIT_VERIFY_HEAD_ARGUMENTS,
-    INSTALLED_DEPENDENCIES_MESSAGE,
 } from '#cli/config/engine.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
@@ -36,32 +35,12 @@ import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';
 
-const UNSTAGED_COPY_CAUSE =
-    ' The staged check runs in a copy of the index because the working tree holds unstaged or untracked files.';
-
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
         if (basename(path) !== PACKAGE_JSON) return [];
         return installed.findStats(posix.join(folder, NODE_MODULES)) === undefined ? [] : [folder];
     });
-}
-
-function assertDependencyReady(copyRoot: string, folder: string, copyCause: string): void {
-    if (
-        LOCKFILES.every(
-            (lockfile) =>
-                !(
-                    'copied' in lockfile &&
-                    (statSync(join(copyRoot, folder, lockfile.file), { throwIfNoEntry: false }) !== undefined ||
-                        statSync(join(copyRoot, lockfile.file), { throwIfNoEntry: false }) !== undefined)
-                ),
-        )
-    )
-        throw new GspotError(
-            'copy',
-            `${folder === '.' ? 'The repository' : folder} has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile.${copyCause}`,
-        );
 }
 
 async function listUnchangedDependencies(
@@ -87,19 +66,16 @@ async function listUnchangedDependencies(
     return new Set(present.filter((indexFile, index) => hashes[index] === indexFile.hash).map(({ path }) => path));
 }
 
-function listInstalledDependencies(copyRoot: string, folders: string[]): string[] {
-    return folders.map((folder) => {
-        const path = posix.join(folder, NODE_MODULES);
-        if (lstatSync(join(copyRoot, path), { throwIfNoEntry: false }) !== undefined)
-            throw new GspotError('copy', INSTALLED_DEPENDENCIES_MESSAGE);
-        return path;
-    });
+function listUntrackedInstalls(copyRoot: string, folders: string[]): string[] {
+    return folders
+        .map((folder) => posix.join(folder, NODE_MODULES))
+        .filter((path) => lstatSync(join(copyRoot, path), { throwIfNoEntry: false }) === undefined);
 }
 
 async function selectRevisionDependencies(
     root: string,
     copyRoot: string,
-    { indexFiles, copyCause, paths }: { indexFiles: GitFile[]; copyCause: string; paths: string[] | undefined },
+    { indexFiles, paths }: { indexFiles: GitFile[]; paths: string[] | undefined },
     cancelSignal?: AbortSignal,
 ): Promise<RevisionDependencies> {
     const installed = openFiles(root);
@@ -142,11 +118,10 @@ async function selectRevisionDependencies(
         (copied.length + environments.length > 0 && dependencyFiles.some(({ path }) => !unchangedPaths.has(path)));
     const note = hasDependencyDrift ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
     if (copied.length === 0) return { dependencies: [], ...note };
-    for (const folder of folders) assertDependencyReady(copyRoot, folder, copyCause);
     const dependencies: string[] = [
         ...declarations.copies,
         ...untrackedArtifacts,
-        ...listInstalledDependencies(copyRoot, folders),
+        ...listUntrackedInstalls(copyRoot, folders),
     ];
     return { dependencies, ...note };
 }
@@ -183,8 +158,8 @@ Git commands use the copied revision.
 
 @param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy. A staged check passes the status that sent it to a copy of the index, which saves
-a second read and names that cause in a refusal. The paths that the run checks, when the source names them, limit the
-ignored declaration files that the copy reads to the tsconfig files whose folder holds one of them.
+a second read. The paths that the run checks, when the source names them, limit the ignored declaration files that the
+copy reads to the tsconfig files whose folder holds one of them.
 @param cancelSignal stops the copy.
 */
 export async function copyRevision(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<RevisionCopy> {
@@ -202,16 +177,11 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
         const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
         const tree = treeLine.replace(TRAILING_NEWLINE, '');
         await writeRevisionFiles(toplevel, copy.path, { indexFiles, source }, cancelSignal);
-        copyValePackages(
-            toplevel,
-            copy.path,
-            indexFiles.map((indexFile) => indexFile.path),
-        );
-        const copyCause = source.kind === 'index' && source.status !== undefined ? UNSTAGED_COPY_CAUSE : '';
+        copyValePackages(toplevel, copy.path);
         const selected = await selectRevisionDependencies(
             toplevel,
             copy.path,
-            { indexFiles, copyCause, paths: source.paths },
+            { indexFiles, paths: source.paths },
             cancelSignal,
         );
         await copyDependencies({

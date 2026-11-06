@@ -8,7 +8,6 @@ import { testdir } from 'testdirs';
 
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import type { CommandFailureJson } from '#cli/types/system.ts';
 import { ARGUMENT_REFUSALS, FIX_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
@@ -94,24 +93,6 @@ test('a staged check after a write of the generated files names the setup files 
         error: 'git',
         message: expect.stringContaining('.gspot/') as string,
     });
-});
-
-test('a staged check that a folder without a lockfile refuses names the one fix and the unstaged files', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'app/package.json': '{}',
-        '.gitignore': 'node_modules/\n',
-        'app/node_modules/example/index.js': 'export const value = 1;',
-    });
-    runGitStep(sandbox.path, ['add', '.']);
-    await writeFile(join(sandbox.path, 'notes.txt'), 'unstaged\n');
-    const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    const { message } = JSON.parse(refused.stdout) as CommandFailureJson;
-    expect(message).toContain('app');
-    expect(message).toEndWith(
-        'Commit a lockfile. The staged check runs in a copy of the index because the working tree holds unstaged or untracked files.',
-    );
 });
 
 test('a staged check during a merge conflict exits 2, names the conflict, and leaves no copy behind', async () => {

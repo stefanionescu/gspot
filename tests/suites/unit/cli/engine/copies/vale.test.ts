@@ -13,7 +13,7 @@ test('a revision copy whose .gspot is a link gets no Vale package link outside t
     await using sandbox = await testdir({ 'work/.gspot/vale/styles/.keep': '', 'copy/.keep': '', 'outside/.keep': '' });
     await symlink(join(sandbox.path, 'outside'), join(sandbox.path, 'copy/.gspot'), 'dir');
     expect(() => {
-        copyValePackages(join(sandbox.path, 'work'), join(sandbox.path, 'copy'), []);
+        copyValePackages(join(sandbox.path, 'work'), join(sandbox.path, 'copy'));
     }).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }));
     expect(existsSync(join(sandbox.path, 'outside/vale'))).toBe(false);
 });

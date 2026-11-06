@@ -148,9 +148,6 @@ test.each(['', 'nested/'])('revision copies link the installed Vale packages und
 
     expect(source).toBe('extends: existence\n');
     expect(await readFile(join(sandbox.path, packagePath), 'utf8')).toBe('extends: existence\n');
-    await writeFile(join(sandbox.path, config), 'Packages = Different\n');
-    const valeError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
-    expect(valeError).toMatchObject({ name: 'GspotError', code: 'copy' });
 });
 
 test('a copy leaves the virtual environment in the working tree and still checks its lockfile', async () => {
@@ -261,28 +258,17 @@ test('an index copy clones the ignored build output that a package.json names in
     expect(existsSync(join(withoutFiles.root, 'dist/index.js'))).toBe(false);
 });
 
-test('a revision refuses installed dependencies without a committed lockfile', async () => {
+test('a copy links installed dependencies with no lockfile, and keeps tracked ones as the revision holds them', async () => {
     await using sandbox = await createGitSandbox({
+        '.gitignore': 'app/node_modules/\n',
         'app/package.json': '{}',
-        '.gitignore': 'node_modules/\n',
-        'app/node_modules/example/index.js': 'export const value = 1;',
-    });
-    runGitStep(sandbox.path, ['add', '.']);
-    const error = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
-    expect(error).toMatchObject({
-        code: 'copy',
-        message:
-            'app has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile.',
-    });
-});
-
-test('a revision refuses tracked installed dependencies', async () => {
-    await using sandbox = await createGitSandbox({
+        'app/node_modules/ignored/index.js': 'export const value = 1;',
         'package.json': '{}',
-        'bun.lock': '{}',
-        'node_modules/example/index.js': 'export const value = 1;',
+        'node_modules/tracked/index.js': 'export const value = 2;',
     });
     runGitStep(sandbox.path, ['add', '.']);
-    const error = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
-    expect(error).toMatchObject({ name: 'GspotError', code: 'copy' });
+    using copy = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(await readFile(join(copy.root, 'app/node_modules/ignored/index.js'), 'utf8')).toContain('value = 1');
+    const tracked = await lstat(join(copy.root, 'node_modules/tracked/index.js'));
+    expect(tracked.isSymbolicLink()).toBe(false);
 });
