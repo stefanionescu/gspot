@@ -269,10 +269,16 @@ test('the undo command of an ignore, printed in a subfolder, removes the ignore 
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('[[ignore]]');
 });
 
-test('the explanation of gspot/weakenings prints no ignore that gspot refuses', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['explain', 'gspot/weakenings']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).not.toContain('--paths');
-    expect(result.stdout).toContain('gspot ignore gspot/weakenings --rule');
-});
+test.each([
+    { commandArguments: ['explain', 'gspot/weakenings'] },
+    { commandArguments: ['explain', 'gspot/weakenings', 'level'] },
+])(
+    '$commandArguments prints no path ignore, which cannot clear a finding on gspot.toml',
+    async ({ commandArguments }) => {
+        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+        const result = await runGspot(sandbox.path, commandArguments);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        expect(result.stdout).not.toContain('--paths');
+        expect(result.stdout).toContain('gspot ignore gspot/weakenings --rule');
+    },
+);

@@ -183,7 +183,7 @@ export const lintRuleExplanationSchema = z.strictObject({
     fix: z.string().nullable(),
     example: z.string().nullable(),
     explanation: z.string().nullable(),
-    turnOff: z.strictObject({ everywhere: z.string(), paths: z.string() }),
+    turnOff: z.strictObject({ everywhere: z.string(), paths: z.string().nullable() }),
     changeOptions: z.string().nullable(),
 });
 

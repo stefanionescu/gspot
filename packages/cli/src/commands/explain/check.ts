@@ -5,7 +5,7 @@ import {
     RUN_IN_COPY_MESSAGE,
     SELECTED_YES_MESSAGE,
 } from '#cli/config/commands/reports.ts';
-import { SETTING_RULES } from '#cli/config/settings/validation.ts';
+import { SETTING_RULES, WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
@@ -159,7 +159,7 @@ function formatLintRuleLines(facts: LintRuleExplanation): string[] {
         '',
         'Ignore it only with a reason your team accepts.',
         `Ignore it everywhere: ${facts.turnOff.everywhere}`,
-        `Ignore it for some paths: ${facts.turnOff.paths}`,
+        ...(facts.turnOff.paths === null ? [] : [`Ignore it for some paths: ${facts.turnOff.paths}`]),
         ...(facts.changeOptions === null ? [] : [`Change its options: ${facts.changeOptions}`]),
     ];
 }
@@ -297,7 +297,7 @@ export async function explainLintRule(
         ...buildRuleDocFacts(docs, { verbose }),
         turnOff: {
             everywhere: `${ignore} --reason "<why>"`,
-            paths: `${ignore} --paths "<path>" --reason "<why>"`,
+            paths: found.check.id === WEAKENINGS_CHECK ? null : `${ignore} --paths "<path>" --reason "<why>"`,
         },
         changeOptions: formatRuleOptions(found, tool, identifier) ?? null,
     };
