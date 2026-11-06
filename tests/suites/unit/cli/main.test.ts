@@ -61,7 +61,7 @@ test('gspot apply exits 2 with one line that names gspot install', async () => {
     });
 });
 
-test('in a repository of 0.3.9, the hook script stops the commit, and each old name prints its new one', async () => {
+test('in a repository of 0.3.9, the hook script stops the commit, and install refuses the old key', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': 'configurations = ["markdown"]\n\n[limits]\nmin_function_statements = 3\n',
         '.gspot/hooks/pre-commit': '#!/bin/sh\nexec gspot check --staged --stage commit\n',
@@ -76,33 +76,11 @@ test('in a repository of 0.3.9, the hook script stops the commit, and each old n
         env: { PATH: `${folder}${delimiter}${String(readEnvironmentVariable('PATH'))}` },
     });
     expect(commit.code, commit.stdout + commit.stderr).toBe(1);
-    expect(commit.stderr).toContain('Run gspot check --only <commit|push>');
-    expect(commit.stderr).toContain('run gspot install');
+    expect(commit.stderr).toContain("Unknown option '--stage'");
     expect(runGitStep(sandbox.path, ['rev-list', '--all'])).toBe('');
     const install = await runGspot(sandbox.path, ['install']);
     expect(install.code).toBe(2);
-    expect(install.stderr).toContain('limits.trivial_function_statements');
-});
-
-test.each([
-    { commandArguments: ['check', '--changed'], replacement: '--base origin/main' },
-    { commandArguments: ['scan', '--markdown'], replacement: 'gspot scan' },
-    { commandArguments: ['init', '--no-configurations'], replacement: 'gspot init --configurations' },
-])('$commandArguments exits 2 and names $replacement', async ({ commandArguments, replacement }) => {
-    await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, commandArguments);
-    expect(result.code).toBe(2);
-    expect(result.stderr).toContain(replacement);
-});
-
-test.each([
-    { plain: ['check', '--stage', 'push'], joined: ['check', '--stage=push'] },
-    { plain: ['check', '--changed'], joined: ['check', '--changed=origin/main'] },
-    { plain: ['scan', '--markdown'], joined: ['scan', '--markdown=true'] },
-    { plain: ['init', '--no-configurations'], joined: ['init', '--no-configurations=true'] },
-])('$joined prints the same line as $plain', async ({ plain, joined }) => {
-    await using sandbox = await testdir();
-    expect(await runGspot(sandbox.path, joined)).toStrictEqual(await runGspot(sandbox.path, plain));
+    expect(install.stderr).toContain('limits.min_function_statements');
 });
 
 test.each([
@@ -115,17 +93,6 @@ test.each([
     const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code).toBe(2);
     expect(result).toStrictEqual(await runGspot(sandbox.path, [removed]));
-});
-
-test.each([
-    { commandArguments: ['check', '--stage', '--help'], plain: ['check', '--stage'] },
-    { commandArguments: ['check', '--help', '--stage=push'], plain: ['check', '--stage'] },
-    { commandArguments: ['init', '--no-configurations', '-h'], plain: ['init', '--no-configurations'] },
-])('$commandArguments prints the line of the removed flag and exits 2', async ({ commandArguments, plain }) => {
-    await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, commandArguments);
-    expect(result.code).toBe(2);
-    expect(result).toStrictEqual(await runGspot(sandbox.path, plain));
 });
 
 test('init requires a Git worktree before reading settings or writing, while its help works outside Git', async () => {

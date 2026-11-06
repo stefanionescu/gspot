@@ -90,8 +90,6 @@ function listUnsettledConflicts(
 }
 
 function formatUnknownLimitSetting(key: string, settings: string[]): string {
-    if (key.endsWith('.min_function_statements'))
-        return `${key} is now ${key.replace('min_function_statements', 'trivial_function_statements')}, with the same value.`;
     const limits = settings.filter((name) => name.startsWith('limits.'));
     const near = selectSimilarNames(key, limits);
     return near.length === 0

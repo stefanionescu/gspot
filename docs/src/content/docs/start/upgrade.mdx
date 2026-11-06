@@ -49,9 +49,9 @@ This release removes commands, flags, and settings, so a repository on 0.3.9 als
    [Clean up the first findings](/start/quickstart/#clean-up-the-first-findings).
 3. Delete `bash/doc-comments` and `swift/doc-comments` from each `[[ignore]]`, `--only`, and `--skip`. This release does
    not have these checks, so a command that names one exits with code 2.
-4. Run the commands above. `gspot install` stops on each setting that this release refuses, such as
-   `limits.min_function_statements`, and names the fix. Each run names only some of them, so repeat it until it passes.
-   It also writes the new Git hooks.
+4. Rename `min_function_statements` to `trivial_function_statements` in each `limits` table, then run the commands above.
+   `gspot install` stops on each setting this release refuses. Each run names some of them, so repeat it until it
+   passes. It also writes the new Git hooks.
 5. Drop the group folder from each path that you wrote by hand, such as in an editor setting or a CI script.
    `.gspot/configurations/<group>/<configuration>/` becomes `.gspot/configurations/<configuration>/`.
 6. Doc comment rules are off at every level. Delete `jsdoc/require-jsdoc` and `jsdoc/require-description` from

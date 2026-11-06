@@ -32,11 +32,9 @@ import {
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
     REMOVED_COMMANDS,
-    REMOVED_OPTIONS,
     UNKNOWN_COMMAND_ERROR_CODE,
     UNKNOWN_COMMAND_NAME,
     UNKNOWN_OPTION_ERROR_CODE,
-    UNKNOWN_OPTION_NAME,
     USAGE_LINE,
     VERBOSE_FLAG,
     VERSION_FLAG,
@@ -87,8 +85,6 @@ function formatArgumentError(error: CommanderError, program: Command, command: s
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
         return `There is no command called ${name}.${readCorrection(message)} ${COMMANDS_HELP_MESSAGE}`;
     }
-    const removed = REMOVED_OPTIONS[UNKNOWN_OPTION_NAME.exec(message)?.[1] ?? ''];
-    if (removed !== undefined) return removed;
     const helpLine =
         command === undefined ? COMMANDS_HELP_MESSAGE : `Run gspot ${command} --help to see its arguments and options.`;
     return `${formatCommanderSentence(error, command)}${readCorrection(message)} ${helpLine}`;
@@ -195,17 +191,6 @@ function isVersionRun(program: Command, name: string): boolean {
     return name === '' || program.commands.some((command) => command.name() === name);
 }
 
-function assertNotRemoved(name: string, options: readonly string[]): void {
-    if (Object.hasOwn(REMOVED_COMMANDS, name))
-        throw new GspotError('arguments', REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS]);
-    const helpWords = new Set(HELP_FLAG.split(', '));
-    if (!options.some((word) => helpWords.has(word))) return;
-    // Commander prints the help before it reports an unknown option.
-    const flags = options.map((word) => word.split('=', 1)[0] as string);
-    const flag = flags.find((word) => Object.hasOwn(REMOVED_OPTIONS, word));
-    if (flag !== undefined) throw new GspotError('arguments', String(REMOVED_OPTIONS[flag]));
-}
-
 /**
 Build the CLI with every command.
 
@@ -293,7 +278,8 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
     });
     try {
         const [name = ''] = program.parseOptions(commandArguments).operands;
-        assertNotRemoved(name, options);
+        if (Object.hasOwn(REMOVED_COMMANDS, name))
+            throw new GspotError('arguments', REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS]);
         if (isVersionRun(program, name)) {
             printResult({ text: cliPackage.version, json: {}, exitCode: 0 });
             return 0;
