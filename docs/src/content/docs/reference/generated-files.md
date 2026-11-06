@@ -30,10 +30,10 @@ flowchart LR
 
 | Path                                                                                 | Holds                                                                    |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| `gspot.toml`                                                                         | Your settings.                                                           |
+| `gspot.toml`                                                                         |                                                                          |
 | `.gspot/configurations/<configuration>/`                                             | The config files of the tools of one configuration.                      |
-| `.gspot/rules/`                                                                      | The rules for coding agents.                                             |
-| `.gspot/hooks/`                                                                      | The Git hooks.                                                           |
+| `.gspot/rules/`                                                                      |                                                                          |
+| `.gspot/hooks/`                                                                      |                                                                          |
 | `package.json`, `pyproject.toml`, and `mise.toml` in `.gspot/`, with their lockfiles | The tools and their pinned versions.                                     |
 | Small files in your folders, such as `eslint.config.mjs` and `ruff.toml`             | They load the real config from `.gspot/`, so editors use the same rules. |
 | `.editorconfig` and `.prettierignore`                                                | Editor settings, and the files that Prettier skips.                      |
@@ -57,7 +57,7 @@ which stay open in review.
 | ---------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `.gspot/node_modules/` | The npm tools.                                                                  | Delete it, then run `gspot install`.                                                          |
 | `.gspot/.venv/`        | The Python tools. It is separate from the `.venv/` of your project.             | Delete it, then run `gspot install`.                                                          |
-| `.gspot/vale/`         | The Vale packages.                                                              | Delete it, then run `gspot install`.                                                          |
+| `.gspot/vale/`         |                                                                                 | Delete it, then run `gspot install`.                                                          |
 | `.gspot-copies/`       | Temporary copies of your files for `gspot scan` and for checks of staged files. | gspot deletes each copy after its run. If a copy stays behind, delete it while no check runs. |
 
 Do not delete the tool pins, their lockfiles, or the other files in `.gspot/`.

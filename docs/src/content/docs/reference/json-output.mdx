@@ -13,8 +13,6 @@ standard error.
 | `exitCode` | The process exit code. See [Exit codes](/reference/commands/#exit-codes). |
 | `notes`    | Lines of text for you to read, such as the next command to run.           |
 
-The other fields depend on the command.
-
 ## Command errors
 
 When a command fails, its object has `error` and `message` instead of the fields of the command. `message` describes the
@@ -240,8 +238,8 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 | `configuration` | The configuration of a shipped check, or `null`.                                                   |
 | `command`       | The command of a `[[command_check]]`, or `null`.                                                   |
 | `paths`         | The paths of a `[[command_check]]`, or `null`.                                                     |
-| `stage`         | The stage that runs the check.                                                                     |
-| `level`         | The level that turns the check on.                                                                 |
+| `stage`         |                                                                                                    |
+| `level`         |                                                                                                    |
 | `summary`       | What the check looks for.                                                                          |
 | `why`           | Why it matters.                                                                                    |
 | `help`          | How to fix a finding.                                                                              |
@@ -257,19 +255,19 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 
 ### `lint-rule`
 
-| Field           | Meaning                                                                      |
-| --------------- | ---------------------------------------------------------------------------- |
-| `tool`          | The tool that reports the rule, or `null`.                                   |
-| `rule`          | The ID, such as `no-console`.                                                |
-| `check`         | The check that runs the rule.                                                |
-| `page`          | The link to its documentation, or `null`.                                    |
-| `description`   | What the rule looks for, or `null`.                                          |
-| `why`           | Why the rule matters, or `null`.                                             |
-| `fix`           | How to fix a finding, or `null`.                                             |
-| `example`       | An example, or `null`.                                                       |
-| `explanation`   | With `--verbose`, the full explanation, and otherwise `null`.                |
-| `turnOff`       | The `gspot ignore` commands for the rule, `everywhere` and for some `paths`. |
-| `changeOptions` | The `gspot set` command that changes the options of the rule, or `null`.     |
+| Field           | Meaning                                                                                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool`          | The tool that reports the rule, or `null`.                                                                                                                                 |
+| `rule`          | The ID, such as `no-console`.                                                                                                                                              |
+| `check`         | The check that runs the rule.                                                                                                                                              |
+| `page`          | The link to its documentation, or `null`.                                                                                                                                  |
+| `description`   | What the rule looks for, or `null`.                                                                                                                                        |
+| `why`           | Why the rule matters, or `null`.                                                                                                                                           |
+| `fix`           | How to fix a finding, or `null`.                                                                                                                                           |
+| `example`       | Can be `null`.                                                                                                                                                             |
+| `explanation`   | With `--verbose`, the full explanation, and otherwise `null`.                                                                                                              |
+| `turnOff`       | The `gspot ignore` commands for the rule: `everywhere`, and for some `paths`. `paths` is `null` for `gspot/weakenings`, because each of its findings sits on `gspot.toml`. |
+| `changeOptions` | The `gspot set` command that changes the options of the rule, or `null`.                                                                                                   |
 
 ### `configuration`
 
@@ -278,11 +276,11 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 | `name`           | The name that `gspot add` takes, such as `nextjs`.                             |
 | `group`          | The kind of configuration, such as `framework`.                                |
 | `title`          | The display name, such as `Next.js`.                                           |
-| `description`    | What it covers.                                                                |
+| `description`    |                                                                                |
 | `requires`       | The configurations that it needs.                                              |
-| `tools`          | Its tools and their versions.                                                  |
+| `tools`          |                                                                                |
 | `checks`         | Its checks, each with `check` and `stage`.                                     |
-| `settingNames`   | Its settings.                                                                  |
+| `settingNames`   |                                                                                |
 | `ruleFiles`      | Its rule files in your repository.                                             |
 | `alwaysSelected` | Whether gspot selects it in every repository.                                  |
 | `removed`        | Each scope that removes it, with `scope`, `reason`, and the `command` to undo. |
@@ -293,8 +291,8 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | `setting`          | The key, such as `limits.max_file_lines`.                                                                                     |
 | `type`             | The kind of value, such as `number`.                                                                                          |
-| `description`      | What it does.                                                                                                                 |
-| `default`          | The default, or `null`.                                                                                                       |
+| `description`      |                                                                                                                               |
+| `default`          | Can be `null`.                                                                                                                |
 | `defaultAll`       | The default at level `all`, or `null`.                                                                                        |
 | `languageDefaults` | The default per language, or `null`.                                                                                          |
 | `reasonFor`        | The change that needs a reason, or `null`.                                                                                    |
