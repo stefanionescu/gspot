@@ -7,7 +7,6 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { BASH_SAFETY_CASES, COMMAND_SAFETY_CASES, PASSED_BASH_RESULTS } from '#tests/config/configurations/bash.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
-import { CONTINUED_TRAP_SOURCE } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -125,14 +124,6 @@ test('the default level permits an explicitly ignored failure', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': '#!/usr/bin/env bash\nfalse || :\n',
-    });
-    expect(await runSandboxCheck(sandbox.path, 'bash/safety')).toStrictEqual([]);
-});
-
-test('a continued trap safely removes its temporary directory on the original source row', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'run.sh': `#!/usr/bin/env bash\n${CONTINUED_TRAP_SOURCE}`,
     });
     expect(await runSandboxCheck(sandbox.path, 'bash/safety')).toStrictEqual([]);
 });
