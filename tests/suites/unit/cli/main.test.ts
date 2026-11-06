@@ -1,15 +1,20 @@
+import { delimiter, join } from 'node:path';
+
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { JSON_ARGUMENT_ERRORS, MALFORMED_SETTINGS, VERSION_ARGUMENTS } from '#tests/config/main.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { markExecutable, runGitStep } from '#tests/setup/system/git.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test('gspot without a command prints the help to stderr and exits 2', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -56,12 +61,27 @@ test('gspot apply exits 2 with one line that names gspot install', async () => {
     });
 });
 
-test('the hook line of 0.3.9 exits 2, and names --only and gspot install', async () => {
-    await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['check', '--staged', '--stage', 'commit']);
-    expect(result.code).toBe(2);
-    expect(result.stderr).toContain('gspot check --only <commit|push>');
-    expect(result.stderr).toContain('run gspot install');
+test('in a repository of 0.3.9, the hook script stops the commit, and each old name prints its new one', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': 'configurations = ["markdown"]\n\n[limits]\nmin_function_statements = 3\n',
+        '.gspot/hooks/pre-commit': '#!/bin/sh\nexec gspot check --staged --stage commit\n',
+        'notes.md': '# Notes\n',
+    });
+    await markExecutable(sandbox.path, '.gspot/hooks/pre-commit');
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
+    runGitStep(sandbox.path, ['add', '-A']);
+    const folder = await writeProgramCommand(join(sandbox.path, '.git/bin'), 'gspot', 'processes/cli');
+    const commit = runBlockingCommand(['git', 'commit', '-m', 'feat: start'], {
+        cwd: sandbox.path,
+        env: { PATH: `${folder}${delimiter}${String(readEnvironmentVariable('PATH'))}` },
+    });
+    expect(commit.code, commit.stdout + commit.stderr).toBe(1);
+    expect(commit.stderr).toContain('Run gspot check --only <commit|push>');
+    expect(commit.stderr).toContain('run gspot install');
+    expect(runGitStep(sandbox.path, ['rev-list', '--all'])).toBe('');
+    const install = await runGspot(sandbox.path, ['install']);
+    expect(install.code).toBe(2);
+    expect(install.stderr).toContain('limits.trivial_function_statements');
 });
 
 test.each([
