@@ -76,7 +76,6 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
 
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '-q']);
-    runGitStep(root, ['init', '-q']);
     runGitStep(root, ['config', 'core.hooksPath', '../hooks']);
     const { hooks } = await readHooks({ root: root });
     expect(hooks).toStrictEqual([{ kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] }]);
