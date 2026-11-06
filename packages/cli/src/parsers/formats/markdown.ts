@@ -3,12 +3,6 @@ import { visit } from 'unist-util-visit';
 
 import type { CodeFence, SourceComment } from '#cli/types/parsers.ts';
 
-/**
-List code blocks with their language, attributes, and source lines.
-
-@param text the Markdown source.
-@returns the blocks in source order, including blocks without a language tag.
-*/
 export function listCodeFences(text: string): CodeFence[] {
     const fences: CodeFence[] = [];
     visit(fromMarkdown(text), 'code', (node) => {
@@ -24,12 +18,6 @@ export function listCodeFences(text: string): CodeFence[] {
     return fences;
 }
 
-/**
-List the prose of a Markdown file, without code, link targets, or front matter.
-
-@param text the Markdown source.
-@returns each text node with the line where it starts.
-*/
 export function listMarkdownTexts(text: string): Array<Pick<SourceComment, 'line' | 'text'>> {
     const texts: Array<Pick<SourceComment, 'line' | 'text'>> = [];
     visit(fromMarkdown(text), 'text', (node) => {

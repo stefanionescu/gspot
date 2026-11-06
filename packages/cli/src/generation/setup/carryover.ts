@@ -276,13 +276,6 @@ function listPrettierRows({
     });
 }
 
-/**
-Read what init carries from the configs it replaces: ignore files, the rules of Ruff, markdownlint, and commitlint, and
-the options of Prettier, which the format table holds.
-
-@param input the repository, the tools that run, and the session of the settings so far.
-@returns the part of gspot.toml to add, and one row per replaced config.
-*/
 export async function readCarryover(input: CarryoverInput): Promise<Carryover> {
     const sections = [
         { ...EMPTY_CARRYOVER, rows: [...listPrettierRows(input), ...listUncomparedRows(input)] },

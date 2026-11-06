@@ -63,8 +63,6 @@ function addPackagePin(text: string): string {
 /**
 Pin this gspot in mise.toml, and pin Node.js when mise.toml names none, because mise otherwise starts gspot with the
 Node.js of the system.
-
-@param writer the repository handle.
 */
 function writeMisePin(writer: Files): void {
     const tools = writer.read(MISE_CONFIG_FILE);
@@ -83,9 +81,6 @@ function writeMisePin(writer: Files): void {
 /**
 List the commands that a mise pin needs before it. Without a Node.js pin, mise starts gspot with the Node.js of the
 system, which can be too old to run it.
-
-@param root the repository root.
-@param runner the program that starts gspot.
 */
 export function listPinPrerequisites(root: string, runner: StartRunner['name']): string[] {
     if (runner !== 'mise') return [];
@@ -93,13 +88,6 @@ export function listPinPrerequisites(root: string, runner: StartRunner['name']):
     return tools[MISE_NODE_TOOL] === undefined ? [MISE_NODE_PIN_COMMAND] : [];
 }
 
-/**
-Read the gspot version that a repository pins where its hooks start gspot. A package.json dependency gives its locked
-version, and a repository without that dependency gives its mise tool.
-
-@param root the repository root.
-@returns undefined without a pin, or for a dependency that names no version.
-*/
 export function readGspotPin(root: string): string | undefined {
     const specifier = readCliSpecifier(root);
     if (specifier === undefined) return readMisePin(root);
@@ -107,12 +95,6 @@ export function readGspotPin(root: string): string | undefined {
     return locked ?? semver.valid(specifier) ?? undefined;
 }
 
-/**
-Say that the repository pins another gspot version than this one, and name the install of the pinned one.
-
-@param root the repository root.
-@returns undefined without a pin, or when this gspot is the pinned version.
-*/
 export function findGspotPinMismatch(root: string): string | undefined {
     const pin = readGspotPin(root);
     if (pin === undefined || pin === cliPackage.version) return undefined;
@@ -120,22 +102,11 @@ export function findGspotPinMismatch(root: string): string | undefined {
     return `This repository pins gspot ${pin}; this is gspot ${cliPackage.version}. Run ${install}.`;
 }
 
-/**
-Refuse to run another version than the one that the repository pins.
-
-@param root the repository root.
-*/
 export function assertGspotPin(root: string): void {
     const mismatch = findGspotPinMismatch(root);
     if (mismatch !== undefined) throw new GspotError('arguments', mismatch);
 }
 
-/**
-Pin this gspot where the hooks start it: as a development dependency, or as a mise tool without a package.json.
-
-@param writer the repository handle.
-@param path the file that takes the pin, when the plan chose one.
-*/
 export function writeGspotPin(writer: Files, path?: string): void {
     const manifest = writer.read(PACKAGE_JSON);
     if (manifest !== undefined && path !== MISE_CONFIG_FILE) {

@@ -14,13 +14,6 @@ import {
 } from '#tests/config/setup/sandboxes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
-/**
-A rule tester using the TypeScript parser and a fixed repository root.
-
-@param options the repository root and language options for the cases.
-@param options.root the folder the rules resolve paths against.
-@param options.languageOptions the parser and runtime settings for the cases.
-*/
 export function buildRuleTester({
     root = RULE_TESTER_ROOT,
     languageOptions = {},
@@ -38,11 +31,6 @@ export function buildRuleTester({
     });
 }
 
-/**
-A rule tester whose cases get TypeScript types from a strict project in a temporary folder.
-
-@returns a tester for rules that read types. Each case lints a file of that project.
-*/
 export function buildTypedRuleTester(): RuleTester {
     const root = mkdtempSync(join(tmpdir(), TYPED_RULE_FOLDER_PREFIX));
     writeFileSync(join(root, 'tsconfig.json'), TYPED_RULE_TSCONFIG);
@@ -53,11 +41,6 @@ export function buildTypedRuleTester(): RuleTester {
     });
 }
 
-/**
-Write package.json files into a new folder of the test run, for the rules that read the dependencies of a project.
-
-@param manifests the package.json content of each folder, by its path in the new folder.
-*/
 export function writePackageFolders(manifests: Record<string, Record<string, unknown>>): string {
     const root = mkdtempSync(join(TEST_RUN_FOLDER, 'rule-tester-'));
     for (const [folder, manifest] of Object.entries(manifests)) {

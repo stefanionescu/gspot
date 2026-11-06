@@ -43,12 +43,6 @@ async function lintProject(
     return assertToolFindings(result, found, 'ansible-lint');
 }
 
-/**
-Runs ansible-lint on each playbook project.
-
-@param session the repository and its tools.
-@param planned the scope files to lint.
-*/
 async function checkAnsibleLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const folders = listSourcePaths(planned.files, [ANSIBLE_CONFIG_FILE])
         .map((path) => findProjectFolder(path, ANSIBLE_CONFIG_FILE))

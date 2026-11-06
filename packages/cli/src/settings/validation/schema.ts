@@ -96,12 +96,6 @@ function validateCheckIds(settings: Settings): SettingsError[] {
     ];
 }
 
-/**
-Name the invalid setting, and keep the message of the validator.
-
-@param issue the schema validation message.
-@param syntax the parsed source keys and their locations.
-*/
 export function formatSettingsIssue(issue: z.core.$ZodIssue, syntax: TomlSyntax): SettingsError[] {
     const branches = issue.code === 'invalid_union' ? issue.errors : [];
     const reasonedValueErrors = branches.find((errors) =>
@@ -126,13 +120,6 @@ export function formatSettingsIssue(issue: z.core.$ZodIssue, syntax: TomlSyntax)
     return [{ path: segments, message }];
 }
 
-/**
-Return what makes the configuration lists, tool options, ignores, or paths invalid.
-
-@param settings the parsed gspot.toml.
-@param root the folder for checking declared scope paths.
-@param selecting the configurations that the running command is about to select, whose settings count as selected.
-*/
 export function validateSettings(settings: Settings, root: string, selecting: readonly string[] = []): SettingsError[] {
     const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),

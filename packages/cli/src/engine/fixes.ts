@@ -199,23 +199,11 @@ function buildFixResult(
     return { check, changed, status: changed.length === 0 ? 'unchanged' : 'changed' };
 }
 
-/**
-List the files that hold merge-conflict markers, which no fixer changes.
-
-@param root the repository or the copy that holds the files.
-@param paths the files to read.
-*/
 export function listConflictedPaths(root: string, paths: string[]): string[] {
     const contents = readContents(root, paths);
     return paths.filter((path) => listConflictMarkerLines(contents.get(path)?.toString('utf8') ?? '').length > 0);
 }
 
-/**
-Runs fixes in passes and collects their results.
-
-@param session the repository and its tools.
-@param planned the checks to fix.
-*/
 export async function runFixers(session: CheckSession, planned: PlannedCheck[]): Promise<FixReport> {
     const fixable = planned.filter((check) => check.check.fix !== undefined);
     const conflicted = listConflictedPaths(session.root, [

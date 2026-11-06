@@ -5,11 +5,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build jscpd.json: the duplicate size limits, the skipped import lines, and the ignored paths.
-
-@param planned the config file to build.
-*/
 function buildJscpdFile(planned: PlannedConfig): string {
     const limits = getTable(planned.scope.settings, 'structure');
     const settings = {

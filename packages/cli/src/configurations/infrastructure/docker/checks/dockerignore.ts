@@ -79,12 +79,6 @@ function listIgnoredSources(text: string, ignoreText: string): DockerIgnoredSour
         );
 }
 
-/**
-Reports each Dockerfile with no ignore file, or with one that misses a required pattern.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkDockerignore(session: Session, planned: PlannedCheck): CheckFinding[] {
     const { contexts, findings } = readComposeDocuments(session, planned);
     return [

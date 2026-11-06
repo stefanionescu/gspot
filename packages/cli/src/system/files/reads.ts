@@ -40,11 +40,6 @@ function decodeCachedText(source: string | RunCache, path: string): string {
 
 /**
 Read file bytes inside a folder, and refuse a link outside it. A run cache keeps the bytes of the first read.
-
-@param source the folder of the relative path, or the run cache of that folder.
-@param path the root-relative file.
-@param options the limit of a read that needs only the first bytes and keeps nothing.
-@param options.limit the maximum byte count.
 */
 export function readBytes(source: string | RunCache, path: string, options?: { limit: number }): Buffer {
     if (typeof source === 'string') return readFileSync(readContainedPath(realpathSync(source), path));
@@ -57,12 +52,6 @@ export function readBytes(source: string | RunCache, path: string, options?: { l
     return bytes;
 }
 
-/**
-Read UTF-8 text, or return undefined for a missing file.
-
-@param source the folder of the relative path, or the run cache of that folder.
-@param path the root-relative file.
-*/
 export function findText(source: string | RunCache, path: string): string | undefined {
     try {
         return decodeCachedText(source, path);
@@ -79,9 +68,6 @@ export function findText(source: string | RunCache, path: string): string | unde
 /**
 Read tracked UTF-8 text and refuse a missing file. A tracked link whose target is missing is present, and reads as
 empty text, because Git tracks the link and not its target.
-
-@param source the folder of the relative path, or the run cache of that folder.
-@param path the tracked file path.
 */
 export function readText(source: string | RunCache, path: string): string {
     const text = findText(source, path);
@@ -94,25 +80,11 @@ export function readText(source: string | RunCache, path: string): string {
     );
 }
 
-/**
-Resolve a path that may hold links, and keep it only when it stays inside the folder.
-
-@param root the folder.
-@param path the path relative to the folder.
-@returns the real path, or undefined for a path that leaves the folder.
-*/
 export function findContainedPath(root: string, path: string): string | undefined {
     const target = realpathSync.native(join(root, path));
     return isInside(relative(realpathSync.native(root), target)) ? target : undefined;
 }
 
-/**
-Resolve a source path, and refuse links outside the root.
-
-@param root the repository folder.
-@param path the root-relative file.
-@returns the real path of the file.
-*/
 export function readContainedPath(root: string, path: string): string {
     const target = findContainedPath(root, join(...splitSystemPath(path)));
     if (target === undefined)
@@ -123,22 +95,10 @@ export function readContainedPath(root: string, path: string): string {
     return target;
 }
 
-/**
-Decode UTF-8 bytes as text.
-
-@param bytes the source buffer to validate before decoding.
-@returns the text, or undefined for invalid UTF-8.
-*/
 export function decodeUtf8(bytes: Buffer): string | undefined {
     return isUtf8(bytes) ? bytes.toString('utf8') : undefined;
 }
 
-/**
-Decode a user file, or tell the user how to fix its encoding.
-
-@param path the file to name in an encoding error.
-@param bytes the file contents to decode.
-*/
 export function decodeUtf8File(path: string, bytes: Buffer): string {
     const text = decodeUtf8(bytes);
     if (text === undefined)
@@ -146,11 +106,6 @@ export function decodeUtf8File(path: string, bytes: Buffer): string {
     return text;
 }
 
-/**
-Split a path into segments, and refuse an empty, dot, parent, or null segment. Windows also splits at a backslash.
-
-@param path a repository-relative file with forward slashes.
-*/
 export function splitSystemPath(path: string): string[] {
     const segments = path.split('/');
     const systemSegments = process.platform === 'win32' ? path.split(PATH_SEPARATORS) : segments;
@@ -162,12 +117,6 @@ export function splitSystemPath(path: string): string[] {
     return segments;
 }
 
-/**
-Add up the sizes of the regular files under a folder. A symbolic link counts for nothing.
-
-@param path the absolute folder.
-@returns the bytes.
-*/
 export function measureFolder(path: string): number {
     const listed = readdirSync(path, { recursive: true, withFileTypes: true });
     const files = listed.filter((file) => file.isFile());

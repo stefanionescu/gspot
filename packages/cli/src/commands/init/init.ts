@@ -32,15 +32,6 @@ import type { CommandDefinition, InitFlags, InitJson } from '#cli/types/commands
 import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
 import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
 
-/**
-Install the tools of the settings that init wrote, and turn on the Git hooks, as gspot install does.
-
-@param root the repository root.
-@param written what init planned and wrote.
-@param written.initPlan what planInit returned.
-@param written.applied the generated files that init wrote.
-@param cancelSignal stops the installers.
-*/
 async function installInitTools(
     root: string,
     { initPlan, applied }: { initPlan: InitPlanning; applied: ApplyReport },

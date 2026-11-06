@@ -151,9 +151,6 @@ function listConcurrencyHits(document: Document & { contents: YAMLMap }): Workfl
 
 /**
 Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with that reference changed to ./.
-
-@param session the repository and its tools.
-@param planned the actionlint check and its files.
 */
 async function checkActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
@@ -185,13 +182,6 @@ async function checkActionlint(session: CheckSession, planned: PlannedCheck): Pr
     return restoreCommandPaths(result, scratch.path, session.root);
 }
 
-/**
-Reports a job with no `timeout-minutes` or on a `-latest` runner, a pull-request workflow with no `concurrency` group,
-a `continue-on-error` with no reason above it, an expression in `run:`, and an upload with no `retention-days`.
-
-@param session the repository file cache.
-@param planned the selected workflow files.
-*/
 function checkWorkflowShape(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path }) => {
         const text = readText(session.cache, path);

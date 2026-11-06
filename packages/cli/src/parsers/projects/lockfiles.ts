@@ -64,9 +64,6 @@ function parseBunVersions(path: string, text: string, folder: string): Map<strin
 /**
 Read the project lock of a pnpm lockfile. pnpm 12, and pnpm 11 with devEngines.packageManager, write the lock of the
 package manager itself as a first YAML document, and the project lock after it. Both documents hold importers.
-
-@param path the lockfile, for the error.
-@param text the lockfile contents.
 */
 function readPnpmProjectLock(path: string, text: string): unknown {
     const documents = parseYamlDocuments(path, text);
@@ -102,13 +99,6 @@ function parseYarnVersions(path: string, text: string, specifiers: Map<string, s
     return new Map(versions);
 }
 
-/**
-Parse a yarn.lock file and reject other formats.
-
-@param path the file, for the error.
-@param text the saved dependency records to decode.
-@returns the packages of the lockfile, by key.
-*/
 function parseYarnLockfile(path: string, text: string): Record<string, unknown> {
     let parsed: unknown;
     try {
@@ -162,21 +152,10 @@ function parseSpecifier([name, value]: [string, unknown]): Array<[string, string
     return typeof specifier === 'string' ? [[name, specifier]] : [];
 }
 
-/**
-Normalize a Python package name: lower case, with one dash for each run of separators.
-
-@param name the name as a project or a lockfile writes it.
-*/
 export function normalizePythonName(name: string): string {
     return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
 }
 
-/**
-Read the declared package requirements from the selected dependency tables.
-
-@param workspace the package or importer record to inspect.
-@param sections the dependency tables to read in order.
-*/
 export function listSpecifiers(
     workspace: unknown,
     sections: ReadonlyArray<(typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies'> = DEPENDENCY_SECTIONS,
@@ -207,23 +186,12 @@ export const SPECIFIER_PARSERS: Readonly<
 
 /**
 Split a package identity into its name and version. The separator follows the name; a scoped name starts with @.
-
-@param identity the package as `name@version`.
-@returns the name and the version, or undefined without a version.
 */
 export function splitIdentity(identity: string): [string, string] | undefined {
     const separator = identity.indexOf('@', 1);
     return separator === -1 ? undefined : [identity.slice(0, separator), identity.slice(separator + 1)];
 }
 
-/**
-Find the first lockfile from a folder up to the repository root.
-
-@param cache the repository cache.
-@param folder the starting project folder.
-@param lockfiles the lockfile names in preference order.
-@returns undefined without a lockfile.
-*/
 export function findNearestLockfile<Name extends string>(
     cache: RunCache,
     folder: string,
@@ -239,13 +207,6 @@ export function findNearestLockfile<Name extends string>(
     return undefined;
 }
 
-/**
-Read the versions that a project's direct dependencies resolve to in its nearest lockfile.
-
-@param cache the run cache.
-@param folder the project folder relative to the repository.
-@returns undefined without a lockfile.
-*/
 export function readLockedVersions(cache: RunCache, folder: string): Map<string, string> | undefined {
     const parsers: Record<LockfileName, (path: string, text: string, importer: string) => Map<string, string>> = {
         'package-lock.json': parseNpmVersions,
@@ -268,13 +229,6 @@ export function readLockedVersions(cache: RunCache, folder: string): Map<string,
         : parsers[found.lockfile](found.path, found.text, posix.relative(found.base, folder));
 }
 
-/**
-List package download URLs from a JavaScript lockfile. Read resolved fields for npm and Yarn, tarball and repo fields for pnpm, and package identities and tuple values for Bun.
-
-@param path the lockfile path, whose file name gives the format.
-@param text the serialized package records to inspect for download addresses.
-@returns the URLs, in the order of the lockfile.
-*/
 export function listLockfileUrls(path: string, text: string): string[] {
     const parsed = parseLockfileDocument(path, text);
     const urls = posix.basename(path) === 'bun.lock' ? listBunUrls(parsed) : [];

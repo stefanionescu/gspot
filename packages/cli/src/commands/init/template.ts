@@ -120,12 +120,6 @@ function readTemplateBytes(file: string, cwd: string): Buffer {
     }
 }
 
-/**
-Read the gspot.toml that init --from names, and split it into the settings that travel and the rows left out.
-
-@param file the path as typed.
-@param cwd the folder the command runs in.
-*/
 export function readTemplate(file: string, cwd: string): Template {
     const text = decodeUtf8(readTemplateBytes(file, cwd));
     if (text === undefined) throw new GspotError('settings', `${file} must contain valid UTF-8 text.`);

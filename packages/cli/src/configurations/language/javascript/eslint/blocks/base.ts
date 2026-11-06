@@ -186,14 +186,6 @@ function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslint
     }));
 }
 
-/**
-Build the blocks before the configuration blocks: default lint rules, pinned presets, and project settings.
-
-@param planned the ESLint context of the scope.
-@param plugins the shipped plugin packages and the local plugins to load.
-@param boundaryBlocks the project classifications and dependency policies.
-@param ignoredGlobs the shared ignored paths.
-*/
 export function buildOpeningBlocks(
     planned: PlannedEslintFile,
     plugins: ListedPlugins,
@@ -223,12 +215,6 @@ export function buildOpeningBlocks(
     ];
 }
 
-/**
-Build the blocks after the configuration blocks: runtime, selector, test, script, final pinned rules, your settings,
-and the rules that wait for level all.
-
-@param planned the ESLint context of the scope.
-*/
 export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlocks {
     const { eslintFiles, session } = planned;
     const { level, runtimes, allLevelRules } = planned.blockWriter;

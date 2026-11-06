@@ -146,11 +146,6 @@ function buildPluginRuleBlocks(scope: EslintScope, configuration: string): Confi
     ];
 }
 
-/**
-Check the request body that each Supabase edge function reads.
-
-@param scope the planned ESLint file of the scope.
-*/
 function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
     const folder = escapeGlob(getTable(scope.settings, 'supabase').functions_folder);
     const files = scope.eslintFiles.code.map((pattern) => [`${folder}/**`, pattern]);
@@ -158,12 +153,6 @@ function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
     return [{ fields: { files, settings, rules: { ...SUPABASE_RULES, [FILE_EXTENSION_RULE]: ['error', 'always'] } } }];
 }
 
-/**
-Collect the scoped blocks of each configuration.
-
-@param planned the source facts and resolved scopes.
-@returns the blocks of each configuration in plan order.
-*/
 export function listConfigurationBlocks(planned: PlannedEslintFile): Map<Configuration, PlannedEslintBlock[]> {
     const configurations = planned.configurations.flatMap((configuration) => {
         const builder = CONFIGURATION_BUILDERS[configuration.name];

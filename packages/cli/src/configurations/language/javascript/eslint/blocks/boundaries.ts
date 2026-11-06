@@ -111,12 +111,6 @@ function buildBoundarySettings({
     return settings;
 }
 
-/**
-Build the boundaries block from the import rules, the test files, and the tRPC server files.
-
-@param planned the scopes and the files to cover.
-@returns one block, or none when no boundary applies.
-*/
 export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>): EslintBlock[] {
     const { session, eslintFiles } = planned;
     const { settings, scopes } = session;

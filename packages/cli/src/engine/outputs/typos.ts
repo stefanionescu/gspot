@@ -70,9 +70,6 @@ function buildTypoFinding(
 /**
 Read the JSON lines that typos prints. JSON keeps filename delimiters. Offsets count UTF-8 bytes,
 but report columns count characters.
-
-@param output the tool output to read.
-@returns source positions with byte offsets converted to character columns.
 */
 export function parseTyposFindings(output: ToolOutput): Finding[] {
     const { stdout, root, cwd } = output;

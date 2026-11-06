@@ -14,9 +14,6 @@ export function hasToolBuild(name: string): boolean {
     return findMissingBuild(pin, { platform: operatingSystem, arch: process.arch }) === undefined;
 }
 
-/**
-Make process.platform report another system until disposal.
-*/
 export function fakePlatform(platform: NodeJS.Platform): Disposable {
     const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
     Object.defineProperty(process, 'platform', { value: platform });

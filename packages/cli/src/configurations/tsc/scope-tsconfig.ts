@@ -23,10 +23,6 @@ import type { Session } from '#cli/types/tools.ts';
 /**
 Resolve each `types` entry from the folder of the authored project, because TypeScript looks from the generated
 config, and the packages that the project installed are out of reach from there.
-
-@param authored the authored config and its path.
-@param folder the folder of the generated config.
-@returns the resolved files, relative to that folder, and the entries that stay for TypeScript to report.
 */
 export function readAuthoredTypes(
     authored: Pick<TypeScriptProject, 'path' | 'config'>,
@@ -45,13 +41,6 @@ export function readAuthoredTypes(
     };
 }
 
-/**
-Builds the scope compiler configuration, extending its authored project when present.
-
-@param session the repository and run cache.
-@param scope the scope and settings.
-@param file the absolute destination of the configuration.
-*/
 export function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const ts = requireTypescript();
     const { root, toolsRoot, cache } = session;
@@ -109,12 +98,6 @@ export function buildTsconfig(session: Session, scope: Scope, file: string): Rec
     };
 }
 
-/**
-Selects the compiler flags that the level and configurations require.
-
-@param level the configured level.
-@param configurations the configurations of the scope.
-*/
 export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
     const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : DEFAULT_LEVEL_OPTIONS) };
     if (configurations.some((configuration) => configuration.name === NESTJS_CONFIGURATION))

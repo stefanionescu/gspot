@@ -69,9 +69,6 @@ function listExceptionNames(
 /**
 Reports allowed names in root naming exceptions that match no code or path name. Only the files that an exception with
 allowed names covers, by their path or a folder above them, get parsed.
-
-@param session the repository and its tools.
-@param planned the settings and tracked files.
 */
 async function checkAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const matchers = session.settings.naming.exception

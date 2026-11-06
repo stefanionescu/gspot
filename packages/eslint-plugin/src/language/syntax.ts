@@ -30,11 +30,6 @@ function isMemberWrite(member: TSESTree.Node): boolean {
     );
 }
 
-/**
-Get the statement after a declaration in its block, module, or switch case.
-
-@param node the declaration to locate.
-*/
 export function getNextStatement(node: TSESTree.VariableDeclaration): TSESTree.Statement | undefined {
     const { parent } = node;
     if (parent.type === AST_NODE_TYPES.SwitchCase) return parent.consequent[parent.consequent.indexOf(node) + 1];
@@ -46,23 +41,12 @@ export function getNextStatement(node: TSESTree.VariableDeclaration): TSESTree.S
     return statements[statements.indexOf(node) + 1];
 }
 
-/**
-Discard expression wrappers that preserve the referenced value.
-
-@param node the possibly wrapped expression.
-*/
 export function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
     let value = node;
     while (isUnwrappable(value)) value = value.expression;
     return value;
 }
 
-/**
-Identify a direct alias of a value bound in this module.
-
-@param node the expression assigned to another name
-@param scope the expression's lexical scope
-*/
 export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope): boolean {
     if (node === null) return false;
     let value = unwrapExpression(node);
@@ -80,11 +64,6 @@ export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope)
     );
 }
 
-/**
-Build the visitors that hand each module specifier of a file to one check: imports, re-exports, dynamic and type imports, import-equals declarations, and CommonJS require calls.
-
-@param checkSource the check that receives each specifier node.
-*/
 export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void): TSESLint.RuleListener {
     return {
         [IMPORT_SELECTOR]: ({ source }: ImportSource) => {
@@ -100,13 +79,6 @@ export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void
     };
 }
 
-/**
-Compare two nodes or two runs of statements. Their node types and tokens must match; comments and layout do not count.
-
-@param first a node, or the statements of one branch.
-@param second the node or statements to compare with the first.
-@param source the file that holds both.
-*/
 export function haveSameTokens(
     first: TSESTree.Node | readonly TSESTree.Node[],
     second: TSESTree.Node | readonly TSESTree.Node[],
@@ -124,22 +96,11 @@ export function haveSameTokens(
     );
 }
 
-/**
-List the nodes directly below a node.
-
-@param node the parent node.
-@param visitorKeys the child keys of each node type.
-*/
 export function listChildren(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): TSESTree.Node[] {
     const values = (visitorKeys[node.type] ?? []).flatMap((key): unknown[] => [node[key as keyof TSESTree.Node]]);
     return values.flat().filter((child): child is TSESTree.Node => typeof child === 'object' && child !== null);
 }
 
-/**
-Identify a type that only forwards its name and generic parameters to another type.
-
-@param node the alias declaration.
-*/
 export function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
     const type = node.typeAnnotation;
     if (type.type !== AST_NODE_TYPES.TSTypeReference) return false;

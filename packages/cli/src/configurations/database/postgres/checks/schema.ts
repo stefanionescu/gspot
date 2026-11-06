@@ -213,12 +213,6 @@ const STATEMENT_APPLIERS: SqlStatementVisitors<void, [SchemaState, Migration]> =
     },
 };
 
-/**
-Replays the parsed migrations in version order. Collects what they leave: tables, foreign keys, indexed columns, tables
-with row security, the policies of each table, and functions with their security options.
-
-@param migrations parsed SQL files in version order.
-*/
 export function buildDatabaseSchema(migrations: Migration[]): Schema {
     const state: SchemaState = {
         indexes: [],

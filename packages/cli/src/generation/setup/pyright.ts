@@ -44,12 +44,6 @@ function readPyrightOptions(
     return options === undefined ? undefined : { path: PYPROJECT_TOML, ...options };
 }
 
-/**
-List the selectors of the paths that a pyright exclude names: a tracked file as it is, and a folder with its contents.
-
-@param exclude the paths that pyright leaves out.
-@param tracked the tracked files.
-*/
 function listExcludedPaths(exclude: string[], tracked: string[]): string[] {
     return exclude.flatMap((path) => {
         const base = path.replace(TRAILING_SLASH, '');
@@ -62,11 +56,6 @@ function listExcludedPaths(exclude: string[], tracked: string[]): string[] {
 /**
 Carry the include and exclude of a pyright config as paths that basedpyright leaves out, so a project that type checks
 only its package keeps its tests out of the check.
-
-@param input the repository and the tools in use.
-@param input.repository the tracked files and the root.
-@param input.tools the tools that the configurations run.
-@param input.trackedPaths the tracked files and every folder above them.
 */
 export function readPyrightCarryover({ repository, tools, trackedPaths }: CarryoverInput): CarryoverSection {
     const found = tools.has('basedpyright') ? readPyrightOptions(repository.root) : undefined;

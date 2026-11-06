@@ -19,13 +19,6 @@ import { ciFields, namingSchema, pythonSchema, ruleFilesSchema } from '#cli/sche
 import { javascriptSchema, toolConfigurationSchemas, toolsSchema } from '#cli/schemas/settings/tools.ts';
 import type { ToolTableSchemas } from '#cli/types/settings.ts';
 
-/**
-Give each configuration table its ID and description in the global registry, where the editor schema and the
-reference read them.
-
-@param tables the table schemas by name.
-@returns the same tables.
-*/
 function describeConfigurationTables<Tables extends Record<string, z.ZodOptional<z.ZodType>>>(tables: Tables): Tables {
     for (const [name, schema] of Object.entries(tables)) {
         const description = TABLE_DESCRIPTIONS[name];

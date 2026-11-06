@@ -179,13 +179,6 @@ function listMissingPins(session: Session, folder: string): CheckFinding[] {
     });
 }
 
-/**
-Reports lockfile downloads from other hosts or over plain HTTP, and lockfiles of a second package manager in the
-scope.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
     const files = planned.files.filter(({ path }) => !isGspotPath(path));
@@ -199,13 +192,6 @@ function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[]
     ];
 }
 
-/**
-Reports a packageManager field that names another version than the mise pin of the same package manager. Also reports
-a missing field beside a lockfile of a package manager that Node.js does not bring.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
@@ -225,12 +211,6 @@ function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckF
     ];
 }
 
-/**
-Reports a package.json whose dependencies differ from what its lockfile records, which a frozen install refuses.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkStaleLockfile(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);

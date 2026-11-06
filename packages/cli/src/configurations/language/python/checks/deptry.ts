@@ -46,9 +46,6 @@ function listFirstPartyPackages(session: Session, planned: PlannedCheck, project
 
 /**
 Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
-
-@param session the repository and installed tools.
-@param planned the configured check and selected scope files.
 */
 async function checkDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);

@@ -21,9 +21,6 @@ export function getConfigPath(session: Session, tool: string, scopePath = ''): s
     return getConfigTarget(scopePath, declaration, buildConfigs(session));
 }
 
-/**
-Find where gspot writes the root copy of a config file that a configuration ships, as its manifest declares it.
-*/
 export function getManifestTarget(configuration: string, file: string): string {
     const target = readConfigurations()
         .get(configuration)
@@ -32,9 +29,6 @@ export function getManifestTarget(configuration: string, file: string): string {
     return target;
 }
 
-/**
-Find where gspot writes a rule file for coding agents, as the configuration ships it.
-*/
 export function getRuleFilePath(configuration: string, file: string): string {
     const shipped = readConfigurations().get(configuration);
     const rule = shipped === undefined ? undefined : listRuleFiles(shipped).find(({ path }) => path === file);
@@ -42,9 +36,6 @@ export function getRuleFilePath(configuration: string, file: string): string {
     return posix.join(GSPOT_PATHS.rules, rule.path);
 }
 
-/**
-Create a repository with this gspot.toml text and these files, and return the content of one generated file.
-*/
 export async function buildGeneratedFile(
     settings: string,
     path: string,

@@ -9,9 +9,6 @@ import type { Session } from '#cli/types/tools.ts';
 /**
 Reports each file whose name without its extension matches the name of a sibling folder. gspot fixes the name of
 gspot.toml, so it clashes with no folder.
-
-@param _session the repository and its tools.
-@param planned the scope files.
 */
 function checkFileFolderClashes(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned).filter(({ path }) => !GSPOT_FIXED_NAMES.has(path));

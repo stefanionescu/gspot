@@ -121,25 +121,12 @@ function buildAttributePattern(match: RegExpExecArray, line: string, folder: str
     ];
 }
 
-/**
-Validate the fields of an index or tree entry.
-
-@param match the entry matched against its listing format.
-@param schema the expected fields and supported file modes.
-*/
 export function parseListingLine<T>(match: RegExpExecArray | null, schema: z.ZodType<T>): T {
     const parsed = schema.safeParse(match?.groups);
     if (!parsed.success) throw new GspotError('git', UNSUPPORTED_GIT_FILE_MESSAGE);
     return parsed.data;
 }
 
-/**
-Read the attribute lines in their file order, and keep quoted paths.
-
-@param text the gitattributes source.
-@param folder the repository-relative place of the .gitattributes file.
-@returns selectors rooted in that folder and their declared attributes.
-*/
 export function parseAttributePatterns(text: string, folder: string): AttributePattern[] {
     return text.split('\n').flatMap((line) => {
         const trimmed = line.trim();
@@ -149,11 +136,6 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
     });
 }
 
-/**
-Read attribute tokens from one selector, clearing entries with the ! prefix.
-
-@param tokens the attribute tokens from one matching pattern.
-*/
 export function mergeAttributes(tokens: string[]): Record<string, string> {
     const attributes = new Map<string, string>();
     for (const match of tokens) {
@@ -165,11 +147,6 @@ export function mergeAttributes(tokens: string[]): Record<string, string> {
     return Object.fromEntries(attributes);
 }
 
-/**
-Parse the null-delimited path, name, and value triplets from Git, and keep spaces in paths.
-
-@param text the successful check-attr -z output.
-*/
 export function parsePathAttributes(text: string): Map<string, Record<string, string>> {
     const fields = text.split('\0');
     const attributes = new Map<string, Record<string, string>>();
@@ -181,12 +158,6 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
     return attributes;
 }
 
-/**
-Split a Git path listing on null bytes. Separate paths with invalid UTF-8.
-
-@param output the bytes that Git printed.
-@param unreadablePaths receives quoted names with octal byte escapes
-*/
 export function decodeGitPaths(output: Uint8Array, unreadablePaths: string[]): string {
     const records: string[] = [];
     for (const record of Buffer.from(output).toString('latin1').split('\0')) {
@@ -202,13 +173,6 @@ export function decodeGitPaths(output: Uint8Array, unreadablePaths: string[]): s
     return records.join('\0');
 }
 
-/**
-Validate unquoted, null-delimited committed-tree entries.
-
-@param output the complete Git listing.
-@param unreadablePaths receives names with invalid UTF-8.
-@returns supported modes, full object IDs, and UTF-8 paths.
-*/
 export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[]): GitFile[] {
     const files: GitFile[] = [];
     for (const line of decodeGitPaths(output, unreadablePaths).split('\0')) {
@@ -218,11 +182,6 @@ export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[]): G
     return files;
 }
 
-/**
-Turn index entries into revision entries, and refuse conflicts with the paths that hold them.
-
-@param indexFiles the validated index listing.
-*/
 export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {
     const conflicted = [...new Set(indexFiles.filter(({ stage }) => stage !== 0).map(({ path }) => path))];
     if (conflicted.length > 0)
@@ -235,10 +194,6 @@ export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {
 
 /**
 Validate the IDs and framing of a batch, and hold only the current blob.
-
-@param chunks the raw output, in stream order.
-@param requestedIds the full object IDs, in response order.
-@returns the exact bytes of each object, one at a time.
 */
 export async function* parseGitBlobs(
     chunks: AsyncIterable<Buffer>,

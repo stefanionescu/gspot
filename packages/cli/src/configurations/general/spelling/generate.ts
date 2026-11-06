@@ -58,11 +58,6 @@ function serializeIgnoredGlobs(sections: IgnoreSection[]): string {
     ].join('\n');
 }
 
-/**
-Build typos.toml: the spelling dictionaries and reason-grouped exclusions as TOML.
-
-@param planned the config file to build.
-*/
 function buildTyposFile(planned: PlannedConfig): string {
     const allowed = Object.fromEntries<string>(
         Object.keys(getTable(planned.scope.settings, 'spelling').allowed_words)

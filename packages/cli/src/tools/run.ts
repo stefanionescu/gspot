@@ -4,12 +4,6 @@ import { runProcess } from '#cli/system/processes.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type { ToolRunOptions } from '#cli/types/tools.ts';
 
-/**
-Run a tool command with the shared output environment and the timeout from the settings.
-
-@param command the expanded arguments.
-@param options how the command runs.
-*/
 export async function runTool(command: readonly string[], options: ToolRunOptions): Promise<SpawnResult> {
     const { timeoutSeconds, cancelSignal, ...spawnOptions } = options;
     const selected = await buildGitEnvironment(spawnOptions.cwd, command, { ...TOOL_ENVIRONMENT, ...spawnOptions.env });

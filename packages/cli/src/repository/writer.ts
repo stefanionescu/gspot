@@ -98,13 +98,6 @@ function isTemporaryPath(path: string): boolean {
     return folder === GSPOT_FOLDER && name !== undefined && VALE_TEMPORARY_NAME.test(name);
 }
 
-/**
-Merge the requested keys and leave every other value in place.
-
-@param writer the repository handle.
-@param path the destination.
-@param keys the keys and requested values.
-*/
 export function planManagedKeys(writer: Files, path: string, keys: ManagedKeys['keys']): WritePlan {
     const onDisk = writer.read(path);
     const document = openManagedKeysFile(path, onDisk, keys);
@@ -119,26 +112,11 @@ export function planManagedKeys(writer: Files, path: string, keys: ManagedKeys['
     };
 }
 
-/**
-Check that each key holds its value, read with the parser that the write plans use.
-
-@param output the file gspot writes managed keys into.
-@param onDisk the file contents on disk.
-*/
 export function hasManagedKeys(output: ManagedKeys, onDisk: FileContents): boolean {
     const document = openManagedKeysFile(output.path, onDisk, output.keys);
     return output.keys.every((field) => isDeepStrictEqual(document.getValue(field.key), normalizeTables(field.value)));
 }
 
-/**
-Find owned files and managed blocks outside the generation plan.
-
-@param session the repository files.
-@param session.root the absolute repository folder.
-@param session.repository the classified file inventory.
-@param expected the generated destinations that remain.
-@param ownablePaths the destinations that the shipped manifests can write.
-*/
 export function listStrayPaths(
     session: { root: string; repository: Repository },
     expected: ReadonlySet<string>,
@@ -181,12 +159,6 @@ export function listStrayPaths(
     });
 }
 
-/**
-Refuse authored bytes that nobody reviewed.
-
-@param writer the repository handle.
-@param requests the new bytes and any reviewed file contents of each file.
-*/
 export function planReplacements(writer: Files, requests: ReplacementRequest[]): WritePlan[] {
     const generatedPatterns = readGeneratedPatterns(writer);
     const ownablePaths = new Set(requests.map(({ path }) => path));
@@ -204,13 +176,6 @@ export function planReplacements(writer: Files, requests: ReplacementRequest[]):
     });
 }
 
-/**
-Keep the text outside the marked block.
-
-@param writer the repository handle.
-@param path the file.
-@param body the block text.
-*/
 export function planBlock(writer: Files, path: string, body: string): WritePlan {
     const onDisk = writer.read(path);
     const text = onDisk === undefined ? '' : decodeUtf8File(path, onDisk.bytes);
@@ -222,13 +187,6 @@ export function planBlock(writer: Files, path: string, body: string): WritePlan 
     return { path, after: next, status: isSameContents(onDisk, next) ? 'unchanged' : 'changed' };
 }
 
-/**
-Plan the removal of owned files, or of their managed blocks.
-
-@param writer the repository handle.
-@param paths the stale generated files.
-@returns for each file, any authored text left after the managed block goes.
-*/
 export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
     const generatedPatterns = readGeneratedPatterns(writer);
     const ownablePaths = new Set(paths);
@@ -245,12 +203,6 @@ export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
     });
 }
 
-/**
-Refuse the plans when they overwrite a file that gspot did not write; otherwise write or delete each changed file.
-
-@param writer the repository handle.
-@param plans one write or removal for each file.
-*/
 export function writePlans(writer: Files, plans: WritePlan[]): void {
     const conflicts = plans.filter((plan) => plan.status === 'refused').map((plan) => plan.path);
     if (conflicts.length > 0)

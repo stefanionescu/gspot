@@ -143,10 +143,6 @@ export const FRAMEWORK_RULES = [
     preferNativeLodash,
 ];
 
-/**
-The rules that flag weak cryptography, turned-off TLS checks, queries and templates built from strings, unsafe Express
-settings, and secrets in the code.
-*/
 export const SECURITY_RULES = [
     xmlParserXxe,
     weakSsl,
@@ -179,10 +175,6 @@ export const SECURITY_RULES = [
     reviewBlockchainMnemonic,
 ];
 
-/**
-The rules that flag unsafe cloud infrastructure code: open storage and networks, missing encryption, and broad access
-policies.
-*/
 export const AWS_RULES = [
     awsInsecureBucketTransport,
     awsS3BucketVersioning,

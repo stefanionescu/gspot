@@ -131,14 +131,6 @@ async function readSelection(
     return { selection: { content: 'working-tree', reference, base: reference, paths, commits }, ...note };
 }
 
-/**
-Check the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
-
-@param treeFolder the working tree or the copy to check.
-@param options the parsed flags.
-@param cancelSignal stops the run.
-@param revision the commit or index that the copy holds, if any.
-*/
 export async function runTreeCheck(
     treeFolder: string,
     options: CheckOptions,

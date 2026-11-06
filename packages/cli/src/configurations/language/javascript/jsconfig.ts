@@ -83,11 +83,6 @@ function isAuthoredSelection(authored: ParsedTsconfig | undefined, jsconfig: Par
     );
 }
 
-/**
-Build jsconfig.json: the JavaScript type-checking project and its scoped source selectors.
-
-@param planned the config file to build.
-*/
 function buildJsconfigFile(planned: PlannedConfig): string {
     const { root, cache } = planned.session;
     const { targetPath: target } = planned;

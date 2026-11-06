@@ -191,12 +191,6 @@ function isVersionRun(program: Command, name: string): boolean {
     return name === '' || program.commands.some((command) => command.name() === name);
 }
 
-/**
-Build the CLI with every command.
-
-@param onResult receives the result of the command that ran.
-@param cwd the folder that the command runs in, which relative paths of its arguments start from.
-*/
 export function buildProgram(onResult: CommandCompletion, cwd: string): Command {
     const location = { cwd, root: cwd };
     const program: Command = new Command('gspot')
@@ -255,13 +249,6 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
     return program;
 }
 
-/**
-Run one gspot command, and print its result or its error.
-
-@param commandArguments the arguments after the program name.
-@param cwd the folder that the command runs in.
-@returns the exit code.
-*/
 export async function runProgram(commandArguments: string[], cwd: string): Promise<number> {
     const separator = commandArguments.indexOf('--');
     const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);

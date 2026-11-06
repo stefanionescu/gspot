@@ -119,12 +119,6 @@ function listSettingsWeakenings(text: string, head: Settings, tracked: string[])
     ];
 }
 
-/**
-Compare gspot.toml with the base revision: the pushed range, `--base`, or the last commit. A weakening with no reason
-fails the check, and one with a reason prints as a note.
-
-@param session the settings of the tree that the run checks, and the base revision of the run.
-*/
 async function checkWeakenings(session: CheckSession): Promise<BuiltInCheckResult> {
     const { root, settings, cancelSignal, repository, selection } = session;
     const paths = [SETTINGS_FILE];

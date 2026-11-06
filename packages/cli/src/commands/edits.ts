@@ -128,12 +128,6 @@ function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): 
     }
 }
 
-/**
-Read and parse gspot.toml and list the repository, without a session.
-
-@param root the validated repository root.
-@param selecting the configurations that the command is about to select.
-*/
 export async function readIgnoreEditContext(root: string, selecting?: readonly string[]): Promise<IgnoreEditContext> {
     const edit = readSettingsFile(root);
     const cache = createRunCache(root);
@@ -143,16 +137,6 @@ export async function readIgnoreEditContext(root: string, selecting?: readonly s
     return { root, edit, settings, cache, listing };
 }
 
-/**
-Read and validate the settings once before a command edits them, and find the table of the scope that the command
-writes into.
-
-@param location where the command starts.
-@param location.root the validated repository root.
-@param location.cwd the calling folder.
-@param scopePath the --scope path relative to the repository root, or absent for the top level.
-@param selecting the configurations that the command is about to select.
-*/
 export async function readSettingsEditContext(
     { root, cwd }: CommandLocation,
     scopePath?: string,
@@ -172,13 +156,6 @@ export async function readSettingsEditContext(
     return { ...context, session, scopePath: path, scopeTable: addScopeTable(input.table, path) };
 }
 
-/**
-Resolve ignore selectors from the calling folder and refuse mistaken checks or unmatched paths.
-
-@param context the settings and repository files from before the edit.
-@param cwd the calling folder.
-@param paths the repeated --paths values.
-*/
 export function buildIgnorePaths(
     context: IgnoreEditContext,
     cwd: string,
@@ -190,12 +167,6 @@ export function buildIgnorePaths(
     return selectors;
 }
 
-/**
-Validate the configuration names and the scope for add and remove before either command edits a list.
-
-@param options where the command starts, the configurations, and the scope.
-@param selecting the configurations that the command is about to select.
-*/
 export async function readConfigurationEditContext(
     options: ConfigurationsOptions,
     selecting?: readonly string[],
@@ -219,29 +190,12 @@ export async function readConfigurationEditContext(
     return { ...context, scopeSettings, selected };
 }
 
-/**
-Summarize an add or remove edit: the configurations it changed, and the ones it left alone.
-
-@param change what the edit did.
-@param change.action the verb of the edit, such as Added.
-@param change.changed the configurations that the edit changed.
-@param change.where the scope phrase, or empty text for the root scope.
-@param change.unchanged the configurations that the edit left alone.
-@param change.state the state of those configurations, such as already selected.
-*/
 export function formatConfigurationChange({ action, changed, where, unchanged, state }: ConfigurationChange): string {
     const summary = `${action} ${formatNameList(changed)}${where}.`;
     if (unchanged.length === 0) return summary;
     return `${summary} ${formatNameList(unchanged)} ${unchanged.length === 1 ? 'is' : 'are'} ${state}.`;
 }
 
-/**
-Look up a setting in one scope with the configurations that the session selects, including the ones that the files of
-the repository select.
-
-@param context the settings from before the edit.
-@param key the dotted setting name.
-*/
 export function selectSettingToEdit(
     context: SettingsEditContext,
     key: string,
@@ -268,12 +222,6 @@ export function selectSettingToEdit(
     return { availableSettings, match, scope: selected };
 }
 
-/**
-Build the result of an edit that leaves gspot.toml and the generated files unchanged.
-
-@param summary the sentence that says why nothing changed.
-@param notes the notes of the edit.
-*/
 export function buildUnchangedResult(summary: string, notes: string[] = []): CommandResult<SettingsEditReport> {
     const noteLines = notes.map((note) => `note     ${note}\n`);
     return {
@@ -285,9 +233,6 @@ export function buildUnchangedResult(summary: string, notes: string[] = []): Com
 
 /**
 Edit settings, check them, and write them and their generated files. Installs nothing.
-
-@param context the edit, the repository that it changes, and the session before it, when the command has one.
-@param options the text the report adds.
 */
 export async function writeSettingsEdit(
     context: IgnoreEditContext & { session?: Session },
@@ -318,13 +263,6 @@ export async function writeSettingsEdit(
     };
 }
 
-/**
-Parse the value of a flag that names checks, such as --only: one check, or several separated by commas. A repeated flag
-adds its checks to the earlier ones.
-
-@param value the text of one flag.
-@param previous the checks of the earlier flags.
-*/
 export function parseCheckNames(value: string, previous: string[] | undefined): string[] {
     const checks = value
         .split(CHECK_LIST_SEPARATOR)

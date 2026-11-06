@@ -6,11 +6,6 @@ import {
     type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
-/**
-Restrict the Zustand store creators to the store files, so a store lives in a factory that a provider owns.
-
-@param scope the planned ESLint file of the scope.
-*/
 function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
     return [

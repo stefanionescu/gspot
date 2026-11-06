@@ -118,12 +118,6 @@ function listScopeRules(scope: Scope): Set<string> {
     );
 }
 
-/**
-Select the shared rules and the configuration rules at the level. Leave out the excluded rules
-and the ones that the level leaves empty.
-
-@param session the repository and its settings.
-*/
 export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | 'repository'>): RuleFile[] {
     const { repository } = session;
     const { rule_files: ruleFiles, level } = session.settings;
@@ -157,15 +151,6 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
     return selected;
 }
 
-/**
-Build the managed block for the rules.
-
-@param block what the block lists.
-@param block.files the rules with their content.
-@param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
-@param block.startCommand the command that starts gspot.
-@param block.hooksEnabled whether the Git hooks run the commit checks, so the agent commits and fixes what they report.
-*/
 export function buildAgentsBlock({ files, startCommand, hasOwnTitle, hooksEnabled }: AgentsBlockContent): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
     const lines = [
@@ -188,11 +173,6 @@ export function buildAgentsBlock({ files, startCommand, hasOwnTitle, hooksEnable
     return (hasOwnTitle ? lines.map((line) => line.replace(MARKDOWN_HEADING, '#$1 ')) : lines).join('\n');
 }
 
-/**
-Check whether Markdown text has a top heading, outside code blocks.
-
-@param text the text of AGENTS.md outside the gspot block.
-*/
 export function hasTopHeading(text: string): boolean {
     let isFound = false;
     visit(fromMarkdown(text), 'heading', (node) => {

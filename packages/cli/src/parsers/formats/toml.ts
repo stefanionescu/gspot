@@ -165,13 +165,6 @@ function setTomlValue({
     else Object.defineProperty(table, key, { value: normalizeTables(value), ...TABLE_PROPERTY_FLAGS });
 }
 
-/**
-Write the values over the TOML text, and keep its order, its layout, and its comments.
-
-@param previous the parsed text.
-@param values the table to write.
-@param format the toml-patch format of the new values.
-*/
 export function buildPatchedToml(
     previous: TomlSyntax,
     values: Record<string, unknown>,
@@ -217,13 +210,6 @@ export function parseTomlFile(path: string, text: string): Record<string, unknow
 
 export function parseTomlFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 
-/**
-Parse TOML, and name the file and position on invalid syntax or fields.
-
-@param path the source file.
-@param text the TOML contents.
-@param schema the shape to check, when supplied.
-*/
 export function parseTomlFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: Record<string, unknown>;
     try {
@@ -242,12 +228,6 @@ export function parseTomlFile(path: string, text: string, schema?: z.ZodType): u
     return schema === undefined ? value : parseFileFields(path, value, schema);
 }
 
-/**
-Open a TOML file for key edits, and keep its comments and layout.
-
-@param path the repository-relative TOML file.
-@param text the complete TOML document.
-*/
 export function openTomlFile(path: string, text: string): EditableFile {
     const document: Record<string, unknown> = parseTomlFile(path, text);
     const previous = parseTomlSyntax(text, document);
@@ -261,13 +241,6 @@ export function openTomlFile(path: string, text: string): EditableFile {
     };
 }
 
-/**
-Check the kind of a TOML syntax node, and narrow its type.
-
-@param node the block or value node.
-@param node.type the kind that the parser gave the node.
-@param kind the kind to match, for example InlineArray.
-*/
 export function isTomlKind<Kind extends string>(
     node: { type: unknown },
     kind: Kind,
@@ -275,11 +248,6 @@ export function isTomlKind<Kind extends string>(
     return String(node.type) === kind;
 }
 
-/**
-Parse TOML into a syntax tree whose nodes carry their offsets in the source.
-
-@param source TOML text.
-*/
 export function parseTomlDocument(source: string): TomlDocument {
     const document = parseDocument(source);
     const lineStarts = [0];
@@ -289,13 +257,6 @@ export function parseTomlDocument(source: string): TomlDocument {
     return document;
 }
 
-/**
-Index concrete keys, headers, and array items without changing layout.
-
-@param source TOML text.
-@param parsed what the TOML parser returned.
-@returns syntax entries and source-ordered comments.
-*/
 export function parseTomlSyntax(source: string, parsed: Record<string, unknown>): TomlSyntax {
     const document = parseTomlDocument(source);
     const comments: TomlSyntax['comments'] = [];
@@ -332,11 +293,6 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
     };
 }
 
-/**
-Read the extent of a parsed syntax token.
-
-@param node parsed syntax.
-*/
 export function getTomlRange(node: SourceRange): readonly [number, number] {
     if (node.range === undefined) throw new Error(MISSING_RANGE_MESSAGE);
     return node.range;

@@ -5,15 +5,6 @@ import { getTool } from '#cli/tools/pins.ts';
 import type { RuleOptionsRun } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Refuse options for rules that do not run at the selected level.
-
-@param options the requested rules and the rules that each level runs.
-@param options.configured the rules with user options.
-@param options.running the rules that run.
-@param options.allLevelRules the rules reserved for level all.
-@param options.level the selected checking level.
-*/
 export function assertRunningRuleOptions({ configured, running, allLevelRules, level }: RuleOptionsRun): void {
     const refused = configured.filter((rule) => !running.has(rule));
     if (refused.length === 0) return;
@@ -29,12 +20,6 @@ export function assertRunningRuleOptions({ configured, running, allLevelRules, l
     );
 }
 
-/**
-Read the rules that the tool of a config file turns off, by the level that turns them off.
-
-@param planned the config file.
-@returns the rules that stay off at every level, and the rules that level basic leaves off.
-*/
 export function readToolDisabledRules(planned: Pick<PlannedConfig, 'config'>): {
     always: string[];
     levelOff: string[];
@@ -46,12 +31,6 @@ export function readToolDisabledRules(planned: Pick<PlannedConfig, 'config'>): {
     };
 }
 
-/**
-List the rules that a config file turns off: the ignored rules of the checks that read it, and the rules that its tool
-leaves off at this level.
-
-@param planned the config file, its configuration, and the level.
-*/
 export function listDisabledRules(
     planned: Pick<PlannedConfig, 'config' | 'configuration' | 'scope' | 'level'>,
 ): string[] {

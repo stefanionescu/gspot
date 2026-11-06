@@ -131,12 +131,6 @@ function planGeneratorRun(session: CheckSession, planned: PlannedCheck): Generat
     return { substitutions: values, commandText, declaration, patterns, named, targets, selected };
 }
 
-/**
-Runs the declared generator in a copy and reports missing or changed generator output.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 export async function checkGeneratorOutputs(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const run = planGeneratorRun(session, planned);
     if (run === undefined) return [];

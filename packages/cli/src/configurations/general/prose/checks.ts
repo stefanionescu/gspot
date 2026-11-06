@@ -120,9 +120,6 @@ async function listFileDates(session: CheckSession, file: TrackedFile): Promise<
 /**
 Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere. Every batch starts at
 once, and the process limit of the session bounds how many run.
-
-@param session the repository and its tools.
-@param planned the scope to check.
 */
 async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (!hasValePackages(session.toolsRoot)) throw new CheckStop('missing', VALE_PACKAGES_MESSAGE);
@@ -139,12 +136,6 @@ async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<
     return results.flat();
 }
 
-/**
-Runs the word rules on a new commit message, with the comment lines that Git adds blanked out.
-
-@param session the repository, its tools, and the commit message file of the run.
-@param planned the configured Vale check.
-*/
 async function checkCommitMessage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const messageFile = session.selection?.messageFile;
     if (messageFile === undefined) return [];
@@ -174,12 +165,6 @@ async function checkCommitMessage(session: CheckSession, planned: PlannedCheck):
     );
 }
 
-/**
-Reports ambiguous dates in Markdown text and in code comments.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 async function checkDates(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.filter((file) => file.kind === 'source');
     const findings = await Promise.all(files.map((file) => listFileDates(session, file)));

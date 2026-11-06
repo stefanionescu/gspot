@@ -48,12 +48,6 @@ function extractAssetSetName(path: string): string {
     return name.slice(0, name.lastIndexOf('.'));
 }
 
-/**
-Reports Swift sources that no Xcode target holds.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): CheckFinding[] {
     const projects = listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).map((path) =>
         parseProjectSources(readText(session.cache, path), path),
@@ -78,12 +72,6 @@ function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): Check
         }));
 }
 
-/**
-Checks that each asset catalog Contents.json parses and each image set holds its images.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
@@ -116,12 +104,6 @@ function checkAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
         });
 }
 
-/**
-Reports asset sets that no source or Xcode build setting names.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const sourceTexts = listSourcePaths(planned.files, ASSET_REFERENCE_ENDINGS).map((path) =>
         readText(session.cache, path),
@@ -149,12 +131,6 @@ function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck): CheckF
         }));
 }
 
-/**
-Checks that each string catalog parses and that every string has every locale the catalog uses.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkXcstrings(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const text = readText(session.cache, path);
@@ -184,12 +160,6 @@ function checkXcstrings(session: Session, planned: PlannedCheck): CheckFinding[]
     });
 }
 
-/**
-Reports each entitlement that xcode.allowed_entitlements does not list.
-
-@param session the repository and its tools.
-@param planned the scope files and allowed entitlements.
-*/
 function checkEntitlements(session: Session, planned: PlannedCheck): CheckFinding[] {
     const allowed = new Set(getTable(planned.scope.settings, 'xcode').allowed_entitlements);
     return listSourcePaths(planned.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
@@ -210,12 +180,6 @@ function checkEntitlements(session: Session, planned: PlannedCheck): CheckFindin
     });
 }
 
-/**
-Reports each plist that turns App Transport Security off for every host.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkAppTransportSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): CheckFinding[] => {
         const text = readText(session.cache, path);
@@ -233,12 +197,6 @@ function checkAppTransportSecurity(session: Session, planned: PlannedCheck): Che
     });
 }
 
-/**
-Reports each target without strict concurrency, and each run-script phase that declares no files or runs the linter.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkBuildSettings(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).flatMap((path) => {
         const parsed = parseCheckedFile(path, () => parseBuildTargets(readText(session.cache, path), path));

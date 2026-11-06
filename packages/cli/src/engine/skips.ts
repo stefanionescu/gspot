@@ -94,25 +94,12 @@ function findConfigSkip(settings: Settings, scope: Scope, check: Check): Setting
         : { cause: 'setting', note: `No selected configuration or ${LOCAL_RULES_SETTING} supplies local rules.` };
 }
 
-/**
-Check whether a setting holds no value: unset, false, an empty string, or a table of empty lists.
-
-@param value the resolved setting.
-*/
 export function isSettingEmpty(value: unknown): boolean {
     if (typeof value === 'object' && value !== null) return Object.values(value).flat().length === 0;
     const empty: unknown[] = [undefined, false, ''];
     return empty.includes(value);
 }
 
-/**
-Skip checks for other systems, or for tools with no build for this system.
-
-@param check the check to read.
-@param tool the tool and its pin.
-@param host the system and architecture.
-@returns undefined when this system can run the check.
-*/
 export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host): Skip | undefined {
     if (check.operating_systems && !(check.operating_systems as readonly string[]).includes(host.platform))
         return {
@@ -124,14 +111,6 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
     return missing === undefined ? undefined : { cause: 'system', note: `${tool.name} has no ${missing} build` };
 }
 
-/**
-Find the reason that the settings turn a check off.
-
-@param settings the validated gspot.toml.
-@param scope the settings of the project folder.
-@param check the check and its project prerequisites.
-@returns undefined for an active check.
-*/
 export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     if (settings.level !== 'all' && check.level !== 'basic') return { cause: 'level', note: 'off at level basic' };
     const ignored = findIgnoreSkip(scope, check);
@@ -142,13 +121,6 @@ export function findSettingsSkip(settings: Settings, scope: Scope, check: Check)
     return setting === undefined ? undefined : { cause: 'setting', note: `needs the setting ${setting}` };
 }
 
-/**
-Find the first reason that a planned check cannot run.
-
-@param check the plan to test.
-@param planned what planning reads.
-@returns undefined when the check can run.
-*/
 export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip | undefined {
     const { session, host } = planned;
     const settings = session.settings;
@@ -163,14 +135,6 @@ export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip 
     );
 }
 
-/**
-Find the setting whose empty value turns a check off.
-
-@param settings the repository settings.
-@param scope the scope that runs the check.
-@param check the check to read.
-@returns undefined when the check has no such setting, or the setting holds a value.
-*/
 export function findEmptySetting(settings: Settings, scope: Scope, check: Check): string | undefined {
     const setting = check.when?.setting;
     if (setting === undefined || !isSettingEmpty(scope.settings.valuesByKey[setting])) return undefined;
@@ -182,10 +146,6 @@ export function findEmptySetting(settings: Settings, scope: Scope, check: Check)
 
 /**
 Tell whether a setting changes nothing at this level: every check that reads it is off, and at least one exists.
-
-@param settings the repository level and ignores.
-@param scope the selected configurations and settings of one folder.
-@param key the setting to look up.
 */
 export function isSettingUnread(settings: Settings, scope: Scope, key: string): boolean {
     if (key.startsWith('limits.')) return listSettingReaders(settings, scope, key).every(({ enabled }) => !enabled);
@@ -194,13 +154,6 @@ export function isSettingUnread(settings: Settings, scope: Scope, key: string): 
     return checks.length > 0 && settings.level !== 'all' && checks.every((check) => check.level === 'all');
 }
 
-/**
-List the selected checks that read a limit and whether its rules run at this level.
-
-@param settings the repository level and ignores.
-@param scope the selected configurations and settings of one folder.
-@param key the setting whose consumers to find.
-*/
 export function listSettingReaders(settings: Settings, scope: Scope, key: string): SettingReader[] {
     if (!key.startsWith('limits.')) return [];
     const names = key.slice('limits.'.length).split('.');

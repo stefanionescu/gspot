@@ -166,7 +166,6 @@ async function checkOutRawFiles(copyRoot: string, cancelSignal: AbortSignal | un
 Writes a Git revision into a private copy and leaves the authored files alone. The copy has its own Git directory, so
 Git commands use the copied revision.
 
-@param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy. The paths that the run checks, when the source names them, limit the ignored
 declaration files that the copy reads to the tsconfig files whose folder holds one of them.
 @param cancelSignal stops the copy.

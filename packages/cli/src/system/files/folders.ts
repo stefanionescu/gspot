@@ -42,10 +42,6 @@ function assertInsideFolder(pattern: string): void {
 
 /**
 Remove interrupted temporary writes and installs. Keep live owners and recent files without an owner.
-
-@param files the repository file handle.
-@param folder the relative folder to scan without following child links.
-@param pattern the temporary names, with an optional pid capture.
 */
 export function deleteStaleTemporaryPaths(files: Files, folder: string, pattern: RegExp): void {
     const names = files.list(folder);
@@ -68,8 +64,6 @@ export function deleteStaleTemporaryPaths(files: Files, folder: string, pattern:
 /**
 Makes an empty folder in a parent folder that removes itself, with everything in it, when disposed.
 Use the real system path, which on Windows expands short folder names, as the paths tools report do.
-
-@param parent the folder to make it in.
 */
 export function createTemporaryFolder(parent = tmpdir()): TemporaryFolder {
     const folder = mkdtempSync(join(parent, TEMPORARY_FILE_PREFIX));
@@ -82,13 +76,6 @@ export function createTemporaryFolder(parent = tmpdir()): TemporaryFolder {
     };
 }
 
-/**
-Find the files under the fixed folder of each pattern. Include dot files, and do not open folder links.
-
-@param folder the folder to scan.
-@param patterns the globs; a leading ! excludes matches.
-@returns matching paths relative to the folder, each once in scan order.
-*/
 export function listMatchingPaths(folder: string, patterns: string[]): string[] {
     for (const pattern of patterns) assertInsideFolder(pattern);
     const positive = patterns.filter(

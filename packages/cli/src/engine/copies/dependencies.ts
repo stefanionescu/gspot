@@ -100,10 +100,6 @@ function readMatchingTsconfig(
 /**
 Link the Python environment of each scope into a copy that holds its own tools, so that the checks of the copy read it.
 The checks run uv with --no-sync, so the environment does not change.
-
-@param root the working tree.
-@param target the copy.
-@param scopes the scope folders.
 */
 export function linkEnvironments(root: string, target: string, scopes: string[]): void {
     for (const scopePath of scopes) {
@@ -113,13 +109,6 @@ export function linkEnvironments(root: string, target: string, scopes: string[])
     }
 }
 
-/**
-Selects the paths that Git ignores.
-
-@param root the repository folder.
-@param paths the prerequisites to test.
-@param cancelSignal stops the Git query.
-*/
 export async function readIgnoredPaths(root: string, paths: string[], cancelSignal?: AbortSignal): Promise<string[]> {
     if (paths.length === 0) return [];
     const result = await runGit(root, GIT_CHECK_IGNORE_ARGUMENTS, {
@@ -130,11 +119,6 @@ export async function readIgnoredPaths(root: string, paths: string[], cancelSign
     return result.stdout.split('\0').filter((path) => path !== '');
 }
 
-/**
-Links the entries of each installed node_modules into the copy, and clones the other dependency paths.
-
-@param plan the copy and the dependencies to copy.
-*/
 export async function copyDependencies(
     plan: Pick<CopyPlan, 'root' | 'target' | 'dependencies' | 'cancelSignal'>,
 ): Promise<void> {
@@ -162,10 +146,6 @@ export async function copyDependencies(
 Lists the ignored declaration files that your own tsconfig needs. With checked paths, only the tsconfig files whose
 folder holds one of them count, because the type-aware tools of the run read only those programs.
 
-@param root the checkout with installed declaration files.
-@param revision what the copy holds and checks.
-@param revision.indexFiles the tracked files of the revision.
-@param revision.unchangedPaths dependency files whose bytes match the selected revision.
 @param revision.paths the paths that the run checks, or undefined to read every tsconfig.
 @param cancelSignal stops the Git queries.
 */

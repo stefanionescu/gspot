@@ -32,13 +32,6 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
     );
 }
 
-/**
-Parse gspot.toml and return its validated settings or field errors.
-
-@param text the gspot.toml contents.
-@param root the folder for validating declared scope paths.
-@param selecting the configurations that the running command is about to select.
-*/
 export function parseSettings(text: string, root: string, selecting?: readonly string[]): Settings | SettingsError[] {
     const written = parseTomlFile(SETTINGS_FILE, text);
     const result = settingsSchema.safeParse(written);
@@ -54,13 +47,6 @@ export function parseSettings(text: string, root: string, selecting?: readonly s
     return parsed;
 }
 
-/**
-Read settings and report every invalid field at its source line.
-
-@param text the settings file contents.
-@param root the repository root.
-@param selecting the configurations that the running command is about to select.
-*/
 export function readSettings(text: string, root: string, selecting?: readonly string[]): Settings {
     const result = parseSettings(text, root, selecting);
     if (!Array.isArray(result)) return result;
@@ -68,14 +54,6 @@ export function readSettings(text: string, root: string, selecting?: readonly st
     throw new GspotError('settings', formatSettingsErrors(result, syntax, SETTINGS_FILE));
 }
 
-/**
-Normalize the validated document: fill the table defaults, key the scopes by path, and turn each [[command_check]]
-into a check.
-
-@param parsed the validated document.
-@param written the table as written in gspot.toml.
-@returns normalized tables that keep the defaults and the scope values as written.
-*/
 export function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const { command_check: commandChecks, scope: scopes = [], ...document } = parsed;
     const writtenScopes = (written['scope'] ?? []) as TomlTable[];

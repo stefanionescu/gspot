@@ -38,10 +38,6 @@ function parseVultureFinding(line: string, selected: ReadonlySet<string>): Check
 /**
 Runs vulture over every Python file of the scope, so that a use in any file counts, and reports the findings in the
 files of this run.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-@returns each unused definition and each line of unreachable code.
 */
 async function checkVulture(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scopePath = planned.scope.path;

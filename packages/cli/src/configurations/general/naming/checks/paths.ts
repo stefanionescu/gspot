@@ -26,12 +26,6 @@ function parseSegmentName(
     return { name: inner.replace(REST_SEGMENT, ''), category: bracket.category };
 }
 
-/**
-Checks file and folder names against the naming settings.
-
-@param session the repository and its tools.
-@param planned the scope files to check.
-*/
 function checkPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
     const settings = readNamingSettings(session.settings, planned.scope);
     const containers = readNamingDefaults().path_containers;
@@ -54,13 +48,6 @@ function checkPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
     return validateIdentifiers(planned, settings, identifiers.values().toArray());
 }
 
-/**
-The file name without its extensions, or the whole name of a .sql file.
-
-@param path the file, relative to the repository root.
-@param language the configuration that covers the file.
-@param containers the bracket pairs that wrap path segments.
-*/
 export function buildFileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {
     const base = posix.basename(path);
     const name = language === 'sql' && base.endsWith(SQL_EXTENSION) ? base : extractBaseName(base);
@@ -78,13 +65,6 @@ export function buildFileIdentifier(path: string, language: string, containers: 
     };
 }
 
-/**
-Builds an identifier for each folder above a file, from the top down, except dot folders.
-
-@param path the file, relative to the repository root.
-@param language the configuration that covers the file.
-@param containers the bracket pairs that wrap path segments.
-*/
 export function buildFolderIdentifiers(path: string, language: string, containers: PathContainer[]): Identifier[] {
     const segments = path.split('/').slice(0, -1);
     return segments.flatMap((segment, index) => {

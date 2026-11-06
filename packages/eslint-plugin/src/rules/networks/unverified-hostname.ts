@@ -12,9 +12,6 @@ const ACCEPTED_RESULTS: ReadonlySet<unknown> = new Set([undefined, null, false, 
 /**
 Tell whether a result of checkServerIdentity accepts the server. Node treats a falsy result as a match and any other
 result as the error that ends the connection.
-
-@param result the returned expression, or null for a return without a value.
-@param source the file and its lexical variables.
 */
 function isAcceptingResult(result: TSESTree.Expression | null, source: TSESLint.SourceCode): boolean {
     if (result === null) return true;

@@ -96,19 +96,12 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
     return { [Symbol.asyncDispose]: restore };
 }
 
-/**
-Write the generated files of a folder from its gspot.toml in this process, as gspot install does before it installs
-the tools.
-*/
 export async function applyGeneratedFiles(root: string): Promise<ApplyReport> {
     const session = await openSession(root);
     const { report } = await writeEveryGeneratedFile(session, openFiles(root));
     return report;
 }
 
-/**
-Write the sample files and the generated files. Disposal restores the working files, index, and current commit.
-*/
 export async function writeSandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await changeSandbox(sandbox, changes));
@@ -116,9 +109,6 @@ export async function writeSandboxChanges(sandbox: Sandbox, changes: SandboxChan
     return resources.move();
 }
 
-/**
-Build the changes that replace the files of a sandbox plan with these files and keep its .gitignore.
-*/
 export function buildSandboxChanges(
     planFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,

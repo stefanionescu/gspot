@@ -71,13 +71,6 @@ function listStaticHits({ name, text }: DockerInstruction): Array<keyof typeof I
     return name === 'FROM' && hasFloatingNginxTag(text) ? ['nginxTag'] : [];
 }
 
-/**
-Reports each Dockerfile instruction that can rewrite a lockfile, pipes a download into a shell, floats an nginx tag, or
-wraps the entry point in a shell.
-
-@param session the repository and its tools.
-@param planned the Dockerfiles to read.
-*/
 async function checkInstructions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const instructions = planned.files.flatMap(({ path }) =>
         listDockerInstructions(readText(session.cache, path)).map((instruction) => ({ ...instruction, path })),
@@ -97,11 +90,6 @@ async function checkInstructions(session: Session, planned: PlannedCheck): Promi
     return findings.flat();
 }
 
-/**
-List the instructions of a Dockerfile, each with its continued lines joined.
-
-@param text the Dockerfile.
-*/
 export function listDockerInstructions(text: string): DockerInstruction[] {
     const instructions: DockerInstruction[] = Array.from(text.matchAll(DOCKER_INSTRUCTION), (match) => ({
         name: (match.groups?.['name'] ?? '').toUpperCase(),

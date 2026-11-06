@@ -83,25 +83,12 @@ function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting
     }
 }
 
-/**
-Find the nearest scope that holds a path.
-
-@param scopes every project scope.
-@param path the repository-relative destination.
-@returns undefined at the root.
-*/
 export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
     if (path === '') return undefined;
     const parent = selectScopePath(extractParentFolder(path), scopes);
     return scopes.find((scope) => scope.path === parent);
 }
 
-/**
-Select the configurations of the root and each parent scope, each once, in order.
-
-@param selected the configuration lists as written.
-@param scopePath the folder to select for.
-*/
 export function selectConfigurationsForScope(selected: SelectedConfigurations, scopePath: string): Configuration[] {
     const automatic = listAutomaticConfigurations();
     const choices = new Set<string>([...selected.configurations, ...automatic]);
@@ -119,11 +106,6 @@ export function selectConfigurationsForScope(selected: SelectedConfigurations, s
     return selectConfigurations([...choices]);
 }
 
-/**
-List the configurations that gspot.toml removes, in the root and in each scope, with the reason of each.
-
-@param settings the parsed gspot.toml.
-*/
 export function listRemovedConfigurations(settings: Settings): RemovedConfiguration[] {
     return [['', settings] as const, ...settings.scopes].flatMap(([scopePath, table]) => {
         const reasons = table.written['removed_configurations'] as Record<string, string>;
@@ -135,15 +117,6 @@ export function listRemovedConfigurations(settings: Settings): RemovedConfigurat
     });
 }
 
-/**
-Build the merged settings of a scope from the known settings, the written settings, and the configurations of the
-scope.
-
-@param availableSettings the settings and defaults of the selected configurations.
-@param settings the written root values and scoped overrides.
-@param configurations the configurations that the scope selects.
-@param scopePath the folder, '' for the root.
-*/
 export function buildScopeSettings(
     availableSettings: AvailableSettings,
     settings: Settings,
@@ -165,12 +138,6 @@ export function buildScopeSettings(
     };
 }
 
-/**
-Read one validated table from the scope's merged values.
-
-@param scopeSettings the merged scope data.
-@param name the table's dotted name.
-*/
 export function getTable<Name extends keyof TableValues>(
     scopeSettings: ScopeSettings,
     name: Name,
@@ -180,12 +147,6 @@ export function getTable<Name extends keyof TableValues>(
     return value;
 }
 
-/**
-Read the format settings of one language: the scope's values, with its override for that language's files on top.
-
-@param scopeSettings the merged scope data.
-@param files the file patterns of the language.
-*/
 export function selectFormat(scopeSettings: ScopeSettings, files: readonly string[]): TableValues['format'] {
     const { format } = scopeSettings.tables;
     const override = format.override.find(({ paths }) => paths.every((path) => files.includes(path)));
@@ -200,13 +161,6 @@ export function selectFormat(scopeSettings: ScopeSettings, files: readonly strin
     };
 }
 
-/**
-Read a language's limit, falling back to the scope's general limit.
-
-@param scopeSettings the merged scope data.
-@param key the limit name.
-@param language the language, if the check reads a language-specific value.
-*/
 export function getLimit(scopeSettings: ScopeSettings, key: string, language?: string): number {
     const value =
         findValueAt(scopeSettings.tables.limits, [language ?? '', key]) ??
@@ -218,22 +172,10 @@ export function getLimit(scopeSettings: ScopeSettings, key: string, language?: s
     return value;
 }
 
-/**
-List the written ignores that apply to a check or to every check.
-
-@param scopeSettings the merged scope data.
-@param check the check name.
-*/
 export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
     return scopeSettings.ignores.filter((ignore) => ignore.check === check || ignore.check === undefined);
 }
 
-/**
-List the lint rules disabled throughout the selected scope.
-
-@param scope the scope and its merged data.
-@param checkId the check name.
-*/
 export function listIgnoredRules(scope: Scope, checkId: string): string[] {
     return scope.settings.ignores
         .filter((ignore) => ignore.check === checkId)
@@ -242,12 +184,6 @@ export function listIgnoredRules(scope: Scope, checkId: string): string[] {
         .filter((rule) => rule !== undefined);
 }
 
-/**
-Find the root scope, which every run has.
-
-@param scopes every scope, the root among them.
-@returns the scope with an empty path.
-*/
 export function getRootScope(scopes: readonly Scope[]): Scope {
     const root = scopes.find((scope) => scope.path === '');
     if (root === undefined) throw new Error(NO_ROOT_SCOPE_MESSAGE);

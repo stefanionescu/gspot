@@ -8,12 +8,6 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Reports a scope without a README.md, and a root without a license file.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkRequiredFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const findings: CheckFinding[] = [];
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));

@@ -104,11 +104,6 @@ function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
     return { plugins: shipped };
 }
 
-/**
-Build .editorconfig: the EditorConfig sections of this repository, and the shfmt layout when a scope selects Bash.
-
-@param planned the config file to build.
-*/
 function buildEditorconfigFile(planned: PlannedConfig): string {
     const { format } = planned.scope.settings.tables;
     const settings = planned.session.settings;
@@ -155,11 +150,6 @@ function buildEditorconfigFile(planned: PlannedConfig): string {
     );
 }
 
-/**
-Build prettier.json, which the root pointer file loads: the formatter options, plugins, and scope overrides.
-
-@param planned the config file to build.
-*/
 function buildPrettierFile(planned: PlannedConfig): string {
     const settings = planned.session.settings;
     const format = planned.scope.settings.tables.format;
@@ -187,11 +177,6 @@ function buildPrettierFile(planned: PlannedConfig): string {
     return JSON.stringify(value, null, JSON_INDENT);
 }
 
-/**
-Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
-
-@param planned the config file to build.
-*/
 function buildPrettierignoreFile(planned: PlannedConfig): string {
     const ordered = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK)].map(
         (section) => ({

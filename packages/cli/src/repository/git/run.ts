@@ -67,10 +67,6 @@ async function selectWorkTreeVariables(
 Build the environment for one Git command. Git lists the repository-local variables and the work tree once for each
 working folder of the process. A command in that work tree inherits the variables with absolute paths. A command in a
 check copy under .gspot-copies, or outside the work tree, runs without them. The caller overrides apply last.
-
-@param cwd the repository folder.
-@param command the executable and its arguments, literally.
-@param explicit the environment overrides for this command.
 */
 export async function buildGitEnvironment(
     cwd: string,
@@ -106,11 +102,6 @@ export async function buildGitEnvironment(
 /**
 Run one Git command and wait for it; the cancel signal in the options stops it. With a reader, Git streams its output
 to the reader, and the result holds an empty stdout.
-
-@param cwd where Git runs.
-@param commandArguments the arguments after git.
-@param options the standard input and the cancel signal.
-@param readStdout consumes stdout while Git runs.
 */
 export async function runGit(
     cwd: string,
@@ -125,13 +116,6 @@ export async function runGit(
     return readStdout === undefined ? runProcess(command, spawn) : streamProcess(command, spawn, readStdout);
 }
 
-/**
-Run Git with cancellation, and keep the output bytes for paths and objects.
-
-@param cwd where Git runs.
-@param commandArguments the arguments after git.
-@param options the standard input and the cancel signal.
-*/
 export async function runGitBytes(
     cwd: string,
     commandArguments: readonly string[],
@@ -144,13 +128,6 @@ export async function runGitBytes(
     return { ...result, stdout: Buffer.concat(chunks) };
 }
 
-/**
-Read a Git setting, and tell an unset key from a failed command.
-
-@param cwd where Git runs.
-@param key the Git setting name.
-@returns undefined for an unset key.
-*/
 export async function readGitSetting(cwd: string, key: string): Promise<string | undefined> {
     const result = await runGit(cwd, [...GIT_SETTING_ARGUMENTS, key], {});
     if (result.code === 0) return result.stdout.slice(0, -1);
@@ -158,26 +135,12 @@ export async function readGitSetting(cwd: string, key: string): Promise<string |
     throw buildGitError(GIT_SETTING_ARGUMENTS, result);
 }
 
-/**
-Find the folder that Git runs hooks from: core.hooksPath when set, else the hooks folder of the Git folder.
-
-@param cwd the repository root.
-@returns the absolute path.
-*/
 export async function readHooksFolder(cwd: string): Promise<string> {
     const result = await runGit(cwd, GIT_HOOKS_ARGUMENTS, {});
     if (result.code !== 0) throw buildGitError(GIT_HOOKS_ARGUMENTS, result);
     return resolve(cwd, result.stdout.replace(TRAILING_NEWLINE, ''));
 }
 
-/**
-Read what a Git command prints, and throw a GspotError when it fails.
-
-@param cwd the repository root.
-@param commandArguments the arguments after git.
-@param options cancellation and input.
-@returns the standard output as printed.
-*/
 export async function readGitText(
     cwd: string,
     commandArguments: readonly string[],
@@ -188,13 +151,6 @@ export async function readGitText(
     return result.stdout;
 }
 
-/**
-Read the non-empty output lines of a Git command.
-
-@param cwd the repository root.
-@param commandArguments the arguments after git.
-@param options cancellation and input.
-*/
 export async function readGitLines(
     cwd: string,
     commandArguments: readonly string[],
@@ -207,9 +163,7 @@ export async function readGitLines(
 /**
 Read paths from a null-separated Git listing. Exclude paths with invalid UTF-8.
 
-@param cwd the repository root.
 @param commandArguments the arguments after git, which must include -z.
-@param options cancellation and input.
 */
 export async function readGitPaths(
     cwd: string,
@@ -225,12 +179,6 @@ export async function readGitPaths(
         .filter((path): path is string => path !== undefined && path !== '');
 }
 
-/**
-Build the error for a Git command that exited with a failure.
-
-@param commandArguments the arguments after git.
-@param result how Git exited.
-*/
 export function buildGitError(
     commandArguments: readonly string[],
     result: Pick<SpawnResult, 'code' | 'stderr'>,
@@ -241,11 +189,6 @@ export function buildGitError(
     );
 }
 
-/**
-Check whether Git refused to run because the folder holds no repository.
-
-@param result how Git exited.
-*/
 export function isOutsideRepository(result: Pick<SpawnResult, 'code' | 'stderr'>): boolean {
     return result.code === NOT_REPOSITORY_CODE && result.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }

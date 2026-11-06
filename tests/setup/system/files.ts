@@ -1,9 +1,6 @@
 import { lstat, open, readdir, readlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
-/**
-Read every path in a repository with its mode and contents, to check that a write kept them.
-*/
 export async function readTree(root: string): Promise<Record<string, string>> {
     const paths = await readdir(root, { recursive: true });
     return Object.fromEntries(

@@ -4,13 +4,6 @@ import type { MemberAssignment } from '../types/plugin.ts';
 import { getAssignedValue, getQualifiedName } from './modules.ts';
 import { unwrapExpression } from './syntax.ts';
 
-/**
-Follow single assignments while retaining the expression that supplies the value.
-
-@param node the expression to resolve.
-@param source the current file and scopes.
-@param seen bindings already followed along this path.
-*/
 export function getExpressionValue(
     node: TSESTree.Node | undefined,
     source: TSESLint.SourceCode,
@@ -26,10 +19,6 @@ export function getExpressionValue(
 
 /**
 Get statically known object properties. Later properties and known spreads replace earlier values.
-
-@param node the object or binding to inspect.
-@param source the current file and scopes.
-@param seen objects already expanded along this path.
 */
 export function getOptionProperties(
     node: TSESTree.Node | undefined,
@@ -51,12 +40,6 @@ export function getOptionProperties(
     return properties;
 }
 
-/**
-Resolve an explicit literal without evaluating calls or other runtime expressions.
-
-@param node the value to resolve.
-@param source the current file and scopes.
-*/
 export function getLiteralValue(
     node: TSESTree.Node | undefined,
     source: TSESLint.SourceCode,
@@ -66,14 +49,6 @@ export function getLiteralValue(
     return value.value;
 }
 
-/**
-List the values of call arguments, with the elements of array values in place of the arrays, as `app.use` accepts
-middleware lists.
-
-@param values the arguments.
-@param source the current file and scopes.
-@param seen arrays already expanded along this path.
-*/
 export function listArgumentValues(
     values: readonly TSESTree.Node[],
     source: TSESLint.SourceCode,
@@ -91,13 +66,6 @@ export function listArgumentValues(
     });
 }
 
-/**
-List the object literals that a call passes at the argument positions that its qualified name selects.
-
-@param node the call or the construction.
-@param source the current file and scopes.
-@param positions the argument positions of each qualified name.
-*/
 export function listOptionLiterals(
     node: TSESTree.CallExpression | TSESTree.NewExpression,
     source: TSESLint.SourceCode,
@@ -111,12 +79,6 @@ export function listOptionLiterals(
     });
 }
 
-/**
-Tell whether the run time builds part of a string expression. A template literal with an expression does, and so does
-a concatenation with an operand other than a literal.
-
-@param node the string expression.
-*/
 export function isDynamicString(node: TSESTree.Node): boolean {
     if (node.type === AST_NODE_TYPES.TemplateLiteral) return node.expressions.length > 0;
     if (node.type !== AST_NODE_TYPES.BinaryExpression || node.operator !== '+') return false;
@@ -129,12 +91,6 @@ export function isDynamicString(node: TSESTree.Node): boolean {
     return node.left.type === AST_NODE_TYPES.BinaryExpression ? isDynamicString(node.left) : isLeftLiteral !== true;
 }
 
-/**
-Find the variable that a declaration or an assignment stores an expression in.
-
-@param node the stored expression.
-@param source the current file and scopes.
-*/
 export function findAssignedVariable(node: TSESTree.Node, source: TSESLint.SourceCode): TSESLint.Scope.Variable | null {
     const { parent } = node;
     let target: TSESTree.Node | null = null;
@@ -143,12 +99,6 @@ export function findAssignedVariable(node: TSESTree.Node, source: TSESLint.Sourc
     return ASTUtils.isIdentifier(target) ? ASTUtils.findVariable(source.getScope(target), target) : null;
 }
 
-/**
-Find the variable and the property name of an assignment to a property of a variable, such as `form.uploadDir = path`.
-
-@param node an assignment of any target.
-@param source the current file and scopes.
-*/
 export function findMemberAssignment(
     node: TSESTree.AssignmentExpression,
     source: TSESLint.SourceCode,

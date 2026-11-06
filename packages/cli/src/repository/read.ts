@@ -59,13 +59,6 @@ async function readAttributes(root: string, paths: string[]): Promise<Map<string
     return parsePathAttributes(result.stdout);
 }
 
-/**
-List the tracked files and the untracked files that Git does not ignore. Each file comes with its first bytes and its Git
-attributes.
-
-@param cache the run cache.
-@param untracked the untracked files that a status read of this run found, or none to list them.
-*/
 export async function listRepositoryFiles(cache: RunCache, untracked?: UntrackedFiles): Promise<RepositoryListing> {
     const root = cache.root;
     const unreadablePaths = [...(untracked?.unreadablePaths ?? [])];
@@ -92,15 +85,6 @@ export async function listRepositoryFiles(cache: RunCache, untracked?: Untracked
     return { root, index, attributes, files, unreadablePaths: unreadablePaths.toSorted(compareText) };
 }
 
-/**
-Classify the listed files, and read the dependency files and the written and discovered scopes.
-
-@param cache the run cache.
-@param listing the files that listRepositoryFiles found.
-@param options what the read needs.
-@param options.generatedPaths the generated and vendored path rules.
-@param options.scopes the written scope tables.
-*/
 export async function readRepository(
     cache: RunCache,
     listing: RepositoryListing,
@@ -143,12 +127,6 @@ export async function readRepository(
     };
 }
 
-/**
-Read generated and vendored selectors from each tracked attribute file.
-
-@param cache the run cache.
-@param paths the tracked root-relative files.
-*/
 export function readLinguistPatterns(cache: RunCache, paths: string[]): string[] {
     return [
         ...new Set(
@@ -170,11 +148,6 @@ export function readLinguistPatterns(cache: RunCache, paths: string[]): string[]
     ];
 }
 
-/**
-Read the canonical worktree root from Git.
-
-@param start where the command starts.
-*/
 export async function readRepositoryRoot(start: string): Promise<string> {
     const folder = realpathSync(start);
     const top = await runGit(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });

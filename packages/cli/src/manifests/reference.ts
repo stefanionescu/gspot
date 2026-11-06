@@ -58,8 +58,6 @@ function formatTagConditions(tags: readonly string[]): string[] {
 /**
 Describe detection evidence and exclusions with the same vocabulary in help and documentation. A negated path pattern
 and the absent dependencies read as exceptions, not as evidence.
-
-@param detect the manifest's selection or rule-file conditions.
 */
 export function formatDetectionConditions(detect: Configuration['detect']): {
     conditions: string[];
@@ -84,11 +82,6 @@ export function formatDetectionConditions(detect: Configuration['detect']): {
     return { conditions, exclusions };
 }
 
-/**
-Describe the shipped rules without applying repository-specific selection.
-
-@param configuration the configuration that owns the rules.
-*/
 export function listRuleReferences(configuration: Configuration): ConfigurationReference['ruleFiles'] {
     const files = listRuleFiles(configuration);
     return files.map(({ path }) => {

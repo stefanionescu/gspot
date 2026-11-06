@@ -51,11 +51,6 @@ function unwrapSettingInput(schema: z.ZodType): z.ZodType {
     return inner;
 }
 
-/**
-Remove optional and default wrappers to inspect the shape of a setting.
-
-@param schema the validator to inspect.
-*/
 export function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
     let inner = schema;
     while (inner instanceof z.ZodOptional || inner instanceof z.ZodDefault || inner instanceof z.ZodPrefault)
@@ -63,26 +58,12 @@ export function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
     return inner;
 }
 
-/**
-Locate one setting in the root, configuration, and tool schemas, or in another table such as a [[scope]] record.
-
-@param key the dotted setting name.
-@param root the table that holds the setting.
-@returns undefined when the key names no setting.
-*/
 export function findSettingSchema(key: string, root: z.ZodType = settingsSchema): z.ZodType | undefined {
     let schema: z.ZodType | undefined = root;
     for (const segment of key.split('.')) schema = findChildSchema(schema, segment);
     return schema;
 }
 
-/**
-Find the key to write for a naming key that gspot reads and gspot.toml has no place for, such as
-naming.typescript.classes.cases.
-
-@param key a dotted name that matches a setting.
-@returns undefined for any other key.
-*/
 export function findNamingParent(key: string): string | undefined {
     if (!key.startsWith('naming.') || findSettingSchema(key) !== undefined) return undefined;
     const [table = '', language = '', category = '', field = ''] = key.split('.', NAMING_KEY_LENGTH);
@@ -90,13 +71,6 @@ export function findNamingParent(key: string): string | undefined {
     return parent === undefined ? `${table}.${language}.cases` : `${table}.${language}.${parent}.${field}`;
 }
 
-/**
-Find a field or element schema within a settings schema.
-
-@param schema the enclosing validator.
-@param segment the field or array index.
-@returns the child validator when present.
-*/
 export function findChildSchema(schema: z.ZodType | undefined, segment: KeyPath[number]): z.ZodType | undefined {
     let table = schema === undefined ? undefined : unwrapSettingSchema(schema);
     while (table instanceof z.ZodPipe) table = unwrapSettingSchema(table.in as z.ZodType);
@@ -109,11 +83,6 @@ export function findChildSchema(schema: z.ZodType | undefined, segment: KeyPath[
     return table instanceof z.ZodObject ? (table.shape[String(segment)] as z.ZodType | undefined) : undefined;
 }
 
-/**
-Describe the input type and path role of a setting without converting its schema.
-
-@param schema the setting validator.
-*/
 export function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_role'> {
     const inner = unwrapSettingInput(schema);
     const metadata = schema.meta() ?? inner.meta();

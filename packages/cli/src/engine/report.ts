@@ -62,13 +62,6 @@ function addFindingExplanations(
     return { ...result, ...(findings.length > 0 && { help }), findings };
 }
 
-/**
-Build the report of a run that checked nothing. Every report starts from it.
-
-@param stage the stage that the run selected.
-@param started when the run started.
-@param notes what the report says about the run.
-*/
 export function buildEmptyRunReport(stage: RunOptions['stage'], started: Date, notes: string[]): RunReport {
     const stages = REPORT_STAGES[stage];
     const duration = Date.now() - started.getTime();
@@ -90,12 +83,6 @@ export function buildEmptyRunReport(stage: RunOptions['stage'], started: Date, n
     };
 }
 
-/**
-Build the check results, detected configuration warning, and exit status of a finished run. Without --verbose, the
-report leaves out each check that no file selected, as the text does, and counts it under its cause.
-
-@param run the planned checks and their results.
-*/
 export function buildRunReport(run: FinishedRun): RunReport {
     const { session, options, comparison, started, planned, results: ran, fixes } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
@@ -147,11 +134,6 @@ export function buildRunReport(run: FinishedRun): RunReport {
     };
 }
 
-/**
-Name what a run reads.
-
-@param comparison the content that the run selected, if any.
-*/
 export function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return STAGED_FILES;
     return comparison?.content === 'commit'
@@ -162,8 +144,6 @@ export function formatCheckedContent(comparison: CheckProgress['comparison']): s
 /**
 Rewrite the progress line when stderr takes one. Otherwise print a line only for the checks that run past the progress
 interval: the checks still running at each interval, and a check that finishes after it.
-
-@param progress the last finished check, or the checks still running, and the place in the run.
 */
 export function printProgress(progress: CheckProgress): void {
     const subject = formatCheckedContent(progress.comparison);

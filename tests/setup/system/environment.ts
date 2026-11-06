@@ -8,9 +8,6 @@ function setEnvironmentVariables(
     }
 }
 
-/**
-Set environment variables for a test and restore them when the scope ends, even after a failure.
-*/
 export function overrideEnvironment(variables: Record<string, string | undefined>): Disposable {
     const previous = Object.fromEntries(Object.keys(variables).map((name) => [name, process.env[name]]));
     setEnvironmentVariables(process.env, variables);

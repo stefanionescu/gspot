@@ -122,13 +122,6 @@ function findSessionSetting(session: Session, key: string): ExplainedSetting | u
     };
 }
 
-/**
-Describe a setting's defaults, effective values, and edit commands.
-
-@param session the repository settings and selected scopes, when available.
-@param key the setting name to resolve.
-@returns undefined when no selected configuration declares the setting.
-*/
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     const explained = session === undefined ? readShippedSetting(key) : findSessionSetting(session, key);
     if (explained === undefined) return undefined;

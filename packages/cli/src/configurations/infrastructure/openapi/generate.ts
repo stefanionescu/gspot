@@ -4,11 +4,6 @@ import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build spectral.yml: the OpenAPI preset and the Spectral rules at this level.
-
-@param planned the config file to build.
-*/
 function buildSpectralFile(planned: PlannedConfig): string {
     const off = listDisabledRules(planned);
 

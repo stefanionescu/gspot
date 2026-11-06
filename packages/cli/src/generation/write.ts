@@ -63,12 +63,6 @@ function hasUnmanagedScanner(session: Session, writer: Files): boolean {
     return false;
 }
 
-/**
-List the generated files that a write changed: one line for the files in .gspot/ and one per file outside it, for each
-kind of change. The files that stayed the same get no line.
-
-@param report the applied file changes.
-*/
 export function listGeneratedChangeLines(report: ApplyReport): string[] {
     const lines: string[] = [];
     for (const [action, paths] of [
@@ -84,11 +78,6 @@ export function listGeneratedChangeLines(report: ApplyReport): string[] {
     return lines;
 }
 
-/**
-Format generated file changes and notes for command output.
-
-@param report the applied file changes and notes.
-*/
 export function formatApplyReport(report: ApplyReport): string {
     const lines = listGeneratedChangeLines(report);
     if (lines.length === 0) lines.push('Generated files: none changed.');
@@ -99,12 +88,6 @@ export function formatApplyReport(report: ApplyReport): string {
 /**
 Plan, write, and report generated file changes. When the settings turn the hooks off, unset core.hooksPath at once, so
 Git does not keep pointing at the removed hooks folder until the next install.
-
-@param session the repository to write to.
-@param generated the files to write, with resolved lockfiles.
-@param writer writes and removes files.
-@param options what the write may replace.
-@param options.reviewed the file contents that you reviewed and approved for replacement.
 */
 export async function writeGeneratedFiles(
     session: Session,
@@ -154,13 +137,6 @@ export async function writeGeneratedFiles(
     return report;
 }
 
-/**
-Write every generated file from the settings of a session. First delete the temporary files that an interrupted write
-left in the folders of those files.
-
-@param session the repository to write to.
-@param writer writes and removes files.
-*/
 export async function writeEveryGeneratedFile(
     session: Session,
     writer: Files,
@@ -173,14 +149,6 @@ export async function writeEveryGeneratedFile(
     return { generated, report: await writeGeneratedFiles(session, generated, writer) };
 }
 
-/**
-List the notes that ask for gspot install after a write: the tool lockfile is absent or stale, or the Git
-hooks changed while Git runs other hooks.
-
-@param session the repository that the files were written to.
-@param generated the files that the write wrote.
-@param report what the write changed.
-*/
 export async function listInstallNotes(
     session: Session,
     generated: Generation,

@@ -5,11 +5,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build commitlint.json: the Commitlint rules with the allowed types and scopes of the repository.
-
-@param planned the config file to build.
-*/
 function buildCommitlintFile(planned: PlannedConfig): string {
     const { scopes } = planned.session;
 

@@ -26,11 +26,6 @@ function readSwiftVersion(cache: RunCache, scopePath: string, projectPath: strin
         : parseBuildSettings(projectText, join(projectPath, PBXPROJ_FILE)).swiftVersion;
 }
 
-/**
-Build swiftformat: the SwiftFormat settings of the repository.
-
-@param planned the config file to build.
-*/
 function buildSwiftformatFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { cache } = planned.session;

@@ -10,9 +10,6 @@ import type { CheckGeneration, CheckRunOptions, RunOptions } from '#cli/types/en
 import type { Session } from '#cli/types/tools.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-/**
-Options for an in-process run of every stage, with no fixes.
-*/
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return {
         stage: 'all',
@@ -25,18 +22,12 @@ export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     };
 }
 
-/**
-The planned fixer of the sandbox, with this command in place of its fix command.
-*/
 export function planFixer(session: Session, fix: readonly string[]): PlannedCheck {
     const [planned] = planChecks(session, { stage: 'all', only: ['sandbox/fixer'] });
     if (planned === undefined) throw new Error('The sandbox has no planned fixer.');
     return { ...planned, check: { ...planned.check, fix: [...fix] } };
 }
 
-/**
-Build the gspot.toml text of a fixer whose check passes and whose fix fails, both through the fake tool program.
-*/
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
 [[command_check]]
@@ -48,14 +39,8 @@ stage = "commit"
 `;
 }
 
-/**
-The options of one check that a test runs outside the engine.
-*/
 export const CHECK_RUN_OPTIONS: CheckRunOptions = {};
 
-/**
-The production generators, called only when a check needs their output.
-*/
 export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,
     listStaleFiles: (session, options) => listStaleFiles(session, buildGeneratedFiles(session), options),
@@ -63,9 +48,6 @@ export const CHECK_GENERATION: CheckGeneration = {
         convertToGlobs(buildIgnoreSections(session, buildConfigs(session)).filter(({ key }) => key === 'gspot')),
 };
 
-/**
-Keep the resources of a run, and free them when the test disposes the list.
-*/
 export function createRunResources(): Disposable[] & Disposable {
     const resources: Disposable[] = [];
     return Object.assign(resources, {

@@ -60,11 +60,6 @@ function listAllowedWords(session: Session): string[] {
     return [...new Set([...products, ...words])];
 }
 
-/**
-Build the `acronyms` style of Vale: the Vale acronym rule with the allowed acronyms.
-
-@param planned the config file to build.
-*/
 function buildAcronymsStyle(planned: PlannedConfig): string {
     const words = listAllowedWords(planned.session);
 
@@ -79,11 +74,6 @@ function buildAcronymsStyle(planned: PlannedConfig): string {
     });
 }
 
-/**
-Build vale.ini: the Vale style locations and rule levels for the prose checks.
-
-@param planned the config file to build.
-*/
 function buildValeIniFile(planned: PlannedConfig): string {
     const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
         'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
@@ -119,11 +109,6 @@ function buildValeIniFile(planned: PlannedConfig): string {
     return lines.join('\n');
 }
 
-/**
-Build the `banned-headings` style of Vale: the Vale rule for the banned headings.
-
-@param planned the config file to build.
-*/
 function buildBannedHeadingsStyle(planned: PlannedConfig): string {
     const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'prose').banned_headings])];
     return stringify({
@@ -140,11 +125,6 @@ function buildBannedHeadingsStyle(planned: PlannedConfig): string {
     });
 }
 
-/**
-Build the `terms` style of Vale: each word of naming.terms, with the word to use instead.
-
-@param planned the config file to build.
-*/
 function buildTermsStyle(planned: PlannedConfig): string {
     const terms = Object.entries(getTable(planned.scope.settings, 'naming').terms);
     return stringify({
@@ -156,23 +136,12 @@ function buildTermsStyle(planned: PlannedConfig): string {
     });
 }
 
-/**
-Build a prose length rule with its configured ceiling.
-
-@param planned the generated config file and scope.
-@param name the prose unit that the rule limits.
-*/
 function buildLengthStyle(planned: PlannedConfig, name: keyof typeof LENGTH_STYLES): string {
     const { setting, message, ...style } = LENGTH_STYLES[name];
     const max = getTable(planned.scope.settings, 'prose')[setting];
     return stringify({ ...style, message: message.replace('{{max}}', () => String(max)), level: 'error', max });
 }
 
-/**
-Build the accepted words of Vale: the accepted product names and your own allowed words, one per line.
-
-@param planned the config file to build.
-*/
 function buildAcceptedWordsFile(planned: PlannedConfig): string {
     const words = listAllowedWords(planned.session);
 

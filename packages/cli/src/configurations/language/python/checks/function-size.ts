@@ -41,13 +41,6 @@ async function listLongFunctions(
     return findings.flat();
 }
 
-/**
-Checks each Python function against limits.max_function_lines, counting code lines only.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-@returns one finding per function over the limit.
-*/
 async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const limit = getLimit(planned.scope.settings, 'max_function_lines', 'python');
     const files = planned.files.filter((file) => file.path.endsWith(PYTHON_EXTENSION));

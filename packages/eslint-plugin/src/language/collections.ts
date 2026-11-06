@@ -2,23 +2,11 @@ import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-e
 
 import { COLLECTION_TYPE_NAMES } from '../config/collections.ts';
 
-/**
-List the variables of every scope below the global scope, the scopes whose variables a collection rule inspects.
-
-@param source the source code of the file.
-*/
 export function listLocalVariables(source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
     const scopes = source.scopeManager?.scopes ?? [];
     return scopes.filter((scope) => scope.type !== TSESLint.Scope.ScopeType.global).flatMap((scope) => scope.variables);
 }
 
-/**
-Get the value that a write reference stores, when a declaration or an assignment statement makes the write.
-
-@param reference a write reference of a variable.
-@param source the source code of the file.
-@returns the initializer or the assigned value, or undefined for any other write.
-*/
 export function getStoredValue(
     reference: TSESLint.Scope.Reference,
     source: TSESLint.SourceCode,
@@ -36,12 +24,6 @@ export function getStoredValue(
     return isAssignment ? expression.right : undefined;
 }
 
-/**
-List the items that an array literal or a collection constructor call starts with.
-
-@param node the stored value.
-@returns the array elements or the constructor arguments, or undefined when the value creates no collection.
-*/
 export function listInitialElements(node: TSESTree.Node | undefined): readonly unknown[] | undefined {
     if (node === undefined) return undefined;
     if (node.type === AST_NODE_TYPES.ArrayExpression) return node.elements;

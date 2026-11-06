@@ -58,14 +58,6 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, l
     return value;
 }
 
-/**
-Change the declared path leaves with the schemas that validation uses.
-
-@param schema the validator of the field.
-@param value the validated written setting.
-@param visit changes one path.
-@param location where the field sits in its table, and the name of its setting or record.
-*/
 export function mapSettingPaths(
     schema: z.ZodType,
     value: unknown,
@@ -81,27 +73,11 @@ export function mapSettingPaths(
         : mapNestedPaths(input, value, visit, location);
 }
 
-/**
-Join a shipped default selector to its scope, and keep a leading exclusion mark.
-
-@param path the shipped default selector.
-@param scopePath the repository-relative folder that owns the default.
-@returns the repository-relative selector.
-*/
 export function joinScopeSelector(path: string, scopePath: string): string {
     if (scopePath === '' || path === '') return path;
     return path.startsWith('!') ? `!${scopePath}/${path.slice(1)}` : `${scopePath}/${path}`;
 }
 
-/**
-Resolve the path leaves of a setting value against the table that sets it.
-
-@param key the dotted setting name.
-@param value the validated value.
-@param scopePath the owning folder, empty for repository-root values.
-@param buildFolder the folder that holds built-output paths.
-@returns repository-relative path values without changing identities or tool options.
-*/
 export function joinSettingPaths(key: string, value: unknown, scopePath: string, buildFolder = ''): unknown {
     const schema = findSettingSchema(key);
     return schema === undefined || value === undefined
@@ -114,14 +90,6 @@ export function joinSettingPaths(key: string, value: unknown, scopePath: string,
           );
 }
 
-/**
-Resolve command selectors relative to the calling folder.
-
-@param root the repository root.
-@param cwd the command folder.
-@param paths the selectors supplied with --paths.
-@returns selectors rooted in the repository, preserving exclusions.
-*/
 export function buildArgumentPaths(root: string, cwd: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
         const isNegative = path.startsWith('!');
@@ -136,13 +104,6 @@ export function buildArgumentPaths(root: string, cwd: string, paths: string[] | 
     });
 }
 
-/**
-Write a selector of gspot.toml as the path to type in the calling folder, which buildArgumentPaths reads back.
-
-@param root the repository root.
-@param cwd the command folder.
-@param selector the selector, rooted in the repository, which may start with an exclusion mark.
-*/
 export function formatArgumentSelector(root: string, cwd: string, selector: string): string {
     const isNegative = selector.startsWith('!');
     const absolute = join(root, isNegative ? selector.slice(1) : selector);

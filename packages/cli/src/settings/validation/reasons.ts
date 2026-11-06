@@ -53,14 +53,6 @@ function validateFieldReasons({
         : validateSettingReasons(field, child, [...keys, key]);
 }
 
-/**
-Find missing or invalid reasons in each shape that gspot.toml keeps them: a record's `reason`, `{ value, reason }` on a
-value, and a `name = "reason"` table.
-
-@param schema the schema of the value.
-@param value the written settings.
-@param keys where the value sits.
-*/
 export function validateSettingReasons(schema: z.ZodType | undefined, value: unknown, keys: KeyPath): SettingsError[] {
     if (Array.isArray(value))
         return value.flatMap((element, index) =>
@@ -72,14 +64,6 @@ export function validateSettingReasons(schema: z.ZodType | undefined, value: unk
     );
 }
 
-/**
-Describe a missing or invalid reason for commands and saved settings.
-
-@param where the setting or command that needs a reason.
-@param reason the written text, if any.
-@param suggestion how to write the missing reason in this context.
-@returns undefined when the reason meets the requirements.
-*/
 export function validateReason(
     where: string,
     reason: string | undefined,
@@ -91,24 +75,12 @@ export function validateReason(
     return `${where} needs a reason of two or more words that says why: ${refused} is refused.`;
 }
 
-/**
-Check whether the reason meets the minimum word count.
-
-@param reason the written text, if any.
-*/
 export function isReasonAccepted(reason: string | undefined): boolean {
     if (reason === undefined) return false;
     const trimmed = reason.trim();
     return trimmed.split(WHITESPACE_RUN).filter((word) => word !== '').length >= REASON_WORDS_MIN;
 }
 
-/**
-Check whether a value weakens the shipped default, so it needs a reason.
-
-@param setting the setting whose reason rule applies.
-@param value what gspot.toml sets.
-@param shipped the default of the configuration.
-*/
 export function isWeakening(setting: Setting, value: unknown, shipped: unknown): boolean {
     if (setting.reason_for === 'adding') {
         if (Array.isArray(value))

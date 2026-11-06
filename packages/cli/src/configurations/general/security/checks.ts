@@ -19,12 +19,6 @@ function listSemgrepRuleFiles(session: CheckSession, planned: PlannedCheck): str
     return [...new Set([...ruleFiles, ...getTable(settings, 'security').semgrep_rules])];
 }
 
-/**
-Runs Semgrep with the rule files of the scope.
-
-@param session the repository and installed tools.
-@param planned the check for one scope.
-*/
 async function checkSemgrep(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];
     const rules = listSemgrepRuleFiles(session, planned);

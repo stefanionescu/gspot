@@ -55,12 +55,6 @@ function removeChildScopeFindings(session: Session, planned: PlannedCheck, resul
     };
 }
 
-/**
-Runs tsc on a project, or on every project that a solution tsconfig names.
-
-@param session the repository and its tools.
-@param planned the compiler check for one scope.
-*/
 async function checkTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,

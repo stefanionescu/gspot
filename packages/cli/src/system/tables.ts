@@ -1,19 +1,7 @@
-/**
-Check whether a parsed value holds named fields without an array or date prototype.
-
-@param value the parsed value to tell apart from arrays, dates, and null.
-*/
 export function isTable(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date);
 }
 
-/**
-Get the value at a key path in a parsed object.
-
-@param value the parsed object.
-@param keys the property names, outermost first.
-@returns undefined when any key along the path has no value.
-*/
 export function findValueAt(value: unknown, keys: ReadonlyArray<string | number>): unknown {
     let node = value;
     for (const key of keys) {
@@ -23,11 +11,6 @@ export function findValueAt(value: unknown, keys: ReadonlyArray<string | number>
     return node;
 }
 
-/**
-Give parsed objects a null prototype, and keep dates and array order.
-
-@param value a parsed or edited field.
-*/
 export function normalizeTables(value: unknown): unknown {
     if (Array.isArray(value)) return value.map((element) => normalizeTables(element));
     if (!isTable(value)) return value;
@@ -38,13 +21,6 @@ export function normalizeTables(value: unknown): unknown {
     return table;
 }
 
-/**
-Create the missing tables along a dotted path.
-
-@param document the parsed document.
-@param keys the table names from the root down.
-@returns undefined when the path runs through a value other than a table.
-*/
 export function addTable(
     document: Record<string, unknown>,
     keys: readonly string[],
@@ -62,13 +38,6 @@ export function addTable(
     return node;
 }
 
-/**
-Read a map entry that the code before this call put there.
-
-@param map the entries.
-@param key the entry to read.
-@param label the kind of entry, for the message of the broken invariant.
-*/
 export function getRequired<Key, Value>(map: ReadonlyMap<Key, Value | undefined>, key: Key, label: string): Value {
     const value = map.get(key);
     if (value === undefined) throw new Error(`Missing ${label}: ${String(key)}.`);

@@ -81,9 +81,6 @@ export async function linkPackages(modulesFolder: string, names: readonly string
     }
 }
 
-/**
-Link the installed TypeScript package and its executable launchers.
-*/
 export async function linkTypescript(modulesFolder: string): Promise<void> {
     await mkdir(modulesFolder, { recursive: true });
     await linkPackages(modulesFolder, ['typescript']);

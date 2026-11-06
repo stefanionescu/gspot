@@ -9,11 +9,6 @@ import {
     type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
-/**
-Apply the accessibility lint rules to the React DOM files.
-
-@param scope the planned ESLint file of the scope.
-*/
 function buildReactDomBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
     const blocks: ConfigurationBlocks = [];
     if (!scope.settings.configurations.includes(REACT_NATIVE_CONFIGURATION)) {

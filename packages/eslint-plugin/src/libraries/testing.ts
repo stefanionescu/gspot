@@ -72,9 +72,6 @@ function isTableTest(call: TestCall | undefined, context: FileContext): call is 
 /**
 Get the name at the base of a callee, its module when a test framework exports it, and the member names after it.
 A call of `each` without its table call counts as no callee.
-
-@param callee the callee to read.
-@param source the file and its scopes.
 */
 export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
     const { steps, base } = listCalleeSteps(callee);
@@ -89,9 +86,6 @@ export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode
 Get a call of a test runner: a test case, a suite, or a hook, with its first function argument. The callee names a
 global or an export of a test framework. In `test.describe` and in the `test.it` of node:test, the name after `test`
 names the construct.
-
-@param node the call to read.
-@param source the file and its scopes.
 */
 export function getTestCall(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TestCall | undefined {
     const callee = getCalleeName(node.callee, source);
@@ -109,11 +103,6 @@ export function getTestCall(node: TSESTree.CallExpression, source: TSESLint.Sour
     return { ...callee, kind, name, callback, modifiers: callee.modifiers.slice(Number(isNested)) };
 }
 
-/**
-Check whether an expression names a Playwright suite: `test.describe`, with any chain of `parallel` and `serial`.
-
-@param node the callee or the object of a member.
-*/
 export function isPlaywrightSuite(node: TSESTree.Node): boolean {
     if (node.type !== AST_NODE_TYPES.MemberExpression) return false;
     const name = ASTUtils.getPropertyName(node);
@@ -122,24 +111,12 @@ export function isPlaywrightSuite(node: TSESTree.Node): boolean {
         : PLAYWRIGHT_SUITE_MODES.has(name) && isPlaywrightSuite(node.object);
 }
 
-/**
-List the child nodes of a node, in source order.
-
-@param node the parent node.
-@param source the file, whose visitor keys name the children.
-*/
 export function listChildNodes(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     const keys = source.visitorKeys[node.type] ?? [];
     const values = keys.flatMap((key): unknown => node[key as keyof TSESTree.Node]);
     return values.filter((value): value is TSESTree.Node => value !== null && typeof value === 'object');
 }
 
-/**
-List a node and the nodes inside it in source order, without the inside of nested functions.
-
-@param root the node to read.
-@param source the file, whose visitor keys name the children.
-*/
 export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
     const nodes: TSESTree.Node[] = [];
     const pending = [root];
@@ -153,12 +130,6 @@ export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode):
     return nodes;
 }
 
-/**
-Read the table of a parameterized test or suite of Bun, Jest, or Vitest: `test.each(table)(title, callback)`.
-
-@param node the call that declares the test, which `TABLE_CALL` selects.
-@param context the rule context of the file.
-*/
 export function readTestTable(node: TableCall, context: FileContext): TSESTree.Node | undefined {
     const [table] = node.callee.arguments;
     const callback = findFunction(node.arguments[1], context.sourceCode);
@@ -166,26 +137,12 @@ export function readTestTable(node: TableCall, context: FileContext): TSESTree.N
     return isTable && callback !== undefined && table?.type !== AST_NODE_TYPES.SpreadElement ? table : undefined;
 }
 
-/**
-Check whether two nodes have one type and the same tokens.
-
-@param left the first node.
-@param right the second node.
-@param source the file that holds both nodes.
-*/
 export function isSameTokens(left: TSESTree.Node, right: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const leftTokens = source.getTokens(left).map(({ value }) => value);
     const rightTokens = source.getTokens(right).map(({ value }) => value);
     return left.type === right.type && leftTokens.join('\0') === rightTokens.join('\0');
 }
 
-/**
-Check whether a path names a test-related file: a `.test.`, `.spec.`, `.cy.`, `.e2e.`, or `.mock.` file, or a file in
-a `__tests__` or `__mocks__` folder.
-
-@param path the path of the file.
-@param configured the file extensions from the `testFileExtensions` setting, if any.
-*/
 export function isTestRelatedPath(path: string, configured: unknown): boolean {
     if (path.split(/[\\/]/u).some((folder) => TEST_FOLDERS.has(folder))) return true;
     const extensions: unknown[] =
@@ -197,11 +154,6 @@ export function isTestRelatedPath(path: string, configured: unknown): boolean {
     );
 }
 
-/**
-Check whether an expression chains Cypress commands from `cy`.
-
-@param node the expression to read.
-*/
 export function isCypressChain(node: TSESTree.Node): boolean {
     let value = node;
     while (value.type === AST_NODE_TYPES.MemberExpression || value.type === AST_NODE_TYPES.CallExpression)
@@ -209,12 +161,6 @@ export function isCypressChain(node: TSESTree.Node): boolean {
     return value.type === AST_NODE_TYPES.Identifier && value.name === 'cy';
 }
 
-/**
-Check whether a node calls a function by one plain name, such as `expect(value)`.
-
-@param node the node to read.
-@param name the name of the function.
-*/
 export function isCallOf(node: TSESTree.Node, name: string): node is TSESTree.CallExpression {
     if (node.type !== AST_NODE_TYPES.CallExpression) return false;
     const { callee } = node;

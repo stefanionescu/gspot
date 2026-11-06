@@ -22,8 +22,6 @@ const TYPESCRIPT_ESLINT_TOOL = 'typescript-eslint';
 /**
 Read the TypeScript version that the tracked root lockfile resolves. An untracked lockfile does not count, so every
 clone reads the same version.
-
-@param session the repository files and the run cache.
 */
 function readLockedTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
     const { cache, repository } = session;
@@ -35,13 +33,6 @@ function readLockedTypescript(session: Pick<SessionBase, 'cache' | 'repository'>
     return semver.valid(readLockedVersions(cache, '')?.get(TYPESCRIPT_PACKAGE)) ?? undefined;
 }
 
-/**
-Read the TypeScript version that the root package.json declares: an exact version as written, or for a range the
-version that the tracked root lockfile resolves.
-
-@param session the repository files and the run cache.
-@returns undefined when the root declares no TypeScript, or no version can be read.
-*/
 function readProjectTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
     const root = session.repository.dependencyFiles.find(({ path }) => path === PACKAGE_JSON);
     const specifier = root?.installed[TYPESCRIPT_PACKAGE];
@@ -75,14 +66,6 @@ function addPeerPackages(names: Set<string>, configurations: readonly Configurat
     }
 }
 
-/**
-List the secondary tools that the command and the configuration of a check use.
-
-@param scope where the check runs.
-@param check the check to read.
-@param command the arguments that run, if known.
-@returns each secondary tool once.
-*/
 export function listSecondaryTools(scope: Scope, check: Check, command?: string[]): string[] {
     const isCoverageDropped =
         hasCoverageArguments(check.command, check.coverage_arguments) &&
@@ -104,11 +87,6 @@ export function listSecondaryTools(scope: Scope, check: Check, command?: string[
     );
 }
 
-/**
-List the tool that a check runs, its fixer, its secondary tools, and the packages they require.
-
-@param planned the plan with resolved conditions, scopes, and exclusions.
-*/
 export function listCheckTools(planned: ScopeCheck): string[] {
     const names = new Set(
         [planned.tool?.name, ...listSecondaryTools(planned.scope, planned.check), planned.check.fix?.[0]].filter(
@@ -119,12 +97,6 @@ export function listCheckTools(planned: ScopeCheck): string[] {
     return [...names];
 }
 
-/**
-List the tools for checks that this machine can run.
-
-@param checks the configured checks across all scopes.
-@returns each required tool once.
-*/
 export function listHostCheckTools(checks: ScopeCheck[]): Set<string> {
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const runnable = checks.filter((planned) => findSystemSkip(planned.check, planned.tool, host) === undefined);
@@ -134,10 +106,6 @@ export function listHostCheckTools(checks: ScopeCheck[]): Set<string> {
 /**
 Select the tools that checks, fixers, and their config files use. The tools cover every supported system, so committed
 output does not depend on this machine.
-
-@param session the repository and its settings.
-@param checks the plans for every supported system.
-@returns the configurations with only the tools they need.
 */
 export function selectToolConfigurations(session: SessionBase, checks: ScopeCheck[]): Configuration[] {
     const toolNames = new Set(checks.flatMap((check) => listCheckTools(check)));
@@ -167,9 +135,6 @@ export function selectToolConfigurations(session: SessionBase, checks: ScopeChec
 Pin the TypeScript of the tool project to the version that the root package.json declares, when typescript-eslint
 supports that version, so that type-aware ESLint reads the project with the compiler that builds it. Otherwise the
 shipped pin stays. The tool project, its lockfile, doctor, and the TypeScript checks all read this pin.
-
-@param configurations the tool configurations of the session.
-@param session the repository files and the run cache.
 */
 export function pinProjectTypescript(
     configurations: Configuration[],
@@ -189,11 +154,6 @@ export function pinProjectTypescript(
     }));
 }
 
-/**
-Map each tool that declares a Prettier plugin to its npm package name, module, and overrides.
-
-@param configurations the configurations in use.
-*/
 export function listPrettierPlugins(configurations: Iterable<Configuration>): Map<Tool, PrettierPlugin> {
     return new Map(
         [...configurations].flatMap(({ tools }) =>

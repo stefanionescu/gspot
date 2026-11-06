@@ -152,12 +152,6 @@ function placeRows(rows: ReadonlyArray<readonly TableCell[]>): TableCell[][] {
     return grid;
 }
 
-/**
-Name the element of a JSX tag as written: `table`, `Layout.Table`, or `svg:rect`.
-
-@param name the tag name node of an opening tag.
-@returns the name with its member path or namespace.
-*/
 export function getElementName(name: TSESTree.JSXTagNameExpression): string {
     if (name.type === AST_NODE_TYPES.JSXIdentifier) return name.name;
     return name.type === AST_NODE_TYPES.JSXNamespacedName
@@ -168,10 +162,6 @@ export function getElementName(name: TSESTree.JSXTagNameExpression): string {
 /**
 Get an attribute of a JSX opening tag by its name, in any letter case. The code may write its value as a string,
 as a literal in braces, or leave it out for `true`. The strings `"true"` and `"false"` read as booleans.
-
-@param element the opening tag that holds the attributes.
-@param name the attribute name to look for.
-@returns the attribute and its value, null for a value that only the run time knows, or undefined for no attribute.
 */
 export function getAttribute(element: TSESTree.JSXOpeningElement, name: string): JsxAttributeValue | undefined {
     const attribute = element.attributes.find(
@@ -185,9 +175,6 @@ export function getAttribute(element: TSESTree.JSXOpeningElement, name: string):
 /**
 Lay out the cells of a JSX table in rows and columns, as a browser does. A cell fills one position for each column and
 row that it spans. A `rowspan` of 0 fills the rows that follow.
-
-@param table the table element.
-@returns the rows of cells, or null when a component, an expression, or a span from the run time hides the rows.
 */
 export function buildTableGrid(table: TSESTree.JSXElement): TableCell[][] | null {
     const block = { next: 0 };
@@ -195,11 +182,6 @@ export function buildTableGrid(table: TSESTree.JSXElement): TableCell[][] | null
     return rows === null ? null : placeRows(rows);
 }
 
-/**
-Tell whether a `role` of `presentation` or `none` marks a JSX table tag as a layout table.
-
-@param element the opening tag.
-*/
 export function isLayoutTable(element: TSESTree.JSXOpeningElement): boolean {
     const role = getAttribute(element, 'role');
     const isTable = getElementName(element.name).toLowerCase() === 'table';

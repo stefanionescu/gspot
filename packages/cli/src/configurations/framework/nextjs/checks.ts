@@ -26,12 +26,6 @@ function formatNextjsFailure(text: string): string {
     return shown.join(' ').trim();
 }
 
-/**
-Generates Next.js route types and runs the TypeScript check in the same copy.
-
-@param session the repository and its tools.
-@param planned the Next.js compiler check.
-*/
 async function checkNextjsTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     using scratchFolder = await createCheckCopy(session, planned);

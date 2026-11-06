@@ -112,13 +112,6 @@ function validateSuppressionComment(
     return [{ ...at, rule: `${syntax.tool}-${kind}`, message: message }];
 }
 
-/**
-Reports forbidden suppressions, suppressions that turn off every rule or a size limit, and suppressions without a
-reason.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const filesByScope = Map.groupBy(
         planned.files.filter((file) => file.tags.includes('text')),

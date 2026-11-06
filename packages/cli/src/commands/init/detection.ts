@@ -87,12 +87,6 @@ function formatConflictingConfigs(summary: DetectionSummary): string[] {
     return lines.length === 0 ? [] : [...lines, ''];
 }
 
-/**
-Format the detection header: tracked files, the evidence for each group, scopes, and existing tools.
-
-@param summary what init detected.
-@returns the text, with a final blank line when the repository has existing tools.
-*/
 export function formatDetection(summary: DetectionSummary): string {
     const detected = summary.detected.filter(
         (evidence) => readConfigurations().get(evidence.configuration)?.always_selected !== true,

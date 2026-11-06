@@ -19,12 +19,6 @@ import type {
     Session,
 } from '#cli/types/tools.ts';
 
-/**
-List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
-tool project needs it.
-
-@param configurations the configurations in use.
-*/
 export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
@@ -33,20 +27,12 @@ export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     return pins;
 }
 
-/**
-Read the mise pin of uv, which installs the Python tool project.
-*/
 export function getUvPin(): MiseToolPin {
     const pin = findMisePin(getTool(readConfigurations().values(), UV_TOOL));
     if (pin === undefined) throw new Error('The uv manifest has no mise pin.');
     return pin;
 }
 
-/**
-Build the mise install of the tools, without the runtime pins of the repository.
-
-@param configurations the configurations in use.
-*/
 export function buildMiseInstall(configurations: Configuration[]): GeneratedFile {
     const tools = Object.fromEntries(
         listMisePins(configurations)
@@ -62,12 +48,6 @@ export function buildMiseInstall(configurations: Configuration[]): GeneratedFile
     };
 }
 
-/**
-Find the mise pin of one tool: its version, its systems, and its backend options.
-
-@param tool the tool to read.
-@returns undefined when mise does not install the tool.
-*/
 export function findMisePin(tool: Tool): MiseToolPin | undefined {
     if (tool.system === true || findPackagePin(tool) !== undefined) return undefined;
     const pin = tool.installers['mise'];
@@ -81,11 +61,6 @@ export function findMisePin(tool: Tool): MiseToolPin | undefined {
           };
 }
 
-/**
-List the npm and Python tool project pins of the configurations.
-
-@param configurations the configurations in use.
-*/
 export function listPackagePins(configurations: Configuration[]): PackagePins {
     const npm: Array<[string, string]> = [];
     const python: string[] = [];
@@ -101,12 +76,6 @@ export function listPackagePins(configurations: Configuration[]): PackagePins {
     };
 }
 
-/**
-List the npm pins of the tool project: the shipped tools, and the plugin packages that the settings name. A shipped pin
-wins over a plugin record that names the same package.
-
-@param session the configurations in use, and the settings of each scope.
-*/
 export function listNpmProjectPins(session: Pick<Session, 'scopes' | 'toolConfigurations'>): PackagePins['npm'] {
     const plugins = session.scopes.flatMap(({ settings }) => [
         ...(settings.tables['tools.eslint']?.plugins ?? []),
@@ -122,12 +91,6 @@ export function listNpmProjectPins(session: Pick<Session, 'scopes' | 'toolConfig
     return { ...Object.fromEntries(pluginPins), ...listPackagePins(session.toolConfigurations).npm };
 }
 
-/**
-List the tools that gspot replaces, the tools that they cover, and the npm pins of their stack.
-
-@param configurations the configurations in use.
-@returns the command names to look for, and the pins that a root devDependency may repeat.
-*/
 export function listReplacedTools(configurations: Configuration[]): Pick<LintCommandSearch, 'tools' | 'pins'> {
     const replaced = listDistinctTools(configurations).filter(
         ({ replace, replace_key }) => replace !== undefined || replace_key !== undefined,
@@ -143,21 +106,10 @@ export function listReplacedTools(configurations: Configuration[]): Pick<LintCom
     return { tools: new Set([...names, ...covered]), pins: listPackagePins(stack).npm };
 }
 
-/**
-Build the project table of the Python tool project: its name, its Python version, and the tool pins.
-
-@param configurations the configurations in use.
-*/
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
     return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
 }
 
-/**
-List each tool once, sorted by name.
-
-@param configurations the configurations in use.
-@returns the first declaration of each tool name.
-*/
 export function listDistinctTools(configurations: Configuration[]): Tool[] {
     const tools = new Map<string, Tool>();
     for (const configuration of configurations)
@@ -170,13 +122,6 @@ export function listDistinctTools(configurations: Configuration[]): Tool[] {
         .toSorted((first, second) => compareText(first.name, second.name));
 }
 
-/**
-Get the first declaration of a tool, in the order of the configurations.
-
-@param configurations the configurations that may declare the tool, the owning configuration first.
-@param name the executable to find.
-@returns the tool, or a system program when no configuration declares the tool.
-*/
 export function getTool(configurations: Iterable<Configuration>, name: string): Tool {
     for (const configuration of configurations) {
         const tool = configuration.tools.find((declaration) => declaration.name === name);
@@ -185,22 +130,10 @@ export function getTool(configurations: Iterable<Configuration>, name: string): 
     return { name, kind: 'program', system: true, installers: {} };
 }
 
-/**
-Get the tool that a check names, or the first word of its command.
-
-@param check the validated check.
-@returns undefined for a built-in check without a tool.
-*/
 export function findToolName(check: Check): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
 
-/**
-Find the npm or Python package that installs a tool.
-
-@param tool the tool to read.
-@returns undefined when the system or mise gives the tool.
-*/
 export function findPackagePin(tool: Tool): PackagePin | undefined {
     const python = tool.installers['pypi'];
     if (python !== undefined && tool.system !== true)
@@ -215,13 +148,6 @@ export function findPackagePin(tool: Tool): PackagePin | undefined {
     };
 }
 
-/**
-Find the operating system that a tool does not support.
-
-@param tool the tool with its builds.
-@param host the operating system.
-@returns undefined when the tool has a build.
-*/
 export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     if (tool.builds === undefined) return undefined;
     const { platform } = host;

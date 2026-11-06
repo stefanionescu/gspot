@@ -171,9 +171,6 @@ function formatTaploValues(text: string, previous: Record<string, unknown>, layo
 /**
 Add an ignore to the list, or merge its paths into the record with the same check, rule, and reason.
 When either record has no paths, the merged record has none. Changes ignores in place.
-
-@param ignores the written [[ignore]] records.
-@param ignore the record to add.
 */
 export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
     const { paths: writtenPaths, ...identity } = ignore;
@@ -192,13 +189,6 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
     return matching;
 }
 
-/**
-Write settings over the template while keeping its comments.
-
-@param template the gspot.toml text that init copies with --from, or an empty text.
-@param written the values to write, before defaults.
-@returns the TOML 1.0 text.
-*/
 export function buildSettingsText(template: string, written: TomlTable): string {
     const syntax = parseTomlSyntax(template, parseTomlFile(SETTINGS_FILE, template));
     if (isDeepStrictEqual(normalizeTables(written), normalizeTables(syntax.value))) return template;

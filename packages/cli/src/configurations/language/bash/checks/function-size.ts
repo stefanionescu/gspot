@@ -8,13 +8,6 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Checks each shell function against the size limits: code lines, branches, nesting, and assignments.
-
-@param session the repository and its tools.
-@param planned the scope scripts and limits.
-@returns one finding per exceeded limit.
-*/
 async function checkBashFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>

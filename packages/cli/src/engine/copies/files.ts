@@ -24,13 +24,6 @@ function writeCopyFile(files: Files, copyRoot: string, file: string): void {
     chmodSync(target, statSync(source).mode & PERMISSION_BITS);
 }
 
-/**
-Selects the paths and installed dependency trees for a copy of the working tree.
-
-@param root the repository folder.
-@param paths the tracked files to copy.
-@param scopes the folders that hold installed dependencies.
-*/
 function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
     const projects = paths.flatMap((path) =>
         DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== GSPOT_FOLDER
@@ -48,11 +41,6 @@ function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyP
     };
 }
 
-/**
-Writes files into a copy.
-
-@param plan what to write, and where.
-*/
 async function writeCopyFiles(plan: CopyPlan): Promise<void> {
     const files = openFiles(plan.root);
     let written = 0;
@@ -65,14 +53,6 @@ async function writeCopyFiles(plan: CopyPlan): Promise<void> {
     }
 }
 
-/**
-Copies the files and dependency trees that the check needs.
-
-@param session the repository and its tools.
-@param planned the check and its files.
-@param includedPaths more paths to copy.
-@returns the new folder, deleted on dispose.
-*/
 export async function createCheckCopy(
     session: Session,
     planned: PlannedCheck,
@@ -93,11 +73,6 @@ export async function createCheckCopy(
 /**
 Copies source files and dependency trees into a private folder inside the repository. Linked packages share the
 repository root with the copy, so Astro resolves their paths outside the copied source tree.
-
-@param session the repository and its cancel signal.
-@param paths the files to copy.
-@param dependencies the installed dependency trees to link.
-@returns the new folder, deleted on dispose.
 */
 export async function createCopy(
     session: Pick<Session, 'root' | 'cancelSignal'>,

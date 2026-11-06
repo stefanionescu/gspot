@@ -11,9 +11,6 @@ import type { Level } from '#cli/types/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-/**
-Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
-*/
 export function buildSandboxSettings(
     configurations: readonly string[],
     options: {
@@ -40,12 +37,6 @@ export function buildSandboxSettings(
     return `${selection}${tables}\n${closing}`;
 }
 
-/**
-Parse settings text and return where each error sits, as `gspot.toml:<line>: <key path>`, or nothing when it parses.
-
-@param text gspot.toml content to parse.
-@param root folder the settings describe, for errors that depend on its files.
-*/
 export function validateSettingsText(text: string, root?: string): string[] {
     using resources = new DisposableStack();
     try {
@@ -61,9 +52,6 @@ export function validateSettingsText(text: string, root?: string): string[] {
     }
 }
 
-/**
-Build a command check that prints each path it gets and fails.
-*/
 export function buildReportingCheck(
     options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'id' | 'paths' | 'stage'>,
 ): NonNullable<WrittenSettings['command_check']>[number] {
@@ -76,16 +64,6 @@ export function buildReportingCheck(
     };
 }
 
-/**
-Write a project with the selected function parameter limit and apply its settings.
-
-@param root the sandbox folder.
-@param scenario the language and source file to check.
-@param scenario.language the language configuration.
-@param scenario.file the source path.
-@param scenario.source the source text.
-@param supplied the requested maximum or the default.
-*/
 export async function prepareParameterProject(
     root: string,
     scenario: { language: string; file: string; source: string },

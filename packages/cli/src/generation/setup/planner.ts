@@ -101,10 +101,6 @@ async function readPlannedRepository(cache: RunCache): Promise<{ listing: Reposi
 
 /**
 Read the repository and work out what init writes, replaces, and leaves. It changes no file.
-
-@param root the repository root.
-@param options the template, the level, and the configurations that the user chose.
-@returns the plan, with the session and the generated files that write it.
 */
 export async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const cache = createRunCache(root);
@@ -166,12 +162,6 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
     };
 }
 
-/**
-Write gspot.toml and the generated files of a plan, and delete the config files that they replace.
-
-@param root the repository root.
-@param initPlan what planInit returned.
-*/
 export async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<ApplyReport> {
     const writer = openFiles(root);
     const { session, generated } = initPlan;

@@ -1,9 +1,6 @@
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import { LEVEL_ADVICE } from '#docs/config/reference.ts';
 
-/**
-Describe each level, and list the tools it adds.
-*/
 export function buildLevelRows(): Array<{ level: string; description: string; tools: string }> {
     return [
         {

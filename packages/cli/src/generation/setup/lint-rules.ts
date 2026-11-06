@@ -37,12 +37,6 @@ function classifyRule(rule: string, state: RuleState, shipped: RuleState | undef
     return isDeepStrictEqual(state.options, shipped.options) ? 'covered' : 'options';
 }
 
-/**
-Turn the value that a tool prints for one rule into its state.
-
-@param value the printed value.
-@param hasSeverity whether the first element of the value holds a severity.
-*/
 export function convertRule(value: unknown, hasSeverity: boolean): RuleState {
     const [first, ...rest] = [value].flat();
     if (hasSeverity) return { on: first !== 0 && first !== 'off', options: rest };
@@ -54,8 +48,6 @@ export function convertRule(value: unknown, hasSeverity: boolean): RuleState {
 Compare the names and options of the rules of a replaced config with what gspot runs. The same rule counts as covered.
 A rule that gspot runs with other options carries over, unless the options give a weaker limit. A rule that the user
 turned off, or weakened, carries over as an ignore. The caller decides what happens to a rule that gspot does not run.
-
-@param input the check, the rules of the user, and what gspot runs.
 */
 export function compareRules(input: RuleComparison): ComparedRules {
     const groups = Map.groupBy(input.user, ([rule, state]) => classifyRule(rule, state, input.lookup(rule)));
@@ -71,8 +63,6 @@ export function compareRules(input: RuleComparison): ComparedRules {
 Compare the selectors of a Ruff config with the selectors that gspot runs. A selector counts as covered when a selector
 of gspot holds it: E5 holds E501, and A holds A001 but no selector of another Ruff plugin. A rule that the config turns
 off carries over as an ignore when a shipped or a carried selector holds it.
-
-@param input the Ruff settings, and the selectors that gspot runs.
 */
 export function compareRuffRules(input: RuffRuleInput): RuffRules {
     const { path, options, shipped } = input;
@@ -113,12 +103,6 @@ export function compareRuffRules(input: RuffRuleInput): RuffRules {
     return { rules, ignores, row };
 }
 
-/**
-Read the rules that a tool of the repository or of gspot resolves.
-
-@param input where the tool sits, and how it prints its settings.
-@returns the rules, or undefined when no tool can print them.
-*/
 export async function readPrintedRules(input: PrintedRules): Promise<RuleTable | undefined> {
     const { root, tool, search, commandArguments, hasSeverity } = input;
     const [program] = listRepositoryExecutablePaths(root, tool, search);

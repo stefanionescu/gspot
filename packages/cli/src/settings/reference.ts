@@ -106,11 +106,6 @@ function buildSettingNode(key: string, schema: z.ZodType, variants: SettingVaria
     };
 }
 
-/**
-Read the settings tree directly from the validators and their definitions, without inferring meaning from JSON Schema.
-
-@param configurations the shipped configurations that supply settings and defaults.
-*/
 export function buildSettingsReference(configurations: Configuration[]): SettingReference[] {
     const variants = listSettingVariants(configurations);
     const fields = Object.entries(settingsSchema.shape);

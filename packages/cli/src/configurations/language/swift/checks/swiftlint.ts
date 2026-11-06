@@ -15,12 +15,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
-/**
-Runs the SwiftLint analyzer rules over the compiler log of the build.
-
-@param session the repository and its tools.
-@param planned the scope to analyze.
-*/
 async function checkSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);
     const build = await runSwiftBuild(session, planned, plan, { clean: true });

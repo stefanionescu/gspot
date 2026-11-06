@@ -13,10 +13,6 @@ const EXCLUDE_FLAG = '--exclude';
 Leave the nested scopes that run Vitest on their own out of this run, so that their tests run once. A project of a root
 `test.projects` reads only an absolute pattern, and Vitest 2 only a relative one. Vitest 3 counts their files as
 uncovered unless `coverage.all` is off, and `--coverage.exclude` drops its default excludes.
-
-@param session the repository and its tools.
-@param planned the Vitest check of one scope.
-@param options the command override and the verbosity of the notes.
 */
 async function runVitest(
     session: CheckSession,

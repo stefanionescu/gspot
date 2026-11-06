@@ -159,12 +159,6 @@ function isInvalidLockfile(error: unknown): boolean {
     );
 }
 
-/**
-Remove registry addresses from the portable lockfile of Bun.
-
-@param lockfile the lockfile contents.
-@param environment the configured registry addresses.
-*/
 export function stripBunRegistryUrls(lockfile: string, environment: Record<string, string>): string {
     const parsed = parseJsonFile(BUN_LOCKFILE, lockfile, bunLockfileSchema);
     let edited = lockfile;
@@ -176,14 +170,6 @@ export function stripBunRegistryUrls(lockfile: string, environment: Record<strin
     return edited;
 }
 
-/**
-Check whether a lockfile pins every generated dependency and no extra root dependency.
-
-@param packageManager the package manager that wrote the lockfile.
-@param lockfile the lockfile text.
-@param dependencies what the tool project declares.
-@param environment the configured package registry addresses, which each download must match when given.
-*/
 export function isLockfileFresh(
     packageManager: ToolPackageManagerName,
     lockfile: string,
@@ -208,11 +194,6 @@ export function isLockfileFresh(
     }
 }
 
-/**
-Select the lockfile name for the package manager of an npm tool project.
-
-@param packageManager the validated name.
-*/
 export function selectLockfileName(packageManager: ToolPackageManagerName): ToolProjectLockfileName {
     return (
         LOCKFILES.filter((lockfile) => 'toolProject' in lockfile).find(

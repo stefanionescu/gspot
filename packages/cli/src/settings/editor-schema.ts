@@ -10,9 +10,6 @@ import { compareText } from '#cli/system/text.ts';
 /**
 Copy the examples of a setting into its converted schema. A configuration name may only be a shipped name, and a check
 ID gets the shipped IDs as examples, because a command check may add its own.
-
-@param zodSchema the setting schema.
-@param jsonSchema the converted schema, which this function changes.
 */
 function copySchemaExamples(zodSchema: z.core.$ZodType, jsonSchema: z.core.JSONSchema.BaseSchema): void {
     const definition = z.globalRegistry.get(zodSchema);
@@ -22,13 +19,6 @@ function copySchemaExamples(zodSchema: z.core.$ZodType, jsonSchema: z.core.JSONS
     if (definition?.['value_names'] === 'checks') jsonSchema.examples = listCheckIds([]);
 }
 
-/**
-Edit the converted schema of one setting in place: hide the facts that only gspot reads, and keep the default and the
-examples of the setting.
-
-@param zodSchema the setting schema.
-@param jsonSchema the converted schema, which this function changes.
-*/
 function normalizeSchemaNode(zodSchema: z.core.$ZodType, jsonSchema: z.core.JSONSchema.BaseSchema): void {
     if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
     for (const key of HIDDEN_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
@@ -40,9 +30,6 @@ function normalizeSchemaNode(zodSchema: z.core.$ZodType, jsonSchema: z.core.JSON
     copySchemaExamples(zodSchema, jsonSchema);
 }
 
-/**
-Build the editor schema for this gspot version.
-*/
 export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
     const converted = z.toJSONSchema(settingsSchema, {
         io: 'input',

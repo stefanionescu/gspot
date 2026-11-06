@@ -214,12 +214,6 @@ function isStrictConfiguration(project: ParsedPbxproj, list: string | undefined)
     });
 }
 
-/**
-Find the Swift sources and managed folders that belong to project targets.
-
-@param text the project.pbxproj contents.
-@param path the project.pbxproj file, relative to the repository root.
-*/
 export function parseProjectSources(text: string, path: string): ProjectSources {
     try {
         const folder = extractParentFolder(path.slice(0, path.indexOf(PBXPROJ_SUFFIX)));
@@ -254,12 +248,6 @@ export function parseProjectSources(text: string, path: string): ProjectSources 
     }
 }
 
-/**
-List the native targets of a project with their concurrency setting and run-script phases.
-
-@param text the project file.
-@param path the project.pbxproj file that the errors name.
-*/
 export function parseBuildTargets(text: string, path: string): ProjectBuildTarget[] {
     const project = parsePbxproj(text, path);
     try {
@@ -291,13 +279,6 @@ export function parseBuildTargets(text: string, path: string): ProjectBuildTarge
     }
 }
 
-/**
-Find compiler and SDK settings without reading project source paths.
-
-@param text the project file.
-@param path the project.pbxproj file that the errors name.
-@returns the first declared SDK and Swift version.
-*/
 export function parseBuildSettings(text: string, path: string): ProjectBuildSettings {
     const project = parsePbxproj(text, path);
     const settings = Object.values(project.objects).flatMap((record) => record.buildSettings ?? []);

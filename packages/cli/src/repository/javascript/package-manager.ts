@@ -76,11 +76,6 @@ function readFirstPackageManager(
     return { name: NPM_TOOL, version: undefined };
 }
 
-/**
-Read and validate the package manager pin written in package.json.
-
-@param packageJson the repository package fields.
-*/
 export function findPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
@@ -94,13 +89,6 @@ export function findPackageManagerPin(packageJson: PackageJson): PackageManagerF
           );
 }
 
-/**
-Select the repository package manager from its pin and lockfiles.
-
-@param root the folder whose package.json files and lockfiles select the manager.
-@param trackedPaths the source paths inventoried in the repository.
-@returns the manager name and its declared or detected version, when present.
-*/
 export function detectPackageManager(root: string, trackedPaths: string[]): PackageManagerPin {
     const packageJsonPaths = [
         PACKAGE_JSON,
@@ -121,14 +109,6 @@ export function detectPackageManager(root: string, trackedPaths: string[]): Pack
     return { name: selected.name };
 }
 
-/**
-Resolve an undeclared package manager version only when generating or installing a tool project.
-
-@param root the working folder for the query of an undeclared version.
-@param packageManager the declared or detected name and version.
-@param timeoutSeconds the limit for the version query.
-@param cache the run cache that owns the resolved version.
-*/
 export async function readPackageManagerVersion(
     root: string,
     packageManager: PackageManagerPin,
@@ -159,15 +139,6 @@ export async function readPackageManagerVersion(
     });
 }
 
-/**
-Resolve a package manager for the tool project, using npm when the repository pins Yarn.
-
-@param root the folder for a version query.
-@param packageManager the repository package manager pin.
-@param timeoutSeconds the version query limit.
-@param cache the run cache for resolved versions.
-@returns a package manager that can hold back new tool releases.
-*/
 export async function readToolPackageManager(
     root: string,
     packageManager: PackageManagerPin,
@@ -179,12 +150,6 @@ export async function readToolPackageManager(
     return { ...(await readPackageManagerVersion(root, selected, timeoutSeconds, cache)), name };
 }
 
-/**
-Select the runner from the root gspot dependency.
-
-@param root the folder whose package.json decides the runner.
-@returns the runner of the package manager, or mise when gspot has no root npm dependency.
-*/
 export function selectStartRunner(root: string): StartRunner {
     const packageJson = readPackageJson(root, PACKAGE_JSON);
     const hasDependency =
@@ -196,9 +161,6 @@ export function selectStartRunner(root: string): StartRunner {
 
 /**
 Select the command that adds a package. pnpm refuses a plain add in the folder that holds its workspace file.
-
-@param name the program that adds the package.
-@param folder the folder that runs the command.
 */
 export function selectInstallCommand(name: StartRunner['name'], folder: string): string {
     return name === 'pnpm' && existsSync(join(folder, PNPM_WORKSPACE_FILE))
@@ -206,24 +168,11 @@ export function selectInstallCommand(name: StartRunner['name'], folder: string):
         : START_RUNNERS[name].installCommand;
 }
 
-/**
-Build the runner of a package manager or of mise.
-
-@param name the program that starts gspot.
-@param root the repository root.
-*/
 export function buildStartRunner(name: StartRunner['name'], root: string): StartRunner {
     const installCommand = selectInstallCommand(name, root).replace('<package>', () => cliPackage.name);
     return { name, ...START_RUNNERS[name], installCommand };
 }
 
-/**
-Run a declared package manager with its pinned runtime and version.
-
-@param packageManager the manager name and declared version, if any.
-@param commandArguments the executable options and operands to pass after its name.
-@returns the direct command or the mise command for the exact pin.
-*/
 export function buildPackageManagerCommand(
     packageManager: PackageManagerCommand,
     commandArguments: readonly string[],

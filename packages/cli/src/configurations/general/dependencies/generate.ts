@@ -10,11 +10,6 @@ import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Build osv-scanner.toml: a note on why the file exists, and the package ignores and their reasons.
-
-@param planned the config file to build.
-*/
 function buildOsvScannerFile(planned: PlannedConfig): string {
     const ignores = listIgnores(planned.scope.settings, OSV_SCANNER_CHECK).filter(
         (ignore) => ignore.rule !== undefined && ignore.paths === undefined,
@@ -29,11 +24,6 @@ function buildOsvScannerFile(planned: PlannedConfig): string {
     ].join('\n');
 }
 
-/**
-Set the scanner in the bunfig.toml of each scope that selects dependencies, installs with Bun, and names a scanner.
-
-@param session the repository inventory and its scopes.
-*/
 export function buildBunScannerEdits(session: Session): ManagedKeys[] {
     return session.scopes.flatMap((scope) => {
         const scanner = getTable(scope.settings, 'dependencies').bun_scanner;

@@ -113,13 +113,6 @@ function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], na
     return lines.some((line) => !HOOK_COMMENT_LINE.test(line) && line.includes(command));
 }
 
-/**
-Set the planned Git setting, or report the instructions for existing hooks.
-
-@param session what the hook plan reads.
-@param steps collects each command that install runs.
-@returns the command that install ran, with the line that reports it, or only the instructions for existing hooks.
-*/
 export async function installHooks(session: Session, steps: Array<readonly string[]>): Promise<HookPlan> {
     const plan = await planHooks(session);
     if (plan.command !== undefined) {
@@ -133,9 +126,6 @@ export async function installHooks(session: Session, steps: Array<readonly strin
 /**
 Check whether the hooks in the settings run in this repository. Git skips a hook file that is missing or, off Windows,
 not executable without a word, so each hook of gspot must be a file with an executable bit.
-
-@param session the settings, runner, and configured checks.
-@param repository the Git repository whose hooks to inspect.
 */
 export async function readHookStatus(session: Session, repository: Pick<Repository, 'root'>): Promise<HookStatus> {
     const { settings } = session;
@@ -164,13 +154,6 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
     return { ready: false, text: NOT_INSTALLED_STATUS };
 }
 
-/**
-List the hooks that run at least one configured check.
-
-@param checks the configured checks.
-
-@returns the hook names, in the order Git runs them.
-*/
 export function listHookNames(checks: ScopeCheck[]): HookName[] {
     const stages = new Set<string>(checks.map((planned) => planned.check.stage));
     return CHECK_HOOKS.filter((name) => HOOK_CHECKS[name].stages.some((stage) => stages.has(stage)));

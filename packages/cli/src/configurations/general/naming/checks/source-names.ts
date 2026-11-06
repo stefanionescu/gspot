@@ -10,11 +10,6 @@ import type { Identifier, IdentifierRead, NamedFile } from '#cli/types/configura
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-List source files with the selected language configuration for each file.
-
-@param planned the scope and its source files.
-*/
 export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
     const languages = planned.scope.configurations
         .filter((configuration) => configuration.group === 'language')
@@ -33,15 +28,6 @@ export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
 
 const IDENTIFIERS = Symbol('identifiers');
 
-/**
-Lists the identifiers a file declares, or none when no extractor reads its language, once per session.
-
-@param file the repository path of the source.
-@param text the source to parse.
-@param language the configuration that covers the file.
-@param session the run cache and parser resources.
-@returns the identifiers in source order, or a syntax error.
-*/
 export function parseIdentifiers(
     file: string,
     text: string,

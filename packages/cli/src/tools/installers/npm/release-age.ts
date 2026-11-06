@@ -10,10 +10,6 @@ import type { PackageManager } from '#cli/types/repository.ts';
 /**
 Add the minimum release age to an npm or pnpm command. Bun reads the file that writeBunReleaseAge writes.
 The gspot packages install at the version of the CLI, so the hold skips them.
-
-@param command the arguments to run.
-@param packageManager the manager and its version.
-@param days how long a new release waits.
 */
 export function prepareReleaseAge(command: readonly string[], packageManager: PackageManager, days: number): string[] {
     if (packageManager.name === 'npm')
@@ -31,12 +27,6 @@ export function prepareReleaseAge(command: readonly string[], packageManager: Pa
     return [...command];
 }
 
-/**
-Write the Bun settings file that holds back new releases. Each Bun run reads it through --config.
-
-@param folder the temporary settings folder of the run.
-@param days how long a new release waits.
-*/
 export function writeBunReleaseAge(folder: string, days: number): string {
     const install = {
         peer: false,

@@ -16,14 +16,6 @@ import type { PackageJson } from '#cli/types/parsers.ts';
 import type { Files } from '#cli/types/system.ts';
 import type { InstalledDependency } from '#cli/types/tools.ts';
 
-/**
-Read and validate an installed package.json through the tool-project boundary.
-
-@param files the confined file handle of the tool project.
-@param root the boundary for resolving and validating installed package.json paths.
-@param path the absolute package.json file.
-@returns undefined when the file does not exist.
-*/
 export function readToolProjectPackage(files: Files, root: string, path: string): PackageJson | undefined {
     let target: string;
     try {
@@ -38,11 +30,6 @@ export function readToolProjectPackage(files: Files, root: string, path: string)
 /**
 List the words that start a tool. An npm tool of the tool project starts through Node at the script that its package
 names, so a Windows run skips the .cmd shim and its short command line.
-
-@param root the folder that holds the tool project.
-@param tool the tool to start.
-@param path the resolved executable.
-@returns the program and its first arguments.
 */
 export function readToolCommandPrefix(root: string, tool: Tool, path: string): string[] {
     const npm = tool.installers['npm'];
@@ -57,14 +44,6 @@ export function readToolCommandPrefix(root: string, tool: Tool, path: string): s
     return [node, join(dirname(packagePath), script)];
 }
 
-/**
-Read the path and version of an installed package, hoisted or not, as its dependency file resolves it.
-
-@param root the base folder for resolving the dependency file.
-@param packageJsonPath the repository-relative package.json used as the module-resolution base.
-@param name the package to resolve through the dependency file.
-@returns undefined when the dependency does not exist.
-*/
 export function findInstalledDependency(
     root: string,
     packageJsonPath: string,

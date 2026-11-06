@@ -22,9 +22,6 @@ export const isolatedEnvironment: Record<string, string | undefined> = {
         .join(delimiter),
 };
 
-/**
-Install gspot from the local registry into a new project, as a user installs it.
-*/
 export async function createGspotProject(): Promise<GspotProject> {
     await using resources = new AsyncDisposableStack();
     const folder = resources.use(await testdir());

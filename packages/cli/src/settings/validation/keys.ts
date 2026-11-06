@@ -141,17 +141,6 @@ function formatUnknownField(key: string, availableKeys: string[]): string {
     }`;
 }
 
-/**
-Name an unknown setting, and list the closest keys in the same table. A setting of a table that no scope offers names
-the configurations that offer it and the command that adds one.
-
-@param key the written dotted name.
-@param keys the settings available at this location, and the settings that any scope offers.
-@param keys.available the settings available at this location.
-@param keys.offered the settings that any scope offers. When one of them shares the table of the key, a scope selects
-a configuration of that table.
-@returns the error, with a command that lists the settings or adds the configuration.
-*/
 export function formatUnknownSetting(
     key: string,
     { available: availableKeys, offered }: { available: string[]; offered: ReadonlySet<string> },
@@ -175,15 +164,6 @@ export function formatUnknownSetting(
         : formatUnknownField(key, availableKeys);
 }
 
-/**
-Validate every written key against the known settings and the weakening rule.
-
-@param availableSettings the settings and defaults of the selected configurations.
-@param settings the parsed gspot.toml.
-@param scopeAvailable the settings of each scope by path, which its own table uses.
-@param automatic the settings of the configurations that gspot selects in every repository or is about to select.
-@returns empty when the settings pass validation.
-*/
 export function validateKeys(
     availableSettings: AvailableSettings,
     settings: Settings,

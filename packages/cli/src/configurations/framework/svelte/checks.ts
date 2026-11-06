@@ -50,13 +50,6 @@ function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckF
     });
 }
 
-/**
-Runs svelte-check on the scope for compiler warnings, accessibility warnings, and type errors.
-
-@param session the repository and its tools.
-@param planned the scope to check.
-@returns one finding for each error and warning.
-*/
 async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using runtime = createTemporaryFolder();
     const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.path, TSCONFIG_FILE);

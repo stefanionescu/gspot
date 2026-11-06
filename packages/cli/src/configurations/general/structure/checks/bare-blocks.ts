@@ -8,9 +8,6 @@ import type { Session } from '#cli/types/tools.ts';
 /**
 Reports each Swift `do` block without a `catch` block, which only groups statements. ESLint reports the bare blocks
 of JavaScript and TypeScript.
-
-@param session the repository and its tools.
-@param planned the scope sources.
 */
 async function checkBareBlocks(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];

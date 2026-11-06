@@ -27,9 +27,6 @@ const workspaceGlobsSchema = z.object({ packages: z.string().array().optional() 
 /**
 List the folders that workspace globs match and that hold a package.json, as the workspace tools do. gspot reads each
 package.json itself later, so a byte order mark, which Node accepts, does not stop the listing.
-
-@param root the repository root that the globs start from.
-@param globs the workspace globs, with ! before an excluded one.
 */
 function expandWorkspaceGlobs(root: string, globs: string[]): string[] {
     return globSync(globs, { cwd: root, onlyDirectories: true, ignore: ['**/node_modules'], expandDirectories: false })
@@ -39,12 +36,6 @@ function expandWorkspaceGlobs(root: string, globs: string[]): string[] {
         .map((folder) => relative(root, folder));
 }
 
-/**
-Read one workspace file, and name the file when its tool cannot parse it.
-
-@param file the workspace file that the read depends on.
-@param read the read through the workspace tool.
-*/
 function readWorkspaceFile<Value>(file: string, read: () => Value): Value {
     try {
         return read();
@@ -56,12 +47,6 @@ function readWorkspaceFile<Value>(file: string, read: () => Value): Value {
     }
 }
 
-/**
-List the workspace package folders of the first workspace file that declares them, and name that file when it does not
-parse.
-
-@param root the repository root.
-*/
 function listWorkspacePackages(root: string): string[] {
     const packageJson = readPackageJson(root, PACKAGE_JSON);
     const sources = [
@@ -122,15 +107,6 @@ function listWorkspaceImportFolders(cache: RunCache, folder: string, ordered: st
           );
 }
 
-/**
-List the files of the workspace packages that a project imports or depends on, and the files that those packages
-publish.
-
-@param cache the run cache.
-@param scopePath the owning project.
-@param files the source inventory.
-@returns the repository-relative paths.
-*/
 export function listWorkspaceSources(cache: RunCache, scopePath: string, files: TrackedFile[]): string[] {
     const root = cache.root;
     const tracked = new Set(files.map((file) => file.path));
@@ -181,12 +157,6 @@ export function listWorkspaceSources(cache: RunCache, scopePath: string, files: 
     });
 }
 
-/**
-List the folders of the npm workspaces that the repository declares, without the root.
-
-@param root the boundary that declared workspace packages must remain inside.
-@returns the root-relative folders.
-*/
 export function listWorkspaceFolders(root: string): string[] {
     const packages = listWorkspacePackages(root);
     for (const found of packages)
@@ -198,13 +168,6 @@ export function listWorkspaceFolders(root: string): string[] {
     return packages.map((found) => convertToPosixPath(found)).filter((path) => path !== '' && path !== '.');
 }
 
-/**
-Select the existing files that package.json files declare for publication.
-
-@param root the base folder for the package.json files and their patterns.
-@param packageJsonPaths the repository-relative package.json files to read.
-@returns the repository-relative package files.
-*/
 export function listPackageFiles(root: string, packageJsonPaths: string[]): string[] {
     return packageJsonPaths.flatMap((path) => {
         const folder = dirname(path);

@@ -206,13 +206,6 @@ function readMessageFiles(
     return { messagesByPath, findings };
 }
 
-/**
-Checks the message files in `translations.messages_folder` against the base locale. Each folder of message files, and each
-namespace of a locale-folder layout, compares with its own base-locale file.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] {
     const options = getTable(planned.scope.settings, 'translations');
     const folder = options.messages_folder as string;

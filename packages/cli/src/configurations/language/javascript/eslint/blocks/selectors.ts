@@ -20,10 +20,6 @@ function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
 Resolve the syntax selectors of each project scope: the base selectors at level all, the selectors of its
 configurations, and those of its settings. A later ESLint block replaces the options of a rule instead of merging them.
 Each scope gets one list, and gspot/restricted-syntax matches the files of each selector itself.
-
-@param scopes every project scope.
-@param level the selected lint rule level.
-@param dependencyFiles the dependency files that a selector can name a package from.
 */
 export function buildSelectorBlocks(
     scopes: Scope[],

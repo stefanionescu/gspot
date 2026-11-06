@@ -74,12 +74,6 @@ function listSecretNodes(syntaxRoot: Node, source: string): Array<readonly [Node
     });
 }
 
-/**
-Reports always-accessible Keychain items, weak hashes, and each secret in UserDefaults, a plist read, or a log.
-
-@param session the repository and its tools.
-@param planned the scope Swift files.
-*/
 async function checkSwiftSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];

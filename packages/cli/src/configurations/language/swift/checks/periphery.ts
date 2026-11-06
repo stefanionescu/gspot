@@ -16,12 +16,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
-/**
-Runs Periphery over the project and reports every declaration nothing uses.
-
-@param session the repository and its tools.
-@param planned the scope to scan.
-*/
 async function checkPeriphery(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);
     const { code, files } = await runSwiftBuild(session, planned, plan, { clean: false });

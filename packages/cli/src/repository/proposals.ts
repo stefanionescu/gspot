@@ -95,11 +95,6 @@ function getConfigurationOrigin(name: string, sources: ConfigurationChoices): Co
     return sources.written.has(name) ? 'suggested' : 'required';
 }
 
-/**
-Select configurations from the files, the named configurations, and the project scopes.
-
-@param request the repository and the flags.
-*/
 export function selectProposedConfigurations(request: ConfigurationRequest): ProposedConfigurations {
     const { repository, options } = request;
     assertConfigurationsExist(options.configurations ?? []);
@@ -157,11 +152,6 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
     return { scopes, rootNames, scopeConfigurations, detected, origins };
 }
 
-/**
-Find newly detected configurations in each project scope, respecting removals.
-
-@param session the current repository and authored selections.
-*/
 export function listDetectedAdditions(
     session: ConfigurationSelection,
 ): Array<{ scopePath: string; configurations: string[]; evidence: ConfigurationEvidence[] }> {

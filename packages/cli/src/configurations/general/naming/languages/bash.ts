@@ -23,12 +23,6 @@ function addDeclarations(found: FileIdentifiers, syntaxRoot: Node): void {
             if (child.type === 'variable_name') addIdentifier(found, child, 'variables');
 }
 
-/**
-Lists the functions and variables that a shell script declares.
-
-@param syntaxRoot the parsed script.
-@param file the repository path of the script.
-*/
 export function extractBashIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const found: FileIdentifiers = { file, language: 'bash', identifiers: [] };
     addFunctions(found, syntaxRoot);

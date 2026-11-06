@@ -1,8 +1,5 @@
 import { expect } from 'bun:test';
 
-/**
-Await a promise that must reject with an error.
-*/
 export async function captureRejection(promise: Promise<unknown>): Promise<Error> {
     try {
         await promise;
@@ -13,9 +10,6 @@ export async function captureRejection(promise: Promise<unknown>): Promise<Error
     throw new Error('The promise resolved, and a rejection was expected.');
 }
 
-/**
-An object that must hold these properties, typed as the compared value.
-*/
 export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }

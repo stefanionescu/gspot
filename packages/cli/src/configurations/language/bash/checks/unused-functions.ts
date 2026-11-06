@@ -8,9 +8,6 @@ import type { Session } from '#cli/types/tools.ts';
 /**
 Report functions that no script in the scope calls. A script can call a function that another script defines, because
 a main script sources its helpers together, and bats loads them. Exclude main and the bats hooks.
-
-@param session the repository and its tools.
-@param planned the scope scripts to read.
 */
 async function checkUnusedFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);

@@ -65,13 +65,6 @@ function listConfigurationConflicts(
     });
 }
 
-/**
-Parse a shared settings file by its extension.
-
-@param text the file contents.
-@param extension the extension of the path.
-@param path the file, for the error.
-*/
 export function parseSharedFile(text: string, extension: string, path: string): unknown {
     if (extension === JSON_EXTENSION) return parseJsonFile(path, text);
     if (YAML_EXTENSIONS.includes(extension)) return parseYamlFile(path, text);
@@ -79,13 +72,6 @@ export function parseSharedFile(text: string, extension: string, path: string): 
     throw new Error(`${path}: gspot cannot read the settings format of this shared file.`);
 }
 
-/**
-Check whether a shared file holds the key or the table of a tool.
-
-@param text the file contents.
-@param path the file.
-@param selector the key or the table.
-*/
 export function hasToolSection(
     text: string,
     path: string,
@@ -105,13 +91,6 @@ export function hasToolSection(
     return true;
 }
 
-/**
-Find the settings files of the tools that gspot writes settings for, such as .commitlintrc.json for commitlint.
-
-@param root the repository to read.
-@param files the tracked inventory.
-@param configurations the configurations whose tools name their settings files.
-*/
 export function listConflictingConfigs(
     root: string,
     files: TrackedFile[],
@@ -125,12 +104,6 @@ export function listConflictingConfigs(
     return selected.flatMap((configuration) => listConfigurationConflicts(root, configuration, located));
 }
 
-/**
-Check whether generated field edits cover an existing tool settings section.
-
-@param config the existing file or section.
-@param fileEdits the generated field edits.
-*/
 export function isEditedInPlace(config: ConflictingConfig, fileEdits: ManagedKeys[]): boolean {
     return fileEdits.some(
         (output) => output.path === config.path && output.keys.some((field) => field.key[0] === config.key),

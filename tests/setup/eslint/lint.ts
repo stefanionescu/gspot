@@ -12,9 +12,6 @@ import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import type { EslintConfiguration, LintFinding } from '#tests/types/setup.ts';
 
-/**
-Lint the files and keep the findings of these rules and fatal errors, sorted.
-*/
 export async function listLintFindings(
     eslint: ESLint,
     root: string,
@@ -40,10 +37,6 @@ export async function listLintFindings(
         );
 }
 
-/**
-Link the test packages, write the generated files of a folder with a gspot.toml, and load the generated ESLint config
-file.
-*/
 export async function buildEslint(root: string, options?: Pick<ESLint.Options, 'fix'>): Promise<ESLint> {
     runGitStep(root, ['init', '--quiet']);
     await linkInstalledModules(join(root, 'node_modules'));
@@ -62,9 +55,6 @@ export async function buildEslint(root: string, options?: Pick<ESLint.Options, '
     });
 }
 
-/**
-Read the rule table ESLint calculates for each file in a scoped repository.
-*/
 export async function readEslintRules(
     eslint: ESLint,
     files: readonly string[],
@@ -79,9 +69,6 @@ export async function readEslintRules(
     );
 }
 
-/**
-List each rule name once, sorted.
-*/
 export function listFindingRules(findings: readonly LintFinding[]): Array<string | null> {
     return [...new Set(findings.map(({ rule }) => rule))].toSorted((left, right) =>
         compareText(String(left), String(right)),

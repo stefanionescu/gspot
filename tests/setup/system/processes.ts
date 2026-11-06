@@ -28,9 +28,6 @@ function hasExited(pid: number): boolean {
     }
 }
 
-/**
-Limit a child command and build the text a timeout error shows.
-*/
 export function limitCommand(
     command: readonly string[],
     options: CancelableSpawnOptions,
@@ -43,18 +40,12 @@ export function limitCommand(
     return { options: { ...options, timeoutSeconds }, context };
 }
 
-/**
-Run a command within its requested limit and the command timeout.
-*/
 export async function runCommand(command: readonly string[], options: CancelableSpawnOptions): Promise<SpawnResult> {
     const limited = limitCommand(command, options);
     const result = await runProcess(command, limited.options);
     return readCommandResult(result, limited);
 }
 
-/**
-Run a synchronous command within the command timeout.
-*/
 export function runBlockingCommand(command: readonly string[], options: CancelableSpawnOptions): SpawnResult {
     const limited = limitCommand(command, options);
     const child = Bun.spawnSync([...command], {
@@ -107,9 +98,6 @@ export async function waitForFile(path: string): Promise<boolean> {
     return false;
 }
 
-/**
-Start and capture one test child within the command timeout.
-*/
 export function spawnCommand(
     command: readonly string[],
     options: CancelableSpawnOptions,
@@ -127,9 +115,6 @@ export function spawnCommand(
     return { child, ...captureChild(child) };
 }
 
-/**
-A process result for check tests, with these fields changed.
-*/
 export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
     return {
         code: 0,
@@ -141,9 +126,6 @@ export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnR
     };
 }
 
-/**
-Drain the output of a child process, and end it when a test leaves its scope.
-*/
 export function captureChild(child: ProcessCapture): ChildCapture {
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
@@ -161,9 +143,6 @@ export function captureChild(child: ProcessCapture): ChildCapture {
 
 export const CHILD_TIMEOUT_SECONDS = (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND;
 
-/**
-Check whether a child stopped: Windows sets its exit code, and other systems set the signal that ended it.
-*/
 export function isStopped(child: ChildProcess | undefined): boolean {
     if (child === undefined) return false;
     return (isWindows ? child.exitCode : child.signalCode) !== null;

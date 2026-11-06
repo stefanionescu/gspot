@@ -17,12 +17,6 @@ import { type CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkPipInstalls(session: Session, planned: PlannedCheck): CheckFinding[] {
     if (
         (planned.check.files?.filenames ?? []).every((file) =>

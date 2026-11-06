@@ -97,12 +97,6 @@ function validateRedirects(text: string): NumberedLine[] {
     });
 }
 
-/**
-Reports syntax errors in each _redirects file.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
         validateRedirects(readText(session.cache, path)).map((invalidLine) => ({
@@ -114,12 +108,6 @@ function checkRedirects(session: Session, planned: PlannedCheck): CheckFinding[]
     );
 }
 
-/**
-Reports syntax errors in each _headers file, and each security header that the block for every path does not set.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
         const { blocks, errors } = parseHeadersFile(readText(session.cache, path));

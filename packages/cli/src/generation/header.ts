@@ -9,13 +9,6 @@ import {
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 
-/**
-Format the header of a generated file outside .gspot.
-
-@param path the generated file.
-@param notes lines to add after the header text.
-@returns the comment block with a final newline, or '' inside .gspot and for JSON that takes no comments.
-*/
 export function formatHeader(path: string, notes: string[] = []): string {
     if (isGspotPath(path)) return '';
     const extension = extractExtension(path);

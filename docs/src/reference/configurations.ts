@@ -152,12 +152,6 @@ function buildConfigurationPage(
     return buildReferencePage(configuration.name, configuration.description, body);
 }
 
-/**
-Build the grouped configuration index and its pages.
-
-@param guides the authored guide titles keyed by slug.
-@returns the index and each configuration page with a section per check, keyed by path
-*/
 export function buildConfigurationPages(guides: Map<string, ConfigurationGuide>): Map<string, ReferencePage> {
     const alwaysSelected = CLI_REFERENCE.configurations
         .filter(({ always_selected }) => always_selected)

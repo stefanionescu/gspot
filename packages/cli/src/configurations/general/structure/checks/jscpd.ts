@@ -26,12 +26,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
-/**
-Runs jscpd over the scope and reports the clones.
-
-@param session the repository and its tools.
-@param planned the scope whose source files to compare.
-*/
 async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using workFolder = createTemporaryFolder();
     const owned = new Set(

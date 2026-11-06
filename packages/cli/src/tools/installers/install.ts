@@ -78,13 +78,6 @@ async function repairTools(install: ToolInstall, tools: Tool[], miseBinPaths: st
     });
 }
 
-/**
-Tell whether install has nothing to change: the tool project files and their lockfiles match the settings, the hooks
-run, every tool that install puts in place passes the inspection of doctor, and the environment of each Python project
-with a uv lockfile matches that lockfile.
-
-@param install the session, the tool project files, and the tools of the checks.
-*/
 async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
     const { session, generated, writer, checkTools } = install;
     const isWritten = generated.files.every(
@@ -109,12 +102,6 @@ async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
     return isEveryEnvironmentReady(install, folders);
 }
 
-/**
-Build what every install step reads from the session.
-
-@param session the repository and its settings.
-@param input the repository handle, generated files, tools of the checks, and the mise program.
-*/
 export async function buildToolInstall(
     session: Session,
     input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools' | 'misePath' | 'runsProjectInstall'>,
@@ -136,9 +123,6 @@ export async function buildToolInstall(
 /**
 Install the tools in their tool projects, inspect each one, reinstall the ones that fail, and set the hooks of this
 clone. When every tool already passes, install only adds the Vale packages and grammars that are missing.
-
-@param session the repository to install for.
-@param input the repository handle, generated files, and tools of the checks.
 */
 export async function installTools(
     session: Session,

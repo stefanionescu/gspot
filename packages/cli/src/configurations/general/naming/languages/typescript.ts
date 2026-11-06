@@ -84,13 +84,6 @@ function addEnumCases(found: FileIdentifiers, syntaxRoot: Node): void {
     }
 }
 
-/**
-Lists the names that a TypeScript or JavaScript file declares.
-
-@param syntaxRoot the parsed program.
-@param file the repository path of the source.
-@param language `typescript` or `javascript`.
-*/
 export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, language: string): Identifier[] {
     const found: FileIdentifiers = { file, language, identifiers: [] };
     addDeclarations(found, syntaxRoot);

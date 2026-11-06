@@ -24,25 +24,12 @@ import type { OwnedConfig } from '#cli/types/configurations/language.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Check whether a scope reads the root config of a tool that walks up to its parent configs, so it needs no pointer.
-
-@param owned the config file and the scope that owns it.
-@param generated the file of each config in each scope.
-*/
 export function isPointerInherited(owned: OwnedConfig, generated: Pick<ConfigTargets, 'targets'>): boolean {
     const { config, owner } = owned;
     const files = ['', owner.scope.path].map((scopePath) => generated.targets.get(scopePath)?.get(config.target));
     return config.pointer?.inherit === true && owner.scope.path !== '' && files.every((file) => file === config.target);
 }
 
-/**
-List the paths outside .gspot/ that a run writes: the root targets and pointer file paths of the config files it writes, and the CI workflow when CI runs.
-
-@param session the scopes and the settings.
-@param generated the file of each config in each scope.
-@returns the paths, each from the repository root with a leading slash.
-*/
 export function listWrittenPaths(session: Session, generated: Pick<ConfigTargets, 'targets'>): string[] {
     const paths = listOwnedConfigs(session).flatMap((owned) => {
         const { config, owner } = owned;
@@ -57,12 +44,6 @@ export function listWrittenPaths(session: Session, generated: Pick<ConfigTargets
     return [...new Set(paths)].toSorted(compareText).map((path) => `/${path}`);
 }
 
-/**
-Group path ignores by source, before the ignores of a check.
-
-@param session the repository to read.
-@param generated the file of each config in each scope.
-*/
 export function buildIgnoreSections(session: Session, generated: Pick<ConfigTargets, 'targets'>): IgnoreSection[] {
     const { cache, repository, scopes } = session;
     const generatorOutputs = scopes.flatMap(({ path: scopePath, configurations }) =>

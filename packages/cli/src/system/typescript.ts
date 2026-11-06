@@ -7,8 +7,6 @@ const requireModule = createRequire(import.meta.url);
 /**
 Require the TypeScript compiler when a caller first needs it. It takes a large part of the start time, so commands that
 parse no TypeScript, JavaScript, or tsconfig file skip it.
-
-@returns the compiler module, which Node.js caches after the first load.
 */
 export function requireTypescript(): typeof ts {
     return requireModule('typescript') as typeof ts;

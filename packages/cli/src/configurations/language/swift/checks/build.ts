@@ -27,15 +27,6 @@ import type { Session } from '#cli/types/tools.ts';
 
 const SWIFT_BUILD_OUTPUTS = Symbol('swift build outputs');
 
-/**
-Turn the compiler lines of the reported levels into findings, with paths from the repository root.
-
-@param session the repository and its tools.
-@param output the compiler output.
-@param options the levels to report, and the rule of a line without one.
-@param options.levels the message levels to report.
-@param options.defaultRule the rule of a line without a rule suffix.
-*/
 function parseOutputFindings(
     session: Session,
 
@@ -84,12 +75,6 @@ function expandResponseFiles(line: string, folder: string, files: Files): string
     });
 }
 
-/**
-Builds the scope and reports the compiler errors.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);
     const { output, code, source } = await runSwiftBuild(session, planned, plan, { clean: false });
@@ -108,15 +93,6 @@ async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Pr
     return assertToolFindings({ code, stdout: restored, stderr: '' }, found, SWIFT_BUILD_NAME);
 }
 
-/**
-Build the scope once for each build folder, and keep the compiler output for the other Swift checks.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-@param plan the build folder, the command, and the log path.
-@param options how to run the build.
-@param options.clean whether to compile every file, so the compiler log lists each one.
-*/
 export async function runSwiftBuild(
     session: CheckSession,
     planned: PlannedCheck,
@@ -152,18 +128,6 @@ export async function runSwiftBuild(
     });
 }
 
-/**
-Run a Swift tool in the source copy of the build, and read its compiler lines as findings.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-@param run what to run, and how to read its output.
-@param run.source the source copy of the build.
-@param run.commandArguments the tool command and its arguments.
-@param run.defaultRule the rule of a line without a rule suffix.
-@param run.tool the tool name that the error of a failed run names.
-@returns the findings, with paths from the repository root.
-*/
 export async function runCopiedTool(
     session: CheckSession,
     planned: PlannedCheck,

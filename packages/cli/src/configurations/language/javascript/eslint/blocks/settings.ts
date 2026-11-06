@@ -192,14 +192,6 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope
     ];
 }
 
-/**
-Build the lint rule options and the path overrides in order, each for its own project.
-
-@param settings the parsed gspot.toml.
-@param scopes every project, that owns its configured rule options.
-
-@returns one option block per scope and path override, in the order they apply.
-*/
 export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
     const scopesByPath = new Map(scopes.map((scope) => [scope.path, scope]));
     const tables = listSettingsTables(settings).toSorted((first, second) =>
@@ -235,12 +227,6 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
     return [...scopeOptions, ...overrides];
 }
 
-/**
-Build import restrictions where a scope changes the list inherited from its parent.
-
-@param planned the planned ESLint file.
-@returns one block per changed list, excluding scopes with their own lists.
-*/
 export function buildRestrictedImportBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
 ): EslintBlockFields[] {
@@ -262,12 +248,6 @@ export function buildRestrictedImportBlocks(
     });
 }
 
-/**
-Build the settings blocks: limit, environment, trivial-code, turned-off rule, and ignore blocks. Split each into a
-block for the code files and a block for the package.json files, and drop the blocks with no rules.
-
-@param planned the planned ESLint file.
-*/
 export function splitSettingsBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles' | 'eslintFiles'>,
 ): EslintBlockFields[] {

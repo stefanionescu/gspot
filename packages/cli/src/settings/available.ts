@@ -156,13 +156,6 @@ function buildSettingsByConfiguration(): Map<string, Setting[]> {
     return settings;
 }
 
-/**
-Build the known settings in the order of the selected configurations. Configurations of the OVERRIDING_GROUPS groups
-override single-value defaults.
-
-@param configurations the manifests of the selection, in order.
-@param level picks the defaults of the configured level.
-*/
 export function buildAvailableSettings(configurations: Configuration[], level: Level): AvailableSettings {
     const availableSettings: AvailableSettings = { settings: new Map(), defaults: new Map(), errors: [] };
     for (const setting of ROOT_SETTINGS) {

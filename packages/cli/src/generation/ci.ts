@@ -137,8 +137,6 @@ function buildFrozenInstall(session: Session, scopePath: string, lockfile: Froze
 Build one lint job for each system, each with one mise setup. With test checks, each system also gets a tests job,
 and its lint job leaves them out. Refuse a command from the repository that holds a GitHub expression: GitHub expands
 it before the shell runs.
-
-@param pipeline what the workflow runs.
 */
 export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     const commands = [...(pipeline.setupCommand ?? []), ...pipeline.projectInstall, buildGspotTools(pipeline)];
@@ -167,11 +165,6 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     return { path: GITHUB_WORKFLOW, content, kind: 'workflow' };
 }
 
-/**
-Build a GitLab include, and leave the authored pipeline unchanged. Platform and Swift choices do not apply.
-
-@param pipeline what the include runs.
-*/
 export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     const tools = buildGspotTools(pipeline);
     const setup = pipeline.setupCommand === undefined ? pipeline.projectInstall : [quoteCommand(pipeline.setupCommand)];
@@ -195,11 +188,6 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
 }
 
-/**
-List the checks of the selected testing configurations that the repository runs.
-
-@param session the repository and its enabled checks.
-*/
 export function listTestChecks(session: Session): string[] {
     const checks = session.configuredChecks
         .filter(({ configuration }) => configuration?.group === 'testing')
@@ -207,13 +195,6 @@ export function listTestChecks(session: Session): string[] {
     return [...new Set(checks)];
 }
 
-/**
-List the shell lines that install the locked dependencies of each project, then write the route types of each
-Next.js project, which typed lint rules read.
-
-@param session the repository, its scopes, and its tools.
-@returns the lines, each run from the repository root.
-*/
 export function listProjectInstallLines(session: Session): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     return session.scopes.flatMap(({ path: scopePath, configurations }) => {

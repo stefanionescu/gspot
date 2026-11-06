@@ -220,14 +220,6 @@ function buildPerScopeTarget(config: Pick<Config, 'target' | 'file' | 'root'>, s
     return join(folder, CONFIG_SCOPES_FOLDER, scopePath, config.file);
 }
 
-/**
-Build the text of one config file, and of the files that it imports.
-
-@param owned the config file and the scope that owns it.
-@param targetPath the repository path where gspot writes the file.
-@param generated the config paths and shared ignore sections.
-@returns the generated file, with paths relative to where it sits, and its companion files.
-*/
 function buildConfigFile(
     owned: OwnedSourceFile,
     targetPath: string,
@@ -267,8 +259,6 @@ function buildConfigFile(
 
 /**
 Reuse generated settings only while the session keeps the same run cache.
-
-@param session the current settings, scopes, and repository files.
 */
 export function buildConfigs(session: Session): ConfigGeneration {
     const repositorySession =

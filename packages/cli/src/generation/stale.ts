@@ -66,13 +66,6 @@ function buildOutputDiff(file: GeneratedFile, onDisk: FileContents): string {
     );
 }
 
-/**
-Build a patch for a changed generated file or managed block when verbose reporting needs it.
-
-@param root the repository root.
-@param generated the expected files and blocks.
-@param path the changed output path.
-*/
 function buildGeneratedDiff(root: string, generated: Generation, path: string): string | undefined {
     const onDisk = openFiles(root).read(path);
     if (onDisk === undefined) return undefined;
@@ -93,15 +86,6 @@ function buildGeneratedDiff(root: string, generated: Generation, path: string): 
     );
 }
 
-/**
-Find changed, absent, or stray generated files. Managed blocks and file edits count too.
-
-@param session the repository to compare.
-@param generated the files that this run generates.
-@param options controls optional differences.
-@param options.verbose includes text and mode differences for changed files.
-@returns the stale files in path order.
-*/
 export function listStaleFiles(
     session: Session,
     generated: Generation,
@@ -131,12 +115,6 @@ export function listStaleFiles(
         .toSorted((a, b) => compareText(a.path, b.path));
 }
 
-/**
-List every managed path, with the lockfiles of the tool projects in use.
-
-@param session the repository and its package manager.
-@param generated the files that this run generates.
-*/
 export function listExpectedPaths(
     session: Pick<Session, 'toolPackageManager' | 'toolsRoot' | 'settings' | 'cache'>,
     generated: Generation,

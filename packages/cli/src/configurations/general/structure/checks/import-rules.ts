@@ -267,9 +267,6 @@ function listPythonImports(syntaxRoot: Node, file: string, search: PythonSearch)
 /**
 Applies [[import_rule]] to Python and Swift imports and to the types that Swift files name, and reports the code files
 of every language that no rule covers. ESLint applies the rules to JavaScript and TypeScript imports.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
 */
 async function checkImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const lookup = buildRuleLookup(session.settings.import_rule);

@@ -13,19 +13,12 @@ import type { KeyPath } from '#cli/types/parsers.ts';
 import type { ReasonedValue, Settings, SettingsEdit } from '#cli/types/settings.ts';
 import type { FileContents, Files } from '#cli/types/system.ts';
 
-/**
-Identify a written setting that carries both its value and its reason.
-
-@param value the written setting.
-*/
 export function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
     return isTable(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
 }
 
 /**
 Read the bytes, mode, and text of gspot.toml without following a link out of the repository.
-
-@param root the folder that contains gspot.toml.
 */
 export function readSettingsText(root: string): Pick<SettingsEdit, 'text' | 'previous'> {
     const files = openFiles(root);
@@ -36,37 +29,18 @@ export function readSettingsText(root: string): Pick<SettingsEdit, 'text' | 'pre
     return { text, previous };
 }
 
-/**
-Read the bytes, mode, text, and table of gspot.toml, for an edit that keeps its layout.
-
-@param root the folder that contains gspot.toml.
-*/
 export function readSettingsFile(root: string): SettingsEdit {
     const { text, previous } = readSettingsText(root);
     const table = parseTomlFile(SETTINGS_FILE, text);
     return { text, table, previous };
 }
 
-/**
-Write gspot.toml when its bytes or mode change.
-
-@param writer the file writer for settings.
-@param text the new gspot.toml contents.
-@param previous the captured file bytes and mode.
-*/
 export function writeSettings(writer: Files, text: string, previous: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: previous?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, previous)) return;
     writePlans(writer, planReplacements(writer, [{ path: SETTINGS_FILE, next, previous: previous }]));
 }
 
-/**
-Find the source line of a written setting or record.
-
-@param text the gspot.toml text.
-@param written the table that the text holds.
-@param keys the setting key or record path.
-*/
 export function findSettingLine(text: string, written: Settings['written'], keys: KeyPath): number {
     const syntax = parseTomlSyntax(text, written);
     const record = syntax.pathNodes

@@ -57,12 +57,6 @@ function listInvalidLinks(session: Session, narrowedLinks: string[] | undefined)
         .flatMap(({ path }) => listLinkFindings(session.root, path));
 }
 
-/**
-Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap((file) => {
         const scope = selectScope(file.path, session.scopes);
@@ -88,9 +82,6 @@ function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[
 /**
 Reports indexed files that the scope configurations mark as untracked, and the links that leave the repository. A
 commit or a push reports only its staged or pushed links.
-
-@param session the repository and its tools.
-@param planned the configured check and the links of its run.
 */
 function checkLocalFiles(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     const scopes = session.repository.scopeFolders;
@@ -127,12 +118,6 @@ function checkLocalFiles(session: CheckSession, planned: PlannedCheck): CheckFin
     return [...tracked, ...links];
 }
 
-/**
-Report tracked text files that need UTF-8 encoding.
-
-@param session the repository file cache.
-@param planned the configured check and selected scope files.
-*/
 function checkEncoding(session: Session, planned: PlannedCheck): CheckFinding[] {
     const unreadable = session.repository.unreadablePaths.map((path) => ({
         file: path,
@@ -161,12 +146,6 @@ function checkEncoding(session: Session, planned: PlannedCheck): CheckFinding[] 
     ];
 }
 
-/**
-Report each marker line that a merge conflict leaves in a tracked text file.
-
-@param session the repository file cache.
-@param planned the configured check and selected scope files.
-*/
 function checkConflictMarkers(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files
         .filter((file) => file.tags.includes('text') && !file.tags.includes('symlink'))

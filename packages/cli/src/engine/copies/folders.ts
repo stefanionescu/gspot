@@ -54,9 +54,6 @@ function createOwnedCopy(files: Files): string {
 
 /**
 Keep the ignore file of the copies until a run ends, because tools that walk the repository read it.
-
-@param root the repository that owns the copies.
-@returns the hold, which removes the empty copies folder on disposal.
 */
 export function holdCopyFolder(root: string): Disposable {
     heldRoots.add(root);
@@ -70,9 +67,6 @@ export function holdCopyFolder(root: string): Disposable {
 
 /**
 Keep copies inside the repository so linked packages share its root. Reclaim only copies whose owner has exited.
-
-@param root the repository that owns the copies.
-@returns the copy folder, removed on disposal.
 */
 export function createCopyFolder(root: string): TemporaryFolder {
     const files = openFiles(root);

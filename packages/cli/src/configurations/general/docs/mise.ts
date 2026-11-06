@@ -13,13 +13,6 @@ const miseTasksSchema = z.object({
     tasks: z.record(z.string(), taskValueSchema).default({}),
 });
 
-/**
-Read task names and aliases from a mise document.
-
-@param text the mise TOML contents.
-@param path the source mise file.
-@returns task names and the aliases explicitly declared for them.
-*/
 export function parseMiseTasks(text: string, path: string): string[] {
     const { tasks } = parseTomlFile(path, text, miseTasksSchema);
     return Object.entries(tasks).flatMap(([name, task]) => {

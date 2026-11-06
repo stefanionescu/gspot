@@ -26,13 +26,6 @@ function formatRuleIgnore(check: Check, explanations: CheckCode['explanations'])
         : undefined;
 }
 
-/**
-Collect tool requirements, supported systems, suppression syntax, and ignore commands for a shipped check.
-
-@param check the manifest check.
-@param configurations the available tools across configurations.
-@param explanations the rule explanations in the code of the check, whose first rule the ignore command names.
-*/
 export function describeCheck(
     check: Check,
     configurations: Configuration[],

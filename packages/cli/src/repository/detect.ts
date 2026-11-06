@@ -153,12 +153,6 @@ const EVIDENCE_FINDERS = [
     findPathEvidence,
 ];
 
-/**
-Propose configurations from the files and the dependencies, with the evidence for each.
-
-@param repository the inventory and parsed package declarations.
-@param scopePath the folder, '' for the root.
-*/
 export function detectConfigurations(
     repository: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
     scopePath = '',
@@ -177,13 +171,6 @@ export function detectConfigurations(
         .toArray();
 }
 
-/**
-Select the conditions that the file and dependency evidence meets.
-
-@param conditions the detection rules of the manifests.
-@param files the repository source inventory.
-@param dependencyFiles the parsed dependency files.
-*/
 export function detectConditions(
     conditions: Array<Configuration['detect']>,
     files: TrackedFile[],
@@ -199,11 +186,6 @@ export function detectConditions(
     );
 }
 
-/**
-List the general configurations that gspot adds without an explicit selection.
-
-@param repository the available inventory, if any
-*/
 export function listAutomaticConfigurations(
     repository?: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
 ): string[] {

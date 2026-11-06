@@ -244,14 +244,6 @@ function buildCheckExplanation(
     };
 }
 
-/**
-Explain a shipped check or a command check.
-
-@param session the repository, or undefined outside one.
-@param checkId the check ID to explain.
-@param cwd the folder where the command starts, which the printed commands start from.
-@returns undefined when no check has the ID.
-*/
 export function explainCheck(session: Session | undefined, checkId: string, cwd: string): Explanation | undefined {
     const commandCheck = session?.settings.commandChecks[checkId];
     const found: Pick<ScopeCheck, 'check' | 'configuration'> | undefined =
@@ -266,11 +258,6 @@ export function explainCheck(session: Session | undefined, checkId: string, cwd:
 Explain one lint rule: its page, its description from the installed tool, and how to ignore it or change its
 options.
 
-@param root the repository root, whose tool project holds ESLint and Stylelint.
-@param checkId the check that runs the rule.
-@param identifier the rule ID, including its plugin prefix.
-@param options the detail level and the session.
-@param options.verbose whether to include the full explanation.
 @param options.session the repository settings and tool project, when available.
 @returns undefined when no check runs the tool, or when the tool lists its rules and this is not one. A name outside the
 rules that gspot reads gets the help of its check.

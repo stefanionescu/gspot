@@ -5,9 +5,6 @@ import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
-/**
-Run git and return its trimmed output; throw when git fails.
-*/
 export function runGitStep(
     cwd: string,
     commandArguments: readonly string[],
@@ -19,9 +16,6 @@ export function runGitStep(
     return result.stdout.trim();
 }
 
-/**
-Commit every file of the folder, create the repository first when the folder has none, and return the commit hash.
-*/
 export function commitAll(cwd: string, message = 'init'): string {
     runGitStep(cwd, ['init', '-q']);
     runGitStep(cwd, ['add', '-A']);

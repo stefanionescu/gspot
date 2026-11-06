@@ -54,12 +54,6 @@ const nodeAssertChecks = new Map<string, AssertionChecks>(
     NODE_ASSERT_CHECKS.map(([name, checks]) => [name, { style: 'node-assert', ...checks }]),
 );
 
-/**
-Read which assertion libraries a file can use: the expect style that its imports or package.json select, chai, and
-node:assert.
-
-@param context the rule context of the file.
-*/
 function readAssertionStyles(context: FileContext): AssertionStyles {
     const cached = styleCache.get(context.sourceCode);
     if (cached !== undefined) return cached;
@@ -239,13 +233,6 @@ function isRunnerAssertion(
     return isRunner || isCypress || (styles.globalExpect && isGlobalExpect(node, source));
 }
 
-/**
-Read an assertion of Jest, Vitest, Bun, Jasmine, Playwright, chai, Cypress, or node:assert that the file can use. It reads a
-predicate on one value or a comparison of two values.
-
-@param node the call or member to read.
-@param context the rule context of the file.
-*/
 export function readAssertion(
     node: TSESTree.CallExpression | TSESTree.MemberExpression,
     context: FileContext,
@@ -266,9 +253,6 @@ export function readAssertion(
 Classify a call that asserts with a test library the file can use. Chai, sinon, supertest, node:assert, node:test, uvu,
 and the aws-cdk assertions also assert outside a test runner, so they return `script`. Vitest, Bun, Cypress, and the
 `expect` of Jest, Jasmine, and Playwright return `runner`, and a type-level assertion returns `type`.
-
-@param node the call to read.
-@param context the rule context of the file.
 */
 export function readAssertionKind(node: TSESTree.CallExpression, context: FileContext): AssertionKind | undefined {
     const source = context.sourceCode;

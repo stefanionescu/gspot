@@ -17,9 +17,6 @@ import type { Files } from '#cli/types/system.ts';
 import type { NpmToolInstall, Session, ToolInstall, ToolPackageManager, ToolSearch } from '#cli/types/tools.ts';
 import type { ToolProjectFiles } from '#tests/types/setup.ts';
 
-/**
-Read a tool project file, its lockfile, and the lockfile mode.
-*/
 export async function readToolProjectFiles(
     root: string,
     packageManager: ToolPackageManager['name'] | 'uv',
@@ -36,24 +33,12 @@ export async function readToolProjectFiles(
     };
 }
 
-/**
-Build the tool install for a sandbox.
-
-@param session the open sandbox.
-@param writer holds the repository lock and saves files.
-*/
 export async function buildSandboxToolInstall(session: Session, writer: Files): Promise<ToolInstall> {
     const generated = buildGeneratedFiles(session);
     const checkTools = listHostCheckTools(session.configuredChecks);
     return await buildToolInstall(session, { writer, generated, checkTools, misePath: undefined });
 }
 
-/**
-Build the npm tool install for a sandbox whose package.json names its package packageManager.
-
-@param session the open sandbox.
-@param writer holds the repository lock and saves files.
-*/
 export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
     const install = await buildSandboxToolInstall(session, writer);
     const { packageManager } = install;
@@ -61,9 +46,6 @@ export async function buildNpmToolInstall(session: Session, writer: Files): Prom
     return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
 }
 
-/**
-A program pin, with an npm installer when npm names a package.
-*/
 export function buildProgramPin(name: string, version: string, npmPackage?: string): Tool {
     return {
         name,
@@ -73,9 +55,6 @@ export function buildProgramPin(name: string, version: string, npmPackage?: stri
     };
 }
 
-/**
-What tool search reads, for tests that inspect installed tools.
-*/
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,
@@ -84,9 +63,6 @@ export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}):
     };
 }
 
-/**
-Build tool lockfiles that match the pins of the configurations, so that install finds every lockfile current.
-*/
 export function buildToolLockfiles(configurations: Configuration[]): Record<string, string> {
     const dependencies = listPackagePins(configurations).npm;
     const python = buildPythonProjectTable(configurations);

@@ -114,12 +114,6 @@ function validateScriptAttributes(source: SourceTree): CheckFinding[] {
     });
 }
 
-/**
-Reports inline scripts, handler attributes, and script links in each HTML file.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: CheckFinding[] = [];

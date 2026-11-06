@@ -20,7 +20,6 @@ import type { Scope } from '#cli/types/settings.ts';
 /**
 Build the glob of the files of these languages.
 
-@param languages the file tags whose extensions the glob matches.
 @returns a plain extension for one extension, because picomatch reads a one-item brace as literal text.
 */
 export function buildExtensionGlob(...languages: string[]): string {
@@ -31,9 +30,6 @@ export function buildExtensionGlob(...languages: string[]): string {
 /**
 Build the blocks of each scope whose value differs from its parent, deepest last, so a nested scope overrides its
 parent.
-
-@param scopes the projects.
-@param override what a scope holds, and the blocks that its value gives.
 */
 export function buildScopeOverrideBlocks<Value, Block>(
     scopes: Scope[],
@@ -60,12 +56,6 @@ export function buildScopeOverrideBlocks<Value, Block>(
     );
 }
 
-/**
-Calculate the exact file sets that base blocks and the blocks of every framework share.
-
-@param groups the file sets to combine.
-@returns code patterns and intersections that leave out non-code files.
-*/
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     const { scopes, nodeFiles } = groups;
     const source = buildExtensionGlob(...CODE_LANGUAGES);
@@ -112,12 +102,6 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     };
 }
 
-/**
-Keep test patterns that can select source files supported by ESLint.
-
-@param testFiles the cross-language test patterns.
-@returns the patterns with no extension or with a supported source extension.
-*/
 export function listCodeTestFiles(testFiles: string[]): string[] {
     const extensions = listTaggedExtensions(...CODE_LANGUAGES, ...COMPONENT_CONFIGURATIONS, 'astro');
     return testFiles.filter((pattern) => {
@@ -126,22 +110,10 @@ export function listCodeTestFiles(testFiles: string[]): string[] {
     });
 }
 
-/**
-Escape detected Node paths for glob selectors within one project scope.
-
-@param paths your repository-relative Node files.
-@param scopePath the folder that owns these sources.
-@returns literal file patterns that cannot select neighboring filenames.
-*/
 export function buildNodePatterns(paths: string[], scopePath: string): string[] {
     return paths.filter((path) => isInScope(path, scopePath)).map((path) => escapeGlob(path));
 }
 
-/**
-Split globs into includes and excludes.
-
-@param patterns your own or generated paths, with a leading ! for an exclusion.
-*/
 export function splitGlobs(patterns: string[]): PathExpressions {
     const included = includeFolderContents(patterns);
     return {
@@ -150,13 +122,6 @@ export function splitGlobs(patterns: string[]): PathExpressions {
     };
 }
 
-/**
-Intersect file selectors with root-relative patterns and one literal project scope.
-
-@param files the source selectors.
-@param scopePath the project folder.
-@param paths the repository-relative path patterns.
-*/
 export function buildScopeFiles(
     files: NonNullable<EslintBlockFields['files']>,
     scopePath: string,
@@ -171,13 +136,6 @@ export function buildScopeFiles(
     );
 }
 
-/**
-Intersect each authored test selector with the generated code selectors.
-
-@param tests the test selectors.
-@param code the code selectors.
-@returns one intersection per test and code selector.
-*/
 export function buildTestFiles(tests: string[], code: string[]): Array<[string, string]> {
     return tests.flatMap((test) => code.map((pattern): [string, string] => [test, pattern]));
 }

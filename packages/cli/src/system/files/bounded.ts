@@ -64,10 +64,6 @@ function writeStagedFile(path: string, contents: FileContents): void {
 
 /**
 Build the absolute path of a file after a check that every parent names a real folder, not a link.
-
-@param bounds the root.
-@param path the root-relative file.
-@param statParent reads each parent folder, which may create it.
 */
 export function buildContainedPath(
     bounds: FileBounds,
@@ -91,9 +87,6 @@ export function buildContainedPath(
 
 /**
 Keep only the permissions that the system file API shows. Windows shows a read-only flag.
-
-@param file the mode, and whether it holds a link.
-@returns the mode the system can represent.
 */
 export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isSymlink'>): number {
     if (file.isSymlink) return PERMISSION_BITS;
@@ -101,13 +94,6 @@ export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isSymlink'>
     return (file.mode & OWNER_WRITE_BIT) === 0 ? READ_ONLY_FILE : WRITABLE_FILE;
 }
 
-/**
-Check whether two file contents hold the same bytes and the same mode, as far as the system can show it.
-
-@param found the file contents on disk.
-@param expected the file contents that the caller expects.
-@returns true when neither exists or both match.
-*/
 export function isSameContents(found: FileContents | undefined, expected: FileContents | undefined): boolean {
     if (found === undefined || expected === undefined) return found === expected;
     const read = { ...found, mode: normalizeFileMode(found) };
@@ -117,9 +103,6 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 
 /**
 Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
-
-@param bounds the root.
-@param path the root-relative file.
 */
 export function preparePath(bounds: FileBounds, path: string): string {
     try {
@@ -129,12 +112,6 @@ export function preparePath(bounds: FileBounds, path: string): string {
     }
 }
 
-/**
-Read a regular file, or return undefined when absent.
-
-@param bounds the root.
-@param path the root-relative file.
-*/
 export function readBoundedFile(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
@@ -145,12 +122,6 @@ export function readBoundedFile(bounds: FileBounds, path: string): FileContents 
     }
 }
 
-/**
-Read a file or symbolic link without following the link, or return undefined when absent.
-
-@param bounds the root.
-@param path the root-relative file.
-*/
 export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
@@ -164,13 +135,6 @@ export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileC
     }
 }
 
-/**
-Replace the file at a path with new file contents, through a staged file that moves into place.
-
-@param bounds the root.
-@param path the root-relative file.
-@param contents the file contents to write.
-*/
 export function replaceBoundedFile(bounds: FileBounds, path: string, contents: FileContents): void {
     const target = preparePath(bounds, path);
     const temporary = join(

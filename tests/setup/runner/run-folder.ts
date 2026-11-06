@@ -24,19 +24,12 @@ export const TEST_RUN_FOLDER = (() => {
     return folder;
 })();
 
-/**
-Link the shared grammars of `mise run setup` into a cache folder, where the source reads them.
-*/
 export async function linkGrammars(cache: string): Promise<void> {
     const folder = join(cache, CACHE_FOLDER_NAME);
     await mkdir(folder, { recursive: true });
     await symlink(SHARED_GRAMMARS, join(folder, GRAMMARS_FOLDER), 'junction');
 }
 
-/**
-Create the cache, temporary, and config folders of a test file, and point the isolated environment at them. Git
-variables that a hook passes in are dropped. The resources remove the folders and restore the environment.
-*/
 export async function prepareRunFolders(resources: AsyncDisposableStack): Promise<void> {
     const cache = await mkdtemp(join(TEST_RUN_FOLDER, `${CACHE_FOLDER}-`));
     const temporary = await mkdtemp(join(TEST_RUN_FOLDER, `${TEMPORARY_FOLDER}-`));

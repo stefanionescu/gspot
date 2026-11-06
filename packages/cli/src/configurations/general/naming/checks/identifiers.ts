@@ -9,12 +9,6 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Checks the names that source files declare.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 async function checkIdentifiers(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const settings = readNamingSettings(session.settings, planned.scope);
     const findings: CheckFinding[] = [];

@@ -11,8 +11,6 @@ import type { Session } from '#cli/types/tools.ts';
 Parse the source files that a Python, Swift, or Bash configuration of the scope reads, capture the nodes that the
 structure query of their language names, and lend each source to a visitor.
 
-@param session the run cache and resources.
-@param planned the files to parse and the configurations that select their languages.
 @param visit reads one source; its syntax nodes must not leave this callback.
 */
 export async function visitQueriedSources(

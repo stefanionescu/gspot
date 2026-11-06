@@ -146,12 +146,6 @@ function listDocumentFindings(text: string, document: Document.Parsed): YamlFind
     return findings;
 }
 
-/**
-Report YAML syntax, ambiguous values, unused anchors, and file conventions.
-
-@param session the repository's cached source files.
-@param planned the YAML files selected for this scope.
-*/
 function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path: file }) => {
         const text = readText(session.cache, file);

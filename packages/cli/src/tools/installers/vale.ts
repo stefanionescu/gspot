@@ -87,11 +87,6 @@ async function readBoundedArchive(response: Response, { url, name, limit }: Arch
     }
 }
 
-/**
-Check that the Vale packages exist before prose checks run.
-
-@param root the root with the generated Vale files and package folders.
-*/
 export function hasValePackages(root: string): boolean {
     const files = openFiles(root);
     if (files.read(GSPOT_PATHS.valeConfig) === undefined) return false;
@@ -103,9 +98,6 @@ export function hasValePackages(root: string): boolean {
 /**
 Download the Vale packages, and replace the installed ones, when a selected configuration uses Vale.
 Skip the download when every package folder exists and the release file names the pinned releases. Needs the network.
-
-@param install what install needs for this step.
-@param miseBinPaths the program folders that mise installed, where Vale may sit.
 */
 export async function installValePackages(install: ToolInstall, miseBinPaths: string[]): Promise<string> {
     const { session } = install;
@@ -143,12 +135,6 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     }
 }
 
-/**
-Download a release archive within the install timeout and a size limit.
-
-@param session the time limit and the cancel signal of the download.
-@param download the archive to fetch.
-*/
 export async function downloadArchive(session: DownloadSession, download: ArchiveDownload): Promise<Buffer> {
     const advice = selectProxyAdvice();
     try {

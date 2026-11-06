@@ -54,13 +54,6 @@ function listMigrationPaths(planned: PlannedCheck): string[] {
         .map((file) => file.path);
 }
 
-/**
-Reads and parses the forward migrations of the scope in version order, once for each set of paths.
-
-@param session the repository and its tools.
-@param planned the scope whose migrations to read.
-@returns both empty when the scope has no migration.
-*/
 export async function readMigrations(session: Session, planned: PlannedCheck): Promise<MigrationRead> {
     const paths = listMigrationPaths(planned);
     if (paths.length === 0) return { migrations: [], findings: [] };
@@ -98,10 +91,6 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
 
 /**
 Skip the check when a migration does not parse, which postgres/migration-order reports.
-
-@param session the repository and its tools.
-@param planned the scope whose migrations to read.
-@returns the migration statements in version order.
 */
 export async function readParsedMigrations(session: Session, planned: PlannedCheck): Promise<Migration[]> {
     const { migrations, findings } = await readMigrations(session, planned);
@@ -109,11 +98,6 @@ export async function readParsedMigrations(session: Session, planned: PlannedChe
     return migrations;
 }
 
-/**
-Cut the text at the first MIGRATION_DOWN line outside every string and dollar-quoted body.
-
-@param text the migration SQL.
-*/
 export function extractForwardText(text: string): string {
     for (const token of listSqlTokens(text)) {
         if (token.kind !== 'line-comment') continue;
@@ -125,14 +109,6 @@ export function extractForwardText(text: string): string {
 
 const COMMITTED_MIGRATIONS = Symbol('committed migrations');
 
-/**
-Read the committed text of each migration file at a revision. A repository without Git has none.
-
-@param session the repository and its run cache.
-@param paths the migration files.
-@param revision the commit to read, or `HEAD`.
-@returns the text of each file that the revision holds, by path.
-*/
 export async function readCommittedMigrations(
     session: Session,
     paths: string[],

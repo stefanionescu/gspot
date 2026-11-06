@@ -65,13 +65,6 @@ function leaveOutUnreadSettings(template: Template, configurations: ProposedConf
     };
 }
 
-/**
-Build the gspot.toml text for a settings draft.
-
-@param draft the settings choices.
-@param repository the tracked source files.
-@returns the TOML text, with the preface and the comments of the copied keys.
-*/
 export function buildInitSettings(draft: SettingsDraft, repository: Repository): string {
     const document = buildSettingsTable(draft, repository);
     delete document['ci'];
@@ -81,15 +74,6 @@ export function buildInitSettings(draft: SettingsDraft, repository: Repository):
     ].join('\n')}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }
 
-/**
-Draft the settings from the configuration choices.
-
-@param configurations the configurations and scopes.
-@param options the authored level, when selected.
-@param format what the format settings read from the repository.
-@param format.prettierScripts the options of the JavaScript Prettier configs.
-@param format.trackedPaths the tracked files and every folder above them.
-*/
 export function buildSettingsDraft(
     configurations: ProposedConfigurations,
     options: Pick<InitOptions, 'level' | 'template'>,

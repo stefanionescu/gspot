@@ -105,9 +105,6 @@ async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise
 /**
 Install the npm tool project. Bun keeps the packages that a new lockfile drops, so a changed lockfile installs into an
 empty node_modules folder.
-
-@param npm what the npm install needs.
-@param lockfiles the lockfiles that this install wrote.
 */
 async function installNpmProject(npm: NpmToolInstall, lockfiles: ReplacementRequest[]): Promise<string> {
     const lockfile = `${GSPOT_FOLDER}/${selectLockfileName(npm.packageManager.name)}`;
@@ -117,13 +114,6 @@ async function installNpmProject(npm: NpmToolInstall, lockfiles: ReplacementRequ
     return installNpmTools(npm);
 }
 
-/**
-Tell whether the environment of each Python project with a uv lockfile exists and matches that lockfile. uv sync --check
-compares them and changes nothing.
-
-@param install what install needs for this step.
-@param miseBinPaths the program folders that mise installed, where uv may sit.
-*/
 export async function isEveryEnvironmentReady(install: ToolInstall, miseBinPaths: string[]): Promise<boolean> {
     const { root } = install.session;
     const folders = listLockedPythonProjects(install.session);
@@ -146,9 +136,6 @@ export async function isEveryEnvironmentReady(install: ToolInstall, miseBinPaths
 List the state of each tool project lockfile: whether it exists and names every pin at its version. It resolves and
 writes nothing, and it reads no package manager settings. With no mise on PATH, gspot install cannot write the mise
 lockfile, so that lockfile counts as current.
-
-@param session the repository, its tool configurations, and its package manager.
-@param generated the tool project files that install writes.
 */
 export function listStaleLockfiles(
     session: Pick<Session, 'root' | 'scopes' | 'toolPackageManager' | 'toolConfigurations'>,
@@ -170,9 +157,6 @@ export function listStaleLockfiles(
 Resolve the npm tool lockfile, then install the frozen npm tool project. A changed lockfile installs into an empty
 node_modules folder. With npm, a missing or stale lockfile resolves and installs in one npm run. The npm project needs
 no tool that mise installs, so it can install beside them.
-
-@param install what install needs for this step.
-@returns nothing installed and no tools without a package manager.
 */
 export async function installNpmToolProject(install: ToolInstall): Promise<ToolProjectsInstall> {
     const { session, writer, tools, packageManager } = install;
@@ -187,13 +171,6 @@ export async function installNpmToolProject(install: ToolInstall): Promise<ToolP
     return { installed: [await installNpmProject(npm, lockfiles)], tools: npmTools };
 }
 
-/**
-Resolve the Python tool lockfile, then install the frozen Python tools and projects with uv.
-
-@param install what install needs for this step.
-@param miseBinPaths the program folders that mise installed, where uv may sit.
-@returns nothing installed and no tools when no uv is found.
-*/
 export async function installPythonToolProjects(
     install: ToolInstall,
     miseBinPaths: string[],
@@ -213,14 +190,6 @@ export async function installPythonToolProjects(
     };
 }
 
-/**
-Install the tool projects of these tools again in the forced form: npm tools in a fresh node_modules folder, and Python
-tools with uv's reinstall.
-
-@param install what install needs for this step.
-@param miseBinPaths the program folders that mise installed, where uv may sit.
-@param tools the tools that failed their inspection.
-*/
 export async function repairToolProjects(install: ToolInstall, miseBinPaths: string[], tools: Tool[]): Promise<void> {
     const kinds = new Set(tools.map((tool) => findPackagePin(tool)?.kind));
     const { session, packageManager } = install;

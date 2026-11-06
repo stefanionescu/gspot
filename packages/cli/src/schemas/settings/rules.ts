@@ -46,13 +46,6 @@ function formatRuleHelp(issue: z.core.$ZodIssue, checkId: string): string {
     return `This table holds options only, without a severity; the level decides which rules run. To ignore ${quoted}, run gspot ignore ${checkId} --rule ${quoted} --reason "<why>".`;
 }
 
-/**
-Validate each rule with one refusal while retaining its published value schema.
-
-@param schema the accepted rule names and option values.
-@param checkId the check whose ignore command accepts a refusal.
-@returns the rule table schema with one issue per invalid rule.
-*/
 export function buildRuleTableSchema<Schema extends z.ZodType>(
     schema: Schema,
     checkId: string,

@@ -25,15 +25,6 @@ function formatValueAdvice(
     return `a valid ${setting.type} value${description === '' ? '' : ': ' + description}`;
 }
 
-/**
-Describe an invalid setting value for a command or a saved settings file.
-
-@param value the value as shown to the reader.
-@param setting the key, type, and description.
-@param validation the schema and its failed validation.
-@param validation.schema the setting validator.
-@param validation.error the failed validation.
-*/
 export function formatSettingValueError(
     value: string,
     setting: Pick<Setting, 'name' | 'type' | 'description'>,
@@ -47,14 +38,6 @@ export function formatSettingValueError(
     return `The value ${value} is not valid for ${setting.name}. ${guidance}`;
 }
 
-/**
-Format a file value with the same sentence used by set, retaining custom validation guidance.
-
-@param schema the validator of the failing field.
-@param issue the failed validation.
-@param value the value written in the file.
-@returns a value error or the field's own validation sentence.
-*/
 export function formatFileValueError(schema: z.ZodType | undefined, issue: z.core.$ZodIssue, value: unknown): string {
     if (schema === undefined || issue.message.startsWith('needs ')) return issue.message;
     const validation = schema.safeParse(value);
@@ -72,14 +55,6 @@ export function formatFileValueError(schema: z.ZodType | undefined, issue: z.cor
     });
 }
 
-/**
-Locate each settings error at its written key, array item, or nearest enclosing table, and end with the page that lists
-the settings.
-
-@param errors the keys and their validation sentences.
-@param syntax the source keys and their positions.
-@param file the path that each line starts with.
-*/
 export function formatSettingsErrors(errors: readonly SettingsError[], syntax: TomlSyntax, file: string): string {
     const lines = errors.map((error) => {
         const source = syntax.pathNodes

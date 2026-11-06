@@ -10,11 +10,6 @@ import {
     type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
-/**
-Apply the Testing Library presets of the frameworks in use.
-
-@param scope the planned ESLint file of the scope.
-*/
 function buildTestingLibraryBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'dependencies'>): ConfigurationBlocks {
     const { eslintFiles, dependencies: scopeDependencies } = scope;
     const dependencies = scopeDependencies.filter((name) => name.startsWith(TESTING_LIBRARY_SCOPE));

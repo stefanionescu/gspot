@@ -210,13 +210,6 @@ function extractStatementIdentifiers({
         });
 }
 
-/**
-Lists the identifiers a SQL file declares, or the parse error.
-
-@param file the repository path of the source.
-@param source the SQL to parse.
-@param cache the cache that SQL checks share.
-*/
 export async function extractSqlIdentifiers(file: string, source: string, cache: RunCache): Promise<IdentifierRead> {
     const parsed = await parseSqlFile(source, cache);
     if (parsed.error !== undefined) return { identifiers: [], error: parsed.error };

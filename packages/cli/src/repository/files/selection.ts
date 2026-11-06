@@ -43,12 +43,6 @@ function buildCoverageMatcher(
     };
 }
 
-/**
-Add the extensions that the selected Prettier and ESLint plugins read to a files table.
-
-@param table the file patterns.
-@param configurations the configurations whose tools can add extensions.
-*/
 export function addPluginExtensions(
     table: Configuration['files'],
     configurations: Configuration[],
@@ -63,11 +57,6 @@ export function addPluginExtensions(
     return { ...table, extensions: [...table.extensions, ...extensions] };
 }
 
-/**
-Build one matcher for the extensions, filenames, tags, and paths of a files table.
-
-@param table the file patterns.
-*/
 export function buildFileMatcher(table: Configuration['files']): (file: Pick<TrackedFile, 'path' | 'tags'>) => boolean {
     const isListedFilename = buildFilenameMatcher(table.filenames);
     const isListedPath = buildPathMatcher(table.paths);
@@ -78,13 +67,6 @@ export function buildFileMatcher(table: Configuration['files']): (file: Pick<Tra
         isListedPath(file.path);
 }
 
-/**
-List the files that the patterns match in one scope, within its `kinds` and `languages` limits.
-
-@param table the file patterns.
-@param files the tracked inventory.
-@param scope the scope to match in.
-*/
 export function listCoveredFiles(
     table: Configuration['files'],
     files: TrackedFile[],
@@ -96,24 +78,11 @@ export function listCoveredFiles(
     );
 }
 
-/**
-List the paths that the patterns match in one scope, for paths that have no file to read.
-
-@param table the file patterns.
-@param paths the root-relative paths.
-@param scope the scope to match in.
-*/
 export function listCoveredPaths(table: Configuration['files'], paths: string[], scope: CoverageScope): string[] {
     const isCovered = buildCoverageMatcher(table, scope);
     return paths.filter((path) => isInScope(path, scope.path) && isCovered({ path, tags: listPathTags(path) }));
 }
 
-/**
-Select source paths by extension or whole file name.
-
-@param files the classified inventory.
-@param endings the extensions or file names to select.
-*/
 export function listSourcePaths(files: TrackedFile[], endings: readonly string[]): string[] {
     return files
         .filter(

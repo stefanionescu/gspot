@@ -81,10 +81,6 @@ function buildPackageRuntime(scope: Scope, escaped: string, packageType: string 
 /**
 Resolve one runtime per file from the package type, scoped framework defaults, and your own runtime settings. More
 specific scopes and your later selectors win. Build scripts keep Node.js unless your own runtime names them.
-
-@param scopes every project scope.
-@param dependencyFiles the package manifests, whose type field decides how Node.js reads a `.js` file.
-@returns the runtimes, lowest priority first.
 */
 export function buildRuntimes(scopes: Scope[], dependencyFiles: DependencyFile[]): EslintRuntime[] {
     const blocks: EslintRuntime[] = [];

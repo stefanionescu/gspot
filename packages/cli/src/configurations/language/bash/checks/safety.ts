@@ -61,13 +61,6 @@ function listCommandFindings(
           ];
 }
 
-/**
-Reports each unsafe process kill or removal and each unsafe shell form. The style forms, discarded failures, `set -x`,
-`seq` loops, and script-level `IFS` report at level `all` only.
-
-@param session the repository and its tools.
-@param planned the scope scripts and level.
-*/
 async function checkSafety(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     const isAll = session.settings.level === 'all';

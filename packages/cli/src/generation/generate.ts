@@ -85,11 +85,6 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
     generated.blocks.push({ path: AGENTS_FILE, body: block });
 }
 
-/**
-Build the project files that the tool installers read: the npm, Python, and mise projects in .gspot.
-
-@param session the package manager and the configurations in use.
-*/
 export function buildToolProjects(
     session: Pick<Session, 'packageManager' | 'scopes' | 'toolConfigurations'>,
 ): GeneratedFile[] {
@@ -105,13 +100,6 @@ export function buildToolProjects(
     ];
 }
 
-/**
-Generate every file in memory, and write nothing.
-
-@param session the repository to generate for.
-
-@returns everything that install writes.
-*/
 export function buildGeneratedFiles(session: Session): Generation {
     const { settings } = session;
     const generated: Generation = {

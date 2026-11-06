@@ -207,11 +207,6 @@ function readFormatOptions(
 /**
 Build the format overrides of a Prettier config. A glob that matches no tracked file stays out, because
 `gspot/unmatched-paths` reports such a glob.
-
-@param options the options that hold the overrides.
-@param scopePath the scope of the config, empty for the root.
-@param trackedPaths the tracked files and every folder above them.
-@returns one record per override with a path and a format option.
 */
 export function buildPrettierOverrides(
     options: PrettierStyle | null,
@@ -232,12 +227,6 @@ export function buildPrettierOverrides(
         );
 }
 
-/**
-Read the first Ruff settings of the repository.
-
-@param root the repository root.
-@returns the file and its settings, or undefined without Ruff settings.
-*/
 export function readRuffOptions(root: string): { path: string; options: RuffOptions } | undefined {
     for (const path of RUFF_SETTINGS_FILES) {
         const text = findText(root, path);
@@ -253,15 +242,6 @@ export function readRuffOptions(root: string): { path: string; options: RuffOpti
     return undefined;
 }
 
-/**
-Read the options of each Prettier config of one folder, of the `prettier` key of its package.json, and of its
-.editorconfig.
-
-@param root the repository root.
-@param scopePath the folder, empty for the root.
-@param scripts the options of the JavaScript and TypeScript configs that loaded.
-@returns the file and its options, for each config that gspot can read.
-*/
 export function readPrettierOptions(
     root: string,
     scopePath: string,
@@ -285,15 +265,6 @@ export function readPrettierOptions(
     ];
 }
 
-/**
-Load each JavaScript or TypeScript Prettier config at the root or at a scope, as Prettier does. This runs the code of
-the file.
-
-@param root the repository root.
-@param files the tracked files.
-@param scopes the scopes that init sets up.
-@returns the options of each config that loads, by path.
-*/
 export async function readPrettierScripts(
     root: string,
     files: TrackedFile[],
@@ -317,14 +288,6 @@ export async function readPrettierScripts(
     return new Map(results.flat());
 }
 
-/**
-Read the Prettier options of a config file.
-
-@param path the config file.
-@param text its contents.
-@param scripts the options of the JavaScript and TypeScript configs that loaded.
-@returns the options, or undefined when gspot cannot read the file.
-*/
 export function parsePrettierFile(path: string, text: string, scripts: PrettierScripts): PrettierOptions | undefined {
     if (PRETTIER_SCRIPT_FILE.test(path)) return scripts.get(path);
     const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
@@ -334,15 +297,6 @@ export function parsePrettierFile(path: string, text: string, scripts: PrettierS
     );
 }
 
-/**
-Read the formatting options of one scope that init sets up.
-
-@param selection the scope and its selected configurations.
-@param selection.scopePath the scope path, empty for the root.
-@param selection.selected the configurations selected in the scope.
-@param draft the configurations and the template.
-@param repository the root and the tracked files.
-*/
 export function readScopeFormat(
     { scopePath, selected }: ScopeConfigurations,
     draft: SettingsDraft,

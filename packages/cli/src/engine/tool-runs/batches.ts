@@ -19,15 +19,6 @@ function selectCommandLimit(platform: NodeJS.Platform, isBatchFile: boolean): nu
     return isBatchFile ? WINDOWS_COMMAND_LIMIT : WINDOWS_PROCESS_LIMIT;
 }
 
-/**
-Splits a command into command lines that fit the system argument limit.
-
-@param planned the check to run.
-@param expansion what to run.
-@param expansion.session the repository and its tools.
-@param expansion.command the resolved executable path and authored arguments.
-@param expansion.substitutions the file paths and placeholder values.
-*/
 export function buildCommandLines(
     planned: PlannedCheck,
     expansion: { session: CheckSession; command: string[]; substitutions: Substitutions },
@@ -43,14 +34,6 @@ export function buildCommandLines(
     );
 }
 
-/**
-Splits file arguments while reserving space for the executable and fixed arguments.
-
-@param files the paths to split.
-@param fixed the executable and arguments outside the file list.
-@param platform the system that runs the command.
-@returns the batches, in order.
-*/
 export function splitFileArguments(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
     const isBatchFile = platform === 'win32' && BATCH_FILE.test(fixed[0] ?? '');
     const measure = (argument: string): number => {

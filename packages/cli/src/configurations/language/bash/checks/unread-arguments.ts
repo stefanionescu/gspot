@@ -21,12 +21,6 @@ function isChanged(
     return narrowed === undefined || [file, ...callers].some(({ path }) => narrowed.includes(path));
 }
 
-/**
-Reports each function called with more arguments than it reads.
-
-@param session the repository and its tools.
-@param planned the scope scripts to read.
-*/
 async function checkUnreadArguments(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     const narrowed = session.selection?.paths;

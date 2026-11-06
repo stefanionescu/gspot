@@ -61,13 +61,6 @@ function parsePydoclintOptions(path: string, text: string, convention: unknown, 
     return { command: [...PYDOCLINT_COMMAND, ...defaults], style };
 }
 
-/**
-Runs pydoclint with the declared docstring style, or with the style each file uses.
-
-@param session the repository and installed tools.
-@param planned the configured check and selected scope files.
-@returns the result, with earlier findings kept when a later batch fails.
-*/
 async function checkPydoclint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(

@@ -107,12 +107,6 @@ function validateScriptFile(file: ScriptFile): CheckFinding[] {
     }));
 }
 
-/**
-Checks the layout of files classified as Bash scripts.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkScriptLayout(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const isEnvironmentReader = buildPathMatcher(planned.scope.settings.tables.structure?.environment_readers ?? []);
     const scripts = await readScripts(session, {

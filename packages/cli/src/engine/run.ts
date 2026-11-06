@@ -247,13 +247,6 @@ async function planAfterFixes(session: CheckSession, options: RunOptions): Promi
     return { session: fixed, planned: planChecks(fixed, options), fixes };
 }
 
-/**
-Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
-
-@param session the repository and its tools.
-@param options the stage, the file selection, and the fix flags.
-@returns the report, the plan, the milliseconds before the first check, and the fix report when --fix ran.
-*/
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
     using _copies = holdCopyFolder(session.root);
     const started = options.started ?? new Date();
@@ -291,14 +284,6 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
     return fixes ? { report, planned, setup, fixes } : { report, planned, setup };
 }
 
-/**
-Give a session the generators of its checks, the content that the run selected, and the one limiter that every tool
-process of its checks waits for.
-
-@param session the repository and its tools.
-@param generation the generators called by checks when they need their output.
-@param selection the content of the run; without one, checks compare with `HEAD` and read the pushed commits.
-*/
 export function buildCheckSession(
     session: Session,
     generation: CheckGeneration,
@@ -307,14 +292,6 @@ export function buildCheckSession(
     return { ...session, generation, selection, limitProcess: pLimit(availableParallelism()) };
 }
 
-/**
-Run a built-in check or the command of its implementation.
-
-@param session the repository and its tools.
-@param planned the check to run.
-@param code the check implementation, or undefined for a tool command.
-@param options the command override and the verbosity of the notes.
-*/
 export async function runCheckCode(
     session: CheckSession,
     planned: PlannedCheck,

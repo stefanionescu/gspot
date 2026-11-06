@@ -31,12 +31,6 @@ function listScopeVersions(session: Session, scopePath: string): string[] {
         .filter((version): version is string => typeof version === 'string');
 }
 
-/**
-Reports the version of a package manifest of the scope in Markdown and test files, except changelogs.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 function checkVersionStrings(session: Session, planned: PlannedCheck): CheckFinding[] {
     const versions = listScopeVersions(session, planned.scope.path);
     if (versions.length === 0) return [];

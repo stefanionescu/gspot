@@ -18,8 +18,6 @@ import type { RunCache } from '#cli/types/system.ts';
 /**
 List the exact npm package names of the tools that the configurations declare. A package that a configuration detects
 as a dependency, such as vitest, is left out: the project uses it, so it marks a real project.
-
-@param configurations the configurations in use.
 */
 function listNpmToolNames(configurations: Iterable<Configuration>): Set<string> {
     const selected = [...configurations];
@@ -36,12 +34,6 @@ async function readDependencyFile(cache: RunCache, file: TrackedFile): Promise<D
     return await tryParseFile(() => parse(file.path, text));
 }
 
-/**
-Read the supported dependency files.
-
-@param cache the run cache.
-@param files the tracked inventory.
-*/
 export async function readDependencyFiles(cache: RunCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
     for (const file of files) {
@@ -52,12 +44,6 @@ export async function readDependencyFiles(cache: RunCache, files: TrackedFile[])
     return dependencies;
 }
 
-/**
-List the dependency files that do not parse. They give no dependencies and mark no scope.
-
-@param files the tracked inventory.
-@param dependencyFiles the dependency files that parsed.
-*/
 export function listUnparsedDependencyFiles(files: TrackedFile[], dependencyFiles: DependencyFile[]): string[] {
     const parsed = new Set(dependencyFiles.map(({ path }) => path));
     return files
@@ -72,25 +58,11 @@ export function listUnparsedDependencyFiles(files: TrackedFile[], dependencyFile
         .map(({ path }) => path);
 }
 
-/**
-Read and validate the package.json fields that gspot uses.
-
-@param source the base folder of the path, or the run cache of that folder.
-@param path the relative package.json.
-@returns the validated package fields, or undefined when the file does not exist.
-*/
 export function readPackageJson(source: string | RunCache, path: string): PackageJson | undefined {
     const text = findText(source, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 
-/**
-List the tool-only packages: each package.json that holds only declared npm tools, Git hook packages, and the gspot
-packages that init pins.
-
-@param dependencyFiles the parsed files.
-@param configurations the configurations that declare the npm tools.
-*/
 export function listToolOnlyPackages(
     dependencyFiles: DependencyFile[],
     configurations: Iterable<Configuration>,
@@ -115,13 +87,6 @@ export function listToolOnlyPackages(
     );
 }
 
-/**
-List the dependency names of the nearest declared npm project that contains a scope.
-
-@param dependencyFiles the validated files.
-@param scopePath the repository-relative project folder.
-@returns the declared dependency names. Child and sibling projects keep their own.
-*/
 export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scopePath: string): string[] {
     const projects = new Map(
         dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),

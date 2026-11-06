@@ -60,11 +60,6 @@ function listScopeConfigs(
     );
 }
 
-/**
-List the config files that this run writes, with the scope that owns each.
-
-@param session the repository to build for.
-*/
 export function listOwnedConfigs(session: Session): OwnedConfig[] {
     return remember(session.cache, OWNED_CONFIGS, session.scopes, () => {
         const usedNames = {

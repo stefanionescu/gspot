@@ -130,9 +130,7 @@ Report each Swift type that a file uses from a rule that its own rule may not im
 other with no import line, so this matches names: the first use of a name in each file, when exactly one rule declares
 that name as a type that other files can read.
 
-@param session the repository and its parsed sources.
 @param planned the files to report on, and the test files, whose types no other file reads.
-@param lookup the import rules, whose paths say which files declare each type.
 */
 export async function listRefusedSwiftTypes(
     session: Session,

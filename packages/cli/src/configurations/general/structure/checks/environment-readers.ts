@@ -55,12 +55,6 @@ async function listReaderVariables(
     return variables;
 }
 
-/**
-Reports each line that reads an environment variable outside the files that structure.environment_readers lists.
-
-@param session the repository and its tools.
-@param planned the scope sources and roles.
-*/
 async function checkEnvironmentReaders(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const readerPaths = getTable(planned.scope.settings, 'structure').environment_readers;
     const isReader = buildPathMatcher(readerPaths);

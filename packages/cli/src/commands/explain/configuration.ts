@@ -34,13 +34,6 @@ function formatRemovals(removed: ConfigurationExplanation['removed']): string[] 
     });
 }
 
-/**
-Describe a configuration's detection, checks, rules, and settings.
-
-@param session the repository settings when the caller opened a repository.
-@param name the configuration to describe.
-@returns undefined for an unknown configuration.
-*/
 export function explainConfiguration(session: Session | undefined, name: string): Explanation | undefined {
     const configuration = readConfigurations().get(name);
     if (configuration === undefined) return undefined;

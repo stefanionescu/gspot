@@ -15,9 +15,6 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { PythonProject } from '#tests/types/setup.ts';
 
-/**
-Create a Python project with a lockfile, and point the uv variables at the sandbox.
-*/
 export async function createPythonProject(
     root: string,
     options: { indexFile: 'pyproject.toml' | 'uv.toml'; indexUrl?: string },

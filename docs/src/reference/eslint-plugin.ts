@@ -168,14 +168,6 @@ function buildTopicPage(label: string, names: readonly string[]): ReferencePage 
     return page;
 }
 
-/**
-Build the plugin pages: an index that says how to install and use the plugin and lists the rules of each topic, and
-one page per topic folder with a section per rule. Each section names the configs that turn the rule on, why, what to
-do, an example, and its options. The rule name gives its heading and anchor, on the topic page and in the index, so a
-link to the index with a rule anchor still finds the rule.
-
-@returns each page, keyed by its path under the reference
-*/
 export function buildPluginPages(): Map<string, ReferencePage> {
     const topics = [...listTopicRules()].map(([topic, names]) => {
         const label = TOPIC_LABELS.get(topic);

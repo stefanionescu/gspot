@@ -111,9 +111,6 @@ Report each private top-level function below a public one, unless a function abo
 from the top: a public function, then its helpers. Python marks a private function with a leading `_`, and Swift with
 `private` or `fileprivate`. In JavaScript and TypeScript, a function or a constant set to a function stays private
 unless the module exports it.
-
-@param session the repository and its tools.
-@param planned the scope sources and the configurations that select their grammars.
 */
 async function checkFunctionOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.flatMap((file) => {

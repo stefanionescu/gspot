@@ -15,9 +15,6 @@ const SHELLCHECK_DIALECT_FLAG = '--shell=';
 /**
 Runs ShellCheck. It passes a dialect only for scripts without a shebang, and leaves out the warnings that do not fit
 how bats runs a file.
-
-@param session the repository and its tools.
-@param planned the ShellCheck check and its files.
 */
 async function checkShellcheck(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {

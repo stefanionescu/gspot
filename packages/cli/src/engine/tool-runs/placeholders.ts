@@ -105,15 +105,6 @@ function buildPlaceholderReaders(
     };
 }
 
-/**
-Find the repository-relative path of the config file for a scope.
-
-@param scopePath the folder, empty for the root.
-@param config the config file from the manifest.
-@param configs the generated paths by scope and file name, and the scopes whose file failed to build.
-@returns the file of the scope, or the root file when the scope has no file of its own.
-@throws the build failure of the file in this scope.
-*/
 export function getConfigTarget(scopePath: string, config: Config, configs: ConfigTargets): string {
     const failure = configs.failures.get(scopePath)?.get(config.target);
     if (failure !== undefined) throw failure;
@@ -124,9 +115,6 @@ export function getConfigTarget(scopePath: string, config: Config, configs: Conf
 Check whether a check that names {workspace:<flag>} runs in its scope folder. That happens when the scope holds its own
 package.json and no workspace declares it. The tool then runs in that package as in a repository of its own, and
 reports its paths from there.
-
-@param root the repository, or the copy of it that the tool runs in.
-@param planned the check and its scope.
 */
 export function isPackageFolderRun(root: string, planned: PlannedCheck): boolean {
     const scopePath = planned.scope.path;
@@ -138,15 +126,6 @@ export function isPackageFolderRun(root: string, planned: PlannedCheck): boolean
     );
 }
 
-/**
-Find the path of the config file that {config_file:<name>} names, with the configurations of the check first.
-
-@param session the repository and its configurations.
-@param planned the check that names it.
-@param name the config file path without its extensions.
-@returns the repository-relative path in the scope of the check.
-@throws the build failure of that config file in the scope.
-*/
 export function getConfigPath(session: CheckSession, planned: PlannedCheck, name: string): string {
     const config = listConfigs(planned).find(({ file }) => extractConfigName(file) === name);
     if (!config)
@@ -157,14 +136,6 @@ export function getConfigPath(session: CheckSession, planned: PlannedCheck, name
     return getConfigTarget(planned.scope.path, config, session.generation.buildConfigs(session));
 }
 
-/**
-Lists the config files that a check command or its environment names.
-
-@param session the repository and its configurations.
-@param planned the check that runs.
-@param command the arguments to scan.
-@returns the config file paths, relative to the root.
-*/
 export function listCommandConfigs(session: CheckSession, planned: PlannedCheck, command: readonly string[]): string[] {
     const words = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scopePath = planned.scope.path;
@@ -189,14 +160,6 @@ export function listCommandConfigs(session: CheckSession, planned: PlannedCheck,
     ].toSorted((left, right) => compareText(left, right));
 }
 
-/**
-Lists the source and config files that a copy needs for a command.
-
-@param session the repository and its configurations.
-@param planned the check and its files.
-@param command the arguments, with config file placeholders.
-@returns repository-relative paths for the copy.
-*/
 export function listCopyFiles(session: CheckSession, planned: PlannedCheck, command: string[]): string[] {
     const scopePath = planned.scope.path;
     const owned = (planned.configuration?.configs ?? []).map((config) =>
@@ -211,12 +174,6 @@ export function listCopyFiles(session: CheckSession, planned: PlannedCheck, comm
     ];
 }
 
-/**
-Get the text of a scalar setting for a placeholder.
-
-@param scopeSettings the values of the scope.
-@param name the dotted key.
-*/
 export function getScalarSetting(scopeSettings: ScopeSettings, name: string): string {
     const found = scopeSettings.valuesByKey[name];
     if (Array.isArray(found))
@@ -227,11 +184,6 @@ export function getScalarSetting(scopeSettings: ScopeSettings, name: string): st
 /**
 Expands a scalar command argument or environment value from the check scope. One pass reads the whole text, so a value
 that a setting supplies stays literal.
-
-@param session the repository and settings.
-@param planned the check and its scope.
-@param argument the value with placeholders.
-@param substitutions the expansion values.
 */
 export function replacePlaceholders(
     session: CheckSession,
@@ -246,14 +198,6 @@ export function replacePlaceholders(
     );
 }
 
-/**
-Expands setting and scope placeholders, and keeps a marker for each file slot.
-
-@param session the repository and settings.
-@param planned the check and its scope.
-@param command the arguments as declared.
-@param substitutions the expansion values.
-*/
 export function expandCommand(
     session: CheckSession,
     planned: PlannedCheck,
@@ -272,13 +216,6 @@ export function expandCommand(
     });
 }
 
-/**
-Replaces every file marker after variable-length arguments have expanded.
-
-@param command the expanded command.
-@param files the paths relative to the working folder.
-@returns one command per file, or one command when no file marker exists.
-*/
 export function buildFileCommandLines(command: CommandArgument[], files: string[]): CommandLine[] {
     const hasFile = command.some((segment) => typeof segment !== 'string');
     return (hasFile ? files : ['']).map((file) => ({

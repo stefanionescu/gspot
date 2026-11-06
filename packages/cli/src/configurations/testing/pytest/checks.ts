@@ -21,13 +21,6 @@ function hasProjectCoverage(session: Session, scopePath: string): boolean {
     );
 }
 
-/**
-Runs pytest, and leaves the shipped coverage settings out when the project writes its own.
-
-@param session the repository and its tools.
-@param planned the coverage check of one scope.
-@param options the command override and the verbosity of the notes.
-*/
 async function checkPytestTests(
     session: CheckSession,
     planned: PlannedCheck,

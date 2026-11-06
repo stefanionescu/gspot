@@ -29,16 +29,6 @@ async function readReleaseState(install: ToolInstall, release: ToolRelease): Pro
     return new Date(published).getTime() > oldest ? 'held' : undefined;
 }
 
-/**
-Record and run one install command with the shared cancellation and time limit.
-
-@param install the installation state and attempted commands.
-@param command the program and arguments.
-@param options the working folder, the environment, and the step that the command does.
-@param options.cwd the folder where the command runs.
-@param options.env variable overrides for the child process.
-@param options.step what the command does, which gspot prints as it starts, for a command that can take a while.
-*/
 export async function runInstallStep(
     install: ToolInstall,
     command: readonly string[],
@@ -61,18 +51,6 @@ export async function runInstallStep(
     return result;
 }
 
-/**
-Record and run one install command, and stop when it exits with an error.
-
-@param install the installation state and attempted commands.
-@param command the program and arguments.
-@param options the working folder, the environment, the step, and the name of the command in the error.
-@param options.cwd the folder where the command runs.
-@param options.env variable overrides for the child process.
-@param options.step what the command does, which gspot prints as it starts.
-@param options.name how the error names the command.
-@param options.readAdvice what the error tells the user to do, when the output says more than a network failure.
-*/
 export async function runRequiredInstallStep(
     install: ToolInstall,
     command: readonly string[],
@@ -95,11 +73,6 @@ export async function runRequiredInstallStep(
     return result;
 }
 
-/**
-List the Python pins with the address of each release on the default index.
-
-@param pins the pins, each written name==version.
-*/
 export function listPythonReleases(pins: readonly string[]): ToolRelease[] {
     return pins.map((pin) => {
         const [name, version] = pin.split('==') as [string, string];
@@ -115,11 +88,6 @@ export function listPythonReleases(pins: readonly string[]): ToolRelease[] {
 /**
 Say why the registry refused pinned tools that a failed resolution names. A release inside the hold waits for its age,
 and a release that the registry does not have needs another pin. A failed registry lookup adds nothing.
-
-@param install the installation state with the hold.
-@param output the redacted output of the package manager.
-@param releases each pinned tool, with the registry address of its release.
-@returns the explanation and a line break, or an empty string when the output names no pin.
 */
 export async function explainReleaseAgeHold(
     install: ToolInstall,

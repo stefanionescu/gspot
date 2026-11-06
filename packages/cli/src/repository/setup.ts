@@ -134,8 +134,6 @@ async function listGitFolderHooks(root: string): Promise<RepositorySetup['hooks'
 Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings. A
 `.husky` folder runs only while core.hooksPath points into it, as Husky sets it, and a hook manager runs only after its
 own install wrote a hook for Git, so a clone that never installed one gets the gspot hooks.
-
-@param repository the repository to read
 */
 export async function readHooks(repository: Pick<Repository, 'root'>): Promise<RepositoryHooks> {
     const { root } = repository;
@@ -153,12 +151,6 @@ export async function readHooks(repository: Pick<Repository, 'root'>): Promise<R
     return { hooksPath, hooks };
 }
 
-/**
-Find config files to replace, hooks, CI, agent files, and lint folders.
-
-@param cache the run cache.
-@param repository the inventory and parsed package declarations.
-*/
 export async function readRepositorySetup(
     cache: RunCache,
     repository: Pick<Repository, 'files'>,

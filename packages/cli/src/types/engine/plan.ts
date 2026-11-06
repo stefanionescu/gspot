@@ -62,9 +62,6 @@ export type PlannedCheck = ScopeCheck & {
     narrowedLinks?: string[] | undefined;
 };
 
-/**
-`all` runs the commit and push stages. `any`, on `PlanOptions`, also runs manual and message checks.
-*/
 export type StageFilter = (typeof STAGE_FILTERS)[number];
 
 export type SettingReader = { check: string; enabled: boolean; note?: string };

@@ -84,12 +84,6 @@ async function readAssetSource(path: string, text: string, session: Session, sco
     return { path, text: references, matches: (file) => matchers.some((match) => match(file)) };
 }
 
-/**
-Report assets absent from the text files and index. Exclude files that browsers and hosts load by name.
-
-@param session the repository and its tools.
-@param planned the scope files and the tracked files.
-*/
 async function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const local = new Set(planned.files.map((file) => file.path));
     const paths = new Set([

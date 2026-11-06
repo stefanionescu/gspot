@@ -14,9 +14,6 @@ import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 
-/**
-Check that the generated files report only tool lockfiles, and that a second write changes nothing.
-*/
 async function expectSettled(root: string): Promise<void> {
     const before = await readTree(root);
     const preview = parseCheckReport(await runGspot(root, ['check', '--only', 'gspot/generated-files', '--json']));

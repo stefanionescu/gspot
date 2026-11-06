@@ -254,11 +254,6 @@ function nameRepeatedLists(writer: EslintFileWriter, blocks: PlannedEslintBlock[
     return shared;
 }
 
-/**
-Build the name that a generated module gives an imported package or a configuration module.
-
-@param name the package or configuration name.
-*/
 export function buildImportName(name: string): string {
     const unscoped = name.replace(PACKAGE_SCOPE_MARK, '');
     return unscoped.replaceAll(NAME_SEPARATOR, (_, letter: string) => letter.toUpperCase());
@@ -268,9 +263,6 @@ export function buildImportName(name: string): string {
 Print groups of blocks in order: each block with the files of its scope, and adjacent blocks that differ only in their
 files as one block. A block prints its fields, the presets it extends, and the calls that finish it. A list that more
 than one place of the groups holds prints once, as a constant at the top of the file, named after its key.
-
-@param writer the level, the code files, and the imports of the file.
-@param groups the blocks of the file, in groups that print apart.
 */
 export function buildBlockLists(writer: EslintFileWriter, groups: PlannedEslintBlock[][]): string[][] {
     const placed = groups.map((blocks) => placeBlocks(writer, blocks));

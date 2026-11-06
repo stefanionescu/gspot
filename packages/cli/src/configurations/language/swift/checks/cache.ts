@@ -110,11 +110,6 @@ function createBuildLock(path: string): Disposable | undefined {
     }
 }
 
-/**
-Return the cache folder of one repository, which all of its build tools share.
-
-@param root the folder whose canonical path identifies the shared build cache.
-*/
 export function readRepositoryCacheFolder(root: string): string {
     const canonicalRoot = realpathSync(root);
     const digest = createHash('sha256').update(canonicalRoot).digest('hex');
@@ -124,10 +119,6 @@ export function readRepositoryCacheFolder(root: string): string {
 /**
 Hold the lock of a build folder, so a commit and a push never rewrite the sources of each other. Remove a lock whose
 process stopped.
-
-@param folder the folder of the scope's build.
-@param cancelSignal stops the wait.
-@returns the lock, which disposal removes.
 */
 export async function acquireBuildLock(folder: string, cancelSignal: AbortSignal | undefined): Promise<Disposable> {
     const files = openBuildCache(folder);
@@ -143,12 +134,6 @@ export async function acquireBuildLock(folder: string, cancelSignal: AbortSignal
     return lock;
 }
 
-/**
-Plans the build of a scope: the command, its folder, and its log path.
-
-@param session the repository and its tools.
-@param planned the scope and its Swift settings.
-*/
 export function planSwiftBuild(session: Session, planned: PlannedCheck): SwiftBuildPlan {
     const folder = join(
         readRepositoryCacheFolder(session.toolsRoot),
@@ -201,13 +186,6 @@ export function planSwiftBuild(session: Session, planned: PlannedCheck): SwiftBu
     };
 }
 
-/**
-Copies the source files the tool needs into a build folder.
-
-@param root the repository folder.
-@param files the scope files.
-@param folder the cache path for the tool.
-*/
 export function prepareBuild(root: string, files: TrackedFile[], folder: string): SwiftBuildSetup {
     const cache = openBuildCache(folder);
     const wantedFiles = readBuildSources(

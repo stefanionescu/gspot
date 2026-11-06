@@ -38,12 +38,6 @@ function listSelectionArguments(selection: RunSelection): string[] {
     return words;
 }
 
-/**
-Tell whether gspot ignore takes one rule of a check: its tool names rules in its output, or its code explains them.
-
-@param check the check that reports the rules.
-@param code the implementation of the check, if it has one.
-*/
 export function canIgnoreRule(check: Check, code: CheckCode | undefined): boolean {
     return OUTPUT_FORMATS[check.output.format].namesRules(check.output) || code?.explanations !== undefined;
 }
@@ -51,10 +45,6 @@ export function canIgnoreRule(check: Check, code: CheckCode | undefined): boolea
 /**
 Tell whether a check has a rule catalog that covers a rule: rule explanations in its code, or a tool whose rules gspot
 reads. Only then can gspot explain the rule, or check it against the rules that exist.
-
-@param check the check that reports the rules.
-@param code the implementation of the check, if it has one.
-@param rule the name that the check reported.
 */
 export function hasRuleExplanations(check: Check, code: CheckCode | undefined, rule: string): boolean {
     if (code?.explanations !== undefined) return true;
@@ -62,12 +52,6 @@ export function hasRuleExplanations(check: Check, code: CheckCode | undefined, r
     return tool !== undefined && canReadRuleExplanations(tool, rule);
 }
 
-/**
-Build the command that explains a finding's check, and its rule when the rule catalog of the check holds it.
-
-@param finding the reported check and optional rule identifier.
-@param selectCheckCode finds the implementation of a check, whose rule explanations name its rules.
-*/
 export function formatExplainCommand(
     finding: Pick<Finding, 'check' | 'rule'>,
     selectCheckCode: (check: Check) => CheckCode | undefined,
@@ -85,12 +69,6 @@ export function formatExplainCommand(
     return `gspot explain ${argumentsList.map((argument) => quoteArgument(argument)).join(' ')}`;
 }
 
-/**
-Starts a passed check result with the check ID, scope, and file count.
-
-@param planned the check to run.
-@param session the scopes of the run.
-*/
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
         check: planned.check.id,
@@ -102,11 +80,6 @@ export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 's
     };
 }
 
-/**
-Measure a tool run from the moment the process limiter gave it a slot to now.
-
-@param start the monotonic time of the first slot, or undefined when no process started.
-*/
 export function measureSpan(start: number | undefined): Pick<CheckResult, 'duration' | 'span'> {
     const end = performance.now();
     const begin = start ?? end;
@@ -118,7 +91,6 @@ Merge repeated runs of one check. Keep their findings and the base file count. R
 duration is the wall time from the first start to the last end.
 
 @param merged the results collected so far.
-@param next the next run of the same check.
 @returns the combined result, with a missing-tool or process failure when the next run stops.
 */
 export function mergeCheckResults(merged: CheckResult, next: CheckResult): CheckResult {
@@ -142,14 +114,6 @@ export function mergeCheckResults(merged: CheckResult, next: CheckResult): Check
     };
 }
 
-/**
-Run a built-in check and attach its help and file count to the result.
-
-@param builtInCheck the implementation that reads repository files.
-@param session the current check session.
-@param planned the configured check and selected files.
-@param options the verbosity of the findings.
-*/
 export async function runBuiltInCheck(
     builtInCheck: BuiltInCheck,
     session: CheckSession,
@@ -176,13 +140,6 @@ export async function runBuiltInCheck(
     };
 }
 
-/**
-Replaces the paths of a copy in the reported command and note with repository paths.
-
-@param result the run, which may have no command or note.
-@param copyRoot the folder of the copy that the tool ran in.
-@param sourceRoot the repository folder that the finding paths point into.
-*/
 export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
     const { command, note } = result;
     return {
@@ -194,13 +151,6 @@ export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourc
     };
 }
 
-/**
-Replace temporary revision paths with the repository path in reported commands, and print the paths of a note from the
-repository root.
-
-@param session the working and temporary repository folders.
-@param result the result to read.
-*/
 export function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
     let restored = result;
     if (session.root !== session.toolsRoot) {
@@ -214,13 +164,6 @@ export function normalizeResultPaths(session: Session, result: CheckResult): Che
     return { ...restored, note };
 }
 
-/**
-Format the command that runs one check again on what this run selected.
-
-@param checkId the check to run.
-@param scopeArgument the scope folder, relative to the working folder, or undefined for the root.
-@param options the paths and the selection of the run.
-*/
 export function formatReproduceCommand(
     checkId: string,
     scopeArgument: string | undefined,

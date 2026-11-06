@@ -12,13 +12,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
-/**
-Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs,
-and each lint command that calls a tool that gspot replaces.
-
-@param session the repository and the tools that the selected checks run.
-@param _planned the configured check and selected scope files.
-*/
 function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck): CheckFinding[] {
     const tools = new Set(
         session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),

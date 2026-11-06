@@ -72,13 +72,6 @@ function readSitemapTree(
     }
 }
 
-/**
-Read sitemap pages and infer the site base path from its nested sitemap URLs.
-
-@param folder the built site folder.
-@param files the built paths.
-@param planned the check that selects the sitemap.
-*/
 export function readSitemapUrls(
     folder: string,
     files: ReadonlySet<string>,

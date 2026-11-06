@@ -119,10 +119,6 @@ async function parseGrammarComments(
 
 /**
 Replace comments with spaces while preserving source offsets and line breaks.
-
-@param grammar the grammar of the source.
-@param text the source contents.
-@param cache the parsed trees of this run.
 */
 async function maskGrammarComments(grammar: GrammarName | 'sql', text: string, cache: ParseCache): Promise<string> {
     const ranges: TextRange[] = [];
@@ -192,10 +188,6 @@ function listComponentScripts(element: Node, text: string, masked: string): Comp
 
 /**
 Read the markup and the scripts of a component, each padded so that its lines stay where the file has them.
-
-@param text the component source.
-@param path the component file, whose extension says whether it has Astro front matter.
-@returns the markup without the front matter, and the script blocks with the front matter.
 */
 export async function readComponentSources(
     text: string,
@@ -238,26 +230,11 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.css', (text) => parseGrammarComments('css', text)],
 ]);
 
-/**
-Remove only the closing delimiter that matches the comment syntax.
-
-@param text the original comment.
-@returns comment text with its opener and without its terminator or trailing whitespace.
-*/
 export function stripCommentEnd(text: string): string {
     if (text.startsWith('/*')) return text.replace(BLOCK_COMMENT_END, '').trimEnd();
     return text.startsWith('<!--') ? text.replace(HTML_COMMENT_END, '').trimEnd() : text.trimEnd();
 }
 
-/**
-Read the text and line of each comment.
-
-@param path the file, whose name selects the syntax.
-@param text the source contents.
-@param tags the file tags, which identify scripts without a known extension.
-@param cache the parsed trees of this run.
-@returns comments in source order.
-*/
 export async function parseComments(
     path: string,
     text: string,
@@ -276,13 +253,6 @@ export async function parseComments(
     return parser === undefined ? [] : parser(text, path);
 }
 
-/**
-Skip blank lines and lines that hold only a comment of the grammar.
-
-@param text the source.
-@param grammar the language whose comments count as no code.
-@param cache the parsed trees of this run.
-*/
 export async function countCodeLines(text: string, grammar: GrammarName | 'sql', cache: ParseCache): Promise<number> {
     const code = await maskGrammarComments(grammar, text, cache);
     return code.split('\n').filter((line) => line.trim() !== '').length;

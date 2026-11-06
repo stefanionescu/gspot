@@ -29,13 +29,6 @@ function renameIndex(state: SchemaState, previous: string, name: string): void {
     index.name = name;
 }
 
-/**
-Move a table's rows, row security, policies, constraints, and indexes to its new name.
-
-@param state the schema so far.
-@param table the qualified name before the rename.
-@param renamed the qualified name after the rename.
-*/
 export function renameTable(state: SchemaState, table: string, renamed: string): void {
     const source = state.tables.get(table);
     if (source !== undefined) {
@@ -61,12 +54,6 @@ export function renameTable(state: SchemaState, table: string, renamed: string):
     );
 }
 
-/**
-Apply a rename of a table, index, constraint, or column.
-
-@param statement what the migration runs.
-@param state the schema so far.
-*/
 export const applyRename: StatementApplier<'RenameStmt'> = (statement, state) => {
     const { relation = {}, newname: name = '', subname: previous = '', renameType } = statement.fields;
     const table = qualifyName(relation.schemaname, relation.relname);

@@ -27,9 +27,6 @@ import type {
 /**
 Tell whether nothing in the file gives an expression a value. The expression, or the start of its member chain, names
 an undeclared variable, or a variable without an import or a write, such as a parameter.
-
-@param source the source code of the file.
-@param node the expression to check.
 */
 function isUnresolved(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     let root = node;
@@ -131,10 +128,6 @@ function isAllowed(source: Readonly<TSESLint.SourceCode>, policy: PolicyStatemen
 /**
 Name the value of the cloud development kit that an expression reads, as `getQualifiedName` does. Each hyphen
 becomes an underscore, so `aws-cdk-lib/aws-s3` and `aws_cdk_lib.aws_s3` read alike.
-
-@param source the source code of the file.
-@param node the expression to name.
-@returns the dotted name, or undefined when the value has none.
 */
 export function getCdkName(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
     const name = node && getQualifiedName(node, source);
@@ -142,15 +135,6 @@ export function getCdkName(source: Readonly<TSESLint.SourceCode>, node: TSESTree
     return name.replaceAll('-', '_');
 }
 
-/**
-List the issues of one property in the options of a construct or a method of the cloud development kit. The options
-may lack a required property, or hold a value that the check rejects.
-
-@param source the source code of the file.
-@param node the construction or the method call.
-@param check the argument position, the property path, and the values to reject or require.
-@returns each node to report, and whether the options omit its property or give it an invalid value.
-*/
 export function listCdkIssues(
     source: Readonly<TSESLint.SourceCode>,
     node: TSESTree.CallExpression | TSESTree.NewExpression,
@@ -172,11 +156,6 @@ export function listCdkIssues(
 List the issues that the property checks of a table find in a call or a construction. The table maps the qualified
 name of each construct or method of the cloud development kit to its checks. A call that spreads an argument has no
 issues, because its arguments stay unknown.
-
-@param source the source code of the file.
-@param node the call or the construction.
-@param table the property checks of each qualified name, with hyphens written as underscores.
-@returns each node to report, whether the options omit its property or give it an invalid value, and the property name.
 */
 export function listCdkTableIssues(
     source: Readonly<TSESLint.SourceCode>,
@@ -191,15 +170,6 @@ export function listCdkTableIssues(
     );
 }
 
-/**
-Find a property of the options that an S3 construct, such as `new s3.Bucket(scope, id, options)`, receives, by its
-identifier key.
-
-@param source the source code of the file.
-@param node the construction.
-@param key the name of the option.
-@returns the property, or null when the options lack the key or hold no object literal.
-*/
 export function findBucketOption(
     source: Readonly<TSESLint.SourceCode>,
     node: TSESTree.NewExpression,
@@ -214,15 +184,6 @@ export function findBucketOption(
     return property ?? null;
 }
 
-/**
-Find a boolean option of an S3 bucket construction that the options leave out or set to `false`.
-
-@param source the source code of the file.
-@param node the construction.
-@param key the name of the option.
-@returns the node to report and whether the options omit the option or turn it off, or undefined for an option
-turned on or a construction of another class.
-*/
 export function findDisabledBucketOption(
     source: Readonly<TSESLint.SourceCode>,
     node: TSESTree.NewExpression,
@@ -237,27 +198,12 @@ export function findDisabledBucketOption(
         : undefined;
 }
 
-/**
-Get the value of an expression, after following identifiers to their written values.
-
-@param source the source code of the file.
-@param node the expression.
-@returns the value, `missing` for `undefined`.
-*/
 export function getCdkResult(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): CdkResult {
     const value = getExpressionValue(node, source) ?? node;
     const isUndefined = ASTUtils.isIdentifier(value) && value.name === UNDEFINED_NAME;
     return { status: isUndefined ? 'missing' : 'found', node: value };
 }
 
-/**
-Get an argument of the call or the construction that a result holds.
-
-@param source the source code of the file.
-@param result the call or the construction.
-@param position the index of the argument.
-@returns the argument value, `missing` when the call has no such argument, or `unknown` when the result holds no call.
-*/
 export function getCdkArgument(source: Readonly<TSESLint.SourceCode>, result: CdkResult, position: number): CdkResult {
     const { node } = result;
     if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression)
@@ -266,15 +212,6 @@ export function getCdkArgument(source: Readonly<TSESLint.SourceCode>, result: Cd
     return argument === undefined ? { status: 'missing', node } : getCdkResult(source, argument);
 }
 
-/**
-Get a property of the object literal that a result holds.
-
-@param source the source code of the file.
-@param result the object.
-@param key the property name.
-@returns the property value, `missing` when the object lacks the key, or `unknown` when the result holds no object
-literal.
-*/
 export function getCdkProperty(source: Readonly<TSESLint.SourceCode>, result: CdkResult, key: string): CdkResult {
     const { node, status } = result;
     if (status !== 'found') return result;
@@ -283,13 +220,6 @@ export function getCdkProperty(source: Readonly<TSESLint.SourceCode>, result: Cd
     return property === undefined ? { status: 'missing', node } : getCdkResult(source, property.value);
 }
 
-/**
-List the string literals that a result holds, as one value or as the elements of an array.
-
-@param source the source code of the file.
-@param result the string or the array.
-@returns the string literals, after following identifiers to their written values.
-*/
 export function listCdkStrings(source: Readonly<TSESLint.SourceCode>, result: CdkResult): TSESTree.StringLiteral[] {
     const { node } = result;
     const values = listArgumentValues([node], source);
@@ -303,10 +233,6 @@ export function listCdkStrings(source: Readonly<TSESLint.SourceCode>, result: Cd
 List the statements of an identity and access management policy that a call or a construction makes, and that allow
 their actions. A statement without an effect allows them too. The calls read `new iam.PolicyStatement(props)`,
 `iam.PolicyStatement.fromJson(json)`, and `iam.PolicyDocument.fromJson(json)`, which makes each of its statements.
-
-@param source the source code of the file.
-@param node the call or the construction.
-@returns each statement with the property names of its format.
 */
 export function listAllowStatements(
     source: Readonly<TSESLint.SourceCode>,

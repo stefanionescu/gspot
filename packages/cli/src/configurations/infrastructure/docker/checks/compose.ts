@@ -64,12 +64,6 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
         .toArray();
 }
 
-/**
-Validates each Compose project with its overrides.
-
-@param session the repository and its tools.
-@param planned the Compose check and its files.
-*/
 async function checkCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     return runCommandBatches(
@@ -92,12 +86,6 @@ async function checkCompose(session: CheckSession, planned: PlannedCheck): Promi
     );
 }
 
-/**
-Read the Compose services of the check and the build contexts of each Dockerfile.
-
-@param session the repository and its tools.
-@param planned the check that reads the Compose files.
-*/
 export function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
     const documents: ComposeDocuments = { declarations: [], contexts: new Map(), findings: [] };
     const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));

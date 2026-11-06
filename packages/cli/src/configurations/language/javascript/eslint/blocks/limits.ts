@@ -23,11 +23,6 @@ function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 
     );
 }
 
-/**
-Build the code and JavaScript limit rules of one scope.
-
-@param settings the configured size and complexity thresholds for this project.
-*/
 export function buildScopeLimitRules(settings: ScopeSettings): EslintLevelRules {
     return {
         code: {
@@ -46,7 +41,6 @@ Build a limit block for each scope whose limits differ from its parent, deeper s
 scope that owns the file, whose limits the base blocks hold. A block holds only the rules that change, because ESLint
 keeps the earlier blocks' other rules for the same files.
 
-@param planned the planned ESLint file.
 @returns up to two blocks for each scope with its own limits: one for its code files and one for its JavaScript files.
 The JavaScript block also restates each rule that the code block changes, because the code block reaches JavaScript
 files too.

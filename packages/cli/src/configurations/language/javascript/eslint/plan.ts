@@ -42,11 +42,6 @@ function listDefaultProjectFiles(session: Session, projects: string[]): string[]
         .filter((path) => isDefaultProjectFile(path) && !covered.has(path));
 }
 
-/**
-Collect what the ESLint config file of one scope needs: its file patterns and rule options.
-
-@param planned the config file to build.
-*/
 export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFile {
     const { session, scope, config } = planned;
     const { settings } = scope;

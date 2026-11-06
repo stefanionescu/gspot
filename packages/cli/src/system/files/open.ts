@@ -50,11 +50,6 @@ function listBoundedFolder(bounds: FileBounds, path: string): string[] {
     }
 }
 
-/**
-Open a reader and writer confined to one root, with paths checked for this system.
-
-@param root the folder containing every relative path.
-*/
 export function openFiles(root: string): Files {
     const bounds: FileBounds = { root: realpathSync(root) };
     const files: Files = {
@@ -95,12 +90,6 @@ export function openFiles(root: string): Files {
     return files;
 }
 
-/**
-Remove the empty parent folders that a removed file leaves, stopping at the root.
-
-@param files the file handle of the root.
-@param path the removed file.
-*/
 export function deleteEmptyFolders(files: Files, path: string): void {
     const parents = listEnclosingFolders(extractParentFolder(path)).slice(0, -1);
     for (const folder of parents) {
@@ -109,13 +98,6 @@ export function deleteEmptyFolders(files: Files, path: string): void {
     }
 }
 
-/**
-Visit every entry under a folder, and walk into each one that the visitor picks.
-
-@param files the root.
-@param start the folder, with forward slashes, or '' for the root itself.
-@param canEnter called with the path of each entry; returns whether to walk into it.
-*/
 export function walkFiles(files: Files, start: string, canEnter: (path: string) => boolean): void {
     const pending = [start];
     for (let folder = pending.pop(); folder !== undefined; folder = pending.pop()) {

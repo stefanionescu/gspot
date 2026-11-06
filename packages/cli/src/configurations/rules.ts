@@ -24,14 +24,6 @@ function rethrowForUnselectedCheck(error: unknown, check: Check, session: Sessio
     });
 }
 
-/**
-Read the explanation of a rule from its built-in check or installed tool.
-
-@param root the repository whose tool installation supplies external documentation.
-@param check the shipped check that reports the rule.
-@param identifier the complete rule ID.
-@param session the selected tools and process timeout, when the repository has settings.
-*/
 export async function readCheckRuleExplanation(
     root: string,
     check: Check,

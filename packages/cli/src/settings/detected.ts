@@ -133,13 +133,6 @@ function buildImportExtensionTable(selection: ScopeConfigurations, repository: R
     return table;
 }
 
-/**
-Build the values that the repository gives for the selected configurations of each scope.
-
-@param selections each scope with the configurations to detect values for.
-@param detected the repository and the scope folders that hold its files.
-@returns the settings table of each scope.
-*/
 export function buildDetectedTables(
     selections: ScopeConfigurations[],
     detected: DetectedScopes,

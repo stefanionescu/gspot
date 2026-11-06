@@ -7,11 +7,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build v8r.yml: the v8r schema catalog, including the configured file selectors.
-
-@param planned the config file to build.
-*/
 function buildV8rFile(planned: PlannedConfig): string {
     const schemas = getTable(planned.scope.settings, 'data_files').schemas.map(({ paths, url }) => ({
         name: url,

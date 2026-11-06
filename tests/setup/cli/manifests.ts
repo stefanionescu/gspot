@@ -11,9 +11,6 @@ export function listAlwaysSelected(): string[] {
         .toArray();
 }
 
-/**
-Parse a manifest.toml for one test, with fields.tables appended as TOML.
-*/
 export function buildConfiguration(name: string, { tables }: { tables: string }): Configuration {
     const header = stringify({
         configuration: {
@@ -26,9 +23,6 @@ export function buildConfiguration(name: string, { tables }: { tables: string })
     return parseConfigurations([{ folder, text: `${header}${tables}` }]).get(name) as Configuration;
 }
 
-/**
-Read one shipped check by ID, rejecting unknown names.
-*/
 export function getShippedCheck(checkId: string): Check {
     const declaration = listChecksById(readConfigurations().values()).get(checkId);
     if (declaration === undefined) throw new Error(`The shipped check ${checkId} does not exist.`);

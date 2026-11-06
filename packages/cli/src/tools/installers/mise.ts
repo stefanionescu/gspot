@@ -184,9 +184,6 @@ function fillVersionChecksums(version: Record<string, unknown>, pin: MiseToolPin
 /**
 Compare the mise pins with the versions recorded in the mise lockfile. Each locked download must come from a release
 host over HTTPS, and each locked checksum must equal the audited checksum of the pin on that platform.
-
-@param pins the mise pins of the configurations in use.
-@param lockfile the recorded lockfile, if present.
 */
 export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | undefined): boolean {
     if (pins.length === 0) return true;
@@ -199,11 +196,6 @@ export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | unde
     );
 }
 
-/**
-Install the mise tools, and read their executable folders.
-
-@param install what install needs for this step.
-*/
 export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
     const { session, misePath, steps } = install;
     const { pins, hookTools, toolNamesByPin } = selectMiseTools(install);
@@ -236,12 +228,6 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     };
 }
 
-/**
-Install the mise tools again over what the mise install folder holds.
-
-@param install what install needs for this step.
-@param pins the mise pins to install again.
-*/
 export async function reinstallMiseTools(install: ToolInstall, pins: MiseToolPin[]): Promise<void> {
     if (pins.length === 0) return;
     const versions = pins.map((pin) => `${pin.name}@${pin.version}`);

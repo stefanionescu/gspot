@@ -102,12 +102,6 @@ function serializeExport(blockTexts: string[], blockWriter: EslintFileWriter): s
     return `export default setRuleOptions(${blocks}, ${JSON.stringify(ruleOptions, null, JSON_INDENT)}, ${JSON.stringify(blockWriter.level)});\n`;
 }
 
-/**
-Build the eslint.mjs of a configuration: its imports, and the calls of the shipped functions that build
-its blocks.
-
-@param planned the config file to build.
-*/
 function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const { session } = planned;
     const eslintFile = buildPlannedEslintFile(planned);

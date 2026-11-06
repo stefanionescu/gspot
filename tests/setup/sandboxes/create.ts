@@ -49,10 +49,6 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     if (plan.dependencies !== undefined) await pinSandboxNpm(root);
 }
 
-/**
-Write gspot.toml and the generated files of a sandbox that installs no tools, with the format that init carries from
-the Prettier config of an installed sandbox.
-*/
 async function writeUninstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<void> {
     const removed = (plan.without ?? []).map((name) => `${name} = ${JSON.stringify(SANDBOX_REMOVAL_REASON)}\n`);
     const tables = `[format]\nindent_width = ${String(JSON_INDENT)}\nquotes = "single"\n${
@@ -97,9 +93,6 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
     );
 }
 
-/**
-Build one isolated sandbox whose commands run in the current process.
-*/
 export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     const { path: root } = resources.use(await testdir());
@@ -119,9 +112,6 @@ export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncD
     };
 }
 
-/**
-Share a sandbox after installing its tools once for the current test file.
-*/
 export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox {
     const resources = new AsyncDisposableStack();
     let sandbox: Sandbox;
@@ -134,10 +124,6 @@ export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox
     return () => sandbox;
 }
 
-/**
-Run init in a sandbox at its level, which installs the tools, and remove the configurations that it leaves out. After
-a removal, install the tools of the remaining configurations.
-*/
 export async function initSandbox(
     sandbox: Sandbox,
     options: {

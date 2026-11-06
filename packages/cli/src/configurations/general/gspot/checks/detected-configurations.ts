@@ -14,12 +14,6 @@ function formatDetection(name: string): string {
     return `${name} changes the lint rules for this code`;
 }
 
-/**
-Reports each configuration that the files of a scope suggest and that gspot.toml neither selects nor removes.
-
-@param session the repository and its settings.
-@param _planned the configured check and selected scope files.
-*/
 function checkDetectedConfigurations(session: Session, _planned: PlannedCheck): CheckFinding[] {
     return listDetectedAdditions(session).flatMap(({ scopePath, evidence }) => {
         const scopeArgument = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;

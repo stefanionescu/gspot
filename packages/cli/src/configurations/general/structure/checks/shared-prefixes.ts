@@ -63,9 +63,6 @@ function listTypeNamedFiles(session: Session, planned: PlannedCheck): Set<string
 /**
 Reports each prefix that at least `limits.min_shared_prefix_files` siblings in a folder share. gspot fixes the name of
 gspot.toml, so it shares no prefix.
-
-@param session the repository and its tools.
-@param planned the scope files and limit.
 */
 function checkSharedPrefixes(session: Session, planned: PlannedCheck): CheckFinding[] {
     const limit = getTable(planned.scope.settings, 'limits').min_shared_prefix_files;

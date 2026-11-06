@@ -61,11 +61,6 @@ function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     return Object.fromEntries(enabled);
 }
 
-/**
-Build swiftlint.yml: the SwiftLint rules with the source limits of the repository.
-
-@param planned the config file to build.
-*/
 function buildSwiftlintFile(planned: PlannedConfig): string {
     const { always } = readToolDisabledRules(planned);
     const off = listDisabledRules(planned);

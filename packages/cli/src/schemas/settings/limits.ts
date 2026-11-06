@@ -5,13 +5,6 @@ import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import { allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import type { LanguageLimitField, LanguageLimitSchemas } from '#cli/types/settings.ts';
 
-/**
-Give each limit the languages whose checks read it, in the global registry, where the settings and the reference read
-them.
-
-@param fields the limit schemas by name.
-@returns the same fields.
-*/
 function addLimitLanguages<Fields extends Record<string, z.ZodType>>(fields: Fields): Fields {
     for (const [field, schema] of Object.entries(fields)) {
         const languages = [

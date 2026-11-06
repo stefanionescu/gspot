@@ -21,12 +21,6 @@ async function readScript(session: Session, file: TrackedFile): Promise<ScriptFi
     };
 }
 
-/**
-Parses the scope scripts once and shares them across checks.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 export function readScripts(session: Session, planned: PlannedCheck): Promise<ScriptFile[]> {
     const files = planned.files.filter((file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG));
     const key = JSON.stringify([planned.scope.path, files.map((file) => file.path)]);
@@ -37,14 +31,6 @@ export function readScripts(session: Session, planned: PlannedCheck): Promise<Sc
     });
 }
 
-/**
-Find calls that can reach a function in one script.
-
-@param scripts the parsed scripts of the scope.
-@param target the script that defines the function.
-@param name the identifier to match in command calls.
-@returns calls in its own script or scripts that source a library.
-*/
 export function listFunctionCalls(scripts: ScriptFile[], target: ScriptFile, name: string): ScriptFile['calls'] {
     const callers = scripts.filter(
         (file) => file === target || file.commands.some((call) => BASH_SOURCE_COMMANDS.has(call.name)),

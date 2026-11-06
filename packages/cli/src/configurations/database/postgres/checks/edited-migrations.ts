@@ -28,13 +28,6 @@ function hasDriftGuard(statement: SqlStatement): boolean {
     return 'if_not_exists' in statement.fields && statement.fields.if_not_exists;
 }
 
-/**
-Reports each migration of the base revision whose text differs from the committed text, and each `IF NOT EXISTS` after
-the frozen migrations, except on `CREATE INDEX CONCURRENTLY`.
-
-@param session the repository and its tools.
-@param planned the scope whose migrations to compare with the last commit.
-*/
 async function checkEditedMigrations(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const frozen = selectFrozenMigrations(

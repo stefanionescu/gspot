@@ -29,13 +29,6 @@ const GIT_LINE_ENDINGS_ARGUMENTS = ['ls-files', '--eol', '-z'] as const;
 
 const CRLF_INDEX_LINE = /^i\/(?:crlf|mixed)\s/u;
 
-/**
-Collect the validated blobs.
-
-@param root the folder where Git runs.
-@param requested full blob object IDs.
-@param cancelSignal stops the command.
-*/
 async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
     const blobs = new Map<string, Buffer>();
     await visitGitBlobs(
@@ -49,14 +42,6 @@ async function readBlobs(root: string, requested: string[], cancelSignal?: Abort
     return requested.map((hash) => getRequired(blobs, hash, 'blob'));
 }
 
-/**
-Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
-
-@param root the folder where Git runs.
-@param source index or commit to inspect.
-@param cancelSignal stops the command.
-@param unreadablePaths receives names with invalid UTF-8.
-*/
 export async function listRevisionFiles(
     root: string,
     source: Revision,
@@ -81,14 +66,6 @@ export async function listRevisionFiles(
     return parseTreeFiles(read.stdout, unreadablePaths);
 }
 
-/**
-Read each raw blob once, and visit it before the next blob loads.
-
-@param root the folder where Git runs.
-@param requested full blob object IDs.
-@param visit reads one validated object.
-@param cancelSignal stops the command.
-*/
 async function visitGitBlobs(
     root: string,
     requested: string[],
@@ -115,9 +92,6 @@ async function visitGitBlobs(
 /**
 List the files whose index blob holds CRLF line endings, which `* text=auto eol=lf` turns to LF only after
 `git add --renormalize .`.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the command.
 */
 export async function listCrlfIndexPaths(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
     const records = await readGitPaths(root, GIT_LINE_ENDINGS_ARGUMENTS, { cancelSignal });
@@ -126,15 +100,6 @@ export async function listCrlfIndexPaths(root: string, cancelSignal?: AbortSigna
         .map((record) => record.slice(record.indexOf('\t') + 1));
 }
 
-/**
-Read the committed text of regular files at a revision.
-
-@param root the folder where Git runs.
-@param paths the files to read.
-@param revision the commit to read, or `HEAD`.
-@param cancelSignal stops the command.
-@returns the text of each file that the revision holds, by path. An unborn branch holds none.
-*/
 export async function readCommittedTexts(
     root: string,
     paths: string[],
@@ -159,10 +124,6 @@ export async function readCommittedTexts(
 /**
 Write the tree of the index through a private copy of the index file. `git write-tree` locks the index it writes,
 so a copy keeps `.git/index.lock` free for the user's `git add` or `git commit` beside the check.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the Git commands.
-@returns the tree hash.
 */
 export async function readIndexTree(root: string, cancelSignal?: AbortSignal): Promise<string> {
     const indexPath = await readGitText(root, GIT_INDEX_PATH_ARGUMENTS, { cancelSignal });
@@ -176,13 +137,6 @@ export async function readIndexTree(root: string, cancelSignal?: AbortSignal): P
     return tree.replace(TRAILING_NEWLINE, '');
 }
 
-/**
-Read the current commit, distinguishing an unborn branch from failed Git reads.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the command.
-@returns undefined for an unborn branch.
-*/
 export async function readHead(root: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
     const options = { cancelSignal };
     const head = await runGit(root, GIT_HEAD_ARGUMENTS, options);

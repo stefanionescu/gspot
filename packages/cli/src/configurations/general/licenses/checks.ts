@@ -68,13 +68,6 @@ function isPackageAllowed(record: AllowedPackage, { name, version, isPython }: L
     );
 }
 
-/**
-Reports the locked packages whose license osv-scanner does not find on the allowed list, and allowed_package records
-that match no locked package.
-
-@param session the repository and its tools.
-@param planned the scope whose lockfiles to scan.
-*/
 async function checkAllowed(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const packages = await readLockedPackages(session, planned);
     if (packages.length === 0) throw new CheckStop('missing', EMPTY_SCAN_MESSAGE);

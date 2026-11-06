@@ -29,13 +29,6 @@ function setFunctionSecurity(security: FunctionSecurity, action: DefElem): boole
     return true;
 }
 
-/**
-Record a new function with its security options.
-
-@param statement what the migration runs.
-@param state the schema so far.
-@param migration the file of the statement.
-*/
 export const applyCreateFunction: StatementApplier<'CreateFunctionStmt'> = (statement, state, migration) => {
     const options = listNodeFields(statement.fields.options, 'DefElem');
     const parameters = listNodeFields(statement.fields.parameters, 'FunctionParameter')
@@ -54,13 +47,6 @@ export const applyCreateFunction: StatementApplier<'CreateFunctionStmt'> = (stat
     });
 };
 
-/**
-Apply the changed security options of a function.
-
-@param statement what the migration runs.
-@param state the schema so far.
-@param migration the file of the statement.
-*/
 export const applyAlterFunction: StatementApplier<'AlterFunctionStmt'> = (statement, state, migration) => {
     const { fields } = statement;
     const key = buildFunctionKey(fields.func?.objname, listNodeFields(fields.func?.objargs, 'TypeName'));
@@ -73,12 +59,6 @@ export const applyAlterFunction: StatementApplier<'AlterFunctionStmt'> = (statem
     state.functions.set(key, security);
 };
 
-/**
-Forget the functions that a statement drops.
-
-@param statement what the migration runs.
-@param state the schema so far.
-*/
 export function dropFunctions(statement: SqlStatement<'DropStmt'>, state: SchemaState): void {
     for (const dropped of listNodeFields(statement.fields.objects, 'ObjectWithArgs'))
         state.functions.delete(buildFunctionKey(dropped.objname, listNodeFields(dropped.objargs, 'TypeName')));

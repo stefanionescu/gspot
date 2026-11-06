@@ -11,14 +11,6 @@ function addBlock(text: string, body: string, placement: { isFirst: boolean; new
     return text + (text.endsWith('\n') ? newline : newline + newline) + body;
 }
 
-/**
-Locate one complete block. Refuse ambiguous or malformed markers.
-
-@param text the file contents.
-@param file the managed file.
-@param file.path the repository-relative path.
-@returns undefined when the file holds none.
-*/
 export function findBlockSpan(text: string, file: { path: string }): TextRange | undefined {
     const name = posix.basename(file.path);
     const markersForStyle =
@@ -47,11 +39,6 @@ export function findBlockSpan(text: string, file: { path: string }): TextRange |
 /**
 Replace a complete block or add it, and keep the text around it. A new block goes first in `.gitattributes`, because a
 later line wins there, so the rules that the repository already has keep winning over the catch-all in the block.
-
-@param text the file text.
-@param block the body to install.
-@param file the managed file.
-@param file.path the repository-relative path.
 */
 export function replaceBlock(text: string, block: string, file: { path: string }): string {
     const name = posix.basename(file.path);
@@ -65,13 +52,6 @@ export function replaceBlock(text: string, block: string, file: { path: string }
     return addBlock(text, body, { isFirst: name === FIRST_BLOCK_FILE, newline });
 }
 
-/**
-Find the gspot block in the text of a file, between its markers.
-
-@param text the file contents.
-@param file the managed file.
-@param file.path the repository-relative path.
-*/
 export function findBlockBody(text: string, file: { path: string }): string | undefined {
     const span = findBlockSpan(text, file);
     if (span === undefined) return undefined;
@@ -82,13 +62,6 @@ export function findBlockBody(text: string, file: { path: string }): string | un
     return block.slice(start.length, -end.length).trim();
 }
 
-/**
-Keep the text outside a managed block.
-
-@param text the file contents.
-@param file the managed file.
-@param file.path the repository-relative path.
-*/
 export function stripBlock(text: string, file: { path: string }): string {
     const span = findBlockSpan(text, file);
     return span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);

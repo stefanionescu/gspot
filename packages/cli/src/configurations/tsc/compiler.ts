@@ -80,14 +80,6 @@ function buildReferenceTsconfig(
     };
 }
 
-/**
-Points the incremental build information of tsc into the temporary folder, when the project builds incrementally.
-
-@param command the tsc arguments to extend.
-@param options the parsed compiler flags.
-@param folder the folder for the build information.
-@param name the file name of the build information.
-*/
 export function addTsbuildinfoFlag(
     command: string[],
     options: ts.CompilerOptions | undefined,
@@ -101,12 +93,6 @@ export function addTsbuildinfoFlag(
 /**
 Shares a project compile across scopes, but never skips a second run in the same scope. The first scope to start wins.
 
-@param cache the run cache.
-@param projectCheck what identifies the compile.
-@param projectCheck.check the ID of the planned tsc run.
-@param projectCheck.path the tsconfig of the project.
-@param projectCheck.scopePath the folder that runs it.
-@param projectCheck.required the compiler flags for one scope.
 @returns whether this scope owns the project: true when it won the claim, or won it earlier in this run.
 */
 export function claimProjectCheck(
@@ -122,14 +108,6 @@ export function claimProjectCheck(
     return remember(cache, CHECKED_PROJECTS, key, () => scopePath) === scopePath;
 }
 
-/**
-Runs tsc on a project and keeps the build information in tsbuildinfoFolder.
-
-@param session the repository or its copy.
-@param planned the tsc check for one scope.
-@param tsbuildinfoFolder the folder for the build information.
-@param project the parsed tsconfig, if any.
-*/
 export async function runTsc(
     session: CheckSession,
     planned: PlannedCheck,
@@ -172,8 +150,6 @@ export async function runTsc(
 
 /**
 Rewrites each copied tsconfig so reference builds write their output into the copy.
-
-@param copy the referenced projects and the copy.
 */
 export function writeReferenceProjects(copy: TypeScriptReferenceCopy): void {
     const { root, copyRoot, projects, cache } = copy;
@@ -192,13 +168,6 @@ export function writeReferenceProjects(copy: TypeScriptReferenceCopy): void {
     }
 }
 
-/**
-Lists the tsconfig files and sources of each project, for the copy.
-
-@param session the repository and run cache.
-@param projects each scope path with its parsed tsconfig.
-@returns the repository-relative paths.
-*/
 export function listCompilerFiles(session: Session, projects: Iterable<readonly [string, ParsedTsconfig]>): string[] {
     return [...projects]
         .flatMap(([scopePath, config]) => [

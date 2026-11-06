@@ -21,12 +21,6 @@ function listFunctions(module: PythonModule): PythonFunction[] {
         });
 }
 
-/**
-Check whether a Python string expression comes first, after any comments.
-
-@param node the statement to test.
-@param siblings the statements in the same file or function body.
-*/
 export function isDocstring(node: Node, siblings: Node[]): boolean {
     const literal = node.namedChildren[0];
     if (literal !== undefined && DOCSTRING_PREFIXES.test(literal.text)) return false;
@@ -39,11 +33,6 @@ export function isDocstring(node: Node, siblings: Node[]): boolean {
 
 const PYTHON_FILES = Symbol('python files');
 
-/**
-Parse the Python sources once for each list of paths, and free their trees with the run.
-
-@param sources the files, the run cache, and the run resources.
-*/
 export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
     return remember(sources.cache, PYTHON_FILES, JSON.stringify(sources.files.map((file) => file.path)), async () => {
         const modules: PythonModule[] = [];
@@ -57,14 +46,6 @@ export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
     });
 }
 
-/**
-Parse one Python module with the grammar cache of the run.
-
-@param path the repository-relative source file.
-@param text the exact source content.
-@param cache the source reads and tree cleanup for this run.
-@returns the caller disposes its tree.
-*/
 export async function parsePythonModule(path: string, text: string, cache?: ParseCache): Promise<PythonModule> {
     const tree = await parseSource('python', text, cache);
     const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
@@ -78,11 +59,6 @@ export async function parsePythonModule(path: string, text: string, cache?: Pars
     };
 }
 
-/**
-Find the docstring text of a function.
-
-@param definition the function node.
-*/
 export function findDocstring(definition: Node): string | undefined {
     const siblings = definition.childForFieldName('body')?.namedChildren ?? [];
     const first = siblings.find((child) => child.type !== 'comment');

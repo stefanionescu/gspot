@@ -13,13 +13,6 @@ export function parseJsonFile(path: string, text: string): Record<string, unknow
 
 export function parseJsonFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 
-/**
-Read a JSON object, and validate it against the schema, if any.
-
-@param path the repository-relative file.
-@param text the complete JSON source, including comments.
-@param schema the shape to check.
-*/
 export function parseJsonFile(path: string, text: string, schema?: z.ZodType): unknown {
     const errors: ParseError[] = [];
     const offset = text.startsWith('\u{FEFF}') ? 1 : 0;
@@ -36,12 +29,6 @@ export function parseJsonFile(path: string, text: string, schema?: z.ZodType): u
     return schema === undefined ? value : parseFileFields(path, value, schema);
 }
 
-/**
-Open a JSON file to edit shared fields, and leave other content as written.
-
-@param path the file that syntax and edit errors name.
-@param text the complete JSON or JSON-with-comments text.
-*/
 export function openJsonFile(path: string, text: string): EditableFile {
     let editedText = text;
     let document = parseJsonFile(path, editedText);
@@ -65,10 +52,6 @@ export function parseToolOutput<Value>(tool: string, text: string, schema: z.Zod
 
 /**
 Parse and validate the output of a tool, and keep its untrusted contents out of errors.
-
-@param tool the program that printed the output.
-@param text the JSON output.
-@param schema the shape to validate when supplied.
 */
 export function parseToolOutput(tool: string, text: string, schema?: z.ZodType): unknown {
     try {

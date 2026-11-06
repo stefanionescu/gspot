@@ -72,10 +72,6 @@ function listScriptLanguages(parsed: ReturnType<ComponentParser['parseForESLint'
 /**
 Remove host runtime globals and keep framework compiler and test names. Runtime APIs get their globals from blocks with
 their own file selectors.
-
-@param preset the config or configs of a framework.
-@param globalsByRuntime the globals tables of the globals package, keyed by runtime name.
-@returns a copy of each config without the runtime names in its globals.
 */
 export function stripRuntimeGlobals(
     preset: JavascriptBlock | JavascriptBlock[],
@@ -103,12 +99,6 @@ export function stripRuntimeGlobals(
     });
 }
 
-/**
-Select the files that one runtime declaration covers. A later matching declaration wins.
-
-@param index the position of the runtime declaration that this matcher stands for.
-@param runtimes the runtime declarations, in order, with their globs compiled to regular expression sources.
-*/
 export function buildRuntimeMatcher(index: number, runtimes: EslintRuntime[]): (file: string) => boolean {
     const matchers = runtimes.map(({ scopePath, includes, excludes }) => {
         const included = includes.map((source) => new RegExp(source, 's'));
@@ -124,9 +114,6 @@ export function buildRuntimeMatcher(index: number, runtimes: EslintRuntime[]): (
 /**
 Select Vue or Svelte files whose script element asks for TypeScript. The final parser reports syntax errors;
 a file that does not parse counts as untyped.
-
-@param parser vue-eslint-parser or svelte-eslint-parser.
-@param typescriptParser the parser of TypeScript script elements, which svelte-eslint-parser takes.
 */
 export function buildComponentMatcher(parser: ComponentParser, typescriptParser?: unknown): (file: string) => boolean {
     const scriptParser =
@@ -146,12 +133,6 @@ export function buildComponentMatcher(parser: ComponentParser, typescriptParser?
     };
 }
 
-/**
-Load Astro and its accessibility peer from the generated tool project.
-
-@param moduleUrl the generated configuration module URL.
-@returns the rules, processors, and recommended component configurations.
-*/
 export function importAstroPlugin(moduleUrl: string = import.meta.url): unknown {
     const previousFolder = process.cwd();
     try {
@@ -168,7 +149,6 @@ export function importAstroPlugin(moduleUrl: string = import.meta.url): unknown 
 /**
 Read Svelte's parser dependencies from the generated tool project.
 
-@param moduleUrl the generated configuration module URL.
 @returns a component parser that restores the working folder after each parse.
 */
 export function importSvelteParser(moduleUrl: string = import.meta.url): ComponentParser {
@@ -187,13 +167,6 @@ export function importSvelteParser(moduleUrl: string = import.meta.url): Compone
     };
 }
 
-/**
-Put the rules of a preset before the rules of the block, without its other fields. A preset list gives the rules of each
-config in order.
-
-@param block the block that the generated file writes.
-@param preset the config or configs of the preset.
-*/
 export function mergePresetRules(block: JavascriptBlock, preset: JavascriptBlock | JavascriptBlock[]): JavascriptBlock {
     const rules = [preset, block]
         .flat()
@@ -201,13 +174,6 @@ export function mergePresetRules(block: JavascriptBlock, preset: JavascriptBlock
     return { ...block, rules: Object.fromEntries(rules) };
 }
 
-/**
-Add options to rules that the block already sets, and keep their severity. A rule that the block sets without options
-keeps its value.
-
-@param block the block after its preset.
-@param options the added options of each rule.
-*/
 export function mergeRuleOptions(
     block: JavascriptBlock,
     options: Record<string, Record<string, unknown>>,
@@ -223,11 +189,6 @@ export function mergeRuleOptions(
 /**
 Give your rule options to each rule that a block turns on, in a block right after it that keeps its severity. Refuse
 options for a rule that no block turns on.
-
-@param blocks the blocks of the ESLint config, in order.
-@param ruleOptions the options of each scope and path override, with the file patterns that they cover.
-@param level the selected checking level.
-@returns the blocks with the option blocks after them.
 */
 export function setRuleOptions(
     blocks: JavascriptBlock[],
@@ -251,14 +212,6 @@ export function setRuleOptions(
     return pairs.flatMap(({ block, picked }) => [block, ...picked]);
 }
 
-/**
-Give each enabled gspot rule the severity from the plugin config. Disable rules absent from that config. Keep each rule's options.
-
-@param block the block that the generated file writes.
-@param plugin the gspot ESLint plugin.
-@param plugin.configs the rule presets by level.
-@param config the config of the level, such as recommended.
-*/
 export function setLevelRules(
     block: JavascriptBlock,
     plugin: { configs: Record<string, JavascriptBlock> },
@@ -274,23 +227,10 @@ export function setLevelRules(
     return { ...block, rules };
 }
 
-/**
-Set the plugins of the block.
-
-@param block the block that the generated file writes.
-@param plugins each imported plugin, by its rule prefix.
-*/
 export function addPlugins(block: JavascriptBlock, plugins: Record<string, unknown>): JavascriptBlock {
     return { ...block, plugins: { ...block.plugins, ...plugins } };
 }
 
-/**
-Set each key of the block to the repository root, or to the scope folder under it.
-
-@param block the block that the generated file writes.
-@param keys the dotted keys, such as languageOptions.parserOptions.tsconfigRootDir.
-@param scopePath the scope folder, from the root.
-*/
 export function setRootFolder(block: JavascriptBlock, keys: string[][], scopePath = ''): JavascriptBlock {
     const result: JavascriptBlock = { ...block };
     for (const path of keys) {
@@ -306,14 +246,6 @@ export function setRootFolder(block: JavascriptBlock, keys: string[][], scopePat
     return result;
 }
 
-/**
-Set the import-x/resolver-next setting of the block to the TypeScript resolver over the projects. Every block of a
-config shares one resolver.
-
-@param block the block that the generated file writes.
-@param createImportLookup createTypeScriptImportResolver of eslint-import-resolver-typescript.
-@param projects the tsconfig.json paths, from the repository root.
-*/
 export function setImportLookup(
     block: JavascriptBlock,
     createImportLookup: (options: { project: string[] } & Record<string, unknown>) => unknown,
@@ -326,12 +258,6 @@ export function setImportLookup(
     return { ...block, settings: { ...block.settings, 'import-x/resolver-next': [importLookup] } };
 }
 
-/**
-Configure the resolver interface of the boundaries plugin.
-
-@param block the configuration block.
-@param projects the TypeScript project paths.
-*/
 export function setBoundaryLookup(block: JavascriptBlock, projects: string[]): JavascriptBlock {
     return {
         ...block,
@@ -344,14 +270,6 @@ export function setBoundaryLookup(block: JavascriptBlock, projects: string[]): J
     };
 }
 
-/**
-Set the source type and the globals of the block. Refuse a runtime that the globals package does not name.
-
-@param block the block that the generated file writes.
-@param globals the default export of the globals package.
-@param names the globals table of the runtime, such as nodeBuiltin.
-@param sourceType commonjs for CommonJS files.
-*/
 export function setRuntime(
     block: JavascriptBlock,
     globals: Record<string, EslintGlobals>,
@@ -366,13 +284,6 @@ export function setRuntime(
     return { ...block, languageOptions: { ...block.languageOptions, sourceType, globals: selected } };
 }
 
-/**
-Set the parser of a Vue or Svelte block. Apply the supplied TypeScript parser to its script elements.
-
-@param block the block that the generated file writes.
-@param parser vue-eslint-parser or svelte-eslint-parser.
-@param typescriptParser the parser of TypeScript script elements.
-*/
 export function setComponentParser(
     block: JavascriptBlock,
     parser: unknown,
@@ -394,12 +305,6 @@ export function setComponentParser(
     };
 }
 
-/**
-Set the TypeScript parser of an Astro component.
-
-@param block the component block.
-@param parser the TypeScript parser.
-*/
 export function setScriptParser(block: JavascriptBlock, parser: unknown): JavascriptBlock {
     return {
         ...block,
@@ -410,15 +315,6 @@ export function setScriptParser(block: JavascriptBlock, parser: unknown): Javasc
     };
 }
 
-/**
-Replace the globals of the test block with the Jest globals of the plugin.
-
-@param block the test block.
-@param plugin the imported Jest plugin.
-@param plugin.environments the test environments.
-@param plugin.environments.globals the default Jest environment.
-@param plugin.environments.globals.globals the global identifiers of Jest.
-*/
 export function setJestGlobals(
     block: JavascriptBlock,
     plugin: { environments: { globals: { globals: EslintGlobals } } },
@@ -430,8 +326,6 @@ export function setJestGlobals(
 Keep the parts of a block that import-x/no-cycle reads: its files, parser, processor, plugins, and import-x settings.
 Leave out its rules and its other settings, which import-x hashes on every resolve, and the TypeScript project
 service, whose type information the rule does not read.
-
-@param block a block of the ESLint config.
 */
 export function keepCycleFields(block: JavascriptBlock): JavascriptBlock {
     const { rules: _rules, settings, languageOptions, ...kept } = block;

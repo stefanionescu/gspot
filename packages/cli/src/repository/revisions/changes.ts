@@ -72,13 +72,6 @@ async function explainInvalidBase(root: string, compared: string, cancelSignal?:
     );
 }
 
-/**
-List the refs under `refs/remotes`, each with the ref that it points to when it is symbolic.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the Git read.
-@returns each remote ref, mapped to its target, or to an empty string for a ref that is not symbolic.
-*/
 export async function listRemoteRefs(root: string, cancelSignal?: AbortSignal): Promise<ReadonlyMap<string, string>> {
     const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, { cancelSignal });
     return new Map(
@@ -89,13 +82,6 @@ export async function listRemoteRefs(root: string, cancelSignal?: AbortSignal): 
     );
 }
 
-/**
-Find the default branch of a remote: the branch that its `HEAD` names, else its `main` or `master` branch.
-
-@param remoteRefs the refs that listRemoteRefs read.
-@param remote the name of the remote.
-@returns the branch name, or undefined when the remote has none of them.
-*/
 export function findRemoteDefaultBranch(remoteRefs: ReadonlyMap<string, string>, remote: string): string | undefined {
     const prefix = `${REMOTES_PREFIX}${remote}/`;
     const target = remoteRefs.get(`${prefix}HEAD`);
@@ -103,14 +89,6 @@ export function findRemoteDefaultBranch(remoteRefs: ReadonlyMap<string, string>,
     return DEFAULT_BRANCHES.find((branch) => remoteRefs.has(`${prefix}${branch}`));
 }
 
-/**
-Read the branch to compare with: the upstream of the current branch, else the default branch of origin.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the Git reads.
-@param remoteRefs the remote refs, when the run listed them already.
-@returns an empty string without a branch.
-*/
 export async function readDefaultRef(
     root: string,
     cancelSignal?: AbortSignal,
@@ -126,13 +104,6 @@ export async function readDefaultRef(
     return branch === undefined ? '' : `${REMOTES_PREFIX}${ORIGIN_REMOTE}/${branch}`;
 }
 
-/**
-Read the merge base between a comparison branch and `HEAD`.
-
-@param root the folder where Git runs.
-@param compared the comparison branch.
-@param cancelSignal stops the Git reads.
-*/
 export async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
     if (EMPTY_BASE_HASH.test(compared))
         return {
@@ -154,10 +125,6 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
 /**
 Read the state of the index and the working tree with one `git status` that takes no lock, so a check beside the
 user's `git add` or `git commit` never holds or waits for `.git/index.lock`.
-
-@param root the top folder of the working tree; Git prints status paths relative to it.
-@param cancelSignal stops the Git command.
-@returns the UTF-8 staged, unstaged, and untracked paths, and whether any entry, of any name, is staged.
 */
 export async function readTreeStatus(root: string, cancelSignal?: AbortSignal): Promise<TreeStatus> {
     const result = await runGitBytes(root, GIT_STATUS_ARGUMENTS, { cancelSignal, env: GIT_NO_OPTIONAL_LOCKS });
@@ -191,13 +158,6 @@ export async function readTreeStatus(root: string, cancelSignal?: AbortSignal): 
     };
 }
 
-/**
-Read the files and commits that changed after a ref.
-
-@param root the folder where Git runs.
-@param compared the git ref to compare against.
-@param cancelSignal stops the Git commands.
-*/
 export async function readChangedPaths(
     root: string,
     compared: string,

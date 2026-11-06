@@ -18,19 +18,12 @@ import {
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
-/**
-Check that a push check left the HEAD commit, the settings, and the working-tree bytes of the push repository alone.
-*/
 export async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
     expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);
     expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
     expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
 }
 
-/**
-Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests, and return their
-hashes with the zero hash of a new ref.
-*/
 export async function preparePushRepository(
     root: string,
 ): Promise<{ base: string; reviewed: string; broken: string; zero: string }> {
@@ -50,9 +43,6 @@ export async function preparePushRepository(
     return { base, reviewed, broken, zero: '0'.repeat(base.length) };
 }
 
-/**
-Create a repository with a nested scope whose source differs in the commit, the index, and the working tree.
-*/
 export async function prepareNestedRepository(
     root: string,
 ): Promise<{ project: string; base: string; commitId: string }> {
@@ -68,9 +58,6 @@ export async function prepareNestedRepository(
     return { project, base, commitId };
 }
 
-/**
-Create a committed repository with hooks on and one file that Git Large File Storage (LFS) stores.
-*/
 export async function createLfsRepository(): Promise<TestdirResult> {
     const sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
@@ -81,9 +68,6 @@ export async function createLfsRepository(): Promise<TestdirResult> {
     return sandbox;
 }
 
-/**
-Create a repository with a committed migration and freeze its migrations.
-*/
 export async function createMigrationHistory(): Promise<AsyncDisposable & { path: string }> {
     const sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
@@ -93,9 +77,6 @@ export async function createMigrationHistory(): Promise<AsyncDisposable & { path
     return sandbox;
 }
 
-/**
-Create a sandbox from these files and make it a Git repository without commits.
-*/
 export async function createGitSandbox(files: DirectoryJSON): Promise<TestdirResult> {
     const sandbox = await testdir(files);
     runGitStep(sandbox.path, ['init', '--quiet']);

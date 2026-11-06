@@ -92,13 +92,6 @@ function formatUncheckedRefs(pushed: PushedRevisions, report: PushReport): strin
     return [...canceled, ...pushed.skipped.map((skip) => `${skip.ref}: ${skip.reason}; no checks apply.\n`)];
 }
 
-/**
-Check each revision that the pre-push input names, each in a copy.
-
-@param root the working tree that gives the settings and gets the push report.
-@param options the parsed flags, with the pre-push input.
-@param cancelSignal stops the run.
-*/
 export async function runPushCheck(
     root: string,
     options: CheckOptions & { push: NonNullable<CheckOptions['push']> },

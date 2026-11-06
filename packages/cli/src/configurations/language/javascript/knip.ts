@@ -106,11 +106,6 @@ function listFileTaskPackages(planned: PlannedConfig, dependencyNames: Set<strin
         .toSorted((left, right) => compareText(left, right));
 }
 
-/**
-Build knip.json: the workspace entry points, project selectors, and dependency exclusions.
-
-@param planned the config file to build.
-*/
 function buildKnipFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { scopes, toolConfigurations: configurations } = planned.session;

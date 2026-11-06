@@ -138,10 +138,6 @@ function formatAccessorName(node: Node, label: string): string {
 /**
 Describe a function at the statement limit. A named function counts its callers, and an accessor, which code reaches
 without its name, does not.
-
-@param node the declaration, whose name or accessor label the message shows.
-@param count the statements of its body, without comments and docstrings.
-@param limit the most statements that the check reports.
 */
 function formatTrivialFunction(node: Node, count: number, limit: number): string {
     const named = node.childForFieldName('name')?.text;
@@ -182,10 +178,6 @@ function isImportedName(node: Node): boolean {
 /**
 Count the places that name each function in the files of the check in the scope, apart from the definitions and the
 imports. Only a file whose text holds one of the names gets parsed.
-
-@param session the repository and its tools.
-@param planned the scope and the check whose files to read.
-@param keys the language and name of each function, joined by a space.
 */
 async function countNameUses(
     session: Session,
@@ -217,9 +209,6 @@ async function countNameUses(
 /**
 Report named functions at the statement limit that one place calls at most, accessors at the limit, and files that
 only forward code. A function counts the places in the scope that name it, so a helper that two places share passes.
-
-@param session the repository and its tools.
-@param planned the scope files and statement limits.
 */
 async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const isTest = buildPathMatcher(planned.scope.settings.test_files);

@@ -174,11 +174,6 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...XCODE_CHECKS,
 };
 
-/**
-Find the implementation of a built-in check or a check that compares generator outputs.
-
-@param check the manifest check.
-*/
 export function selectCheckCode(check: Check): CheckCode | undefined {
     if (check.generator_outputs !== undefined)
         return { check: checkGeneratorOutputs, explanations: GENERATOR_OUTPUT_EXPLANATIONS };

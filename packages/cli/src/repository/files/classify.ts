@@ -181,11 +181,6 @@ function tagFile(file: ListedFile, prefix: Buffer): FileTags {
     return tagTextFile(tags, newline === -1 ? text : text.slice(0, newline));
 }
 
-/**
-List the inventory tags that a path alone gives.
-
-@param path the root-relative path.
-*/
 export function listPathTags(path: string): string[] {
     const extension = extractExtension(path);
     const base = posix.basename(path);
@@ -201,33 +196,15 @@ export function listPathTags(path: string): string[] {
     ];
 }
 
-/**
-Check whether a path sits in the folder of gspot.
-
-@param path the repository-relative path.
-*/
 export function isGspotPath(path: string): boolean {
     return path.startsWith(`${GSPOT_FOLDER}/`);
 }
 
-/**
-Check whether the first lines of a file hold the gspot header.
-
-@param text the start of a file.
-*/
 export function hasGeneratedHeader(text: string): boolean {
     const lines = text.split('\n', HEADER_LINES_CHECKED);
     return lines.some((line) => GENERATED_HEADER_LINE.test(line));
 }
 
-/**
-Build the inventory entry of a tracked file: its kind, where the kind comes from, and its tags.
-
-@param root the base folder for resolving tracked entries.
-@param file the tracked listing item.
-@param prefix the first bytes of the file.
-@param rules the generated and vendored paths to match.
-*/
 export function classifyFile(root: string, file: ListedFile, prefix: Buffer, rules: FileKindRules): TrackedFile {
     const tagged = tagFile(file, prefix);
     const kind = classifyKind({ root: root, listed: file, prefix, isBinary: tagged.isBinary }, rules);
@@ -241,24 +218,12 @@ export function classifyFile(root: string, file: ListedFile, prefix: Buffer, rul
     };
 }
 
-/**
-List the extensions whose inventory tags include any of the tags.
-
-@param tags the language or content labels to find.
-@returns extensions in inventory order.
-*/
 export function listTaggedExtensions(...tags: string[]): string[] {
     return Object.entries(EXTENSION_TAGS)
         .filter(([, owned]) => owned.some((tag) => tags.includes(tag)))
         .map(([extension]) => extension);
 }
 
-/**
-Resolve generated paths of the configurations each scope selects, with one matcher per configuration. A rule whose
-paths all sit in its scope matches only files of that scope.
-
-@param selected the configurations of each written scope.
-*/
 export function listConfigurationGeneratedPaths(selected: Map<string, Configuration[]>): GeneratedPaths[] {
     return selected
         .entries()
@@ -281,11 +246,6 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
         .toArray();
 }
 
-/**
-List the tracked paths that the current inventory classifies as generated.
-
-@param files the files of the current repository read.
-*/
 export function listGeneratedPaths(files: TrackedFile[]): ReadonlySet<string> {
     return new Set(files.filter(({ kind }) => kind === 'generated').map(({ path }) => path));
 }

@@ -66,11 +66,6 @@ function buildCssModulesOverrides(
     ];
 }
 
-/**
-Build stylelint.json: the CSS lint presets and rules for this level.
-
-@param planned the config file to build.
-*/
 function buildStylelintFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { dependencyFiles } = planned.session.repository;

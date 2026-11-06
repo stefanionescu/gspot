@@ -4,11 +4,6 @@ import { getTable, selectFormat } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.
-
-@param planned the config file to build.
-*/
 function buildSqlfluffFile(planned: PlannedConfig): string {
     const format = selectFormat(planned.scope.settings, SQL_FILES);
     const off = listDisabledRules(planned);

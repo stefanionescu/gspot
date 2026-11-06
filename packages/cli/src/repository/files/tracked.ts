@@ -43,15 +43,6 @@ function readListedFile(
     return { path, size: stat.size, executable: isExecutable, isSymlink: false };
 }
 
-/**
-Read a Git file listing and separate names with invalid UTF-8.
-
-@param root the folder where Git runs.
-@param gitArguments the listing command and flags.
-@param cancelSignal stops the command.
-@param unreadablePaths receives quoted names with invalid UTF-8.
-@returns the readable null-delimited listing.
-*/
 export async function readGitListing(
     root: string,
     gitArguments: readonly string[],
@@ -63,12 +54,6 @@ export async function readGitListing(
     return decodeGitPaths(listed.stdout, unreadablePaths);
 }
 
-/**
-Find gitlinks without opening submodule folders or reading their settings.
-
-@param indexFiles the shared index listing.
-@returns sorted, unique submodule paths.
-*/
 export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
     return [
         ...new Set(
@@ -77,13 +62,6 @@ export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
     ].toSorted((left, right) => compareText(left, right));
 }
 
-/**
-List tracked and new files as sorted, root-relative paths.
-
-@param root the folder where Git runs.
-@param index the parsed staging area entries.
-@param untracked the null-delimited listing of the untracked files.
-*/
 export function listTrackedFiles(root: string, index: GitIndexFile[], untracked: string): ListedFile[] {
     const tracked = new Set(index.map((indexFile) => indexFile.path));
     const paths = [...tracked, ...untracked.split('\0').filter(Boolean)];

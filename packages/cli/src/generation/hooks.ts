@@ -50,11 +50,6 @@ function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly
 /**
 Build a script for each hook that runs a check. Include hooks for Git Large File Storage (LFS) when the repository uses it.
 The pre-push hook runs the checks before the LFS upload, so a push that the checks refuse uploads nothing.
-
-@param runner the command that starts gspot.
-@param names the hooks that run a configured check.
-@param options the repository features the hooks need.
-@param options.hasLfsFiles whether tracked files use Git Large File Storage.
 */
 export function buildHookFiles(
     runner: StartRunner,

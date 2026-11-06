@@ -232,12 +232,6 @@ const ruffSchema = z.strictObject({
         }),
 });
 
-/**
-Give each tool table its description in the global registry, where the editor schema and the reference read it.
-
-@param tables the table schemas by tool.
-@returns the same tables.
-*/
 function describeToolTables<Tables extends Record<string, z.ZodType>>(tables: Tables): Tables {
     for (const [tool, schema] of Object.entries(tables))
         z.globalRegistry.add(schema, { description: `Options that gspot writes to the ${tool} configuration.` });

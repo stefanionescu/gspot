@@ -10,12 +10,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, your own rule options, and the rules
-that the selected configurations of the scope turn off.
-
-@param planned the config file to build.
-*/
 function buildMarkdownlintFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';
     const document: Record<string, string | boolean | Record<string, unknown>> = {

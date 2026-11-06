@@ -124,12 +124,6 @@ const relativePathsSchema = relativePathSchema.array();
 
 export const nonemptyPathsSchema = relativePathsSchema.min(1);
 
-/**
-Accept a setting value, or a reasoned value with the same value schema.
-
-@param schema the value validator.
-@param definition the description of the setting and the change that needs a reason.
-*/
 export function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
     definition: ReasonedSettingDefinition & { default: z.util.NoUndefined<Output> },

@@ -172,14 +172,6 @@ function listPackageRows({ place, manifest }: LintCommandPackage, search: Comman
     ];
 }
 
-/**
-Find the line of a text in a file, for an instruction that a person follows by its line number.
-
-@param text the file text.
-@param needle what the line holds.
-@param from the first line to search.
-@returns the line, or `from` when no line holds it.
-*/
 export function findLine(text: string, needle: string, from = 1): number {
     const lines = text.split(LINE_BREAK);
     const index = lines.findIndex((line, lineIndex) => lineIndex >= from - 1 && line.includes(needle));
@@ -189,10 +181,6 @@ export function findLine(text: string, needle: string, from = 1): number {
 /**
 List the format scripts of the root package that call a tool gspot does not know. It stays out of listLintCommands,
 because a row there fails a commit, and gspot cannot tell what such a tool formats.
-
-@param input what the search reads.
-@param input.root the repository root.
-@param input.tools the replaced tools.
 */
 export function listOtherFormatScripts({ root, tools }: Pick<LintCommandSearch, 'root' | 'tools'>): LintCommand[] {
     const text = findText(root, PACKAGE_JSON);
@@ -217,9 +205,6 @@ export function listOtherFormatScripts({ root, tools }: Pick<LintCommandSearch, 
 /**
 List the CI files that do not parse. listLintCommands gives them no row, because a row there fails the commit of a
 user, so the init plan names them instead.
-
-@param input the repository root and its tracked files.
-@returns the path of each file.
 */
 export function listUnparsedCiFiles(input: Pick<LintCommandSearch, 'root' | 'files'>): string[] {
     return readPlaces(input)
@@ -231,9 +216,6 @@ export function listUnparsedCiFiles(input: Pick<LintCommandSearch, 'root' | 'fil
 List what calls or repeats a tool that gspot replaces. The list holds package scripts, lint-staged entries, hook lines,
 pre-commit entries, and CI steps. It also holds root devDependencies that gspot installs too, and the settings of the
 tools that a replaced tool covers.
-
-@param input the repository, the replaced tools, and their pins.
-@returns one row per place, each with the line to delete or to replace.
 */
 export function listLintCommands(input: LintCommandSearch): LintCommand[] {
     const places = readPlaces(input);

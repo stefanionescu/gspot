@@ -27,12 +27,6 @@ function isLinkInRoot(message: string, root: string): boolean {
     return isInside(relative(root, target)) || isInside(relative(findCanonicalPath(root) ?? root, target));
 }
 
-/**
-Find the real path of a file or folder.
-
-@param path the path to read.
-@returns undefined when the path does not exist.
-*/
 export function findCanonicalPath(path: string): string | undefined {
     try {
         return convertToPosixPath(realpathSync.native(path));
@@ -42,11 +36,6 @@ export function findCanonicalPath(path: string): string | undefined {
     }
 }
 
-/**
-Read a finding from each matching output line.
-
-@param output the tool output to read.
-*/
 export function parseRegexFindings(output: ToolOutput): Finding[] {
     const { check, output: format, text, help } = output;
     const pattern = new RegExp(format.pattern as string, 'u');
@@ -66,13 +55,6 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
     return new Map(findings.map((finding) => [JSON.stringify(finding), finding])).values().toArray();
 }
 
-/**
-Tell whether grouped output reports only file links that leave the root, which report nothing.
-
-@param output how to read the output.
-@param text the tool output to read.
-@param root the repository, or the copy of it that the tool ran in.
-*/
 export function hasOnlyOutsideLinks(output: CheckOutput, text: string, root: string): boolean {
     const pattern = new RegExp(output.pattern as string, 'u');
     const messages = text.split(LINE_BREAK).flatMap((line) => pattern.exec(line)?.groups?.['message'] ?? []);
@@ -82,8 +64,6 @@ export function hasOnlyOutsideLinks(output: CheckOutput, text: string, root: str
 /**
 Read findings grouped under output file headings. A file link that leaves the repository root works on a Git host and
 not in a clone, so it reports nothing.
-
-@param output the tool output to read.
 */
 export function parseGroupedFindings(output: ToolOutput): Finding[] {
     const { check, output: format, text, help } = output;

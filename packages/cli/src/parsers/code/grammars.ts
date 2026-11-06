@@ -72,21 +72,10 @@ function getParser(grammar: GrammarName): Promise<Parser> {
     return parser;
 }
 
-/**
-Build the path of an installed grammar. Every repository of this user shares the folder.
-
-@param grammar the language syntax.
-*/
 export function buildGrammarPath(grammar: GrammarName): string {
     return join(readCacheFolder(), GRAMMARS_FOLDER, `${grammar}${GRAMMAR_FILE_EXTENSION}`);
 }
 
-/**
-Select the grammar of a code file by its extension alone.
-
-@param path the file to parse.
-@returns undefined for a file that no code grammar reads.
-*/
 export function findGrammarByExtension(path: string): GrammarName | undefined {
     if (DECLARATION_EXTENSIONS.some((extension) => path.endsWith(extension))) return undefined;
     const extension = posix.extname(path);
@@ -97,11 +86,6 @@ export function findGrammarByExtension(path: string): GrammarName | undefined {
 
 /**
 Share one parse per run, and give each reader its own tree handle to dispose.
-
-@param grammar the language syntax to parse.
-@param text the exact source to parse.
-@param cache source reads and tree cleanup for this run.
-@returns the caller owns the tree, which frees itself on dispose.
 */
 export async function parseSource(grammar: GrammarName, text: string, cache?: ParseCache): Promise<Tree & Disposable> {
     grammars.parses += 1;
@@ -130,7 +114,6 @@ export async function parseSource(grammar: GrammarName, text: string, cache?: Pa
 /**
 Read the files, lend each parsed tree to a visitor, then release its handle.
 
-@param sources the files to parse, each with its grammar.
 @param visit reads one tree; syntax nodes must not leave this callback.
 */
 export async function visitParsedSources<Grammar extends GrammarName>(
@@ -144,13 +127,6 @@ export async function visitParsedSources<Grammar extends GrammarName>(
     }
 }
 
-/**
-Select the grammar of a language configuration, with TSX for .tsx files.
-
-@param path the file to parse.
-@param language the configuration that owns the file.
-@returns undefined for declaration files, settings files, and languages without a grammar.
-*/
 export function selectGrammar(path: string, language: string): GrammarName | undefined {
     if (!GRAMMAR_CONFIGURATIONS.has(language)) return undefined;
     if (language === 'bash' && posix.extname(path) === '') return 'bash';

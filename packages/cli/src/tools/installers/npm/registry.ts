@@ -62,12 +62,6 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     return merged;
 }
 
-/**
-Add a connection setting under an unused environment variable and return its reference.
-
-@param environment the install variables that get the value.
-@param value the connection setting kept out of generated files.
-*/
 function addEnvironmentReference(environment: Record<string, string>, value: string): string {
     let index = 0;
     while (Object.hasOwn(environment, `${NPM_SETTING_VARIABLE_PREFIX}${String(index)}`)) index += 1;
@@ -93,11 +87,6 @@ function buildSettingVariable(root: string, [key, value]: [string, unknown]): Ar
     return [[`${NPM_SETTING_PREFIX}${key}`, text]];
 }
 
-/**
-Collect the raw, decoded, and URL-encoded secrets.
-
-@param environment variables for the tool process.
-*/
 export function extractRegistryCredentials(environment: Record<string, string>): string[] {
     const credentials = Object.entries(environment)
         .filter(([key]) => CREDENTIAL_KEY.test(key))
@@ -117,9 +106,6 @@ export function extractRegistryCredentials(environment: Record<string, string>):
 
 /**
 Write npm connection settings through environment references, so the temporary .npmrc contains no credentials.
-
-@param settingsFolder the private user settings folder.
-@param environment variables for the tool process.
 */
 export function writeNpmrc(settingsFolder: string, environment: Record<string, string>): void {
     const references: string[] = [];
@@ -131,11 +117,6 @@ export function writeNpmrc(settingsFolder: string, environment: Record<string, s
     writeFileSync(join(settingsFolder, NPMRC_FILE), `${references.join('\n')}\n`, { mode: PRIVATE_FILE });
 }
 
-/**
-Read npm-compatible connection settings through the npm settings file, and keep credentials in memory.
-
-@param root the working folder for npm settings and relative certificate paths.
-*/
 export async function readRegistryEnvironment(root: string): Promise<Record<string, string>> {
     const merged = await readRegistrySettings(root);
     const env: Record<string, string> = Object.fromEntries(

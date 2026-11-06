@@ -26,13 +26,6 @@ import { escapeGlob } from '#cli/system/paths.ts';
 import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/language.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
-/**
-Build the n/file-extension-in-import blocks for each project and path style.
-
-@param scopes the projects and their import styles.
-@param nodeFiles your own scripts that run on Node.js.
-@param denoFolders the folders that hold a Deno config file, whose code imports the real `.ts` extension.
-*/
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], denoFolders: Set<string>): EslintBlock[] {
     return buildScopeOverrideBlocks(scopes, {
         read: ({ path, settings }) =>
@@ -63,24 +56,12 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], den
     });
 }
 
-/**
-List the folders that relative imports may not leave: the shipped folders, the projects, and your boundaries.
-
-@param scopes the projects and their settings.
-*/
 export function listImportBoundaryFolders(scopes: Scope[]): string[] {
     const scopePaths = scopes.map((scope) => escapeGlob(scope.path)).filter((path) => path !== '');
     const boundaries = scopes.flatMap(({ settings }) => settings.tables.javascript?.import_boundaries ?? []);
     return [...new Set([...IMPORT_BOUNDARY_FOLDERS, ...scopePaths, ...boundaries])];
 }
 
-/**
-Build one relative-import boundary rule from the project folders and aliases. The root and nested rules share the
-boundary folders and the aliases of their project.
-
-@param scopes the projects and their settings.
-@param aliases the repository-relative alias paths.
-*/
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
     return [
@@ -93,11 +74,6 @@ export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<strin
     ];
 }
 
-/**
-Resolve nested project boundaries against the aliases of each project.
-
-@param planned the scopes and Node.js script paths to cover.
-*/
 export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
         session: { root, cache, scopes },
@@ -123,9 +99,6 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
 /**
 Keep the imports of Node scripts runnable: Node needs full file names, and resolves only package.json imports.
 These blocks come after the style and project blocks, so they win for .mjs, .cjs, and Node shebang files.
-
-@param planned the scopes and the Node scripts without a code extension.
-@returns one block for each project.
 */
 export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
@@ -156,9 +129,6 @@ export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session'
 /**
 Turn the ignored folder globs into the patterns that import-x/ignore matches against resolved module paths, so the
 import rules never parse a gitignored bundle or build output.
-
-@param globs the ignore globs of the ESLint file.
-@returns a pattern for each ignored folder without other wildcards.
 */
 export function buildImportIgnores(globs: string[]): string[] {
     const patterns: string[] = [];

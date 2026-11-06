@@ -82,11 +82,6 @@ function buildRuntimeTypeOptions(planned: PlannedConfig): Record<string, unknown
         : {};
 }
 
-/**
-Build basedpyright.json: the Python environment and source paths used by Basedpyright.
-
-@param planned the config file to build.
-*/
 function buildBasedpyrightFile(planned: PlannedConfig): string {
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
     const pythonScopePath = posix.join(root, planned.scope.path);
@@ -120,11 +115,6 @@ function buildBasedpyrightFile(planned: PlannedConfig): string {
     );
 }
 
-/**
-Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
-
-@param planned the config file to build.
-*/
 function buildRuffFile(planned: PlannedConfig): string {
     const format = selectFormat(planned.scope.settings, PYTHON_FILES);
     const root = posix.relative(posix.dirname(planned.targetPath), '.');

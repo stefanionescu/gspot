@@ -5,11 +5,6 @@ import type { FolderChild } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 
-/**
-Lists the source files other than Markdown.
-
-@param planned the scope files.
-*/
 export function listCodeFiles(planned: PlannedCheck): TrackedFile[] {
     const documents = listTaggedExtensions('markdown');
     return planned.files.filter(
@@ -17,11 +12,6 @@ export function listCodeFiles(planned: PlannedCheck): TrackedFile[] {
     );
 }
 
-/**
-Maps each folder to its files and child folders, sorted by name.
-
-@param files the tracked paths.
-*/
 export function buildFolderTree(files: ReadonlyArray<{ path: string }>): Map<string, FolderChild[]> {
     const tree = new Map<string, Map<string, FolderChild['kind']>>();
     const addChild = (folder: string, name: string, kind: FolderChild['kind']): void => {

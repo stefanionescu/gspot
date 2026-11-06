@@ -20,9 +20,6 @@ function getFunctionNode(node: TSESTree.Node | null): LocalFunction | undefined 
 /**
 Resolve a locally defined function or a directly called function expression. A parameter resolves to nothing: its
 definition names the function that declares it, not the function that it holds.
-
-@param node the callee to inspect.
-@param source the file and its lexical variables.
 */
 export function getLocalFunction(node: TSESTree.Node, source: TSESLint.SourceCode): LocalFunction | undefined {
     if (node.type !== AST_NODE_TYPES.Identifier) return getFunctionNode(node);
@@ -34,13 +31,6 @@ export function getLocalFunction(node: TSESTree.Node, source: TSESLint.SourceCod
     return getFunctionNode(declaration.type === AST_NODE_TYPES.VariableDeclarator ? declaration.init : declaration);
 }
 
-/**
-Find the function that an expression holds or names, through the variables that hold it. A declared function without
-a body does not count.
-
-@param node the expression, such as a callback argument.
-@param source the file and its lexical variables.
-*/
 export function findFunction(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): FunctionNode | undefined {
     const value = getExpressionValue(node, source) ?? node;
     const found = value && getLocalFunction(value, source);

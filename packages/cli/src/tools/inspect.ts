@@ -195,10 +195,6 @@ function buildInspectedTool(search: ToolSearch, tool: Tool): InspectedTool {
 Require the installed npm dependencies of the scope before a check whose types or imports come from them. Without
 them, every imported type reads as any, and the typed rules report each use. The packages of gspot itself give the
 project no types, so a scope that declares only them can run.
-
-@param session the repository and the folder that holds its installed packages.
-@param planned the check and its project scope.
-@returns the missing-dependencies result, or undefined when the check can run.
 */
 export function findMissingDependencies(
     session: Pick<Session, 'repository' | 'toolsRoot'>,
@@ -219,12 +215,6 @@ export function findMissingDependencies(
         : { status: 'missing', note: PROJECT_DEPENDENCIES_MESSAGE.replace('{folder}', () => folder) };
 }
 
-/**
-Explain why the required tool cannot run.
-
-@param tool the tool to explain.
-@param inspection the observed installation.
-*/
 export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): string {
     const help = inspection.help ?? buildInstallHelp(tool);
     if (inspection.state === 'missing' && inspection.path === undefined && inspection.note !== undefined)
@@ -234,12 +224,6 @@ export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): s
         : `${formatMissingProgram(tool, inspection)} ${help}`;
 }
 
-/**
-Inspect one tool.
-
-@param search where to search.
-@param tool the tool to inspect.
-*/
 export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolInspection> {
     const inspected = buildInspectedTool(search, tool);
     const inspection = await (tool.kind === 'package' ? inspectPackage(inspected) : inspectExecutable(inspected));
@@ -250,10 +234,6 @@ export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolI
 /**
 Inspect one tool once per run. The working folder counts only for a system tool, which a project can supply. Only a
 tool that mise installs waits for the folders that mise lists.
-
-@param session the run, with its tool cache.
-@param tool the tool to inspect.
-@param cwd the working folder of the tool.
 */
 export function lookUpTool(session: ToolLookupSession, tool: Tool, cwd: string): Promise<ToolInspection> {
     const folder = tool.system === true ? relative(session.root, cwd) : '';
@@ -264,23 +244,10 @@ export function lookUpTool(session: ToolLookupSession, tool: Tool, cwd: string):
     });
 }
 
-/**
-Find the path of a tool once per run, or the failure with the next step.
-
-@param session the run, with its tool cache.
-@param tool the tool to find.
-@param cwd the working folder of the tool.
-*/
 export async function findToolPath(session: ToolLookupSession, tool: Tool, cwd: string): Promise<ToolAvailability> {
     return buildToolAvailability(tool, await lookUpTool(session, tool, cwd));
 }
 
-/**
-Resolve a usable executable, or a failure with the next step.
-
-@param tool the tool and its pin.
-@param inspection the resolved path, version, and install command.
-*/
 export function buildToolAvailability(tool: Tool, inspection: ToolInspection): ToolAvailability {
     if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };
     return inspection.state === 'error'

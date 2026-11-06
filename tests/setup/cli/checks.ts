@@ -22,9 +22,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
-/**
-Keep the compiler cache in a temporary folder until the test ends.
-*/
 export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
@@ -33,9 +30,6 @@ export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
     return resources.move();
 }
 
-/**
-Plan one sandbox check with the product planner, and select the entry of its scope.
-*/
 export function planSandboxCheck(
     session: Session,
     checkId: string,
@@ -50,9 +44,6 @@ export function planSandboxCheck(
     return selected;
 }
 
-/**
-Create a Swift sandbox with fake tool versions and a temporary compiler cache. The test removes the sandbox folder.
-*/
 export async function prepareSwiftCheck(
     sandbox: TestdirResult,
     checkId: string,
@@ -78,9 +69,6 @@ export async function prepareSwiftCheck(
     return Object.assign(resources.move(), { session, planned: planSandboxCheck(session, checkId) });
 }
 
-/**
-Open the sandbox, run one built-in check, and return its findings.
-*/
 export async function runSandboxCheck(
     root: string,
     checkId: string,
@@ -125,9 +113,6 @@ export function getBuiltInCheck(
     };
 }
 
-/**
-Read the naming settings that apply in one scope of this settings text.
-*/
 export async function buildScopeNamingSettings(text: string, scopePath = ''): Promise<NamingSettings> {
     await using sandbox = await createGitSandbox({
         'gspot.toml': text,

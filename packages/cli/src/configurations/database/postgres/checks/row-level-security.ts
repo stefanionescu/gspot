@@ -61,14 +61,6 @@ function listPolicyFindings(migration: Migration, statement: SqlStatement): Chec
     ];
 }
 
-/**
-Reports each table in a client schema with row security off, and each client view that skips it. In the migrations
-after the frozen ones, reports each policy that names no role, calls an identity function per row, or opens a table with
-no comment.
-
-@param session the repository and its tools.
-@param planned the scope whose migrations to read.
-*/
 async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildDatabaseSchema(migrations);

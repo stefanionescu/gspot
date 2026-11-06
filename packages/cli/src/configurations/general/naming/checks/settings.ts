@@ -78,12 +78,6 @@ function compileBannedWords(
         .filter((term) => term.words.length > 0);
 }
 
-/**
-Join the shipped lists with the repository's additions, exemptions, and limits.
-
-@param settings the authored repository settings.
-@param scope the scope, selected configurations, and merged settings.
-*/
 export function readNamingSettings(settings: Settings, scope: Scope): NamingSettings {
     const { settings: scopeSettings, configurations, path: scopePath } = scope;
     const shipped = readNamingDefaults();

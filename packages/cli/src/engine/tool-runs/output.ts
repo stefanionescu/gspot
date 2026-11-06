@@ -39,9 +39,6 @@ const BROKEN_TOOL_ADVICE = `A tool in ${GSPOT_PATHS.nodeModules} failed to load.
 /**
 End a crash message with the install command when a module under the tool folder failed to load, because install
 replaces a damaged or partial tool there.
-
-@param text the crash message.
-@param result the output that names the module.
 */
 function addInstallAdvice(text: string, result: Pick<SpawnResult, 'stdout' | 'stderr'>): string {
     const output = `${result.stderr}\n${result.stdout}`.replaceAll('\\', '/');
@@ -83,11 +80,6 @@ function isOnDisk(file: string, roots: string[]): boolean {
 /**
 Describe a crash by the error output of the tool, so the cause comes first. The report on stdout, such as the JSON
 of a scanner that cannot reach its server, shows only when the tool printed no error, or with --verbose.
-
-@param planned the check that ran.
-@param result the exit code and output.
-@param options controls crash details.
-@param options.verbose includes stack frames and both streams.
 */
 function formatCrash(planned: OutputCheck, result: SpawnResult, options: { verbose?: boolean | undefined }): string {
     const failure = `${planned.tool?.name ?? planned.check.id} failed with exit ${String(result.code)}`;
@@ -122,13 +114,6 @@ function formatReportRefusal(
     return `${opening}\n${tail}`;
 }
 
-/**
-Clear the exit code of a run that failed only on file links that leave the root, so that the check passes.
-
-@param check how to read the output of the run.
-@param result what the process returned.
-@param root the repository, or the copy of it that the tool ran in.
-*/
 export function clearOutsideLinkExit(check: Pick<Check, 'output'>, result: SpawnResult, root: string): SpawnResult {
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`);
     const isCleared =
@@ -136,16 +121,6 @@ export function clearOutsideLinkExit(check: Pick<Check, 'output'>, result: Spawn
     return isCleared ? { ...result, code: 0 } : result;
 }
 
-/**
-Builds the check result from what the runs collected.
-
-@param check the check that ran.
-@param completion what the run collected.
-@param completion.base the initial check result.
-@param completion.state the findings and failure flag.
-@param completion.commandArguments what the process ran, placeholders expanded.
-@param completion.start the monotonic time of the first process slot, if a process started.
-*/
 export function buildCheckResult(
     check: Check,
     completion: { base: CheckResult; state: CommandRun; commandArguments: string[]; start: number | undefined },
@@ -161,15 +136,6 @@ export function buildCheckResult(
     return { ...base, status, ...measureSpan(start), findings, command: commandArguments };
 }
 
-/**
-Parses the command output, or returns why gspot refused it.
-
-@param planned the check that ran.
-@param result what the process returned.
-@param paths the repository root and working folder.
-@param options controls crash details.
-@param options.verbose includes stack frames.
-*/
 export function parseCommandFindings(
     planned: OutputCheck,
     result: SpawnResult,
@@ -189,14 +155,6 @@ export function parseCommandFindings(
     }
 }
 
-/**
-Records a process result and assigns its findings to their file and scope.
-
-@param planned the check that ran.
-@param tool the tool with its version pin.
-@param output what one run printed and parsed.
-@param commandRun what the runs collected so far.
-*/
 export function addCommandLine(
     planned: PlannedCheck,
     tool: Tool,
@@ -217,27 +175,12 @@ export function addCommandLine(
     commandRun.findings.push(...findings);
 }
 
-/**
-Checks whether a run exited with an undeclared code or printed a crash pattern.
-
-@param check the declared exit codes and crash pattern.
-@param tool the tool with the shared crash pattern.
-@param result what the process returned.
-*/
 export function isReportedCrash(check: Check, tool: Tool | undefined, result: SpawnResult): boolean {
     if (result.code !== 0 && check.exit_codes !== undefined && !check.exit_codes.includes(result.code)) return true;
     const pattern = tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);
 }
 
-/**
-Formats the last lines of tool output.
-
-@param result what the tool printed.
-@param emptyOutputText the text when both streams stay empty.
-@param options controls crash details.
-@param options.verbose includes stack frames.
-*/
 export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
     emptyOutputText = NO_ERROR_OUTPUT_MESSAGE,
@@ -259,13 +202,6 @@ export function formatOutputTail(
     return output.length === 0 ? emptyOutputText : output.join('\n');
 }
 
-/**
-Returns the findings, or fails when the tool exited nonzero with none.
-
-@param result the exit code and output.
-@param findings what the parser read.
-@param toolName the program that ran.
-*/
 export function assertToolFindings(
     result: Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>,
     findings: CheckFinding[],

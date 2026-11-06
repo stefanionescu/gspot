@@ -54,12 +54,6 @@ function listUnexplainedSkips(syntaxRoot: Node, lines: string[]): Node[] {
     return [...calls, ...attributes];
 }
 
-/**
-Reports each skipped test without a reason, and each unavailable declaration without an explanation.
-
-@param session the repository and its tools.
-@param planned the scope Swift test files.
-*/
 async function checkSkipReasons(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];

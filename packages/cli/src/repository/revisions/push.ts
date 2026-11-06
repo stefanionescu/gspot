@@ -187,14 +187,6 @@ async function readPushBase(
     return roots.at(-1) as string;
 }
 
-/**
-Resolve the exact objects that the Git pre-push input names.
-
-@param root the folder where Git runs.
-@param input the lines that Git writes to the pre-push hook.
-@param remote the name or address that the hook gets.
-@param cancelSignal stops the Git commands.
-*/
 export async function readPushedRevisions(
     root: string,
     input: string,
@@ -224,24 +216,11 @@ export async function readPushedRevisions(
     return result;
 }
 
-/**
-Read the commits after the push base.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the Git commands.
-*/
 export async function readPushedCommits(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
     const range = await readPushedRange(root, cancelSignal);
     return range.length === 0 ? [] : readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
 }
 
-/**
-Read the revision range for checks of outgoing commits.
-
-@param root the Git repository.
-@param cancelSignal cancellation for Git reads.
-@returns the revision arguments, or no arguments without a current commit.
-*/
 export async function readPushedRange(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
     if ((await readHead(root, cancelSignal)) === undefined) return [];
     const base = await readPushBase(root, cancelSignal);

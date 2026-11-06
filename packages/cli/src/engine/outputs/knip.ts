@@ -3,12 +3,6 @@ import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { knipOutputSchema } from '#cli/schemas/engine.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
-/**
-Read the Knip JSON categories, and keep grouped symbols and source positions.
-
-@param output the tool output to read.
-@returns the findings, with each positioned member of a grouped issue.
-*/
 export function parseKnipFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
     const report = parseToolOutput('Knip', stdout, knipOutputSchema);

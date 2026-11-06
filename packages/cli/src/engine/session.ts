@@ -80,22 +80,6 @@ function selectPackageManagers(
     return { packageManager, toolPackageManager: packageManager.name === 'yarn' ? 'npm' : packageManager.name };
 }
 
-/**
-Read the settings and files of a repository, and build its scopes, checks, and tool configurations. Refuse invalid
-settings or configuration choices.
-
-@param root the repository root.
-@param options where the tools sit, and what the run already read.
-@param options.toolsRoot the working repository with the installed tools.
-@param options.cache the run cache.
-@param options.toolCache the cache of the tool lookups, which pushed revisions and a --fix session share.
-@param options.listing the files of the repository, or none to list them.
-@param options.untracked the untracked files that a status read of this run found, or none to list them.
-@param options.settings the settings to use, or none to read them from the repository.
-@param options.unreadablePaths the paths of a copy with names outside UTF-8.
-@param options.resources the resources that the caller disposes when the run ends.
-@param options.cancelSignal stops the operations of this session.
-*/
 export async function openSession(
     root: string,
     {

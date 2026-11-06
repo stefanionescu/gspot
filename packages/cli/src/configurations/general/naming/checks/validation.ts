@@ -266,13 +266,6 @@ function validateIdentifier(identifier: Identifier, naming: FileNaming): CheckFi
     return findings.filter((finding) => finding !== undefined);
 }
 
-/**
-Check declared names against naming rules and the selected test-file patterns.
-
-@param planned the selected check and its test-file patterns.
-@param settings the naming limits and allowances.
-@param identifiers the declarations and their source positions.
-*/
 export function validateIdentifiers(
     planned: NamingCheck,
     settings: NamingSettings,

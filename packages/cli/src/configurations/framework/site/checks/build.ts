@@ -49,12 +49,6 @@ function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<Si
     });
 }
 
-/**
-Reports a build command that fails or writes no build folder.
-
-@param session the repository and its tools.
-@param planned the scope to build.
-*/
 async function checkSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSiteBuild(session, planned);
     if (build.built) return [];
@@ -68,21 +62,10 @@ async function checkSiteBuild(session: CheckSession, planned: PlannedCheck): Pro
     ];
 }
 
-/**
-Build the repository path of a file in the build output.
-
-@param planned the scope of the site.
-@param file the path relative to the build folder.
-*/
 export function convertToBuildPath(planned: PlannedCheck, file: string): string {
     return `${getTable(planned.scope.settings, 'site').build_folder}/${convertToPosixPath(normalize(file))}`;
 }
 
-/**
-List every file under a folder as sorted relative paths.
-
-@param folder the build output to walk.
-*/
 export function listBuiltFiles(folder: string): string[] {
     const root = realpathSync.native(folder);
     const files = openFiles(root);
@@ -102,9 +85,6 @@ export function listBuiltFiles(folder: string): string[] {
 
 /**
 Read the site build of this run, which the first caller runs, and skip the check when the build failed.
-
-@param session the repository and its tools.
-@param planned the scope to build.
 */
 export async function readSuccessfulBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
     const build = await readSiteBuild(session, planned);

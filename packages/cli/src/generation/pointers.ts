@@ -105,14 +105,6 @@ function listPointerFieldTools(session: Session) {
     });
 }
 
-/**
-List the paths where a config file puts its pointer file. Every scope shares one pointer file with overrides, at the root.
-Another pointer file sits at one path, or in each folder that holds files of the configuration and matches pointer.folders.
-
-@param owner the repository and the scope.
-@param config the config file from the manifest.
-@returns each path where the pointer file goes, from the repository root.
-*/
 export function listPointerPaths(owner: ConfigOwner, config: Config): string[] {
     const { scope, configuration } = owner;
     const { scopes, repository } = owner.session;
@@ -139,12 +131,6 @@ export function listPointerPaths(owner: ConfigOwner, config: Config): string[] {
     return [...folders].map((folder) => `${folder}/${pointer.path}`);
 }
 
-/**
-List every path outside .gspot/ that gspot can write. Include manifest targets and pointer files at each scope root and pointer file folder, and both CI workflow paths.
-
-@param session the scopes and the configurations.
-@returns the paths, from the repository root.
-*/
 export function listOwnablePaths(session: Session): Set<string> {
     const configs = session.scopes.flatMap((scope) =>
         readConfigurations()
@@ -166,13 +152,6 @@ export function listOwnablePaths(session: Session): Set<string> {
     return new Set([GITHUB_WORKFLOW, GITLAB_WORKFLOW, ...paths]);
 }
 
-/**
-Point the package fields that manifests declare at the generated config files.
-
-@param session the repository files and scopes.
-@param generated the config files that this run generates.
-@param configs the config file path for each scope and config file.
-*/
 export function buildPointerFieldEdits(
     session: Session,
     generated: GeneratedFile[],
@@ -225,10 +204,6 @@ export function buildPointerFieldEdits(
 /**
 Build the pointer files of one generated config file. A pointer file with overrides sits at the root. For the files of each scope,
 it extends the config file of that scope. Parents come first, so the config of a nested scope wins.
-
-@param owner the repository and the scope.
-@param config the shipped config file.
-@param targets the config file path of each scope that writes it; other pointer files read the path of the owner's scope.
 */
 export function buildPointerFiles(
     owner: ConfigOwner,

@@ -17,12 +17,6 @@ function canRangesMeet(react: string, reactDom: string): boolean {
     return first === null || second === null || intersects(first, second);
 }
 
-/**
-Reports a project whose react and react-dom resolve to different versions.
-
-@param session the repository and its tools.
-@param planned the scope to check.
-*/
 function checkReactVersions(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);

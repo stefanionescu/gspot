@@ -7,12 +7,6 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Reports each tracked AGENTS.md outside the repository root.
-
-@param _session the repository and its tools.
-@param planned the configured check.
-*/
 function checkNestedAgentsFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files
         .filter(({ path }) => path !== AGENTS_FILE && posix.basename(path) === AGENTS_FILE)

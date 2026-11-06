@@ -37,13 +37,6 @@ import { ciSchema, importRulesSchema, namingSchema, ruleFilesSchema } from '#cli
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 
-/**
-Give each table of a settings shape its description in the global registry, where the editor schema and the
-reference read it.
-
-@param shape the settings schemas by name.
-@returns the same shape.
-*/
 function describeTables<Shape extends Record<string, z.ZodType>>(shape: Shape): Shape {
     for (const [name, schema] of Object.entries(shape)) {
         const description = TABLE_DESCRIPTIONS[name];

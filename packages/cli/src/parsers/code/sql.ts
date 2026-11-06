@@ -157,12 +157,6 @@ function listSqlStatements(source: string, statements: NonNullable<ParseResult['
     return built;
 }
 
-/**
-Select migration paths at or below the written version.
-
-@param paths the migration files to filter.
-@param through the written freeze version.
-*/
 export function selectFrozenMigrations(paths: string[], through: string): Set<string> {
     if (through === FROZEN_NONE) return new Set();
     const cutoff = MIGRATION_VERSION.exec(through)?.groups?.['version'];
@@ -177,24 +171,12 @@ export function selectFrozenMigrations(paths: string[], through: string): Set<st
     );
 }
 
-/**
-Extract a migration version from its file name or its Prisma folder.
-
-@param path the repository-relative SQL file to inspect.
-@returns the numeric version when the name starts with one.
-*/
 export function extractMigrationVersion(path: string): string | undefined {
     const name = basename(path);
     const versioned = name === PRISMA_MIGRATION_FILE ? basename(dirname(path)) : name;
     return MIGRATION_VERSION.exec(versioned)?.groups?.['version']?.replaceAll('_', '.');
 }
 
-/**
-Order two migration versions group by group, each group as a number.
-
-@param left a version.
-@param right another version.
-*/
 export function compareMigrationVersions(left: string, right: string): number {
     const first = left.replaceAll('_', '.').split('.');
     const second = right.replaceAll('_', '.').split('.');
@@ -208,13 +190,6 @@ export function compareMigrationVersions(left: string, right: string): number {
 
 const PARSED_SQL_FILES = Symbol('parsed sql files');
 
-/**
-Get the fields of a PostgreSQL parse tree node when the node has the given kind.
-
-@param node the parse tree node, if any.
-@param kind the node kind to select.
-@returns the fields of that kind, or undefined for another kind.
-*/
 export function findNodeFields<Kind extends keyof SqlNodeFields>(
     node: Node | undefined,
     kind: Kind,
@@ -224,13 +199,6 @@ export function findNodeFields<Kind extends keyof SqlNodeFields>(
         : (node as Record<Kind, SqlNodeFields[Kind]>)[kind];
 }
 
-/**
-List the fields of the nodes of one kind in a node list.
-
-@param nodes the nodes, if any.
-@param kind the node kind to select.
-@returns the fields of the matching nodes, in source order.
-*/
 export function listNodeFields<Kind extends keyof SqlNodeFields>(
     nodes: Node[] | undefined,
     kind: Kind,
@@ -241,12 +209,6 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
     });
 }
 
-/**
-Parse a PostgreSQL file once per run.
-
-@param text the original SQL, including supported psql syntax.
-@param cache the run cache.
-*/
 export function parseSqlFile(text: string, cache: RunCache): Promise<SqlFile> {
     return remember(cache, PARSED_SQL_FILES, text, async (): Promise<SqlFile> => {
         const { text: source, variables } = replacePsqlSyntax(text);
@@ -290,9 +252,6 @@ const TOKEN_MATCHERS: Record<string, (text: string, at: number) => MatchedToken 
 
 /**
 Read SQL strings, comments, and client syntax without interpreting quoted bodies as source.
-
-@param text the SQL source.
-@returns tokens with their original UTF-16 boundaries.
 */
 export function* listSqlTokens(text: string): Generator<SqlToken> {
     let at = 0;

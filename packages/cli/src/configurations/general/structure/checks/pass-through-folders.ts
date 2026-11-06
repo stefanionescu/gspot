@@ -8,12 +8,6 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Reports each folder inside the scope that holds only one folder, above the code of the scope.
-
-@param session the repository and its tools.
-@param planned the scope files.
-*/
 function checkPassThroughFolders(session: Session, planned: PlannedCheck): CheckFinding[] {
     const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(
         (configuration) => configuration.files.extensions,

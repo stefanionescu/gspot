@@ -254,13 +254,6 @@ function listTemporaryPaths(syntaxRoot: Node, commands: Node[], traps: TrapScrip
     return temporaryPaths.paths;
 }
 
-/**
-Parse a Bash script once: its code with comments blanked out, its functions, its calls, and its temporary files.
-
-@param text the exact source.
-@param cache the parser grammars of this run.
-@returns the parsed facts, which stay valid after the tree goes away.
-*/
 export async function parseBashScript(text: string, cache?: ParseCache): Promise<ScriptSyntax> {
     using tree = await parseSource('bash', text, cache);
     const comments = tree.rootNode
@@ -307,12 +300,6 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
     }
 }
 
-/**
-Select non-blank code lines after the parser has masked comments.
-
-@param lines the masked code, one entry per line.
-@returns trimmed code and one-based positions.
-*/
 export function listCodeLines(lines: string[]): NumberedLine[] {
     return lines.flatMap((line, index) => {
         const code = line.trim();
@@ -320,12 +307,6 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
     });
 }
 
-/**
-Find the function that contains a Bash syntax node.
-
-@param node the syntax point to start from.
-@returns undefined outside a function.
-*/
 export function findFunctionNode(node: Node): Node | undefined {
     let parent = node.parent;
     while (parent !== null) {

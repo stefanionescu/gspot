@@ -18,8 +18,6 @@ const ACTIVE_ENVIRONMENT_VARIABLE = 'VIRTUAL_ENV';
 
 /**
 Find the Python environment that the shell activated. Poetry, pip-tools, and conda keep it outside the project folder.
-
-@returns the environment folder, or undefined when VIRTUAL_ENV names no folder.
 */
 function findActiveEnvironment(): string | undefined {
     const active = readEnvironmentVariable(ACTIVE_ENVIRONMENT_VARIABLE);
@@ -27,13 +25,6 @@ function findActiveEnvironment(): string | undefined {
     return statSync(active, { throwIfNoEntry: false })?.isDirectory() === true ? active : undefined;
 }
 
-/**
-Find the Python environment of a project: the one that VIRTUAL_ENV names, or else the .venv of the project.
-
-@param toolsRoot the working tree that holds the installed environments.
-@param scopePath the project folder.
-@returns the environment folder, or undefined when the project has none.
-*/
 function findProjectEnvironment(toolsRoot: string, scopePath: string): string | undefined {
     const active = findActiveEnvironment();
     if (active !== undefined) return active;
@@ -42,13 +33,6 @@ function findProjectEnvironment(toolsRoot: string, scopePath: string): string | 
     return environment?.isDirectory() === true || environment?.isSymbolicLink() === true ? folder : undefined;
 }
 
-/**
-List the interpreter arguments for a tool in the Python environment of a copy.
-
-@param tool the configured Python tool.
-@param environment the environment of the check.
-@returns the interpreter flag and executable when the tool accepts them.
-*/
 export function listCopyPythonArguments(tool: Tool, environment: Record<string, string>): string[] {
     const environmentPath = environment[UV_PROJECT_ENVIRONMENT];
     const flag = tool.interpreter_flag;
@@ -58,9 +42,6 @@ export function listCopyPythonArguments(tool: Tool, environment: Record<string, 
 /**
 Build the command that runs a pinned Python check with the installed project dependencies of the scope.
 
-@param scope the scope and its tools.
-@param scopeRoot the project folder.
-@param command the executable to run and its arguments.
 @returns the uv command, which syncs neither the project nor its lockfile.
 */
 export function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [string, ...string[]]): string[] {
@@ -81,12 +62,6 @@ export function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [str
 Point the Python tools at the environment that VIRTUAL_ENV names, before the .venv of the project. Without one, point
 the tools that check a copy at the environment the working tree installed. The hook checks a pushed revision in a copy
 that holds no environment, after it verifies that the dependency files match.
-
-@param roots the folder the tools check, and the working tree.
-@param roots.root the folder the tools check.
-@param roots.toolsRoot the working tree that holds the installed environments.
-@param scopePath the project folder.
-@returns UV_PROJECT_ENVIRONMENT, or nothing when the tools read the .venv of the folder they check.
 */
 export function buildCopyPythonEnvironment(
     roots: { root: string; toolsRoot: string },
@@ -101,14 +76,6 @@ export function buildCopyPythonEnvironment(
         : {};
 }
 
-/**
-Require the project's Python environment before running checks that read its installed packages: the environment that
-VIRTUAL_ENV names, or the .venv of the project.
-
-@param session the repository and installed tool folder.
-@param planned the check and its project scope.
-@returns the missing-environment result, or undefined when the check can run.
-*/
 export function findMissingEnvironment(
     session: Pick<Session, 'repository' | 'toolsRoot'>,
     planned: Pick<ScopeCheck, 'check' | 'scope'>,

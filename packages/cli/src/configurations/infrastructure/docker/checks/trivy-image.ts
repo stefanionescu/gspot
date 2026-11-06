@@ -41,12 +41,6 @@ async function scanImage(session: CheckSession, planned: PlannedCheck, image: st
     ]);
 }
 
-/**
-Scans each literal service image once and reports its findings in every Compose file that names it.
-
-@param session the repository and its tools.
-@param planned the scope files to read.
-*/
 async function checkTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scanned = new Map<string, ImageFinding[]>();
     const documents = readComposeDocuments(session, planned);

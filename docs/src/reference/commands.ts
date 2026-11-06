@@ -49,9 +49,6 @@ function formatCommand(command: CommandReference): string {
     return formatSection(`gspot ${command.name}`, blocks.filter(Boolean).join('\n\n'));
 }
 
-/**
-Build the Commands page from the CLI help data, with a section per command in program order.
-*/
 export function buildCommandPage(): ReferencePage {
     const { commands } = CLI_REFERENCE;
     const commandRows = commands.map((command) => [

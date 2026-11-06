@@ -25,9 +25,6 @@ async function listReportedChecks(
     return report.checks.filter(({ status, findings }) => status !== 'passed' || findings.length > 0);
 }
 
-/**
-Write the sample, run its check, and restore the sandbox.
-*/
 export async function runCheckOnChanges(
     sandbox: Sandbox,
     changes: SandboxChanges & { check: string },
@@ -38,9 +35,6 @@ export async function runCheckOnChanges(
     return await sandbox.run(sandbox.root, commandArguments);
 }
 
-/**
-Assert that the sample fails with its expected findings and its fix, or cleanSource, passes.
-*/
 export async function assertCheckSample(sandbox: Sandbox, sample: CheckSample, cleanSource?: string): Promise<void> {
     const failed = await listReportedChecks(sandbox, sample);
     const sampleFix: SampleFix = sample.corrected ?? {

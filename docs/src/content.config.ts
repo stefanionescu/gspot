@@ -44,9 +44,6 @@ async function buildGuideIndex(context: LoaderContext): Promise<Map<string, Conf
     return guides;
 }
 
-/**
-Load the hand-written and generated pages into the Starlight content collection.
-*/
 function buildDocsSource(): Loader {
     return {
         name: DOCS_SOURCE_NAME,

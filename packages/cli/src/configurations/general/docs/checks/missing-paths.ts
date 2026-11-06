@@ -245,12 +245,6 @@ function isCausedByChange(finding: CheckFinding, narrowed: string[], session: Se
         .some((path) => [token, target].some((name) => path === name || path.startsWith(`${name}/`)));
 }
 
-/**
-Reports each path that names no tracked file, and each run command that names no task.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkMissingPaths(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     const files = planned.files.filter(
         (file) =>

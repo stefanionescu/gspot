@@ -192,20 +192,12 @@ function getSettingHeading(key: string): { key: string; kind: SettingReference['
     return heading;
 }
 
-/**
-Link a setting to its heading on the gspot.toml page.
-
-@param key the dotted key, such as format.indent_style or import_rule.
-*/
 export function formatSettingLink(key: string): string {
     const heading = getSettingHeading(key);
     const anchor = buildSettingAnchor(heading.key, heading.kind);
     return `[\`${key}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS.settings}/#${anchor})`;
 }
 
-/**
-Build the settings page from the CLI's documented tree, with one explicit anchor for every heading.
-*/
 export function buildSettingsPage(): ReferencePage {
     const roots = CLI_REFERENCE.settings;
     const topLevelKeys = roots.filter((node) => node.kind === 'value');

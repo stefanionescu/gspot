@@ -55,12 +55,6 @@ function addCases(found: FileIdentifiers, syntaxRoot: Node): void {
             if (name.type === 'simple_identifier') addIdentifier(found, name, 'enum_cases');
 }
 
-/**
-Lists the names that a Swift file declares.
-
-@param syntaxRoot the parsed file.
-@param file the repository path of the source.
-*/
 export function extractSwiftIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const found: FileIdentifiers = { file, language: 'swift', identifiers: [] };
     addTypes(found, syntaxRoot);

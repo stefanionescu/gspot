@@ -45,12 +45,6 @@ function listRuleTables({ table, path }: WrittenScopeTable) {
     ];
 }
 
-/**
-Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
-
-@param root the base folder for each written scope path.
-@param settings the normalized gspot.toml.
-*/
 export function validateScopePaths(root: string, settings: Settings): SettingsError[] {
     const paths = settings.scopes
         .values()
@@ -71,13 +65,6 @@ export function validateScopePaths(root: string, settings: Settings): SettingsEr
     });
 }
 
-/**
-Check the rule file paths of the root and every scope against the repository files.
-
-@param root the folder the paths start from.
-@param settings the parsed gspot.toml.
-@returns an error at each key that names no file.
-*/
 export function validateRuleFilePaths(root: string, settings: Settings): SettingsError[] {
     const files = openFiles(root);
     return listSettingsTables(settings).flatMap(({ table, scopePath, path }) => {
@@ -116,13 +103,6 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
     });
 }
 
-/**
-Find the errors in [rules] exclude: an item that matches no rule, and an item that hides a file that the reader opens
-first.
-
-@param exclude the written items, relative to the rules folder.
-@returns each error with its position in the exclusion list.
-*/
 export function validateRuleExcludes(exclude: string[]): SettingsError[] {
     if (exclude.length === 0) return [];
     const paths = readConfigurations()
@@ -158,11 +138,6 @@ export function validateRuleExcludes(exclude: string[]): SettingsError[] {
     });
 }
 
-/**
-Refuse rule options whose values come from another gspot setting.
-
-@param settings the root settings and every scope.
-*/
 export function validateSettingRules(settings: Settings): SettingsError[] {
     const tools = new Set([...Object.keys(SETTING_RULES), ...Object.keys(LIMIT_SETTING_RULES)]);
     const owned = new Map(
@@ -187,12 +162,6 @@ export function validateSettingRules(settings: Settings): SettingsError[] {
         });
 }
 
-/**
-Require a reason when a Swift target lowers the coverage minimum.
-
-@param settings the parsed settings.
-@param availableSettings the selected configuration settings and defaults.
-*/
 export function validateSwiftTargets(settings: Settings, availableSettings: AvailableSettings): SettingsError[] {
     const coverageLines = getSettingValue(availableSettings, settings, COVERAGE_LINES_SETTING, '')?.value;
     return (settings.coverage?.swift_target ?? [])

@@ -21,11 +21,6 @@ const SHELLCHECK_ALL_LEVEL_ON = [
     'useless-use-of-cat',
 ] as const;
 
-/**
-Build shellcheckrc: the ShellCheck source-path settings, the optional checks of level all, and the excluded rules.
-
-@param planned the config file to build.
-*/
 function buildShellcheckFile(planned: PlannedConfig): string {
     const disable = listDisabledRules(planned);
     return [

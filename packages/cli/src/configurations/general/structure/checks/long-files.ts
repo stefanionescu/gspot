@@ -10,12 +10,6 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Reports source files over the code-line limit of their language.
-
-@param session the repository and its tools.
-@param planned the scope files and limits.
-*/
 async function checkLongFiles(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const sources = listCheckedFiles(session.scopes, planned).flatMap((file) => {
         const tagged: GrammarName | 'sql' | undefined = file.tags.includes('sql')

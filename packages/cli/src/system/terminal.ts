@@ -26,9 +26,6 @@ const options: OutputState = { isJson: false, notes: [] };
 Write text as a line, without terminal escape sequences, control characters except tabs and line feeds, and format
 characters such as bidirectional overrides. Keep the color codes of the gspot palette. Repository text then cannot
 control terminal output.
-
-@param stream the terminal stream.
-@param text the text to print, which gets a final newline if it lacks one.
 */
 function writePrintableLine(stream: NodeJS.WriteStream, text: string): void {
     const printable = text
@@ -42,20 +39,10 @@ function writePrintableLine(stream: NodeJS.WriteStream, text: string): void {
     stream.write(printable.endsWith('\n') ? printable : `${printable}\n`);
 }
 
-/**
-Set the output mode for the process.
-
-@param next the JSON output choice.
-*/
 export function setOutputOptions(next: OutputOptions): void {
     Object.assign(options, next, { notes: [] });
 }
 
-/**
-Print an error message to stderr without terminal control bytes, or a structured failure to stdout under --json.
-
-@param failure the message, or the structured error.
-*/
 export function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.isJson) {
         const fields: CommandJson = { version: cliPackage.version, exitCode: EXIT_ERROR, notes: options.notes };
@@ -70,34 +57,18 @@ export function printError(failure: string | CommandFailureJson): void {
     );
 }
 
-/**
-Describe an unexpected failure without exposing its implementation details.
-
-@param subject the command or check that stopped.
-*/
 export function formatUnexpectedError(subject: string): string {
     const location = subject === 'gspot' ? '' : ' in gspot';
     const page = cliPackage.bugs.url;
     return `${subject} stopped because of an internal error${location}. Report it at ${page}, with the stack that --verbose prints.`;
 }
 
-/**
-Print an unexpected command failure, retaining its stack only for verbose output.
-
-@param error the unexpected thrown value.
-@param isVerbose whether to include its message and stack.
-*/
 export function printUnexpectedError(error: unknown, isVerbose: boolean): void {
     const stackText = error instanceof Error ? (error.stack ?? error.message) : String(error);
     const message = formatUnexpectedError('gspot');
     printError({ error: 'unexpected', message, ...(isVerbose && { stack: stackText }) });
 }
 
-/**
-Print the command result in the chosen format.
-
-@param result the command output.
-*/
 export function printResult(result: CommandResult<object>): void {
     const fields: CommandJson = { version: cliPackage.version, exitCode: result.exitCode, notes: options.notes };
     if (options.isJson) {
@@ -108,21 +79,11 @@ export function printResult(result: CommandResult<object>): void {
     } else if (result.text !== '') print(result.text);
 }
 
-/**
-Keep warnings in the JSON result, or print them without terminal controls on stderr.
-
-@param text the warning without its label.
-*/
 export function printWarning(text: string): void {
     if (options.isJson) options.notes.push(text);
     else printError(`${styleText('yellow', '[warn]', { stream: process.stderr })} ${text}`);
 }
 
-/**
-Write progress text to stderr, unless --json keeps the output to the result.
-
-@param text the text, with the terminal controls it needs.
-*/
 export function writeProgress(text: string): void {
     if (options.isJson) return;
     process.stderr.write(text);
@@ -131,9 +92,6 @@ export function writeProgress(text: string): void {
 /**
 Replace the progress line in place on a terminal that is not dumb, while NO_COLOR has no value. A dumb terminal and a
 reader that asks for no control sequences show the raw sequence, so they get nothing.
-
-@param text the new progress line, or an empty line to clear it.
-@returns whether stderr took the line, so the caller prints plain progress lines when it did not.
 */
 export function rewriteProgress(text: string): boolean {
     const noColor = readEnvironmentVariable('NO_COLOR') ?? '';
@@ -142,23 +100,11 @@ export function rewriteProgress(text: string): boolean {
     return true;
 }
 
-/**
-Print readable text on stdout without terminal control bytes, unless --json asks for structured output.
-
-@param text the output, which gets a final newline if it lacks one.
-*/
 export function print(text: string): void {
     if (options.isJson) return;
     writePrintableLine(process.stdout, text);
 }
 
-/**
-Run a command that termination signals can stop, and remove each listener when it finishes.
-
-@param runCommand the command, which gets the shared abort signal.
-@param canceledMessage the message when a cancellation stops the command before it has a result.
-@returns the command result, with the signal status after an interruption.
-*/
 export async function runCancelableCommand<Json extends object>(
     runCommand: (cancelSignal: AbortSignal) => Promise<CommandResult<Json>>,
     canceledMessage: string,
@@ -190,8 +136,6 @@ export async function runCancelableCommand<Json extends object>(
 
 /**
 Drop what this process writes to stdout and stderr, so that code gspot does not own prints nothing.
-
-@returns the handle that restores the output.
 */
 export function muteOutput(): Disposable {
     const streams = [process.stdout, process.stderr];

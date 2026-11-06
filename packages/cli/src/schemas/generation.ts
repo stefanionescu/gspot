@@ -8,9 +8,6 @@ import { formatSchema } from '#cli/schemas/settings/fields.ts';
 /**
 Read the options of a config that init replaces. An option that gspot does not know, or a value that gspot.toml cannot
 hold, goes to `dropped`, so a config of the user reaches the table and stops nothing.
-
-@param shape the options that gspot carries, each with the values it can hold.
-@returns a schema that accepts any table, and gives the options that gspot carries and the names of the others.
 */
 function buildCarriedSchema<Shape extends z.ZodRawShape>(shape: Shape) {
     const carriedSchema = z.object(shape).partial();

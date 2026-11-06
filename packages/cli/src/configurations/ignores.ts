@@ -5,21 +5,12 @@ import type { ScopeSettings } from '#cli/types/settings.ts';
 
 /**
 Keep the findings in the files that the repository lists, for a tool that walks the disk past what Git tracks.
-
-@param session the repository.
-@param result the result of the tool.
 */
 export function keepListedFindings(session: CheckSession, result: CheckResult): CheckResult {
     const listed = new Set(session.repository.files.map(({ path }) => path));
     return { ...result, findings: result.findings.filter(({ file }) => listed.has(file)) };
 }
 
-/**
-Convert one gitignore pattern to the glob that config files use.
-
-@param pattern the gitignore pattern, which may start with ! or /.
-@returns the glob, rooted at the repository unless the pattern names a bare file or folder name.
-*/
 export function convertToGlob(pattern: string): string {
     const negative = pattern.startsWith('!') ? '!' : '';
     let path = negative === '' ? pattern : pattern.slice(1);
@@ -31,23 +22,12 @@ export function convertToGlob(pattern: string): string {
     return `${negative}${prefix}${bare}${isFolder ? '/**' : ''}`;
 }
 
-/**
-List the path ignores of one check, each with its written reason.
-
-@param scopeSettings the merged settings and ignores of the scope.
-@param checkId the ID whose path ignores apply.
-*/
 export function listCheckIgnoreSections(scopeSettings: ScopeSettings, checkId: string): IgnoreSection[] {
     return listIgnores(scopeSettings, checkId)
         .filter((ignore) => ignore.rule === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths ?? [] }));
 }
 
-/**
-Keep each pattern in its first section.
-
-@param sections the ordered sections.
-*/
 export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
     const seen = new Set<string>();
     return sections.map((section) => ({
@@ -60,12 +40,6 @@ export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
     }));
 }
 
-/**
-Convert the sections to the globs that config files use.
-
-@param sections the ordered exclusion groups and their written reasons.
-@returns the globs, each once.
-*/
 export function convertToGlobs(sections: IgnoreSection[]): string[] {
     const patterns = sections.flatMap((section) => [
         ...section.patterns.filter((pattern) => !pattern.startsWith('!')),

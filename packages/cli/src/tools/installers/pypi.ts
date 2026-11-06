@@ -150,15 +150,6 @@ function writeUvSettings(folder: string, indexes: PythonIndexSettings['settings'
     writeFileSync(join(folder, UV_SETTINGS_FILE), settings, { mode: PRIVATE_FILE });
 }
 
-/**
-Resolve the Python tool lockfile outside the repository before writing it.
-
-@param install what install needs for this step.
-@param toolProjectFile the generated pyproject.toml.
-@param executable the path of uv.
-
-@returns the path, the next bytes, and the previous bytes of the lockfile, with its credentials removed.
-*/
 export async function planPythonLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
@@ -195,13 +186,6 @@ export async function planPythonLockfile(
     };
 }
 
-/**
-Install the frozen Python tool project in .gspot.
-
-@param install what install needs for this step.
-@param executable the path of uv.
-@param flags the flags after the install command.
-*/
 export async function installPythonTools(
     install: ToolInstall,
     executable: string,
@@ -224,11 +208,6 @@ export async function installPythonTools(
     return `installed ${formatCount(count, PYTHON_TOOL_NOUN)} in ${GSPOT_PATHS.pythonEnvironment}`;
 }
 
-/**
-List the scope folders of the Python projects that install syncs: each tracks a pyproject.toml and a uv lockfile.
-
-@param session the tracked files and the scopes.
-*/
 export function listLockedPythonProjects(session: Pick<ToolInstall['session'], 'repository' | 'scopes'>): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     return session.scopes
@@ -238,13 +217,6 @@ export function listLockedPythonProjects(session: Pick<ToolInstall['session'], '
         );
 }
 
-/**
-Install the environment of each Python project with a uv lockfile, so that its checks read the real packages.
-
-@param install what install needs for this step.
-@param executable the path of uv.
-@returns one line for each project.
-*/
 export async function installPythonProjects(install: ToolInstall, executable: string): Promise<string[]> {
     const { root } = install.session;
     const lines = listLockedPythonProjects(install.session).map((folder) => {
@@ -260,14 +232,6 @@ export async function installPythonProjects(install: ToolInstall, executable: st
     return lines.map(({ place }) => `installed the Python environment of ${place}`);
 }
 
-/**
-Compare a Python tool project with the pins recorded in its uv lockfile.
-
-@param project the project table of the tool project.
-@param lockfile the recorded uv.lock contents.
-@param indexes the configured Python index settings, which the download addresses must match when given.
-@param minimumReleaseAge the required relative release age in days.
-*/
 export function isPythonLockfileFresh(
     project: PythonToolProject,
     lockfile: string | undefined,
@@ -293,11 +257,6 @@ export function isPythonLockfileFresh(
     );
 }
 
-/**
-Read repository index settings and resolve their local paths for a temporary uv project.
-
-@param root the base for local index paths.
-*/
 export function readPythonSettings(root: string): PythonIndexSettings {
     const uv = findText(root, UV_SETTINGS_FILE);
     const project = findText(root, PYPROJECT_TOML);

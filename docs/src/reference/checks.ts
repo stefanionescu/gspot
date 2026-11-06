@@ -87,12 +87,6 @@ function formatRuleTable(reference: CliReference['checks'][number]): string {
     );
 }
 
-/**
-Format the section of one check on the page of its configuration: where it runs, why it matters, what to do, and how
-to turn it off. The check name without the configuration gives its heading and anchor.
-
-@param reference the shipped check and its shared requirements
-*/
 export function formatCheckSection(reference: CliReference['checks'][number]): string {
     const { check } = reference;
     const facts = [
@@ -127,9 +121,6 @@ export function formatCheckSection(reference: CliReference['checks'][number]): s
     );
 }
 
-/**
-Build the check index: one table per group, each check linked to its section on the page of its configuration.
-*/
 export function buildCheckIndex(): ReferencePage {
     const { checks } = CLI_REFERENCE;
     return buildReferencePage(
@@ -145,11 +136,6 @@ export function buildCheckIndex(): ReferencePage {
     );
 }
 
-/**
-Format the checks table shared by guide pages and the check index.
-
-@param checks the checks in display order
-*/
 export function formatCheckTable(checks: CliReference['checks']): string {
     const rows = checks.map(({ check, configuration }) => [
         formatConfigurationLink(configuration.name, check.id),

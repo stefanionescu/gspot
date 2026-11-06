@@ -6,10 +6,6 @@ import type { ReferencePage } from '#docs/types/pages.ts';
 
 const CHANGELOG_TITLE = '# Changelog\n';
 
-/**
-Build the Changelog page from CHANGELOG.md when the site builds, so each new section shows on the next build. Its table
-of contents lists the releases.
-*/
 export function buildChangelogPage(): ReferencePage {
     const changelog = readFileSync(new URL('../../../CHANGELOG.md', import.meta.url), 'utf8');
     const start = changelog.indexOf(CHANGELOG_TITLE);

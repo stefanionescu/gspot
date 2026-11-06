@@ -21,9 +21,6 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 
 /**
 Identify Swift imports, test declarations, and package targets without matching comment or string text.
-
-@param path the repository-relative source file.
-@param text the Swift source.
 */
 export async function detectSwiftTags(path: string, text: string): Promise<string[]> {
     if (!SWIFT_TAG_WORDS.test(text)) return [];
@@ -49,12 +46,6 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
     ];
 }
 
-/**
-Get the top-level module named by a Swift import declaration.
-
-@param node the import declaration.
-@returns the imported module, when the declaration names one.
-*/
 export function findImportedModule(node: Node): string | undefined {
     return node.namedChildren.find((child) => child.type === SWIFT_IDENTIFIER_NODE)?.text.split('.', 1)[0];
 }

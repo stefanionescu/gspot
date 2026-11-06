@@ -25,12 +25,6 @@ import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
 const COMMENT_CHARACTER = Symbol('comment character');
 
-/**
-Checks every pushed commit message, including empty commits that change no files.
-
-@param session the repository, its tools, and the pushed commits of the run.
-@param planned the configured commitlint check.
-*/
 async function checkCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
     const commits = session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
@@ -72,11 +66,6 @@ async function checkCommitlintPushed(session: CheckSession, planned: PlannedChec
         : result;
 }
 
-/**
-Report each line of a new commit message that links to an AI session.
-
-@param session the repository, its tools, and the commit message file of the run.
-*/
 async function checkReferences(session: CheckSession): Promise<CheckFinding[]> {
     const messageFile = session.selection?.messageFile;
     if (messageFile === undefined) return [];
@@ -95,9 +84,6 @@ async function checkReferences(session: CheckSession): Promise<CheckFinding[]> {
 /**
 Read a commit message without the comment lines and the diff that Git adds to the message file. The checks of one run
 share one read of `core.commentChar`.
-
-@param session the repository and its tools.
-@param messageFile the file that Git passes to the commit-msg hook.
 */
 export async function readCommitMessage(session: CheckSession, messageFile: string): Promise<CommitMessage> {
     const text = readFileSync(messageFile, 'utf8');

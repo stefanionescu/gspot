@@ -15,10 +15,6 @@ const SKIPPED_PATTERN_STARTS = ['#', '!'] as const;
 /**
 Anchor one line of a .gitignore file at the folder of that file. A pattern with a slash before its end is relative to
 that folder, and any other pattern matches at any depth below it.
-
-@param line the line as written.
-@param folder the folder of the .gitignore file, empty at the root.
-@returns no pattern for a blank line, a comment, a negation, or an escaped character.
 */
 function anchorPattern(line: string, folder: string): string[] {
     const pattern = line.trimEnd();
@@ -30,13 +26,6 @@ function anchorPattern(line: string, folder: string): string[] {
     return [isAnchored ? `/${folder}/${body}` : `/${folder}/**/${body}`];
 }
 
-/**
-Test a path against ignore files in order, keeping later negations.
-
-@param path the repository-relative file or folder path.
-@param ignores the patterns with the folder that contains each ignore file.
-@returns whether the final matching pattern ignores the path.
-*/
 function isIgnored(path: string, ignores: GitignoreMatcher[]): boolean {
     let isPathIgnored = false;
     for (const { base, matcher } of ignores) {
@@ -48,12 +37,6 @@ function isIgnored(path: string, ignores: GitignoreMatcher[]): boolean {
     return isPathIgnored;
 }
 
-/**
-Build a test for paths that a tracked .gitignore ignores, or that sit inside an ignored folder.
-
-@param cache the run cache.
-@param trackedPaths the tracked files of the repository.
-*/
 export function buildGitignoreMatcher(cache: RunCache, trackedPaths: string[]): (path: string) => boolean {
     const ignores: GitignoreMatcher[] = trackedPaths
         .filter((path) => posix.basename(path) === GITIGNORE_FILE)
@@ -76,9 +59,6 @@ export function buildGitignoreMatcher(cache: RunCache, trackedPaths: string[]): 
 List the patterns of the tracked .gitignore files outside .gspot/, each anchored at the folder of its file. Every clone
 tracks the same files, so every clone lists the same patterns. A pattern that matches a tracked file stays out, because
 Git checks a tracked file whatever its ignore files say.
-
-@param cache the run cache.
-@param trackedPaths the tracked files of the repository.
 */
 export function listGitignorePatterns(cache: RunCache, trackedPaths: string[]): string[] {
     const patterns = [

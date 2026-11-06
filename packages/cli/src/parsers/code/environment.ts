@@ -231,12 +231,6 @@ function listTreeReads(syntaxRoot: Node, getters: Set<string>): EnvironmentRead[
         });
 }
 
-/**
-Read expansions of the environment names that the environment readers declare.
-
-@param syntaxRoot the parsed Bash source.
-@param readerVariables the variables that environment readers declare.
-*/
 export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
     return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
         expansion.namedChildren
@@ -249,11 +243,6 @@ export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: Read
     );
 }
 
-/**
-Read Swift process environment access from navigation expressions.
-
-@param syntaxRoot the parsed Swift source.
-*/
 export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
     return syntaxRoot
         .descendantsOfType('navigation_expression')
@@ -261,12 +250,6 @@ export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
         .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
 }
 
-/**
-Get the text of a string or a template without substitutions.
-
-@param node the expression.
-@returns undefined for any other expression.
-*/
 export function getStringLiteral(node: Node | null | undefined): string | undefined {
     if (node?.type === 'string') return node.text.slice(1, -1);
     const isStaticTemplate =
@@ -274,13 +257,6 @@ export function getStringLiteral(node: Node | null | undefined): string | undefi
     return isStaticTemplate ? node.text.slice(1, -1) : undefined;
 }
 
-/**
-List the JavaScript and TypeScript sources of a file: the file itself, or the scripts of a component.
-
-@param path the original source path.
-@param text the source.
-@returns each source with its grammar.
-*/
 export async function listJavascriptSources(path: string, text: string): Promise<ComponentScript[]> {
     if (!COMPONENT_EXTENSION.test(path))
         return [{ grammar: findGrammarByExtension(path) ?? 'typescript', source: text }];
@@ -288,14 +264,6 @@ export async function listJavascriptSources(path: string, text: string): Promise
     return scripts;
 }
 
-/**
-Read environment members and calls to the environment functions in JavaScript or TypeScript.
-
-@param path the original source path.
-@param text the JavaScript or TypeScript source.
-@param environmentFunctions the configured names that read process variables.
-@param cache the parsed trees of this run.
-*/
 export async function listJavascriptEnvironmentReads(
     path: string,
     text: string,
@@ -312,12 +280,6 @@ export async function listJavascriptEnvironmentReads(
     return reads;
 }
 
-/**
-Read Python environment access and calls to the environment functions, through import aliases.
-
-@param syntaxRoot the parsed Python source.
-@param environmentFunctions the configured names that read process variables.
-*/
 export function listPythonEnvironmentReads(
     syntaxRoot: Node,
     environmentFunctions: readonly string[],

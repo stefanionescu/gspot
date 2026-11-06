@@ -4,11 +4,6 @@ import { getLimit } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Keep Biome limited to cognitive complexity, with the scope's language thresholds.
-
-@param planned the config file and the scope it checks.
-*/
 function buildBiomeFile(planned: PlannedConfig): string {
     const javascript = getLimit(planned.scope.settings, 'max_cognitive_complexity', 'javascript');
     const typescript = getLimit(planned.scope.settings, 'max_cognitive_complexity', 'typescript');

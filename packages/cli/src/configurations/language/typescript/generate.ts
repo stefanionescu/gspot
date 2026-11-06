@@ -8,12 +8,6 @@ import {
     type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
-/**
-Apply the parser of typescript-eslint to TypeScript files, its strict typed rules to every typed file, and the
-project files.
-
-@param scope the file selectors and projects of the scope.
-*/
 function buildTypescriptBlocks(
     scope: Pick<EslintScope, 'eslintFiles' | 'projects' | 'defaultProjectFiles'>,
 ): ConfigurationBlocks {

@@ -14,11 +14,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build lychee.toml: a note on why the file exists, and the lychee link exclusions as TOML.
-
-@param planned the config file to build.
-*/
 function buildLycheeFile(planned: PlannedConfig): string {
     const { configurations, settings } = planned.scope;
 

@@ -125,14 +125,6 @@ function readMetadataVersion(inspected: InspectedTool, path: string): string | u
     return miseBinPaths?.includes(dirname(path)) === true ? tool.version : readDistributionVersion(root, tool);
 }
 
-/**
-Classify a reported version against its pin and minimum version.
-
-@param found the version the tool reported.
-@param want the pinned version.
-@param minimum the lowest version the configuration accepts.
-@returns ok, outdated below the minimum, newer above the pin, system without a pin, or error for no version.
-*/
 export function classifyToolVersion(
     found: string,
     want: string | undefined,
@@ -152,9 +144,6 @@ pin gives it for a program in a mise folder of that pin. Every other tool runs i
 
 With runsVersionCommand, every program runs it. A package keeps its package version, because some npm tools print
 another one. A program in a mise folder reports what it prints, because the pin does not prove what the folder holds.
-
-@param inspected the tool and where to run its version query.
-@param path the resolved executable.
 */
 export async function readToolVersion(inspected: InspectedTool, path: string): Promise<ParsedToolVersion> {
     const { root, cwd, tool, timeoutSeconds, miseBinPaths, runsVersionCommand } = inspected;

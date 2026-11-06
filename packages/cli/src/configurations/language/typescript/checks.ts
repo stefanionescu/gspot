@@ -76,9 +76,6 @@ function claimOwnedProjects(
 /**
 Reports each required compiler option that a scope tsconfig leaves off. A tsconfig that fails to load reports alone,
 because the other checks treat it as absent.
-
-@param session the repository and its tools.
-@param planned the scope to check.
 */
 function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] {
     const unreadable = listUnreadableTsconfigs(session, planned);

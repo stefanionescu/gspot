@@ -50,9 +50,6 @@ async function writeNpmProject(options: {
     return rootPackage;
 }
 
-/**
-Create an authenticated registry and an authored project for a package manager.
-*/
 export async function createNpmProject(packageManager: ToolPackageManager['name']): Promise<NpmProject> {
     await using resources = new AsyncDisposableStack();
     const folder = resources.use(await testdir());

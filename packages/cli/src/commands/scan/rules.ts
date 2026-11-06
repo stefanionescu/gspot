@@ -12,9 +12,6 @@ import type { CarryoverRow, InitPlanning, RuleRead } from '#cli/types/generation
 
 /**
 Read the rules that the ESLint and Stylelint of the repository resolve. Call this before init replaces their configs.
-
-@param planning the plan of init in the copy.
-@returns one read per replaced config, with the file that gspot asks each side about.
 */
 export async function readUserRules(planning: InitPlanning): Promise<RuleRead[]> {
     const { detection, session } = planning;
@@ -47,10 +44,6 @@ export async function readUserRules(planning: InitPlanning): Promise<RuleRead[]>
 Compare the rules of each replaced config with the rules that the installed tools of gspot resolve. The printed rules
 hold the shared configs that the file extends, so only a rule that the file itself names counts: a rule that a shared
 config turns off is not the user's choice, and needs no reason.
-
-@param root the copy with the generated configs and the installed tools.
-@param reads what readUserRules returned.
-@returns one row per replaced config.
 */
 export async function compareInstalledRules(root: string, reads: RuleRead[]): Promise<CarryoverRow[]> {
     return await Promise.all(

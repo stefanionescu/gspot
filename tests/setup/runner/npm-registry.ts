@@ -48,9 +48,6 @@ function buildPackageDocument(packed: PackedPackage, tarball: string): Record<st
     };
 }
 
-/**
-Pack these npm packages into the folder and write the list the registry serves.
-*/
 export async function runNpmPack(workFolder: string, declarations: readonly RegistryPackage[]): Promise<string> {
     const packages: PackedPackage[] = [];
     for (const { source, ...declaration } of declarations) {
@@ -71,9 +68,6 @@ export async function runNpmPack(workFolder: string, declarations: readonly Regi
     return packagesFile;
 }
 
-/**
-Serve the packed npm packages and any extra packages that a credential test asks for.
-*/
 export async function startNpmRegistry(
     workFolder: string,
     options: { packages?: readonly RegistryPackage[]; token?: string } = {},

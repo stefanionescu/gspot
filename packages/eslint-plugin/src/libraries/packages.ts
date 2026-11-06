@@ -69,11 +69,6 @@ function getCeiling(comparator: string): VersionCeiling | null | undefined {
     return buildCeiling(numbers, VERSION_OPERATORS.get(groups['operator'] ?? ''));
 }
 
-/**
-List the folders from the folder of the file up to the repository root, nearest first, where package.json files apply.
-
-@param context the rule context of the file.
-*/
 export function listManifestFolders(context: FileContext): string[] {
     const root = (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root;
     let folder = dirname(context.filename);
@@ -85,12 +80,6 @@ export function listManifestFolders(context: FileContext): string[] {
     return folders;
 }
 
-/**
-Read the package.json files from the folder of the file up to the repository root. Count them, and map each package
-name they list to its version range, which the nearest file sets.
-
-@param context the rule context of the file.
-*/
 export function readPackageFacts(context: FileContext): PackageFacts {
     const cached = manifestCache.get(context.sourceCode);
     if (cached !== undefined) return cached;
@@ -103,11 +92,6 @@ export function readPackageFacts(context: FileContext): PackageFacts {
     return facts;
 }
 
-/**
-Get the module that a `require` call names, through the members read from its result.
-
-@param node the call or a member of its result.
-*/
 export function getRequiredModule(node: TSESTree.Node): string | undefined {
     let value = node;
     while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
@@ -117,12 +101,6 @@ export function getRequiredModule(node: TSESTree.Node): string | undefined {
     return module ?? undefined;
 }
 
-/**
-List the modules that a file imports or requires. The Svelte parser puts the imports inside a script element, one
-level below the program.
-
-@param source the file.
-*/
 export function listImportedModules(source: TSESLint.SourceCode): ReadonlySet<string> {
     const cached = importCache.get(source);
     if (cached !== undefined) return cached;
@@ -141,13 +119,6 @@ export function listImportedModules(source: TSESLint.SourceCode): ReadonlySet<st
     return modules;
 }
 
-/**
-Check whether the file imports one of the modules, or a package.json above it depends on one of the packages.
-
-@param context the rule context of the file.
-@param modules the module names to find in imports.
-@param dependencies the package names to find in the manifests.
-*/
 export function isModuleUsed(
     context: FileContext,
     modules: readonly string[],
@@ -159,25 +130,11 @@ export function isModuleUsed(
     return dependencies.some((dependency) => listed.has(dependency));
 }
 
-/**
-Compare two versions field by field, with a missing field of the left version read as 0.
-
-@param left the version to compare, as major, minor, and patch numbers.
-@param right the version to compare it with.
-@returns a negative number when left is lower, 0 when the two are equal, and a positive number when left is higher.
-*/
 export function compareVersions(left: readonly number[], right: readonly number[]): number {
     const differences = right.map((value, position) => (left[position] ?? 0) - value);
     return differences.find((difference) => difference !== 0) ?? 0;
 }
 
-/**
-Check whether a package.json version range allows a version at or above a minimum.
-
-@param range the range from package.json.
-@param minimum the lowest version, as major, minor, and patch numbers.
-@returns undefined for a range that does not have the form of a version range.
-*/
 export function allowsVersion(range: string, minimum: readonly number[]): boolean | undefined {
     const alternatives = range
         .split(VERSION_ALTERNATIVES)
@@ -197,8 +154,6 @@ export function allowsVersion(range: string, minimum: readonly number[]): boolea
 /**
 Check whether the package.json files above the file allow Vue 3 or newer. Count a Vue range that does not have the
 form of a version range as Vue 3.
-
-@param context the rule context of the file.
 */
 export function isVueThreeUsed(context: FileContext): boolean {
     const range = readPackageFacts(context).dependencies.get('vue');

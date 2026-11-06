@@ -150,11 +150,6 @@ function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs
         .map(({ path }) => buildGeneratedRow(path, conflicts));
 }
 
-/**
-Word the table of what init carries: one line per replaced config, and one per weakening that needs a reason.
-
-@param rows one row per replaced config.
-*/
 export function listCarryoverLines(rows: CarryoverRow[]): InitFileRow[] {
     return rows.flatMap((row) => {
         const groups = Object.entries(CARRYOVER_GROUPS)
@@ -168,15 +163,6 @@ export function listCarryoverLines(rows: CarryoverRow[]): InitFileRow[] {
     });
 }
 
-/**
-Build the file changes that init reports before it writes them.
-
-@param scan the repository facts and configurations.
-@param settings the validated gspot.toml and its generated files.
-@param settings.settings the parsed gspot.toml for file generation.
-@param settings.requirements the configurations whose tools the checks need.
-@param settings.generated the files to write and their ownership plan.
-*/
 export function planInitFiles(
     scan: InitScan,
     { settings, requirements, generated }: { settings: Settings; requirements: Configuration[]; generated: Generation },
@@ -235,12 +221,6 @@ export function planInitFiles(
     };
 }
 
-/**
-Format the plan that init prints before it writes anything.
-
-@param plan the configurations and file changes to preview.
-@param settingsText the gspot.toml text that init writes.
-*/
 export function formatInitPlan(plan: InitPlan, settingsText: string): string {
     const lines = [
         ...formatConfigurationSection(plan.configurations, plan.level),

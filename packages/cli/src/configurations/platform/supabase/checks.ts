@@ -191,12 +191,6 @@ async function runDenoFunction(
     return runCheckTool(session, planned, command, { cwd: join(session.root, planned.scope.path) });
 }
 
-/**
-Reports each storage bucket that no migration policy on storage.objects names.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkStoragePolicies(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed === undefined) return [];
@@ -218,12 +212,6 @@ async function checkStoragePolicies(session: Session, planned: PlannedCheck): Pr
         }));
 }
 
-/**
-Runs deno lint on each edge function.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkDenoLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
@@ -258,12 +246,6 @@ async function checkDenoLint(session: CheckSession, planned: PlannedCheck): Prom
     return findings;
 }
 
-/**
-Reports the first type error of each edge function, from deno check on its entry file.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
@@ -280,12 +262,6 @@ async function checkDenoCheck(session: CheckSession, planned: PlannedCheck): Pro
     return findings;
 }
 
-/**
-Reports privileged Supabase keys outside edge functions and test files.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 function checkServiceRoleKey(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
     const tests = planned.scope.settings.test_files;
@@ -314,12 +290,6 @@ function checkServiceRoleKey(session: Session, planned: PlannedCheck): CheckFind
     );
 }
 
-/**
-Reports each `verify_jwt = false` line of the project file with no comment that gives the reason.
-
-@param session the repository and its tools.
-@param planned the scope of the project file.
-*/
 function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFinding[] {
     const file = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
     return (findText(session.cache, file) ?? '')

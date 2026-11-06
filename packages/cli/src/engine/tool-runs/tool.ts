@@ -65,9 +65,6 @@ function findProcessFailure(
 
 /**
 Run a tool process and classify a failure. With exit codes, any other nonzero exit code is a failure too.
-
-@param commandArguments the executable and expanded arguments.
-@param options the process options, the tool name for a failure note, and the nonzero exit codes that mean findings.
 */
 export async function runToolProcess(
     commandArguments: string[],
@@ -78,13 +75,6 @@ export async function runToolProcess(
     return { result, failure: findProcessFailure(result, { name, timeoutSeconds: options.timeoutSeconds, exitCodes }) };
 }
 
-/**
-Add the folders of the installed secondary tools of a check to the process `PATH`, also in a copy.
-
-@param session the repository and its configurations.
-@param names the secondary tools to add.
-@param environment variables for the tool process.
-*/
 export async function buildSecondaryToolEnvironment(
     session: CheckSession,
     names: string[],
@@ -104,16 +94,6 @@ export async function buildSecondaryToolEnvironment(
     };
 }
 
-/**
-Run the tool of a check with the tool time limit and failure handling.
-
-@param session the repository and its tools.
-@param planned the check and scope.
-@param command the tool name and its arguments. With `options.tool`, the program that drives that tool, which gets the
-path of the tool as its last argument.
-@param options how to start the process, the tool to find when the command starts another program, and the nonzero
-exit codes that mean findings. With `exitCodes`, any other nonzero exit code stops the check with an error.
-*/
 export async function runCheckTool(
     session: CheckSession,
     planned: PlannedCheck,

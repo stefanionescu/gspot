@@ -25,8 +25,6 @@ const GENERATED_MARKUP_RULES = [
 /**
 Build html-validate.json: the HTML validation rules for source files or built site pages. A site built with Starlight
 or Expressive Code leaves out the rules that report the markup those packages write, which the user does not write.
-
-@param planned the config file to build.
 */
 export function buildHtmlValidateFile(planned: PlannedConfig): string {
     const configuration = planned.configuration.name;

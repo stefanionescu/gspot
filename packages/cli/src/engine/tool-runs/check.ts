@@ -140,13 +140,6 @@ async function findMissingSecondaryTool(
     return undefined;
 }
 
-/**
-Resolves the working folder and expands the tool environment values.
-
-@param session the repository and its settings.
-@param planned the check and its files.
-@param root the repository, or the copy of it that the command runs in.
-*/
 function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: string): CommandSetup {
     const { scope } = planned;
     const cwd = selectCommandFolder(root, planned);
@@ -168,12 +161,6 @@ function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: s
     return { root, cwd, files, substitutions, env: { ...env, ...python } };
 }
 
-/**
-Select the folder that a command of a check runs in.
-
-@param root the repository, or the copy of it that the tool runs in.
-@param planned the check and its scope.
-*/
 export function selectCommandFolder(root: string, planned: PlannedCheck): string {
     const { check, scope } = planned;
     const isInScopeFolder =
@@ -181,15 +168,6 @@ export function selectCommandFolder(root: string, planned: PlannedCheck): string
     return isInScopeFolder ? join(root, scope.path) : root;
 }
 
-/**
-Builds the placeholder values from the scope and working folder.
-
-@param root the repository, or the copy of it that the tool runs in.
-@param planned the check and its files.
-@param cwd the folder that the tool runs in.
-@param messageFile the commit message file of the run, if any.
-@returns the placeholder values, with paths relative to cwd.
-*/
 export function buildCommandSubstitutions(
     root: string,
     planned: PlannedCheck,
@@ -207,16 +185,6 @@ export function buildCommandSubstitutions(
     return substitutions;
 }
 
-/**
-Expands a check or fix command into file batches that fit the command line.
-
-@param planned the check to run.
-@param expansion what to run.
-@param expansion.session the repository and its tools.
-@param expansion.command the executable and the arguments as declared.
-@param expansion.root the repository, or the copy of it that the tool runs in.
-@param expansion.toolPath the resolved executable path.
-*/
 export function buildCommandLaunch(
     planned: PlannedCheck,
     expansion: { session: CheckSession; command: string[]; root: string; toolPath: string },
@@ -240,13 +208,6 @@ export function buildCommandLaunch(
     };
 }
 
-/**
-Finds the tool and runs the expanded commands of a check.
-
-@param session the repository and its tools.
-@param planned the check to run.
-@param options the command override and the verbosity of the notes.
-*/
 export async function runCommandCheck(
     session: CheckSession,
     planned: PlannedCheck,
@@ -278,13 +239,6 @@ export async function runCommandCheck(
         : { ...base, ...secondaryToolFailure };
 }
 
-/**
-Look up the tool and the secondary tools of each command check once, so that the checks read them from the tool cache.
-
-@param session the repository and its tools.
-@param checks the checks of the run.
-@param codes the code of each check; a check with built-in code runs no command.
-*/
 export async function lookUpCommandTools(
     session: CheckSession,
     checks: PlannedCheck[],
@@ -303,11 +257,6 @@ export async function lookUpCommandTools(
 
 /**
 Run each command batch and merge the findings, keeping earlier findings when a later run fails.
-
-@param session the repository and tools.
-@param planned the check to run.
-@param batches the files and command of each run.
-@returns the merged result, or the first failure with the findings so far.
 */
 export async function runCommandBatches(
     session: CheckSession,

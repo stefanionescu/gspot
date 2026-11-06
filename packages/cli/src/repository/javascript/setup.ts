@@ -12,12 +12,6 @@ import {
 } from '#cli/config/repository/javascript.ts';
 import type { SetupReference } from '#cli/types/repository.ts';
 
-/**
-Choose the frozen-install arguments for a lockfile and package-manager version.
-
-@param lockfile the project's dependency lockfile.
-@param version the package-manager version; docs select Yarn Berry explicitly.
-*/
 export function buildFrozenInstallArguments(
     lockfile: keyof typeof FROZEN_INSTALLS,
     version: string | undefined,
@@ -27,9 +21,6 @@ export function buildFrozenInstallArguments(
     return (isYarnBerry ? YARN_BERRY_INSTALL : command).slice(1);
 }
 
-/**
-Build setup and clone commands from the same runner and frozen-install records used by the CLI and CI.
-*/
 export function buildSetupReference(): SetupReference[] {
     return Object.entries(PACKAGE_MANAGER_LABELS).map(([name, label]) => {
         const runner = START_RUNNERS[name as keyof typeof START_RUNNERS];

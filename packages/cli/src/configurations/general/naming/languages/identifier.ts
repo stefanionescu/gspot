@@ -3,14 +3,6 @@ import type { Node } from 'web-tree-sitter';
 import { CATEGORY_LABELS, NAME_QUOTE } from '#cli/config/configurations/naming.ts';
 import type { FileIdentifiers, NamedCategory } from '#cli/types/configurations/general.ts';
 
-/**
-Adds an identifier at its source place, except an empty name or `_`.
-
-@param found the file and the identifiers found so far.
-@param node the parsed declaration.
-@param category the kind of declared name.
-@param name the name as written, after any language change.
-*/
 export function addIdentifier(
     found: FileIdentifiers,
     node: Node,

@@ -6,12 +6,6 @@ import { FOLDER_CONTENTS, GLOB_EXCLUDE, GLOB_EXCLUSION, TRAILING_SLASH } from '#
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
-/**
-Build a picomatch matcher for root-relative POSIX paths, cached by pattern list.
-
-@param patterns the globs; a leading `!` excludes, and `!(` opens an extglob.
-@returns a function that accepts a path that some glob matches and no `!` glob excludes.
-*/
 export function buildPathMatcher(patterns: string[]): (path: string) => boolean {
     const key = JSON.stringify(patterns);
     const cached = matcherCache.get(key);
@@ -29,12 +23,6 @@ export function buildPathMatcher(patterns: string[]): (path: string) => boolean 
     return isMatch;
 }
 
-/**
-Expand literal folder selectors, and keep each include or exclude.
-
-@param patterns the selectors, a leading ! for an exclusion.
-@returns the selectors, each literal path followed by everything under it.
-*/
 export function includeFolderContents(patterns: string[]): string[] {
     return patterns.flatMap((pattern) => {
         const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
@@ -44,11 +32,6 @@ export function includeFolderContents(patterns: string[]): string[] {
     });
 }
 
-/**
-Build a matcher for literal filenames and globs that tests both the filename and the repository path.
-
-@param names exact filenames and glob selectors.
-*/
 export function buildFilenameMatcher(names: string[]): (path: string) => boolean {
     const literals = new Set(names.filter((name) => !picomatch.scan(name).isGlob));
     const isGlobMatch = buildPathMatcher(names.filter((name) => picomatch.scan(name).isGlob));

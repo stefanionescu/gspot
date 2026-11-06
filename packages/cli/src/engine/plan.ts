@@ -171,12 +171,6 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     });
 }
 
-/**
-List the nested scopes that run a Vitest or Jest check themselves, so that the run of this scope can leave them out.
-
-@param session the scopes and files of the repository.
-@param planned the check and the scope that runs it.
-*/
 export function listOwnTestScopes(session: Session, planned: PlannedCheck): string[] {
     const configuration = planned.configuration as Configuration;
     return listNestedScopes(
@@ -185,12 +179,6 @@ export function listOwnTestScopes(session: Session, planned: PlannedCheck): stri
     );
 }
 
-/**
-Check whether a planned check has files, deleted trigger paths, a commit message, or pushed commits to read.
-
-@param planned the plan to inspect.
-@param selection the content of the run; without one, the run reads no pushed commits.
-*/
 export function isActive(planned: PlannedCheck, selection?: RunSelection): boolean {
     return (
         planned.files.length > 0 ||
@@ -200,25 +188,12 @@ export function isActive(planned: PlannedCheck, selection?: RunSelection): boole
     );
 }
 
-/**
-Build the state of a planned check for list and explain: on, or skipped with the cause that check --json names.
-
-@param planned the plan of the check, or undefined when the run of another scope covers its tests.
-*/
 export function buildCheckState(planned: PlannedCheck | undefined): CheckState {
     if (planned === undefined) return { status: 'skipped', cause: 'replaced' };
     if (planned.skip !== undefined) return { status: 'skipped', cause: planned.skip.cause };
     return isActive(planned) ? { status: 'on' } : { status: 'skipped', cause: 'no-files' };
 }
 
-/**
-Plan the checks of every scope, and skip each check that another check replaces. Leave out the checks that the run
-skips, and refuse history checks when the pushed history lacks commits.
-
-@param session the repository to check.
-@param options what the run narrows to.
-@returns the planned checks in scope order.
-*/
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
     const checks = planScopes(session, options)
         .flatMap((planned) => skipReplacedChecks(planned, options.selection))
@@ -234,13 +209,6 @@ export function planChecks(session: Session, options: PlanOptions): PlannedCheck
     return checks;
 }
 
-/**
-Keep an override command, and drop the shipped coverage arguments when every coverage minimum equals 0.
-
-@param planned the check and its scope settings.
-@param authored the command and workspace.
-@returns the command, with coverage only when a coverage minimum needs it.
-*/
 export function stripCoverageArguments(
     planned: Pick<PlannedCheck, 'check' | 'scope' | 'configuration'>,
     authored: Pick<Check, 'command'>,
@@ -262,22 +230,11 @@ export function stripCoverageArguments(
     return command.filter((argument) => !hasCoverageArguments([argument], coverageArguments));
 }
 
-/**
-Check whether every coverage requirement of a scope equals zero.
-
-@param scope the resolved coverage settings.
-*/
 export function isCoverageOff(scope: Scope): boolean {
     const coverage = getTable(scope.settings, 'coverage');
     return COVERAGE_DIMENSIONS.every((name) => coverage[name] === 0);
 }
 
-/**
-Check whether a command uses one of the declared coverage arguments.
-
-@param command the program and arguments.
-@param coverageArguments the coverage flags of the check.
-*/
 export function hasCoverageArguments(
     command: readonly string[] | undefined,
     coverageArguments: readonly string[] | undefined,
@@ -290,13 +247,6 @@ export function hasCoverageArguments(
     );
 }
 
-/**
-List each check that a scope runs at some stage, with no files.
-
-@param scopes the scopes of the repository.
-@param settings the authored selections, rule overrides, and stage choices.
-@returns one entry for each scope and check.
-*/
 export function listEnabledChecks(scopes: Scope[], settings: Settings): ScopeCheck[] {
     const root = getRootScope(scopes);
     const configurations = scopes.flatMap((each) => each.configurations);

@@ -23,9 +23,6 @@ function getConstructorSource(
 /**
 Parse a regular expression literal, or a `RegExp` call whose pattern and flags the file spells out. A pattern that
 does not compile returns nothing, because `no-invalid-regexp` reports it.
-
-@param node the literal or call to read.
-@param source the file that holds the node.
 */
 export function getRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.RegExpLiteral | undefined {
     let text: { pattern: string; flags: string } | undefined;
@@ -41,12 +38,6 @@ export function getRegex(node: TSESTree.Node, source: TSESLint.SourceCode): AST.
     }
 }
 
-/**
-Build the visitors that hand each regular expression of a file to one check.
-
-@param check the check that receives the node and its parsed expression.
-@param source the file whose expressions the visitors read.
-*/
 export function buildRegexVisitors(
     check: (node: TSESTree.Node, regex: AST.RegExpLiteral) => void,
     source: TSESLint.SourceCode,

@@ -176,8 +176,6 @@ function spawnProcess(command: readonly string[], options: CancelableSpawnOption
 
 /**
 Check a process without signaling it. A permission refusal still means that the process exists.
-
-@param pid the process that owns a copy.
 */
 export function isProcessRunning(pid: number): boolean {
     try {
@@ -190,12 +188,6 @@ export function isProcessRunning(pid: number): boolean {
     }
 }
 
-/**
-Run a supervised process tree and capture its text.
-
-@param command executable and literal arguments.
-@param options where and how the process runs.
-*/
 export async function runProcess(command: readonly string[], options: CancelableSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
     const unstarted = findUnstartedProcess(command, options, started);
@@ -217,14 +209,6 @@ export async function runProcess(command: readonly string[], options: Cancelable
     return finishProcess(spawned.child, spawned.supervision, started, spawned.child);
 }
 
-/**
-Run a supervised process tree and read its output bytes.
-
-@param command executable and literal arguments.
-@param options where and how the process runs.
-@param readStdout reads the output bytes.
-@returns an empty stdout when the callback reads it.
-*/
 export async function streamProcess(
     command: readonly string[],
     options: CancelableSpawnOptions,

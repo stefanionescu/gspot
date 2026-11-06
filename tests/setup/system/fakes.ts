@@ -21,10 +21,6 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import type { ProgramName } from '#tests/types/setup.ts';
 
-/**
-Write a Unix and a Windows command that runs a fixed command before the arguments it gets. Name it without the Windows
-suffix.
-*/
 export async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
@@ -60,9 +56,6 @@ export function fakeCommands(
     });
 }
 
-/**
-Fake the lookup and version output of these tools, as programs that mise installed.
-*/
 export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     const resources = new DisposableStack();
     const folder = join(tmpdir(), 'test-tools');
@@ -93,10 +86,6 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     return resources;
 }
 
-/**
-Write a Unix and a Windows command that runs one of the test programs with fixed arguments before the ones it gets.
-Name it without the Windows suffix, and return the folder to put on `PATH`.
-*/
 export async function writeProgramCommand(
     folder: string,
     path: string,
@@ -108,9 +97,6 @@ export async function writeProgramCommand(
     return dirname(target);
 }
 
-/**
-Write the package.json and a version program for the pinned npm tool.
-*/
 export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
     const declaration = getTool(readConfigurations().values(), tool);
     const installer = declaration.installers['npm'];
@@ -125,9 +111,6 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
     return declaration;
 }
 
-/**
-List the dist-info file that gives a Python tool its version in the tool environment.
-*/
 export function buildPythonToolFiles(tool: string): Record<string, string> {
     const declaration = getTool(readConfigurations().values(), tool);
     const name = declaration.installers['pypi']?.name;
@@ -136,9 +119,6 @@ export function buildPythonToolFiles(tool: string): Record<string, string> {
     return { [`${GSPOT_PATHS.pythonEnvironment}/lib/python3/site-packages/${folder}/METADATA`]: '' };
 }
 
-/**
-Write an installed npm package and the program that the tool package exposes.
-*/
 export async function fakeNpmPackage(
     root: string,
     npmPackage: { name: string; version: string; toolArguments: string[]; bin?: string },
@@ -150,11 +130,6 @@ export async function fakeNpmPackage(
     await writeProgramCommand(root, `${GSPOT_PATHS.nodeModules}/.bin/${bin}`, 'fakes/tool', ...toolArguments);
 }
 
-/**
-Make executable lookup return one path, or the path a function picks for each name. Git keeps its real lookup.
-
-@param path the path, or a function of the name; when the function gives undefined, the real lookup runs.
-*/
 export function fakeExecutableLookup(
     path: string | null | ((name: string) => string | null | undefined),
 ): Mock<typeof executables.sync> {
@@ -172,9 +147,6 @@ export function fakeExecutableLookup(
     return spyOn(executables, 'sync').mockImplementation(lookUp as typeof executables.sync);
 }
 
-/**
-Mark each stream as a terminal or not, and restore the streams when the scope ends.
-*/
 export function fakeTerminals(
     terminals: ReadonlyArray<readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean]>,
 ): Disposable {

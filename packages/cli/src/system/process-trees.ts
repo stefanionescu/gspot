@@ -84,12 +84,6 @@ async function stopProcessTree(child: ChildProcess, pid: number, termination: Pr
     }, OUTPUT_CLOSE_MILLISECONDS);
 }
 
-/**
-Supervise a process tree: stop it on a timeout, a cancel, or a stream error, and clean up what it leaves when it exits.
-
-@param child the process that leads the tree.
-@param options the time limit and the cancel signal.
-*/
 export function trackProcessTree(child: ChildProcess, options: CancelableSpawnOptions): ProcessTreeControl {
     const state = { timedOut: false, canceled: false };
     const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };

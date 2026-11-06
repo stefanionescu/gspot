@@ -56,10 +56,6 @@ export async function runGspot(
     }
 }
 
-/**
-Commit a folder and plan init on it, with the --configurations and --level arguments of the command. It writes nothing.
-The result holds the plan and the settings that init writes.
-*/
 export async function runInit(
     root: string,
     commandArguments: readonly string[] = [],
@@ -81,9 +77,6 @@ export function parseCheckReport(output: ProcessOutput): ProcessOutput & { repor
     return { ...output, report: runReportSchema.parse(JSON.parse(output.stdout)) };
 }
 
-/**
-Run gspot as a child process in a folder with color off and CI set.
-*/
 export async function spawnGspot(
     cwd: string,
     commandArguments: readonly string[],
@@ -104,9 +97,6 @@ export async function spawnRootCheck(root: string, checkId: string): Promise<Che
     return found;
 }
 
-/**
-List, for each path, whether the tool left it unreported and the directives that gspot/suppressions finds in it.
-*/
 export async function readSuppressionResults(
     root: string,
     paths: readonly string[],
@@ -121,9 +111,6 @@ export async function readSuppressionResults(
     }));
 }
 
-/**
-Run one gspot command in a sandbox and throw with its output when it fails.
-*/
 export async function runGspotStep(sandbox: Sandbox, commandArguments: readonly string[]): Promise<ProcessOutput> {
     const result = await sandbox.run(sandbox.root, commandArguments);
     if (result.code !== 0) {
@@ -133,10 +120,6 @@ export async function runGspotStep(sandbox: Sandbox, commandArguments: readonly 
     return result;
 }
 
-/**
-Run a refused command with --json, check that it exits 2 with the error code and writes nothing, and return the
-failure so that a test can check a value that the message names.
-*/
 export async function assertRefusalWithoutWrites(
     root: string,
     commandArguments: readonly string[],

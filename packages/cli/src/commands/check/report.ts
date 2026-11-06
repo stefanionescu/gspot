@@ -80,14 +80,6 @@ function formatFinding(finding: Finding, { verbose }: { verbose: boolean }): str
     return lines;
 }
 
-/**
-Print each help text once after the findings of a check. The explain command names the rule when every finding of
-that help shares one, and a rule placeholder when they name several.
-
-@param findings the findings that the report shows.
-@param result the check, its help that a finding of its own help replaces, and its fix line, which the fix sentence
-points at.
-*/
 function formatHelpLines(
     findings: readonly Finding[],
     result: Pick<CheckResult, 'check' | 'help' | 'fixCommand'>,
@@ -228,13 +220,6 @@ function formatMissingChecks(checks: readonly CheckResult[]): string[] {
     return lines.length === 0 ? [] : [...lines, ''];
 }
 
-/**
-Print failed fixer warnings, with the full diagnostics when requested.
-
-@param fixes the fixer results.
-@param options the report verbosity.
-@param options.verbose whether to include the full fixer output.
-*/
 export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
     for (const result of fixes.results) {
         if (result.status !== 'failed') continue;
@@ -258,16 +243,6 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
     }
 }
 
-/**
-Format the check lines, the ignores, and the summary of a run.
-
-@param report the check results and totals.
-@param options how to show the report.
-@param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
-@param options.canceled whether a signal stopped the run, so it ends without its exit code.
-@param options.setup the milliseconds from the start of the run to the first check, which --verbose prints.
-@param options.startCommand the command to write in place of gspot, when gspot is not on the PATH.
-*/
 export function formatRunReport(
     report: RunReport,
     {
@@ -305,9 +280,6 @@ export function formatRunReport(
 Format one GitHub error annotation per finding, up to the number of error annotations that GitHub shows for one step.
 The annotations print after the report, once workflow commands run again. The escapes keep tool text from closing a
 property or from starting a second command.
-
-@param json the report of the check command.
-@returns no line outside GitHub Actions.
 */
 export function formatAnnotations(json: CheckCommandJson): string[] {
     if (readEnvironmentVariable('GITHUB_ACTIONS') !== 'true' || 'error' in json) return [];
@@ -347,11 +319,6 @@ export function beginCheckReport(): (() => void) | undefined {
     };
 }
 
-/**
-Format the fixes as lines: the changed files and the files that the fixers broke.
-
-@param fixes the fixer report.
-*/
 export function formatFixes(fixes: FixReport): string[] {
     const count = fixes.changed.length;
     if (count === 0 && fixes.broken.length === 0 && fixes.conflicted.length === 0) return [UNCHANGED_FIX_MESSAGE];

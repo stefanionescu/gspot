@@ -23,9 +23,6 @@ function listIndentSteps(text: string): string[] {
 /**
 Find the indent that most lines of the .sh and .bash files use. init records it once, because reading it on each run
 makes a new script change a generated file.
-
-@param repository the root and the tracked files.
-@returns the format fields, empty when no script line is indented.
 */
 export function detectScriptIndent(repository: Repository): TomlTable {
     const steps = repository.files

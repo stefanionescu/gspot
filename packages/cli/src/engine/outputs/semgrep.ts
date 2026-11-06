@@ -4,11 +4,6 @@ import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
-/**
-Read Semgrep rule findings and source parsing errors, and refuse scanner or rule failures.
-
-@param output the tool output to read.
-*/
 export function parseSemgrepFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
     const report = parseToolOutput('Semgrep', stdout, semgrepOutputSchema);

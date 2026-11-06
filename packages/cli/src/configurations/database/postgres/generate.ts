@@ -8,11 +8,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build squawk.toml: the disabled Squawk migration rules.
-
-@param planned the config file to build.
-*/
 function buildSquawkFile(planned: PlannedConfig): string {
     const { files } = planned.session.repository;
 

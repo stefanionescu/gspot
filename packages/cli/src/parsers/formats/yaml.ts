@@ -8,13 +8,6 @@ export function parseYamlFile(path: string, text: string): unknown;
 
 export function parseYamlFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 
-/**
-Parse YAML, and name the file on invalid syntax or fields.
-
-@param path the source file.
-@param text the YAML contents.
-@param schema the fields to validate, when supplied.
-*/
 export function parseYamlFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: unknown;
     try {
@@ -27,12 +20,6 @@ export function parseYamlFile(path: string, text: string, schema?: z.ZodType): u
     return schema === undefined ? value : parseFileFields(path, value, schema);
 }
 
-/**
-Parse every document of a YAML file.
-
-@param path the file, for the error.
-@param text the complete source, including document separators.
-*/
 export function parseYamlDocuments(path: string, text: string): unknown[] {
     const documents = parseAllDocuments(text, { merge: true, logLevel: 'error' });
     return documents.map((document) => {

@@ -167,12 +167,6 @@ async function parseSwiftPackage(path: string, text: string): Promise<Dependency
     };
 }
 
-/**
-Parse package requirements after removing line continuations and comments.
-
-@param path the repository-relative requirements file.
-@param text the file as written.
-*/
 export function parseRequirements(path: string, text: string): DependencyFile {
     const dependencies: Dependencies = {};
     for (const line of text.replaceAll(LINE_CONTINUATION, '').split(LINE_BREAK)) {

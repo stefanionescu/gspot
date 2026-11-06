@@ -109,8 +109,6 @@ function listDownloadRuns(syntaxRoot: Node): Node[] {
 /**
 Parse literal trap scripts once and retain their trees until the caller disposes them.
 
-@param commands the script's commands.
-@param cache the grammars of this run.
 @param resources disposes the script trees after their readers finish.
 */
 export async function parseTrapScripts(
@@ -140,12 +138,6 @@ export async function parseTrapScripts(
     return scripts;
 }
 
-/**
-Read command names, argument counts, and argument forwarding from script or trap nodes.
-
-@param commands the parsed commands.
-@param sourceRows maps decoded trap offsets to original source lines.
-*/
 export function buildCommandCalls(commands: Node[], sourceRows?: TrapScript['sourceRows']): ScriptSyntax['calls'] {
     return commands.flatMap((node) => {
         const name = node.childForFieldName('name')?.text ?? node.child(0)?.text;
@@ -172,12 +164,6 @@ export function buildCommandCalls(commands: Node[], sourceRows?: TrapScript['sou
     });
 }
 
-/**
-Read literal command arguments from the main script and its parsed traps.
-
-@param commands the top-level parse's command nodes.
-@param traps parsed trap bodies with their original source positions.
-*/
 export function listScriptCommands(commands: Node[], traps: TrapScript[]): ScriptSyntax['commands'] {
     return [
         ...commands.map((node) => ({ node, sourceRows: undefined as TrapScript['sourceRows'] | undefined })),
@@ -197,12 +183,6 @@ export function listScriptCommands(commands: Node[], traps: TrapScript[]): Scrip
     });
 }
 
-/**
-List failure handlers that discard a command's status in the script and its traps.
-
-@param syntaxRoot the main script's parsed root.
-@param traps parsed trap bodies with their original source positions.
-*/
 export function listSwallowedLines(syntaxRoot: Node, traps: TrapScript[]): number[] {
     return [
         { node: syntaxRoot, sourceRows: undefined as TrapScript['sourceRows'] | undefined },
@@ -215,23 +195,12 @@ export function listSwallowedLines(syntaxRoot: Node, traps: TrapScript[]): numbe
     );
 }
 
-/**
-Find the source line of a node after decoding the escaped characters and continuations of a trap.
-
-@param node the decoded syntax node.
-@param sourceRows source boundaries recorded while decoding the trap.
-*/
 export function findSourceLine(node: Node, sourceRows?: TrapScript['sourceRows']): number {
     if (sourceRows === undefined) return node.startPosition.row + 1;
     const source = sourceRows.findLast((row) => row.offset <= node.startIndex);
     return source?.line ?? node.startPosition.row + 1;
 }
 
-/**
-List the syntax forms that the Bash rules forbid.
-
-@param syntaxRoot the parsed script.
-*/
 export function listScriptForms(syntaxRoot: Node): ScriptSyntax['forms'] {
     return [
         ...Object.entries(BASH_TOKEN_FORMS)

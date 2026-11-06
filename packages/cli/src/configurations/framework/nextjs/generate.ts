@@ -14,11 +14,6 @@ import {
     type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
-/**
-Apply the Next.js presets and the pages and JSX settings.
-
-@param scope the planned ESLint file of the scope.
-*/
 function buildNextjsBlocks(
     scope: Pick<EslintScope, 'path' | 'eslintFiles' | 'dependencyFiles' | 'sourceFiles'>,
 ): ConfigurationBlocks {

@@ -37,10 +37,6 @@ function listRepositoryGrammars(install: ToolInstall): GrammarName[] {
 /**
 Download a grammar into the shared folder and check it against its SHA-256 value, unless that folder holds it. The
 grammar moves into place from a staged file, because checks in other repositories read the shared folder at any time.
-
-@param grammar the grammar to download.
-@param session the time limit and the cancel signal of the download.
-@returns whether it downloaded the grammar.
 */
 export async function downloadGrammar(grammar: GrammarName, session: DownloadSession): Promise<boolean> {
     const { url, sha256 } = GRAMMAR_RELEASES[grammar];
@@ -59,20 +55,11 @@ export async function downloadGrammar(grammar: GrammarName, session: DownloadSes
 
 /**
 Download the Swift grammar when the listing holds a Swift file, because a read of the repository parses each one.
-
-@param listing the files that the read takes.
-@param session the time limit and the cancel signal of the download.
 */
 export async function downloadSwiftGrammar(listing: RepositoryListing, session: DownloadSession): Promise<void> {
     if (listing.files.some(({ path }) => path.endsWith(SWIFT_EXTENSION))) await downloadGrammar('swift', session);
 }
 
-/**
-Download each grammar that the repository needs and the shared folder lacks.
-
-@param install what install needs for this step.
-@returns the line about the grammars that it downloaded, or an empty string.
-*/
 export async function installGrammars(install: ToolInstall): Promise<string> {
     const downloads = await Promise.all(
         listRepositoryGrammars(install).map((grammar) => downloadGrammar(grammar, install.session)),

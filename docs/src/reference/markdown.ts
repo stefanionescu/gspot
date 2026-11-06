@@ -37,13 +37,6 @@ function formatHeadingHtml(title: string, level: number, anchor: string): string
     return `<h${String(level)} id="${anchor}">${content.join('')}</h${String(level)}>`;
 }
 
-/**
-Build a reference page with no edit link or empty table of contents.
-
-@param title the visible heading
-@param description the one-line summary, when it says more than the title
-@param body the Markdown text
-*/
 export function buildReferencePage(title: string, description: string | undefined, body: string): ReferencePage {
     const frontmatter: ReferencePage['data'] = {
         title,
@@ -58,8 +51,6 @@ export function buildReferencePage(title: string, description: string | undefine
 Write text from the CLI, a manifest, or this site as Markdown that shows it as written. The text keeps its code spans,
 code blocks, links, and lists, while HTML, emphasis, entities, and angle-bracket links stay literal text. A bare `--`
 or an option such as `--hook` becomes code, so the renderer keeps its hyphens.
-
-@param text prose, CLI help, or a manifest description that may contain Markdown code
 */
 export function formatText(text: string): string {
     const tree = fromMarkdown(text, { extensions: [{ disable: { null: LITERAL_CONSTRUCTS } }] });
@@ -67,14 +58,6 @@ export function formatText(text: string): string {
     return toMarkdown(tree, MARKDOWN_OPTIONS).trimEnd();
 }
 
-/**
-Format a section under a heading, or nothing for empty text.
-
-@param title the heading, in Markdown
-@param body the Markdown text
-@param level the heading level
-@param anchor the explicit HTML heading ID
-*/
 export function formatSection(title: string, body: string, level = TABLE_HEADING_LEVEL, anchor?: string): string {
     if (body === '') return '';
     const heading =
@@ -82,25 +65,12 @@ export function formatSection(title: string, body: string, level = TABLE_HEADING
     return `\n${heading}\n\n${body}\n`;
 }
 
-/**
-Format a Markdown table.
-
-@param header the column titles
-@param rows the cells of each line, in Markdown; the table escapes them
-@returns the table, or nothing without rows
-*/
 export function formatTable(header: readonly string[], rows: ReadonlyArray<readonly string[]>): string {
     if (rows.length === 0) return '';
     const table = { type: 'table', children: [header, ...rows].map((cells) => buildTableRow(cells)) } as const;
     return toMarkdown({ type: 'root', children: [table] }, MARKDOWN_OPTIONS).trimEnd();
 }
 
-/**
-Link a configuration or one of its checks to the generated reference.
-
-@param name the selected configuration whose page the link opens
-@param check the full check ID, when linking to a check
-*/
 export function formatConfigurationLink(name: string, check?: string): string {
     const path = `${REFERENCE_PATH}${REFERENCE_FOLDERS.configurations}/${name}/`;
     const anchor = check === undefined ? '' : `#${posix.basename(check)}`;

@@ -11,12 +11,6 @@ import { type CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Reports Python docstrings that only repeat a name or placeholder.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
 async function checkPlaceholderDocstrings(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { functions, modules } = await readPythonFiles({
         cache: session.cache,

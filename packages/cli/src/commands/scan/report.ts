@@ -171,12 +171,6 @@ function listSections(report: ScanReport): ScanSection[] {
     ];
 }
 
-/**
-Sum up a finished trial run.
-
-@param input the plan of init, the session and the report of the run in the copy, and the bytes of its tools.
-@returns the report that scan prints, with every finding in `checks`.
-*/
 export function buildScanReport(input: ScanInput): ScanReport {
     const { planning, report } = input;
     const findings = report.checks.flatMap((check) => check.findings);
@@ -211,11 +205,6 @@ export function buildScanReport(input: ScanInput): ScanReport {
     };
 }
 
-/**
-Format the report for a terminal.
-
-@param report what the scan found.
-*/
 export function formatScanText(report: ScanReport): string {
     const sections = listSections(report).flatMap(({ title, rows }) => [
         title,

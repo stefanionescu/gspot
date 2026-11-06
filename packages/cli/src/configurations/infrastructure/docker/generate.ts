@@ -6,11 +6,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
-/**
-Build hadolint.yml: the Hadolint exclusions and trusted registry settings.
-
-@param planned the config file to build.
-*/
 function buildHadolintFile(planned: PlannedConfig): string {
     const off = listDisabledRules(planned);
     const registries = getTable(planned.scope.settings, 'docker').allowed_registries;

@@ -84,15 +84,6 @@ async function listSystemExecutablePaths(cwd: string, name: string, timeoutSecon
     };
 }
 
-/**
-List the executables of the repository or its tool project, without the system search path.
-
-@param root the boundary for validating managed executable paths.
-@param name the executable to find.
-@param options the search folders and installation ownership.
-
-@returns the executable paths that exist, without the system `PATH`.
-*/
 export function listRepositoryExecutablePaths(root: string, name: string, options: ExecutableSearch): string[] {
     if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
     const files = openFiles(root);
@@ -105,10 +96,6 @@ export function listRepositoryExecutablePaths(root: string, name: string, option
 /**
 Build the variables that let one mise call read the mise tool project. mise may read it only when it holds the bytes
 that gspot generates and no other mise config file sits in .gspot. mise then reads no config of the repository above.
-
-@param root the repository with the mise tool project.
-@param project the mise tool project that gspot generates.
-@returns the variables, or the reason why mise must not read .gspot.
 */
 export function buildMiseTrust(root: string, project: string): MiseTrust {
     const files = openFiles(root);
@@ -128,16 +115,6 @@ export function buildMiseTrust(root: string, project: string): MiseTrust {
     };
 }
 
-/**
-Ask mise for the program folders of the tools that the mise tool project pins, when mise may read the project.
-
-@param root the folder with the managed mise settings.
-@param toolNames the mise tools to find.
-@param options the limit for the mise query, and the mise tool project that gspot generates.
-@param options.timeoutSeconds the limit for the mise query.
-@param options.project the mise tool project that gspot generates.
-@returns the folders, or the reason why mise gave none.
-*/
 export async function readMiseBinPaths(
     root: string,
     toolNames: string[],
@@ -161,12 +138,6 @@ export async function readMiseBinPaths(
 List the executables with the name, in the order that gspot prefers. The system search path counts only when neither
 mise nor the repository holds the executable. A mise shim on the search path gives the program that mise selects for
 the repository, or nothing when mise selects none.
-
-@param root the base for repository searches and the fallback mise query.
-@param name the executable to find.
-@param options the search folders and tool project installation ownership.
-
-@returns the paths that exist.
 */
 export async function listExecutablePaths(
     root: string,
@@ -183,11 +154,6 @@ export async function listExecutablePaths(
     return await listSystemExecutablePaths(root, name, options.timeoutSeconds);
 }
 
-/**
-Ask mise once for the program folders of the mise tools that the selected configurations pin.
-
-@param session the run whose mise tools to find.
-*/
 export function readToolBinPaths(session: ToolLookupSession): Promise<MiseBinPaths> {
     return remember(session.toolCache, MISE_FOLDERS, session.toolsRoot, async () => {
         const pins = listMisePins(listSelectedConfigurations(session.scopes));

@@ -19,8 +19,6 @@ const COPY_ROOT = new RegExp(`^(?<repository>.*)/${escapeRegExp(COPIES_FOLDER)}/
 /**
 List the forms of a folder path. A copy lists the folder of the repository too, because a tool that follows a link to an
 installed package reports the path in the repository.
-
-@param root the folder, with forward slashes.
 */
 function listRootForms(root: string): string[] {
     const forms = [root, findCanonicalPath(root) ?? root];
@@ -43,11 +41,6 @@ function buildRootRelativePath(path: string, cwd: string, posixRoot: string): st
     return stripRoot(posixRoot, absolute);
 }
 
-/**
-List the forms of a folder path that start a path below it, the longest first.
-
-@param root the folder, with forward slashes.
-*/
 export function listRootPrefixes(root: string): string[] {
     const prefixes = new Set(
         listRootForms(root).flatMap((form) => {
@@ -86,14 +79,6 @@ export const OUTPUT_FORMATS = {
     },
 } satisfies Record<CheckOutput['format'], OutputParser>;
 
-/**
-Read the findings in the tool output, with every path relative to the root.
-
-@param check how to read the output.
-@param stdout the standard output of the tool.
-@param stderr the standard error of the tool.
-@param paths the folders that resolve reported files.
-*/
 export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
     const posixRoot = convertToPosixPath(root);

@@ -46,12 +46,6 @@ const RUFF_SUMMARY_FIELD = /\{(\w+)?(?::[^{}]*)?\}/gu;
 
 const SWIFTLINT_UNKNOWN_RULE = 'No rule with identifier';
 
-/**
-Read the longest declared plugin prefix of a qualified lint rule.
-
-@param rule the rule name, optionally prefixed by its plugin.
-@returns undefined for an unqualified rule.
-*/
 function extractRulePrefix(rule: string): string | undefined {
     const prefixes = readConfigurations()
         .values()
@@ -63,13 +57,6 @@ function extractRulePrefix(rule: string): string | undefined {
     return prefixes[0];
 }
 
-/**
-Tell whether a tool reports this name from outside the rules that gspot reads: a rule of a plugin that gspot does not
-ship, a rule built into Vale, or a syntax error.
-
-@param tool the manifest tool name.
-@param rule the name that the tool reported.
-*/
 function isUnlistedRule(tool: string, rule: string): boolean {
     if (tool === VALE_TOOL) return rule.startsWith('Vale.');
     if (tool === 'biome') return !rule.startsWith('lint/');
@@ -77,14 +64,6 @@ function isUnlistedRule(tool: string, rule: string): boolean {
     return rule === 'CssSyntaxError' || (rule.includes('/') && extractRulePrefix(rule) === undefined);
 }
 
-/**
-Resolve only a package installed inside the repository's tool project.
-
-@param root the repository root.
-@param specifier the package name or exported entry point.
-@param subpath a catalog path relative to the installed entry point.
-@returns undefined when gspot has not installed the tool.
-*/
 function findInstalledToolPath(root: string, specifier: string, subpath?: string): string | undefined {
     let path: string;
     try {
@@ -265,9 +244,6 @@ function getRuleMetadata(rule: unknown, page: string | undefined): RuleExplanati
 /**
 Tell whether gspot reads this rule of this tool: through a reader of its own, or through the rule page address in its
 manifest. Without either, gspot has no list of the rules to explain or to check an ignore against.
-
-@param tool the manifest tool name.
-@param rule the name that the tool reported.
 */
 export function canReadRuleExplanations(tool: string, rule: string): boolean {
     if (isUnlistedRule(tool, rule)) return false;
@@ -275,17 +251,6 @@ export function canReadRuleExplanations(tool: string, rule: string): boolean {
     return getTool(readConfigurations().values(), tool).rule_url !== undefined;
 }
 
-/**
-Read the explanation of a rule from an installed tool without importing generated configuration.
-
-@param root the repository root.
-@param tool the program that runs the rule.
-@param identifier the complete rule identifier.
-@param options the subprocess time limit, installed mise tool locator, and check help.
-@param options.timeoutSeconds the subprocess time limit.
-@param options.readMiseBinPaths locates the tools through the validated generated tool project.
-@param options.help what to do about a finding of the check, which stands in when a tool process cannot answer.
-*/
 export async function readLintRuleExplanation(
     root: string,
     tool: string,

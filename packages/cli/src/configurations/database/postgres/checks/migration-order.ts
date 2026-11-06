@@ -31,12 +31,6 @@ function listVersionFindings(migrations: Migration[]): CheckFinding[] {
     return findings;
 }
 
-/**
-Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
-
-@param session the repository and its tools.
-@param planned the scope whose migrations to compare with the last commit.
-*/
 async function checkMigrationOrder(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { migrations, findings: syntax } = await readMigrations(session, planned);
     if (syntax.length > 0) return syntax;

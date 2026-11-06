@@ -84,12 +84,6 @@ async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Pr
     return styles.join('\n').replaceAll(STYLE_WHITESPACE, '');
 }
 
-/**
-Reports broken links between built pages, stylesheets, and fragments.
-
-@param session the repository and its tools.
-@param planned the scope whose site to check.
-*/
 async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const pages = new Set(listBuiltFiles(build.folder));
@@ -127,12 +121,6 @@ async function checkLychee(session: CheckSession, planned: PlannedCheck): Promis
     return findings;
 }
 
-/**
-Runs html-validate on every built page with the config file for built output.
-
-@param session the repository and its tools.
-@param planned the scope whose site to check.
-*/
 async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const pages = listBuiltFiles(build.folder)
@@ -165,12 +153,6 @@ async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): 
     return findings;
 }
 
-/**
-Reports selectors in built stylesheets that no built page or script uses.
-
-@param session the repository and its tools.
-@param planned the scope whose site to check.
-*/
 async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
@@ -203,12 +185,6 @@ async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Prom
     );
 }
 
-/**
-Reports sitemap URLs with no built page, and built pages the sitemap leaves out unless the settings allow them.
-
-@param session the repository and its tools.
-@param planned the scope whose site to check.
-*/
 async function checkSitemap(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const files = new Set(listBuiltFiles(build.folder));

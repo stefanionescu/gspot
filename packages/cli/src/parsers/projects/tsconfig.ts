@@ -157,14 +157,6 @@ function buildTsconfigError(path: string, error: unknown): GspotError {
     return new GspotError('configuration', message, { cause: error });
 }
 
-/**
-Resolve compiler options and inherited paths with the TypeScript compiler.
-
-@param root the base folder of the cached readers.
-@param path the absolute tsconfig file.
-@param cache the run cache.
-@returns undefined when the file does not exist.
-*/
 export function readTsconfig(root: string, path: string, cache: RunCache): ParsedTsconfig | undefined {
     const ts = requireTypescript();
     try {
@@ -190,11 +182,6 @@ export function readTsconfig(root: string, path: string, cache: RunCache): Parse
 /**
 Resolve a tsconfig like readTsconfig, and treat a tsconfig that fails to load as absent. typescript/tsconfig reports
 that file in its scope, so a template that extends an uninstalled package stops no command.
-
-@param root the base folder of the cached readers.
-@param path the absolute tsconfig file.
-@param cache the run cache.
-@returns undefined when the file does not exist or fails to load.
 */
 export function findTsconfig(root: string, path: string, cache: RunCache): ParsedTsconfig | undefined {
     try {
@@ -205,15 +192,6 @@ export function findTsconfig(root: string, path: string, cache: RunCache): Parse
     }
 }
 
-/**
-Find the nearest TypeScript project that includes every source of a scope.
-
-@param root the base folder of the cached readers.
-@param scopePath the repository-relative folder.
-@param files the source paths of the scope.
-@param cache the run cache.
-@returns undefined for a standalone scope.
-*/
 export function readTsconfigProject(
     root: string,
     scopePath: string,
@@ -235,15 +213,6 @@ export function readTsconfigProject(
     return undefined;
 }
 
-/**
-Resolve the source inputs through the tsconfig of the project.
-
-@param root the base folder of the cached readers.
-@param scopePath the importing project folder.
-@param cache the run cache.
-@param config the parsed project.
-@returns resolved source files without installed or compiler libraries.
-*/
 export function listSourceFiles(
     root: string,
     scopePath: string,

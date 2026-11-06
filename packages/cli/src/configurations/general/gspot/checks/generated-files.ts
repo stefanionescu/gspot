@@ -5,13 +5,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckRunOptions, type CheckSession } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 
-/**
-Reports each generated file on disk that does not match what the settings generate.
-
-@param session the settings and repository.
-@param _planned the configured check and selected scope files.
-@param options whether to include the differences.
-*/
 function checkGeneratedFiles(
     session: CheckSession,
     _planned: PlannedCheck,

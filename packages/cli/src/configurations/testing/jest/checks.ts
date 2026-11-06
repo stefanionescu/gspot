@@ -11,10 +11,6 @@ Leave the nested scopes that run Jest on their own out of this run, so that thei
 leaves `testPathIgnorePatterns` of the project in place, which the flag of that name replaces. Jest 30 matches it
 against the path from `rootDir`, and an older Jest against the absolute path. With those tests gone, the scope may hold
 none.
-
-@param session the repository and its tools.
-@param planned the Jest check of one scope.
-@param options the command override and the verbosity of the notes.
 */
 async function runJest(
     session: CheckSession,

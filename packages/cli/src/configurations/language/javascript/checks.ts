@@ -57,12 +57,6 @@ function buildScopeCompilerProject(
     };
 }
 
-/**
-Type-checks JavaScript with the type declarations the project uses.
-
-@param session the repository and its tools.
-@param planned the JavaScript compiler check.
-*/
 async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const scopePath = planned.scope.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
@@ -110,12 +104,6 @@ async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck):
     return restoreCommandPaths(result, folder.path, session.root);
 }
 
-/**
-Run Biome on supported files and name copied Node shebang scripts as JavaScript.
-
-@param session the repository and installed tools.
-@param planned the scope and selected files.
-*/
 async function checkJavascriptBiome(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const files = listCheckedFiles(session.scopes, planned);
     const biomeExtensions = new Set(planned.check.files?.extensions);

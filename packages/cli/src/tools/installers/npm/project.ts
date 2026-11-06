@@ -131,8 +131,6 @@ function assertSettingsFree(install: ToolInstall): void {
 
 /**
 Verify the package manager executable before install changes any tool project file.
-
-@param install the tool install of this step.
 */
 export async function assertPackageManagerVersion(install: ToolInstall): Promise<void> {
     const { session, packageManager } = install;
@@ -165,12 +163,6 @@ export async function assertPackageManagerVersion(install: ToolInstall): Promise
     );
 }
 
-/**
-Prepare the npm tool project lockfile, free of credentials.
-
-@param install what install needs for this step.
-@param toolProjectFile the generated package.json.
-*/
 export async function planNpmLockfile(
     install: NpmToolInstall,
     toolProjectFile: GeneratedFile,
@@ -186,12 +178,6 @@ export async function planNpmLockfile(
     return { path, next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE }, previous: previous };
 }
 
-/**
-Check whether the saved npm tool lockfile exists and names every pin at its version. Refuse one that holds registry
-credentials.
-
-@param install what install needs for this step.
-*/
 export function isNpmLockfileFresh(install: NpmToolInstall): boolean {
     const { packageManager, registryEnvironment } = install;
     const saved = install.writer.read(`${GSPOT_FOLDER}/${selectLockfileName(packageManager.name)}`);
@@ -207,8 +193,6 @@ export function isNpmLockfileFresh(install: NpmToolInstall): boolean {
 Resolve and install the npm tool project in one npm run in .gspot, when its lockfile is missing or stale. The run
 starts with no lockfile and no node_modules folder, so npm resolves the tree as a lock run in an empty folder does, and
 writes the lockfile that later installs read. A lockfile that holds credentials is deleted, and the error stays.
-
-@param install what install needs for this step, with npm as the package manager.
 */
 export async function installUnlockedNpmTools(install: NpmToolInstall): Promise<string> {
     if (findProgram(NODE_TOOL) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
@@ -236,11 +220,6 @@ export async function installUnlockedNpmTools(install: NpmToolInstall): Promise<
     return `installed ${formatCount(count, NPM_TOOL_NOUN)} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }
 
-/**
-Install the npm tool project in .gspot.
-
-@param install what install needs for this step.
-*/
 export async function installNpmTools(install: NpmToolInstall): Promise<string> {
     const { root, toolConfigurations } = install.session;
     const packageManager = install.packageManager;

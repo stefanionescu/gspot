@@ -44,16 +44,6 @@ function addConflictingConfig(
     });
 }
 
-/**
-Read the config files of the chosen tools, and sort them into the files init deletes and the files it keeps.
-
-@param root the folder where init reads the originals before it replaces them.
-@param repositorySetup the config files that init found.
-@param search what to read.
-@param search.tools what the checks at this level run.
-@param search.managedKeys the shared config file edits for these configurations.
-@param search.prettierScripts the options of the JavaScript Prettier configs.
-*/
 export function readConflictingConfigs(
     root: string,
     repositorySetup: RepositorySetup,
@@ -82,9 +72,6 @@ export function readConflictingConfigs(
 
 /**
 Refuse to replace a config file unless Git holds it unchanged in the last commit, so that the user can restore it.
-
-@param root the repository folder.
-@param paths the config files init deletes.
 */
 export async function assertFilesCommitted(root: string, paths: string[]): Promise<void> {
     const committed = await listCommittedPaths(root, paths);
@@ -99,11 +86,6 @@ export async function assertFilesCommitted(root: string, paths: string[]): Promi
 
 /**
 Delete the config files that init replaces, and keep each one that changed after init read it.
-
-@param writer the repository writer.
-@param deleted the config files that the plan deletes.
-@param reviewed the contents init read before it showed the plan.
-@returns the paths that init kept.
 */
 export function deleteConflictingConfigs(
     writer: Files,

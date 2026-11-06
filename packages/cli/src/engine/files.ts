@@ -172,9 +172,6 @@ function addNarrowedLinks(
 Index the tracked files once per plan: their paths, the tracked files among the narrowed paths, and the files under
 each scope folder. A change to gspot.toml or to a gspot file leaves the narrowed files out, so every check plans its
 whole scope, because such a change can change what every check reads.
-
-@param files the tracked files of the session.
-@param narrowedPaths the paths that the run narrows to, if any.
 */
 export function buildPlanInventory(
     files: TrackedFile[],
@@ -192,24 +189,12 @@ export function buildPlanInventory(
     };
 }
 
-/**
-Get the name that a config-file placeholder uses for a config file.
-
-@param file the path that the manifest names.
-@returns the file name without its folder and extensions.
-*/
 export function extractConfigName(file: string): string {
     const name = posix.basename(file);
     const dot = name.indexOf('.');
     return dot === -1 ? name : name.slice(0, dot);
 }
 
-/**
-List the files that the configurations of a check own, apart from the files of a project-wide run.
-
-@param scopes every scope of the session; a scope-wide run leaves out the files of its child scopes.
-@param planned the plan to read.
-*/
 export function listCheckedFiles(scopes: Scope[], planned: PlannedCheck): TrackedFile[] {
     const owners = planned.check.files ?? planned.configuration?.files;
     const children =
@@ -228,20 +213,12 @@ export function listCheckedFiles(scopes: Scope[], planned: PlannedCheck): Tracke
         : listCoveredFiles(owners, files, planned.scope);
 }
 
-/**
-Check whether a check runs once for the whole repository.
-
-@param check the check to inspect.
-*/
 export function isRepositoryRun(check: Pick<Check, 'runs'>): boolean {
     return (ROOT_RUNS as readonly string[]).includes(check.runs);
 }
 
 /**
 Check whether a general per-file check runs once at the root. A check that reads a scope config file does not.
-
-@param configuration the configuration that declares the check.
-@param check the check to inspect.
 */
 export function isRootOnlyCheck(configuration: Configuration | undefined, check: Check): boolean {
     if (configuration === undefined) return true;
@@ -260,9 +237,6 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
 /**
 Select the files and deleted trigger paths of a planned check. A check that runs once or per scope plans every file of
 its scope, apart from a check whose command takes `{files}`: that tool reads only the files that the check covers.
-
-@param planned the scope to plan.
-@param scopeCheck the check and its manifest.
 */
 export function selectCheckFiles(
     planned: PlannedScope,
@@ -286,12 +260,6 @@ export function selectCheckFiles(
     });
 }
 
-/**
-List the files that a check of the selected configurations covers.
-
-@param planned the scope and its candidate files.
-@param checkId the declaration whose coverage to apply.
-*/
 export function listCheckFiles(planned: Pick<PlannedCheck, 'scope' | 'files'>, checkId: string): TrackedFile[] {
     return planned.scope.configurations.flatMap((configuration) =>
         configuration.checks

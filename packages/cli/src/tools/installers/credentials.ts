@@ -10,13 +10,6 @@ import {
 import { GspotError } from '#cli/system/errors.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 
-/**
-Reject a generated lockfile that holds a configured credential in either URL form.
-
-@param lockfile the text that the package manager wrote.
-@param credentials the raw and decoded registry secrets.
-@param message the failure to report, without credential values.
-*/
 export function assertCredentialFreeLockfile(lockfile: string, credentials: string[], message: string): void {
     if (LOCKFILE_URL_PASSWORD.test(lockfile)) throw new GspotError('install', message);
     for (const credential of credentials) {
@@ -25,25 +18,12 @@ export function assertCredentialFreeLockfile(lockfile: string, credentials: stri
     }
 }
 
-/**
-Read both encoded and decoded passwords from a registry or proxy URL.
-
-@param url the registry or proxy address as written in your settings.
-*/
 export function extractUrlPasswords(url: string): string[] {
     if (!URL.canParse(url)) return [];
     const password = new URL(url).password;
     return password.length === 0 ? [] : [password, unescape(password)];
 }
 
-/**
-Keep the end of the install output once the configured and printed credentials go.
-
-@param result the captured package-manager streams.
-@param credentials the secrets from the registry settings of the repository.
-
-@returns the redacted tail, or a sentence that says the tool printed nothing.
-*/
 export function redactInstallOutput(result: Pick<SpawnResult, 'stdout' | 'stderr'>, credentials: string[]): string {
     const secrets = [...new Set(credentials.filter((value) => value !== ''))]
         .flatMap((value) => [value, encodeURIComponent(value), Buffer.from(value).toString('base64')])

@@ -25,13 +25,6 @@ function convertIgnoreFile(path: string, text: string, tracked: string[]): { pat
     return { paths: [...new Set(paths)], dropped: patterns.filter((pattern) => pattern.startsWith('!')) };
 }
 
-/**
-Turn one pattern of an ignore file into a selector that matches a tracked file, or nothing when none matches.
-
-@param pattern the pattern as the file writes it.
-@param folder the folder of the ignore file, empty for the root.
-@param tracked the tracked files.
-*/
 export function convertIgnorePattern(pattern: string, folder: string, tracked: string[]): string | undefined {
     const inFolder = tracked.filter((path) => folder === '' || path.startsWith(`${folder}/`));
     const base = pattern.replace(LEADING_SLASH, '').replace(TRAILING_SLASH, '');
@@ -43,13 +36,6 @@ export function convertIgnorePattern(pattern: string, folder: string, tracked: s
     });
 }
 
-/**
-Carry the patterns of the ignore files of the replaced tools as path ignores of their checks.
-
-@param input the repository and the tools in use.
-@param input.repository the tracked files and the root.
-@param input.tools the tools that the configurations run.
-*/
 export function readIgnoreFiles({ repository, tools }: CarryoverInput): CarryoverSection {
     const tracked = repository.files.filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`)).map(({ path }) => path);
     const owned = IGNORE_FILES.filter(({ tool }) => tools.has(tool)).flatMap(({ file, tool, check }) =>

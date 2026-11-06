@@ -81,8 +81,6 @@ function listCommandPrograms(session: Session): ReadonlySet<string> {
 /**
 Look up the program of each command check and of its fix, in the repository root where check runs them, so that doctor
 reports a missing one as check does. gspot install does not install such a program, so its row names its own help.
-
-@param session the configured checks and their tools.
 */
 async function inspectCommandTools(session: Session): Promise<Array<[string, DoctorTool]>> {
     return await Promise.all(
