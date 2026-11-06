@@ -40,7 +40,7 @@ const formatFieldsSchema = z.strictObject({
         .default('space')
         .meta({
             configurations: ['format'],
-            description: 'The character of one indent level: space or tab.',
+            description: 'The character of one indent level.',
         }),
     indent_width: z
         .int()
@@ -66,14 +66,14 @@ const formatFieldsSchema = z.strictObject({
         .meta({
             configurations: ['format'],
             description:
-                'Single or double, for the languages where a formatter chooses. Unset, Python gets double quotes and the other languages single.',
+                'The quote for the languages where a formatter chooses. When unset, Python gets double quotes and the other languages single.',
         }),
     trailing_commas: z
         .enum(TRAILING_COMMAS)
         .default('all')
         .meta({
             configurations: ['format'],
-            description: 'Where trailing commas go: all, es5, or none.',
+            description: 'Where trailing commas go.',
         }),
     semicolons: z
         .boolean()
@@ -101,7 +101,7 @@ const formatFieldsSchema = z.strictObject({
         .default('preserve')
         .meta({
             configurations: ['format'],
-            description: 'How Prettier wraps Markdown prose: always, never, or preserve.',
+            description: 'How Prettier wraps Markdown prose.',
         }),
 });
 

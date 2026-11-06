@@ -54,7 +54,7 @@ export const ANGLE_BRACKETS = /[<>]/gu;
 
 export const TABLE_HEADING_LEVEL = 2;
 
-export const REASONED_VALUE_LABEL = 'the table `{ value = …, reason = "…" }` with a reason';
+export const REASONED_VALUE_LABEL = '`{ value = …, reason = "…" }`';
 
 export const LANGUAGE_PLACEHOLDER = '<language>';
 

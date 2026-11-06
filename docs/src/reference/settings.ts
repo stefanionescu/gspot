@@ -45,7 +45,7 @@ function formatAcceptedValue(accepted: AcceptedSettingValues): string {
 
 function formatReasonedValue({ alternatives }: AcceptedSettingValues): string {
     const values = alternatives.filter(({ types }) => !types.includes('object'));
-    return `${values.map((value) => formatAcceptedValue(value)).join(' or ')}, or ${REASONED_VALUE_LABEL}`;
+    return values.map((value) => formatAcceptedValue(value)).join(' or ');
 }
 
 function formatDefaults(variants: SettingVariant[]): string {
@@ -67,21 +67,34 @@ function formatLanguageDefaults(variants: SettingVariant[]): string {
         setting.language_defaults === undefined ? [] : Object.entries(setting.language_defaults),
     );
     const defaultTexts = defaults.map(([language, value]) => `${language} \`${JSON.stringify(value)}\``);
-    return defaultTexts.length === 0 ? '' : ` Language defaults: ${defaultTexts.join(', ')}.`;
+    return defaultTexts.length === 0 ? '' : `Language defaults: ${defaultTexts.join(', ')}.`;
+}
+
+function formatPresence({ required, default: schemaValue, variants }: SettingReference): string {
+    if (required) return 'Required.';
+    const schemaDefault = schemaValue === undefined ? 'unset' : `\`${JSON.stringify(schemaValue)}\``;
+    const shown = formatDefaults(variants) || schemaDefault;
+    return shown === 'unset' ? '' : `Default: ${shown}.`;
+}
+
+function formatSentenceStart(text: string): string {
+    return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function formatSetting(node: SettingReference): string {
-    const { variants, required } = node;
+    const { variants } = node;
     const reasons = [...new Set(variants.flatMap(({ setting }) => setting.reason_for ?? []))];
     const accepted = node.reasoned ? formatReasonedValue(node.accepted) : formatAcceptedValue(node.accepted);
-    const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (SENTENCE_END.test(accepted) ? '' : '.');
-    const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
-    const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
+    const facts = [
+        formatSentenceStart(accepted) + (SENTENCE_END.test(accepted) ? '' : '.'),
+        formatPresence(node),
+        reasons.length === 0
+            ? ''
+            : `${formatSentenceStart(reasons.join(' or '))} needs a reason: ${REASONED_VALUE_LABEL}.`,
+        formatLanguageDefaults(variants),
+    ];
     return (
-        `${sentence} ${presence}` +
-        (reasons.length === 0 ? '' : ` Reason needed for: ${reasons.join(', ')}.`) +
-        formatLanguageDefaults(variants) +
-        (node.description === undefined ? '' : `\n\n${formatText(node.description)}`)
+        facts.filter(Boolean).join(' ') + (node.description === undefined ? '' : `\n\n${formatText(node.description)}`)
     );
 }
 

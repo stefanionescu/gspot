@@ -25,7 +25,7 @@ export const javascriptSchema = z
         script_files: allowReasonedValue(relativePathSchema.array(), {
             reason_for: 'adding',
             configurations: ['javascript'],
-            description: 'Script files, which may print to the console and call process.exit.',
+            description: 'The files that may print to the console and call `process.exit`.',
             default: ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'],
         }),
         import_boundaries: relativePathSchema

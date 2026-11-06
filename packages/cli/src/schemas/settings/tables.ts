@@ -144,7 +144,7 @@ export const pythonSchema = z
             .optional()
             .meta({
                 configurations: ['python'],
-                description: 'The docstring style that Ruff and pydoclint check: google, numpy, or pep257.',
+                description: 'The docstring style that Ruff and pydoclint check.',
             }),
         import_folders: relativePathSchema
             .array()

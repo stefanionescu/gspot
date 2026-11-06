@@ -115,7 +115,7 @@ export const generalTableSchemas = {
         .strictObject({
             allowed_urls: allowReasonedValue(z.string().array(), {
                 configurations: ['docs'],
-                description: 'Allowed URL patterns; additions need a reason for the whole list.',
+                description: 'URL patterns that the link check skips; additions need a reason for the whole list.',
                 reason_for: 'adding',
                 default: [],
             }),

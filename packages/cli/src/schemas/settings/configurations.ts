@@ -169,7 +169,7 @@ const configurationTables = {
             allowed_classes: allowReasonedValue(nonemptyStringsSchema, {
                 leftOut: 'repository',
                 configurations: ['site'],
-                description: 'Class names a script adds at run time: the names and the reason.',
+                description: 'Class names that a script adds at run time, which the unused CSS check keeps.',
                 reason_for: 'adding',
                 default: [],
             }),
@@ -236,7 +236,7 @@ const configurationTables = {
             xcode_destination: nonemptyStringSchema.default('generic/platform=iOS Simulator').meta({
                 leftOut: 'repository',
                 configurations: ['swift'],
-                description: 'The xcodebuild destination.',
+                description: 'The `-destination` that xcodebuild builds for.',
             }),
         })
         .optional(),

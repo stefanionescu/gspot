@@ -220,7 +220,7 @@ export const rootSettingSchemas = {
             '**/*Tests.swift',
         ])
         .meta({
-            description: 'Test files. Linters apply their test rules to these files.',
+            description: 'The files that get the test rules of each linter.',
         }),
 };
 
