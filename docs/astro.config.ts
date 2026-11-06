@@ -189,6 +189,7 @@ export default defineConfig({
         },
         starlight({
             title: SITE_TITLE,
+            description: cliPackage.description,
             favicon: FAVICON,
             disable404Route: true,
             plugins: [
