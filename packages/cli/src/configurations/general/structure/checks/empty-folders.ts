@@ -41,12 +41,14 @@ function isPlaceholder(path: string): boolean {
     return PLACEHOLDER_FILES.has(posix.basename(path));
 }
 
-function listPlaceholderFolders({ repository }: CheckSession): CheckFinding[] {
+function listPlaceholderFolders({ repository, selection }: CheckSession): CheckFinding[] {
     const paths = repository.files.map(({ path }) => path);
     const holding = new Set(
         paths.filter((path) => !isPlaceholder(path)).flatMap((path) => listEnclosingFolders(extractParentFolder(path))),
     );
-    const placeholders = paths.filter((path) => isPlaceholder(path));
+    const placeholders = paths.filter(
+        (path) => isPlaceholder(path) && (selection?.paths === undefined || selection.paths.includes(path)),
+    );
     return placeholders.flatMap((path) => {
         const top = listEnclosingFolders(extractParentFolder(path)).findLast((folder) => !holding.has(folder));
         if (top === undefined) return [];

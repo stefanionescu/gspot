@@ -3,7 +3,10 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
+import { runChecks } from '#cli/engine/run.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
@@ -48,4 +51,21 @@ test('a folder that only a placeholder file keeps in Git reports on that file, a
         { file: 'logs/.gitkeep', message: 'The folder logs/ holds only .gitkeep.' },
         { file: 'tmp/inner/.keep', message: 'The folder tmp/ holds only .keep.' },
     ]);
+});
+
+test('a run of selected files reports a placeholder file only when it selects that file', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'logs/.gitkeep': '',
+        'src/index.ts': 'export const index = 1;\n',
+    });
+    commitAll(sandbox.path);
+    const session = await openSession(sandbox.path);
+    const run = async (paths: string[]) => {
+        const selection = { content: 'working-tree', paths } as const;
+        const { report } = await runChecks(session, buildRunOptions({ only: ['structure/empty-folders'], selection }));
+        return report.checks.flatMap(({ findings }) => findings.map(({ file }) => file));
+    };
+    expect(await run(['src/index.ts'])).toStrictEqual([]);
+    expect(await run(['logs/.gitkeep'])).toStrictEqual(['logs/.gitkeep']);
 });
