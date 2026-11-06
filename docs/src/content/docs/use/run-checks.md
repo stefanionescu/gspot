@@ -7,7 +7,7 @@ This report from `gspot check` has two failed checks:
 ```text
 failed   docs/lychee  1 finding
   README.md:3:5  ERROR  file://docs/missing.md (at 3:5) | File not found. Check if file exists and path is correct
-  help: Point the link at the file or heading that exists, or delete it. Details: gspot explain docs/lychee
+  help: Point the link at the file or heading that exists, or delete it. A link that starts with / starts at the repository root. Details: gspot explain docs/lychee
   rerun: gspot check --only docs/lychee
 
 failed   format/prettier  2 findings

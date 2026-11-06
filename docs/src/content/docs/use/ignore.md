@@ -20,7 +20,8 @@ push and in CI, and fails a weaker `gspot.toml` that has no reason, as
 [Changes that need a reason](/configure/gspot-toml/#changes-that-need-a-reason) shows.
 
 Most checks skip the files that `.gitattributes` marks `linguist-generated` or `linguist-vendored`, and that mark needs
-no reason. `--skip` and `git commit --no-verify` affect one run, and the next run reports the same findings.
+no reason. `--skip` and `git commit --no-verify` affect one run, and the next run reports the same findings, so they are
+not a way to adopt gspot.
 
 ## Suppress one line
 
@@ -43,8 +44,8 @@ gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "
 
 Leave out `--rule` to ignore the whole check, and `--paths` to cover every file. An ignore also hides new findings of
 that rule in those paths, so name the rule and the paths. gspot rejects a rule name that the tool does not know, and a
-check that names no lint rules takes `--paths` instead. A commit reads `gspot.toml` as you staged it, so stage the
-ignore with your change.
+check that names no lint rules takes `--paths` instead. A commit reads `gspot.toml` as you staged it, so stage
+`gspot.toml` and the generated files that the command wrote with your change.
 
 To cover one finding alone, give `--rule` its fingerprint, which `gspot check --json` prints for each finding of a secret
 scan:
@@ -82,8 +83,9 @@ You do not need an ignore for the files that `.gitignore` excludes, or for these
   `third_party`, `third-party`, `node_modules`, `Pods`, `Carthage`, or `.build`
 - binary files
 
-Secret scans still read every file, and dependency checks still read lockfiles. To skip other generated or vendored
-files, mark them in `.gitattributes`:
+Secret scans still read every file, and dependency checks still read lockfiles. `javascript/knip` still reports a
+generated or vendored file when nothing imports it, so mark that file in `.gitattributes`, as you do to skip other
+generated or vendored files:
 
 ```text title=".gitattributes"
 src/api/schema.ts linguist-generated

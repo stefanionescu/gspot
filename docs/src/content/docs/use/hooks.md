@@ -41,10 +41,8 @@ fix it.
 
 ## When a hook fails
 
-Fix each finding, then commit or push again. If a finding does not apply to your code, add an ignore with a reason, as
-[Ignore findings](/use/ignore/) describes, and stage it with your change.
-
-`git commit --no-verify` skips one hook run, and the next run of the check reports the same findings.
+If a finding does not apply to your code, add an ignore with a reason, as [Ignore findings](/use/ignore/) describes.
+Stage `gspot.toml` and the generated files that the command wrote with your change.
 
 ## Turn hooks on or off
 
@@ -124,8 +122,9 @@ gspot check --hook commit-msg -- .git/COMMIT_EDITMSG
 ```
 
 The pre-push hook reads the remote and the list of pushed commits from Git, so test it with a real `git push`. After a
-failed push, the `rerun:` line of the report is `gspot check --only <check> --base <hash>`, where `<hash>` is the commit
-that the remote had. To see the result without pushing, run `gspot check --base origin/HEAD`.
+failed push, the `rerun:` line of the report is `gspot check --only <check> --base <hash>`. `<hash>` is the commit that
+the remote had, or on the first push to an empty remote, the first commit of the branch. To see the result without
+pushing, run `gspot check --base origin/HEAD`.
 
 ## Large files
 

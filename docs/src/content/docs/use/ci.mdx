@@ -16,7 +16,7 @@ For GitHub:
 gspot set ci.enabled true
 ```
 
-gspot writes `.github/workflows/gspot.yml`. Commit it.
+gspot writes `.github/workflows/gspot.yml` and prints the other files that change. Commit them with `gspot.toml`.
 
 For GitLab, also set the provider:
 
@@ -24,7 +24,8 @@ For GitLab, also set the provider:
 gspot set ci.provider gitlab
 ```
 
-gspot writes `.gitlab/ci/gspot.yml`. Include it from `.gitlab-ci.yml`:
+gspot writes `.gitlab/ci/gspot.yml` and prints the other files that change. Commit them with `gspot.toml`, and include
+the workflow from `.gitlab-ci.yml`:
 
 ```yaml
 include:
