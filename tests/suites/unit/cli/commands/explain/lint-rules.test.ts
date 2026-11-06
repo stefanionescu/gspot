@@ -186,6 +186,17 @@ test('explain gives Ruff summaries and reserves its full explanation for verbose
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(RULE_PAGE_SETTINGS);
 });
 
+test('explain prints the check help when Ruff stops before it answers', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        [`.gspot/.venv/${executableLayout.environmentFolder}/ruff${isWindows ? '.exe' : ''}`]: '',
+    });
+    using _commands = fakeCommands().mockResolvedValue(buildProcessResult({ end: 'failed', signal: 'SIGABRT' }));
+    const result = await runGspot(sandbox.path, ['explain', 'python/ruff', 'F401', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ rule: 'F401', fix: getShippedCheck('python/ruff').help });
+});
+
 test.each(['javascript/eslint', 'css/stylelint'])('explain refuses ancestor packages for %s', async (check) => {
     const name = check === 'javascript/eslint' ? 'eslint' : 'stylelint';
     await using sandbox = await createGitSandbox({

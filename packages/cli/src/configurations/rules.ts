@@ -25,7 +25,7 @@ export async function readCheckRuleExplanation(
         return Object.hasOwn(explanations, identifier) ? explanations[identifier] : undefined;
     const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
     if (tool === undefined) return undefined;
-    const options: RuleExplanationOptions = {};
+    const options: RuleExplanationOptions = { help: check.help };
     if (session !== undefined) {
         options.timeoutSeconds = session.settings.tool_timeout_seconds;
         options.readMiseBinPaths = async () => {

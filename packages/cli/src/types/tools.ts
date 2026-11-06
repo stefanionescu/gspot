@@ -240,6 +240,7 @@ export type ProcessFailure = { status: 'error' | 'missing' | 'canceled'; note: s
 export type InstalledDependency = { path: string; version: string | undefined };
 
 export type RuleExplanationOptions = {
+    help: string;
     timeoutSeconds?: number | undefined;
     readMiseBinPaths?: (() => Promise<string[]>) | undefined;
 };

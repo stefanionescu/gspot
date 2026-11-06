@@ -1,6 +1,5 @@
-import { readFileSync, realpathSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { devNull } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -23,6 +22,7 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { installedRulesSchema, ruffRuleSchema, ruleDocumentationSchema, valeRuleSchema } from '#cli/schemas/tools.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isInside } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
@@ -43,6 +43,8 @@ const RULE_READER_TOOLS: ReadonlySet<string> = new Set([
 ]);
 
 const RUFF_SUMMARY_FIELD = /\{(\w+)?(?::[^{}]*)?\}/gu;
+
+const SWIFTLINT_UNKNOWN_RULE = 'No rule with identifier';
 
 /**
 Read the longest declared plugin prefix of a qualified lint rule.
@@ -129,7 +131,7 @@ async function readSwiftlintRule(
     options: RuleToolSearch,
 ): Promise<RuleExplanation | undefined> {
     if (!SWIFTLINT_RULE_IDENTIFIER.test(identifier)) return undefined;
-    const { timeoutSeconds } = options;
+    const { timeoutSeconds, help } = options;
     const { paths } = await listExecutablePaths(root, 'swiftlint', {
         folders: [],
         timeoutSeconds,
@@ -137,13 +139,16 @@ async function readSwiftlintRule(
     });
     const [path] = paths;
     if (path === undefined) throw new GspotError('tool', 'SwiftLint is not installed. Run gspot install.');
-    const result = await runTool([path, ...SWIFTLINT_RULE_ARGUMENTS, devNull, identifier], {
+    // SwiftLint stops with a permission error on a device file, so it reads an empty regular file.
+    using folder = createTemporaryFolder();
+    const emptyConfig = join(folder.path, 'swiftlint.yml');
+    writeFileSync(emptyConfig, '');
+    const result = await runTool([path, ...SWIFTLINT_RULE_ARGUMENTS, emptyConfig, identifier], {
         cwd: root,
         timeoutSeconds,
     });
-    if (result.end !== 'exited')
-        throw new GspotError('tool', `SwiftLint could not read rule ${identifier}. ${result.stderr.trim()}`);
-    if (result.code !== 0) return undefined;
+    if (result.stderr.includes(SWIFTLINT_UNKNOWN_RULE)) return undefined;
+    if (result.end !== 'exited' || result.code !== 0) return { fix: help };
     const url = findRulePage('swiftlint', identifier);
     return { description: result.stdout.trim(), ...(url !== undefined && { url }) };
 }
@@ -212,13 +217,12 @@ function readValeRule(root: string, identifier: string): RuleExplanation | undef
 async function readRuffRule(
     root: string,
     identifier: string,
-    timeoutSeconds: number,
+    { timeoutSeconds, help }: RuleToolSearch,
 ): Promise<RuleExplanation | undefined> {
     const [path] = listRepositoryExecutablePaths(root, 'ruff', { folders: [], toolFolderKind: 'python' });
     if (path === undefined) throw new GspotError('tool', 'Ruff is not installed in .gspot/.venv. Run gspot install.');
     const result = await runTool([path, 'rule', identifier, '--output-format', 'json'], { cwd: root, timeoutSeconds });
-    if (result.end !== 'exited')
-        throw new GspotError('tool', `Ruff could not read rule ${identifier}. ${result.stderr.trim()}`);
+    if (result.end !== 'exited') return { fix: help };
     if (result.code !== 0) return undefined;
     const rule = parseJsonFile('ruff rule output', result.stdout, ruffRuleSchema);
     return {
@@ -277,9 +281,10 @@ Read the explanation of a rule from an installed tool without importing generate
 @param root the repository root.
 @param tool the program that runs the rule.
 @param identifier the complete rule identifier.
-@param options the subprocess time limit and installed mise tool locator.
+@param options the subprocess time limit, installed mise tool locator, and check help.
 @param options.timeoutSeconds the subprocess time limit.
 @param options.readMiseBinPaths locates the tools through the validated generated tool project.
+@param options.help what to do about a finding of the check, which stands in when a tool process cannot answer.
 */
 export async function readLintRuleExplanation(
     root: string,
@@ -288,13 +293,15 @@ export async function readLintRuleExplanation(
     {
         timeoutSeconds = rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         readMiseBinPaths,
-    }: RuleExplanationOptions = {},
+        help,
+    }: RuleExplanationOptions,
 ): Promise<RuleExplanation | undefined> {
+    const search = { timeoutSeconds, readMiseBinPaths, help };
     const readRule = new Map<string, () => RuleExplanation | undefined | Promise<RuleExplanation | undefined>>([
-        ['ruff', () => readRuffRule(root, identifier, timeoutSeconds)],
+        ['ruff', () => readRuffRule(root, identifier, search)],
         ['markdownlint-cli2', () => readMarkdownlintRule(root, identifier)],
         [VALE_TOOL, () => readValeRule(root, identifier)],
-        ['swiftlint', () => readSwiftlintRule(root, identifier, { timeoutSeconds, readMiseBinPaths })],
+        ['swiftlint', () => readSwiftlintRule(root, identifier, search)],
     ]).get(tool);
     if (readRule !== undefined) return readRule();
     if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool))

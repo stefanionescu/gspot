@@ -25,6 +25,8 @@ import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
+const REASON = 'The generated parser keeps its long lines.';
+
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
@@ -175,5 +177,39 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
         expect(findings.filter((finding) => finding.rule_id === 'function_parameter_count')).toMatchObject(
             maximum === defaultMaximum ? [scenario.finding] : [],
         );
+    },
+);
+
+test.skipIf(!hasToolBuild('swiftlint'))(
+    'gspot explain and ignore read a rule from the installed SwiftLint',
+    async () => {
+        await using sandbox = await prepareSwiftScope('');
+        const { root } = sandbox;
+        const explained = await spawnGspot(root, ['explain', 'swift/swiftlint', 'line_length', '--json']);
+        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+        expect(JSON.parse(explained.stdout)).toMatchObject({
+            description: expect.stringContaining('(line_length)') as string,
+        });
+        const unknown = await spawnGspot(root, ['explain', 'swift/swiftlint', 'no_such_rule', '--json']);
+        expect(unknown.code).toBe(2);
+        expect(JSON.parse(unknown.stdout)).toMatchObject({ error: 'arguments' });
+        const refused = await spawnGspot(root, [
+            'ignore',
+            'swift/swiftlint',
+            '--rule',
+            'no_such_rule',
+            '--reason',
+            REASON,
+        ]);
+        expect(refused.code).toBe(2);
+        const ignored = await spawnGspot(root, [
+            'ignore',
+            'swift/swiftlint',
+            '--rule',
+            'line_length',
+            '--reason',
+            REASON,
+        ]);
+        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     },
 );

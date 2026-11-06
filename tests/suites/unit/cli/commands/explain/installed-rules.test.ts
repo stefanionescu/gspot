@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { devNull, tmpdir } from 'node:os';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { parse } from '@decimalturn/toml-patch';
@@ -11,13 +11,40 @@ import { VALE_STYLES_PATH } from '#cli/config/tools/vale.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildMiseInstall } from '#cli/tools/pins.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/configurations/general.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+async function fakeSwiftlint(
+    root: string,
+    answer: (command: readonly string[]) => Partial<SpawnResult>,
+): Promise<DisposableStack> {
+    const executable = join(root, 'tools/swiftlint');
+    using resources = createRunResources();
+    const session = await openSession(root, { resources });
+    await createFileTree(root, {
+        '.gspot/mise.toml': buildMiseInstall(session.toolConfigurations).content,
+        'tools/swiftlint': '',
+    });
+    const fakes = new DisposableStack();
+    fakes.use(
+        fakeExecutableLookup((name) => {
+            if (name === 'swiftlint') return null;
+            return name === 'mise' ? join(tmpdir(), 'mise') : undefined;
+        }),
+    );
+    fakes.use(fakeCommands('mise', () => Promise.resolve(buildProcessResult({ stdout: dirname(executable) }))));
+    fakes.use(
+        fakeCommands(executable).mockImplementation((command) => Promise.resolve(buildProcessResult(answer(command)))),
+    );
+    return fakes;
+}
 
 test('set refuses a rule that the installed catalog does not hold, and takes one that it holds', async () => {
     await using sandbox = await createGitSandbox({
@@ -85,48 +112,51 @@ test('Markdownlint validates a rule against its installed catalog without evalua
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
-test('SwiftLint validates rules with installed metadata and an empty explicit configuration', async () => {
+test('a SwiftLint rule explains from the installed tool, and a name it does not know is refused', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['swift']) });
-    const executable = join(sandbox.path, 'tools/swiftlint');
-    using resources = createRunResources();
-    const session = await openSession(sandbox.path, { resources });
-    await createFileTree(sandbox.path, {
-        '.gspot/mise.toml': buildMiseInstall(session.toolConfigurations).content,
-        'tools/swiftlint': '',
-    });
-    using _lookup = fakeExecutableLookup((name) => {
-        if (name === 'swiftlint') return null;
-        return name === 'mise' ? join(tmpdir(), 'mise') : undefined;
-    });
-    using _bins = fakeCommands('mise', () => Promise.resolve(buildProcessResult({ stdout: dirname(executable) })));
-    using commands = fakeCommands(executable).mockImplementation((command) =>
-        Promise.resolve(
-            buildProcessResult(
-                command.at(-1) === 'force_cast'
-                    ? { stdout: 'Force Cast (force_cast): Force casts should be avoided\n' }
-                    : { code: 1, stderr: 'Error: No rule with identifier: force_castt' },
-            ),
-        ),
+    using _fakes = await fakeSwiftlint(sandbox.path, (command) =>
+        command.at(-1) === 'force_cast'
+            ? { stdout: 'Force Cast (force_cast): Force casts should be avoided\n' }
+            : { code: 1, stderr: 'Error: No rule with identifier: force_castt' },
     );
     const described = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'force_cast', '--json']);
     expect(described.code, described.stdout + described.stderr).toBe(0);
     expect(JSON.parse(described.stdout)).toMatchObject({
         description: 'Force Cast (force_cast): Force casts should be avoided',
     });
-    expect(commands.mock.calls[0]?.[0]).toStrictEqual([
-        executable,
-        'rules',
-        '--default-config',
-        '--config',
-        devNull,
-        'force_cast',
-    ]);
     const unknown = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'force_castt', '--json']);
     expect(unknown.code).toBe(2);
     expect(JSON.parse(unknown.stdout)).toMatchObject({
         error: 'arguments',
         message: expect.stringContaining('force_castt') as string,
     });
+});
+
+test.each([
+    { failure: 'a signal', result: { end: 'failed', signal: 'SIGABRT', stderr: 'Could not read configuration' } },
+    { failure: 'exit code 127', result: { code: 127, stderr: 'error while loading shared libraries' } },
+] as const)('after $failure from SwiftLint, explain prints the check help and ignore goes on', async ({ result }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['swift']) });
+    using _fakes = await fakeSwiftlint(sandbox.path, () => result);
+    const explained = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'force_cast', '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(JSON.parse(explained.stdout)).toMatchObject({
+        rule: 'force_cast',
+        description: null,
+        fix: getShippedCheck('swift/swiftlint').help,
+    });
+    const reason = 'The parser keeps this cast on purpose.';
+    const ignored = await runGspot(sandbox.path, [
+        'ignore',
+        'swift/swiftlint',
+        '--rule',
+        'force_cast',
+        '--reason',
+        reason,
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toStrictEqual([{ check: 'swift/swiftlint', rule: 'force_cast', reason }]);
 });
 
 test('declarative Biome rule selection and ShellCheck identifiers refuse misspelled rule names', async () => {
