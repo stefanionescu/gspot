@@ -1,9 +1,8 @@
 ---
 title: Ignore findings
-description: Which switch fits which job, where its reason goes, and how to remove it again.
 ---
 
-To let something pass, use the narrowest row that works. Fix the code first.
+Fix the code first. To let something pass, use the narrowest row that works:
 
 | You want to let pass                                   | Do this                                                                                               | Where the reason goes                                                                       |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -20,12 +19,12 @@ remove a configuration that is always on, such as `spelling`, so ignore its chec
 push and in CI, and fails a weaker `gspot.toml` that has no reason, as
 [Changes that need a reason](/configure/gspot-toml/#changes-that-need-a-reason) shows.
 
-Files that `.gitattributes` marks `linguist-generated` or `linguist-vendored` leave most checks, with no reason.
-`--skip` and `git commit --no-verify` affect one run, and the next run reports the same findings.
+Most checks skip the files that `.gitattributes` marks `linguist-generated` or `linguist-vendored`, and that mark needs
+no reason. `--skip` and `git commit --no-verify` affect one run, and the next run reports the same findings.
 
 ## Suppress one line
 
-To turn off a rule on one line, use the tool's own comment, and give a reason of two or more words:
+To turn off a rule on one line, use the tool's own comment with a reason:
 
 ```javascript
 // eslint-disable-next-line no-console -- reason: the command prints its result
@@ -47,8 +46,8 @@ that rule in those paths, so name the rule and the paths. gspot rejects a rule n
 check that names no lint rules takes `--paths` instead. A commit reads `gspot.toml` as you staged it, so stage the
 ignore with your change.
 
-`--rule` also takes the fingerprint of one finding, which `gspot check --json` prints for each finding of a secret scan.
-The ignore then covers that finding alone:
+To cover one finding alone, give `--rule` its fingerprint, which `gspot check --json` prints for each finding of a secret
+scan:
 
 ```shell
 gspot ignore secrets/gitleaks-staged --rule "<fingerprint>" --reason "<why>"
@@ -62,7 +61,7 @@ root folder of the repository. Each path must match at least one file. To give m
 
 ## Ignore a dependency advisory
 
-To ignore one security advisory of a dependency, give the advisory ID as the rule:
+To ignore one advisory, give its ID as the rule:
 
 ```shell
 gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason "<why>"
@@ -84,7 +83,7 @@ You do not need an ignore for the files that `.gitignore` excludes, or for these
 - binary files
 
 Secret scans still read every file, and dependency checks still read lockfiles. To skip other generated or vendored
-files, mark them in `.gitattributes`, which GitHub reads too:
+files, mark them in `.gitattributes`:
 
 ```text title=".gitattributes"
 src/api/schema.ts linguist-generated

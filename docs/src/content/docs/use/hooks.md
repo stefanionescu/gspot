@@ -1,6 +1,5 @@
 ---
 title: Git hooks
-description: What each hook checks, what a first commit and push run into, and how to run gspot beside another hook manager.
 ---
 
 `gspot init` installs these hooks and turns them on, and in a new clone, `gspot install` turns them on. The hooks run
@@ -27,40 +26,31 @@ flowchart LR
 
 A commit checks what you stage, and what your staged change breaks in other files, so a commit that touches an old file
 fails on that file's old findings. A change to `gspot.toml` does not run the commit checks on other files, so the setup
-commit passes once you delete the old tool settings that gspot reports as conflicts.
+commit fails only on what `gspot/conflicting-configs` reports and on the files that it stages.
+[Clean up the first findings](/start/quickstart/#clean-up-the-first-findings) shows what to do.
 
-The pre-push hook checks only the newest commit of each pushed branch. A mistake in an older commit of the push does not
-fail the hook when a newer commit fixes it. It does not run the commit checks again, because the pre-commit hook ran
-them on each commit, and CI runs both. Checks that read the whole project, such as the type checker, report findings in
-files that you did not change. The first push fails until you fix or ignore those old findings, as
-[Clean up the first findings](/start/quickstart/#clean-up-the-first-findings) shows.
+The pre-push hook checks only the newest commit of each pushed branch, so a newer commit can fix a mistake in an older
+one. It leaves out the commit checks, because the pre-commit hook ran them on each commit, and CI runs both. Checks that read the whole project, such as the type checker, report findings in files you did not
+change, so the first push fails until you fix or ignore them.
 
-Hooks in npm, pnpm, and Bun repositories start gspot from `node_modules/.bin`, so they need `node` on the `PATH` that
-the Git client gives hooks. Yarn and mise keep their launchers, so those repositories need `yarn` or `mise` on that
-`PATH` instead. A Git client can give hooks another `PATH` than your terminal, so a hook can find an older Node.js and
-stop on the Node.js minimum. When a hook cannot start gspot, the commit stops, and
-[Troubleshooting](/use/troubleshooting/#a-hook-cannot-find-nodejs-yarn-or-mise) shows how to fix it.
+Hooks in npm, pnpm, and Bun repositories start gspot from `node_modules/.bin`, so they need `node` on the `PATH` that the
+Git client gives hooks, and Yarn and mise repositories need `yarn` or `mise` there instead. That `PATH` can differ from
+the one in your terminal, so a hook can find an older Node.js and stop on the Node.js minimum. When a hook cannot start
+gspot, the commit stops, and [Troubleshooting](/use/troubleshooting/#a-hook-cannot-find-nodejs-yarn-or-mise) shows how to
+fix it.
 
 ## When a hook fails
 
 Fix each finding, then commit or push again. If a finding does not apply to your code, add an ignore with a reason, as
 [Ignore findings](/use/ignore/) describes, and stage it with your change.
 
-`git commit --no-verify` skips one hook run. The next run of the check reports the same findings, so it is not a way to
-adopt gspot.
+`git commit --no-verify` skips one hook run, and the next run of the check reports the same findings.
 
 ## Turn hooks on or off
 
-To turn the hooks on, run:
-
-```shell
-gspot set hooks.enabled true
-gspot install
-```
-
-To turn them off, run `gspot set hooks.enabled false`, and gspot deletes `.gspot/hooks` and unsets the Git setting
-`core.hooksPath`. `gspot/weakenings` then fails in CI until you
-[give a reason](/configure/gspot-toml/#changes-that-need-a-reason).
+To turn the hooks on, run `gspot set hooks.enabled true`, then `gspot install`. To turn them off, run
+`gspot set hooks.enabled false`, and gspot deletes `.gspot/hooks` and unsets the Git setting `core.hooksPath`.
+`gspot/weakenings` then fails in CI until you [give a reason](/configure/gspot-toml/#changes-that-need-a-reason).
 
 ## Existing hook managers
 
@@ -126,7 +116,7 @@ chmod +x .git/hooks/pre-push
 
 ## Test a hook
 
-To run the checks of the pre-commit and commit-msg hooks without committing:
+These commands run the checks of the pre-commit and commit-msg hooks without a commit:
 
 ```shell
 gspot check --staged --only commit

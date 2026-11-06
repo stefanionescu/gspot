@@ -1,9 +1,8 @@
 ---
 title: Run checks
-description: Read a finding, ask gspot why it matters, choose which files and checks to run, and fix what a fixer can fix.
 ---
 
-`gspot check` runs the checks and prints each finding. This report has two failed checks:
+This report from `gspot check` has two failed checks:
 
 ```text
 failed   docs/lychee  1 finding
@@ -19,13 +18,13 @@ failed   format/prettier  2 findings
   rerun: gspot check --only format/prettier
 ```
 
-Each failed check starts with its status, its ID, and its number of findings, and when the check runs in a
-[scope](/start/concepts/#scopes), the scope path comes before the ID. Each finding gives the file, the line and column,
-the lint rule, and the message. `help:` says what to do and names the `gspot explain` command of the check, `fix:` runs
-the fixers of that check on the files that it names, and `rerun:` runs that check again alone. When `gspot` is not on your
-`PATH`, a failed run also names the command to write in its place, such as `npm exec --no -- gspot`.
+A check that runs in a [scope](/start/concepts/#scopes) prints the scope path before its ID. Each finding gives the file
+and the message, and the line, column, and lint rule when the tool reports them. The report shows the first 200 findings
+of each check, and `--verbose` shows them all.
 
-The report shows the first 200 findings of each check, and `--verbose` shows them all.
+`help:` says what to do and names the `gspot explain` command of the check, `fix:` runs the fixers of that check on the
+files that it names, and `rerun:` runs that check again alone. When `gspot` is not on your `PATH`, a failed run also names
+the command to write in its place, such as `npm exec --no -- gspot`.
 
 ## Explain a finding
 
@@ -56,9 +55,9 @@ Paths and `--staged` or `--base` choose the files, and `--only` and `--skip` cho
 To see the result of both hooks before you push, run `gspot check --base origin/HEAD`. A clone has `origin/HEAD`. In a
 repository that added its remote later, run `git remote set-head origin --auto` first, or name the branch.
 
-Separate several check IDs with commas, or repeat the option, and `--skip` takes checks in the same way. A path after
-`--only` is a file to check, not another check. `--only` can also run a check that your [level](/start/concepts/#levels)
-turns off, and gspot prints a note about it, because the check still needs its tools and settings.
+`--only` and `--skip` take several check IDs: separate them with commas, or repeat the option. A path after `--only` is a
+file to check, not another check. `--only` can also run a check that your [level](/start/concepts/#levels) turns off, with
+a note, because the check still needs its tools and settings.
 
 Some checks read the whole project, such as `typescript/tsc`. When you name paths, these checks still read every file,
 but the report shows only their findings in those paths. In a run on staged or pushed files, the report shows all of
@@ -66,7 +65,7 @@ their findings.
 
 ## Fix findings automatically
 
-Run the formatters and the other fixers on the files that you name, then check them again:
+This runs the formatters and the other fixers on the file, then checks it again:
 
 ```shell title="example"
 gspot check --fix src/app.ts
@@ -91,5 +90,3 @@ add a fixer to a command check of your own, follow [Add a fix command](/configur
 The report shows the `failed`, `missing`, `error`, and `canceled` rows. `--verbose` adds the `passed` and `skipped`
 rows, each command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object, as
 [JSON output](/reference/json-output/#gspot-check) describes.
-
-When a lint rule does not fit your code, [ignore the finding](/use/ignore/) and give a reason.

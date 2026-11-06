@@ -3,8 +3,8 @@ title: Editors
 description: Make your editor run the same tools, with the same settings, as gspot.
 ---
 
-Editor extensions read the same generated config files as gspot. The ESLint and Prettier extensions, however, run the
-ESLint and Prettier packages of your project, not the copies that gspot installs, so their versions can differ.
+Editor extensions read the same generated config files as gspot. The ESLint and Prettier extensions run the packages of
+your project, not the copies that gspot installs, so their versions can differ, as the output of each extension shows.
 
 ## Before you open the editor
 
@@ -19,8 +19,6 @@ extension uses the ESLint that gspot installs:
     "eslint.nodePath": ".gspot/node_modules"
 }
 ```
-
-To confirm which ESLint and Prettier versions your editor runs, read the output of each extension.
 
 ## How editors find the generated config files
 
@@ -42,19 +40,19 @@ gspot also writes the `[format]` settings into `.editorconfig`, so each editor t
 
 ## Tools without a pointer file
 
-Five tools cannot load a config file from another path, so gspot passes the config file with `--config` when it runs
+These tools cannot load a config file from another path, so gspot passes the config file with `--config` when it runs
 them. An editor extension without that path uses the defaults of the tool, and format on save then writes text that the
-check rejects. Vale runs at level `all` only.
+check rejects:
 
-| Tool        | VS Code extension                                                               |
-| ----------- | ------------------------------------------------------------------------------- |
-| Taplo       | [Even Better TOML](https://github.com/tamasfe/taplo/tree/master/editors/vscode) |
-| typos       | [typos-lsp](https://github.com/tekumara/typos-lsp)                              |
-| Vale        | [Vale VSCode](https://github.com/chrischinchilla/vale-vscode)                   |
-| SQLFluff    | [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                  |
-| SwiftFormat | [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)             |
+| Tool                      | VS Code extension                                                               |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| Taplo                     | [Even Better TOML](https://github.com/tamasfe/taplo/tree/master/editors/vscode) |
+| typos                     | [typos-lsp](https://github.com/tekumara/typos-lsp)                              |
+| Vale, which runs at `all` | [Vale VSCode](https://github.com/chrischinchilla/vale-vscode)                   |
+| SQLFluff                  | [vscode-sqlfluff](https://github.com/sqlfluff/vscode-sqlfluff)                  |
+| SwiftFormat               | [vscode-swiftformat](https://github.com/vknabel/vscode-swiftformat)             |
 
-Give each extension that you use the same path, in `.gspot/configurations/<configuration>/`:
+Give each extension that you use the path in `.gspot/configurations/<configuration>/`:
 
 ```json title=".vscode/settings.json"
 {
@@ -66,8 +64,8 @@ Give each extension that you use the same path, in `.gspot/configurations/<confi
 }
 ```
 
-Do not add a config file of your own for these tools, such as `.taplo.toml` in the root folder, because gspot writes
-their settings and `gspot/conflicting-configs` reports such a file.
+Do not add a config file of your own for these tools, such as `.taplo.toml`, because `gspot/conflicting-configs` reports
+it.
 
 ## Validate `gspot.toml`
 

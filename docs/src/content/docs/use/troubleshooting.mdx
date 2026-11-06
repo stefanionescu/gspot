@@ -1,6 +1,5 @@
 ---
 title: Troubleshooting
-description: Fix gspot.toml errors, old findings, missing tools, failed installs, hooks that cannot start, and slow checks.
 ---
 
 import { Code } from '@astrojs/starlight/components';
@@ -14,8 +13,7 @@ include the output, the check ID, and a command that shows the problem, and leav
 ## A command reports an error in `gspot.toml`
 
 A key that gspot cannot read stops every command that reads the file, `gspot explain` and `gspot list settings` too. The
-message names the key and what it accepts, so fix the line by hand. The [settings reference](/reference/gspot-toml/)
-lists every key.
+message names the key and what it accepts, so fix the line by hand.
 
 ## A commit or push fails on findings from before gspot
 
@@ -25,9 +23,9 @@ ignore each finding, as [Clean up the first findings](/start/quickstart/#clean-u
 
 ## A check reports `missing`
 
-Run `gspot install`. With mise, it installs the tools that mise provides. Without mise, install the tools that
-`gspot doctor` lists yourself, as [What you need](/start/install/#what-you-need) describes. While a tool is missing, the
-run cannot finish and exits with code 2, and in a Git hook, that also stops the commit.
+Run `gspot install`. Without mise, install the tools that `gspot doctor` lists yourself, as
+[What you need](/start/install/#what-you-need) describes. While a tool is missing, the run exits with code 2, and in a
+Git hook, that also stops the commit.
 
 ## A lockfile in `.gspot/` has a merge conflict
 
@@ -63,15 +61,13 @@ install command of your package manager, then `gspot install`. With mise, run `m
 
 ## A hook cannot find Node.js, Yarn, or mise
 
-The hook did not find the program that starts gspot, so it stopped the commit. Hooks in npm, pnpm, and Bun repositories
-need `node`, and those in Yarn and mise repositories need `yarn` or `mise`. The message names the program and the `PATH`
-that the Git client gave the hook:
+Hooks in npm, pnpm, and Bun repositories need `node`, and those in Yarn and mise repositories need `yarn` or `mise`. The
+message names the program and the `PATH` that the Git client gave the hook:
 
 <Code code={hookProgramMissing.replaceAll('<program>', 'node').replace('$PATH', '/usr/bin:/bin')} lang="text" />
 
 A Git client in an editor can get a different `PATH` from your terminal. Start the client from a terminal, or add the
-folder of the program to the `PATH` of the client, then restart the client. If the program is not installed, install
-Node.js, Yarn, or mise first.
+folder of the program to the `PATH` of the client, then restart the client.
 
 When the hook says that gspot is not installed in the worktree, run the install command that the hook prints in that
 worktree, then `gspot install`. With mise, run `mise install` in that worktree, then `gspot install`.

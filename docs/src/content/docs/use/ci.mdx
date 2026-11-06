@@ -6,8 +6,8 @@ description: Run the checks in GitHub Actions, GitLab, another CI provider, or a
 import { cloneInstalls } from '#docs/reference/setup.ts';
 
 gspot can write a CI workflow that runs the checks on each pull request and on each push to the default branch, in one
-file beside your other workflows. CI stays off until you turn it on. A pull request that changes `gspot.toml` or a file
-in `.gspot/` checks every file, so turn CI on after you fix or ignore the old findings.
+file beside your other workflows. A pull request that changes `gspot.toml` or a file in `.gspot/` checks every file, so
+turn CI on after you fix or ignore the old findings.
 
 ## Turn CI on
 
@@ -36,19 +36,17 @@ include:
 
 ## What the job checks
 
-On GitHub, the workflow runs a job named `lint`, for pull requests, merge queues, and pushes to the default branch. A
-push to another branch does not run the job, so open a pull request to check a branch. When your repository uses jest,
-vitest, or pytest, the workflow also runs a `tests` job, so the lint result does not wait for your tests. On GitLab, one
-job runs both.
+On GitHub, a job named `lint` runs for pull requests, merge queues, and pushes to the default branch, so open a pull
+request to check another branch. When your repository uses jest, vitest, or pytest, the workflow also runs a `tests` job,
+so the lint result does not wait for your tests. On GitLab, one job runs both.
 
 To run your tests only in a workflow of your own, run `gspot ignore vitest/tests --reason "<why>"`. gspot then stops
 running them, and the lint rules and coding agent rules of `vitest` stay.
 
 The job runs `gspot check --base` with the base of the pull request or merge request, or with the previous push, so it
-checks what changed after that commit. It leaves out the manual checks. An empty base, an all-zero hash, or a full hash
-that the clone lacks checks every file, and the report says why. The first push of a branch has an all-zero hash, so it
-checks every file. Any other base that Git cannot find stops the run with exit code 2, and in a shallow clone the
-message says how to fetch the history.
+checks what changed after that commit. It leaves out the manual checks. An empty base, the all-zero hash of a branch's
+first push, or a full hash that the clone lacks checks every file, and the report says why. Any other base that Git cannot
+find stops the run with exit code 2, and in a shallow clone the message says how to fetch the history.
 
 The job fails when `gspot install` changes a file in the clone, such as a generated file that someone edited by hand, or
 a lockfile that is missing or out of date. To fix the job, run `gspot install` on your machine and commit the changed
@@ -87,8 +85,7 @@ workflow:
 
 ## Install your dependencies
 
-Before `gspot install`, the job installs the dependencies from the lockfiles of the root folder and of each scope, so
-that the checks that read those dependencies find them:
+Before `gspot install`, the job installs the dependencies from the lockfiles of the root folder and of each scope:
 
 <table>
     <thead>
@@ -155,15 +152,14 @@ names the revision to compare with, so that gspot checks only the changed files,
 | Any other provider, such as CircleCI                                                             | `$(git merge-base origin/<default-branch> HEAD)`        |
 
 Let the pipeline fail when gspot exits with a code other than 0. Exit code `1` means that findings remain, and `2` means
-that the run did not finish, such as when a tool is missing, and the report names the tool. `gspot check --json` prints
-the report as JSON.
+that the run did not finish, such as when a tool is missing.
 
 In a monorepo, run your build before the checks, because `tsc` reads the types of a workspace package from its build.
 Without the build, `typescript/tsc` cannot find those types, and the lint rules that read types report false
 `no-unsafe-*` findings.
 
-Do not cache or upload credentials. To cache downloads and installed tools, build the cache key from the gspot version,
-the files in `.gspot/` that pin the tools, and your lockfiles.
+To cache downloads and installed tools, but no credentials, build the cache key from the gspot version, the files in
+`.gspot/` that pin the tools, and your lockfiles.
 
 ## Run gspot in a container
 
