@@ -38,12 +38,15 @@ function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck):
         root: session.root,
         files: session.repository.files,
         ...listReplacedTools(session.toolConfigurations),
-    }).map(({ file, line, source, command, tool, fix }) => ({
-        file,
-        line,
-        rule: GSPOT_RULES.lintCommand,
-        message: `${LINT_COMMAND_NAMES[source]} ${source === 'settings' ? 'configures' : 'calls'} ${tool}: ${command}. ${fix}`,
-    }));
+    }).map(({ file, line, source, command, tool, fix }) => {
+        const shown = source === 'dependency' ? command : `\`${command}\``;
+        return {
+            file,
+            line,
+            rule: GSPOT_RULES.lintCommand,
+            message: `${LINT_COMMAND_NAMES[source]} ${source === 'settings' ? 'configures' : 'calls'} ${tool}: ${shown}. ${fix}`,
+        };
+    });
     const findings = [...conflicts, ...commands];
     const narrowed = session.selection?.paths;
     return narrowed === undefined || narrowed.includes(SETTINGS_FILE)

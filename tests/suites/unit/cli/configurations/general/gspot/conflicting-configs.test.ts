@@ -75,7 +75,7 @@ test('gspot/conflicting-configs reports an lint command until it goes', async ()
             file: 'package.json',
             line: 3,
             rule: 'lint-command',
-            message: expect.stringContaining('eslint .') as string,
+            message: expect.stringContaining('calls eslint: `eslint .`. Replace') as string,
         },
     ]);
     await writeFile(
