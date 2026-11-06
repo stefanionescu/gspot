@@ -1,6 +1,18 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
 import type { IgnoreSection } from '#cli/types/configurations/general.ts';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
+
+/**
+Keep the findings in the files that the repository lists, for a tool that walks the disk past what Git tracks.
+
+@param session the repository.
+@param result the result of the tool.
+*/
+export function keepListedFindings(session: CheckSession, result: CheckResult): CheckResult {
+    const listed = new Set(session.repository.files.map(({ path }) => path));
+    return { ...result, findings: result.findings.filter(({ file }) => listed.has(file)) };
+}
 
 /**
 Convert one gitignore pattern to the glob that config files use.

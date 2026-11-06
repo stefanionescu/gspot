@@ -104,6 +104,24 @@ test('a full secrets scan leaves out a file that Git ignores', async () => {
     expect(report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
+test('a full secrets scan follows what Git lists: a forced file reports, and an excluded file does not', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['secrets']),
+        '.gitignore': 'dist/\n',
+        'src/value.js': 'export const value = 1;\n',
+    });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, '.git/info/exclude'), 'local/\n');
+    const secret = `const token = "${API_TOKEN}";\n`;
+    await createFileTree(sandbox.path, { 'dist/forced.js': secret, 'local/excluded.js': secret });
+    runGitStep(sandbox.path, ['add', '-f', 'dist/forced.js']);
+    await applyGeneratedFiles(sandbox.path);
+    const { report } = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
+    );
+    expect(report.checks).toMatchObject([{ status: 'failed', findings: [{ file: 'dist/forced.js' }] }]);
+});
+
 test('gitleaks reports both staged secrets, hides the tokens, and passes after the fix', async () => {
     await using sandbox = await testdir();
     await prepareSecrets(sandbox.path);

@@ -10,12 +10,12 @@ import {
     SECRET_KEY_NAME,
 } from '#cli/config/configurations/general.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { keepListedFindings } from '#cli/configurations/ignores.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { readPushedCommits, readPushedRange } from '#cli/repository/revisions/push.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
@@ -70,12 +70,6 @@ function listMissingEnvironmentKeys(
     return findings;
 }
 
-function removeIgnoredFindings(session: CheckSession, result: CheckResult): CheckResult {
-    const paths = session.repository.files.map(({ path }) => path);
-    const isIgnored = buildGitignoreMatcher(session.cache, paths);
-    return { ...result, findings: result.findings.filter(({ file }) => !isIgnored(file)) };
-}
-
 /**
 Scans the staged change with Gitleaks. A full check, with no staged change, path, or pushed range to narrow it, scans
 every file that Git does not ignore, so a secret that an earlier commit added still reports.
@@ -100,7 +94,7 @@ async function checkGitleaksStaged(
             if (argument === GITLEAKS_GIT_MODE) return GITLEAKS_FILES_MODE;
             return argument === ROOT_PLACEHOLDER ? '.' : argument;
         });
-    return removeIgnoredFindings(session, await runCommandCheck(session, planned, { ...options, command }));
+    return keepListedFindings(session, await runCommandCheck(session, planned, { ...options, command }));
 }
 
 /**
