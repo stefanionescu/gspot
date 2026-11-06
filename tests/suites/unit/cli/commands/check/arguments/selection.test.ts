@@ -102,7 +102,7 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
                 command: buildProgramCommand(
                     'fakes/tool',
                     '--stdout',
-                    'src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless\n',
+                    'src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless\nnode_modules/pkg/index.d.ts:demo:installed\n',
                     '--exit',
                     '1',
                 ),
@@ -112,6 +112,7 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
     });
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
+        '.gitignore': 'node_modules/\n',
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
     });
@@ -136,7 +137,42 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
         'here',
         'elsewhere',
         'fileless',
+        'installed',
     ]);
+});
+
+test('a named folder keeps the finding of an ignored file in it, and a named file passes without it', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'sandbox/site',
+                paths: ['web/**'],
+                stage: 'commit',
+                command: buildProgramCommand(
+                    'fakes/tool',
+                    '--stdout',
+                    'web/dist/page.html:demo:built\n',
+                    '--exit',
+                    '1',
+                ),
+                output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
+            },
+        ],
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
+        '.gitignore': 'dist/\n',
+        'web/page.ts': 'page',
+        'web/dist/page.html': 'built',
+    });
+    const folder = parseCheckReport(await runGspot(sandbox.path, ['check', 'web', '--only', 'sandbox/site', '--json']));
+    expect(folder.code, folder.stdout + folder.stderr).toBe(1);
+    expect(folder.report.checks[0]?.findings.map(({ file }) => file)).toStrictEqual(['web/dist/page.html']);
+    const named = parseCheckReport(
+        await runGspot(sandbox.path, ['check', 'web/page.ts', '--only', 'sandbox/site', '--json']),
+    );
+    expect(named.code, named.stdout + named.stderr).toBe(0);
+    expect(named.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
 });
 
 test.each([false, true])('rerun resolves a scope from the calling folder (staged: %p)', async (staged) => {

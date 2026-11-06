@@ -147,7 +147,8 @@ test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unig
         ),
     );
     const session = await openSession(sandbox.path);
-    const options = buildRunOptions({ only: ['project/batches'], paths: ['one.txt', 'two.txt'] });
+    const paths = ['one.txt', 'two.txt'];
+    const options = buildRunOptions({ cwd: sandbox.path, only: ['project/batches'], paths, pathArguments: paths });
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(2);
     expect(

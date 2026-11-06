@@ -22,10 +22,11 @@ import { buildBaseResult, formatReproduceCommand, normalizeResultPaths, runBuilt
 import { openSession } from '#cli/engine/session.ts';
 import { lookUpCommandTools, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { convertToPosixPath, isInScope } from '#cli/system/paths.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -144,11 +145,10 @@ function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
 function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
     const { options, session } = run;
     if (options.paths === undefined) return result;
-    const paths = new Set(options.paths);
-    const tracked = new Set(session.repository.files.map((file) => file.path));
+    const named = options.pathArguments.map((path) => buildArgumentPath(session.toolsRoot, options.cwd, path));
     return {
         ...result,
-        findings: result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file)),
+        findings: result.findings.filter(({ file }) => file === '' || named.some((path) => isInScope(file, path))),
     };
 }
 
