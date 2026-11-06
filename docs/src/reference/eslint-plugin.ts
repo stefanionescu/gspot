@@ -162,8 +162,7 @@ function buildTopicPage(label: string, names: readonly string[]): ReferencePage 
     const page = buildReferencePage(
         `${label} rules`,
         undefined,
-        `[\`${pluginPackage.name}\`](${PLUGIN_PATH}) says how to install the plugin and which configs turn these rules on.\n` +
-            names.map((name) => formatRuleSection(name, getRequired(rules, name, 'plugin rule'))).join(''),
+        names.map((name) => formatRuleSection(name, getRequired(rules, name, 'plugin rule'))).join(''),
     );
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };
     return page;

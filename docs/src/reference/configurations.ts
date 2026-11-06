@@ -111,7 +111,7 @@ function formatConfigurationGuide(name: string, guides: Map<string, Configuratio
     const guide = guides.get(name);
     if (guide === undefined) return '';
     const { slug, title } = guide;
-    return `The [${title} guide](/${slug}/) explains the setup.`;
+    return `Guide: [${title}](/${slug}/).`;
 }
 
 function buildConfigurationPage(

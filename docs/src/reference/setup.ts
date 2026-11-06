@@ -94,9 +94,10 @@ export const AGENT_STEPS = `## Set up gspot: steps for coding agents
 Run every command from the root folder of the user's repository. gspot needs Git, Node.js ${runtimeMinimums.node} or
 newer, npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or
 newer, and mise. Node.js 22 comes with an older npm, so run \`npm install --global npm@latest\` there. Without mise, the
-user installs each tool that \`gspot init\` names, because a missing tool stops every commit.
+user installs each tool that \`gspot init\` names, because a missing tool stops every commit. A \`packageManager\` field
+in \`package.json\` needs mise, because gspot runs that version through it.
 
-Some package managers wait several days before they install a newly published package, such as pnpm 11. In that case,
+Some package managers refuse a version until it is a set age, as pnpm 11 does for one day by default. In that case,
 let gspot's two packages, @gspothq/cli and @gspothq/eslint-plugin, install right away by adding them to
 ${CONJUNCTION_FORMAT.format(RELEASE_AGE_EXCLUSIONS.map(({ label, key, file }) => `${key} in ${file} for ${label}`))}.
 
@@ -184,7 +185,6 @@ export const LLMS_PAGES = {
         {
             label: 'Reference',
             paths: ['reference/**'],
-            description: 'every command, gspot.toml setting, configuration, check, and ESLint plugin rule',
         },
     ],
     customSelectors: { all: ['.sl-anchor-link'] },
@@ -192,17 +192,14 @@ export const LLMS_PAGES = {
         {
             label: 'Commands',
             url: `${REFERENCE_URL}${REFERENCE_FOLDERS.commands}/`,
-            description: 'every command, its options, and exit codes',
         },
         {
             label: 'gspot.toml settings',
             url: `${REFERENCE_URL}${REFERENCE_FOLDERS.settings}/`,
-            description: 'every setting of gspot.toml, its accepted values, and its default',
         },
         {
             label: 'JSON output',
             url: `${REFERENCE_URL}${REFERENCE_FOLDERS.jsonOutput}/`,
-            description: 'the fields of gspot check --json',
         },
     ],
 };

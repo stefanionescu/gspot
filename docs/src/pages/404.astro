@@ -13,7 +13,6 @@ const url = `${cliPackage.homepage}/404`;
 <StarlightPage
     frontmatter={{
         title: 'Page not found',
-        description: 'Find a gspot guide or return to the homepage.',
         template: 'splash',
         hero: {},
         editUrl: false,
@@ -33,7 +32,6 @@ const url = `${cliPackage.homepage}/404`;
                 <span>4</span>
             </p>
             <h1 id="_top">Page not found</h1>
-            <p class="not-found-text">The link may be old, or the address may have a typo.</p>
             <a class="not-found-action" href={DOCS_PATH}>Go to the docs</a>
         </div>
     </section>
@@ -99,14 +97,6 @@ const url = `${cliPackage.homepage}/404`;
         font-weight: 700;
         line-height: 1.2;
         letter-spacing: -0.02em;
-    }
-
-    .not-found-text {
-        margin: 0;
-        color: var(--sl-color-gray-3);
-        font-size: 1rem;
-        line-height: 1.5;
-        text-wrap: balance;
     }
 
     .not-found-action {
