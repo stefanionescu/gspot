@@ -60,7 +60,7 @@ function explainSubject(session: Session | undefined, { subject, cwd }: { subjec
     const file = explainPath(session, subject, cwd);
     if (file !== undefined && subject.startsWith('.')) return file;
     const explanation =
-        explainCheck(session, subject) ??
+        explainCheck(session, subject, cwd) ??
         explainSetting(session, subject) ??
         explainConfiguration(session, subject) ??
         file;

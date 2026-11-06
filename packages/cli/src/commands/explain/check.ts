@@ -16,6 +16,7 @@ import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
 import { listChecksById, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { formatArgumentSelector } from '#cli/settings/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
 import { findToolName, getTool } from '#cli/tools/pins.ts';
@@ -29,8 +30,9 @@ import type {
 import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
 import type { RuleExplanation, ScopeCheck, Session } from '#cli/types/tools.ts';
 
-function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
-    return (session?.settings.ignore ?? [])
+function listCheckIgnores(session: Session | undefined, checkId: string, cwd: string): CheckIgnore[] {
+    if (session === undefined) return [];
+    return session.settings.ignore
         .filter((ignore) => ignore.check === checkId)
         .map(({ rule, paths, reason }) => ({
             rule,
@@ -39,7 +41,10 @@ function listCheckIgnores(session: Session | undefined, checkId: string): CheckI
             command: [
                 `gspot unignore ${quoteArgument(checkId)}`,
                 ...(rule === undefined ? [] : [`--rule ${quoteArgument(rule)}`]),
-                ...(paths === undefined ? [] : paths.flatMap((path) => ['--paths', quoteArgument(path)])),
+                ...(paths ?? []).flatMap((path) => [
+                    '--paths',
+                    quoteArgument(formatArgumentSelector(session.root, cwd, path)),
+                ]),
             ].join(' '),
         }));
 }
@@ -48,6 +53,7 @@ function buildCheckFacts(
     check: Check,
     configuration: Configuration | undefined,
     session: Session | undefined,
+    cwd: string,
 ): CheckFacts {
     const reference = describeCheck(
         check,
@@ -71,7 +77,7 @@ function buildCheckFacts(
         settings,
         ruleFiles,
         crashPattern,
-        ignores: listCheckIgnores(session, check.id),
+        ignores: listCheckIgnores(session, check.id, cwd),
         minVersions: reference.minVersions,
         turnOff: reference.turnOff,
     };
@@ -210,9 +216,10 @@ function buildCheckOrigin(
 function buildCheckExplanation(
     found: Pick<ScopeCheck, 'check' | 'configuration'>,
     session: Session | undefined,
+    cwd: string,
 ): CheckExplanation {
     const { check, configuration } = found;
-    const described = buildCheckFacts(check, configuration, session);
+    const described = buildCheckFacts(check, configuration, session, cwd);
     const selected =
         session === undefined || configuration === undefined
             ? null
@@ -242,15 +249,16 @@ Explain a shipped check or a command check.
 
 @param session the repository, or undefined outside one.
 @param checkId the check ID to explain.
+@param cwd the folder where the command starts, which the printed commands start from.
 @returns undefined when no check has the ID.
 */
-export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
+export function explainCheck(session: Session | undefined, checkId: string, cwd: string): Explanation | undefined {
     const commandCheck = session?.settings.commandChecks[checkId];
     const found: Pick<ScopeCheck, 'check' | 'configuration'> | undefined =
         listChecksById(readConfigurations().values()).get(checkId) ??
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;
-    const facts = buildCheckExplanation(found, session);
+    const facts = buildCheckExplanation(found, session, cwd);
     return { kind: 'check', subject: checkId, text: formatCheckExplanation(facts), facts };
 }
 

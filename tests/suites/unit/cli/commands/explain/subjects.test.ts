@@ -1,10 +1,11 @@
-import { unlink, writeFile } from 'node:fs/promises';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { parseBashScript } from '#cli/parsers/code/bash.ts';
 import { pathOutputSchema } from '#cli/schemas/commands.ts';
 import { getTool } from '#cli/tools/pins.ts';
 import {
@@ -242,6 +243,30 @@ test('explain names the ignores of a check and the removals of a configuration, 
     expect(configuration.stdout).toEndWith(
         'Removed in this repository: The project keeps no Markdown files.  (undo: gspot add markdown)\n',
     );
+});
+
+test('the undo command of an ignore, printed in a subfolder, removes the ignore from there', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            tables: [
+                '[[ignore]]',
+                'check = "bash/shellcheck"',
+                'paths = ["scripts/entry.sh"]',
+                'reason = "The script splits words on purpose."',
+                '',
+            ].join('\n'),
+        }),
+        'scripts/entry.sh': CLEAN_BASH_SCRIPT,
+    });
+    const folder = join(sandbox.path, 'scripts');
+    const explained = await runGspot(folder, ['explain', 'bash/shellcheck', '--json']);
+    const { ignores } = JSON.parse(explained.stdout) as { ignores: Array<{ command: string }> };
+    const command = ignores[0]?.command ?? '';
+    expect(command).toBe('gspot unignore bash/shellcheck --paths entry.sh');
+    const parsed = await parseBashScript(command);
+    const removed = await runGspot(folder, parsed.commands[0]!.arguments as string[]);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('[[ignore]]');
 });
 
 test('the explanation of gspot/weakenings prints no ignore that gspot refuses', async () => {

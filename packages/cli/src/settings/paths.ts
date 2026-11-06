@@ -1,5 +1,5 @@
 import { statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { z } from 'zod';
 
@@ -8,7 +8,7 @@ import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { convertToPosixPath, escapeGlob } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
 
@@ -134,4 +134,18 @@ export function buildArgumentPaths(root: string, cwd: string, paths: string[] | 
             });
         }
     });
+}
+
+/**
+Write a selector of gspot.toml as the path to type in the calling folder, which buildArgumentPaths reads back.
+
+@param root the repository root.
+@param cwd the command folder.
+@param selector the selector, rooted in the repository, which may start with an exclusion mark.
+*/
+export function formatArgumentSelector(root: string, cwd: string, selector: string): string {
+    const isNegative = selector.startsWith('!');
+    const absolute = join(root, isNegative ? selector.slice(1) : selector);
+    const path = convertToPosixPath(relative(cwd, absolute)) || '.';
+    return isNegative ? `!${path}` : path;
 }
