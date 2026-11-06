@@ -35,10 +35,13 @@ function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
             warning: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
             error: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
         },
-        cyclomatic_complexity: {
-            warning: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
-            error: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
-        },
+        // No limit setting applies at level basic, so the rule keeps SwiftLint's default there.
+        ...(planned.level === 'all' && {
+            cyclomatic_complexity: {
+                warning: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
+                error: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
+            },
+        }),
         closure_body_length: {
             warning: getLimit(planned.scope.settings, 'max_closure_lines', 'swift'),
             error: getLimit(planned.scope.settings, 'max_closure_lines', 'swift'),

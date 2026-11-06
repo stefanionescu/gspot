@@ -132,6 +132,16 @@ test('a SwiftLint rule explains from the installed tool, and a name it does not 
     });
 });
 
+test('explain names the limit that writes the options of the SwiftLint complexity rule', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['swift']) });
+    using _fakes = await fakeSwiftlint(sandbox.path, () => ({ stdout: 'Cyclomatic Complexity\n' }));
+    const explained = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'cyclomatic_complexity', '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(JSON.parse(explained.stdout)).toMatchObject({
+        changeOptions: 'gspot set limits.max_cyclomatic_complexity <value>',
+    });
+});
+
 test.each([
     { failure: 'a signal', result: { end: 'failed', signal: 'SIGABRT', stderr: 'Could not read configuration' } },
     { failure: 'exit code 127', result: { code: 127, stderr: 'error while loading shared libraries' } },

@@ -192,10 +192,9 @@ export const LIMIT_SUPPRESSION_CASES = [
     },
     {
         configuration: 'swift',
-        name: 'max_cyclomatic_complexity',
+        name: 'cyclomatic_complexity',
         file: 'Source.swift',
-        directive:
-            '// swiftlint:disable max_cyclomatic_complexity // reason: The external interface fixes this statement.',
+        directive: '// swiftlint:disable cyclomatic_complexity // reason: The external interface fixes this statement.',
         code: 'let value = 1',
         rule: 'swiftlint-limit',
         message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',

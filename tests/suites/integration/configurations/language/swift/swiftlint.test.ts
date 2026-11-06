@@ -25,6 +25,16 @@ import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
+const BRANCHING_SOURCE = `/// Counts the matches of a sample value.
+public func matches(_ value: Int) -> Int {
+    var total = 0
+    if value == 1 { total += 1 }
+    if value == 2 { total += 1 }
+    if value == 3 { total += 1 }
+    return total
+}
+`;
+
 const REASON = 'The generated parser keeps its long lines.';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
@@ -177,6 +187,35 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
         expect(findings.filter((finding) => finding.rule_id === 'function_parameter_count')).toMatchObject(
             maximum === defaultMaximum ? [scenario.finding] : [],
         );
+    },
+);
+
+const COMPLEXITY_LEVELS = [
+    {
+        level: 'all',
+        findings: [{ line: 2, reason: 'Function should have complexity 2 or less; currently complexity is 3' }],
+    },
+    { level: 'basic', findings: [] },
+] as const;
+
+test.skipIf(!hasToolBuild('swiftlint')).each([...COMPLEXITY_LEVELS])(
+    'SwiftLint at level $level takes every generated rule name, and level all applies the complexity limit',
+    async ({ level, findings: expected }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['swift'], {
+                level,
+                tables: '[limits.swift]\nmax_cyclomatic_complexity = 2\n',
+            }),
+            'Value.swift': BRANCHING_SOURCE,
+        });
+        await applyGeneratedFiles(sandbox.path);
+        const result = await runCommand(
+            ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
+            { cwd: sandbox.path },
+        );
+        expect(result.stderr).toBe('');
+        const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
+        expect(findings.filter((finding) => finding.rule_id === 'cyclomatic_complexity')).toMatchObject([...expected]);
     },
 );
 
