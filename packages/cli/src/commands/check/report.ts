@@ -255,10 +255,16 @@ Format the check lines, the ignores, and the summary of a run.
 @param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
 @param options.canceled whether a signal stopped the run, so it ends without its exit code.
 @param options.setup the milliseconds from the start of the run to the first check, which --verbose prints.
+@param options.startCommand the command to write in place of gspot, when gspot is not on the PATH.
 */
 export function formatRunReport(
     report: RunReport,
-    { verbose, canceled = false, setup }: { verbose: boolean; canceled?: boolean; setup?: number },
+    {
+        verbose,
+        canceled = false,
+        setup,
+        startCommand,
+    }: { verbose: boolean; canceled?: boolean; setup?: number; startCommand?: string | undefined },
 ): string {
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
@@ -270,6 +276,9 @@ export function formatRunReport(
     lines.push(
         ...formatMissingChecks(checks),
         ...report.notes.map((note) => `note     ${note}`),
+        ...(report.exitCode === 0 || startCommand === undefined
+            ? []
+            : [`note     To run the lines above, write ${startCommand} in place of gspot.`]),
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report),

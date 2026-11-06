@@ -22,7 +22,8 @@ failed   format/prettier  2 findings
 Each failed check starts with its status, its ID, and its number of findings, and when the check runs in a
 [scope](/start/concepts/#scopes), the scope path comes before the ID. Each finding gives the file, the line and column,
 the lint rule, and the message. `help:` says what to do and names the `gspot explain` command of the check, `fix:` runs
-the fixers of that check on the files that it names, and `rerun:` runs that check again alone.
+the fixers of that check on the files that it names, and `rerun:` runs that check again alone. When `gspot` is not on your
+`PATH`, a failed run also names the command to write in its place, such as `npm exec --no -- gspot`.
 
 The report shows the first 200 findings of each check, and `--verbose` shows them all.
 

@@ -9,11 +9,12 @@ import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/system/paths.ts';
+import { findProgram } from '#cli/system/programs.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import type { CheckOptions, RevisionSource } from '#cli/types/commands/reports.ts';
 import type { RunSelection } from '#cli/types/engine/plan.ts';
-import type { RunOptions, RunReport } from '#cli/types/engine/run.ts';
+import type { RunOptions, RunReport, RunResult } from '#cli/types/engine/run.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -97,6 +98,18 @@ async function warnMissingHooks(session: Session, revision: RevisionSource | und
     for (const line of lines) printWarning(line);
 }
 
+function formatTreeReport(
+    session: Session,
+    { report, fixes }: RunResult,
+    { verbose, canceled }: { verbose: boolean; canceled: boolean },
+): string {
+    const { name, command } = session.startRunner;
+    // mise exec puts gspot on the PATH of this run only, so finding it there says nothing about the terminal of the user.
+    const isOnPath = name !== 'mise' && findProgram('gspot') !== undefined;
+    const reportText = formatRunReport(report, { verbose, canceled, startCommand: isOnPath ? undefined : command });
+    return fixes ? `${formatFixes(fixes).join('\n')}\n${reportText}` : reportText;
+}
+
 async function readSelection(
     session: Session,
     options: CheckOptions,
@@ -154,8 +167,7 @@ export async function runTreeCheck(
         if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
         if (note !== undefined) result.report.notes.push(note);
         result.report.notes.push(...onlyNotes.map((id) => formatLevelNote(id, result.report, session)));
-        const reportText = formatRunReport(result.report, { verbose: options.verbose, canceled: cancelSignal.aborted });
-        const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
+        const text = formatTreeReport(session, result, { verbose: options.verbose, canceled: cancelSignal.aborted });
         return { text, json: result.report, exitCode: result.report.exitCode };
     } finally {
         for (const resource of resources.toReversed()) resource[Symbol.dispose]();
