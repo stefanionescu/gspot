@@ -33,7 +33,7 @@ import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readIndexTree } from '#cli/repository/revisions/files.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
@@ -129,10 +129,9 @@ function readOnlyStage({ only, hook }: CheckFlags): CheckOptions['stage'] {
 }
 
 // The commit-msg hook passes an absolute path, and its `$PWD` may reach the repository through a symlink.
-function formatMessageArgument(typed: string, { root, cwd }: CommandLocation): string {
+function formatMessageArgument(typed: string, { cwd }: CommandLocation): string {
     if (!isAbsolute(typed) || !existsSync(typed)) return typed;
-    const path = realpathSync(typed);
-    return isInside(relative(root, path)) ? convertToPosixPath(relative(realpathSync(cwd), path)) : typed;
+    return convertToPosixPath(relative(realpathSync(cwd), realpathSync(typed)));
 }
 
 function parseCheckFlags(

@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
 
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -57,6 +58,29 @@ test.each([{ isAbsolute: false }, { isAbsolute: true }])(
         expect(result.stdout).not.toContain(sandbox.path);
     },
 );
+
+test('a failed commit-msg check in a linked worktree prints no absolute path', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
+    await using folder = await testdir();
+    runGitStep(sandbox.path, ['add', 'gspot.toml']);
+    runGitStep(sandbox.path, ['commit', '-m', 'test: add settings']);
+    const linked = join(folder.path, 'linked');
+    runGitStep(sandbox.path, ['worktree', 'add', '-b', 'linked', linked]);
+    const message = join(sandbox.path, '.git/worktrees/linked/COMMIT_EDITMSG');
+    await writeFile(message, 'fix(cli): retain the argument of C3-BUG-019\n');
+    const result = await runGspot(linked, [
+        'check',
+        '--hook',
+        'commit-msg',
+        '--only',
+        'commits/references',
+        '--',
+        message,
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.stdout).toContain('.git/worktrees/linked/COMMIT_EDITMSG\n');
+    expect(result.stdout).not.toContain(sandbox.path);
+});
 
 test('an unreadable commit message file is named as typed', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
