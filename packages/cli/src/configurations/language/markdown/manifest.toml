@@ -36,7 +36,6 @@ fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config_file:mar
 help = "Run the `fix:` command that the report prints for the rules that fix themselves; read the rule name for the rest."
 name = "markdownlint"
 output = { format = "json", fields = { file = "fileName", line = "lineNumber", column = "errorRange.0", rule = "ruleNames.0", message = ["ruleDescription", "errorDetail", "errorContext"], fixable = "fixInfo" } }
-run_in_copy = true
 stage = "commit"
 summary = "Checks the headings, lists, and spacing of every Markdown file."
 why = "Consistent Markdown renders the same in every viewer."
