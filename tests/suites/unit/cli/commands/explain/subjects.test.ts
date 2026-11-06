@@ -243,3 +243,11 @@ test('explain names the ignores of a check and the removals of a configuration, 
         'Removed in this repository: The project keeps no Markdown files.  (undo: gspot add markdown)\n',
     );
 });
+
+test('the explanation of gspot/weakenings prints no ignore that gspot refuses', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['explain', 'gspot/weakenings']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).not.toContain('--paths');
+    expect(result.stdout).toContain('gspot ignore gspot/weakenings --rule');
+});

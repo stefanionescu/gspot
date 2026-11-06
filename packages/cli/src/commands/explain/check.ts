@@ -111,8 +111,10 @@ function formatCheckExplanation(facts: CheckExplanation): string {
         ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer.`),
         '',
         'Ignore it only with a reason your team accepts.',
-        `Ignore it for some paths: ${facts.turnOff.paths}`,
-        ...(facts.turnOff.rule === null ? [] : [`Ignore one of its lint rules: ${facts.turnOff.rule}`]),
+        ...[
+            { label: 'Ignore it for some paths', command: facts.turnOff.paths },
+            { label: 'Ignore one of its lint rules', command: facts.turnOff.rule },
+        ].flatMap(({ label, command }) => (command === null ? [] : [`${label}: ${command}`])),
         ...(facts.runInCopy === true ? [RUN_IN_COPY_MESSAGE] : []),
         ...(settings.length === 0
             ? []

@@ -234,26 +234,26 @@ its name after its check, such as `gspot explain javascript/eslint no-console --
 
 ### `check`
 
-| Field           | Meaning                                                                                      |
-| --------------- | -------------------------------------------------------------------------------------------- |
-| `check`         | The ID, such as `python/ruff`.                                                               |
-| `configuration` | The configuration of a shipped check, or `null`.                                             |
-| `command`       | The command of a `[[command_check]]`, or `null`.                                             |
-| `paths`         | The paths of a `[[command_check]]`, or `null`.                                               |
-| `stage`         | The stage that runs the check.                                                               |
-| `level`         | The level that turns the check on.                                                           |
-| `summary`       | What the check looks for.                                                                    |
-| `why`           | Why it matters.                                                                              |
-| `help`          | How to fix a finding.                                                                        |
-| `condition`     | What must hold for the check to run, or `null`.                                              |
-| `crashPattern`  | The output that marks a crash of the tool, or `null`.                                        |
-| `runInCopy`     | Whether the check runs on a copy of the files, or `null`.                                    |
-| `minVersions`   | The oldest version of each runtime or tool that the check needs.                             |
-| `turnOff`       | The `gspot ignore` commands: `paths` for some paths, and `rule` for one lint rule or `null`. |
-| `settingNames`  | The settings that change the check.                                                          |
-| `ruleFiles`     | The rule files that describe what the check enforces.                                        |
-| `selected`      | Whether a scope selects the configuration of the check, or `null`.                           |
-| `ignores`       | The ignores of `gspot.toml` that name the check, with `reason` and `command`.                |
+| Field           | Meaning                                                                                            |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| `check`         | The ID, such as `python/ruff`.                                                                     |
+| `configuration` | The configuration of a shipped check, or `null`.                                                   |
+| `command`       | The command of a `[[command_check]]`, or `null`.                                                   |
+| `paths`         | The paths of a `[[command_check]]`, or `null`.                                                     |
+| `stage`         | The stage that runs the check.                                                                     |
+| `level`         | The level that turns the check on.                                                                 |
+| `summary`       | What the check looks for.                                                                          |
+| `why`           | Why it matters.                                                                                    |
+| `help`          | How to fix a finding.                                                                              |
+| `condition`     | What must hold for the check to run, or `null`.                                                    |
+| `crashPattern`  | The output that marks a crash of the tool, or `null`.                                              |
+| `runInCopy`     | Whether the check runs on a copy of the files, or `null`.                                          |
+| `minVersions`   | The oldest version of each runtime or tool that the check needs.                                   |
+| `turnOff`       | The `gspot ignore` commands, each or `null`: `paths` for some paths, and `rule` for one lint rule. |
+| `settingNames`  | The settings that change the check.                                                                |
+| `ruleFiles`     | The rule files that describe what the check enforces.                                              |
+| `selected`      | Whether a scope selects the configuration of the check, or `null`.                                 |
+| `ignores`       | The ignores of `gspot.toml` that name the check, with `reason` and `command`.                      |
 
 ### `lint-rule`
 

@@ -79,7 +79,7 @@ export type CheckDescription = {
     systems: string[] | undefined;
     needs: NonNullable<Check['needs']>;
     minVersions: Record<string, string>;
-    turnOff: { paths: string; rule: string | undefined };
+    turnOff: { paths: string | null; rule: string | undefined };
     suppression: Tool['suppression'];
 };
 

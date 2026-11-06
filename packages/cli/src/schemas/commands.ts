@@ -166,7 +166,7 @@ export const checkExplanationSchema = z.strictObject({
     crashPattern: z.string().nullable(),
     runInCopy: z.boolean().nullable(),
     minVersions: z.record(z.string(), z.string()),
-    turnOff: z.strictObject({ paths: z.string(), rule: z.string().nullable() }),
+    turnOff: z.strictObject({ paths: z.string().nullable(), rule: z.string().nullable() }),
     settingNames: z.string().array(),
     ruleFiles: z.string().array(),
     selected: z.boolean().nullable(),

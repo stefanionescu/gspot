@@ -1,4 +1,5 @@
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
+import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -55,7 +56,10 @@ export function describeCheck(
                 .flatMap((pin) => (pin.min_version === undefined ? [] : [[pin.name, pin.min_version]])),
         ),
         turnOff: {
-            paths: `gspot ignore ${quoteArgument(check.id)} --paths "<path>" --reason "<why>"`,
+            paths:
+                check.id === WEAKENINGS_CHECK
+                    ? null
+                    : `gspot ignore ${quoteArgument(check.id)} --paths "<path>" --reason "<why>"`,
             rule: formatRuleIgnore(check, explanations),
         },
         suppression: tool?.suppression,

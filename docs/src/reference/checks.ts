@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 
-import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
     CHECK_FIX_MESSAGE,
@@ -68,7 +67,7 @@ function formatSuppressionComment(suppression: Suppression | undefined): string 
 function formatTurnOff(reference: CliReference['checks'][number]): string {
     const { check, turnOff, suppression } = reference;
     const commands = [
-        ...(check.id === WEAKENINGS_CHECK ? [] : [turnOff.paths]),
+        ...(turnOff.paths === null ? [] : [turnOff.paths]),
         ...(turnOff.rule === undefined ? [] : [turnOff.rule]),
     ];
     const comment =
