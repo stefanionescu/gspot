@@ -1,5 +1,396 @@
 # Changelog
 
+## 0.4.0
+
+gspot 0.4.0 removes `gspot baseline`, `gspot check --stage`, and `gspot check --changed`, so a hook script or CI line
+from 0.3.9 stops until you change it. Several `gspot.toml` keys and `[[ignore]]` records stop every command with exit 2,
+and generated configs move to a shorter path. A repository that used a baseline sees its old findings again. A commit
+now reports old findings only in the files it touches. `gspot check --fix` no longer rewrites SQL, spelling, or
+environment files, and `gspot scan` no longer runs your tests or your build. Read the upgrade steps before you install.
+
+### Upgrade from 0.3.9
+
+1. Install 0.4.0 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.4.0`. With a
+   mise pin, raise the version in `mise.toml` and run `mise install`. Each commit now stops on
+   `gspot check --stage was removed` until step 3.
+2. Edit `gspot.toml` by hand, because `gspot set` stops on the same errors. `gspot install` names only some bad keys in
+   each run, so repeat it until it stops naming them.
+    - Rename each `limits.min_function_statements` and `limits.<language>.min_function_statements` to
+      `trivial_function_statements`, with the same value.
+    - Delete `type-enum` and `scope-enum` from `tools.commitlint.rules`, and set `commits.types` or `commits.scopes`.
+    - Give a `[[command_check]]` with the ID `commit` or `push` a new ID.
+    - Delete each `[[ignore]]` of `gspot/baseline`, `bash/doc-comments`, or `swift/doc-comments`. Rename
+      `ansible/ansible-lint-production` to `ansible/ansible-lint`.
+    - Delete each `.gspot/rules/` entry for `NODE.md`, `BUN.md`, `JEST.md`, `VITEST.md`, `PYTEST.md`, `PACKAGING.md`, or
+      `YAML.md` from `rule_files.exclude`.
+    - With a `[licenses]` table or a `[[licenses.allowed_package]]` record and no `licenses` configuration, run
+      `gspot add licenses`, or delete them.
+    - Delete `jsdoc/require-jsdoc` and `jsdoc/require-description` from `tools.eslint.rules`. No command names these,
+      and `javascript/eslint` exits 2 on them after step 3. Breaking changes says how to keep them.
+3. Run `gspot install`. It writes the new hooks, moves the generated configs, and deletes the old tree and the removed
+   rule files. A hook manager that calls `.gspot/hooks/*` needs no change.
+4. Delete `gspot.baseline.json`. `format/prettier` can report the file if you keep it, because `.prettierignore` stops
+   listing it.
+5. Replace the old flags in your scripts and CI jobs. `--stage commit` becomes `--only commit`, `--stage push` becomes
+   `--only push`, and `--changed` becomes `--base origin/main`, with your default branch. So
+   `gspot check --changed --stage push` becomes `gspot check --base origin/main --only push`. The generated CI job needs
+   no edit.
+6. Drop the group folder from each path that you wrote by hand to a generated config, such as an editor setting or a CI
+   script. `.gspot/configurations/language/javascript/knip.json` becomes `.gspot/configurations/javascript/knip.json`.
+7. With shell scripts, run `gspot check --only bash/shfmt`. If it reports a script with another indent, run
+   `gspot check --fix --only bash/shfmt`. Or write a `[[format.override]]` with the extensions you have, such as
+   `paths = ["**/*.sh"]` and `indent_width = 4`, then run `gspot install`.
+8. Update each script that reads `--json` output, with the JSON output changes below.
+9. Stage `gspot.toml`, your package manifest and lockfile, `.gspot/`, and the other generated files, then commit them
+   together. The hook reads only what you staged, so old findings in other files do not stop it. A blank line left by a
+   hand edit fails `data-files/taplo-format`, and the report prints the fix.
+10. Run `gspot check --base origin/main` before you push. The upgrade commit changes `gspot.toml` and `.gspot/`, so this
+    run and the CI run read every file and list what the baseline hid. Fix each finding, or run
+    `gspot ignore <check> --rule <rule> --paths <old files> --reason "<why>"` and commit. A check that lists no rules
+    takes `--paths` alone. If `gspot/detected-configurations` fails, run the `gspot add` line that it prints. Then
+    push. On this push, `gspot/weakenings` prints `compared no settings` if the old `gspot.toml` held a key that step 2
+    changed.
+11. In each other clone, install the dependencies, such as with `npm ci`, and run `gspot install`. Until then its hooks
+    stop with `This repository pins gspot 0.4.0; this is gspot 0.3.9.`
+
+### Breaking changes
+
+Commands and flags:
+
+- `gspot baseline`, with `--prune` and `--only`, the check `gspot/baseline`, and the file `gspot.baseline.json` are
+  gone. Each form exits 2 and says to fix old findings or ignore them with a reason. Old findings come back in
+  `gspot check`, in commits that touch their files, and in push checks. (ded0427, 1f7eeb6)
+- `gspot check --stage <commit|push>` is gone, in the `--stage=push` form too. It exits 2 and names
+  `gspot check --only <commit|push>`. A hook script from 0.3.9 stops the same way until `gspot install`. (84432d4,
+  81abc4b, 1f7eeb6)
+- `gspot check --changed` is gone. It exits 2 and names `--base origin/main` and `--base origin/HEAD`. When a clone
+  lacks `origin/HEAD`, the error says to run `git remote set-head origin --auto`. (99a0bb0, 4ce3522)
+- `gspot check --only commit` and `--only push` run that stage at your level, and any other name in the list exits 2.
+  (81abc4b)
+- `gspot scan --markdown` is gone: run `gspot scan`, and put its report in a code fence.
+  `gspot init --no-configurations` is gone: run `gspot init --configurations <one name>`, then
+  `gspot remove <each name> --reason "<why>"`. Each exits 2 and prints its replacement. (1ee3d57)
+- A bare `gspot unignore` exits 2, where it deleted every path ignore without asking. Name a check, or pass `--paths`.
+  (0da77ea)
+- `add`, `remove`, `set`, `unset`, `ignore`, and `unignore` exit 2 when the repository pins another gspot version, as
+  `check` and `install` did. `gspot doctor` prints the mismatch and exits 1. (46cf966)
+- From a subfolder, a `--scope` value that starts with `.` exits 2, because `--scope .` named the repository root. Write
+  the path from the root. (c16f102)
+- `gspot doctor` no longer suggests configurations or lists lint commands. `gspot/detected-configurations` and
+  `gspot/conflicting-configs` report them. (54645ef)
+- `gspot scan` exits 2 in a repository that tracks no file, and says to run `git add`. It reported 0 files and 0
+  findings. (9e45d2b)
+- `gspot set tools.<tool>.rules` exits 2 on a rule that the tool does not have, with
+  `gspot does not know rule <rule> of <check>.` It wrote the value before. (35d24d1, 7d2d4da)
+
+`gspot.toml`:
+
+- `limits.min_function_statements` and each `limits.<language>.min_function_statements` stop every command with exit 2.
+  Write `trivial_function_statements`, with the same value. The error names the new key. (c5d4756)
+- `type-enum` and `scope-enum` in `tools.commitlint.rules` stop every command with `Set commits.types instead.` or
+  `Set commits.scopes instead.` `gspot init` lists one from a replaced commitlint config as dropped. (ea85d9b)
+- A `[licenses]` table or a `[[licenses.allowed_package]]` record with no `licenses` configuration stops every command,
+  because its check never ran. Run `gspot add licenses`, or delete them. `gspot remove licenses` now deletes both.
+  (a600c5e, 5fefb2c)
+- A `[[command_check]]` with the ID `commit` or `push` stops every command, because `--only` reads those names as
+  stages. Give it a new ID. (81abc4b)
+- An `[[ignore]]` of `gspot/baseline`, `bash/doc-comments`, `swift/doc-comments`, or `ansible/ansible-lint-production`
+  stops every command with `There is no check called <check>.` `--only` and `--skip` refuse them too. (ded0427, b6d7a1c,
+  95aa5a0)
+- Options for `jsdoc/require-jsdoc` or `jsdoc/require-description` in `tools.eslint.rules` stop `javascript/eslint`,
+  with `gspot does not run jsdoc/require-jsdoc at level <level>, so it takes no options.` Delete them. (76e32b6,
+  01ecf72)
+
+JSON output:
+
+- In `gspot check`, `baselined` is gone, and `checks[].command` comes only with `--verbose`. `comparison` and `fixes`
+  are always present, and `null` when empty. So is `canceled` in `gspot check --hook pre-push`. (ded0427, 00767f3,
+  72aa622)
+- `skippedCount` counts each check once and leaves out a check that another scope ran. In `gspot scan`, `totals.checks`
+  counts each check once. (292577a)
+- `gspot list` gives the `cause` `replaced` to a nested scope that another run covers. (10638d7, f00ad95, 1910509)
+- A finding `file` outside the checked folder is no longer absolute. A file outside the repository is relative to the
+  root, such as `../shared/a.ts`, and a package that a copy run reports starts at the root. (94c1c04)
+- In `gspot doctor`, `suggestions` is gone and `pin` is new. `ci.provider`, `ci.file`, `hooks.tool`, and `hooks.lines`
+  are always present. (54645ef, 46cf966, 72aa622)
+- An edit command that changes nothing prints `written`, `updated`, `deleted`, and `unchanged` as empty lists. (72aa622)
+- `gspot explain` gives each optional key of its check, lint rule, setting, and file forms the value `null`.
+  `turnOff.paths` is `null` for `gspot/weakenings`, because that ignore exits 2. (72aa622, c42a3af)
+- In `gspot scan`, `leftOut` is new, and each `categories` item adds `rules`. Its `examples` now come from the largest
+  rule. (5a7efb8, a69bb60)
+- In `plan.carryover`, an `.editorconfig` row now names `indent_size`, `max_line_length`, `indent_style`, `quote_type`,
+  and `sections`, in place of the Prettier words such as `tabWidth`. (292577a)
+- The `message` of a `gspot.toml` error ends with a line that names the settings page. (a0a4b37)
+- No command prints the error code `copy`, because the refusals that raised it are gone. (c270f3e, e4a1578)
+
+Text output:
+
+- Without `--verbose`, text output holds no absolute path. A failed commit message prints its rerun path from the
+  current folder, such as `.git/COMMIT_EDITMSG`, and a note prints paths from the repository root. (00767f3, dc14b64, 4cfe3ac)
+- The summaries of `gspot check` and `gspot scan` count a check once, under its worst result, so a count in a repository
+  with scopes gets smaller. (292577a)
+- A refused import says `from rule "features"` where it said `from import-rule:features`. (c0ce02c)
+- A `help:` line ends with `Details: gspot explain <check>`. (35d24d1, 5ec3cee)
+- `gspot list` prints `on in . and 2 scopes` where it named each scope, and `skipped (replaced)` for a covered test
+  scope. (e5d58d6, 10638d7)
+- `gspot list settings` heads its column `needs a reason when`, with `you add items`, `you lower it`, or `you raise it`.
+  The JSON `reasonFor` values stay. (4da5cc3)
+- Each `gspot.toml` error ends with `https://generativespotting.com/reference/gspot-toml/ lists every setting.` An
+  unknown key named `gspot list settings`, which stops on the same key, and other errors named no page. (a0a4b37,
+  4ce3522)
+- `gspot unignore` prints `Removed 1 ignore of <check> for <path>`. (8595567)
+- `gspot explain` prints `Ignore it only with a reason your team accepts.` where it told the reader to ask the user.
+  (048b030)
+
+Generated files and paths:
+
+- Generated configs move from `.gspot/configurations/<group>/<configuration>/` to
+  `.gspot/configurations/<configuration>/`. `gspot install` writes the new tree and deletes the old one. A path that you
+  wrote by hand needs its group folder removed. (d890afd)
+- npm, pnpm, and Bun hooks start gspot from `node_modules/.bin`, and need `node` on the `PATH` that your Git client
+  gives hooks. They name that `PATH` when `node` is missing. Yarn and mise keep their launchers. (89dfa7e)
+- `.editorconfig` no longer takes an indent from your `.sh` and `.bash` files, so its `[*.{sh,bash}]` section goes and
+  `bash/shfmt` reports a script with another indent. `gspot init` records that indent as a `[[format.override]]`.
+  (437dabf)
+- A `.pre-commit-config.yaml`, a Lefthook file, or a `simple-git-hooks` key counts as installed hooks only when
+  `.git/hooks` holds an executable hook. Otherwise `gspot install` sets `core.hooksPath`, so commits start to run the
+  checks. (cbe9910)
+- In `.gitattributes`, `.gspot/hooks/**` is `linguist-generated=false`, and the CI workflow leaves the block, so both
+  show in a review. The generated GitHub workflow no longer gives `MISE_GITHUB_TOKEN` to its install step. (17eac17)
+- The block in `AGENTS.md` is one sorted list. It says "Before you finish a change, stage it and run
+  `gspot check --staged --only commit`." (64e53a6)
+
+Checks that newly fail:
+
+- `structure/empty-folders` runs at every level and fails a commit on a folder that holds no files, directly or through
+  its subfolders. A folder that holds only `.gitkeep` or `.keep` fails a commit only when the commit touches that file.
+  Delete the folder. (e60245b, 09f0e2d)
+- `structure/import-rules` now reads the types that a Swift file names, so a repository with `[[import_rule]]` on Swift
+  sees new findings for a crossing inside one target. Move the code, or change the `[[import_rule]]`. (0d6e1c2)
+- At level `all`, SwiftLint now reads `limits.swift.max_cyclomatic_complexity`, where gspot wrote a key that names no
+  rule. A Swift function fails above 8, where SwiftLint's default of 10 applied. Level `basic` keeps that default. At
+  every level, `gspot/suppressions` reports a `swiftlint:disable` of `cyclomatic_complexity`. Split the function, or
+  raise the limit with a reason. (9339592, 097f82c)
+- A `package.json` with only gspot's tools plus `vitest` or `wrangler` now selects that configuration and `javascript`,
+  and a nested one becomes a scope. `gspot/detected-configurations` fails until you run `gspot add vitest` or
+  `gspot add cloudflare`, with `--scope` for a nested package, then `gspot install`, or `gspot remove` with a reason.
+  The Vitest tests of such a repository then run at push. (6b7ddc0)
+- A full `secrets/gitleaks-staged` scan now reports a secret in a tracked file that an ignore pattern names, and leaves
+  out a file that `.git/info/exclude` ignores. It stops reading submodules. (bf83786)
+- A commit that only deletes a file now runs `docs/missing-paths`, `site/build`, and the other checks that an edit runs.
+  That includes a deleted task in `mise-tasks`. (a337c75, 6563d98)
+
+Checks that stop running or report less:
+
+- A commit reads only what you staged, so a staged `gspot.toml` no longer runs every check on every file. A
+  repository-wide check reports a finding when its file is staged or the staged change causes it. `gspot check` and a
+  push still read everything, and `--base` does when `gspot.toml` or `.gspot/` changed. (2705d6c)
+- `gspot check --fix` no longer runs `typos`, `sqlfluff`, or `dotenv-linter`, and Ruff no longer fixes `F401`. Each
+  stays a finding that you correct by hand. (f0b9547, 71f5497, 1253651, b723b14)
+- At level `basic`, ESLint and Ruff stop reporting unused suppressions, so `gspot check --fix` no longer deletes one
+  that names an `all` rule. Level `all` still reports them. (b723b14)
+- Doc comments are no longer required. `bash/doc-comments` and `swift/doc-comments` are gone, and SwiftLint's
+  `missing_docs`, `jsdoc/require-jsdoc`, `jsdoc/require-description`, and Ruff's `D100` to `D107` are off at every
+  level. At level `all`, an ESLint or Ruff suppression for one of them fails as unused, and `gspot check --fix` removes
+  it. To keep Ruff's, name each code in `tools.ruff.rules`, because a bare `D` no longer reaches them. To keep the
+  JSDoc rules, add a `[[tools.eslint.plugins]]` record with `package = "eslint-plugin-jsdoc"`. (76e32b6, b6d7a1c,
+  82da594, 9434f67)
+- With a path, `gspot check` reports only the findings in that path. A run on `src/a.ts` dropped findings in other
+  tracked files and kept those under `node_modules` or in build output, so it can now exit 0 where it exited 1.
+  `gspot check`, `gspot check .`, and the hooks still report them. (d77a34c)
+- `jsdoc/check-param-names` accepts a doc comment that leaves out some parameters, and no longer checks destructured
+  field names. It still reports a wrong name. (76e32b6, 2bb1bcb)
+- `ansible/ansible-lint` takes its profile from the generated `ansible-lint.yml`: moderate at `basic`, production at
+  `all`. An ignore written at `basic` now also applies at `all`. (95aa5a0)
+- Vitest and Jest run only where a test config sits. A package with no config leaves its tests to an enclosing scope. A
+  run leaves out each nested scope that runs its own tests, so tests run once on a push. (f00ad95, 1910509)
+- ShellCheck drops `--check-sourced`, so a staged script no longer reports the file that it sources. A sourced file with
+  no shell tag goes unchecked. (7f1178a)
+- `javascript/knip` skips a repository with no `package.json`, and no longer reports files that Git ignores. (597216e,
+  bd1c232)
+
+Removed rule files:
+
+- `TALKING.md`, `NODE.md`, `BUN.md`, `JEST.md`, `VITEST.md`, `PYTEST.md`, `PACKAGING.md`, and `YAML.md` are gone from
+  `.gspot/rules/`, and `gspot install` deletes them. A `rule_files.exclude` entry that names one stops every command,
+  and a doc of yours that names one fails `docs/missing-paths`. (64e53a6)
+
+### Known issues
+
+- When a staged file also has unstaged edits, a commit checks a copy of what you staged, and a test file that imports
+  `eslint` can get false type errors there. Stage the rest of the file, or commit it separately.
+- Node.js 22 ships an npm older than 11.19.0, which `gspot init` and `gspot install` need. On Node.js 22, run
+  `npm install --global npm@latest` first.
+- A `.gitattributes` rule above the gspot block still loses to `* text=auto eol=lf`, because `gspot install` keeps the
+  order of a block that exists. Move such a rule below the block.
+
+### Highlights
+
+#### First run
+
+- In a Swift repository on a machine without the Swift grammar, `gspot scan`, `init`, `install`, and `check` all stopped
+  with `The swift grammar is not installed. Run gspot install.`, and `gspot install` needs a `gspot.toml`. Each command
+  now downloads the grammar first, so this also fixes a new CI runner. (638a874)
+- `gspot scan` runs no tests, no build, no project install, and no check that loads project code. It lists those checks
+  under `Not run in a scan, because they run your code`. It still loads your Prettier config and runs your installed
+  ESLint, Stylelint, and TypeScript. (5a7efb8)
+- The scan report lists the five largest rules of each category with one `gspot ignore` line, and takes its examples
+  from the largest. What did not run groups by cause. A check that refuses `--rule` gets a `--paths` line. (a69bb60,
+  ea88c22)
+- The scan next steps end with committing the setup files and fixing each file as you touch it. In a mise repository
+  they start with the Node.js pin. At a pnpm workspace root the install command holds `--workspace-root`. (a69bb60,
+  d8ae8ba, 6049603)
+- `gspot init` writes only the extensions the repository tracks in `[[format.override]]` and its pyright ignore, so
+  `gspot/unmatched-paths` stops failing the setup commit on them. (94e9881, ed4dc57)
+- A `package.json` with no dependency selects nothing, unless the repository holds a JavaScript or TypeScript file. It
+  cost 200 MB of tools before. (0546834)
+- `gspot init` lists Ruff's `I` as dropped, and names a format script that calls oxfmt or dprint. A pyright include
+  stays one glob, and its Python comes from `requires-python`. (c568dfb, 0aca8e4, 31a5cf6)
+- `gspot init` keeps a sorted `devDependencies` block sorted when it pins gspot, and writes the `.gitattributes` block
+  before your rules in a new repository. (3569269, d176646)
+- A `lib` or `target` name that the bundled compiler lacks no longer stops `gspot scan` and `gspot init`. `gspot init`
+  no longer stops on the GitHub limit of 60 requests, and a failed install names `GITHUB_TOKEN`. (09cb0e9, beb643c)
+
+#### Findings that no longer report correct code
+
+- `prose/commit-message` lets a commit message say what changed, and a session link reports once, in
+  `commits/references`. (a62a84d, eee4201)
+- MD026 accepts a heading that ends with `?`, `package-json/valid-contributors` is off, and `bash/safety` accepts a
+  function named like a command and the removal of a `mktemp` folder. (61d6ff7)
+- `unicorn/require-array-sort-compare` and `unicorn/no-useless-coercion` are off, because TypeScript rules report the
+  same code. (61d6ff7)
+- `python/vulture` counts a route decorator as a use, `structure/shared-prefixes` leaves out pytest's `test_`, and the
+  heading rule accepts GitHub Actions, React Hook Form, and TanStack Query. (9339592, 820bab2)
+- A full secrets scan leaves out Git-ignored build output, `format/editorconfig-checker` leaves out TOML files that
+  Taplo formats, and `jest/tests` stops reading console output as a failed test. (9339592, afa99bc, c196d3b)
+- `docs/missing-paths` leaves out changelogs. A link that leaves the repository root reports nothing and no longer
+  crashes `docs/lychee` or `site/lychee`, and a Windows file link reads as a path. (232f176, 158b943, a0a4cef, 56d3a66)
+- `typescript/tsc` and `javascript/tsc` resolve a `types` entry from the tsconfig that names it, and a failed run names
+  a workspace package that needs a build. (95cf206, abe633e, 5ec343c)
+- A Drizzle raw SQL finding no longer tells you to turn off every lint selector in a file. A Ruff finding counts as
+  fixable only when its fix is safe. (2184cd3, ba04c5b)
+
+#### Install and hooks
+
+- A commit copies the repository only when a staged file or `gspot.toml` also has unstaged edits. It used to copy for any
+  untracked or unstaged file, so most commits ran in a copy, where a test file that imports `eslint` could get false
+  type errors. In place, type-aware ESLint can read unstaged edits in other files. `tsc` at push and ESLint in CI read
+  the real commit. (13cb6ed)
+- A copy no longer stops on a folder with no lockfile, a tracked `node_modules`, Vale settings that differ from the
+  installed packages, or two files whose names differ only by letter case. (c270f3e, e4a1578)
+- Git writes each copy with `git checkout-index`, and `markdown/markdownlint` runs in place, where it made a copy on
+  every commit that touched Markdown. (e4a1578, 945b3a1)
+- `gspot install` passes `--inexact` to `uv sync`, so it no longer deletes an installed extra of a Python project.
+  (616cad8)
+- `gspot install` always fetches the HTML grammar that `gspot/suppressions` reads, so a Markdown commit no longer exits
+  2 on a clean machine. (0667b47)
+- A private registry token survives `NPM_CONFIG_USERCONFIG` under Bun 1.4.4, and a Bun package alias that names another
+  package is refused. (0c35fd7, aa6510c)
+- The package ships `dist/THIRD-PARTY-NOTICES.md` for its bundled packages. (3189583)
+- A hook that stops on an old Node.js says that a Git client can give hooks another `PATH`. `gspot doctor` starts gspot
+  as the hooks do, so it no longer reports a working hook as broken. (38c3629, 1a014e5)
+- A pre-commit or Lefthook repository now gets a YAML block in place of a shell line, because both tools keep the push
+  input from a shell line. (cbe9910)
+
+#### Settings and messages
+
+- `gspot set --reason` works on every key that holds a reason, and keeps a reason on a value that is not weaker. On
+  `level`, `hooks.enabled`, and `rule_files.enabled` it exits 2 and names `gspot ignore gspot/weakenings`. (bef49cc)
+- `gspot set` and `unset` print `This turns off <check>.` when an empty list turns a check off, and `gspot add` prints
+  `<check> stays off until you set <setting>.` (418b1bc, 4ce3522)
+- A note says when no check reads a naming key at your level, and `gspot list settings` hides 20 naming keys that `set`
+  refuses. A configuration with no checks, such as `zustand`, says that it changes the lint rules. (bed31b7, 3292029)
+- `gspot explain` and `gspot ignore` accept each rule name that a report prints, such as a Vale built-in or a Stylelint
+  syntax error. A comment for a rule of a removed plugin says to delete it. (b3cbec8, a68206a, 158b943)
+- `gspot explain swift/swiftlint <rule>` and `gspot ignore swift/swiftlint --rule <rule>` work on macOS and Linux, where
+  both exited 2 for every rule. A failed lookup of a SwiftLint or Ruff rule now prints the check's help and exits 0.
+  (618d49d)
+- `gspot explain` on a rule of a configuration that no scope selects says `css is not selected. Run gspot add css, then
+gspot install.` where it said to run `gspot install`, which did not help. (f344f74)
+- `gspot doctor` prints the install help of a package that `gspot install` does not add, such as `pytest-cov`, and
+  counts only npm packages as `missing npm packages`. With no mise on `PATH`, it says to install mise or the tools it
+  names, and `gspot scan` and `gspot check` stop reporting `.gspot/mise.lock`. (01d9350, 07bf224)
+- The package manager floor error names the upgrade, such as `Run npm install --global npm@latest.` A version read
+  error says to run the command again, not `gspot install`. (78f971e, c601caa)
+- `gspot init --from` lists under `left out of <file>` a setting of a configuration that the new repository does not
+  select. It stopped on a `gspot.toml` that did not exist yet. (4c1cb15)
+- `gspot set` on a naming key that takes its value from another names the key to set, where it asked for a reason and
+  then refused. A hint for an unknown key prints the full key. (e84ab99)
+- The `undo:` line of `gspot explain` prints a path from the current folder, so it works from a subfolder. A file that
+  an ignore covers says `gspot unignore --paths <path>`, not a bare `gspot unignore`, which exits 2. (51f127b, 529719b)
+- `gspot --version` before a command prints the version and runs nothing. A `help:` line names the `fix:` command only
+  when one prints. The refusal of a rule's options says `gspot does not run <rule> at level <level>`. (cff449a, 4e37b57,
+  01ecf72)
+- The `origin/HEAD` error says to run `gspot check --only push` before the first push to an empty remote. The scan says
+  files differ from the format that gspot uses, and it quotes a lint command in a script. (0d5d1ae, 4484b6f, 63ccdb4)
+- A hand-written weaker value prints the form to write, where the `gspot set` line it printed stopped on the same value.
+  (b27f291)
+- `gspot unignore --paths` removes an ignore after its files are gone, and its note names the rule of an ignore that it
+  cannot narrow. `--only a b` suggests commas when `b` is a check. (4ce3522, 8595567, 77aa6e8)
+- A failed run names the command to write in place of `gspot` when `gspot` is not on your `PATH`. A fixer failure names
+  its cause and file. `gspot remove` always stores its reason. (2120645, 639f005, a1c4a79)
+- A missing system tool prints its own install help, and `Delete this line` points at the right line. The help of
+  `spelling.allowed_words` and the package manager pin message name a form that works. (3c22996, 34a7e7f, 934fe3f,
+  7d39f2d)
+- One word now means a weaker setting. `gspot explain` names the configuration that owns a setting, and a root setting
+  with `--scope` says to leave it out. (35d24d1)
+- Help lines, check text, setting descriptions, and the generated reference pages now say what a reader can do.
+  (4da5cc3, d897b45, e958bb0, 64ebcaa, b8be792, 8c0574c, 9168abb, 1cb92fb, 99ec37a, c25eca6, decda37, 71279c3, 6cf4a06,
+  360b559, 7b52c95, 0fd3b13, c256dd6)
+
+#### Speed
+
+- npm, pnpm, and Bun hooks skip starting the package manager, which cost each hook about 150 ms. (89dfa7e)
+- The fixers of one check run together, so `--fix` in a nine-scope sample took 3 s where it took 11 s. (6776be8)
+- `docs/missing-paths` runs only when a doc, a task, or a path changes, and a deleted path still starts it. (3348f73)
+- The bundle leaves out development builds of its packages, and hooks reuse the compiled `typescript` module. (57be5f6)
+
+#### Rules for coding agents
+
+- Rule text drops what a check already reports, what another rule says, and what agents already know. In a TypeScript
+  and Bash sample at level `all`, the rule files and `AGENTS.md` went from 14,226 words to 8,460. (bb629a8, 44ef7a8,
+  285bf53, f16da2d, 66d17c3, 81791d4, 86a9bb4, beb2119, 58bdc33, bc76504, a11b02d, 63454d5, 0a55cdb, b59d584, 38b43a2,
+  0996054, 28c89d2, 4201527, d25a3ab, 1b09c88, e467d4e, 272be5d, 9adb1a2, 4ff49c1, cf1a29c, 384e97f, f3c1d6a, d09dfb4,
+  ffd3bbb, 60f72b5, b3402af, 4e8cace, 1b02668, c8216e5, b60aafb, f98c0e6, 34a7404, 0214881, 8decd3b, eaecf8f, 152a3a4,
+  14b8268, 6ea48a6, d5a6f98, 2ee91f8, 5ae80ee, 2dc4d2a, 5e4b5ee, 00cd8ee, 3573cb0, b62a91c, dbede20, 656b5a1, b3a73ef,
+  f5164dd, 483c398, 74903c7, a4ccde5, ec13512, 38a8bf2, 3989ff0, 2657091, ca94f06, 76e4dc2, ecfc582, 3a9cae8, be7211a,
+  0e0a67f, 671327e, 3942ce6, ad9943b, 98defde, d95aa3a)
+- `WRITING.md` asks for connected prose and replaces its word list with one instruction. `TESTING.md` asks you to break
+  the code before a new test stays. `GIT.md` says that a `feat` or `fix` subject says what changes for a user. (7d2de05,
+  58454a7, 98992a2)
+- Some lines now say more exactly when they apply, such as which booleans take a prefix, and that a time needs a time
+  zone. `WORKING.md` says to delete an empty folder. (429bab1, 5c6cce7, 2e69c6e, b7a1c09, 1a0ace7, d838a56, 5a78b10,
+  cfdecdd, 04f64db, 9e6e70f, e60245b)
+
+#### ESLint plugin 0.2.5
+
+- `gspot/no-unexplained-test-skips` reports a skipped test in a Karma project, where it read jasmine only by its own
+  package. (e4dfeb2)
+- `gspot/prefer-readonly-static` also checks `.mts` and `.cts` files. (4d3e616)
+- `gspot/no-any-origin-messages` exempts only a handler that passes the event on, so one that reads the data with no
+  origin check now reports. (dbfedff)
+- `gspot/no-path-command` accepts any drive letter, where only `C:` counted as an explicit path. (6082b99)
+
+#### Docs
+
+- Each older section of this changelog now says what changed, what you see, and what to do. (f0acd43, fa1c6be, d1d286a,
+  87d66db)
+- `gspot init --from` has its own page, [Copy settings](https://generativespotting.com/start/copy-settings/). Page
+  descriptions and field rows that repeated a name are gone. (5c7f8f5, d056cbc, 4d18692)
+- The README and every page are rewritten in connected prose around what a reader does. The
+  [Upgrade](https://generativespotting.com/start/upgrade/) page holds the steps from 0.3.9, and `/use/baseline`
+  redirects to the Quickstart. (b3fd3b4, 4ce7401, 67846c6, 4245ffb, cbd0933, 5ac6d8e, b6c5a25, 1dad64b, 7845054,
+  9ee940f, 83d1aeb, ba86564, b6dcb3a, e1a1443, 4807496, c859780, 6aa5c6d, 23b37aa, 35b6ca9, 9836548, d2abea1, 6de6abc,
+  9fd299b, 32a64c6, fe60237, 67cc203, 129686d, 32ea351, 2f8812e, 7e98d0d, a05060a, 5f955f3, 2bac957, 50d450b, 811c23e)
+
+### Development
+
+Publishing and deployment are by hand, and the release workflow is gone. `mise run changelog` prints material, and
+`CHANGELOG.md` is written by hand. CI tests Ubuntu on each push and all systems before a release, and about 120 commits
+cut the test suite and moved slow tests to the unit suite. (8c4bacc, f1e772d, d90bdba, 3432b7a)
+
+Released 2026-11-06. [Compare with 0.3.9](https://github.com/stefanionescu/gspot/compare/v0.3.9...v0.4.0)
+
 ## 0.3.9
 
 gspot 0.3.9 removes `gspot apply`: `gspot install` now writes every generated file, and `gspot init` also installs the
