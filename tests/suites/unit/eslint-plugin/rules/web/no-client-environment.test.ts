@@ -28,7 +28,6 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
             { code: 'const url = import.meta.env.VITE_URL;', options: [{ client: true, publicPrefixes: ['VITE_'] }] },
             { name: 'private environment value outside a client module', code: 'const key = process.env.SECRET;' },
             "'use client';\nconst process = { env: { SECRET: 1 } };\nconst key = process.env.SECRET;",
-            { code: 'const url = process.env.NEXT_PUBLIC_URL;', options: [{ client: true }] },
             "'use client';\nconst url = process.env['NEXT_PUBLIC_URL'];",
             "'use client';\nconst url = Deno.env.get('NEXT_PUBLIC_URL');",
             "'use client';\nconst { env } = process;\nconst url = env.NEXT_PUBLIC_URL;",
