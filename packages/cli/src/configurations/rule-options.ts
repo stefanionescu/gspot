@@ -23,7 +23,7 @@ export function assertRunningRuleOptions({ configured, running, allLevelRules, l
             .map((rule) =>
                 allLevelRules.has(rule)
                     ? `${rule} runs only at level all. gspot sets options only for the rules that run at level ${level}.`
-                    : `gspot runs ${rule} at no level, so it takes no options.`,
+                    : `gspot does not run ${rule} at level ${level}, so it takes no options.`,
             )
             .join('\n'),
     );

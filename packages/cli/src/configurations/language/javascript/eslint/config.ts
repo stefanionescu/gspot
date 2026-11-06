@@ -99,7 +99,7 @@ function serializeExport(blockTexts: string[], blockWriter: EslintFileWriter): s
         ignores: options.excludes,
         rules: options.rules,
     }));
-    return `export default setRuleOptions(${blocks}, ${JSON.stringify(ruleOptions, null, JSON_INDENT)});\n`;
+    return `export default setRuleOptions(${blocks}, ${JSON.stringify(ruleOptions, null, JSON_INDENT)}, ${JSON.stringify(blockWriter.level)});\n`;
 }
 
 /**

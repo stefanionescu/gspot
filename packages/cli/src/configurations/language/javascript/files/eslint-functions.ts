@@ -226,9 +226,14 @@ options for a rule that no block turns on.
 
 @param blocks the blocks of the ESLint config, in order.
 @param ruleOptions the options of each scope and path override, with the file patterns that they cover.
+@param level the selected checking level.
 @returns the blocks with the option blocks after them.
 */
-export function setRuleOptions(blocks: JavascriptBlock[], ruleOptions: EslintRuleOptionBlock[]): JavascriptBlock[] {
+export function setRuleOptions(
+    blocks: JavascriptBlock[],
+    ruleOptions: EslintRuleOptionBlock[],
+    level: string,
+): JavascriptBlock[] {
     const pairs = blocks.map((block) => ({
         block,
         picked: ruleOptions.flatMap((options) => pickRuleOptions(block, options)),
@@ -240,7 +245,7 @@ export function setRuleOptions(blocks: JavascriptBlock[], ruleOptions: EslintRul
             Array.from(
                 refused,
                 (name) =>
-                    `gspot runs ${name} at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`,
+                    `gspot does not run ${name} at level ${level}, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`,
             ).join('\n'),
         );
     return pairs.flatMap(({ block, picked }) => [block, ...picked]);

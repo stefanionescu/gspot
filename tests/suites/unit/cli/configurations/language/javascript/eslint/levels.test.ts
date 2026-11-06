@@ -79,10 +79,10 @@ test('all applies your rule options except in script and test files', async () =
     expect(testFile.rules['n/no-unpublished-import']![0]).toBe(0);
 });
 
-test('ESLint refuses options for a rule that no block turns on', async () => {
+test.each(LEVELS)('ESLint refuses options for a rule that no block turns on at level %s', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
-            level: 'basic',
+            level,
             tables: '[tools.eslint.rules]\n"id-length" = []\n"acme/foo" = []\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
@@ -91,8 +91,8 @@ test('ESLint refuses options for a rule that no block turns on', async () => {
     const eslint = await buildEslint(sandbox.path);
     expect(await captureRejection(eslint.calculateConfigForFile('source.js'))).toMatchObject({
         message: [
-            'gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
-            'gspot runs acme/foo at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
+            `gspot does not run id-length at level ${level}, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`,
+            `gspot does not run acme/foo at level ${level}, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`,
         ].join('\n'),
     });
 });
