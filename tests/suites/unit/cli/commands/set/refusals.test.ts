@@ -43,6 +43,33 @@ test.each([...UNKNOWN_SETTING_KEYS])(
     },
 );
 
+test('an unknown setting suggests the full key, which set takes', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const refusal = await assertRefusalWithoutWrites(sandbox.path, ['set', 'format.print_wide', '100'], 'arguments');
+    expect(refusal.message).toContain('Did you mean format.print_width?');
+    const accepted = await runGspot(sandbox.path, ['set', 'format.print_width', '100']);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+});
+
+test('a naming key of a category names the parent key that takes the value, before it asks for a reason', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['typescript']) });
+    const refusal = await assertRefusalWithoutWrites(
+        sandbox.path,
+        ['set', 'naming.typescript.classes.cases', 'camel'],
+        'arguments',
+    );
+    expect(refusal.message).toContain('gspot set naming.typescript.types.cases');
+    expect(refusal.message).not.toContain('--reason');
+    const accepted = await runGspot(sandbox.path, [
+        'set',
+        'naming.typescript.types.cases',
+        'camel',
+        '--reason',
+        'the team writes camel types',
+    ]);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+});
+
 test.each([...SET_VALUE_REFUSALS])('set refuses $name without writing', async ({ arguments: commandArguments }) => {
     await using sandbox = await createGitSandbox(REFUSAL_FILES);
     await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');

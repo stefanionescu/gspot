@@ -10,7 +10,7 @@ import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
-import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { findNamingParent, findSettingSchema } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
@@ -166,6 +166,12 @@ function buildSettingChange(
     const { settings } = edit;
     const { availableSettings, match, scope } = selectSettingToEdit(edit, options.key);
     const setting = match.setting;
+    const parent = findNamingParent(options.key);
+    if (parent !== undefined)
+        throw new GspotError(
+            'arguments',
+            `${options.key} takes its value from ${parent}. Run gspot set ${parent} <value>.`,
+        );
     const change: ParsedSettingValue =
         setting.reason_values === true
             ? {

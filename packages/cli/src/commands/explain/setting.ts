@@ -1,11 +1,10 @@
 import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/reports.ts';
-import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { isSettingUnread, listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
-import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { findNamingParent, findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { formatNameList, formatScope, quoteArgument } from '#cli/system/text.ts';
@@ -41,19 +40,11 @@ function formatReasonOption(setting: Setting): string {
     return setting.reason_for === undefined ? '' : REASON_OPTION_TEXT;
 }
 
-const NAMING_KEY_LENGTH = 4;
-
-function formatParentSetting(key: string): string {
-    const [table = '', language = '', category = '', field = ''] = key.split('.', NAMING_KEY_LENGTH);
-    const parent = CATEGORY_PARENTS[category];
-    return parent === undefined ? `${table}.${language}.cases` : `${table}.${language}.${parent}.${field}`;
-}
-
 function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     if (Object.hasOwn(RECORD_FIELDS, key))
         return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot install.`];
-    if (key.startsWith('naming.') && findSettingSchema(key) === undefined)
-        return [`Change it: gspot set ${formatParentSetting(key)}`];
+    const parent = findNamingParent(key);
+    if (parent !== undefined) return [`Change it: gspot set ${parent}`];
     const { scopePath } = scopeSetting;
     const target = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     return [

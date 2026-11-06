@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { PATH_ROLES } from '#cli/config/manifests.ts';
+import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import { commandCheckSchema, ignoreSchema, scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -8,6 +9,8 @@ import { importRulesSchema, namingSchema } from '#cli/schemas/settings/tables.ts
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
+
+const NAMING_KEY_LENGTH = 4;
 
 export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
     Object.entries({
@@ -71,6 +74,20 @@ export function findSettingSchema(key: string, root: z.ZodType = settingsSchema)
     let schema: z.ZodType | undefined = root;
     for (const segment of key.split('.')) schema = findChildSchema(schema, segment);
     return schema;
+}
+
+/**
+Find the key to write for a naming key that gspot reads and gspot.toml has no place for, such as
+naming.typescript.classes.cases.
+
+@param key a dotted name that matches a setting.
+@returns undefined for any other key.
+*/
+export function findNamingParent(key: string): string | undefined {
+    if (!key.startsWith('naming.') || findSettingSchema(key) !== undefined) return undefined;
+    const [table = '', language = '', category = '', field = ''] = key.split('.', NAMING_KEY_LENGTH);
+    const parent = CATEGORY_PARENTS[category];
+    return parent === undefined ? `${table}.${language}.cases` : `${table}.${language}.${parent}.${field}`;
 }
 
 /**

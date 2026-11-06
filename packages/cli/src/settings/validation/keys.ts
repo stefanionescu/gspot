@@ -113,6 +113,10 @@ function formatUnknownTable(key: string, availableKeys: string[]): string | unde
     return `There is no ${parent}.${table} table.${correction} The ${parent} tables are ${formatCodeList([...tables])}.`;
 }
 
+function formatTableKeys(prefix: string, names: string[]): string {
+    return formatCodeList(prefix === '' ? names : names.map((name) => `${prefix}.${name}`));
+}
+
 function formatUnknownField(key: string, availableKeys: string[]): string {
     const segments = key.split('.');
     const depth = Math.min(key.startsWith('tools.') ? TABLE_KEY_SEGMENTS : 1, segments.length - 1);
@@ -128,14 +132,14 @@ function formatUnknownField(key: string, availableKeys: string[]): string {
                   .filter((name) => name.startsWith(`${prefix}.`))
                   .map((name) => name.slice(prefix.length + 1));
     const near = selectSimilarNames(prefix === '' ? key : key.slice(prefix.length + 1), keys);
-    const correction = near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
+    const correction = near.length === 0 ? '' : ` Did you mean ${formatTableKeys(prefix, near)}?`;
     const rest = keys.filter((each) => !near.includes(each));
     const suggestions = [...near, ...rest];
     const place = prefix === '' ? AT_TOP_LEVEL : UNDER_TABLE;
     return `There is no setting called ${key}.${correction} ${
         suggestions.length === 0
             ? `No setting exists ${place}.`
-            : `The settings that exist ${place} are ${formatCodeList(suggestions)}.`
+            : `The settings that exist ${place} are ${formatTableKeys(prefix, suggestions)}.`
     }`;
 }
 
