@@ -11,7 +11,7 @@ export const COMMAND_HELP = {
         summary: 'Try gspot on a copy of this repository, and change nothing',
         group: 'Set up a repository:',
         description:
-            'Try gspot on a temporary copy of your staged files. Your repository does not change. In the copy, gspot writes what init writes, installs the tools, and runs the checks at the default level with no fixes. It runs no tests, no build, and no check that loads project code. It still loads your Prettier config, and it runs your installed ESLint, Stylelint, and TypeScript. Run it only on code that you trust.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, how long each tool took on this scan, the plan of init, and the next steps.\n\nscan keeps no cache of its own. npm, uv, and mise keep their download caches, so a second scan downloads no tool again. Each scan still asks GitHub for the pinned releases, so set GITHUB_TOKEN if you scan often. Tools that mise installs stay on this computer. After init, run `gspot check` instead.',
+            'Try gspot on a temporary copy of your tracked files, with staged changes and without unstaged ones, so your repository stays as it is. In the copy, gspot writes what init writes, installs the tools, and runs the checks at the default level with no fixes. It runs no tests, no build, and no check that loads project code. It still loads your Prettier config, and it runs your installed ESLint, Stylelint, and TypeScript, so run it only on code that you trust.\n\nThe report gives the totals, the findings by category with three examples each, the files that differ from your style, how long each tool took on this scan, the plan of init, and the next steps.\n\nnpm, uv, and mise keep their download caches, so a second scan downloads no tool again, and tools that mise installs stay on this computer. Each scan still asks GitHub for the pinned releases, so set GITHUB_TOKEN if you scan often. After init, run `gspot check` instead.',
         arguments: {},
         options: {
             '--json': 'Print the report as JSON, with every finding',
@@ -33,7 +33,7 @@ export const COMMAND_HELP = {
             '--from <file>': "Start from another repository's gspot.toml",
             '--configurations <names>':
                 'Use these configurations at the root; repeat the flag or separate names with commas',
-            '--level <level>': 'Start at this level: basic or all. Default: basic.',
+            '--level <level>': 'Start at this level. Default: basic',
         },
         exitCodes: [
             ['0', 'The plan was written, and the tools are installed.'],
@@ -70,8 +70,8 @@ export const COMMAND_HELP = {
             '--only <checks>':
                 'Run only these checks, including checks off at your level. Separate several with commas, or repeat the option. commit or push alone runs the checks of that stage at your level',
             '--skip <checks>': 'Run every check except these. Separate several with commas, or repeat the option',
-            '--staged': 'Check the files as you staged them. The pre-commit hook adds --only commit.',
-            '--base <ref>': 'Check the files changed since this branch, tag, or commit.',
+            '--staged': 'Check the files as you staged them. The pre-commit hook adds --only commit',
+            '--base <ref>': 'Check the files changed since this branch, tag, or commit',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
             '--verbose': 'Also print the passed and skipped checks, each command, and each ignore',
         },
@@ -92,8 +92,7 @@ export const COMMAND_HELP = {
             '<configuration...>': 'Configuration names, such as pytest. Run `gspot list` to see them',
         },
         options: {
-            '--scope <path>':
-                'Apply to one project folder, by its path from the repository root, such as services/api.',
+            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
         },
         exitCodes: [
             ['0', 'The configurations were added, or they were already selected.'],
@@ -110,8 +109,7 @@ export const COMMAND_HELP = {
             '<configuration...>': 'Configuration names',
         },
         options: {
-            '--scope <path>':
-                'Apply to one project folder, by its path from the repository root, such as services/api.',
+            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
             '--reason <text>': 'Why you remove them (required)',
         },
         exitCodes: [
@@ -124,15 +122,14 @@ export const COMMAND_HELP = {
         summary: 'Change a setting',
         group: 'Change gspot.toml:',
         description:
-            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run `gspot unset <setting> <items...>`. For a setting that holds a table, such as tools.eslint.rules, give one TOML inline table, and gspot adds its keys. spelling.allowed_words takes its words and one --reason instead.\n\nFor an ignore, run `gspot ignore <check> --reason "<why>"`. Write other records, such as [[command_check]], by hand.',
+            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\nFor a list, give every item, because gspot replaces the whole list. To remove single items, run `gspot unset <setting> <items...>`. For a setting that holds a table, such as tools.eslint.rules, give one TOML inline table, and gspot adds its keys. spelling.allowed_words takes its words and one --reason instead.\n\nFor an ignore, run `gspot ignore <check> --reason "<why>"`. Write other records, such as [[command_check]], by hand.',
         arguments: {
             '<setting>': 'The setting name, such as limits.max_file_lines. Run `gspot list settings` to see them',
             '<values...>': 'The new value: every item of a list, or the table keys to add',
         },
         options: {
-            '--reason <text>': 'Why you change it. A value weaker than the shipped default needs one.',
-            '--scope <path>':
-                'Apply to one project folder, by its path from the repository root, such as services/api.',
+            '--reason <text>': 'Why you change it. A value weaker than the shipped default needs one',
+            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
         },
         exitCodes: [
             ['0', 'The setting was written, or it already had this value.'],
@@ -150,8 +147,7 @@ export const COMMAND_HELP = {
             '[items...]': 'List items or table keys to remove (default: the whole value)',
         },
         options: {
-            '--scope <path>':
-                'Apply to one project folder, by its path from the repository root, such as services/api.',
+            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
         },
         exitCodes: [
             ['0', 'The value was removed, or there was no value to remove.'],
@@ -165,11 +161,11 @@ export const COMMAND_HELP = {
         description:
             'Ignore a check, or one of its lint rules, everywhere or for some paths. Without a check, no check reads these paths.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. `gspot check --verbose` prints them with their reasons.',
         arguments: {
-            '[check]': 'The check, such as python/ruff. Leave it out to skip the --paths files in every check.',
+            '[check]': 'The check, such as python/ruff. Leave it out to skip the --paths files in every check',
         },
         options: {
             '--reason <text>': 'Why you ignore it (required)',
-            '--rule <rule>': 'Ignore only this lint rule',
+            '--rule <rule>': 'Ignore only this lint rule, or the finding with this fingerprint',
             '--paths <path>':
                 'Ignore it for one path or glob relative to the current folder; repeat for more (default: every path)',
         },
@@ -203,7 +199,7 @@ export const COMMAND_HELP = {
         summary: 'List the configurations or the settings',
         group: 'Look up:',
         description:
-            'List the selected and the available configurations, with the state of each check in each scope. `gspot list settings` lists each setting, its value, and where the value comes from.\n\nlist changes nothing.',
+            'List the selected and the available configurations, with the state of each check in each scope. `gspot list settings` lists each setting, its value, and where the value comes from.',
         arguments: {
             '[configurations|settings]': 'What to list',
         },
@@ -217,8 +213,7 @@ export const COMMAND_HELP = {
     explain: {
         summary: 'Explain a check, lint rule, configuration, setting, or file',
         group: 'Look up:',
-        description:
-            'Explain one thing: what it means, its state in this repository, and the commands that change it.\n\nexplain changes nothing.',
+        description: 'Explain one thing: what it means, its state in this repository, and the commands that change it.',
         arguments: {
             '<subject>':
                 'A check (python/ruff), a configuration (python), a setting (limits.max_file_lines), or a file (./src/app.ts)',
@@ -238,7 +233,7 @@ export const COMMAND_HELP = {
         summary: 'Find setup problems and print the command that fixes each one',
         group: 'Look up:',
         description:
-            'Find setup problems: missing or wrong tool versions, Git hooks that do not run, and a gspot version other than the pinned one.\n\nEach problem line says how to fix it: a command, or what to change. doctor changes nothing.',
+            'Find setup problems: missing or wrong tool versions, Git hooks that do not run, and a gspot version other than the pinned one.\n\nEach problem line says how to fix it: a command, or what to change.',
         arguments: {},
         options: {},
         exitCodes: [

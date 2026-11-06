@@ -27,7 +27,7 @@ function formatChoices(value: Pick<CommandReference['arguments'][number], 'choic
 function formatCommand(command: CommandReference): string {
     const argumentRows = command.arguments.map((argument) => [
         `\`${argument.name}\``,
-        `${argument.description}. ${argument.required ? 'Required.' : 'Optional.'}` + formatChoices(argument),
+        `${argument.description}.` + formatChoices(argument),
     ]);
     const globalOptions: Readonly<Record<string, string>> = CLI_REFERENCE.globalOptions;
     const optionRows = command.options
