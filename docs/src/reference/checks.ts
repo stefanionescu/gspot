@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 
+import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
-    BUILT_IN_MESSAGE,
     CHECK_FIX_MESSAGE,
     CHECK_NEEDS_LABELS,
     CHECK_RUN_LABELS,
@@ -11,7 +11,6 @@ import {
     CONJUNCTION_FORMAT,
     HELP_HEADING,
     LINT_RULES_HEADING,
-    LINT_RULES_MESSAGE,
     MINOR_HEADING_LEVEL,
     PURPOSE_HEADING,
     REFUSED_FORM_LABEL,
@@ -33,15 +32,30 @@ import type { CliReference, Suppression } from '#docs/types/reference.ts';
 
 const NO_INLINE_CONFIG_FLAG = '--no-inline-config';
 
-function listCheckRequirements(reference: CliReference['checks'][number]): string[] {
-    const { programs, systems, needs } = reference;
-    return [
-        programs.length === 0 ? BUILT_IN_MESSAGE : `It runs ${CONJUNCTION_FORMAT.format(programs)}.`,
-        needs.length === 0
-            ? ''
-            : `It needs ${CONJUNCTION_FORMAT.format(needs.map((need) => CHECK_NEEDS_LABELS[need]))}.`,
-        systems === undefined ? '' : `It runs on ${CONJUNCTION_FORMAT.format(systems)}.`,
-    ];
+function formatCheckRequirements(needs: CliReference['checks'][number]['needs']): string {
+    const resources = needs.flatMap((need) => (need === 'project-code' ? [] : [CHECK_NEEDS_LABELS[need]]));
+    return CONJUNCTION_FORMAT.format([
+        ...(needs.includes('project-code') ? ['loads your code'] : []),
+        ...(resources.length === 0 ? [] : [`needs ${CONJUNCTION_FORMAT.format(resources)}`]),
+    ]);
+}
+
+function formatCheckRun(reference: CliReference['checks'][number]): string {
+    const { check, programs, systems, needs } = reference;
+    const [program] = programs;
+    const run = [
+        check.stage === 'manual'
+            ? `Runs only when \`gspot check --only ${check.id}\` names it`
+            : `Runs at the \`${check.stage}\` [stage](${CLI_REFERENCE.docs.stage})`,
+        check.level === 'basic' ? '' : `only at the \`${check.level}\` [level](${CLI_REFERENCE.docs.levels})`,
+        CHECK_RUN_LABELS[check.runs],
+        program === undefined || check.id.includes(program) ? '' : `with ${program}`,
+        systems === undefined ? '' : `on ${CONJUNCTION_FORMAT.format(systems)}`,
+    ]
+        .filter(Boolean)
+        .join(', ');
+    const requirements = formatCheckRequirements(needs);
+    return requirements === '' ? `${run}.` : `${run}, and ${requirements}.`;
 }
 
 function formatSuppressionComment(suppression: Suppression | undefined): string {
@@ -53,10 +67,13 @@ function formatSuppressionComment(suppression: Suppression | undefined): string 
 
 function formatTurnOff(reference: CliReference['checks'][number]): string {
     const { check, turnOff, suppression } = reference;
-    const commands = [turnOff.paths, ...(turnOff.rule === undefined ? [] : [turnOff.rule])];
+    const commands = [
+        ...(check.id === WEAKENINGS_CHECK ? [] : [turnOff.paths]),
+        ...(turnOff.rule === undefined ? [] : [turnOff.rule]),
+    ];
     const comment =
         check.command?.includes(NO_INLINE_CONFIG_FLAG) === true ? '' : formatSuppressionComment(suppression);
-    return `Turn it off for some files${turnOff.rule === undefined ? '' : LINT_RULES_MESSAGE}, with a reason:\n\n\`\`\`text\n${commands.join('\n')}\n\`\`\`${comment}`;
+    return `\`\`\`text\n${commands.join('\n')}\n\`\`\`${comment}`;
 }
 
 function formatRuleTable(reference: CliReference['checks'][number]): string {
@@ -77,13 +94,8 @@ to turn it off. The check name without the configuration gives its heading and a
 */
 export function formatCheckSection(reference: CliReference['checks'][number]): string {
     const { check } = reference;
-    const timing =
-        check.stage === 'manual'
-            ? `only when \`gspot check --only ${check.id}\` names it`
-            : `at the \`${check.stage}\` [stage](${CLI_REFERENCE.docs.stage})`;
     const facts = [
-        `\`${check.id}\` runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}, at the \`${check.level}\` [level](${CLI_REFERENCE.docs.levels}).`,
-        ...listCheckRequirements(reference),
+        formatCheckRun(reference),
         check.fix === undefined ? '' : CHECK_FIX_MESSAGE,
         check.when?.setting === undefined ? '' : `It skips until you set \`${check.when.setting}\`.`,
     ];

@@ -14,16 +14,15 @@ export const SCHEMA_TYPE_LABELS: Readonly<Record<string, string>> = {
 export const CHECK_RUN_LABELS = {
     once: 'once for the repository',
     scope: 'once per scope',
-    files: 'on the files of the run',
-    history: 'once for pushed history',
+    files: '',
+    history: '',
 } as const;
 
 export const CHECK_NEEDS_LABELS = {
-    build: 'a build of the project',
-    dependencies: 'the installed npm dependencies of the project',
-    docker: 'Docker, running',
+    build: 'a build',
+    dependencies: 'the installed npm dependencies',
+    docker: 'a running Docker daemon',
     network: 'network access',
-    'project-code': 'to run the code of the project',
     'python-environment': 'the Python environment of the project',
 } as const;
 
@@ -87,13 +86,9 @@ export const CHECKS_OPENING =
 
 export const PURPOSE_HEADING = 'What it does';
 
-export const BUILT_IN_MESSAGE = 'gspot runs this check itself.';
-
 export const CHECK_FIX_MESSAGE = '`gspot check --fix` fixes what it can.';
 
 export const REFUSED_SUPPRESSION_MESSAGE = '\n\nA suppression comment is refused; use `gspot ignore`.';
-
-export const LINT_RULES_MESSAGE = ', or one of its lint rules';
 
 export const HELP_HEADING = 'What to do';
 
