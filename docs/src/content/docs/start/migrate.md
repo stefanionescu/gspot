@@ -22,7 +22,7 @@ The scan shows the plan for level `basic`. Level `all` also replaces the configs
 `.commitlintrc.json`.
 
 To start from another repository's `gspot.toml`, follow
-[Copy settings from another repository](/start/copy-settings/). It also copies `hooks.enabled` and `rule_files.enabled`.
+[Copy settings](/start/copy-settings/). It also copies `hooks.enabled` and `rule_files.enabled`.
 
 ## Read the plan
 

@@ -1,14 +1,15 @@
 ---
-title: Dependencies and licenses
-configurations: [dependencies, licenses]
+title: Dependencies
+configurations: [dependencies]
 ---
 
 import ChecksTable from '#docs/components/ChecksTable.astro';
 
-gspot checks your locked packages for known vulnerabilities, and the registry hosts that your lockfiles download from. It
-can also check their licenses:
+gspot checks your locked packages for known vulnerabilities, and the registry hosts that your lockfiles download from:
 
 <ChecksTable guide="topics/dependencies" />
+
+To check their licenses too, see [Licenses](/topics/licenses/).
 
 ## Vulnerabilities
 
@@ -38,39 +39,3 @@ gspot set dependencies.allowed_registries registry.npmjs.org registry.yarnpkg.co
 ```
 
 Downloads must still use HTTPS. A host allowed in a scope counts for that folder and the folders inside it.
-
-## Licenses
-
-`gspot add licenses` adds a check that runs before each push and reads the lockfiles of each scope. It sends the names and
-versions of your locked packages to the deps.dev service, so it needs network access and a lockfile. The check skips until
-you list the licenses that your project accepts:
-
-```shell
-gspot set licenses.allowed MIT Apache-2.0 BSD-3-Clause
-gspot check --only licenses/allowed
-```
-
-## Allow a license or one package
-
-To allow one package version whose license you reviewed, add a `[[licenses.allowed_package]]` record, and name the license
-in the reason:
-
-```toml
-[[licenses.allowed_package]]
-name = "colorama"
-version = "0.4.6"
-reason = "BSD. Installed metadata reports the reviewed BSD license in its short form."
-```
-
-`version` takes an exact version, a version range such as `^1.2.0`, or `*` for any version. For a package with one build
-for each platform, `name` takes a glob pattern:
-
-```toml
-[[licenses.allowed_package]]
-name = "@img/sharp-libvips-*"
-version = "*"
-reason = "LGPL-3.0-or-later. sharp loads the library as a separate file."
-```
-
-gspot reports a record that matches no package in the lockfile. Python package names match the way pip matches them:
-letter case and runs of `.`, `_`, and `-` do not matter.

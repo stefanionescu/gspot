@@ -54,12 +54,13 @@ CI stays off until you run `gspot set ci.enabled true`, and each new clone needs
 
 - [Run checks](https://generativespotting.com/use/run-checks/): read a finding, explain it, and fix it.
 - [Change settings](https://generativespotting.com/configure/gspot-toml/)
-- [Checks](https://generativespotting.com/reference/checks/): what each check finds, and how to fix its findings.
+- [All checks](https://generativespotting.com/reference/checks/): what each check finds, and how to fix its findings.
 - [Commands](https://generativespotting.com/reference/commands/)
 - [ESLint plugin](https://generativespotting.com/reference/eslint-plugin/): rules that also work in ESLint without gspot.
-- [Tests](https://github.com/stefanionescu/gspot/blob/main/tests/README.md): run the test suites of gspot, or one test
-  file.
-- [Issues](https://github.com/stefanionescu/gspot/issues)
+
+## Contribute
+
+[Report an issue](https://github.com/stefanionescu/gspot/issues), or [run the tests](https://github.com/stefanionescu/gspot/blob/main/tests/README.md).
 
 ## License
 

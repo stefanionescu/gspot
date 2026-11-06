@@ -776,7 +776,7 @@ ESLint plugin 0.2.4:
 - New guides cover Bash, HTML, Markdown, and SQL, and a new Frameworks group covers Astro, Expo, Express, FastAPI,
   NestJS, Next.js, React, React Native, Svelte, and Vue. (fdba592, 6012f27, 8808aef, c2b4384, 9848f94, e1ce6eb, 9684caa,
   b60dbb3, 28f12a3, 670c885, 902bf53, a614aae, 8537ade, 5ae8b23, 2ed7a2c, fe3105a)
-- New pages: Baseline and [Mistakes that gspot catches](https://generativespotting.com/topics/real-catches/). The
+- New pages: Baseline and Mistakes that gspot catches. The
   [changelog page](https://generativespotting.com/reference/changelog/) renders from `CHANGELOG.md`, and each ESLint
   plugin topic has its own page. (680a994, ac55cdd, 1588eae, 99c2a95)
 - Overview merges into the [Quickstart](https://generativespotting.com/start/quickstart/), and Footprint into

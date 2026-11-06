@@ -91,10 +91,11 @@ export const SIDEBAR = [
         items: [
             { slug: 'topics/security' },
             { slug: 'topics/dependencies' },
+            { slug: 'topics/licenses' },
             { slug: 'topics/testing' },
+            { slug: 'topics/spelling' },
             { slug: 'topics/prose' },
             { slug: 'topics/site' },
-            { slug: 'topics/real-catches' },
         ],
     },
     {

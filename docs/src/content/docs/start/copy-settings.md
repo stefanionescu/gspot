@@ -1,5 +1,5 @@
 ---
-title: Copy settings from another repository
+title: Copy settings
 ---
 
 To set up a new repository with the settings of a repository that already uses gspot, pass the path of its `gspot.toml`

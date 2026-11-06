@@ -1,5 +1,5 @@
 ---
-title: Security and secrets
+title: Security
 configurations: [security, docker, github-actions, secrets]
 ---
 

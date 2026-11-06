@@ -1,5 +1,5 @@
 ---
-title: Tests and coverage
+title: Tests
 configurations: [jest, vitest, pytest]
 ---
 
