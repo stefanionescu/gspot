@@ -55,3 +55,15 @@ test('grouped output that locates no existing file is an error', async () => {
         ),
     ).toStrictEqual({ note: expect.stringContaining('missing.ts:\n  1: A defect.') as string });
 });
+
+test('jest/tests reports no finding for the console output of a passing run', async () => {
+    await using sandbox = await testdir();
+    const check = getShippedCheck('jest/tests');
+    const parsed = parseCommandFindings(
+        { check },
+        buildProcessResult({ code: 0, stderr: '  ● Console\n\n    console.log\n      hello\n' }),
+        { root: sandbox.path, cwd: sandbox.path },
+        {},
+    );
+    expect(parsed.findings).toStrictEqual([]);
+});

@@ -50,4 +50,4 @@ extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
 
 [check.output]
 format = "regex"
-pattern = "^(?:Jest: \"global\" |  (?=● ))(?<message>coverage threshold for .+ not met: .+|● .+)$"
+pattern = "^(?:Jest: \"global\" |  (?=● (?!Console$)))(?<message>coverage threshold for .+ not met: .+|● .+)$"
