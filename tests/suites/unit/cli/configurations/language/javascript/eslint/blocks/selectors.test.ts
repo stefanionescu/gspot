@@ -145,20 +145,16 @@ test('library selectors at level basic report both whole-store reads and accept 
 test.each([...FRAMEWORK_SELECTOR_CASES])(
     '$configuration selectors report their sample lines at level all',
     async (sample) => {
-        for (const level of ['all'] as const) {
-            await using sandbox = await testdir({
-                'gspot.toml': buildSandboxSettings([sample.language, sample.configuration], { level }),
-                'package.json': '{"private":true,"type":"module"}\n',
-                'tsconfig.json': '{"compilerOptions":{"experimentalDecorators":true},"include":["*.ts"]}\n',
-                [sample.file]: sample.source,
-            });
-            const eslint = await buildEslint(sandbox.path);
-            expect(
-                await listLintFindings(eslint, sandbox.path, [sample.file], ['gspot/restricted-syntax']),
-            ).toStrictEqual(
-                sample[level].map((line) => ({ file: sample.file, rule: 'gspot/restricted-syntax', line })),
-            );
-        }
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([sample.language, sample.configuration], { level: 'all' }),
+            'package.json': '{"private":true,"type":"module"}\n',
+            'tsconfig.json': '{"compilerOptions":{"experimentalDecorators":true},"include":["*.ts"]}\n',
+            [sample.file]: sample.source,
+        });
+        const eslint = await buildEslint(sandbox.path);
+        expect(await listLintFindings(eslint, sandbox.path, [sample.file], ['gspot/restricted-syntax'])).toStrictEqual(
+            sample.lines.map((line) => ({ file: sample.file, rule: 'gspot/restricted-syntax', line })),
+        );
     },
 );
 

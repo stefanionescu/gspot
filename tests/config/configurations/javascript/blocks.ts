@@ -53,16 +53,14 @@ export const FRAMEWORK_SELECTOR_CASES = [
         language: 'typescript',
         file: 'source.ts',
         source: 'import { Res, Response, forwardRef } from "@nestjs/common";\nexport class Controller {\n    first(@Res() response: unknown) { return response; }\n    second(@Response({ passthrough: true }) response: unknown) { return response; }\n}\nforwardRef(() => Controller);\n',
-        basic: [3],
-        all: [3, 6],
+        lines: [3, 6],
     },
     {
         configuration: 'react-native',
         language: 'javascript',
         file: 'source.jsx',
         source: 'import { TouchableOpacity, Pressable } from "react-native";\nAsyncStorage.setItem("accessToken", value);\nAsyncStorage.setItem("theme", value);\nexport const button = <Pressable />;\n',
-        basic: [2],
-        all: [1, 2],
+        lines: [1, 2],
     },
 ] as const;
 
