@@ -97,6 +97,17 @@ test.each([
     expect(result).toStrictEqual(await runGspot(sandbox.path, [removed]));
 });
 
+test.each([
+    { commandArguments: ['check', '--stage', '--help'], plain: ['check', '--stage'] },
+    { commandArguments: ['check', '--help', '--stage=push'], plain: ['check', '--stage'] },
+    { commandArguments: ['init', '--no-configurations', '-h'], plain: ['init', '--no-configurations'] },
+])('$commandArguments prints the line of the removed flag and exits 2', async ({ commandArguments, plain }) => {
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, commandArguments);
+    expect(result.code).toBe(2);
+    expect(result).toStrictEqual(await runGspot(sandbox.path, plain));
+});
+
 test('init requires a Git worktree before reading settings or writing, while its help works outside Git', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
     const before = await readTree(sandbox.path);

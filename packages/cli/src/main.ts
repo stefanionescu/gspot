@@ -195,6 +195,17 @@ function isVersionRun(program: Command, name: string): boolean {
     return name === '' || program.commands.some((command) => command.name() === name);
 }
 
+function assertNotRemoved(name: string, options: readonly string[]): void {
+    if (Object.hasOwn(REMOVED_COMMANDS, name))
+        throw new GspotError('arguments', REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS]);
+    const helpWords = new Set(HELP_FLAG.split(', '));
+    if (!options.some((word) => helpWords.has(word))) return;
+    // Commander prints the help before it reports an unknown option.
+    const flags = options.map((word) => word.split('=', 1)[0] as string);
+    const flag = flags.find((word) => Object.hasOwn(REMOVED_OPTIONS, word));
+    if (flag !== undefined) throw new GspotError('arguments', String(REMOVED_OPTIONS[flag]));
+}
+
 /**
 Build the CLI with every command.
 
@@ -282,8 +293,7 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
     });
     try {
         const [name = ''] = program.parseOptions(commandArguments).operands;
-        if (Object.hasOwn(REMOVED_COMMANDS, name))
-            throw new GspotError('arguments', REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS]);
+        assertNotRemoved(name, options);
         if (isVersionRun(program, name)) {
             printResult({ text: cliPackage.version, json: {}, exitCode: 0 });
             return 0;
