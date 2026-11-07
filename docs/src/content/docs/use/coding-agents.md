@@ -59,7 +59,5 @@ Leaving out a rule file, or turning rules off, is a
 
 ## Documentation for coding agents
 
-The docs site serves four plain text files for coding agents. `/llms.txt` says what gspot does, gives the steps to try
-gspot and to set it up, and links the others. `/llms-small.txt` holds the docs without the reference pages of commands,
-settings, configurations, checks, and the ESLint plugin. `/llms-full.txt` holds every page, and
-`/_llms-txt/reference.txt` holds the reference pages.
+The docs site serves `/llms.txt` for coding agents. It lists the languages and frameworks that gspot supports, and
+gives the steps to try gspot and to set it up. It links the pages an agent reads when a step fails.

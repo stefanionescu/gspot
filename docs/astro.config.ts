@@ -8,11 +8,9 @@ import { defineConfig, passthroughImageService } from 'astro/config';
 import { createMermaidRenderer } from 'mermaid-isomorphic';
 import { chromium } from 'playwright';
 import { defineHastPlugin, type HastNode, type HastPluginEntry } from 'satteri';
-import starlightLlmsTxt from 'starlight-llms-txt';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { EDIT_URL, README_OPENING_BLOCKS, REPOSITORY_URL, SIDEBAR, SITE_TITLE } from '#docs/config/site.ts';
-import { AGENT_EVALUATION, AGENT_FACTS, AGENT_STEPS, LLMS_PAGES } from '#docs/reference/setup.ts';
 
 const FAVICON = '/favicon.svg';
 const ICONS = [
@@ -192,14 +190,6 @@ export default defineConfig({
             description: cliPackage.description,
             favicon: FAVICON,
             disable404Route: true,
-            plugins: [
-                starlightLlmsTxt({
-                    projectName: 'gspot',
-                    description: cliPackage.description,
-                    details: `This documentation covers ${cliPackage.name} ${cliPackage.version}.\n\n${AGENT_FACTS}\n\n${AGENT_EVALUATION}\n\n${AGENT_STEPS}`,
-                    ...LLMS_PAGES,
-                }),
-            ],
             head: ICONS.map((attrs) => ({ tag: 'link', attrs })),
             components: {
                 Head: './src/components/starlight/Head.astro',
