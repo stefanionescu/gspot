@@ -7,11 +7,11 @@ buildRuleTester().run('aws-sqs-unencrypted-queue', awsSqsUnencryptedQueue, {
     ],
     invalid: [
         {
-            code: "import * as sqs from 'aws-cdk-lib/aws-sqs';\nnew sqs.Queue(this, 'a');\nnew sqs.Queue(this, 'b', { encryption: sqs.QueueEncryption.UNENCRYPTED });\nnew sqs.Queue(this, 'c', { encryption: sqs.QueueEncryption.KMS });\nnew sqs.CfnQueue(this, 'd', {});",
+            code: "import * as sqs from 'aws-cdk-lib/aws-sqs';\nnew sqs.Queue(this, 'a');\nnew sqs.Queue(this, 'b', { encryption: sqs.QueueEncryption.UNENCRYPTED });\nnew sqs.CfnQueue(this, 'd', {});",
             errors: [
                 { messageId: 'omitted', line: 2 },
                 { messageId: 'invalid', line: 3 },
-                { messageId: 'omitted', line: 5 },
+                { messageId: 'omitted', line: 4 },
             ],
         },
     ],

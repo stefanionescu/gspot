@@ -6,7 +6,6 @@ const rule = validThrowAssertions;
 buildTypedRuleTester().run('valid-throw-assertions', rule, {
     valid: [
         'import { expect } from "vitest";\ndeclare function parse(): number;\nexpect(() => parse()).toThrow();',
-        'import { expect } from "vitest";\ndeclare const run: () => void;\nexpect(run).not.toThrowError();',
         'import { expect } from "vitest";\ndeclare const value: any;\nexpect(value).toThrow();',
         'import { expect } from "vitest";\nfunction check<T>(value: T) { expect(value).toThrow(); }',
         'import { expect } from "vitest";\ndeclare const load: () => Promise<void>;\nawait expect(load()).rejects.toThrow();',

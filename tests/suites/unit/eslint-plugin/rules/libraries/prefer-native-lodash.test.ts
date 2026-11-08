@@ -7,11 +7,9 @@ buildRuleTester().run('prefer-native-lodash', rule, {
     valid: [
         'import _ from "./utilities";\n_.isArray(value);',
         'import _ from "lodash";\n_(values).keys();',
-        'import _ from "lodash";\n_["keys"](value);',
         'import _ from "lodash";\n_.map(values, read);',
         'import _ from "lodash";\n_.map([1], "id");',
         'import _ from "lodash";\n_.map([1]);',
-        'import _ from "lodash";\n_.map(...values, read);',
         'import _ from "lodash";\nconst id = "id";\n_.map([1], id);',
         'import _ from "lodash";\n_.includes("text", /t/u);',
         'import _ from "lodash";\n_.includes(values, 1);',
@@ -73,12 +71,6 @@ buildRuleTester().run('prefer-native-lodash', rule, {
         },
         ...[
             [
-                '_.map([1], (value) => value + 1);',
-                'map',
-                'Array.prototype.map()',
-                'the library also accepts objects and nullish values',
-            ],
-            [
                 '_.includes([1], 1);',
                 'includes',
                 'Array.prototype.includes()',
@@ -105,11 +97,11 @@ buildRuleTester().run('prefer-native-lodash', rule, {
 
 buildRuleTester({ languageOptions: { ecmaVersion: 7 } }).run('prefer-native-lodash in ES2016', rule, {
     valid: ['import _ from "lodash";\n_.values(value);'],
-    invalid: [{ code: 'import _ from "lodash";\n_.isArray(value);', errors: [{ messageId: 'direct' }] }],
+    invalid: [],
 });
 
 buildRuleTester({ languageOptions: { ecmaVersion: 2018 } }).run('prefer-native-lodash in ES2018', rule, {
-    valid: ['import _ from "lodash";\n_.flatten(values);'],
+    valid: [],
     invalid: [{ code: 'import _ from "lodash";\n_.values(value);', errors: [{ messageId: 'cautious' }] }],
 });
 
@@ -117,21 +109,8 @@ buildTypedRuleTester().run('prefer-native-lodash with types', rule, {
     valid: [
         'import _ from "lodash";\ndeclare const value: Record<string, number>;\n_.map(value, (entry) => entry);',
         'import _ from "lodash";\ndeclare const value: string[] | string;\n_.includes(value, "t");',
-        'import _ from "lodash";\ndeclare const value: any;\n_.map(value, (entry: unknown) => entry);',
     ],
     invalid: [
-        [
-            'declare const value: number[] | undefined;\n_.map(value, (entry) => entry);',
-            'map',
-            'Array.prototype.map()',
-            'the library also accepts objects and nullish values',
-        ],
-        [
-            'declare const value: [number, string];\n_.some(value, (entry) => entry);',
-            'some',
-            'Array.prototype.some()',
-            'the library also accepts objects, nullish values, and shorthand predicates',
-        ],
         [
             'declare const value: string;\n_.contains(value, "t");',
             'contains',

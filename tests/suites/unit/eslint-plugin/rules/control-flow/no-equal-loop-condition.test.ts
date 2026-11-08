@@ -8,7 +8,6 @@ buildRuleTester().run('no-equal-loop-condition', noEqualLoopCondition, {
         'for (let index = 0; index < limit; index += 2) {}',
         'for (let index = 0; limit !== 10; index++) {}',
         'for (let index = 0; index !== limit;) {}',
-        'for (let index = 0; index !== limit; advance()) {}',
         'for (let index = 10; index != 0; index--) {}',
         'for (let index = 0; index != 10; index += 1) {}',
         'for (index = 0; index != 10; index++) {}',

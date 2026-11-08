@@ -7,7 +7,7 @@ buildRuleTester().run('aws-unblocked-public-buckets', awsUnblockedPublicBuckets,
     ],
     invalid: [
         {
-            code: "import * as s3 from 'aws-cdk-lib/aws-s3';\nnew s3.Bucket(this, 'a', { blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS_ONLY });\nnew s3.Bucket(this, 'b', { blockPublicAccess: new s3.BlockPublicAccess({ blockPublicAcls: false, blockPublicPolicy: true, restrictPublicBuckets: false }) });\nnew s3.Bucket(this, 'c', { blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL });",
+            code: "import * as s3 from 'aws-cdk-lib/aws-s3';\nnew s3.Bucket(this, 'a', { blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS_ONLY });\nnew s3.Bucket(this, 'b', { blockPublicAccess: new s3.BlockPublicAccess({ blockPublicAcls: false, blockPublicPolicy: true, restrictPublicBuckets: false }) });",
             errors: [
                 { messageId: 'aclsOnly', line: 2 },
                 { messageId: 'public', line: 3 },

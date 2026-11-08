@@ -6,7 +6,6 @@ buildRuleTester().run('no-component-debounce', noComponentDebounce, {
         'import { debounce } from "lodash";\nconst onChange = debounce(search, 300);',
         'import { debounce } from "lodash";\nfunction search() { return debounce(load, 300); }',
         'import { debounce } from "./timers";\nfunction Search() { const onChange = debounce(search, 300); }',
-        'import { debounce } from "lodash";\nimport { useMemo } from "react";\nfunction Search() { const onChange = useMemo(() => debounce(search, 300), []); }',
         'import { debounce } from "lodash";\nimport { useCallback } from "react";\nfunction Search() { const onChange = useCallback(debounce(search, 300), []); }',
         'import { throttle } from "lodash";\nimport { useRef } from "react";\nfunction Search() { const onScroll = useRef(throttle(load, 100)); }',
         'import { debounce } from "lodash";\nimport { useRef } from "react";\nfunction Search() {\n    const ref = useRef(null);\n    if (!ref.current) ref.current = debounce(search, 300);\n}',

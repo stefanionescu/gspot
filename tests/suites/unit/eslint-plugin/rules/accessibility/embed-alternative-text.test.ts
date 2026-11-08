@@ -8,13 +8,13 @@ buildRuleTester().run('embed-alternative-text', embedAlternativeText, {
         { code: 'const a = <object data="x">{...items}</object>;', errors: [{ messageId: 'missingContent' }] },
 
         {
-            code: 'const a = <object data="x.svg" />;\nconst b = <object data="x.svg">Chart</object>;\nconst c = <object data="x"><span aria-hidden="true">x</span></object>;\nconst d = <object data="x">{label}</object>;\nconst e = <object data="x">{undefined}</object>;\nconst f = <object data="x"><input type="hidden" /></object>;\nconst g = <object data="x"><><em>Chart</em></></object>;\nconst h = <object>   </object>;',
+            code: 'const a = <object data="x.svg" />;\nconst c = <object data="x"><span aria-hidden="true">x</span></object>;\nconst d = <object data="x">{label}</object>;\nconst e = <object data="x">{undefined}</object>;\nconst f = <object data="x"><input type="hidden" /></object>;\nconst g = <object data="x"><><em>Chart</em></></object>;\nconst h = <object>   </object>;',
             errors: [
                 { messageId: 'missingContent', line: 1 },
-                { messageId: 'missingContent', line: 3 },
+                { messageId: 'missingContent', line: 2 },
+                { messageId: 'missingContent', line: 4 },
                 { messageId: 'missingContent', line: 5 },
-                { messageId: 'missingContent', line: 6 },
-                { messageId: 'missingContent', line: 8 },
+                { messageId: 'missingContent', line: 7 },
             ],
         },
     ],

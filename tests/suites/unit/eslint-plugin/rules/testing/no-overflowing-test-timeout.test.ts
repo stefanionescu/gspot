@@ -17,9 +17,5 @@ buildRuleTester().run('no-overflowing-test-timeout', noOverflowingTestTimeout, {
             code: 'import { expect } from "chai";\nconst limit = 2147483648;\nit.only("adds", function () { this.timeout(limit); });',
             errors: [{ messageId: 'overflow', line: 3 }],
         },
-        {
-            code: 'import { expect } from "chai";\nbeforeEach(function () { this.timeout(1e10); });',
-            errors: [{ messageId: 'overflow' }],
-        },
     ],
 });

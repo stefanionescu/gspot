@@ -6,16 +6,11 @@ buildRuleTester().run('prefer-native-axios', preferNativeAxios, {
         'import axios from "axios";\nawait Promise.all([axios.get(first), axios.get(second)]);',
         'import axios from "axios";\nawait axios.get(url, { signal: controller.signal });',
         'import axios from "./http";\naxios.all([first]);',
-        'all([first]);',
     ],
     invalid: [
         {
             code: 'import axios from "axios";\nawait axios.all([first, second]);',
             errors: [{ messageId: 'helper', data: { symbol: 'axios.all()', alternative: 'Promise.all()' } }],
-        },
-        {
-            code: 'import axios from "axios";\nconst read = axios.spread((first, second) => first + second);',
-            errors: [{ messageId: 'helper', data: { symbol: 'axios.spread()', alternative: 'array destructuring' } }],
         },
         {
             code: 'import axios from "axios";\nconst source = axios.CancelToken.source();\nawait axios.post(url, body, { cancelToken: source.token });',

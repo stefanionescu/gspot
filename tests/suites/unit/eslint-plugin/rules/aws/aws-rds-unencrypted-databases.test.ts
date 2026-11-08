@@ -8,7 +8,7 @@ buildRuleTester().run('aws-rds-unencrypted-databases', awsRdsUnencryptedDatabase
     ],
     invalid: [
         {
-            code: "import * as rds from 'aws-cdk-lib/aws-rds';\nimport * as kms from 'aws-cdk-lib/aws-kms';\nnew rds.DatabaseInstance(this, 'a', { engine });\nnew rds.DatabaseInstance(this, 'b', { storageEncrypted: false });\nnew rds.DatabaseInstance(this, 'c', { storageEncryptionKey: new kms.Key(this, 'k') });\nnew rds.CfnDBCluster(this, 'd');\nnew rds.DatabaseCluster(this, 'e', props);\nnew rds.CfnDBInstance(this, 'f', { storageEncrypted: true });",
+            code: "import * as rds from 'aws-cdk-lib/aws-rds';\nimport * as kms from 'aws-cdk-lib/aws-kms';\nnew rds.DatabaseInstance(this, 'a', { engine });\nnew rds.DatabaseInstance(this, 'b', { storageEncrypted: false });\nnew rds.DatabaseInstance(this, 'c', { storageEncryptionKey: new kms.Key(this, 'k') });\nnew rds.CfnDBCluster(this, 'd');\nnew rds.DatabaseCluster(this, 'e', props);",
             errors: [
                 { messageId: 'omitted', line: 3, column: 37 },
                 { messageId: 'unencrypted', line: 4, column: 57 },

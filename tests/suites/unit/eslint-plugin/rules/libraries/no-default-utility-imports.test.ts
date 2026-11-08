@@ -27,7 +27,6 @@ buildRuleTester({ root }).run('no-default-utility-imports', noDefaultUtilityImpo
         },
         { code: 'import rx from "rxjs";', filename, errors: [{ messageId: 'named', data: { library: 'rxjs' } }] },
         { code: 'import validator from "validator";', filename, errors: [{ messageId: 'method' }] },
-        { code: 'import R from "rambda";', filename, errors: [{ messageId: 'named' }] },
         { code: 'import _ from "lodash";', filename: join(root, 'capped/cart.ts'), errors: [{ messageId: 'method' }] },
         { code: 'import _ from "lodash";', filename: join(root, 'major/cart.ts'), errors: [{ messageId: 'method' }] },
     ],

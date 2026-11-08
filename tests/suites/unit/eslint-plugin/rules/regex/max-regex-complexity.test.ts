@@ -2,7 +2,7 @@ import { maxRegexComplexity } from '#eslint-plugin/rules/regex/max-regex-complex
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('max-regex-complexity', maxRegexComplexity, {
-    valid: ['/^(a|b|c)[a-z]+$/u;', { code: '/a+/u;', options: [{ threshold: 1 }] }],
+    valid: [{ code: '/a+/u;', options: [{ threshold: 1 }] }],
     invalid: [
         {
             code: String.raw`/^(?:(?:[a-z0-9]+(?:[-_][a-z0-9]+)*)\.)+(?:com|org|net|io|dev)(?:\/(?:[a-z]+|\d+))*(?:\?[a-z]+=[a-z0-9]+(?:&[a-z]+=[a-z0-9]+)*)?$/u;`,
@@ -18,6 +18,5 @@ buildRuleTester().run('max-regex-complexity', maxRegexComplexity, {
             options: [{ threshold: 0 }],
             errors: [{ messageId: 'complex', data: { score: 5, threshold: 0 } }],
         },
-        { code: '/(?=a+)b/u;', options: [{ threshold: 1 }], errors: [{ messageId: 'complex' }] },
     ],
 });

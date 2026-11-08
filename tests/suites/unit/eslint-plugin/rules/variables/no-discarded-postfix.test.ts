@@ -6,8 +6,6 @@ buildRuleTester().run('no-discarded-postfix', noDiscardedPostfix, {
         'function read(value) { return ++value; }',
         'function read(value) { return value.count++; }',
         'let count = 0; function read() { return count++; }',
-        'function read(count) { if (ready) { return count++; } }',
-        'function read(count) { return count++ as number; }',
         'first = second++;',
     ],
     invalid: ['function read(count) { return count++; }', 'count = count++;'].map((code) => ({

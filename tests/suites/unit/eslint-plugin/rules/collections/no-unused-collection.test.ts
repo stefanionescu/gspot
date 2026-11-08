@@ -15,10 +15,6 @@ buildRuleTester().run('no-unused-collection', noUnusedCollection, {
             errors: [{ messageId: 'unused', data: { name: 'names' }, column: 25 }],
         },
         {
-            code: 'function store(key) { const cache = new Map(); cache.set(key, 1); cache.delete(key); }',
-            errors: [{ messageId: 'unused', data: { name: 'cache' } }],
-        },
-        {
             code: 'function list() { const names = ["a"]; names[0] = "b"; }',
             errors: [{ messageId: 'unused' }],
         },

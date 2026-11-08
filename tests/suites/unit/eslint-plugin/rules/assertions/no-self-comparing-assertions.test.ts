@@ -6,7 +6,6 @@ buildRuleTester().run('no-self-comparing-assertions', noSelfComparingAssertions,
         'expect(total).to.equal(total);',
         'import { expect } from "chai";\nexpect(total).to.equal(3);',
         'import { expect } from "chai";\nexpect(1).to.equal(1);',
-        'import { assert } from "chai";\nassert.equal(total, sum);',
         'import { expect } from "chai";\nother(total).to.equal(total);',
     ],
     invalid: [

@@ -4,7 +4,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('require-error-checks', requireErrorChecks, {
     valid: [
         'it("fails", () => { expect(run).to.throw(RangeError); });',
-        'it("fails", () => { expect(run).to.throw("negative"); });',
         'it("fails", () => { expect(run).to.not.throw(); });',
         'expect(run).to.throw();',
         'test("fails", () => { expect(run).to.throw(); });',

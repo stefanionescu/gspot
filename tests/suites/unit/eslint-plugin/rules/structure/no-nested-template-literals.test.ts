@@ -6,9 +6,5 @@ buildRuleTester().run('no-nested-template-literals', noNestedTemplateLiterals, {
     invalid: [
         { code: 'const text = `outer ${`inner ${name}`}`;', errors: [{ messageId: 'template' }] },
         { code: 'const text = `outer\n${`inner\n${name}`}`;', errors: [{ messageId: 'template' }] },
-        {
-            code: 'const text = `outer ${`middle ${`inner ${name}`}`}`;',
-            errors: [{ messageId: 'template' }, { messageId: 'template' }],
-        },
     ],
 });

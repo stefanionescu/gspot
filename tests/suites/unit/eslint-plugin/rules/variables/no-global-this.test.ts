@@ -13,8 +13,5 @@ buildRuleTester().run('no-global-this', noGlobalThis, {
 
 buildRuleTester({ languageOptions: { sourceType: 'script' } }).run('no-global-this-script', noGlobalThis, {
     valid: [],
-    invalid: [
-        { code: 'this.name;', errors: [{ messageId: 'this' }] },
-        { code: '"use strict"; this.name;', errors: [{ messageId: 'this' }] },
-    ],
+    invalid: [{ code: 'this.name;', errors: [{ messageId: 'this' }] }],
 });

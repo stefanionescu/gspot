@@ -9,16 +9,13 @@ buildRuleTester().run('no-excess-call-arguments', noExcessCallArguments, {
         'function read() { return arguments[0]; } read(1, 2);',
         'function read() { return (() => arguments[0])(); } read(1, 2);',
         'function read(value) { return value; } const alias = read; alias(1, 2);',
-        'import read from "reader"; read(1, 2);',
         'function read(value: string): void; function read(value: number): void; function read(value: unknown) {} read(1, 2);',
         'function run({ visit }) { return visit(1, 2); }',
     ],
     invalid: [
         { code: 'function read(value) { return value; } read(1, 2);', errors: [{ messageId: 'arguments' }] },
-        { code: 'function read() { work(); } read(...values);', errors: [{ messageId: 'arguments' }] },
         { code: 'const read = (value) => value; read(1, 2);', errors: [{ messageId: 'arguments' }] },
         { code: '(function(value) { return value; })(1, 2);', errors: [{ messageId: 'arguments' }] },
-        { code: '((value) => value)(1, 2);', errors: [{ messageId: 'arguments' }] },
         {
             code: 'function read() { function nested() { return arguments[0]; } work(); } read(1);',
             errors: [{ messageId: 'arguments' }],

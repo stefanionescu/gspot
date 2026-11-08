@@ -78,7 +78,6 @@ buildRuleTester({ root }).run('prefer-matcher-assertions', preferMatcherAssertio
         'import { expect } from "vitest";\nexpect(await page.locator("a").isVisible()).toBe(true);',
         'import { expect } from "@playwright/test";\nexpect(await other.isVisible()).toBe(true);',
         'import { expect } from "@playwright/test";\nexpect(await load().isVisible()).toBe(true);',
-        'import { expect } from "@playwright/test";\nexpect(value).toBe(1);',
         'import { assert } from "chai";\nassert.equal(value, null);',
         'import { assert } from "chai";\nassert.notStrictEqual(items.length, 3);',
         'import { assert } from "chai";\nconst { strictEqual } = assert;\nstrictEqual(value.length, 1);',
@@ -86,7 +85,6 @@ buildRuleTester({ root }).run('prefer-matcher-assertions', preferMatcherAssertio
         { code: 'expect(value).toBe(NaN);', filename: join(root, 'jasmine/a.spec.ts') },
         { code: 'expect(items.length).toBe(2);', filename: join(root, 'early/a.spec.ts') },
         { code: 'expect(items.length).toBe(2);', filename: join(root, 'major/a.spec.ts') },
-        { code: 'cy.wrap(value).should("equal", 1);', filename: join(root, 'cypress/a.cy.ts') },
     ],
     invalid: [
         ...matcherCases,

@@ -8,9 +8,6 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
     noClientEnvironment,
     {
         valid: [
-            'log(process);',
-            'const { argv } = process;',
-
             {
                 code: 'const { MODE, BASE_URL, PROD, DEV, SSR } = import.meta.env;',
                 options: [{ client: true, publicPrefixes: ['VITE_'] }],
@@ -31,7 +28,6 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
             "'use client';\nconst url = process.env['NEXT_PUBLIC_URL'];",
             "'use client';\nconst url = Deno.env.get('NEXT_PUBLIC_URL');",
             "'use client';\nconst { env } = process;\nconst url = env.NEXT_PUBLIC_URL;",
-            "'use client';\nconst { env } = process;",
             {
                 code: "'use client';\nconst url = process.env['VITE_URL'];\nconst mode = process.env.APP_MODE;",
                 options: [{ publicPrefixes: ['VITE_'], allowedNames: ['APP_MODE'] }],

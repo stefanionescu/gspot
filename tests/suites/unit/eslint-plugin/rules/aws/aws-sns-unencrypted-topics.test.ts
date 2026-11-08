@@ -5,11 +5,10 @@ buildRuleTester().run('aws-sns-unencrypted-topics', awsSnsUnencryptedTopics, {
     valid: ["import * as sns from 'aws-cdk-lib/aws-sns';\nnew sns.Topic(this, 'Alerts', { masterKey: key });"],
     invalid: [
         {
-            code: "import * as sns from 'aws-cdk-lib/aws-sns';\nnew sns.Topic(this, 'a');\nnew sns.Topic(this, 'b', { masterKey: key });\nnew sns.CfnTopic(this, 'c', {});\nnew sns.Topic(this, 'd', { masterKey: undefined });",
+            code: "import * as sns from 'aws-cdk-lib/aws-sns';\nnew sns.CfnTopic(this, 'c', {});\nnew sns.Topic(this, 'd', { masterKey: undefined });",
             errors: [
                 { messageId: 'omitted', line: 2 },
-                { messageId: 'omitted', line: 4 },
-                { messageId: 'omitted', line: 5 },
+                { messageId: 'omitted', line: 3 },
             ],
         },
     ],

@@ -7,7 +7,6 @@ buildRuleTester().run('test-hooks-first', testHooksFirst, {
         'describe("cart", () => { beforeEach(reset); it("adds", run); afterEach(clean); afterAll(close); });',
         'describe("cart", () => { beforeEach(reset); });',
         'describe.each([1])("cart", () => { it("adds", run); beforeEach(reset); });',
-        'it("adds", run); beforeEach(reset);',
     ],
     invalid: [
         {

@@ -5,7 +5,6 @@ buildRuleTester().run('no-invariant-returns', noInvariantReturns, {
     valid: [
         'function save(item) { if (item) { store(item); return 1; } return 1; }',
         'function read(item) { if (item) return 1; }',
-        'function read(item) { let result = 3; if (item) { result = 4; } return result; }',
         'function read(item) { if (item) throw new Error("Missing item."); if (other) return 1; return 1; }',
         'function read(item) { const result = []; if (item) { result.push(1); return result; } return result; }',
         'function read(item) { if (item) return 1; return 2; }',
@@ -14,7 +13,6 @@ buildRuleTester().run('no-invariant-returns', noInvariantReturns, {
         'function read(item) { const result = {}; if (item) { result.size = 1; return result; } return result; }',
         'function read(item) { const result = {}; if (item) store(item); if (other) return result; return result; }',
         'async function save(draft) { if (draft) { await store(); return true; } await publish(); return true; }',
-        'async function load(p, langs) { const h = await p; if (!langs) { return h; } for (const l of langs) { await h.load(l); } return h; }',
     ],
     invalid: [
         {

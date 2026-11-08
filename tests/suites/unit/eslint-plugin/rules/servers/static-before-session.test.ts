@@ -7,10 +7,10 @@ buildRuleTester().run('static-before-session', staticBeforeSession, {
     ],
     invalid: [
         {
-            code: "const express = require('express');\nconst session = require('express-session');\nconst app = express();\napp.use(express.static('a'));\napp.use(session({ secret }));\napp.use(express.static('public'));\nmodule.exports = function (app) {\n  app.use(express.static('b'));\n  app.use(require('cookie-session')({}));\n  app.use(express.static('c'));\n};",
+            code: "const express = require('express');\nconst session = require('express-session');\nconst app = express();\napp.use(session({ secret }));\napp.use(express.static('public'));\nmodule.exports = function (app) {\n  app.use(express.static('b'));\n  app.use(require('cookie-session')({}));\n  app.use(express.static('c'));\n};",
             errors: [
-                { messageId: 'staticAfterSession', line: 6 },
-                { messageId: 'staticAfterSession', line: 10 },
+                { messageId: 'staticAfterSession', line: 5 },
+                { messageId: 'staticAfterSession', line: 9 },
             ],
         },
     ],

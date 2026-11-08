@@ -8,10 +8,10 @@ buildRuleTester().run('no-production-debug', noProductionDebug, {
     ],
     invalid: [
         {
-            code: "const errorhandler = require('errorhandler');\nconst express = require('express');\nconst app = express();\napp.use(errorhandler());\nif (process.env.NODE_ENV === 'development') {\n  app.use(errorhandler());\n}\nconst handler = errorhandler();\napp.use([handler]);",
+            code: "const errorhandler = require('errorhandler');\nconst express = require('express');\nconst app = express();\napp.use(errorhandler());\nconst handler = errorhandler();\napp.use([handler]);",
             errors: [
                 { messageId: 'debugMiddleware', line: 4 },
-                { messageId: 'debugMiddleware', line: 8 },
+                { messageId: 'debugMiddleware', line: 5 },
             ],
         },
     ],

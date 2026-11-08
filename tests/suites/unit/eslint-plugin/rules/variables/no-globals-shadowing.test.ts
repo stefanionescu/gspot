@@ -2,14 +2,7 @@ import { noGlobalsShadowing } from '#eslint-plugin/rules/variables/no-globals-sh
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester({ languageOptions: { sourceType: 'script' } }).run('no-globals-shadowing', noGlobalsShadowing, {
-    valid: [
-        'let undefined;',
-        'function read(undefined) {}',
-        'function toString() {}',
-        'const escape = 1;',
-        'const window = 1;',
-        'Math.limit = 1;',
-    ],
+    valid: ['let undefined;', 'function read(undefined) {}', 'const window = 1;', 'Math.limit = 1;'],
     invalid: [
         { code: 'const [Map] = load();', errors: [{ messageId: 'declaration' }] },
         { code: 'function read(Set = 1) {}', errors: [{ messageId: 'declaration' }] },

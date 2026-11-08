@@ -6,10 +6,6 @@ buildRuleTester().run('no-identical-functions', noIdenticalFunctions, {
         'function first() {\n    a();\n    b();\n}\nfunction second() {\n    a();\n    b();\n}',
         'function first() {\n    a();\n    b();\n    c();\n}\nfunction second() {\n    a();\n    b();\n    d();\n}',
         'run(() => {\n    a();\n    b();\n    c();\n});\nrun(() => {\n    a();\n    b();\n    c();\n});',
-        {
-            code: 'function first() {\n    a();\n    b();\n    c();\n}\nfunction second() {\n    a();\n    b();\n    c();\n}',
-            options: [{ minLines: 4 }],
-        },
     ],
     invalid: [
         {

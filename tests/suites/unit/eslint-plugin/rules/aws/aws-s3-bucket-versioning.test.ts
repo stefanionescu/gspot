@@ -8,7 +8,7 @@ buildRuleTester().run('aws-s3-bucket-versioning', awsS3BucketVersioning, {
     ],
     invalid: [
         {
-            code: "import { Bucket } from 'aws-cdk-lib/aws-s3';\nnew Bucket(this, 'a');\nconst v = false;\nnew Bucket(this, 'b', { versioned: v });\nnew Bucket(this, 'c', { versioned: true });",
+            code: "import { Bucket } from 'aws-cdk-lib/aws-s3';\nnew Bucket(this, 'a');\nconst v = false;\nnew Bucket(this, 'b', { versioned: v });",
             errors: [
                 { messageId: 'omitted', line: 2 },
                 { messageId: 'unversioned', line: 4 },

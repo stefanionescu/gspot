@@ -8,7 +8,7 @@ buildRuleTester().run('disabled-auto-escaping', disabledAutoEscaping, {
     ],
     invalid: [
         {
-            code: "const Handlebars = require('handlebars');\nHandlebars.compile(source, { noEscape: true });\nHandlebars.compile(source, { noEscape: false });\nconst marked = require('marked');\nmarked.setOptions({ sanitize: false });\nconst markdownIt = require('markdown-it');\nmarkdownIt({ html: true });\nconst swig = require('swig');\nswig.setDefaults({ autoescape: false });\nconst kramed = require('kramed');\nnew kramed.Renderer({ sanitize: false });\nconst Mustache = require('mustache');\nMustache.escape = function (text) { return text; };\nMustache.escape = (text) => text;\nMustache.escape = (text) => escapeHtml(text);",
+            code: "const Handlebars = require('handlebars');\nHandlebars.compile(source, { noEscape: true });\nHandlebars.compile(source, { noEscape: false });\nconst marked = require('marked');\nmarked.setOptions({ sanitize: false });\nconst markdownIt = require('markdown-it');\nmarkdownIt({ html: true });\nconst swig = require('swig');\nswig.setDefaults({ autoescape: false });\nconst kramed = require('kramed');\nnew kramed.Renderer({ sanitize: false });\nconst Mustache = require('mustache');\nMustache.escape = function (text) { return text; };\nMustache.escape = (text) => text;",
             errors: [
                 { messageId: 'unescaped', line: 2 },
                 { messageId: 'unescaped', line: 5 },

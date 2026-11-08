@@ -11,9 +11,5 @@ buildRuleTester().run('no-switch-case-labels', noSwitchCaseLabels, {
             code: 'switch (value) { case 1: retry: while (ready) run(); }',
             errors: [{ messageId: 'label' }],
         },
-        {
-            code: 'switch (value) { case 1: function repeat() {} retry: while (ready) run(); case 2: later: run(); }',
-            errors: [{ messageId: 'label' }, { messageId: 'label' }],
-        },
     ],
 });

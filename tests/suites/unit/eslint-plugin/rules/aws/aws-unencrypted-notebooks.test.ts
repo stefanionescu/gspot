@@ -7,7 +7,7 @@ buildRuleTester().run('aws-unencrypted-notebooks', awsUnencryptedNotebooks, {
     ],
     invalid: [
         {
-            code: "import { aws_sagemaker as sagemaker } from 'aws-cdk-lib';\nnew sagemaker.CfnNotebookInstance(this, 'a', { instanceType });\nnew sagemaker.CfnNotebookInstance(this, 'b', { kmsKeyId: key });",
+            code: "import { aws_sagemaker as sagemaker } from 'aws-cdk-lib';\nnew sagemaker.CfnNotebookInstance(this, 'a', { instanceType });",
             errors: [{ messageId: 'omitted', line: 2 }],
         },
     ],

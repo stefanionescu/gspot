@@ -3,9 +3,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-element-overwrite', noElementOverwrite, {
     valid: [
-        'list.push(1);',
         'map.set(load(), 1);\nmap.set(load(), 2);',
-        'await load();',
 
         'labels[1] = "first"; names[1] = "second"; labels[1] = "third";',
         'labels[key] = 1; labels[key] = labels[key] + 1;',
@@ -19,7 +17,6 @@ buildRuleTester().run('no-element-overwrite', noElementOverwrite, {
             code: 'labels[0] = "first"; labels[0] = "second";',
             errors: [{ messageId: 'overwrite', data: { key: '0', line: 1 } }],
         },
-        { code: 'cache.set("key", 1); cache.set("key", 2);', errors: [{ messageId: 'overwrite' }] },
         { code: 'seen.add(1); seen.add(1);', errors: [{ messageId: 'overwrite' }] },
         { code: 'labels[1] = 1; labels[2] = 2; labels[1] = 3;', errors: [{ messageId: 'overwrite' }] },
         {

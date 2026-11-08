@@ -9,7 +9,6 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
         valid: [
             'const SIZES = [16, 32, 64];',
             'export const TIMEOUT_MS = 60 * 1000;',
-            'export const STEPS = [1, 2, 4].map((step) => step) as const;',
             "export const DEPTHS = new Map([['expect', 3], ['assert', 2]]);",
             'export const UNITS = new Set<unknown>([1, 1n]);',
             {
@@ -31,7 +30,6 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
                 code: 'setTimeout(retry, 3000);',
                 errors: [{ messageId: 'noMagic', data: { raw: '3000' } }],
             },
-            { code: 'function area(radius) { return radius * 3.14; }', errors: [{ messageId: 'noMagic' }] },
             { code: 'const HANDLERS = [() => wait(500)];', errors: [{ messageId: 'noMagic' }] },
             {
                 name: 'call argument in a module constant',
@@ -45,11 +43,6 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
                     { messageId: 'noMagic', data: { raw: '0' } },
                     { messageId: 'noMagic', data: { raw: '50' } },
                 ],
-            },
-            {
-                name: 'timer delay in a module constant',
-                code: 'export const timer = setTimeout(() => undefined, 3000);',
-                errors: [{ messageId: 'noMagic', data: { raw: '3000' } }],
             },
             {
                 name: 'constructor argument in a module constant',

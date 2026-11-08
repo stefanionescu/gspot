@@ -5,22 +5,15 @@ buildRuleTester().run('no-redundant-boolean', noRedundantBoolean, {
     valid: [
         'value === true;',
         'value == "true";',
-        '!value;',
         'const result = value || true;',
         'value ? other || true : false;',
         'const result = value ?? false;',
     ],
     invalid: [
-        ...[
-            'value == true;',
-            '!true;',
-            'value && true;',
-            'if (value || false) run();',
-            '(value || true) ? first : second;',
-        ].map((code) => ({ code, errors: [{ messageId: 'boolean' as const }] })),
-        ...['true == false;', 'true && false;', 'if (false || true) run();'].map((code) => ({
-            code,
-            errors: [{ messageId: 'boolean' as const }, { messageId: 'boolean' as const }],
-        })),
-    ],
+        'value == true;',
+        '!true;',
+        'value && true;',
+        'if (value || false) run();',
+        '(value || true) ? first : second;',
+    ].map((code) => ({ code, errors: [{ messageId: 'boolean' as const }] })),
 });

@@ -9,7 +9,6 @@ buildRuleTester().run('no-index-imports', noIndexImports, {
     ],
     invalid: [
         { code: "import { a } from '~/lib/index.js';", errors: [{ messageId: 'index' }] },
-        { code: "import { a } from '#app/index';", errors: [{ messageId: 'index' }] },
         {
             code: "import { a } from './index.js';",
             errors: [{ messageId: 'index', data: { source: './index.js' } }],

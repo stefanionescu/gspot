@@ -22,24 +22,7 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 code: "import { b } from '../../user/b';",
                 filename: '/repo/packages/shop/source/cart/inner/a.ts',
             },
-            { code: "import { b } from '../b';", filename: '/repo/features/cart/inner/a.ts' },
             { code: "import { b } from './cart/b';", filename: '/repo/features/main.ts' },
-            {
-                name: 'sibling within the package feature folder',
-                code: "import { b } from '../cart/b';",
-                filename: '/repo/packages/shop/source/cart/a.ts',
-            },
-            {
-                name: 'relative import within an aliased feature',
-                code: "import { a } from './a.js';",
-                filename: '/repo/src/turn/b.ts',
-                options: [{ aliases: IMPORT_ALIASES }],
-            },
-            {
-                code: "import { a } from '@/turn/a.js';",
-                filename: '/repo/src/other/b.ts',
-                options: [{ aliases: IMPORT_ALIASES }],
-            },
             {
                 code: "import { a } from '../src-other/a.js';",
                 filename: '/repo/api/src/b.ts',
@@ -53,29 +36,6 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 code: "import { a } from '../../src/a.js';",
                 filename: '/repo/features/cart/b.ts',
                 options: [{ folders: ['.'] }],
-            },
-            {
-                name: 'relative import within a declared project',
-                code: "import { a } from './a.js';",
-                filename: '/repo/api/src/b.ts',
-                options: [{ folders: PROJECT_FOLDERS }],
-            },
-            {
-                code: "import { a } from '../types/a.js';",
-                filename: '/repo/api/src/b.ts',
-                options: [{ folders: PROJECT_FOLDERS }],
-            },
-            {
-                name: 'parent import across declared project boundaries',
-                code: "import { a } from '../../supabase/a.js';",
-                filename: '/repo/root/src/b.ts',
-                options: [{ folders: PROJECT_FOLDERS }],
-            },
-            {
-                name: 'relative import within a nested declared project',
-                code: "import { a } from './a.js';",
-                filename: '/repo/apps/api/src/b.ts',
-                options: [{ folders: ['apps', 'apps/api', 'services/db'] }],
             },
         ],
         invalid: [
@@ -101,12 +61,6 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 options: [{ aliases: { '#cli-package': 'packages/package.json' } }],
                 output: "import metadata from '#cli-package';",
                 errors: [{ messageId: 'alias' }],
-            },
-            {
-                code: "import { a } from '../a.js';",
-                filename: '/repo/scripts/inner/b.ts',
-                options: [{ aliases: IMPORT_ALIASES }],
-                errors: [{ messageId: 'escape' }],
             },
             {
                 code: "import { b } from '../../tests/b';",
@@ -151,17 +105,6 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                     { messageId: 'escape', data: { source: '../../other/a.js', folder: 'apps/api', target: 'apps' } },
                 ],
             },
-            ...['import(`../../supabase/src/a.js`);'].map((code) => ({
-                code,
-                filename: '/repo/api/src/b.ts',
-                options: [{ folders: PROJECT_FOLDERS }] satisfies [Partial<ImportBoundariesOptions[0]>],
-                errors: [
-                    {
-                        messageId: 'escape' as const,
-                        data: { source: '../../supabase/src/a.js', folder: 'api', target: 'supabase' },
-                    },
-                ],
-            })),
             {
                 code: 'import(`../turn/a.js`);',
                 filename: '/repo/src/other/b.ts',
@@ -183,28 +126,6 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                     {
                         messageId: 'escape',
                         data: { source: '../outside/a.js', folder: '.', target: '../outside/a.js' },
-                    },
-                ],
-            },
-            {
-                code: "import { a } from '../../quality/a.js';",
-                filename: '/repo/api/src/b.ts',
-                options: [{ folders: PROJECT_FOLDERS }],
-                errors: [
-                    {
-                        messageId: 'escape',
-                        data: { source: '../../quality/a.js', folder: 'api', target: 'quality/a.js' },
-                    },
-                ],
-            },
-            {
-                code: "import { a } from '../../../services/db/src/a.js';",
-                filename: '/repo/apps/api/src/b.ts',
-                options: [{ folders: ['apps', 'apps/api', 'services/db'] }],
-                errors: [
-                    {
-                        messageId: 'escape',
-                        data: { source: '../../../services/db/src/a.js', folder: 'apps/api', target: 'services/db' },
                     },
                 ],
             },

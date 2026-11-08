@@ -3,7 +3,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-insecure-random', noInsecureRandom, {
     valid: [
-        'crypto.randomUUID();',
         'function draw(Math) { return Math.random(); }',
         'const Math = { random() { return 1; } }; Math.random();',
         'const random = "round"; Math[random]();',

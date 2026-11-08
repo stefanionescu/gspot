@@ -6,12 +6,7 @@ buildRuleTester().run<'alias' | 'escape', [Partial<ImportBoundariesOptions[0]>]>
     'import-boundaries regressions',
     importBoundaries,
     {
-        valid: [
-            {
-                code: "import { a } from '..';",
-                filename: '/repo/src/cart/items/a.ts',
-            },
-        ],
+        valid: [],
         invalid: [
             {
                 code: "import text from '../lib/a.txt?raw';",

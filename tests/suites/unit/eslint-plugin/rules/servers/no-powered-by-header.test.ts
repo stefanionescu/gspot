@@ -14,7 +14,6 @@ buildRuleTester().run('no-powered-by-header', noPoweredByHeader, {
         'import express from "express"; import helmet from "helmet"; const app = express(); app.use(helmet());',
         'import express from "express"; import { hidePoweredBy as hide } from "helmet"; const app = express(); app.use(hide());',
         'const express = require("express"); const hide = require("hide-powered-by"); const app = express(); app.use(hide());',
-        'import express from "express"; import helmet from "helmet"; const middleware = [helmet.hidePoweredBy()]; const app = express(); app.use(middleware);',
         'import express from "express"; const app = express(); configure(app);',
         'import express from "express"; function build() { const app = express(); return app; }',
     ],

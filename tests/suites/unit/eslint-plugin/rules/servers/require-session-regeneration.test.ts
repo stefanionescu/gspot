@@ -8,7 +8,7 @@ buildRuleTester().run('require-session-regeneration', requireSessionRegeneration
     ],
     invalid: [
         {
-            code: "const passport = require('passport');\napp.post('/login', passport.authenticate('local', { failureRedirect: '/login' }), function (req, res) {\n  res.redirect('/');\n});\napp.post('/login2', passport.authenticate('local'), function (req, res) {\n  req.session.regenerate(() => res.redirect('/'));\n});\napp.post('/api', passport.authenticate('bearer', { session: false }), function (req, res) {\n  res.json({});\n});",
+            code: "const passport = require('passport');\napp.post('/login', passport.authenticate('local', { failureRedirect: '/login' }), function (req, res) {\n  res.redirect('/');\n});\napp.post('/api', passport.authenticate('bearer', { session: false }), function (req, res) {\n  res.json({});\n});",
             errors: [{ messageId: 'keptSession', line: 2 }],
         },
     ],

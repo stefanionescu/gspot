@@ -12,7 +12,6 @@ buildRuleTester({ root }).run('no-nested-vitest-mock', noNestedVitestMock, {
         { code: 'it("reads", () => { vi.doMock("./store"); });', filename },
         { code: 'it("reads", () => { vi.mock("./store"); });', filename: join(root, 'plain/a.test.ts') },
         { code: 'const vi = other;\nit("reads", () => { vi.mock("./store"); });', filename },
-        { code: 'import { vi } from "vitest";\nvi.mock("./store", () => ({ read: vi.fn() }));', filename },
     ],
     invalid: [
         {

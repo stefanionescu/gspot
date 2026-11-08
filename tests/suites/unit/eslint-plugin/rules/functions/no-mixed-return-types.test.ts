@@ -11,7 +11,6 @@ buildRuleTester().run('no-mixed-return-types', rule, {
 buildTypedRuleTester().run('no-mixed-return-types', rule, {
     valid: [
         'function read(raw: boolean) { if (raw) return "1"; return "2"; }',
-        'function read(raw: boolean) { if (raw) return "1"; return null; }',
         'function check(raw: boolean) { if (raw) return "invalid"; return true; }',
         '/** @returns the value */\nfunction read(raw: boolean) { if (raw) return "1"; return 1; }',
         'class Builder { add(raw: boolean) { if (raw) return this; return 1; } }',

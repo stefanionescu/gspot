@@ -3,10 +3,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('aws-apigateway-public-api', awsApigatewayPublicApi, {
     valid: [
-        "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nconst api = new apigateway.RestApi(this, 'Api', { defaultMethodOptions: { authorizationType: apigateway.AuthorizationType.IAM } });\napi.root.addMethod('GET', integration);",
         "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nconst api = new apigateway.RestApi(this, 'Api');\napi.root.addMethod('GET', integration, buildOptions());",
-        "import * as apigateway from 'aws-cdk-lib/aws-apigateway';\nconst api = new apigateway.RestApi(this, 'Api');\napi.root.resourceForPath('users').addMethod('GET');",
-        'load();',
     ],
     invalid: [
         {

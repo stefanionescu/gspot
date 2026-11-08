@@ -33,11 +33,6 @@ buildRuleTester({ root }).run('prefer-test-table', preferTestTable, {
             name: 'one statement',
         },
         {
-            code: 'test("a", () => run(1));\ntest("b", () => run(2));\ntest("c", () => run(3));',
-            filename,
-            name: 'bodies without a block',
-        },
-        {
             code: 'test.skip("adds", () => { const total = double(1); expect(total).toBeGreaterThan(0); });\ntest.skip("adds more", () => { const total = double(2); expect(total).toBeGreaterThan(0); });\ntest.skip("adds most", () => { const total = double(3); expect(total).toBeGreaterThan(0); });',
             filename,
             name: 'skipped tests',

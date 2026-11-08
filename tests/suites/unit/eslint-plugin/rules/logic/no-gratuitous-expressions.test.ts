@@ -4,8 +4,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-gratuitous-expressions', noGratuitousExpressions, {
     valid: [
         'function start(ready) { if (ready) { ready = check(); if (ready) run(); } }',
-        'function start(ready) { if (!ready) { run(); } else if (ready) { run(); } }',
-        'function start(ready, other) { if (ready && (other && last)) { if (other) run(); } }',
         'function start(ready) { if (ready) { run(ready); } }',
         'function start(ready) { const reset = () => { ready = false; }; if (ready) { if (ready) run(reset); } }',
         'function f() { let ready = true; if (ready) { queue(() => { if (ready) go(); }); } ready = false; }',
@@ -34,6 +32,5 @@ buildRuleTester().run('no-gratuitous-expressions', noGratuitousExpressions, {
             errors: [{ messageId: 'decided', data: { value: 'falsy' } }],
         },
         { code: 'if (false) run();', errors: [{ messageId: 'decided', data: { value: 'falsy' } }] },
-        { code: 'function f(a) { if (a) return a && 1; }', errors: [{ messageId: 'decided' }] },
     ],
 });

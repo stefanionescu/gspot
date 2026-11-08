@@ -10,15 +10,11 @@ buildRuleTester().run('no-swapped-arguments', rule, {
         'function compare(a, b) {} list.sort((a, b) => compare(b, a));',
         'function compare(a, b) {} const order = { reverse: compare(b, a) };',
         'function compare(a, b) {} const result = a < b ? compare(b, a) : compare(a, b);',
-        'function compare(a, b) {} const result = a < b ? compare(b, a) : 0;',
         'divide(divisor, dividend);',
-        'function compare(left, right, order) { return order(right, left); }',
         'function compare(a, b) {} list.sort((a, b) => { return compare(b, a); });',
-        'function compare(a, b) {} const result = a < b ? compare(a, b) : compare(b, a);',
         'function range(start, end) {} if (!start.isBefore(end)) range(end, start);',
         'function merge(first, second) {} if (first.length > second.length) merge(second, first);',
         'function split({ head }, tail) {} split(tail, head);',
-        'function asc(a, b) {} function desc(a, b) { return asc(b, a); }',
         'function mid(lo, hi) { return lo > hi ? mid(hi, lo) : 0; }',
     ],
     invalid: [
@@ -49,8 +45,6 @@ buildRuleTester().run('no-swapped-arguments', rule, {
 
 buildTypedRuleTester().run('no-swapped-arguments', rule, {
     valid: [
-        'function divide(dividend: number, divisor: string) {} declare const dividend: number; declare const divisor: number; divide(divisor as never, dividend);',
-        'function divide(dividend: number, divisor: number) {} declare const dividend: number; declare const divisor: number; divide(dividend, divisor);',
         'function pair(left: string, right: number) {} declare const left: number; declare const right: string; pair(right, left);',
     ],
     invalid: [

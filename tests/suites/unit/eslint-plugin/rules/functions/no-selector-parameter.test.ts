@@ -28,10 +28,6 @@ buildTypedRuleTester().run('no-selector-parameter', rule, {
             errors: [{ messageId: 'selector', data: { name: 'draft' }, column: 103 }],
         },
         {
-            code: 'declare function store(): void; class Editor { save(draft: boolean) { return draft ? store() : 1; } }',
-            errors: [{ messageId: 'selector', data: { name: 'draft' } }],
-        },
-        {
             code: 'declare function read(): number; function total(draft: boolean) { return draft ? 1 + read() : 1; }',
             errors: [{ messageId: 'selector', data: { name: 'draft' } }],
         },

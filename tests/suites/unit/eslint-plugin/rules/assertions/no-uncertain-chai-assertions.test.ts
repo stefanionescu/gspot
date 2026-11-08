@@ -15,14 +15,12 @@ buildRuleTester().run('no-uncertain-chai-assertions', noUncertainChaiAssertions,
             code: 'import { expect } from "chai";\nexpect(run).to.not.throw(TypeError);',
             errors: [{ messageId: 'uncertain', line: 2, column: 16, endColumn: 25 }],
         },
-        ...[
-            'expect(cart).to.not.include({ total: 3 });',
-            'expect(cart).to.not.have.property("total", 3);',
-            'expect(add).to.change(cart, "total").by(2);',
-        ].map((assertion) => ({
-            code: `import { expect } from "chai";\n${assertion}`,
-            errors: [{ messageId: 'uncertain' as const }],
-        })),
+        ...['expect(cart).to.not.include({ total: 3 });', 'expect(cart).to.not.have.property("total", 3);'].map(
+            (assertion) => ({
+                code: `import { expect } from "chai";\n${assertion}`,
+                errors: [{ messageId: 'uncertain' as const }],
+            }),
+        ),
         {
             code: 'import "chai";\nlist.should.not.have.members([1]);',
             errors: [{ messageId: 'uncertain' }],

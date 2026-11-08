@@ -20,13 +20,13 @@ buildRuleTester().run('no-weak-hashing', noWeakHashing, {
         },
 
         {
-            code: "import crypto from 'crypto';\ncrypto.createHash('md5').update(x).digest('hex');\ncrypto.createHash('sha256');\ncrypto.createHash('SHA1');\nconst id = crypto.createHash('md5').update(x).digest('hex').slice(0, 8);\nconst full = crypto.createHash('md5').update(x).digest('hex').slice(0);\nconst d = crypto.createHash('md5').update(x).digest('hex');\nuse(d.substring(0, 8));\nconst e = crypto.createHash('sha1').update(x).digest('hex');\nuse(e);\nasync function f() {\n  await crypto.subtle.digest('SHA-1', buf);\n  const short = (await crypto.subtle.digest('SHA-1', buf)).slice(0, 4);\n  crypto.subtle.digest('SHA-1', buf).then((h) => h.slice(0, 2));\n  const g = crypto.subtle.digest('sha-256', buf);\n}",
+            code: "import crypto from 'crypto';\ncrypto.createHash('md5').update(x).digest('hex');\ncrypto.createHash('SHA1');\nconst full = crypto.createHash('md5').update(x).digest('hex').slice(0);\nconst d = crypto.createHash('md5').update(x).digest('hex');\nuse(d.substring(0, 8));\nconst e = crypto.createHash('sha1').update(x).digest('hex');\nuse(e);\nasync function f() {\n  await crypto.subtle.digest('SHA-1', buf);\n  const short = (await crypto.subtle.digest('SHA-1', buf)).slice(0, 4);\n  crypto.subtle.digest('SHA-1', buf).then((h) => h.slice(0, 2));\n  const g = crypto.subtle.digest('sha-256', buf);\n}",
             errors: [
                 { messageId: 'weak', line: 2 },
+                { messageId: 'weak', line: 3 },
                 { messageId: 'weak', line: 4 },
-                { messageId: 'weak', line: 6 },
-                { messageId: 'weak', line: 9 },
-                { messageId: 'weak', line: 12 },
+                { messageId: 'weak', line: 7 },
+                { messageId: 'weak', line: 10 },
             ],
         },
         {

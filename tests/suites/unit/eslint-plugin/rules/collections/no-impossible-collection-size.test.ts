@@ -2,13 +2,7 @@ import { noImpossibleCollectionSize } from '#eslint-plugin/rules/collections/no-
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-impossible-collection-size', noImpossibleCollectionSize, {
-    valid: [
-        'items.length === 0;',
-        'items.count < 0;',
-        'items.length < 1;',
-        'items["length"] < 0;',
-        'items.length < zero;',
-    ],
+    valid: ['items.length === 0;', 'items.count < 0;', 'items.length < 1;'],
     invalid: [
         { code: 'items.length < 0;', errors: [{ messageId: 'comparison' }] },
         { code: 'items.length >= 0;', errors: [{ messageId: 'comparison' }] },

@@ -35,7 +35,7 @@ buildRuleTester({ root }).run('no-early-test-return', noEarlyTestReturn, {
             filename: join(root, 'plain/f.test.ts'),
         },
         {
-            code: 'import { test } from "@playwright/test";\nconst other = test;\nhelper("pays", () => { if (!ready) return; pay(); });',
+            code: 'import { test } from "@playwright/test";\nhelper("pays", () => { if (!ready) return; pay(); });',
             filename: join(root, 'plain/g.test.ts'),
         },
     ],

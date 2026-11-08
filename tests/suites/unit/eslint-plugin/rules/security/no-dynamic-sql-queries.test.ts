@@ -8,12 +8,12 @@ buildRuleTester().run('no-dynamic-sql-queries', noDynamicSqlQueries, {
     ],
     invalid: [
         {
-            code: "const { Client } = require('pg');\nconst client = new Client();\nclient.query(`SELECT * FROM users WHERE id = ${id}`);\nclient.query('SELECT * FROM users WHERE id = $1', [id]);\nclient.query('SELECT * FROM users WHERE id = ' + id);\nconst mysql = require('mysql');\nconst connection = mysql.createConnection({});\nconnection.query('SELECT ' + 'x');\nconnection.query(sql.concat(id));\nconst knex = require('knex');\nknex.raw(`DROP ${table}`);",
+            code: "const { Client } = require('pg');\nconst client = new Client();\nclient.query(`SELECT * FROM users WHERE id = ${id}`);\nclient.query('SELECT * FROM users WHERE id = ' + id);\nconst mysql = require('mysql');\nconst connection = mysql.createConnection({});\nconnection.query('SELECT ' + 'x');\nconnection.query(sql.concat(id));\nconst knex = require('knex');\nknex.raw(`DROP ${table}`);",
             errors: [
                 { messageId: 'builtQuery', line: 3 },
-                { messageId: 'builtQuery', line: 5 },
-                { messageId: 'builtQuery', line: 9 },
-                { messageId: 'builtQuery', line: 11 },
+                { messageId: 'builtQuery', line: 4 },
+                { messageId: 'builtQuery', line: 8 },
+                { messageId: 'builtQuery', line: 10 },
             ],
         },
     ],

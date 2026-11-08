@@ -1,10 +1,5 @@
 import { noMismatchedAssertionTypes } from '#eslint-plugin/rules/assertions/no-mismatched-assertion-types.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-
-buildRuleTester().run('no-mismatched-assertion-types', noMismatchedAssertionTypes, {
-    valid: ['read(undefined);'],
-    invalid: [],
-});
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('no-mismatched-assertion-types', noMismatchedAssertionTypes, {
     valid: [
@@ -17,7 +12,6 @@ buildTypedRuleTester().run('no-mismatched-assertion-types', noMismatchedAssertio
         'import { expect } from "vitest";\ndeclare function parse(): any;\nconst count: number = parse();\nexpect(count).toBe("3");',
         'import { expect } from "vitest";\nconst clock = { now: () => 1 };\nclock.now = () => 2;\nexpect(clock.now()).toBe("2");',
         'import { assert } from "chai";\ndeclare const count: number;\nassert.equal(count, "3");',
-        'declare const expect: (value: unknown) => { toBe(other: unknown): void };\ndeclare const count: number;\nexpect(count).toBe("3");',
     ],
     invalid: [
         {

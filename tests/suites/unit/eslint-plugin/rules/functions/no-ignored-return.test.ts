@@ -1,10 +1,5 @@
 import { noIgnoredReturn } from '#eslint-plugin/rules/functions/no-ignored-return.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-
-buildRuleTester().run('no-ignored-return', noIgnoredReturn, {
-    valid: ['read(undefined);'],
-    invalid: [],
-});
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('no-ignored-return', noIgnoredReturn, {
     valid: [

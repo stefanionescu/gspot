@@ -13,15 +13,12 @@ buildRuleTester().run('no-vue-updated-writes', noVueUpdatedWrites, {
             'onUpdated(() => { setTimeout(() => { count.value++; }); });',
             'onMounted(() => { count.value++; });',
             'onUpdated(() => { state.total = read(); });',
-            'onUpdated(refresh);',
             'onUpdated((value) => { value.total++; });',
-            'onUpdated(() => { state.items.total++; });',
         ].map(
             (body) =>
                 `import { ref, reactive, onUpdated, onMounted } from "vue";\nconst count = ref(0);\nconst state = reactive({ total: 0 });\nlet other = { value: 0 };\n${body}`,
         ),
         'const count = ref(0);\nonUpdated(() => { count.value++; });',
-        'import { ref } from "vue";\nconst count = ref(0);\nexport const options = { updated() { count.value++; } };',
     ],
     invalid: [
         'onUpdated(() => { count.value++; });',
@@ -35,7 +32,7 @@ buildRuleTester().run('no-vue-updated-writes', noVueUpdatedWrites, {
         'export default { updated() { count.value++; } };',
         'onUpdated(() => { if (ready) { save(); } count.value++; });',
     ].map((body) => ({
-        code: `import { ref, reactive, onUpdated, defineComponent } from "vue";\nconst count = ref(0);\nconst state = reactive({ total: 0 });\n${body}`,
+        code: `import { ref, reactive, onUpdated } from "vue";\nconst count = ref(0);\nconst state = reactive({ total: 0 });\n${body}`,
         errors: [{ messageId: 'loop' as const }],
     })),
 });

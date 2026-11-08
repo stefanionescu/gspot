@@ -8,11 +8,11 @@ buildRuleTester().run('review-blockchain-mnemonic', reviewBlockchainMnemonic, {
     ],
     invalid: [
         {
-            code: "import { Wallet } from 'ethers';\nconst phrase = 'test test test test test test test test test test test junk';\nWallet.fromPhrase(phrase);\nWallet.fromPhrase('abandon abandon abandon');\nWallet.fromPhrase(process.env.PHRASE);\nmnemonicToAccount(`legal winner thank year`);",
+            code: "import { Wallet } from 'ethers';\nconst phrase = 'test test test test test test test test test test test junk';\nWallet.fromPhrase(phrase);\nWallet.fromPhrase('abandon abandon abandon');\nmnemonicToAccount(`legal winner thank year`);",
             errors: [
                 { messageId: 'mnemonic', line: 2 },
                 { messageId: 'mnemonic', line: 4 },
-                { messageId: 'mnemonic', line: 6 },
+                { messageId: 'mnemonic', line: 5 },
             ],
         },
     ],

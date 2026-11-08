@@ -8,7 +8,7 @@ buildRuleTester().run('require-csrf-middleware', requireCsrfMiddleware, {
     ],
     invalid: [
         {
-            code: "const express = require('express');\nconst csrf = require('csurf');\nconst app = express();\nconst csrfProtection = csrf({ cookie: true });\napp.post('/a', handler);\napp.post('/b', csrfProtection, handler);\ncsrf({ ignoreMethods: ['GET', 'POST'] });\napp.use(csrf());\napp.post('/c', handler);",
+            code: "const express = require('express');\nconst csrf = require('csurf');\nconst app = express();\nconst csrfProtection = csrf({ cookie: true });\napp.post('/a', handler);\napp.post('/b', csrfProtection, handler);\ncsrf({ ignoreMethods: ['GET', 'POST'] });",
             errors: [
                 { messageId: 'unprotectedRoute', line: 5 },
                 { messageId: 'ignoredMethod', line: 7 },

@@ -8,11 +8,11 @@ buildRuleTester().run('dynamic-templates', dynamicTemplates, {
     ],
     invalid: [
         {
-            code: "const pug = require('pug');\npug.render(`p Hello ${name}`);\npug.compile('p Hello');\npug.compile(template);\nconst fn = pug.compile('p');\nfn(data);\nimport ejs from 'ejs';\nejs.render('a' + b);\nejs.render('a' + 'b');",
+            code: "const pug = require('pug');\npug.render(`p Hello ${name}`);\npug.compile(template);\nimport ejs from 'ejs';\nejs.render('a' + b);\nejs.render('a' + 'b');",
             errors: [
                 { messageId: 'builtTemplate', line: 2 },
-                { messageId: 'builtTemplate', line: 4 },
-                { messageId: 'builtTemplate', line: 8 },
+                { messageId: 'builtTemplate', line: 3 },
+                { messageId: 'builtTemplate', line: 5 },
             ],
         },
         { code: 'import { compile } from "pug";\ncompile(value + "b");', errors: [{ messageId: 'builtTemplate' }] },

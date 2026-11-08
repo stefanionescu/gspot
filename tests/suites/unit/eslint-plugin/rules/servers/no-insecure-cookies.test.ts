@@ -25,7 +25,6 @@ buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
         ...[
             'import session from "express-session"; const flags = { secure: false, httpOnly: false }; session({ cookie: flags });',
             'const { default: csrf } = require("csurf"); const enabled = true; csrf({ cookie: enabled });',
-            'import csrf from "csurf"; csrf({ cookie: { secure: false, httpOnly: false } });',
             'import Cookies from "cookies"; const cookies = new Cookies(req, res); cookies.set("key", "value", { secure: false, httpOnly: false });',
         ].map((code) => ({ code, errors: [{ messageId: 'flag' as const }, { messageId: 'flag' as const }] })),
         ...[

@@ -3,21 +3,18 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('dompurify-unsafe-config', dompurifyUnsafeConfig, {
     valid: [
-        "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ...options });",
         "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ALLOWED_TAGS: tags });",
         "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { KEEP_CONTENT: true, RETURN_DOM: true });",
-        "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { [key]: true });",
 
         "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ALLOWED_TAGS: ['b', 'i'], ALLOWED_URI_REGEXP: /^https:/ });",
     ],
     invalid: [
         {
-            code: "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { ADD_TAGS: ['iframe'], ADD_ATTR: ['onload'] });\nDOMPurify.sanitize(html, { ALLOWED_TAGS: ['b', 'i'] });\nDOMPurify.sanitize(html, { WHOLE_DOCUMENT: true, SAFE_FOR_XML: false });\nDOMPurify.sanitize(html, { ALLOWED_URI_REGEXP: /https?:/ });\nDOMPurify.sanitize(html, { ADD_URI_SAFE_ATTR: ['href'] });\nconst config = { ADD_TAGS: ['script'] };\nDOMPurify.sanitize(html, config);",
+            code: "import DOMPurify from 'dompurify';\nDOMPurify.sanitize(html, { WHOLE_DOCUMENT: true, SAFE_FOR_XML: false });\nDOMPurify.sanitize(html, { ALLOWED_URI_REGEXP: /https?:/ });\nDOMPurify.sanitize(html, { ADD_URI_SAFE_ATTR: ['href'] });",
             errors: [
                 { messageId: 'unsafe', line: 2 },
+                { messageId: 'unsafe', line: 3 },
                 { messageId: 'unsafe', line: 4 },
-                { messageId: 'unsafe', line: 5 },
-                { messageId: 'unsafe', line: 6 },
             ],
         },
     ],

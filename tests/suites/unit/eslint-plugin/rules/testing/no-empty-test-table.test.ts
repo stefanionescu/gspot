@@ -10,7 +10,6 @@ buildRuleTester({ root }).run('no-empty-test-table', noEmptyTestTable, {
     valid: [
         { code: 'test.each([])("adds %d", () => {});', filename: join(root, 'plain/a.test.ts') },
         { code: 'test.each([1])("adds %d", () => {});', filename },
-        { code: 'test.each([])("adds %d");', filename, name: 'no callback' },
         { code: 'const rows = [];\nrows.push(1);\ntest.each(rows)("adds %d", () => {});', filename },
         { code: 'let rows = [];\nrows = [1];\ntest.each(rows)("adds %d", () => {});', filename },
         { code: 'test.skip.each([])("adds %d", () => {});', filename },

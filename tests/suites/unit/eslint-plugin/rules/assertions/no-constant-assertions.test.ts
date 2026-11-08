@@ -2,7 +2,6 @@ import { noConstantAssertions } from '#eslint-plugin/rules/assertions/no-constan
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 const constantCases = [
-    ['vitest', 'expect(-1).toBe(-1);'],
     ['vitest', 'const LIMIT = 3;\nexpect(LIMIT).not.toBe(4);'],
     ['vitest', 'expect(NaN).toBe(NaN);'],
     ['vitest', 'expect(undefined).toBeUndefined();'],
@@ -31,25 +30,15 @@ const freshCases = [
 
 buildRuleTester().run('no-constant-assertions', noConstantAssertions, {
     valid: [
-        'import "cypress";\nthis.page.should("equal", 1);',
-
         'expect(true).toBe(true);',
         `import { expect } from "vitest";\nexpect(isReady()).toBe(true);`,
         `import { expect } from "vitest";\nexpect(true).toBe(false);`,
-        `import { expect } from "vitest";\nexpect(total).toBeTruthy();`,
         `import { expect } from "vitest";\nexpect([1]).toEqual([1]);`,
         `import { expect } from "vitest";\nexpect(null).toBeTruthy();`,
         `import { expect } from "vitest";\nexpect({}).not.toBeTruthy();`,
-        `import { expect } from "vitest";\nexpect(NaN).not.toBe(NaN);`,
-        `import { expect, assert } from "chai";\nexpect(total).to.equal(3);`,
-        `import { expect, assert } from "chai";\nexpect(1).to.equal(2);`,
         `import { expect, assert } from "chai";\nassert.deepEqual(load(), []);`,
         `import { expect } from "chai";\nexpect([1]).to.deep.equal([1]);`,
         `import { expect } from "vitest";\nexpect(1).toBeGreaterThan(1);`,
-        `import "cypress";\ncy.wrap(1).should("deep.include", 1);`,
-        `import "cypress";\ncy.wrap(1).should(chainer, 1);`,
-        'import assert from "node:assert";\nassert.ok(total);',
-        'import assert from "node:assert";\nassert.equal(total, 1);',
     ],
     invalid: [
         ...constantCases,

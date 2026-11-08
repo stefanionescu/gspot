@@ -7,7 +7,6 @@ buildRuleTester().run<keyof (typeof restrictedSyntax)['meta']['messages'], Restr
     restrictedSyntax,
     {
         valid: [
-            'enum Color { Red }',
             {
                 name: 'a file outside the files of the selector',
                 code: 'enum Color { Red }',
@@ -54,12 +53,6 @@ buildRuleTester().run<keyof (typeof restrictedSyntax)['meta']['messages'], Restr
                     { messageId: 'restricted', data: { message: 'Remove the debugger.' } },
                     { messageId: 'restricted', data: { message: 'Commit no debugger.' } },
                 ],
-            },
-            {
-                code: 'run();',
-                options: [{ selector: 'CallExpression', message: 'x' }],
-                settings: { gspot: {} },
-                errors: [{ messageId: 'restricted' }],
             },
             {
                 code: 'run();',

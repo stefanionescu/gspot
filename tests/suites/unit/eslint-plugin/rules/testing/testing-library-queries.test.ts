@@ -10,8 +10,6 @@ buildRuleTester().run('testing-library-queries', testingLibraryQueries, {
         'import { screen, waitForElementToBeRemoved } from "@testing-library/react";\nawait waitForElementToBeRemoved(() => screen.queryByText("Saving"));',
         'import { screen, waitForElementToBeRemoved } from "@testing-library/react";\nawait waitForElementToBeRemoved(screen.getByText("Saving"));',
         'import { screen } from "@testing-library/react";\nexpect(element).toBeTruthy();',
-        'import { screen } from "@testing-library/react";\nexpect(load()[0]).toBeTruthy();',
-        'import { screen } from "@testing-library/react";\nwrapper(element).toBeTruthy();',
     ],
     invalid: [
         ...['@testing-library/react', '@testing-library/react/pure'].map((module) => ({

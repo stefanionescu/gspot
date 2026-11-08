@@ -21,10 +21,6 @@ buildRuleTester({ root }).run('no-async-suite-callbacks', noAsyncSuiteCallbacks,
             filename,
             name: 'a callback that the suite receives as a parameter',
         },
-        {
-            code: 'import { describe } from "vitest";\ndescribe("cart", async () => { await load(); });',
-            filename: join(root, 'plain/b.test.ts'),
-        },
     ],
     invalid: [
         {

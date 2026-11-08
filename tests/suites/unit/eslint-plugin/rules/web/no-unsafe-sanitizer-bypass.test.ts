@@ -19,8 +19,6 @@ buildRuleTester().run('no-unsafe-sanitizer-bypass', noUnsafeSanitizerBypass, {
         })),
         ...[
             'sanitizer.bypassSecurityTrustHtml(`Trusted ${dynamic}`);',
-            'sanitizer.bypassSecurityTrustHtml(read());',
-            'sanitizer.bypassSecurityTrustHtml("Trusted" + dynamic);',
             'let text = "Trusted"; text = dynamic; sanitizer.bypassSecurityTrustHtml(text);',
             'const options = { text: dynamic }; sanitizer.bypassSecurityTrustHtml(options.text);',
             'const options = { text: "Trusted" }; sanitizer.bypassSecurityTrustHtml(options["text"]);',

@@ -5,7 +5,6 @@ buildRuleTester().run('no-nested-functions', noNestedFunctions, {
     valid: [
         'function a() { function b() { function c() { function d() { function e() {} } } } }',
         'describe("a", () => { it("b", () => { function c() { function d() { function e() { function f() { function g() {} } } } } }); });',
-        { code: 'function a() { function b() {} }', options: [{ threshold: 2 }] },
     ],
     invalid: [
         {

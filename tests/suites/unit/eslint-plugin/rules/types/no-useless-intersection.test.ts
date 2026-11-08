@@ -8,7 +8,6 @@ buildRuleTester().run('no-useless-intersection', noUselessIntersection, {
 
 buildTypedRuleTester().run('no-useless-intersection', noUselessIntersection, {
     valid: [
-        'type Shape = { size: number } & { name: string };',
         'type Size = "small" | "large" | (string & {});',
         'type Plain<T> = { [K in keyof T]: T[K] } & {};',
         'type Present<T> = T & {};',

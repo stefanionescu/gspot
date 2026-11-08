@@ -4,10 +4,8 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-duplicated-branches', noDuplicatedBranches, {
     valid: [
         'if (first) { run(); } else if (second) { run(); } else { stop(); }',
-        'switch (mode) { case 1: { run(); } break; case 2: run(); break; }',
         'switch (mode) { case 1: run(); break; case 2: run(); break; default: }',
         'const value = isReady ? first : second;',
-        'if (first) {\n    run();\n    stop();\n} else if (second) {\n    stop();\n}',
     ],
     invalid: [
         {

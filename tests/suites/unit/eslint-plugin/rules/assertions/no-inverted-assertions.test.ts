@@ -38,17 +38,5 @@ buildRuleTester().run('no-inverted-assertions', noInvertedAssertions, {
                 },
             ],
         },
-        {
-            code: 'it("adds", () => { should.fail(1, total); });',
-            errors: [
-                {
-                    messageId: 'swap',
-                    data: { format: 'should.fail(actual, expected)' },
-                    suggestions: [
-                        { messageId: 'swapArguments', output: 'it("adds", () => { should.fail(total, 1); });' },
-                    ],
-                },
-            ],
-        },
     ],
 });

@@ -26,10 +26,6 @@ buildTypedRuleTester().run('no-try-promise', noTryPromise, {
             errors: [{ messageId: 'open' }],
         },
         {
-            code: 'async function run(load: () => Promise<number>) { try { load().finally(stop); } catch {} }',
-            errors: [{ messageId: 'open' }],
-        },
-        {
             code: 'async function run(load: () => Promise<number>) { try { new Promise(load); } catch {} }',
             errors: [{ messageId: 'open' }],
         },

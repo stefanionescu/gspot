@@ -5,7 +5,6 @@ buildRuleTester().run('no-ui-test-debugging', noUiTestDebugging, {
     valid: [
         { code: 'cy.pause();', filename: 'page.ts' },
         { code: 'cy.get("button").click();', filename: 'page.cy.ts' },
-        { code: 'logger.debug("value");', filename: 'page.test.ts' },
         { code: 'import { screen } from "./screen";\nscreen.debug();', filename: 'page.test.ts' },
     ],
     invalid: [

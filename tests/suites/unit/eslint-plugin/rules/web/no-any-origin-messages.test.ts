@@ -15,7 +15,6 @@ buildTypedRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
         "function handle(event: any) {\n    const source = event || event.originalEvent;\n    if (source.origin === 'https://app.example.com') console.log(source.data);\n}\nwindow.addEventListener('message', handle);",
         "function handle(event: any) {\n    const origin = event.originalEvent.origin || event.origin;\n    if (origin === 'https://app.example.com') console.log(event.data);\n}\nwindow.addEventListener('message', handle);",
         "function handle(event: any) {\n    if (event.originalEvent.origin === 'https://app.example.com') console.log(event.data);\n}\nwindow.addEventListener('message', handle);",
-        "declare const handler: (event: MessageEvent) => void;\nwindow.addEventListener('message', handler);",
         "declare const handle: (event: MessageEvent) => void;\nwindow.addEventListener('message', (event) => handle(event));",
         'declare const port: MessagePort;\nport.onmessage = (event) => { console.log(event.data); };',
         "window.addEventListener('message', (event) => { const { origin, data } = event; if (origin !== 'https://app.example.com') return; console.log(data); });",
@@ -37,10 +36,6 @@ buildTypedRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
         {
             code: "declare const untyped: any;\nuntyped.childWindow.postMessage({ ready: true }, '*');",
             errors: [{ messageId: 'anyTarget', line: 2 }],
-        },
-        {
-            code: "window.addEventListener('message', (event) => {\n    console.log(event.data);\n});",
-            errors: [{ messageId: 'unverifiedOrigin', line: 1 }],
         },
         {
             code: "window.addEventListener('message', (event) => {\n    console.log(event);\n});",

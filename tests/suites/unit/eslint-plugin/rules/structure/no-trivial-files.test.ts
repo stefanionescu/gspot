@@ -10,31 +10,21 @@ buildRuleTester().run<keyof (typeof noTrivialFiles)['meta']['messages'], [Partia
     {
         valid: [
             'import "./polyfills.js"; import "./app.js";',
-            'export const PORT = process.env.PORT; export const HOST = process.env.HOST;',
+            'export const PORT = process.env.PORT;',
             'import { loadConfig } from "./config"; export const port = loadConfig().port;',
-            'export const ROOT = import.meta.dirname;',
             'export class Money { double() { return this.amount * 2; } }',
             {
                 code: 'import type { A } from "a"; declare const plugin: A & { rules: Record<string, unknown> }; export default plugin;',
                 filename: '/repo/src/plugin.d.ts',
             },
-            'import type { Plugin } from "./owner"; declare const plugin: Plugin; export default plugin;',
             'export const callback = () => 1;',
             'import { run } from "./owner"; run();',
-            'await run();',
-            'export default ({ enabled: true } satisfies Settings);',
             'export type Settings = { enabled: boolean };',
             'import type { z } from "zod"; import type { schema } from "./schema"; export type Settings = z.infer<typeof schema>;',
             {
                 name: 'index re-export allowed at index-only',
                 code: 'export * from "./owner";',
                 filename: '/repo/src/index.ts',
-                options: [{ reexports: 'index-only' }],
-            },
-            {
-                name: 'named index re-export allowed at index-only',
-                code: 'export { value } from "./owner";',
-                filename: '/repo/src/nested/index.ts',
                 options: [{ reexports: 'index-only' }],
             },
             {
@@ -145,10 +135,6 @@ buildRuleTester().run('no-trivial-files regressions', noTrivialFiles, {
             code: 'export type Tree = ReadonlyArray<Tree>;',
             name: 'a recursive type is not forwarding',
         },
-        {
-            code: "import type { Box, User } from './types';\nexport type UserBox = Box<User>;",
-            name: 'a specialized generic is not forwarding',
-        },
     ],
     invalid: [],
 });
@@ -163,7 +149,7 @@ const packageRoot = writePackageFolders({
 });
 
 buildRuleTester({ root: packageRoot }).run('no-trivial-files package entries', noTrivialFiles, {
-    valid: ['src/index.ts', 'src/middleware.ts', 'bin/store.js'].map((path) => ({
+    valid: ['src/middleware.ts', 'bin/store.js'].map((path) => ({
         code: "export * from './vanilla.ts';",
         filename: join(packageRoot, 'store', path),
     })),

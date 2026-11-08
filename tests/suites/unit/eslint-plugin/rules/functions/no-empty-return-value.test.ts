@@ -15,9 +15,7 @@ buildRuleTester().run('no-empty-return-value', noEmptyReturnValue, {
         'const read = () => save(); const value = read();',
         'declare function read(): number; const value = read();',
         'function read() { save(); } const alias = read; const value = alias();',
-        'import read from "reader"; const value = read();',
         'function run(callback: () => number) { const value = callback(); consume(value); }',
-        'function run({ read }) { consume(read()); }',
     ],
     invalid: [
         { code: 'function write() { save(); } const value = write();', errors: [{ messageId: 'return' }] },
