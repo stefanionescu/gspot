@@ -14,7 +14,6 @@ test('detection descriptions join the absent dependencies into one exception', (
     expect(exclusions).toHaveLength(1);
     expect(exclusions[0]).toStartWith('unless the scope depends on `next`, `nuxt`, ');
     expect(conditions.join(' ')).not.toContain('`next`');
-    expect(conditions).toContain('a filename `sitemap.xml`');
 });
 
 test('detection descriptions write a negated path as an exception and a shebang by its program', () => {

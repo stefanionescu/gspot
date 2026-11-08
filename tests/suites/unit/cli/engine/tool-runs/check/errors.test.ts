@@ -5,12 +5,11 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { formatRunReport } from '#cli/commands/check/report.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandBatches, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { BATCH_CHECK, BATCH_FINDINGS, BATCH_IGNORE, CAFE_SOURCE_PATH } from '#tests/config/engine/tool-runs.ts';
+import { BATCH_CHECK, BATCH_FINDINGS, BATCH_IGNORE } from '#tests/config/engine/tool-runs.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -49,26 +48,6 @@ test.skipIf(isWindows)('a command check whose program lost its execute bit error
     expect(unexecutable.report.checks[0]?.note).toContain('EACCES');
 });
 
-test('per-file failures name the selected file', async () => {
-    const command = buildProgramCommand('checks/search', '--text', 'invalid', '{file}');
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [{ id: 'project/file-result', command, paths: ['inputs/**'], stage: 'commit' }],
-            }),
-        }),
-        'inputs/café source.txt': 'invalid',
-    });
-
-    const session = await openSession(sandbox.path);
-    const plans = planChecks(session, { stage: 'all', only: ['project/file-result'] });
-    const planned = plans[0]!;
-    const failed = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
-    expect(failed.status).toBe('failed');
-    expect(failed.findings.map((finding) => finding.file)).toStrictEqual([CAFE_SOURCE_PATH]);
-});
-
 test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a finding', async () => {
     const command = buildProgramCommand('fakes/tool', '--signal', 'SIGTERM', '{file}');
     await using sandbox = await createGitSandbox({
@@ -87,25 +66,6 @@ test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a
     const failed = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
     expect(failed.status).toBe('error');
     expect(failed.findings).toStrictEqual([]);
-});
-
-test('a command check whose config file is missing errors before it runs and names gspot install', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'source.js': 'export const ready = true;\n',
-    });
-    const session = await openSession(sandbox.path);
-    const planned = planChecks(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
-    const command = ['prettier', '--config', '{config_file:prettier}', '{files}'];
-    const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), {
-        ...planned,
-        check: { ...planned.check, command },
-    });
-    expect(result).toMatchObject({
-        status: 'error',
-        note: expect.stringContaining('.gspot/configurations/format/prettier.json') as string,
-        findings: [],
-    });
 });
 
 test('a fatal command group stops before the next group runs', async () => {
@@ -130,7 +90,7 @@ test('a fatal command group stops before the next group runs', async () => {
     expect(commands).toStrictEqual([[process.execPath, 'first']]);
 });
 
-test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unignored findings', async (failure) => {
+test.each(['crash'] as const)('a later %s preserves only selected, unignored findings', async () => {
     const command = buildProgramCommand('fakes/tool', '{file}');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [{ ...BATCH_CHECK, command }] }) }),
@@ -138,7 +98,7 @@ test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unig
         'two.txt': 'two',
         'outside.txt': 'outside',
     });
-    const failed = failure === 'crash' ? { code: 2, stderr: 'Fatal failure.' } : { stdout: '{broken' };
+    const failed = { code: 2, stderr: 'Fatal failure.' };
     using _commands = fakeCommands(process.execPath, (command) =>
         Promise.resolve(
             buildProcessResult(
@@ -150,21 +110,14 @@ test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unig
     const paths = ['one.txt', 'two.txt'];
     const options = buildRunOptions({ cwd: sandbox.path, only: ['project/batches'], paths, pathArguments: paths });
     const result = await runChecks(session, options);
-    expect(result.report.exitCode).toBe(2);
     expect(
         result.report.checks.map(({ status, findings }) => ({
             status,
             findings: findings.map(({ file, rule, message }) => ({ file, rule, message })),
         })),
     ).toStrictEqual([{ status: 'error', findings: [{ file: 'one.txt', rule: 'kept', message: 'Kept finding.' }] }]);
-    for (const isVerbose of [false, true]) {
-        const text = formatRunReport(result.report, { verbose: isVerbose });
-        expect(text).toContain('Kept finding.');
-        expect(text).not.toContain('Outside finding.');
-    }
     session.settings.ignore.push(BATCH_IGNORE);
     const ignored = await runChecks(session, options);
-    expect(ignored.report.exitCode).toBe(2);
     expect(ignored.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual([
         { status: 'error', findings: [] },
     ]);

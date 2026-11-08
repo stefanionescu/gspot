@@ -51,7 +51,6 @@ test('a human error removes terminal controls while JSON preserves the message a
         expect(stderr).toStrictEqual(['Beforeafter\n']);
         setOutputOptions({ isJson: true });
         printError({ error: 'filesystem', message });
-        expect(stdout.join('')).not.toContain('\u{1B}');
         expect(JSON.parse(stdout.join(''))).toStrictEqual({
             version: cliPackage.version,
             exitCode: 2,

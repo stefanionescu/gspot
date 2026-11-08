@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test';
 
-import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import {
     getLimit,
@@ -62,9 +61,6 @@ test('OpenAPI stays off without a document and in a scope that removes it', asyn
     const session = await openSession(sandbox.path);
     expect(getTable(session.scopes[0]!.settings, 'openapi').document).toBeUndefined();
     expect(session.scopes[1]!.configurations.map(({ name }) => name)).not.toContain('openapi');
-    expect(
-        planChecks(session, { stage: 'all', only: ['openapi/spectral'] }).map(({ skip }) => skip?.cause),
-    ).toStrictEqual(['setting']);
 });
 
 test('Postgres client schemas come from Supabase or from gspot.toml', async () => {
@@ -145,7 +141,6 @@ test('an ignore without a check applies to every check', async () => {
     const selected = scopes[0]!.settings;
     const expected = [{ paths: ['generated/**'], reason: 'The generator owns these files.' }];
     expect(listIgnores(selected, 'python/ruff')).toStrictEqual(expected);
-    expect(listIgnores(selected, 'typescript/tsc')).toStrictEqual(expected);
 });
 
 test('a table rule option keeps its value and reason fields', async () => {

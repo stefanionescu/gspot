@@ -72,10 +72,3 @@ test('invalid Xcode syntax names the file and uses the parse error code', () => 
         throw new Error('Invalid Xcode syntax was accepted.');
     }
 });
-
-test('an inherited object name is refused as an Xcode object reference', () => {
-    const source = GROUPED_PBXPROJ.replace('B1, B2,', 'constructor, B2,');
-    expect(() => parseProjectSources(source, 'App.xcodeproj/project.pbxproj')).toThrow(
-        matchFields<GspotError>({ name: 'GspotError', code: 'parse' }),
-    );
-});

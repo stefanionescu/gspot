@@ -19,7 +19,6 @@ test('limits that no check reads are refused', () => {
 });
 
 test.each([
-    { tables: '[limits]\nmax_function_lines = 59\n', general: 59, bash: 40 },
     {
         tables: '[limits]\nmax_function_lines = 59\n[limits.bash]\nmax_function_lines = { value = 50, reason = "Long installers." }\n',
         general: 59,

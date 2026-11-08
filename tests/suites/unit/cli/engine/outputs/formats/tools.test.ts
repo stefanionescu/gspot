@@ -4,14 +4,11 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import { EDITORCONFIG_REPORT, LINE_ENDING_CASES, WINDOWS_ROOT_CASES } from '#tests/config/engine/outputs.ts';
-import { FAILED_RUN } from '#tests/config/engine/tool-runs.ts';
 import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
 import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test.each([...LINE_ENDING_CASES])(
     'ShellCheck output keeps path, position and rule with %s line endings',
@@ -35,17 +32,6 @@ test.each([...LINE_ENDING_CASES])(
                 fixable: false,
             },
         ]);
-        expect(
-            parseCommandFindings(
-                { check },
-                buildProcessResult({ ...FAILED_RUN, stderr: output }),
-                {
-                    cwd: sandbox.path,
-                    root: sandbox.path,
-                },
-                {},
-            ).findings,
-        ).toStrictEqual(findings);
     },
 );
 

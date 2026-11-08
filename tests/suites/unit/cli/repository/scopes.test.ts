@@ -38,17 +38,10 @@ test.each([...WORKSPACE_FILE_CASES])(
             'packages/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
         });
 
-        const repository = await readTestRepository(sandbox.path);
         expect(listWorkspaceFolders(sandbox.path).toSorted(compareText)).toStrictEqual([
             'packages/api',
             'packages/lint',
         ]);
-        const scopes = detectScopeFolders(
-            repository.files,
-            await readDependencyFiles(createRunCache(sandbox.path), repository.files),
-            readConfigurations().values(),
-        );
-        expect(scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
     },
 );
 

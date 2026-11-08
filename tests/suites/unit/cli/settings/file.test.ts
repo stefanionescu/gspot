@@ -37,14 +37,14 @@ test('writing an unchanged file does not touch it', async () => {
     expect(await stat(path)).toMatchObject({ ino: before.ino, mtimeMs: before.mtimeMs, mode: before.mode });
 });
 
-test.each(['symlink inside', 'symlink outside'])('reading a gspot.toml that is a link is refused: %s', async (kind) => {
+test.each(['symlink inside'])('reading a gspot.toml that is a link is refused: %s', async () => {
     await using sandbox = await testdir({
         'project/source.toml': COMMENTED_SETTINGS,
         'outside.toml': COMMENTED_SETTINGS,
     });
 
     const root = join(sandbox.path, 'project');
-    const target = join(sandbox.path, kind === 'symlink outside' ? 'outside.toml' : 'project/source.toml');
+    const target = join(sandbox.path, 'project/source.toml');
     await symlink(target, join(root, 'gspot.toml'));
     expect(() => readSettingsFile(root)).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }));
 });

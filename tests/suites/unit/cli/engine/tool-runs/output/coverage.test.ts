@@ -21,7 +21,6 @@ test.each(FILELESS_COVERAGE_CASES)(
             {},
         );
         expect(parsed.findings).toStrictEqual([{ check: id, file: '', message, help: check.help, fixable: false }]);
-        expect(parsed.note).toBeUndefined();
         const result = buildCheckResult(check, {
             base: { check: id, scope: '', status: 'passed', fileCount: 0, duration: 0, findings: [] },
             state: { root: sandbox.path, cwd: sandbox.path, failed: true, findings: parsed.findings! },

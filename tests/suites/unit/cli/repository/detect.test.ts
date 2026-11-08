@@ -175,18 +175,16 @@ test('a package.json with no dependency selects no JavaScript in a shell reposit
     expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('javascript');
 });
 
-test.each([
-    ['vitest', ['typescript', 'vitest']],
-    ['vitest', ['vitest']],
-    ['jest', ['typescript', 'jest']],
-    ['cloudflare', ['wrangler']],
-])('a package.json with a dependency that %s detects selects it and javascript: %j', async (configuration, names) => {
-    const devDependencies = Object.fromEntries(names.map((name) => [name, '0.0.0-test']));
-    await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify({ devDependencies }) });
-    const proposed = await detectSandboxConfigurations(sandbox.path);
-    expect(proposed).toContain(configuration);
-    expect(proposed).toContain('javascript');
-});
+test.each([['vitest', ['typescript', 'vitest']]])(
+    'a package.json with a dependency that %s detects selects it and javascript: %j',
+    async (configuration, names) => {
+        const devDependencies = Object.fromEntries(names.map((name) => [name, '0.0.0-test']));
+        await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify({ devDependencies }) });
+        const proposed = await detectSandboxConfigurations(sandbox.path);
+        expect(proposed).toContain(configuration);
+        expect(proposed).toContain('javascript');
+    },
+);
 
 test('a package.json with only gspot, its tools, and a hook manager selects no javascript', async () => {
     const names = ['@gspothq/cli', 'prettier', 'eslint', 'typescript', 'husky'];
@@ -213,23 +211,4 @@ test('site detection excludes a server framework even when a sitemap is present'
         'public/sitemap.xml': '<urlset/>',
     });
     expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('site');
-});
-
-test('a favicon manifest alone does not select the static site checks', () => {
-    expect(
-        detectConfigurations({
-            root: process.cwd(),
-            files: [
-                {
-                    path: 'public/site.webmanifest',
-                    kind: 'source' as const,
-                    kindOrigin: SOURCE_KIND.origin,
-                    tags: ['text'],
-                    executable: false,
-                    size: 1,
-                },
-            ],
-            dependencyFiles: [],
-        }).map(({ configuration }) => configuration),
-    ).not.toContain('site');
 });

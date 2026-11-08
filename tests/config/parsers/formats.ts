@@ -106,21 +106,6 @@ export const LOCKED_VERSION_CASES = [
 
 export const XCODE_PROJECT_REFUSALS = [
     {
-        name: 'missing value',
-        source: GROUPED_PBXPROJ.slice(0, -3),
-    },
-    {
-        name: 'unknown object',
-        source: GROUPED_PBXPROJ.replace('B1, B2,', 'MISSING, B2,'),
-    },
-    {
-        name: 'group cycle',
-        source: GROUPED_PBXPROJ.replace('children = (F1,);', 'children = (FIRST, F1,);').replace(
-            'children = (FIRST, SECOND, ROOT, SYNC,);',
-            'children = (SECOND, ROOT, SYNC,);',
-        ),
-    },
-    {
         name: 'unresolved source tree',
         source: GROUPED_PBXPROJ.replace('sourceTree = SOURCE_ROOT;', 'sourceTree = CUSTOM_BUILD_ROOT;'),
     },

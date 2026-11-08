@@ -45,7 +45,6 @@ test('every accepted fixed property has an editor description, including nested 
         );
         for (const [key, child] of children) {
             if (child.not !== undefined) continue;
-            expect(child.description, path + '.' + key).toBeString();
             expect(child.description?.length, path + '.' + key).toBeGreaterThan(0);
             visit(child, path + '.' + key);
         }

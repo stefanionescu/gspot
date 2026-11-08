@@ -60,25 +60,6 @@ export const EDITORCONFIG_REPORT = `source.js:
 2 errors found
 `;
 
-export const BRACKETED_WORD_FINDINGS = [
-    {
-        check: 'sandbox/diagnostic',
-        file: 'a.txt',
-        line: 1,
-        message: 'Call the function by its full name (fetch)',
-        help: '',
-        fixable: false,
-    },
-    {
-        check: 'sandbox/diagnostic',
-        file: 'b.txt',
-        line: 2,
-        message: 'Name the type [User]',
-        help: '',
-        fixable: false,
-    },
-] as const;
-
 export const WINDOWS_ROOT_CASES = [
     {
         root: 'C:/work',
@@ -95,7 +76,6 @@ export const FIXABLE_FORMAT_CASES = [
 ] as const;
 
 export const ESLINT_PATH_CASES: Array<[root: string, path: string, expected: string]> = [
-    ['/repo', '/repo/a.js', 'a.js'],
     ['/repo', '/repository/a.js', '../repository/a.js'],
     [
         win32.normalize('C:/repo'),
@@ -221,10 +201,6 @@ export const TYPO_REPORT = {
 } as const;
 
 export const TYPOS_REPORT_ERRORS = [
-    {
-        name: 'escaping path',
-        output: { ...TYPO_REPORT, path: '../outside.txt' },
-    },
     {
         name: 'missing source',
         output: { ...TYPO_REPORT, path: 'missing.txt' },

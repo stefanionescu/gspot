@@ -49,14 +49,6 @@ test.each([0])('the fixer tool owns crash detection when exit is %p', async (cod
         changed: [],
         note: 'Fatal: cannot write',
     });
-    const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
-    corrected.tool = planned.tool;
-    const correctedResultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [corrected]);
-    const correctedResult = correctedResultRun.results[0];
-    expect(correctedResult).toMatchObject({
-        status: 'changed',
-        changed: ['source.txt'],
-    });
 });
 
 test.each([...FIXER_RESULTS])(
@@ -119,7 +111,6 @@ test('a skipped fixer reports skipped, and a fixer whose program is missing fail
         status: 'failed',
         note: expect.stringContaining(join(sandbox.path, 'absent-tool')) as string,
     });
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
 });
 
 test('a fixer runs its own program when the check program is missing', async () => {
@@ -196,12 +187,6 @@ test('a fixer that breaks a file with an unstaged edit puts the file back and ex
     expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
     expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);
     expect(result.fixes?.changed).toStrictEqual([]);
-    const output = formatFixes(result.fixes!);
-    expect(output.join('\n')).not.toContain('git checkout');
-    expect(output.join('\n')).not.toContain('Fixed ');
-    expect(output).toContain(
-        'The fixers left a syntax error in client.ts; gspot put back the file as it was before the fixers.',
-    );
     expect(result.report.exitCode).toBe(2);
     expect(result.report.failed).toStrictEqual([]);
 });

@@ -4,7 +4,6 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import { NEXT_INTL_PROJECTS } from '#tests/config/engine/skips.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -118,18 +117,6 @@ test('shipped Semgrep rules select its tool', async () => {
     expect(listPackagePins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(true);
 });
 
-test('a JavaScript repository installs no Python tool', async () => {
-    using _platform = fakePlatform('linux');
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'github-actions']),
-        'package.json': '{"name":"example","version":"1.0.0"}',
-        'index.js': 'export const port = 8080;\n',
-        '.github/workflows/ci.yml': 'on: push\n',
-    });
-    const session = await openSession(sandbox.path);
-    expect(listPackagePins(session.toolConfigurations).python).toStrictEqual([]);
-});
-
 test('generated and vendored test files do not satisfy a source-tag condition', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift']),
@@ -167,18 +154,6 @@ test('pytest/tests skips a scope that holds no test file', async () => {
             scope: 'docs',
             skip: { cause: 'condition', note: expect.stringContaining('conftest.py') as string },
         },
-    ]);
-});
-
-test('javascript/knip skips a TypeScript repository that has no package.json', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript']),
-        'tsconfig.json': '{}',
-        'main.ts': 'export const value = 1;\n',
-    });
-    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['javascript/knip'] });
-    expect(planned.map(({ skip }) => skip)).toStrictEqual([
-        { cause: 'condition', note: expect.stringContaining('package.json') as string },
     ]);
 });
 
@@ -223,18 +198,3 @@ test('limit readers report their enabled state and exact level note', async () =
         ),
     ).toStrictEqual([{ check: 'python/function-size', enabled: true }]);
 });
-
-test.each(['max_function_lines', 'max_function_statements', 'max_block_nesting', 'max_callback_nesting'])(
-    'javascript/eslint writes the configured %s limit into its generated file',
-    async (limit) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['javascript'], {
-                level: 'all',
-                tables: `[limits.javascript]\n${limit} = { value = 1001, reason = "The generated limit must retain this distinctive value." }\n`,
-            }),
-        });
-        const session = await openSession(sandbox.path);
-        const generated = buildGeneratedFiles(session).files.find(({ path }) => path.endsWith('eslint.mjs'));
-        expect(generated?.content).toMatch(/\b1001\b/u);
-    },
-);

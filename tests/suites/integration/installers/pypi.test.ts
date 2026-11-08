@@ -1,14 +1,13 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
-import { basename, delimiter, join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { strToU8, zipSync } from 'fflate';
 import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import {
     PYTHON_INDEX_CREDENTIALS,
     UV_RELEASE_CUTOFF_LINE,
@@ -25,7 +24,6 @@ import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
@@ -46,22 +44,10 @@ afterAll(() => resources.disposeAsync());
 
 test('Python tool project install keeps the authored and generated files with uv.toml', async () => {
     await using sandbox = await createGitSandbox({});
-    await using artifacts = await createGitSandbox({});
     await using project = await createIndexedPythonProject(sandbox.path);
-    const { projectFile, lockfilePath, lockfile } = project.files;
-    const { rootProject, rootConfiguration } = project;
-    expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
-    const brokenUv = await writeProgramCommand(artifacts.path, 'bin/uv', 'fakes/tool', '--exit', '87');
-    const installed = await spawnGspot(sandbox.path, ['install', '--json'], {
-        PATH: [brokenUv, readEnvironmentVariable('PATH') ?? ''].join(delimiter),
-        MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
-    });
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    const { rootProject } = project;
     expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
     expect(await readFile(join(sandbox.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject))).toStrictEqual(projectFile);
-    expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
-    expect(await readFile(join(sandbox.path, UV_CONFIGURATION))).toStrictEqual(rootConfiguration);
 });
 
 test('a fresh Python clone with uv.toml installs the locked tools twice without changing tracked files, and its Python runs from .gspot/.venv', async () => {

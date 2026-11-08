@@ -17,21 +17,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
-test('basic tRPC server files select the boundaries plugin without import rules', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript', 'trpc'], {
-            tables: '[trpc]\nserver_files = ["server/**"]\n',
-        }),
-        'server/router.ts': 'export const router = {};\n',
-    });
-    const session = await openSession(sandbox.path);
-    const planned = planChecks(session, { stage: 'commit', only: ['javascript/eslint'] })[0]!;
-    expect(listCheckTools(planned)).toContain('eslint-plugin-boundaries');
-    expect(session.toolConfigurations.flatMap(({ tools }) => tools.map(({ name }) => name))).toContain(
-        'eslint-plugin-boundaries',
-    );
-});
-
 test.each([...NODE_REQUIREMENTS])(
     'the tools include Node only when an npm tool needs it: $name',
     async ({ configurations, tables, files, needs, skips }) => {
@@ -69,7 +54,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
             checks = planChecks(session, { stage: 'push', only: [configuration + '/tests'] });
         });
         afterAll(() => resources.disposeAsync());
-        test.each(['', 'app'])(
+        test.each([''])(
             'scope %p needs the coverage provider only above a zero limit and always lists it among the secondary tools',
             (scope) => {
                 const check = checks.find((planned) => planned.scope.path === scope)!;

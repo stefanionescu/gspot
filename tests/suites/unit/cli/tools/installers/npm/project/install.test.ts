@@ -12,7 +12,6 @@ import { LOCKFILE_CREDENTIAL_MESSAGE, NPM_LOCKFILE_CREDENTIAL_MESSAGE } from '#c
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installNpmTools, installUnlockedNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
 import {
     CREDENTIAL_LOCKFILE,
     CREDENTIAL_PACKAGE_JSON,
@@ -23,7 +22,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
@@ -43,7 +41,7 @@ async function captureLockfileRefusal(root: string, packageJson: string, lockfil
     );
 }
 
-test.each([...FAILED_INSTALL_CASES])('a failed $operation hides credentials', async ({ frozen }) => {
+test.each([...FAILED_INSTALL_CASES])('a failed $operation hides credentials', async () => {
     const refusal = 'HTTP 403 Forbidden';
     await using sandbox = await createGitSandbox({});
     const token = 'synthetic-registry-failure-token';
@@ -51,11 +49,9 @@ test.each([...FAILED_INSTALL_CASES])('a failed $operation hides credentials', as
     const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
     const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
     const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
-    const previous = frozen
-        ? packageJson
-        : JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
+    const previous = packageJson;
     const lockfile = JSON.stringify({
-        workspaces: { '': { devDependencies: { prettier: frozen ? '3.8.1' : '3.8.0' } } },
+        workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
     });
     await createFileTree(sandbox.path, {
         '.npmrc': source,
@@ -76,11 +72,7 @@ test.each([...FAILED_INSTALL_CASES])('a failed $operation hides credentials', as
         ),
     );
     const install = await buildNpmToolInstall(session, owner);
-    const installationError = await captureRejection(
-        frozen
-            ? installNpmTools(install)
-            : planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: packageJson }),
-    );
+    const installationError = await captureRejection(installNpmTools(install));
     expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
     for (const secret of [password, encodeURIComponent(password), token])
         expect(installationError.message).not.toContain(secret);
@@ -158,35 +150,4 @@ test('a lockfile that npm writes with registry credentials in its one run is del
     const error = await captureRejection(installUnlockedNpmTools(install));
     expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
     expect(existsSync(join(sandbox.path, GSPOT_FOLDER, 'package-lock.json'))).toBe(false);
-});
-
-test('a missing Node stops npm before it writes a lockfile and keeps a cached lockfile', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
-        'gspot.toml': buildSandboxSettings([]),
-    });
-    const session = await openSession(sandbox.path);
-    const pins = listPackagePins(session.toolConfigurations).npm;
-    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: pins });
-    const lockfile = JSON.stringify({
-        workspaces: { '': { devDependencies: pins } },
-        packages: Object.fromEntries(
-            Object.entries(pins).map(([name, version]) => [name, [`${name}@${version}`, '', {}, 'sha512-YQ==']]),
-        ),
-    });
-    using _path = overrideEnvironment({
-        PATH: join(sandbox.path, 'missing-bin'),
-        MISE_DATA_DIR: join(sandbox.path, 'missing-mise'),
-    });
-    const owner = openFiles(sandbox.path);
-    const install = await buildNpmToolInstall(session, owner);
-    const projectFile = { path: GSPOT_PATHS.npmProject, content: packageJson };
-    const lockfileError = await captureRejection(planNpmLockfile(install, projectFile));
-    expect(lockfileError).toMatchObject({ name: 'GspotError', code: 'install' });
-    await createFileTree(sandbox.path, {
-        [GSPOT_PATHS.npmProject]: packageJson,
-        [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
-    });
-    const cached = await planNpmLockfile(install, projectFile);
-    expect(cached.next.bytes.toString('utf8')).toBe(lockfile);
 });

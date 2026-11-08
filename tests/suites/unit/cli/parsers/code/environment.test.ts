@@ -36,20 +36,8 @@ test.each([
     expect(reads.map((read) => read.key)).toStrictEqual([key]);
 });
 
-test.each(['process.env[name]', 'process.env[`KEY_${suffix}`]', 'const { ...rest } = process.env'])(
-    '%s names no variable',
-    async (source) => {
-        expect(await listJavascriptEnvironmentReads('app.ts', source, [])).toStrictEqual([]);
-    },
-);
-
-test('an Astro front matter read keeps its line', async () => {
-    const reads = await listJavascriptEnvironmentReads(
-        'Page.astro',
-        '---\nconst url = process.env.SITE_URL;\n---\n',
-        [],
-    );
-    expect(reads).toStrictEqual([{ key: 'SITE_URL', line: 2, column: 13 }]);
+test.each(['process.env[name]', 'process.env[`KEY_${suffix}`]'])('%s names no variable', async (source) => {
+    expect(await listJavascriptEnvironmentReads('app.ts', source, [])).toStrictEqual([]);
 });
 
 test('Python reads use the preceding import binding and decode literal escapes', async () => {

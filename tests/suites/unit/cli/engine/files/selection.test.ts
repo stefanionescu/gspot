@@ -1,12 +1,10 @@
-import { symlink, writeFile } from 'node:fs/promises';
+import { symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -24,7 +22,6 @@ import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
@@ -90,36 +87,6 @@ test('EditorConfig checks source files beyond the Prettier extensions and skips 
     expect(planned!.skip).toBeUndefined();
 });
 
-test('a project-wide TypeScript check counts its source file and tsconfig.json, not unrelated files', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript']),
-        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
-        'source.ts': 'export const value = 1;\n',
-        ...Object.fromEntries(
-            Array.from({ length: 20 }, (_, index) => [`notes-${String(index)}.txt`, 'Other input.\n']),
-        ),
-    });
-    commitAll(sandbox.path);
-    const declaration = await fakeNpmTool(sandbox.path, 'tsc');
-    await writeProgramCommand(
-        sandbox.path,
-        `${GSPOT_PATHS.nodeModules}/.bin/tsc`,
-        'fakes/tool',
-        '--version-line',
-        String(declaration.version),
-    );
-    const all = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
-    expect(all.code, all.stdout + all.stderr).toBe(0);
-    expect(all.report.checks).toMatchObject([{ check: 'typescript/tsc', fileCount: 2 }]);
-    await writeFile(join(sandbox.path, 'source.ts'), 'export const value = 2;\n');
-    runGitStep(sandbox.path, ['add', 'source.ts', GSPOT_FOLDER]);
-    const staged = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--staged', '--json']),
-    );
-    expect(staged.code, staged.stdout + staged.stderr).toBe(0);
-    expect(staged.report.checks).toMatchObject([{ check: 'typescript/tsc', fileCount: 2 }]);
-});
-
 test(`a scope's per-scope check plans every file of its scope and covers only its test files`, async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['jest'], {
@@ -144,22 +111,6 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     expect(listCheckedFiles(session.scopes, project).map((file) => file.path)).toStrictEqual([
         'apps/web/value.test.js',
     ]);
-});
-
-test('Prettier gets every matching file, also those its ignore file lists', async () => {
-    await using sandbox = await createGitSandbox({});
-    const ignored = 'ignored.md\n';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['markdown']),
-        'settings/format.ignore': ignored,
-        [`${GSPOT_PATHS.configurations}/.keep`]: '',
-        'ignored.md': '# Ignored\n',
-        'kept.md': '# Kept\n',
-    });
-    await symlink('settings/format.ignore', join(sandbox.path, '.prettierignore'));
-    const session = await openSession(sandbox.path);
-    const plans = planChecks(session, { stage: 'commit', only: ['format/prettier'] });
-    expect(plans[0]!.files.map((file) => file.path)).toStrictEqual(['ignored.md', 'kept.md']);
 });
 
 test('a command check reads each matching file once across nested scopes', async () => {

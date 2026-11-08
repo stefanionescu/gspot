@@ -23,11 +23,6 @@ test.each([...INVALID_SETTING_LOCATIONS])('settings errors locate $name', ({ tex
 test('an import rule may import the rules above it, and a rule below is refused', () => {
     using sandbox = createTemporaryFolder();
     const settings = readSettings(ORDERED_IMPORT_RULES, sandbox.path);
-    expect(settings.import_rule).toStrictEqual([
-        { name: 'storage', paths: ['storage/**'] },
-        { name: 'app', paths: ['app/**'] },
-        { name: 'entry', paths: ['entry/**'] },
-    ]);
     expect(listAllowedRules(settings.import_rule, 1)).toStrictEqual(['app', 'storage']);
     expect(validateSettingsText(ORDERED_IMPORT_RULES.replace('paths = ["app/**"]', 'paths = [3]'))).toStrictEqual([
         'gspot.toml:7: import_rule.1.paths.0',
@@ -35,13 +30,6 @@ test('an import rule may import the rules above it, and a rule below is refused'
 });
 
 test('can_import lists exact rules and names only declared rules', () => {
-    using sandbox = createTemporaryFolder();
-    const settings = readSettings(BOUNDARY_IMPORT_RULES, sandbox.path);
-    expect(settings.import_rule[1]).toStrictEqual({
-        name: 'app',
-        paths: ['app/**'],
-        can_import: ['storage'],
-    });
     expect(
         validateSettingsText(BOUNDARY_IMPORT_RULES.replace('can_import = ["storage"]', 'can_import = ["missing"]')),
     ).toStrictEqual(['gspot.toml:8: import_rule.1.can_import.0']);

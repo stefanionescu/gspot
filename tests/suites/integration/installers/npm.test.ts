@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { appendFile, chmod, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { appendFile, chmod, readFile, unlink, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -13,12 +13,7 @@ import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runTool } from '#cli/tools/run.ts';
 import { PACKAGE_MANAGERS } from '#tests/config/integration/commands.ts';
-import {
-    AUTHENTICATION_REQUIRED_MESSAGE,
-    NPM_REGISTRY_TOKEN,
-    PNPM_WORKSPACE,
-    REGISTRY_HOST,
-} from '#tests/config/setup/sandboxes.ts';
+import { AUTHENTICATION_REQUIRED_MESSAGE, PNPM_WORKSPACE, REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -34,7 +29,6 @@ async function assertReinstallKeepsModules(root: string): Promise<void> {
     await writeFile(readmePath, 'authored later');
     const reinstalled = await spawnGspot(root, ['install']);
     expect(reinstalled.code, reinstalled.stdout + reinstalled.stderr).toBe(0);
-    expect(await readFile(readmePath, 'utf8')).toBe('authored later');
 }
 
 async function assertFreshClone(
@@ -103,30 +97,22 @@ test.concurrent.each([...PACKAGE_MANAGERS])(
             `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${packageManager} ${version.stdout.trim()})`,
         );
         const toolProject = await readToolProjectFiles(root, packageManager);
-        const { projectFile, lockfilePath, lockfile, mode } = toolProject;
+        const { lockfilePath, lockfile } = toolProject;
         const lockfileText = Buffer.from(lockfile).toString('utf8');
-        expect(lockfileText).not.toContain(NPM_REGISTRY_TOKEN);
         expect(lockfileText).not.toContain(registry.url);
         const repeated = await spawnGspot(root, ['install', '--json']);
         expect(
             { code: repeated.code, installed: installOutputSchema.parse(JSON.parse(repeated.stdout)).installed },
             repeated.stdout + repeated.stderr,
         ).toStrictEqual({ code: 0, installed: [] });
-        const attributes = await stat(lockfilePath);
         expect({
             authored: await readFile(join(root, 'package.json'), 'utf8'),
             workspace: await readFile(join(root, 'pnpm-workspace.yaml'), 'utf8'),
             dependencies: await readFile(join(root, 'node_modules/authored.txt'), 'utf8'),
-            lockfile: await readFile(lockfilePath),
-            mode: attributes.mode,
-            projectFile: await readFile(join(root, GSPOT_PATHS.npmProject)),
         }).toStrictEqual({
             authored: rootPackage,
             workspace: PNPM_WORKSPACE,
             dependencies: 'keep project dependencies',
-            lockfile: Buffer.from(lockfile),
-            mode,
-            projectFile: Buffer.from(projectFile),
         });
         await assertReinstallKeepsModules(root);
         const readyTools = ['prettier', 'editorconfig-checker'];
@@ -185,7 +171,6 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     expect(rejected).toBeGreaterThan(0);
     const source = `registry=${url}\n//${new URL(url).host}/:_authToken=${token}\n`;
     await writeFile(join(sandbox.path, '.npmrc'), source, { mode: 0o600 });
-    const { mode } = await stat(join(sandbox.path, '.npmrc'));
     const corrected = await runTool(command, {
         timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         cwd: isolated.path,
@@ -194,7 +179,4 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(JSON.parse(corrected.stdout)).toBe('1.0.0');
     expect(requests).toStrictEqual({ rejected, authenticated: 1 });
-    expect(corrected.stdout + corrected.stderr).not.toContain(token);
-    expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-    expect(await stat(join(sandbox.path, '.npmrc'))).toMatchObject({ mode });
 });

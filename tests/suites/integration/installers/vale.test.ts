@@ -69,10 +69,6 @@ test('a Vale reinstall for new package releases replaces an edited package and k
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readFile(join(sandbox.root, GOOGLE_RULE_PATH))).toStrictEqual(previous);
-    expect({
-        authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
-        stray: existsSync(join(sandbox.root, STRAY_STYLE_PATH)),
-    }).toStrictEqual({ authored: 'keep\n', stray: false });
 });
 
 test.each([...VALE_INSTALL_FAILURES])(

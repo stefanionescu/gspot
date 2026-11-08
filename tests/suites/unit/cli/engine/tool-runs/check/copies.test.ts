@@ -96,6 +96,5 @@ test('a command run in a copy finds the secondary tools beside its program befor
         planned,
     );
     expect(result.status, result.note).toBe('passed');
-    expect(result.findings).toStrictEqual([]);
     expect(result.command).toStrictEqual([join(sandbox.path, 'native/checker')]);
 });

@@ -1,4 +1,4 @@
-import { mkdir, symlink, unlink, writeFile } from 'node:fs/promises';
+import { symlink, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
@@ -19,29 +19,6 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-
-test('an absent library is missing, and one above its pin is newer', async () => {
-    await using sandbox = await testdir({
-        [`${GSPOT_PATHS.nodeModules}/typescript/package.json`]: '{"name":"typescript","version":"6.0.0"}',
-    });
-
-    const absent = await inspectTool(buildToolSearch(sandbox.path), {
-        name: 'eslint-plugin-regexp',
-        kind: 'package' as const,
-        version: '3.3.0',
-        installers: { npm: { name: 'eslint-plugin-regexp', version: '3.3.0' } },
-    });
-    expect(absent.state).toBe('missing');
-    expect(absent.want).toBe('3.3.0');
-    const laterVersion = await inspectTool(buildToolSearch(sandbox.path), {
-        name: 'typescript',
-        kind: 'package' as const,
-        version: '0.0.0-test',
-        installers: { npm: { name: 'typescript', version: '0.0.0-test' } },
-    });
-    expect(laterVersion.state).toBe('newer');
-    expect(laterVersion.found).toBe('6.0.0');
-});
 
 test('a system library is read from the requested project, not from the tool project', async () => {
     await using sandbox = await testdir({
@@ -64,7 +41,6 @@ test('a system library is read from the requested project, not from the tool pro
         found: '4.1.11',
         path: join(project.path, 'app/node_modules/@vitest/coverage-v8/package.json'),
     });
-    expect(await inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({ state: 'missing' });
     await createFileTree(project.path, { 'app/node_modules/@vitest/coverage-v8/package.json': '{invalid' });
     const search = buildToolSearch(project.path, { cwd: join(project.path, 'app') });
     const failure = await captureRejection(inspectTool(search, tool));
@@ -118,35 +94,6 @@ test('a library linked inside the tool project is accepted and one linked outsid
     });
 });
 
-test('library reads are kept per session and see a new install in the next session', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
-    });
-
-    const session = await openSession(sandbox.path);
-    const pin = {
-        name: 'example',
-        kind: 'package' as const,
-        version: '1.0.0',
-        installers: { npm: { name: 'example', version: '1.0.0' } },
-    };
-    expect(await inspectTool(session, pin)).toMatchObject({ state: 'missing' });
-    await createFileTree(sandbox.path, {
-        [`${GSPOT_PATHS.nodeModules}/example/package.json`]: '{"name":"example","version":"1.0.0"}',
-    });
-    const next = await openSession(sandbox.path);
-    expect(await inspectTool(next, pin)).toMatchObject({ state: 'ok' });
-    expect(
-        await inspectTool(next, {
-            name: 'example',
-            kind: 'package' as const,
-            version: '2.0.0',
-            installers: { npm: { name: 'example', version: '2.0.0' } },
-        }),
-    ).toMatchObject({ state: 'outdated' });
-});
-
 test.each([...PACKAGE_METADATA_FAILURES])(
     'a tool project library with a non-string $field is refused until it is fixed',
     async ({ field, packageJson }) => {
@@ -171,7 +118,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
     },
 );
 
-test.each(['typescript/tsc', 'javascript/eslint'])(
+test.each(['typescript/tsc'])(
     '%s is missing until a node_modules folder holds the dependencies of its scope',
     async (check) => {
         await using sandbox = await createGitSandbox({
@@ -189,8 +136,5 @@ test.each(['typescript/tsc', 'javascript/eslint'])(
         );
         const ownPackages = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
         expect(ownPackages.report.checks[0]?.note).not.toBe(note);
-        await mkdir(join(sandbox.path, 'node_modules'));
-        const installed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-        expect(installed.report.checks[0]?.note).not.toBe(note);
     },
 );

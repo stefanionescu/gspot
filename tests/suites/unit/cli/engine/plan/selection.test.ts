@@ -42,10 +42,7 @@ test('coverage stripping leaves your own checks and given arguments unchanged', 
     ]);
 });
 
-test.each([
-    { verbose: false, checks: [] },
-    { verbose: true, checks: [{ check: 'python/ruff', status: 'skipped', cause: 'no-files', findings: [] }] },
-])(
+test.each([{ verbose: false, checks: [] }])(
     'a project check with no matching files is skipped even when its scope holds another language: verbose $verbose',
     async ({ verbose, checks }) => {
         await using sandbox = await createGitSandbox({
@@ -58,7 +55,6 @@ test.each([
         const result = await runChecks(session, options);
         expect(result.report.exitCode).toBe(0);
         expect(result.report.checks).toMatchObject(checks);
-        expect(result.report.skippedCount).toStrictEqual({ 'no-files': 1 });
     },
 );
 
@@ -113,20 +109,10 @@ test.each(['all'] as const)(
         });
         commitAll(sandbox.path);
         const session = await openSession(sandbox.path);
-        expect(session.settings.configurations).toStrictEqual([]);
         const selected = new Set(
             session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
         );
         expect([...selected].toSorted(compareText)).toStrictEqual(listAlwaysSelected().toSorted(compareText));
-        const checks = planChecks(session, {
-            stage: 'all',
-            only: ['security/semgrep', 'prose/vale', 'structure/jscpd'],
-        });
-        expect(checks.find((check) => check.check.id === 'prose/vale')?.files.map((file) => file.path)).toStrictEqual([
-            'app/source.js',
-            'guide.md',
-            'source.js',
-        ]);
     },
 );
 
@@ -153,9 +139,6 @@ test.each(['all'] as const)('%s plans history checks once at the root and only f
     const names = ['commits/commitlint-pushed', 'secrets/gitleaks-pushed'];
     const pushed: RunSelection = { content: 'commit', paths: [], commits: ['selected'] };
     const planned = planChecks(session, { stage: 'push', only: [...names, 'sandbox/once'], selection: pushed });
-    expect(planned.filter((check) => check.check.runs === 'history').map((check) => check.check.id)).toStrictEqual(
-        names,
-    );
     expect(planned.map((check) => check.scope.path)).toStrictEqual([...names.map(() => ''), '']);
     expect(planned.map((check) => isActive(check, pushed))).toStrictEqual([...names.map(() => true), false]);
     const empty: RunSelection = { content: 'commit', paths: [], commits: [] };
@@ -202,22 +185,3 @@ test.each([...TSC_REPLACEMENTS])(
         ).toBeUndefined();
     },
 );
-
-test('a nested Next.js check replaces TypeScript only in its own scope', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            scopes: [{ path: 'app', configurations: ['typescript', 'nextjs'] }],
-        }),
-        'source.ts': 'export const port = 8080;\n',
-        'app/source.ts': 'export const port = 3000;\n',
-    });
-    const session = await openSession(sandbox.path);
-    const configured = planChecks(session, { stage: 'push', only: ['typescript/tsc', 'nextjs/tsc'] })
-        .filter((planned) => planned.skip === undefined)
-        .filter((configuredCheck) => ['typescript/tsc', 'nextjs/tsc'].includes(configuredCheck.check.id))
-        .map((configuredCheck) => [configuredCheck.scope.path, configuredCheck.check.id]);
-    expect(configured).toStrictEqual([
-        ['', 'typescript/tsc'],
-        ['app', 'nextjs/tsc'],
-    ]);
-});

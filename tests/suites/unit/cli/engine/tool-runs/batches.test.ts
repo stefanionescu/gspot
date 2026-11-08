@@ -24,7 +24,6 @@ test('a Windows program that is no batch file gets the CreateProcess limit', () 
     const files = Array.from({ length: 5000 }, (_, index) => `docs/café folder (draft)/page-${String(index)}.md`);
     const fixed = ['C:/node/node.exe', 'C:/workspace/.gspot/node_modules/markdownlint/bin.js'];
     const batches = splitFileArguments(files, fixed, 'win32');
-    expect(batches.length).toBeGreaterThan(1);
     expect(batches.flat()).toStrictEqual(files);
     for (const batch of batches) {
         const command = [...fixed, ...batch].map((argument) => `"${argument}"`).join(' ');

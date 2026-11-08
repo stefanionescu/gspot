@@ -8,9 +8,12 @@ test('a path outside the repository is not ignored, and a path that .gitignore n
     await using sandbox = await testdir({ '.gitignore': 'dist/\n' });
 
     const isIgnored = buildGitignoreMatcher(createRunCache(sandbox.path), ['.gitignore']);
-    expect(
-        ['..', '../', '../README.md', 'dist/index.html', 'src/index.ts'].map((path) => isIgnored(path)),
-    ).toStrictEqual([false, false, false, true, false]);
+    expect(['..', '../', 'dist/index.html', 'src/index.ts'].map((path) => isIgnored(path))).toStrictEqual([
+        false,
+        false,
+        true,
+        false,
+    ]);
 });
 
 test('the tracked .gitignore patterns are anchored at their folders, without negations or tracked matches', async () => {

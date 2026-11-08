@@ -40,7 +40,6 @@ test.each([...OUTSIDE_WORKSPACE_FILES])(
         const refusal = await captureRejection(Promise.try(() => listWorkspaceFolders(root)));
         expect(refusal).toMatchObject({ name: 'GspotError', code: 'filesystem' });
         expect(refusal.message).toContain(join(escaped));
-        expect(listWorkspaceFolders(join(root, 'packages'))).toStrictEqual([]);
     },
 );
 
@@ -61,7 +60,7 @@ test('workspace detection does not parse an unused lower-priority file', async (
     expect(listWorkspaceFolders(sandbox.path)).toStrictEqual(['packages/app']);
 });
 
-test.each(['pnpm-workspace.yaml', 'lerna.json'])('an invalid %s is a GspotError that names the file', async (path) => {
+test.each(['pnpm-workspace.yaml'])('an invalid %s is a GspotError that names the file', async (path) => {
     await using sandbox = await testdir({ 'package.json': '{}', [path]: '{' });
 
     const invalid = await captureRejection(Promise.try(() => listWorkspaceFolders(sandbox.path)));

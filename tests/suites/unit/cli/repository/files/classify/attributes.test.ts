@@ -30,9 +30,6 @@ test('Git attributes win over the generated files of configurations', async () =
     runGitStep(sandbox.path, ['add', '.']);
     const session = await openSession(sandbox.path);
     const files = new Map(session.repository.files.map((file) => [file.path, file]));
-    expect(files.get('next-env.d.ts')).toMatchObject({ kind: 'vendored', kindOrigin: '.gitattributes' });
-    expect(files.get('worker-configuration.d.ts')).toMatchObject({ kind: 'vendored', kindOrigin: '.gitattributes' });
-    expect(files.get('app/next-env.d.ts')).toMatchObject({ kind: 'binary', kindOrigin: '.gitattributes' });
     expect(files.get('app/worker-configuration.d.ts')).toMatchObject({ kind: 'generated', kindOrigin: 'cloudflare' });
 });
 

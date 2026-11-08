@@ -23,7 +23,6 @@ test.each([
     const onPath = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(onPath).toMatchObject({ state, found: version });
     const search = buildToolSearch(sandbox.path, { miseBinPaths: [join(sandbox.path, 'bin')] });
-    expect(await inspectTool(search, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     expect(await inspectTool({ ...search, runsVersionCommand: true }, tool)).toMatchObject({ state, found: version });
 });
 

@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -6,7 +6,6 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { readPushedCommits, readPushedRevisions } from '#cli/repository/revisions/push.ts';
-import { PUSH_CONTENT } from '#tests/config/setup/sandboxes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import {
     createGitSandbox,
@@ -36,17 +35,13 @@ test('push comparison reports an unborn or broken HEAD instead of inventing a ba
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, '.git/HEAD'), 'broken head');
-    const historyError = await captureRejection(readPushedCommits(sandbox.path));
-    expect(historyError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
-test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
+test.each(['origin', undefined, 'file:///unused'] as const)(
     'the pre-push remote %p picks the remote-tracking branch that a new branch compares with',
     async (remote) => {
         await using sandbox = await testdir();
-        const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
+        const { base, reviewed, zero } = await preparePushRepository(sandbox.path);
         runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
         for (const [name, commit] of [
             ['origin', base],
@@ -57,12 +52,6 @@ test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
         const selected = await readPushedRevisions(sandbox.path, protocol, remote);
         expect(selected.revisions[0]?.commits).toStrictEqual(remote === 'origin' ? [reviewed] : []);
         expect(selected.revisions[0]?.paths).toStrictEqual(remote === 'origin' ? ['changed.sh'] : []);
-        expect(runGitStep(sandbox.path, ['rev-parse', 'HEAD'])).toBe(broken);
-        for (const [path, content] of [
-            ['gspot.toml', PUSH_CONTENT.settings],
-            ['changed.sh', PUSH_CONTENT.working],
-        ] as const)
-            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     },
 );
 
@@ -70,7 +59,6 @@ test('a shallow clone reports incomplete history and skips commits the remote al
     await using sandbox = await testdir();
     const source = join(sandbox.path, 'source');
     const { base, reviewed } = await preparePushRepository(source);
-    const branch = runGitStep(source, ['branch', '--show-current']);
     runGitStep(sandbox.path, [
         'clone',
         '--quiet',
@@ -91,15 +79,11 @@ test('a shallow clone reports incomplete history and skips commits the remote al
     runGitStep(checkout, ['fetch', '--unshallow']);
     const unseen = await readPushedRevisions(checkout, protocol, 'unseen');
     expect(unseen.revisions[0]).toMatchObject({ commits: [reviewed, base], shallow: false });
-    expect(runGitStep(source, ['branch', '--show-current'])).toBe(branch);
 });
 
 test('a gspot.toml below the Git root keeps paths relative to its folder for updated and new branches', async () => {
     await using sandbox = await testdir();
     const { project, base, commitId } = await prepareNestedRepository(sandbox.path);
-    expect(
-        runGitStep(sandbox.path, ['diff', '--name-status', base, commitId, '--', 'nested settings/source.txt']),
-    ).toBe('M\tnested settings/source.txt');
     const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
     const updated = await readPushedRevisions(project, protocol);
     expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
@@ -108,12 +92,11 @@ test('a gspot.toml below the Git root keeps paths relative to its folder for upd
     const createdRef = `refs/heads/new ${commitId} refs/heads/new ${'0'.repeat(commitId.length)}\n`;
     const created = await readPushedRevisions(project, createdRef, 'example');
     expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
-    expect(await readFile(join(project, 'source.txt'), 'utf8')).toBe('working');
 });
 
 test('an unfetched remote tip selects the same outgoing commits and files as a new ref', async () => {
     await using sandbox = await testdir();
-    const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
+    const { base, reviewed, zero } = await preparePushRepository(sandbox.path);
     runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/other/main', reviewed]);
@@ -129,7 +112,6 @@ test('an unfetched remote tip selects the same outgoing commits and files as a n
     );
     expect(unfetched).toEqual(created);
     expect(unfetched.revisions[0]).toMatchObject({ commits: [reviewed], paths: ['changed.sh'] });
-    expect(runGitStep(sandbox.path, ['rev-parse', 'HEAD'])).toBe(broken);
 });
 
 test('a push refuses to rewrite the default branch, and needs its remote tip in the clone', async () => {

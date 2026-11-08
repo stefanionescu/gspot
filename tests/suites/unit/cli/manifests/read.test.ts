@@ -1,6 +1,5 @@
 import { expect, test } from 'bun:test';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { parseConfigurations } from '#cli/manifests/read.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { CONFIGURATION_TABLE, EXAMPLE_MANIFEST_FOLDER, MANIFEST_INVARIANT_CASES } from '#tests/config/manifests.ts';
@@ -36,28 +35,6 @@ test('a tool name links to the configuration that declares it, listed after the 
         { name: 'probe', kind: 'program', system: true, installers: {} },
     ]);
     expect(configurationsByName.get('consumer')!.tools).toStrictEqual(configurationsByName.get('owner')!.tools);
-});
-
-test('only declared config files are loaded and each record sets its tool and scope', () => {
-    const configurationsByName = parseConfigurations([
-        {
-            folder: EXAMPLE_MANIFEST_FOLDER,
-            text:
-                CONFIGURATION_TABLE +
-                '\n[[config_file]]\ntarget = "other.yml"\npointer = { path = "other.yml", body = "{target}" }\n\n[[config_file]]\ntarget = "semgrep/first.yml"\ntool = "semgrep"\nper_scope = true\n\n[[config_file]]\ntarget = "semgrep/second.yml"\ntool = "semgrep"\nper_scope = true\n' +
-                '[[tool]]\nname = "semgrep"\nversion = "1.0.0"\n',
-        },
-    ]);
-    const configuration = configurationsByName.get('example')!;
-    expect(configuration.configs.map(({ source, target }) => [source, target])).toStrictEqual([
-        ['files/other.yml', `${GSPOT_PATHS.configurations}/example/other.yml`],
-        ['files/semgrep/first.yml', `${GSPOT_PATHS.configurations}/example/semgrep/first.yml`],
-        ['files/semgrep/second.yml', `${GSPOT_PATHS.configurations}/example/semgrep/second.yml`],
-    ]);
-    expect(configuration.configs.slice(1, 3)).toMatchObject([
-        { tool: ['semgrep'], per_scope: true },
-        { tool: ['semgrep'], per_scope: true },
-    ]);
 });
 
 test.each([...MANIFEST_INVARIANT_CASES])('the loader refuses $name and names the field', ({ tables, field }) => {

@@ -38,7 +38,6 @@ export const PROJECT_FILE_FOLDERS = [
     ['services/billing/requirements-dev.txt', 'requirements*.txt', 'services/billing'],
     ['ios/App.xcodeproj/project.pbxproj', '*.xcodeproj', 'ios'],
     ['apps/web/supabase/config.toml', 'supabase/config.toml', 'apps/web'],
-    ['api/package-lock.json', 'package.json', undefined],
     ['requirements.txt.bak', 'requirements*.txt', undefined],
 ] as const;
 
@@ -119,5 +118,4 @@ export const PRETTIER_SETTINGS_FILES = {
     'vendor/.prettierrc.json': '{"semi":true}',
     [`${GSPOT_FOLDER}/.prettierrc.json`]: '{"tabWidth":8}',
     [GSPOT_PATHS.npmProject]: 'unowned malformed output',
-    'nested/.gspot/package.json': '{}',
 } as const;

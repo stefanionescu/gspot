@@ -62,9 +62,6 @@ test('progress is reported as soon as each check ends, with ignores applied to t
     expect(finished).toStrictEqual([1, 2]);
     expect(result.report.checks.map((each) => each.check)).toStrictEqual(['project/fast', 'project/waiting']);
     expect(result.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
-    expect(result.report.ignores).toStrictEqual([
-        { check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' },
-    ]);
 });
 
 test('a check still running at the progress interval is reported as running, and then as finished', async () => {

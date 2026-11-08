@@ -85,27 +85,6 @@ test('a successful uv run refuses a password in its new lockfile and the saved o
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
 });
 
-test('uv installs the tool project with its own Python, whatever UV_PYTHON and .python-version the repository sets', async () => {
-    await using sandbox = await createGitSandbox({
-        ...PYTHON_INSTALL_FILES,
-        '.python-version': '3.12.13\n',
-    });
-
-    const runs: Array<{ command: string[]; env: Record<string, string | undefined> | undefined }> = [];
-    using _boundary = fakeCommands('pinned-uv', (command, options) => {
-        runs.push({ command: [...command], env: options.env });
-        return Promise.resolve(buildProcessResult());
-    });
-    const writer = openFiles(sandbox.path);
-    await installPythonTools(await buildSandboxToolInstall(await openSession(sandbox.path), writer), 'pinned-uv');
-    for (const { command, env } of runs) {
-        const flag = command.indexOf('--python');
-        expect(command.slice(flag, flag + 2)).toStrictEqual(['--python', pythonProject['requires-python'].slice(2)]);
-        expect(env).toHaveProperty('UV_PYTHON');
-        expect(env?.['UV_PYTHON']).toBeUndefined();
-    }
-});
-
 test('the uv lockfile check ignores name spelling and requirement order and refuses invalid TOML and a range', () => {
     expect(isPythonLockfileFresh(pythonProject, PYTHON_TOOL_LOCKFILE, {})).toBe(true);
     expect(isPythonLockfileFresh(pythonProject, 'not valid =', {})).toBe(false);

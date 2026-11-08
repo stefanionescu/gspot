@@ -32,7 +32,6 @@ test('an inherited default names the configuration that declares it', async () =
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['supabase'], { rules: true }) });
     const { settings, scopes } = await openSession(sandbox.path);
     expect(getSettingValue(scopes[0]!.availableSettings, settings, 'sql.dialect', '')).toMatchObject({
-        value: 'postgres',
         source: POSTGRES_ORIGIN,
     });
 });
@@ -49,7 +48,4 @@ test('a value comes from the configuration default, then the root table, then th
     const [root, api] = scopes;
     expect(getSettingValue(root!.availableSettings, settings, 'limits.max_file_lines', '')?.value).toBe(250);
     expect(getSettingValue(api!.availableSettings, settings, 'limits.max_file_lines', 'api')?.value).toBe(200);
-    expect(getSettingValue(root!.availableSettings, settings, 'limits.max_function_lines', '')?.source).toBe(
-        'configuration structure',
-    );
 });

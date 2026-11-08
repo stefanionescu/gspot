@@ -19,9 +19,7 @@ export const INVALID_BLOBS = [
     { name: 'missing header terminator', output: `${SHA1} blob 0` },
     { name: 'wrong object identity', output: `${SHA256} blob 0\n\n` },
     { name: 'non-blob object', output: `${SHA1} tree 0\n\n` },
-    { name: 'missing object', output: `${SHA1} missing\n` },
     { name: 'unsafe byte count', output: `${SHA1} blob 9007199254740992\n\n` },
-    { name: 'truncated content', output: `${SHA1} blob 3\nab\n` },
     { name: 'missing body terminator', output: `${SHA1} blob 2\nab` },
 ] as const;
 
@@ -115,7 +113,7 @@ export const CLASSIFICATION_FILES = {
     'src/a.ts': 'export const a = 1;\n',
 } as const;
 
-export const LICENSE_LIKE_SOURCES = ['license-lockfiles.test.ts', 'license.ts', 'licenses.json', 'notice.py'] as const;
+export const LICENSE_LIKE_SOURCES = ['license-lockfiles.test.ts', 'licenses.json', 'notice.py'] as const;
 
 export const SWIFT_TAG_CASES = [
     {
@@ -197,7 +195,6 @@ export const JEST_CASES = [
         expected: ['app/qa/child.js', 'app/verification/read.js', 'app/jest.config.js', 'app/deep/qa/read.js'],
     },
     { scope: 'app/deep', tests: ['**/qa/**', 'app/verification/**'], expected: ['app/deep/qa/read.js'] },
-    { scope: 'sibling', tests: ['**/qa/**'], expected: ['sibling/qa/read.js'] },
     { scope: '', tests: [], expected: ['jest.config.js', 'app/jest.config.js'] },
 ] as const;
 

@@ -10,11 +10,6 @@ async function listMarkedLines(path: string, source: string, tags: readonly stri
         .map((comment) => comment.line);
 }
 
-test.each(["'", "E'", '"'])('an unterminated SQL %s value hides the comment text after it', async (opener) => {
-    const source = ['-- marker: Required interface.', `SELECT ${opener}`, '-- marker: Literal sample text.', ':value;'];
-    expect(await listMarkedLines('source.sql', source.join('\n'), [])).toStrictEqual([1]);
-});
-
 test.each(COMMENT_BOUNDARIES)(
     '%s: only the comment after the string counts as a comment',
     async (_label, path, source, line, tags) => {

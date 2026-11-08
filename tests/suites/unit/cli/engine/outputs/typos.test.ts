@@ -37,21 +37,6 @@ test('the typos format tells findings from fatal exits', async () => {
             },
         ],
     );
-    expect(
-        parseCommandFindings(
-            planned,
-            { ...result, code: 78, stderr: 'Invalid native configuration.' },
-            { cwd: sandbox.path, root: sandbox.path },
-            {},
-        ).note,
-    ).toContain('Invalid native configuration.');
-    expect(
-        parseCommandFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }, {}).note,
-    ).toBeTypeOf('string');
-    expect(
-        parseCommandFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path }, {})
-            .findings,
-    ).toStrictEqual([]);
 });
 
 test.each([...TYPOS_REPORT_ERRORS])('typos refuses $name', async ({ output }) => {

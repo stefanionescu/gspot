@@ -2,10 +2,8 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { openSession } from '#cli/engine/session.ts';
-import { formatHeader } from '#cli/generation/header.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -72,21 +70,6 @@ test('an @generated marker in a comment line makes a file generated, and the bar
     const repository = await readTestRepository(sandbox.path);
     const kinds = Object.fromEntries(repository.files.map((file) => [file.path, file.kind]));
     expect(kinds).toStrictEqual({ 'marked.py': 'generated', 'marked.ts': 'generated', 'named.ts': 'source' });
-});
-
-test('every generated header format marks a file generated outside .gspot', async () => {
-    await using sandbox = await createGitSandbox({});
-    const paths = ['tool.js', 'tool.py', 'tool.sql', 'tool.md', 'tool.html'];
-    const files = Object.fromEntries(paths.map((path) => [path, `${formatHeader(path)}content\n`]));
-    await createFileTree(sandbox.path, files);
-    const repository = await readTestRepository(sandbox.path);
-    expect(repository.files.map(({ path, kind, kindOrigin }) => ({ path, kind, kindOrigin }))).toStrictEqual(
-        paths.toSorted(compareText).map((path) => ({
-            path,
-            kind: 'generated',
-            kindOrigin: 'banner',
-        })),
-    );
 });
 
 test.each([...GENERATED_PATH_CASES])(

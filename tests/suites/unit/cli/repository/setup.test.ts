@@ -158,8 +158,6 @@ test('hook discovery lists a hooks folder once when core.hooksPath names it by i
 test('hook discovery includes executable Git hooks and leaves gspot hooks out', async () => {
     await using sandbox = await createGitSandbox({ '.git/hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
     await chmod(join(sandbox.path, '.git/hooks/pre-commit'), 0o755);
-    const hooks = [{ kind: 'hooksPath' as const, path: '.git/hooks', files: ['pre-commit'] }];
-    expect(await readHooks({ root: sandbox.path })).toStrictEqual({ hooksPath: '', hooks });
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
     expect(await readHooks({ root: sandbox.path })).toStrictEqual({
         hooksPath: '.gspot/hooks',

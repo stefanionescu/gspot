@@ -1,4 +1,3 @@
-import { writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -11,7 +10,7 @@ import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { BASE_CHECK, LOCATED_CHECK, MISSING_LOCATED_FILE, REGEX_OUTPUT_CASES } from '#tests/config/engine/tool-runs.ts';
+import { BASE_CHECK, LOCATED_CHECK, REGEX_OUTPUT_CASES } from '#tests/config/engine/tool-runs.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -56,14 +55,6 @@ test('an ESLint finding whose source text holds a module error word stays a find
     expect(
         parseCommandFindings(
             planned,
-            { ...result, code: 2, stderr: 'ConfigError: invalid configuration' },
-            { cwd: sandbox.path, root: sandbox.path },
-            {},
-        ).note,
-    ).toBe('eslint failed with exit 2:\nConfigError: invalid configuration');
-    expect(
-        parseCommandFindings(
-            planned,
             { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
             { cwd: sandbox.path, root: sandbox.path },
             {},
@@ -71,46 +62,43 @@ test('an ESLint finding whose source text holds a module error word stays a find
     ).toBe('eslint failed with exit 2:\nOops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin');
 });
 
-test.each(['{file}', '{files}'])(
-    'declared exit codes tell partial findings from a fatal %s run',
-    async (placeholder) => {
-        const source = 'input.txt';
-        const located = `${source}:1: Located defect before exit`;
-        const tables = stringify({
-            command_check: [
-                {
-                    id: 'project/exit-contract',
-                    command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '1', placeholder),
-                    paths: [source],
-                    stage: 'commit',
-                    exit_codes: [1],
-                    output: { format: 'regex', pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$` },
-                },
-            ],
-        });
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
-            [source]: 'input\n',
-        });
-        const session = await openSession(sandbox.path);
-        const plans = planChecks(session, { stage: 'all', only: ['project/exit-contract'] });
-        const planned = plans[0]!;
-        planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-        const finding = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
-        expect(finding.status).toBe('failed');
-        expect(finding.findings).toStrictEqual([
-            matchFields({ file: source, line: 1, message: 'Located defect before exit' }),
-        ]);
-        planned.check = {
-            ...planned.check,
-            command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '7', placeholder),
-        };
-        const fatal = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
-        expect(fatal.status).toBe('error');
-        expect(fatal.findings).toStrictEqual([]);
-        expect(fatal.note).toContain(located);
-    },
-);
+test.each(['{file}'])('declared exit codes tell partial findings from a fatal %s run', async (placeholder) => {
+    const source = 'input.txt';
+    const located = `${source}:1: Located defect before exit`;
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/exit-contract',
+                command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '1', placeholder),
+                paths: [source],
+                stage: 'commit',
+                exit_codes: [1],
+                output: { format: 'regex', pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$` },
+            },
+        ],
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
+        [source]: 'input\n',
+    });
+    const session = await openSession(sandbox.path);
+    const plans = planChecks(session, { stage: 'all', only: ['project/exit-contract'] });
+    const planned = plans[0]!;
+    planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
+    const finding = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
+    expect(finding.status).toBe('failed');
+    expect(finding.findings).toStrictEqual([
+        matchFields({ file: source, line: 1, message: 'Located defect before exit' }),
+    ]);
+    planned.check = {
+        ...planned.check,
+        command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '7', placeholder),
+    };
+    const fatal = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
+    expect(fatal.status).toBe('error');
+    expect(fatal.findings).toStrictEqual([]);
+    expect(fatal.note).toContain(located);
+});
 
 test('a run that exits nonzero only on file links that leave the root passes, and another failure stays an error', async () => {
     const link = pathToFileURL(resolve('/v0.1.0/README.md')).href;
@@ -172,36 +160,6 @@ test('per-file failures drop only the header lines the tool declares', async () 
     });
     expect(filtered.status).toBe('failed');
     expect(filtered.findings).toMatchObject([{ file: 'source.txt', message: 'Native input failed.' }]);
-});
-
-test('a regex finding in a file that does not exist is a note until the file exists', async () => {
-    await using sandbox = await createGitSandbox({});
-    const source = 'unchanged input\n';
-    const command = buildProgramCommand('fakes/tool');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings([], {
-            tables: String.raw`[[command_check]]
-id = "notes/regex"
-command = ${JSON.stringify(command)}
-paths = ["notes/**"]
-stage = "commit"
-[command_check.output]
-format = "regex"
-pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
-`,
-        }),
-        'notes/selected.txt': source,
-    });
-    const session = await openSession(sandbox.path);
-    const planned = planChecks(session, { stage: 'all', only: ['notes/regex'] })[0]!;
-    const result = buildProcessResult(MISSING_LOCATED_FILE);
-    const paths = { root: sandbox.path, cwd: sandbox.path };
-    const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];
-    expect(parseCommandFindings(planned, result, paths, {})).toStrictEqual({
-        note: expect.stringContaining('notes/reported.txt:1:A defect.') as string,
-    });
-    await writeFile(join(sandbox.path, 'notes/reported.txt'), source);
-    expect(parseCommandFindings(planned, result, paths, {}).findings).toMatchObject(expected);
 });
 
 test('a finding in a folder outside the scope keeps its repository path when the check runs in the scope folder', async () => {

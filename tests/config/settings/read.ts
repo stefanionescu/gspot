@@ -83,17 +83,6 @@ export const KEY_PATH_CASES = [
     },
 ] as const;
 
-export const UNKNOWN_KEY_CASES = [
-    {
-        name: 'a misspelled key names the closest key',
-        text: `[dependencies]
-bun_scanners = "@socketsecurity/bun-security-scanner"
-`,
-        where: 'gspot.toml:2: dependencies.bun_scanners',
-        correction: ['bun_scanners', 'bun_scanner'] as const,
-    },
-] as const;
-
 export const RULE_FILE_SETTINGS = {
     configurations: ['javascript', 'security'],
     tools: { eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] } },

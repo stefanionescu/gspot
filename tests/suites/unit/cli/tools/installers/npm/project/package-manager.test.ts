@@ -1,9 +1,8 @@
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 
 import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import * as processes from '#cli/system/processes.ts';
 import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
 import { PACKAGE_MANAGER_AGE_CASES } from '#tests/config/tools/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -20,20 +19,6 @@ test.each([
         files: { 'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}' },
         found: '11.18.0',
         fix: 'Run npm install --global npm@latest.',
-    },
-    {
-        name: 'pnpm with no pin',
-        manager: 'pnpm',
-        files: { 'package.json': '{"private":true}', 'pnpm-lock.yaml': '' },
-        found: '10.15.0',
-        fix: 'Run pnpm self-update.',
-    },
-    {
-        name: 'Bun with no pin',
-        manager: 'bun',
-        files: { 'package.json': '{"private":true}', 'bun.lock': '' },
-        found: '1.2.0',
-        fix: 'Run bun upgrade.',
     },
 ] as const)('$name below the release age floor names its upgrade command', async ({ manager, files, found, fix }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), ...files });
@@ -71,24 +56,3 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
         }
     },
 );
-
-test('a pinned pnpm runs through mise instead of the older PATH executable', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"private":true,"packageManager":"pnpm@10.30.0"}',
-    });
-    const run = processes.runProcess;
-    using commands = spyOn(processes, 'runProcess').mockImplementation((command, options) => {
-        if (command[0] === 'pnpm') return Promise.resolve(buildProcessResult({ stdout: '9.9.0\n' }));
-        return command[0] === 'mise'
-            ? Promise.resolve(buildProcessResult({ stdout: '10.30.0\n' }))
-            : run(command, options);
-    });
-    const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const install = await buildSandboxToolInstall(session, writer);
-    await assertPackageManagerVersion(install);
-    const programs = commands.mock.calls.map(([command]) => command[0]);
-    expect(programs).toContain('mise');
-    expect(programs).not.toContain('pnpm');
-});

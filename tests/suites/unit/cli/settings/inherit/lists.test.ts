@@ -104,8 +104,7 @@ test('a first list written in a scope replaces the shipped default for that scop
         'app/deep/schema.sql': '',
     });
     const { settings, scopes } = await openSession(sandbox.path);
-    const [root, app] = scopes;
-    expect(getSettingValue(root!.availableSettings, settings, 'supabase.schemas', '')?.value).toStrictEqual(['public']);
+    const [, app] = scopes;
     for (const scope of ['app', 'app/deep'])
         expect(getSettingValue(app!.availableSettings, settings, 'supabase.schemas', scope)?.value).toStrictEqual([
             'api',

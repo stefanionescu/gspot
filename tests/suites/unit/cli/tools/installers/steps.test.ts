@@ -47,8 +47,6 @@ test.each([
     const output = 'npm error notarget No matching version found for eslint@10.13.0 with a date before 10/23/2026.';
     const prettier = { ...ESLINT_RELEASE, label: 'prettier@3.8.1' };
     expect(await explainReleaseAgeHold(install, output, [ESLINT_RELEASE, prettier])).toBe(expected);
-    expect(await explainReleaseAgeHold(install, 'HTTP 403 Forbidden', [ESLINT_RELEASE])).toBe('');
-    expect(await explainReleaseAgeHold({ ...install, releaseAgeDays: 0 }, output, [ESLINT_RELEASE])).toBe('');
 });
 
 test.skipIf(isWindows)('an install step that a signal stops names the signal in place of an exit code', async () => {

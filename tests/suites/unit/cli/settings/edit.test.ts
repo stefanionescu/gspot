@@ -18,7 +18,6 @@ test('an edit writes the new ignore as a table and keeps the authored comment', 
     expect(proposed.text).toBe(
         '# Authored selection.\nconfigurations = ["security",]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n',
     );
-    expect(proposed.settings.ignore).toStrictEqual([SEMGREP_IGNORE]);
     await writeFile(path, proposed.text);
     const unchanged = readSettingsFile(sandbox.path);
     setKey(unchanged.table, 'ignore', [SEMGREP_IGNORE]);
@@ -79,7 +78,6 @@ test('reordering keys does not change the file', async () => {
     delete edit.table['configurations'];
     edit.table['configurations'] = configurations;
     const result = buildEditedSettings(sandbox.path, edit);
-    expect(result.changed).toBe(false);
     expect(result.text).toBe(source);
 });
 

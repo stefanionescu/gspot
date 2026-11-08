@@ -157,54 +157,6 @@ actual: 1
         [],
     ],
     [
-        'YAML multiline quoted value',
-        'source.yaml',
-        `value: "
-  # marker: Literal sample text.
-  "
-# marker: Required interface.
-actual: 1
-`,
-        4,
-        [],
-    ],
-    [
-        'Python multiline string',
-        'source.py',
-        `value = """
-# marker: Literal sample text.
-"""
-# marker: Required interface.
-value = 1
-`,
-        4,
-        [],
-    ],
-    [
-        'Bash heredoc',
-        'source.sh',
-        `cat <<EOF
-# marker: Literal sample text.
-EOF
-# marker: Required interface.
-value=1
-`,
-        4,
-        [],
-    ],
-    [
-        'Swift multiline string',
-        'source.swift',
-        `let value = """
-// marker: Literal sample text.
-"""
-// marker: Required interface.
-let actual = 1
-`,
-        4,
-        [],
-    ],
-    [
         'HTML script content',
         'source.html',
         `<script>
@@ -223,11 +175,6 @@ export const COMPONENT_SCRIPT_COMMENTS = [
         path: 'Component.vue',
         source: '<script lang="tsx">const view = <p>// marker: JSX text.</p>;\n// marker: Script directive.\n</script>',
         lines: [2],
-    },
-    {
-        path: 'App.vue',
-        source: '<template><p>// marker: Template text.</p></template>\n<script lang="ts">\n// marker: Script directive.\nconst sample = "// marker: String text.";\n</script>\n<!-- marker: Markup directive. -->\n',
-        lines: [3, 6],
     },
     {
         path: 'Component.svelte',

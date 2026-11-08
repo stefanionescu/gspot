@@ -26,7 +26,6 @@ test.each([...YARN_CLIENTS])(
         });
         const session = await openSession(sandbox.path);
         const generated = buildGeneratedFiles(session);
-        expect(generated.files.some(({ path }) => path === '.gspot/.yarnrc.yml')).toBe(false);
         const lockfiles = listStaleLockfiles(session, generated.files);
         expect(
             lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),

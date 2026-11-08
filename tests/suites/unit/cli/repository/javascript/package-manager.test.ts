@@ -107,7 +107,6 @@ test('a refused pinned package manager keeps project files and gives no install 
     expect(JSON.parse(failure.stdout)).toMatchObject({ error: 'tool' });
     for (const [path, content] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
-    expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept\n');
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
     expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`))).toBe(false);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);

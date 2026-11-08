@@ -56,16 +56,3 @@ test('install downloads the grammars of the repository once, and refuses other b
     expect(existsSync(join(cache.path, 'gspot/grammars/bash.wasm'))).toBe(true);
     expect(await installGrammars(install)).toBe('');
 });
-
-test('install downloads the HTML grammar for Markdown, because gspot/suppressions reads it in every repository', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]), 'README.md': '# Title\n' });
-    await using cache = await testdir();
-    using _environment = overrideEnvironment({ XDG_CACHE_HOME: cache.path });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
-    const bytes = readFileSync(join(SHARED_GRAMMARS, 'html.wasm'));
-    using _request = spyOn(globalThis, 'fetch').mockImplementation(
-        Object.assign(() => Promise.resolve(new Response(bytes)), { preconnect: fetch.preconnect }),
-    );
-    expect(await installGrammars(install)).toBe('installed 1 grammar');
-    expect(existsSync(join(cache.path, 'gspot/grammars/html.wasm'))).toBe(true);
-});

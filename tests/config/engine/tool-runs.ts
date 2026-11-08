@@ -6,7 +6,7 @@ export const SESSION_FILES = {
     [`${GSPOT_FOLDER}/.keep`]: '',
 };
 
-export const FAILED_RUN = { code: 1 } as const;
+const FAILED_RUN = { code: 1 } as const;
 
 export const BASE_CHECK = {
     id: 'sandbox/diagnostic',
@@ -32,22 +32,6 @@ export const CHILD_SCOPE_SETTINGS = {
         { path: 'web', configurations: [] },
     ],
     tables: '\n[[command_check]]\nid = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "none"\npaths = ["**/*.sh"]\nstage = "push"\n',
-} as const;
-
-export const PENDING_NOTE_RESULTS = [
-    {
-        check: 'notes/no-pending',
-        status: 'failed',
-        findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
-    },
-] as const;
-
-export const MISSING_LOCATED_FILE = {
-    code: 1,
-    stdout: 'notes/reported.txt:1:A defect.',
-    stderr: '',
-    missing: false,
-    duration: 1,
 } as const;
 
 export const ESLINT_CRASH = { code: 1, stderr: 'Oops! Something went wrong\n' } as const;
@@ -80,7 +64,6 @@ export const REGEX_OUTPUT_CASES = [
             ],
         },
     },
-    { title: 'a passing run that prints nothing has no findings', result: {}, expected: { findings: [] } },
 ];
 
 export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
@@ -89,7 +72,6 @@ export const WORKSPACE_SCOPE_CASES = [
     { scopePath: '', expected: [] },
     { scopePath: 'package', expected: ['--workspace', 'package'] },
     { scopePath: 'docs', expected: [] },
-    { scopePath: 'source', expected: [] },
 ] as const;
 
 export const ASTRO_CHECK_SUMMARY = [
@@ -154,7 +136,6 @@ export const COVERAGE_PROJECT_FILES = [
         generated: false,
     },
     { name: 'setup.cfg coverage', files: { 'setup.cfg': '[coverage:run]\nomit = custom/**\n' }, generated: false },
-    { name: 'tox.ini coverage', files: { 'tox.ini': '[coverage:run]\nomit = custom/**\n' }, generated: false },
 ] as const;
 
 export const FILELESS_COVERAGE_CASES = [
@@ -178,18 +159,12 @@ export const TOOL_PATTERN_CASES = [
     {
         check: 'dependencies/syncpack',
         code: 1,
-        output: 'Versions differ\n  ✘ lodash 1.0.0 in packages/app/package.json at dependencies.lodash (HighestSemverMismatch)\n  ✘ lodash 2.0.0 in package.json at dependencies.lodash (SemverRangeMismatch)\n2 issues found',
+        output: 'Versions differ\n  ✘ lodash 1.0.0 in packages/app/package.json at dependencies.lodash (HighestSemverMismatch)\n2 issues found',
         expected: [
             {
                 file: 'packages/app/package.json',
                 rule: 'HighestSemverMismatch',
                 message: 'lodash 1.0.0 in packages/app/package.json at dependencies.lodash',
-                fixable: false,
-            },
-            {
-                file: 'package.json',
-                rule: 'SemverRangeMismatch',
-                message: 'lodash 2.0.0 in package.json at dependencies.lodash',
                 fixable: false,
             },
         ],

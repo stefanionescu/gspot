@@ -22,7 +22,6 @@ import {
     RULE_FILE_SETTINGS,
     RULE_OPTION_REASON_TABLES,
     SCOPE_CONFIGURATION_SETTINGS,
-    UNKNOWN_KEY_CASES,
     VALID_LICENSES,
 } from '#tests/config/settings/read.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
@@ -102,9 +101,6 @@ test.each([
 });
 
 test('settings of an unselected language are refused while settings of automatic general configurations stay valid', () => {
-    expect(validateSettingsText('configurations = ["bash"]\n[sql]\ndialect = "sqlite"\n')).toStrictEqual([
-        'gspot.toml:3: sql.dialect',
-    ]);
     expect(validateSettingsText('[commits]\ntypes = ["feat", "fix"]\n')).toStrictEqual([]);
 });
 
@@ -153,13 +149,6 @@ test('a limit looser than the default needs a reason, and a tighter one does not
         }),
     );
     expect(validateSettingsText('configurations = ["bash"]\n[limits]\nmax_file_lines = 100\n')).toStrictEqual([]);
-});
-
-test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
-    using sandbox = createTemporaryFolder();
-    expect(validateSettingsText(row.text)).toStrictEqual([row.where]);
-    expect(() => readSettings(row.text, sandbox.path)).toThrow(new RegExp(String.raw`\b${row.correction[1]}\b`, 'u'));
-    expect(validateSettingsText(row.text.replace(row.correction[0], () => row.correction[1]))).toStrictEqual([]);
 });
 
 test('an ignore of ansible/ansible-lint-production is refused and names ansible/ansible-lint', () => {

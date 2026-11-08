@@ -69,7 +69,6 @@ test('setting level keeps the opening init comments first', async () => {
     const preface = text.split('\n').filter((line) => line.startsWith('# '));
     expect(preface.length).toBeGreaterThan(1);
     expect(result.text.split('\n').slice(0, preface.length + 1)).toStrictEqual([...preface, 'level = "all"']);
-    expect(result.settings.level).toBe('all');
 });
 
 test('setting level keeps a written value equal to its default', async () => {

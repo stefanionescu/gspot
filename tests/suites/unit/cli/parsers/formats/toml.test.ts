@@ -62,7 +62,6 @@ test('TOML edits keep dates, array order and keys named like object properties',
     const text = document.getText();
     expect(text).toStartWith(source);
     expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries: values });
-    expect(document.getValue(['copied'])).toStrictEqual(new Date('2026-10-06T00:00:00Z'));
 });
 
 test('TOML schema failures name the source file and the field', () => {

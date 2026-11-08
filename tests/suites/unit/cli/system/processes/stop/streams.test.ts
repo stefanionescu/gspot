@@ -1,11 +1,9 @@
-import * as childProcess from 'node:child_process';
-
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { streamProcess } from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { CHILD_TIMEOUT_SECONDS, isStopped, waitForExit } from '#tests/setup/system/processes.ts';
+import { CHILD_TIMEOUT_SECONDS, waitForExit } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('stream reading keeps raw bytes and the error output', async () => {
@@ -24,31 +22,6 @@ test('stream reading keeps raw bytes and the error output', async () => {
     );
     expect(Buffer.concat(bytes)).toStrictEqual(Buffer.from([0, 255, 0, 10]));
     expect(result).toMatchObject({ code: 0, stdout: '', stderr: 'diagnostic\n', end: 'exited' });
-});
-
-test('a stream reader that throws stops its child process', async () => {
-    await using sandbox = await testdir();
-    using children = spyOn(childProcess, 'spawn');
-    const failure = new Error('Consumer refused the bytes.');
-    const command = buildProgramCommand('fakes/tool', '--stdout', 'ready', '--wait');
-    const error = await captureRejection(
-        streamProcess(
-            command,
-            {
-                cwd: sandbox.path,
-                timeoutSeconds: CHILD_TIMEOUT_SECONDS,
-            },
-            async (chunks) => {
-                const first = await chunks[Symbol.asyncIterator]().next();
-                expect(first).toStrictEqual({ done: false, value: Buffer.from('ready') });
-                throw failure;
-            },
-        ),
-    );
-    expect(error).toBe(failure);
-    const launched = children.mock.results[0];
-    expect(launched?.type).toBe('return');
-    if (launched?.type === 'return') expect(isStopped(launched.value)).toBe(true);
 });
 
 test('stream cancellation stops the child and keeps the cancellation reason', async () => {

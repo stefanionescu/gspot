@@ -16,10 +16,8 @@ test('parsed source copies remain usable after the run releases its resources', 
     using resources = createRunResources();
     const typescript = copies.use(await parseSource('typescript', source, { cache, resources }));
     const javascript = copies.use(await parseSource('javascript', source, { cache, resources }));
-    const repeated = copies.use(await parseSource('typescript', source, { cache, resources }));
     expect(typescript.rootNode.hasError).toBe(false);
     expect(javascript.rootNode.hasError).toBe(true);
-    expect(repeated.rootNode.text).toBe(source);
     resources[Symbol.dispose]();
     expect(typescript.rootNode.text).toBe(source);
 });

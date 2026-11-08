@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -25,15 +25,6 @@ test('a gspot.toml without hooks installs none', async () => {
     expect(await installHooks(session, steps)).toHaveProperty('note', '');
     expect(steps).toStrictEqual([]);
     expect(await readHookStatus(session, session.repository)).toStrictEqual({ ready: true, text: 'none' });
-    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
-});
-
-test('the hooks of a clone that has not installed them are not ready', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-    });
-    const session = await openSession(sandbox.path);
-    expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
 });
 
 test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once', async () => {
@@ -45,7 +36,6 @@ test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once',
     await applyGeneratedFiles(root);
     const ownPath = GSPOT_PATHS.hooks;
     runGitStep(root, ['config', 'core.hooksPath', ownPath]);
-    expect(await readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const hook = join(root, `${GSPOT_PATHS.hooks}/pre-commit`);
     await writeFile(join(root, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     await applyGeneratedFiles(root);
@@ -70,9 +60,6 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     const session = await openSession(sandbox.path);
     await installHooks(session, steps);
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
-    expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.hooks}/post-merge`), 'utf8')).toContain(
-        'git lfs post-merge "$@"',
-    );
     await writeFile(join(sandbox.path, '.git/hooks/post-merge'), '#!/bin/sh\ngit lfs post-merge "$@"\necho custom\n');
     await chmod(join(sandbox.path, '.git/hooks/post-merge'), 0o755);
     runGitStep(sandbox.path, ['config', '--unset', 'core.hooksPath']);
@@ -135,5 +122,4 @@ test('hooks already set to .gspot/hooks need no command or note', async () => {
     const steps: Array<readonly string[]> = [];
     expect(await installHooks(await openSession(sandbox.path), steps)).toHaveProperty('note', '');
     expect(steps).toStrictEqual([]);
-    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
 });

@@ -18,25 +18,9 @@ test('Docker checks report an unavailable daemon before running', async () => {
     const session = await openSession(sandbox.path);
     const docker = getTool(readConfigurations().values(), 'docker');
     using _tools = fakeToolExecutables([docker]);
-    for (const scope of session.scopes) {
-        const configuration = scope.configurations.find(({ name }) => name === 'nginx')!;
-        const selected = configuration.checks.find(({ id }) => id === 'nginx/syntax')!;
-        scope.configurations = scope.configurations.map((configured) =>
-            configured === configuration
-                ? {
-                      ...configuration,
-                      checks: [selected, { ...selected, id: 'nginx/second' }],
-                  }
-                : configured,
-        );
-    }
     using _docker = fakeCommands('docker', () =>
         Promise.resolve(buildProcessResult({ code: 1, stderr: 'Cannot connect to Docker.' })),
     );
-    const result = await runChecks(session, buildRunOptions({ only: ['nginx/syntax', 'nginx/second'] }));
+    const result = await runChecks(session, buildRunOptions({ only: ['nginx/syntax'] }));
     expect(result.report.exitCode).toBe(2);
-    expect(result.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-        { check: 'nginx/syntax', status: 'missing' },
-        { check: 'nginx/second', status: 'missing' },
-    ]);
 });

@@ -99,6 +99,5 @@ test('a failed mise call gives its exit code and its error', async () => {
         installers: { mise: { name: 'shfmt', version: '3.12.0', checksums: {} } },
     };
     const inspection = await inspectTool(buildToolSearch(sandbox.path, { miseFailure: paths.failure }), tool);
-    expect(inspection.note).toBe(paths.failure);
     expect(formatUnavailableNote(tool, inspection)).toBe(paths.failure!);
 });

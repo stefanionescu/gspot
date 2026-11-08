@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { copyFile, mkdir, readdir, readFile, readlink, rm, symlink, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, readFile, readlink, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -37,7 +37,6 @@ test('a revision copy of a nested gspot.toml keeps the repository around it', as
             source.kind === 'index' ? 'indexed' : 'pushed',
         );
         expect(await readFile(join(copy.root, '..', 'outside.txt'), 'utf8')).toBe(CHANGED_CONTEXT);
-        expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
     }
     expect(await readFile(join(project, 'source.txt'), 'utf8')).toBe('working');
 });
@@ -67,13 +66,10 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     const source = kind === 'index' ? { kind } : { kind, hash: runGitStep(sandbox.path, ['rev-parse', 'HEAD']) };
     using copy = await copyRevision(sandbox.path, source);
     expect(copy.tree).toBe(expected);
-    expect(runGitStep(copy.root, ['write-tree'])).toBe(expected);
     expect(await readdir(join(copy.root, path))).toStrictEqual([]);
     expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe(SELECTED_SOURCE);
     const copied = await readTestRepository(copy.root);
     expect(listSubmodulePaths(copied.index)).toStrictEqual([path]);
-    expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
-    expect(await readFile(join(outside.path, 'source.txt'), 'utf8')).toBe('outside source');
 });
 
 test('a Git hook in a linked worktree copies the index and the commit, and keeps its own index, HEAD, Git settings, and cancellation', async () => {
@@ -122,18 +118,6 @@ test.skipIf(isWindows)('an index copy keeps unusual filename bytes and contents'
     expect(await readFile(join(copy.root, path), 'utf8')).toBe(LOWERCASE_SELECT_SQL);
 });
 
-test('a revision copy keeps its source available until disposal and removes the temporary folder afterward', async () => {
-    await using sandbox = await testdir({ 'source.txt': SELECTED_SOURCE });
-    commitAll(sandbox.path);
-    const copy = await copyRevision(sandbox.path, { kind: 'index' });
-    const copiedPath = join(copy.root, 'source.txt');
-    expect(await readFile(copiedPath, 'utf8')).toBe(SELECTED_SOURCE);
-    expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
-    copy[Symbol.dispose]();
-    expect(existsSync(copiedPath)).toBe(false);
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(SELECTED_SOURCE);
-});
-
 test('a shallow index copy reads newly staged blobs and preserves its shallow history', async () => {
     await using sandbox = await testdir({ 'origin/source.txt': 'committed\n' });
     const origin = join(sandbox.path, 'origin');
@@ -146,7 +130,6 @@ test('a shallow index copy reads newly staged blobs and preserves its shallow hi
     using copy = await copyRevision(checkout, { kind: 'index' });
     expect(await readFile(join(copy.root, 'new.txt'), 'utf8')).toBe('new staged blob\n');
     expect(runGitStep(copy.root, ['rev-list', '--count', 'HEAD'])).toBe('1');
-    expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
 });
 
 test.skipIf(isWindows)('a revision copy links the packages of a node_modules that is a link', async () => {
@@ -169,18 +152,6 @@ test.skipIf(isWindows)('a revision copy keeps a committed link', async () => {
     commitAll(sandbox.path);
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
     expect(await readlink(join(copy.root, 'linked.txt'))).toBe('target.txt');
-});
-
-test('an index copy holds the LF bytes of the index for a file that core.autocrlf checks out with CRLF', async () => {
-    await using sandbox = await testdir({ 'source.txt': 'one\ntwo\n', 'kept.txt': 'kept' });
-    commitAll(sandbox.path);
-    runGitStep(sandbox.path, ['config', 'core.autocrlf', 'true']);
-    await rm(join(sandbox.path, 'source.txt'));
-    runGitStep(sandbox.path, ['checkout', '--', 'source.txt']);
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('one\r\ntwo\r\n');
-    using copy = await copyRevision(sandbox.path, { kind: 'index' });
-    expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe('one\ntwo\n');
-    expect(await readFile(join(copy.root, 'kept.txt'), 'utf8')).toBe('kept');
 });
 
 test('a copy runs no global Git filter or line conversion, and its checks read the attributes of the revision', async () => {

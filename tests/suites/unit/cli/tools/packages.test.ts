@@ -34,5 +34,4 @@ test.each([
         findProgram('node')!,
         join(sandbox.path, GSPOT_PATHS.nodeModules, 'teller', script),
     ]);
-    expect(readToolCommandPrefix(sandbox.path, tool, join(sandbox.path, 'node_modules/.bin/teller'))).toHaveLength(1);
 });

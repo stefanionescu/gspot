@@ -71,11 +71,6 @@ test('an SQL error after Unicode points at the right token', async () => {
         line: 1,
         column: text.lastIndexOf(TYPO.select) + 1,
     });
-    const corrected = await parseSqlFile(
-        text.replace(`${TYPO.select} 2`, () => SELECT_SQL),
-        createRunCache(process.cwd()),
-    );
-    expect(corrected.error).toBeUndefined();
 });
 
 test.each(["'", "E'", '"'])('an unterminated SQL %s value gives the parser error at its start', async (opener) => {

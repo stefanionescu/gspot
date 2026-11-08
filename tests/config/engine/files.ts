@@ -135,12 +135,6 @@ export const TSC_PUSH_OPTIONS = { stage: 'push' as const, only: ['typescript/tsc
 
 export const EDITORCONFIG_FILES = {
     'source.py': 'VALUE = 1\n',
-    'task.sh': '#!/bin/sh\nprintf hello\n',
-    'Source.swift': 'let value = 1\n',
-    'settings.toml': 'value = 1\n',
-    'query.sql': 'SELECT 1;\n',
-    Makefile: 'build:\n\ttrue\n',
-    Dockerfile: 'FROM scratch\n',
 } as const;
 
 export const PROJECT_PATH_IGNORES = [

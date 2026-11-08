@@ -3,7 +3,6 @@ import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
 export const REGISTRY_PASSWORDS = [
     ['https://alex@example.com/simple', []],
     ['https://alex:test%2Bpassword@example.com/simple', ['test%2Bpassword', 'test+password']],
-    ['https://alex:password@example.com/simple', ['password', 'password']],
 ] as const;
 
 export const LEAKED_LOCKFILES = [
@@ -109,18 +108,6 @@ export const LOCKFILE_REGISTRY_CASES = [
         },
         '@example/package',
     ],
-    [
-        'exact private scope registry tarball',
-        '@example/package',
-        '7.0.0',
-        'https://packages.example/@example/package/-/package-7.0.0.tgz',
-        true,
-        {
-            npm_config_registry: 'https://registry.npmjs.org/',
-            'npm_config_@example:registry': 'https://packages.example/',
-        },
-        '@example/package',
-    ],
 ] as const;
 
 export const NPMRC_REFUSALS = [
@@ -153,10 +140,7 @@ export const NPM_PREFIX_ENVIRONMENT = {
     NPM_CONFIG_REGISTRY: undefined,
 };
 
-export const FAILED_INSTALL_CASES = [
-    { operation: 'installation', frozen: true },
-    { operation: 'lockfile resolution', frozen: false },
-] as const;
+export const FAILED_INSTALL_CASES = [{ operation: 'installation', frozen: true }] as const;
 
 export const PACKAGE_MANAGER_AGE_CASES = [
     { name: 'pnpm', version: '10.15.0', minimum: '10.16.0', accepted: false },

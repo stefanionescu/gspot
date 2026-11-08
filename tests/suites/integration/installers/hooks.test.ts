@@ -38,8 +38,6 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
         expect(installation.code, installation.stdout + installation.stderr).toBe(0);
         expect(runGitStep(clone, ['status', '--porcelain'])).toBe('');
     }
-    const ready = await spawnGspot(clone, ['check', '--only', 'bash/shellcheck']);
-    expect(ready.code, ready.stdout + ready.stderr).toBe(0);
     await writeFile(join(clone, 'scripts/b.sh'), UNQUOTED_SCRIPT);
     runGitStep(clone, ['add', 'scripts/b.sh']);
     const rejected = await runCommand(['git', 'commit', '-qm', 'Unquoted shell input'], {

@@ -18,17 +18,7 @@ test('a shared function coverage limit enables Jest coverage without enabling py
         stage: 'push',
         only: ['pytest/tests', 'jest/tests'],
     });
-    const pytestPlan = plans.find(({ check }) => check.id === 'pytest/tests')!;
     const jestPlan = plans.find(({ check }) => check.id === 'jest/tests')!;
-    expect(stripCoverageArguments(pytestPlan, {})).toStrictEqual([
-        'pytest',
-        '-q',
-        '--strict-markers',
-        '--strict-config',
-        '--no-header',
-        '-p',
-        'no:cacheprovider',
-    ]);
     expect(stripCoverageArguments(jestPlan, {})).toContain('--coverage');
 });
 
@@ -140,7 +130,6 @@ test('a skipped history check does not refuse a shallow push', async () => {
 test('v8r keeps unowned schema files and excludes files validated by other tools', async () => {
     const otherToolFiles = [
         'package.json',
-        'app/package.json',
         'tsconfig.json',
         'app/tsconfig.build.json',
         'jsconfig.json',

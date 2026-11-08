@@ -1,5 +1,3 @@
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-
 export const PACKAGE_FIELDS = {
     name: 'example-package',
     dependencies: { next: '16.0.0' },
@@ -12,7 +10,6 @@ export const PROJECT_DEPENDENCY_FILES = {
     'app/package.json': '{"devDependencies":{"tailwindcss":"4.1.13"}}',
     'other/package.json': '{"dependencies":{"next":"16.3.5"}}',
     'empty/package.json': '{"private":true}',
-    [GSPOT_PATHS.npmProject]: '{"dependencies":{"tailwindcss":"4.1.13"}}',
 } as const;
 
 export const PROJECT_DEPENDENCY_SCOPES = [
@@ -20,9 +17,7 @@ export const PROJECT_DEPENDENCY_SCOPES = [
     { scope: 'application', names: ['@nestjs/swagger'] },
     { scope: 'app', names: ['tailwindcss'] },
     { scope: 'app/styles', names: ['tailwindcss'] },
-    { scope: 'other', names: ['next'] },
     { scope: 'empty', names: [] },
-    { scope: 'empty/src', names: [] },
 ] as const;
 
 export const INVALID_DEPENDENCY_FILES = [

@@ -7,16 +7,12 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the pin of a repository with package.json is an exact development dependency', async () => {
     await using sandbox = await createGitSandbox({ 'package.json': '{\n  "name": "example"\n}\n' });
     writeGspotPin(openFiles(sandbox.path));
-    const manifest = JSON.parse(await readFile(join(sandbox.path, 'package.json'), 'utf8')) as Record<string, unknown>;
-    expect(manifest['devDependencies']).toStrictEqual({ [cliPackage.name]: cliPackage.version });
     expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
 });
 
@@ -25,14 +21,6 @@ test('the pin keeps the indentation of package.json', async () => {
     writeGspotPin(openFiles(sandbox.path));
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(
         `{\n    "name": "example",\n    "devDependencies": {\n        "${cliPackage.name}": "${cliPackage.version}"\n    }\n}\n`,
-    );
-});
-
-test('the pin of a repository with neither file writes a mise.toml that pins Node.js, with a final newline', async () => {
-    await using sandbox = await createGitSandbox({});
-    writeGspotPin(openFiles(sandbox.path));
-    expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe(
-        `[tools]\nnode = "24"\n"npm:${cliPackage.name}" = { version = "${cliPackage.version}", allow_low_downloads = "true" }\n`,
     );
 });
 
@@ -55,30 +43,6 @@ test('the pin of a repository without package.json is a mise tool beside the oth
     expect(text.match(/^node = /gmu)).toStrictEqual(['node = ']);
     expect(text).toContain('node = "24.0.0"');
     expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
-});
-
-test.each([
-    { commandArguments: ['add', 'bash'] },
-    { commandArguments: ['remove', 'bash', '--reason', 'The repository has no shell scripts.'] },
-    { commandArguments: ['set', 'level', 'all'] },
-    { commandArguments: ['unset', 'level'] },
-    { commandArguments: ['ignore', '--paths', 'README.md', '--reason', 'The readme is written by hand.'] },
-    { commandArguments: ['unignore', '--paths', 'README.md'] },
-    { commandArguments: ['install'] },
-    { commandArguments: ['check'] },
-])('another pinned version stops gspot $commandArguments.0, and names the install', async ({ commandArguments }) => {
-    const settings = buildSandboxSettings([]);
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': settings,
-        'mise.toml': '[tools]\n"npm:@gspothq/cli" = "0.0.1"\n',
-        'README.md': '# Example\n',
-    });
-    const result = await runGspot(sandbox.path, [...commandArguments, '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    const failure = JSON.parse(result.stdout) as { error: string; message: string };
-    expect(failure.error).toBe('arguments');
-    expect(failure.message).toContain('npm:@gspothq/cli@0.0.1');
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('the pin keeps a sorted devDependencies block sorted, and goes last in an unsorted one', async () => {

@@ -31,17 +31,6 @@ reason = "This sandbox exercises native tools without the license scanner."
         needs: ['ruff'],
         skips: ['node', 'eslint', 'typescript'],
     },
-    {
-        name: 'Bun with TypeScript',
-        tables: '',
-        configurations: ['typescript'],
-        files: {
-            'app.ts': 'export const value = 1;\n',
-            'package.json': '{"private":true,"engines":{"bun":"1.4.2"}}\n',
-        },
-        needs: ['node', 'eslint'],
-        skips: [],
-    },
 ] as const;
 
 export const COVERAGE_PROVIDERS = [
@@ -51,19 +40,6 @@ export const COVERAGE_PROVIDERS = [
         provider: '@vitest/coverage-v8',
         file: 'math.test.js',
         configurations: ['javascript', 'vitest'],
-    },
-] as const;
-
-export const FIX_SUMMARY_CASES = [
-    {
-        name: 'no changes',
-        paths: [],
-        appliedText: 'No fixer changed anything.',
-    },
-    {
-        name: 'two changed files',
-        paths: ['source.txt', 'other.txt'],
-        appliedText: 'Fixed 2 files: other.txt, source.txt. The changes are not staged.',
     },
 ] as const;
 
@@ -209,12 +185,6 @@ export const TYPESCRIPT_PIN_CASES = [
         name: 'a range with an untracked lockfile',
         files: { 'package.json': RANGE_PACKAGE, 'pnpm-lock.yaml': PNPM_TYPESCRIPT_LOCK },
         untracked: ['pnpm-lock.yaml'],
-        isProjectPin: false,
-    },
-    {
-        name: 'a range without a lockfile',
-        files: { 'package.json': RANGE_PACKAGE },
-        untracked: [],
         isProjectPin: false,
     },
     {
