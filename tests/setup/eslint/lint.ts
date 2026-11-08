@@ -68,9 +68,3 @@ export async function readEslintRules(
         ),
     );
 }
-
-export function listFindingRules(findings: readonly LintFinding[]): Array<string | null> {
-    return [...new Set(findings.map(({ rule }) => rule))].toSorted((left, right) =>
-        compareText(String(left), String(right)),
-    );
-}
