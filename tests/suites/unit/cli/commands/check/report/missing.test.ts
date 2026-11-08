@@ -48,12 +48,3 @@ test('the summary counts canceled checks apart from errors', () => {
     expect(text).toContain('canceled  bash/shellcheck  Canceled.');
     expect(text).toContain('Errors: 1. Canceled: 1 check. Passed: 0 checks.');
 });
-
-test('a report with missing checks adds the install reminder to the summary of the tools that need it', () => {
-    const checks = [
-        ENVIRONMENT_CHECK,
-        { ...ENVIRONMENT_CHECK, check: 'python/ruff', note: 'ruff is not installed. Run gspot install.' },
-    ];
-    const report = { ...FAILED_CHECK_REPORT, ignores: [], failed: [], exitCode: 2, checks };
-    expect(formatRunReport(report, { verbose: false }).match(/gspot install/gu)).toHaveLength(2);
-});

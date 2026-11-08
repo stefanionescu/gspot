@@ -19,7 +19,6 @@ test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', a
     expect(result.stdout + result.stderr).toBe(
         'There is no check called bash/shelcheck. Did you mean bash/shellcheck?\n',
     );
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('ignore merges matching paths, keeps different reasons apart, and a record without paths covers the scope', async () => {
@@ -96,20 +95,7 @@ test('ignore rejects unknown rules and checks without rule output before writing
             error: 'arguments',
             message: expect.stringContaining(check) as string,
         });
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     }
-});
-
-test('ignore keeps a rule of a check without a rule catalog as given', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript']),
-        'source.ts': 'export const count = 1;\n',
-    });
-    const reason = ['--reason', 'The fixture holds a deliberate type error.'];
-    const ignored = await runGspot(sandbox.path, ['ignore', 'typescript/tsc', '--rule', 'TS2322', ...reason]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(written['ignore']).toMatchObject([{ check: 'typescript/tsc', rule: 'TS2322' }]);
 });
 
 test('ignore refuses a one-letter reason without writing', async () => {

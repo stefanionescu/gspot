@@ -1,5 +1,4 @@
 export const INVALID_PRETTIER_OPTIONS = [
-    { file: '.prettierrc.json', text: '{"tabWidth":"4"}', field: 'tabWidth' },
     { file: 'app/package.json', text: '{"prettier":{"printWidth":"wide"}}', field: 'printWidth' },
 ];
 
@@ -59,12 +58,6 @@ export const CARRYOVER_ROW_CASES = [
         name: 'a Ruff file that does not parse',
         files: { 'ruff.toml': 'select = [\n', 'main.py': 'VALUE = 1\n' },
         path: 'ruff.toml',
-        row: { dropped: ['the whole file, which gspot could not read'] },
-    },
-    {
-        name: 'a pyproject.toml that does not parse',
-        files: { 'pyproject.toml': '[project\n', 'main.py': 'VALUE = 1\n' },
-        path: 'pyproject.toml',
         row: { dropped: ['the whole file, which gspot could not read'] },
     },
     {

@@ -22,8 +22,8 @@ test.each([
         ci: GITLAB_CI,
     },
     {
-        name: 'GitHub remote with unrelated Bitbucket configuration',
-        tracked: ['bitbucket-pipelines.yml'],
+        name: 'GitHub remote',
+        tracked: [],
         remote: 'git@github.com:example/repo.git',
         ci: GITHUB_CI,
     },

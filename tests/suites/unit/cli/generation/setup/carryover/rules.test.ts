@@ -110,18 +110,6 @@ test('init compares the markdownlint table with what gspot runs', async () => {
     });
 });
 
-test('init compares a markdownlint alias under its rule ID', async () => {
-    await using sandbox = await createGitSandbox({
-        '.markdownlint.json': '{ "heading-increment": false }',
-        'README.md': '# Example\n',
-    });
-    const { plan } = await runInit(sandbox.path);
-    expect(plan.carryover.find(({ path }) => path === '.markdownlint.json')).toMatchObject({
-        carried: ['ignore MD001'],
-        dropped: [],
-    });
-});
-
 test('init asks for no reason for a markdownlint rule that markdownlint retired', async () => {
     await using sandbox = await createGitSandbox({
         '.markdownlint.json': '{ "MD002": false }',

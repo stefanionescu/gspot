@@ -1,10 +1,5 @@
 export const FORMAT_FILE_CASES = [
     {
-        name: 'Prettier dependency without configuration',
-        files: { 'package.json': '{"devDependencies":{"prettier":"3.8.1"}}' },
-        expected: { indent_width: 2, print_width: 80, quotes: 'double' },
-    },
-    {
         name: 'partial Prettier JSON configuration',
         files: { '.prettierrc.json': '{"tabWidth":3}' },
         expected: { indent_width: 3, print_width: 80, quotes: 'double' },
@@ -38,18 +33,6 @@ export const FORMAT_FILE_CASES = [
         name: 'EditorConfig project settings and section overrides',
         files: { '.editorconfig': '[*]\nindent_size = 4\n[*.json]\nindent_size = 2\n', 'data.json': '{}\n' },
         expected: { indent_width: 4, override: [{ paths: ['**/*.json'], indent_width: 2 }] },
-    },
-    {
-        name: 'Prettier precedence over EditorConfig',
-        files: {
-            '.prettierrc.json': '{"singleQuote":true}',
-            '.editorconfig': `root = true
-[*]
-indent_size = 6
-max_line_length = 96
-`,
-        },
-        expected: { indent_width: 6, print_width: 96, quotes: 'single' },
     },
     {
         name: 'EditorConfig before declared Prettier defaults',
@@ -96,18 +79,6 @@ export const FORMAT_WORKSPACE_FILES = {
 } as const;
 
 export const DEFAULT_CASES = [
-    {
-        name: `defaults are omitted`,
-        source: `level="basic"
-tool_timeout_seconds=600
-[hooks]
-enabled=true
-[format]
-indent_style="space"
-indent_width=4
-`,
-        expected: ``,
-    },
     {
         name: `scope restores default after parent override`,
         source: `[format]

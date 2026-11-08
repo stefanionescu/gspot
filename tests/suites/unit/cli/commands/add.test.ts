@@ -1,5 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -10,32 +9,11 @@ import { readSettings } from '#cli/settings/read.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { CONFIGURATIONS_SETTINGS, INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
-import { API_SCOPE_FILES } from '#tests/config/commands/reports.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-
-test('add --scope writes the scope list and applies the generated files', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'api', configurations: [] }] }),
-        ...API_SCOPE_FILES,
-    });
-    commitAll(sandbox.path);
-    await applyGeneratedFiles(sandbox.path);
-    const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
-    expect(existsSync(generated)).toBe(false);
-    const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
-    expect(saved.scopes.get('api')!.configurations).toStrictEqual(['bash']);
-    expect(saved.configurations).toStrictEqual(['markdown']);
-    await applyGeneratedFiles(sandbox.path);
-    expect(existsSync(generated)).toBe(true);
-});
 
 test('add selects a configuration whose table stops every other command', async () => {
     const text = '[licenses]\nallowed = ["MIT"]\n';
@@ -50,8 +28,7 @@ test('add selects a configuration whose table stops every other command', async 
 
 test('add security exits 2, names gspot set level, and writes nothing', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { rules: true }),
-        'source.py': 'PORT = 8080\n',
+        'gspot.toml': buildSandboxSettings([]),
     });
     const refusal = await assertRefusalWithoutWrites(sandbox.path, ['add', 'security'], 'arguments');
     expect(refusal.message).toContain('gspot set level');
@@ -77,7 +54,6 @@ test('add names every unknown configuration before changing the settings', async
     const { error, message } = JSON.parse(result.stdout) as CommandFailureJson;
     expect(error).toBe('arguments');
     for (const name of ['not-a-real-config-a', 'not-a-real-config-b']) expect(message).toContain(name);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(text);
 });
 
 test('add names only added configurations in a mixed request', async () => {

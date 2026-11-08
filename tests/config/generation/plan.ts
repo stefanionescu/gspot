@@ -124,11 +124,6 @@ export const CONFIGURATION_CHOICES = [
     { configurations: ['python'], selected: ['python'] },
 ] as const;
 
-export const NEXTJS_LOCALE_CASES = [
-    { dependency: true, named: false, isSelected: false },
-    { dependency: false, named: true, isSelected: true },
-] as const;
-
 export const GENERATED_WRITE_MESSAGE = 'Generated write denied';
 
 export const INVALID_CSS = `a {

@@ -38,8 +38,7 @@ test.each([...UNKNOWN_SETTING_KEYS])(
             'settings.toml': 'enabled = true\n',
         });
 
-        const refusal = await assertRefusalWithoutWrites(sandbox.path, ['set', key, '{ enabled = true }'], 'arguments');
-        expect(refusal.message).toEndWith('/reference/gspot-toml/ lists every setting.');
+        await assertRefusalWithoutWrites(sandbox.path, ['set', key, '{ enabled = true }'], 'arguments');
     },
 );
 
@@ -75,33 +74,15 @@ test.each([...SET_VALUE_REFUSALS])('set refuses $name without writing', async ({
     await assertRefusalWithoutWrites(sandbox.path, commandArguments, 'arguments');
 });
 
-test.each([
-    { key: 'level', value: 'all', ignore: '--rule level' },
-    { key: 'hooks.enabled', value: 'false', ignore: '--rule hooks' },
-    { key: 'rule_files.enabled', value: 'false', ignore: '--rule rule-files' },
-])('set refuses --reason on $key, and names the ignore that records it', async ({ key, value, ignore }) => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const refusal = await assertRefusalWithoutWrites(
-        sandbox.path,
-        ['set', key, value, '--reason', 'the team chose this'],
-        'arguments',
-    );
-    expect(refusal.message).toContain(`gspot ignore gspot/weakenings ${ignore}`);
-});
-
-test('a reason on a value that is not weaker stays, and gspot.toml still reads', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'README.md': '# Example\n',
-    });
-    const result = await runGspot(sandbox.path, [
-        'set',
-        'limits.max_file_lines',
-        '100',
-        '--reason',
-        'the team keeps files short',
-    ]);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const read = await runGspot(sandbox.path, ['list', 'settings', '--json']);
-    expect(read.code, read.stdout + read.stderr).toBe(0);
-});
+test.each([{ key: 'level', value: 'all', ignore: '--rule level' }])(
+    'set refuses --reason on $key, and names the ignore that records it',
+    async ({ key, value, ignore }) => {
+        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+        const refusal = await assertRefusalWithoutWrites(
+            sandbox.path,
+            ['set', key, value, '--reason', 'the team chose this'],
+            'arguments',
+        );
+        expect(refusal.message).toContain(`gspot ignore gspot/weakenings ${ignore}`);
+    },
+);

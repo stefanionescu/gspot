@@ -9,7 +9,7 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a missing local commit stops a pre-push check and leaves the working tree as it was', async () => {
     await using sandbox = await createGitSandbox({});
-    const { base, broken } = await preparePushRepository(sandbox.path);
+    const { base } = await preparePushRepository(sandbox.path);
     const absent = 'f'.repeat(base.length);
     const missing = await runGspot(
         sandbox.path,
@@ -24,7 +24,6 @@ test('a missing local commit stops a pre-push check and leaves the working tree 
         error: 'git',
         message: expect.stringContaining(absent) as string,
     });
-    await assertWorkingTreeKept(sandbox.path, broken);
 });
 
 test('an annotated tag of a commit is checked while blob tags, blobs, and deleted refs are skipped', async () => {

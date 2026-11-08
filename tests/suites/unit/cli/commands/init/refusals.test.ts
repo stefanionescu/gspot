@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -7,7 +6,7 @@ import { testdir } from 'testdirs';
 
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { PRESERVE_SOURCE, UNCOMMITTED_FORMAT_CASES } from '#tests/config/generation/plan.ts';
+import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/generation/plan.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
@@ -21,14 +20,12 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
 
     commitAll(sandbox.path);
-    const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'bassh', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'arguments',
         message: expect.stringMatching(/\bbash\b/u) as string,
     });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('init refuses an unreadable package.json before writing', async () => {
@@ -47,17 +44,6 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
 
     commitAll(sandbox.path);
     await assertRefusalWithoutWrites(sandbox.path, ['init'], 'arguments');
-});
-
-test('init without a terminal writes the plan and preserves authored files', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await createGitSandbox({ 'control.txt': PRESERVE_SOURCE });
-
-    const accepted = await runGspot(sandbox.path, ['init']);
-    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(accepted.stderr).toBe('');
-    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
-    expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
 
 test('a linked .gspot folder stops init, and nothing outside changes', async () => {

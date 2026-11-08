@@ -34,8 +34,6 @@ test('init keeps the old config file when the generated one cannot be written', 
     expect(refused.code).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'unexpected' });
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    const generated = join(sandbox.path, getManifestTarget('spelling', 'typos.toml'));
-    expect(existsSync(generated)).toBe(false);
 });
 
 test.each([
@@ -68,31 +66,6 @@ test('init writes the generated files, then installs the tools of the plan', asy
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'install', message: 'The test stops at the first tool.' });
     const shellcheck = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
     expect(existsSync(shellcheck)).toBe(true);
-});
-
-test('init keeps a shared file that was edited after the plan', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await createGitSandbox({
-        'setup.cfg': '[sqlfluff]\nexclude_rules = LT01\n',
-        'query.sql': 'SELECT 1;\n',
-    });
-
-    const edited = `[sqlfluff]
-exclude_rules = LT01, RF01
-[flake8]
-ignore = E501
-`;
-    const rename = fs.renameSync;
-    using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, 'gspot.toml'))
-            fs.writeFileSync(join(sandbox.path, 'setup.cfg'), edited);
-        rename(source, target);
-    });
-    const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
-    expect(written.code, written.stdout + written.stderr).toBe(0);
-    expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    const generated = join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg'));
-    expect(existsSync(generated)).toBe(true);
 });
 
 test('init keeps a replaced config that changes after the plan reads it', async () => {

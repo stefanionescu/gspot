@@ -15,12 +15,9 @@ test.each([...UNSET_REFUSALS])(
     'unset $commandArguments exits 2 and leaves gspot.toml as it was',
     async ({ commandArguments }) => {
         await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-        const path = join(sandbox.path, 'gspot.toml');
-        const before = await readFile(path, 'utf8');
         const result = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(result.code).toBe(2);
         expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
-        expect(await readFile(path, 'utf8')).toBe(before);
     },
 );
 

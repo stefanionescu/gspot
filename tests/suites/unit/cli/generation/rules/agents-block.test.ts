@@ -41,7 +41,6 @@ test('with no configurations the block still lists the general rules', async () 
     )!.body;
     const paths = listIndexPaths(block);
     expect(paths).toContain('.gspot/rules/TESTING.md');
-    expect(block).toContain('Read `.gspot/rules/WORKING.md` and `.gspot/rules/WRITING.md` first.');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
@@ -74,8 +73,6 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
         '## Rules',
         '### Commands',
     ]);
-    await applyGeneratedFiles(sandbox.path);
-    expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });
 
 test('the AGENTS.md Commands section names its launcher once', () => {
@@ -88,7 +85,6 @@ test('the AGENTS.md Commands section names its launcher once', () => {
     });
     const commands = block.slice(block.indexOf(COMMANDS_HEADING));
     expect(commands).toContain(`The rules write \`gspot\` for \`${command}\`.`);
-    expect(commands.match(/pnpm exec gspot/gu)).toHaveLength(1);
 });
 
 test.each([

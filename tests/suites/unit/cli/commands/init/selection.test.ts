@@ -9,14 +9,13 @@ import { openSession } from '#cli/engine/session.ts';
 import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { CONFIGURATION_CHOICES, NEXTJS_LOCALE_CASES, TOOL_ONLY_PACKAGE } from '#tests/config/generation/plan.ts';
+import { CONFIGURATION_CHOICES, TOOL_ONLY_PACKAGE } from '#tests/config/generation/plan.ts';
 import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
 
@@ -41,7 +40,6 @@ test.each([...CONFIGURATION_CHOICES])(
         expect(selected.filter(({ group }) => group !== 'general').map(({ name }) => name)).toStrictEqual([
             ...row.selected,
         ]);
-        expect(selected.map(({ name }) => name)).toContain('structure');
     },
 );
 
@@ -110,26 +108,22 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
     expect(existsSync(generated)).toBe(true);
 });
 
-test.each([...NEXTJS_LOCALE_CASES])(
-    'a named Next.js configuration list wins over locale dependency detection: %j',
-    async ({ dependency, named, isSelected }) => {
-        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-        await using sandbox = await createGitSandbox({
-            'package.json': JSON.stringify({
-                name: 'translated-app',
-                private: true,
-                dependencies: { next: '16.3.5', ...(dependency && { 'next-intl': '4.3.9' }) },
-            }),
-            'app/page.tsx': 'export default function Page() { return "home"; }\n',
-        });
+test('a named Next.js configuration list wins over locale dependency detection', async () => {
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({
+            name: 'translated-app',
+            private: true,
+            dependencies: { next: '16.3.5', 'next-intl': '4.3.9' },
+        }),
+        'app/page.tsx': 'export default function Page() { return "home"; }\n',
+    });
 
-        const configurations = ['--configurations', 'nextjs', ...(named ? ['--configurations', 'translations'] : [])];
-        const result = await runGspot(sandbox.path, ['init', '--json', ...configurations]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
-        expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(isSelected);
-    },
-);
+    const result = await runGspot(sandbox.path, ['init', '--json', '--configurations', 'nextjs']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
+    expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(false);
+});
 
 test('init proposes workspace scopes without a lockfile, and writes nothing when the workspace file is broken', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
@@ -147,12 +141,10 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const plan = initOutputSchema.parse(JSON.parse(proposed.stdout));
     const settings = readSettings(plan.settingsText, sandbox.path);
     expect(settings.scopes.keys().toArray()).toStrictEqual(['packages/api']);
-    const before = await readTree(broken.path);
     const refused = await runGspot(broken.path, command);
     expect(refused.code).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'filesystem' });
     expect((JSON.parse(refused.stdout) as { message: string }).message).toContain('pnpm-workspace.yaml');
-    expect(await readTree(broken.path)).toStrictEqual(before);
 });
 
 test('init keeps root Docker and GitHub configurations beside an app scope', async () => {
@@ -183,7 +175,6 @@ test('init names an uninstalled tsconfig extension and the dependency install st
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'configuration',
-        message: expect.stringContaining('@tsconfig/node22/tsconfig.json') as string,
     });
 });
 

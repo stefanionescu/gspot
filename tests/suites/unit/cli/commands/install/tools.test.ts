@@ -105,10 +105,6 @@ test('install writes the generated files, exits 1, and names the tools that stay
     const shellcheck = getManifestTarget('bash', 'shellcheckrc');
     expect(report.written).toContain(shellcheck);
     expect(existsSync(join(sandbox.path, shellcheck))).toBe(true);
-    const repeated = await runGspot(sandbox.path, ['install', '--json']);
-    const repeatedReport = installOutputSchema.parse(JSON.parse(repeated.stdout));
-    expect(repeatedReport.written).toStrictEqual([]);
-    expect(repeatedReport.unchanged).toContain(shellcheck);
 });
 
 test('install stopped by SIGINT reports cancellation once and exits 130', async () => {

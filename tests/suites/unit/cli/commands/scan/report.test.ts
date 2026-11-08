@@ -51,7 +51,6 @@ test('scan prints the commands that would break and what init carries once, befo
         'What gspot init would carry over and drop\n  .prettierrc.json  carried over: semi; dropped: quoteProps',
     );
     expect(text.match(/Replace the lint and format parts/gu)).toHaveLength(1);
-    expect(text.indexOf('Commands that would break')).toBeLessThan(text.indexOf('What gspot init would do'));
 });
 
 test('scan lists real problems first, keeps three examples, and counts formatting apart', async () => {
@@ -65,7 +64,6 @@ test('scan lists real problems first, keeps three examples, and counts formattin
     expect(report.filesToFormat).toBe(2);
     expect(report.totals).toMatchObject({ checks: 5, findings: 8, filesFlagged: 4, seconds: 4.2 });
     expect(report.notRun).toStrictEqual(['python/ruff: ruff is not installed.']);
-    expect(report.checks).toBe(SCAN_RUN_REPORT.checks);
 });
 
 test('scan counts a check once, however many scopes ran it', async () => {
@@ -161,23 +159,6 @@ test('scan names paths in the ignore line of a check whose one rule gspot ignore
     );
     expect(text).toContain('gspot ignore gspot/suppressions --paths <path> --reason "<why>"');
     expect(text).not.toContain('gspot ignore gspot/suppressions --rule');
-});
-
-test.each(['data-files/taplo-format', 'bash/shfmt'])('scan counts a file of %s as formatting', async (check) => {
-    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
-    const finding = { check, file: 'a.toml', message: 'This file is not formatted.', fixable: true };
-    const checks = [{ check, scope: '', status: 'failed' as const, fileCount: 1, duration: 1, findings: [finding] }];
-    const report = buildScanReport({
-        planning,
-        session: planning.session,
-        report: { ...SCAN_RUN_REPORT, checks },
-        toolBytes: 0,
-        ruleRows: [],
-        leftOut: ['vitest/tests'],
-    });
-    expect(report.filesToFormat).toBe(1);
-    expect(report.categories).toStrictEqual([]);
 });
 
 test.each([

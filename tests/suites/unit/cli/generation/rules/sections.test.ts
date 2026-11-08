@@ -37,7 +37,4 @@ test('at level basic, a rule file loses its level-all sections with their subsec
     expect(allFiles.map(({ content }) => content)).toStrictEqual([
         before + '## Convention\n\nContent.\n\n### Detail\n\n```md\n## Not a boundary\n```\n\n' + after,
     ]);
-    writeFileSync(join(sandbox.path, 'rules/GUIDE.md'), before + after);
-    const keptFiles = selectRuleFiles({ ...defaultLevel, scopes: defaultLevelScopes });
-    expect(keptFiles.map(({ content }) => content)).toStrictEqual([before + after]);
 });

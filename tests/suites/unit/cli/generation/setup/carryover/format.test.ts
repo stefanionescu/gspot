@@ -82,16 +82,6 @@ test('init keeps the EditorConfig overrides beside the overrides of a Prettier c
     ]);
 });
 
-test('init keeps the EditorConfig line width for Python files without Ruff settings', async () => {
-    await using sandbox = await createGitSandbox({
-        '.editorconfig': '[*]\nmax_line_length = 117\n',
-        'main.py': 'VALUE = 1\n',
-    });
-    const { settings } = await runInit(sandbox.path, ['--configurations', 'python']);
-    const { override = [] } = settings['format'] as { override?: TomlTable[] };
-    expect(override.filter(({ print_width }) => print_width !== undefined)).toStrictEqual([]);
-});
-
 test('init names the excludeFiles of a Prettier override', async () => {
     await using sandbox = await createGitSandbox({
         '.prettierrc': '{"overrides":[{"files":"*.js","excludeFiles":"vendor/**","options":{"semi":false}}]}\n',

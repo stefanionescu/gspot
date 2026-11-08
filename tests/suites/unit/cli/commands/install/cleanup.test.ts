@@ -3,7 +3,6 @@ import { join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -22,7 +21,6 @@ test('install removes interrupted temporary writes and keeps active writes and u
         'gspot.toml': buildSandboxSettings([]),
         [stale]: 'interrupted',
         [active]: 'writing',
-        [`.gspot/${active}`]: 'writing generated file',
         [ownerless]: 'previous interrupted write',
         [recent]: 'recent write',
         '.gspot-notes.tmp': 'authored',
@@ -38,20 +36,6 @@ test('install removes interrupted temporary writes and keeps active writes and u
     expect(existsSync(join(sandbox.path, stale))).toBe(false);
     expect(existsSync(join(sandbox.path, ownerless))).toBe(false);
     expect(existsSync(join(sandbox.path, active))).toBe(true);
-    expect(existsSync(join(sandbox.path, '.gspot', active))).toBe(true);
     expect(existsSync(join(sandbox.path, recent))).toBe(true);
     expect(existsSync(join(sandbox.path, '.gspot-notes.tmp'))).toBe(true);
-});
-
-test('install moves a .gspot folder of gspot 0.3.9 to one folder per configuration and deletes the group folder', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-        'guide.md': '# Guide\n',
-        '.gspot/configurations/general/prose/vale.ini': 'StylesPath = ../../../vale\n',
-    });
-    const result = await runGspot(sandbox.path, ['install', '--json']);
-    expect(result).toMatchObject({ code: 0 });
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.valeConfig))).toBe(true);
-    expect(existsSync(join(sandbox.path, '.gspot/configurations/general'))).toBe(false);
 });

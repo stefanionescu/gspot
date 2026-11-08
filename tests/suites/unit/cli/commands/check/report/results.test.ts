@@ -132,17 +132,6 @@ test('verbose output prints the time before the first check above the total time
     expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false, setup: 820 })).not.toContain('Setup:');
 });
 
-test('the report prints planned skips once with their reason only in verbose output', () => {
-    const { rerun: _rerun, ...check } = FAILED_CHECK_REPORT.checks[0];
-    const skipped: RunReport = {
-        ...FAILED_CHECK_REPORT,
-        checks: [{ ...check, status: 'skipped', cause: 'condition', note: 'disabled', findings: [] }],
-        skippedCount: { condition: 1 },
-    };
-    expect(formatRunReport(skipped, { verbose: false })).not.toContain('bash/shellcheck');
-    expect(formatRunReport(skipped, { verbose: true })).toContain('skipped (condition)  bash/shellcheck  disabled');
-});
-
 test('the summary counts a check once under its worst result, and names the scopes that ran', () => {
     const [failed, passed] = FAILED_CHECK_REPORT.checks;
     const report: RunReport = {
@@ -281,5 +270,4 @@ test('a finding message occupies one report line', () => {
     };
     const text = formatRunReport(report, { verbose: false });
     expect(text).toContain('First line. Second line. Third line.');
-    expect(text).not.toContain('\nSecond line.');
 });

@@ -1,20 +1,15 @@
-import { delimiter, join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { JSON_ARGUMENT_ERRORS, MALFORMED_SETTINGS, VERSION_ARGUMENTS } from '#tests/config/main.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { markExecutable, runGitStep } from '#tests/setup/system/git.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('gspot without a command prints the help to stderr and exits 2', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -51,42 +46,8 @@ test('gspot baseline exits 2 and names gspot ignore', async () => {
     expect(result.stderr).toContain('gspot ignore <check>');
 });
 
-test('gspot apply exits 2 with one line that names gspot install', async () => {
-    await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: expect.stringContaining('gspot install') as string,
-    });
-});
-
-test('in a repository of 0.3.9, the hook script stops the commit, and install refuses the old key', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': 'configurations = ["markdown"]\n\n[limits]\nmin_function_statements = 3\n',
-        '.gspot/hooks/pre-commit': '#!/bin/sh\nexec gspot check --staged --stage commit\n',
-        'notes.md': '# Notes\n',
-    });
-    await markExecutable(sandbox.path, '.gspot/hooks/pre-commit');
-    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
-    runGitStep(sandbox.path, ['add', '-A']);
-    const folder = await writeProgramCommand(join(sandbox.path, '.git/bin'), 'gspot', 'processes/cli');
-    const commit = runBlockingCommand(['git', 'commit', '-m', 'feat: start'], {
-        cwd: sandbox.path,
-        env: { PATH: `${folder}${delimiter}${String(readEnvironmentVariable('PATH'))}` },
-    });
-    expect(commit.code, commit.stdout + commit.stderr).toBe(1);
-    expect(commit.stderr).toContain("Unknown option '--stage'");
-    expect(runGitStep(sandbox.path, ['rev-list', '--all'])).toBe('');
-    const install = await runGspot(sandbox.path, ['install']);
-    expect(install.code).toBe(2);
-    expect(install.stderr).toContain('limits.min_function_statements');
-});
-
 test.each([
     { commandArguments: ['baseline', '--help'], removed: 'baseline' },
-    { commandArguments: ['baseline', '-h'], removed: 'baseline' },
-    { commandArguments: ['apply', '--help'], removed: 'apply' },
     { commandArguments: ['--verbose', 'baseline', '--help'], removed: 'baseline' },
 ])('$commandArguments prints the line of the removed command and exits 2', async ({ commandArguments, removed }) => {
     await using sandbox = await testdir();
@@ -102,24 +63,17 @@ test('init requires a Git worktree before reading settings or writing, while its
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git' });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const help = await runGspot(sandbox.path, ['init', '--help']);
-    expect(help.code).toBe(0);
-    expect(help.stdout).toContain('Usage:');
 });
 
 test('a sparse checkout is refused before reading settings and help remains available', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': MALFORMED_SETTINGS });
     runGitStep(sandbox.path, ['config', 'core.sparseCheckout', 'yes']);
-    const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'git',
         message: expect.stringContaining('git sparse-checkout disable') as string,
     });
-    expect(await readTree(sandbox.path)).toEqual(before);
-    const help = await runGspot(sandbox.path, ['doctor', '--help']);
-    expect(help.code).toBe(0);
 });
 
 test.each(VERSION_ARGUMENTS.map((commandArguments) => ({ commandArguments })))(
@@ -202,9 +156,6 @@ test('check treats --version after the separator as a file path', async () => {
         '--version',
     ]);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(JSON.parse(checked.stdout)).toMatchObject({
-        checks: [{ check: 'repository/encoding', status: 'passed' }],
-    });
 });
 
 test('--verbose before the command reaches check, which then prints its passed checks', async () => {

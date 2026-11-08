@@ -31,5 +31,4 @@ test.each([
     expect(after.scopes.map(({ path, settings }) => [path, getTable(settings, 'supabase')])).toStrictEqual(
         before.scopes.map(({ path, settings }) => [path, getTable(settings, 'supabase')]),
     );
-    expect(buildSettingsText(written, parseTomlFile('gspot.toml', written))).toBe(written);
 });

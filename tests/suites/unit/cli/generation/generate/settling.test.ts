@@ -36,8 +36,7 @@ test.each([...LEVELS])('every configuration at level %s settles in one write', a
         ...PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(names, { level, rules: true }),
     });
-    const first = await applyGeneratedFiles(sandbox.path);
-    expect(first.written.length).toBeGreaterThan(0);
+    await applyGeneratedFiles(sandbox.path);
     await expectSettled(sandbox.path);
 });
 

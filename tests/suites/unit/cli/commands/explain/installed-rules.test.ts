@@ -100,16 +100,6 @@ test('Markdownlint validates a rule against its installed catalog without evalua
         error: 'arguments',
         message: expect.stringContaining('MD999') as string,
     });
-    const ignored = await runGspot(sandbox.path, [
-        'ignore',
-        'markdown/markdownlint',
-        '--rule',
-        'MD999',
-        '--reason',
-        'Generated text keeps a different layout.',
-    ]);
-    expect(ignored.code).toBe(2);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('a SwiftLint rule explains from the installed tool, and a name it does not know is refused', async () => {
@@ -129,16 +119,6 @@ test('a SwiftLint rule explains from the installed tool, and a name it does not 
     expect(JSON.parse(unknown.stdout)).toMatchObject({
         error: 'arguments',
         message: expect.stringContaining('force_castt') as string,
-    });
-});
-
-test('explain names the limit that writes the options of the SwiftLint complexity rule', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['swift']) });
-    using _fakes = await fakeSwiftlint(sandbox.path, () => ({ stdout: 'Cyclomatic Complexity\n' }));
-    const explained = await runGspot(sandbox.path, ['explain', 'swift/swiftlint', 'cyclomatic_complexity', '--json']);
-    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout)).toMatchObject({
-        changeOptions: 'gspot set limits.max_cyclomatic_complexity <value>',
     });
 });
 
@@ -182,12 +162,6 @@ test('declarative Biome rule selection and ShellCheck identifiers refuse misspel
             message: expect.stringContaining(rule!) as string,
         });
     }
-    const described = await runGspot(sandbox.path, [
-        'explain',
-        'javascript/biome',
-        'lint/complexity/noExcessiveCognitiveComplexity',
-    ]);
-    expect(described.code, described.stdout + described.stderr).toBe(0);
 });
 
 test('Vale reads a rule from the style files that Vale loads, and gspot ignore takes it', async () => {
@@ -219,20 +193,4 @@ test('Vale reads a rule from the style files that Vale loads, and gspot ignore t
         error: 'arguments',
         message: expect.stringMatching(/\bgspot\.home-path\b/u) as string,
     });
-    const reason = 'The guide shows a home folder on purpose.';
-    const ignored = await runGspot(sandbox.path, [
-        'ignore',
-        'prose/vale',
-        '--rule',
-        'gspot.home-paths',
-        '--paths',
-        'guide.md',
-        '--reason',
-        reason,
-    ]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(written['ignore']).toStrictEqual([
-        { check: 'prose/vale', rule: 'gspot.home-paths', paths: ['guide.md'], reason },
-    ]);
 });

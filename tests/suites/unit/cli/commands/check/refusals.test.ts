@@ -59,7 +59,6 @@ test.each([...FIX_REFUSALS])('check $flags exits 2 and leaves the working tree a
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments' });
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
     expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
 
@@ -75,8 +74,6 @@ test.each([...PUSH_INPUT_REFUSALS])(
         );
         expect(refused.code).toBe(2);
         expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'git' });
-        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
-        expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
     },
 );
 

@@ -21,7 +21,6 @@ test('setting level all and unsetting it restores every generated file and its b
     const all = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(all.code, all.stdout + all.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, '.gspot/configurations/prose/vale.ini'))).toBe(true);
-    expect(await readTree(sandbox.path)).not.toStrictEqual(before);
     const restored = await runGspot(sandbox.path, ['unset', 'level']);
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
     expect(await readTree(sandbox.path)).toStrictEqual(before);

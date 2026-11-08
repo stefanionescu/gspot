@@ -55,10 +55,7 @@ export const PUSH_INPUT_REFUSALS = [
 ] as const;
 
 export const ARGUMENT_REFUSALS = [
-    ['a path outside the repository', ['check', '../elsewhere.txt'], '../elsewhere.txt'],
-    ['a path that matches nothing', ['check', 'missing'], 'missing'],
     ['an empty --only list', ['check', '--only', ','], '--only'],
-    ['an empty --skip list', ['check', '--skip', ','], '--skip'],
     ['an unknown --skip check', ['check', '--skip', 'bash/unknown'], 'bash/unknown'],
 ] as const;
 

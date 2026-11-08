@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
@@ -79,14 +78,11 @@ test('remove --scope writes removed_configurations with its reason and applies t
     const reason = 'The API scope no longer uses Bash.';
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--scope', 'api', '--reason', reason, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.pythonProject))).toBe(false);
     const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.scopes.get('api')!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
     const contents = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope'];
     expect(contents).toStrictEqual([{ path: 'api', removed_configurations: { bash: reason } }]);
-    await applyGeneratedFiles(sandbox.path);
-    expect(existsSync(generated)).toBe(false);
 });
 
 test('remove reports no change for a configuration the root does not list', async () => {

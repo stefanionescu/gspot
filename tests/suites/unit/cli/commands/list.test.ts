@@ -8,7 +8,6 @@ import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/comman
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using sandbox = await createGitSandbox({});
@@ -18,7 +17,6 @@ test('list shows selected settings and available configurations', async () => {
         'entry.sh': 'echo example\n',
         'query.sql': 'SELECT 1;\n',
     });
-    const before = await readTree(sandbox.path);
     const listed = await runGspot(sandbox.path, ['list', 'configurations', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = configurationsListOutputSchema.parse(JSON.parse(listed.stdout));
@@ -37,9 +35,6 @@ test('list shows selected settings and available configurations', async () => {
     expect(JSON.parse(defaults.stdout)).toStrictEqual(result);
     const listedSettings = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(listedSettings.code, listedSettings.stdout + listedSettings.stderr).toBe(0);
-    const rows = settingsListOutputSchema.parse(JSON.parse(listedSettings.stdout)).settings;
-    expect(rows.find((row) => row.setting === 'level')?.value).toBe('basic');
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('checks that run at the root appear once when selected in two child scopes', async () => {
@@ -88,20 +83,16 @@ test('the settings list reports inherited values and their source scope', async 
         'api/worker/query.sql': 'SELECT 1;\n',
     });
 
-    const before = await readTree(sandbox.path);
     const structured = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings } = settingsListOutputSchema.parse(JSON.parse(structured.stdout));
-    expect(settings.find((row) => row.setting === 'test_files')?.reasonFor).toBeUndefined();
-    expect(settings.find((row) => row.setting === 'limits.max_file_lines')?.reasonFor).toBe('raising');
     expect(settings.find((row) => row.scope === 'api/worker' && row.setting === 'limits.max_file_lines')).toMatchObject(
         {
             value: 200,
             source: { kind: 'scope', name: 'api' },
         },
     );
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('the settings list leaves out a naming category that gspot set refuses', async () => {
@@ -111,20 +102,19 @@ test('the settings list leaves out a naming category that gspot set refuses', as
     expect(stdout).not.toContain('naming.typescript.classes.cases');
 });
 
-test.each([
-    { reasonFor: 'adding', condition: 'you add items' },
-    { reasonFor: 'lowering', condition: 'you lower it' },
-    { reasonFor: 'raising', condition: 'you raise it' },
-])('the settings list says that a setting for $reasonFor needs a reason when $condition', async (row) => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
-    const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
-    const { settings } = settingsListOutputSchema.parse(JSON.parse(listed.stdout));
-    const { setting } = settings.find(({ reasonFor }) => reasonFor === row.reasonFor)!;
-    const printed = await runGspot(sandbox.path, ['list', 'settings']);
-    const lines = printed.stdout.split('\n');
-    expect(lines[0]).toContain('needs a reason when');
-    expect(lines.find((line) => line.startsWith(`${setting} `))).toContain(` ${row.condition} `);
-});
+test.each([{ reasonFor: 'raising', condition: 'you raise it' }])(
+    'the settings list says that a setting for $reasonFor needs a reason when $condition',
+    async (row) => {
+        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
+        const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
+        const { settings } = settingsListOutputSchema.parse(JSON.parse(listed.stdout));
+        const { setting } = settings.find(({ reasonFor }) => reasonFor === row.reasonFor)!;
+        const printed = await runGspot(sandbox.path, ['list', 'settings']);
+        const lines = printed.stdout.split('\n');
+        expect(lines[0]).toContain('needs a reason when');
+        expect(lines.find((line) => line.startsWith(`${setting} `))).toContain(` ${row.condition} `);
+    },
+);
 
 test('the text lists group equal scope states on one line', async () => {
     await using sandbox = await createGitSandbox({

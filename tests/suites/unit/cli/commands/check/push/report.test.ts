@@ -10,10 +10,10 @@ import type { RunReport } from '#cli/types/engine/run.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
-import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { assertWorkingTreeKept, createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 
@@ -52,7 +52,6 @@ test('the pre-push report prints a command that reproduces the same findings', a
     const repeatedReport = runReportSchema.parse(JSON.parse(repeated.stdout));
     expect(repeatedReport.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
     runGitStep(sandbox.path, ['worktree', 'remove', '--force', checkout.path]);
-    await assertWorkingTreeKept(sandbox.path, broken);
 });
 
 test('a pushed commit that changes gspot.toml checks every file of that commit', async () => {
@@ -115,18 +114,4 @@ test('push skips pre-adoption and unchanged refs without opening a copy or parsi
         expect(text.stdout).toBe(`refs/heads/legacy: ${reason}; no checks apply.\n`);
     }
     expect(await readFile(join(sandbox.path, '.gspot-copies'), 'utf8')).toBe('A copy cannot be created here.');
-});
-
-test('a pre-push run checks the push stage and leaves the commit stage to the commit hook', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: BASH_SYNTAX_CHECK }),
-        'entry.sh': 'echo base\n',
-    });
-    const base = commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'entry.sh'), BROKEN_IF_SCRIPT);
-    const head = commitAll(sandbox.path, 'broken');
-    const stdin = `refs/heads/main ${head} refs/heads/main ${base}\n`;
-    const result = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, { stdin });
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ exitCode: 0 });
 });

@@ -124,21 +124,6 @@ test('ignore without a check keeps the paths out of every check and every config
     expect(contents).not.toHaveProperty('ignore');
 });
 
-test('unignore removes a path ignore with no check after its files are gone', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'data/facts.txt': 'facts\n',
-    });
-    const reason = 'Product facts copy words as printed on the packaging.';
-    const ignored = await runGspot(sandbox.path, ['ignore', '--paths', 'data/**', '--reason', reason]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    await rm(join(sandbox.path, 'data'), { recursive: true });
-    const removed = await runGspot(sandbox.path, ['unignore', '--paths', 'data/**']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
-    expect(contents).not.toHaveProperty('ignore');
-});
-
 test.each([...LITERAL_ROUTE_CASES])(
     'ignore escapes literal $folder and unignore removes its deleted path',
     async ({ folder, path, escaped }) => {

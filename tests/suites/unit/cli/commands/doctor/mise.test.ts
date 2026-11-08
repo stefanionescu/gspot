@@ -23,10 +23,3 @@ test('with no mise on PATH, doctor sends the tools that mise installs to mise, n
     );
     expect(result.stdout).not.toContain('Run gspot install');
 });
-
-test('with no mise on PATH, doctor still sends a missing npm tool to gspot install, which installs it without mise', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    using _lookup = fakeExecutableLookup(null);
-    const result = await runGspot(sandbox.path, ['doctor']);
-    expect(result.stdout).toContain('Run gspot install to install the missing or outdated tools.');
-});

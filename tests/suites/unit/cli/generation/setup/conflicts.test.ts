@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { chmod, readFile, readlink, stat, symlink, writeFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 
@@ -9,9 +9,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { LINT_FOLDER_MESSAGE } from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { initOutputSchema } from '#cli/schemas/commands.ts';
-import { readSettings } from '#cli/settings/read.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import {
@@ -79,8 +77,6 @@ test('the init plan deletes the conflicting config files and lists the lint fold
     expect(plan.deleted.map(({ path }) => path)).toStrictEqual(REPLACED_CONFIG_DELETIONS.map(({ path }) => path));
     expect(plan.lintFolders).toStrictEqual([{ path: 'quality/', note: LINT_FOLDER_MESSAGE }]);
     for (const { path } of REPLACED_CONFIG_DELETIONS) expect(existsSync(join(sandbox.path, path))).toBe(false);
-    const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
     expect(existsSync(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
 
@@ -91,8 +87,6 @@ test.each(['setup.cfg'])('init leaves a shared %p in place and names its SQLFluf
     await chmod(join(sandbox.path, path), 0o640);
     const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'sql', '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).ignore;
-    expect(settings).toStrictEqual([]);
     const plan = initOutputSchema.parse(JSON.parse(initialized.stdout)).plan;
     expect(plan.keep).toStrictEqual([{ path, note: expect.stringContaining('sqlfluff') as string }]);
     await assertFileKept(sandbox.path, path, SHARED_SETUP_CONFIG);

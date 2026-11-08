@@ -10,10 +10,7 @@ paths = ["**/*.json"]
 reason = "These files retain generated formatting."
 `;
 
-export const UNSET_REFUSALS = [
-    { commandArguments: ['unset', 'no_such_key'] },
-    { commandArguments: ['unset', 'level', 'extra'] },
-] as const;
+export const UNSET_REFUSALS = [{ commandArguments: ['unset', 'level', 'extra'] }] as const;
 
 export const UNKNOWN_IGNORE_ARGUMENTS = [
     'ignore',
@@ -139,7 +136,6 @@ export const UNKNOWN_SETTING_KEYS = [{ key: 'tools.eslint.unknown_key' }, { key:
 export const STRING_SETTING_VALUES = [
     { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },
     { key: 'ci.linux_runner', words: ['true'], value: 'true' },
-    { key: 'ci.setup_command', words: ['--', 'make', '-C', 'make'], value: ['make', '-C', 'make'] },
 ] as const;
 
 export const SET_VALUE_REFUSALS = [

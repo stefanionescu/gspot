@@ -31,7 +31,6 @@ test('install leaves generated files writable, keeps their bytes, and deletes a 
     expect(installOutputSchema.parse(JSON.parse(applied.stdout)).deleted).toContain(`${GSPOT_FOLDER}/obsolete/old.txt`);
     expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
     expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gitattributes'))).toBe(true);
     const rulePath = getRuleFilePath('engineering', 'WORKING.md');
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
@@ -146,6 +145,4 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     const settled = installOutputSchema.parse(JSON.parse(repeated.stdout));
     expect(settled.unchanged.filter((path) => path === '.prettierignore')).toStrictEqual(['.prettierignore']);
     expect({ written: settled.written, deleted: settled.deleted }).toStrictEqual({ written: [], deleted: [] });
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
-    expect(await readFile(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');
 });

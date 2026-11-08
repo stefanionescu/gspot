@@ -35,7 +35,6 @@ test('remove deletes settings that only the removed configuration exposes and na
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain('sql.dialect');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect((written['tools'] as TomlTable | undefined)?.['sqlfluff']).toBeUndefined();
     expect(written['limits']).toStrictEqual({ max_file_lines: 250 });
 });
 

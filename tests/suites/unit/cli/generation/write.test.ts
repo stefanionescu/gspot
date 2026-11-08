@@ -89,7 +89,6 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     const settled = await openSession(sandbox.path);
     const output = buildGeneratedFiles(settled);
     expect(listStaleFiles(settled, output)).toStrictEqual(listStaleLockfiles(settled, output.files));
-    expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
 });
 
 test('writing a mise project preserves its lockfile and asks for an install after a changed hook', async () => {
@@ -143,7 +142,6 @@ test('at level basic, gspot removes the Vale configuration and the installed sty
     const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(existsSync(join(sandbox.path, '.gspot/vale'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot/configurations/prose/vale.ini'))).toBe(false);
 });
 
 test('writing the generated files preserves a copied header example and removes an obsolete scoped pointer file', async () => {

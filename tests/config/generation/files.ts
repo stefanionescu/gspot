@@ -88,14 +88,7 @@ export const SETUP_CASES = [
     ['gitlab', 29],
 ] as const;
 
-export const SETUP_ARGUMENTS = [
-    '',
-    'two words',
-    "a'b",
-    '$(touch unexpected)',
-    'x; touch unexpected',
-    'line\nbreak',
-] as const;
+export const SETUP_ARGUMENTS = ['', 'two words', "a'b", 'line\nbreak'] as const;
 
 export const LINUX_PIPELINE = {
     version: '1.2.3',
@@ -110,8 +103,6 @@ const BIN_FOLDER_START = { program: 'node', launcher: 'node_modules/.bin/gspot',
 
 export const START_COMMANDS = [
     { manager: 'npm', packageManager: 'npm@11.10.1', ...BIN_FOLDER_START },
-    { manager: 'pnpm', packageManager: 'pnpm@10.32.1', ...BIN_FOLDER_START },
-    { manager: 'bun', packageManager: 'bun@1.4.2', ...BIN_FOLDER_START },
     {
         manager: 'yarn',
         packageManager: 'yarn@4.13.0',

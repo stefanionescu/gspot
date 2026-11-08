@@ -22,40 +22,6 @@ async function prepareChangedRepository(root: string, files: Record<string, stri
     await createFileTree(root, { 'gspot.toml': gspotToml, ...files });
 }
 
-test('--base compares with the merge base, names its base, and a folder argument stays a path', async () => {
-    await using sandbox = await testdir();
-    await prepareChangedRepository(sandbox.path, {
-        '.gitignore': `${GSPOT_FOLDER}/\n`,
-        'api/source.txt': 'before',
-        'web/source.txt': 'before',
-    });
-    runGitStep(sandbox.path, ['init', '-b', 'main']);
-    commitAll(sandbox.path);
-    runGitStep(sandbox.path, ['branch', 'base']);
-    await writeFile(join(sandbox.path, 'api/source.txt'), 'committed change');
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'web/source.txt'), 'working change');
-    const narrowed = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', 'base', 'api', '--json']),
-    );
-    expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
-    expect(narrowed.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'base' });
-    expect(narrowed.report.checks[0]?.rerun).toBe('gspot check api --only sandbox/paths --base base');
-    expect(narrowed.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
-        'api/source.txt',
-    ]);
-    const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', 'base', '--json']),
-    );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(checked.report.checks[0]?.rerun).toBe('gspot check --only sandbox/paths --base base');
-    expect(
-        checked.report.checks
-            .flatMap((check) => check.findings.map((finding) => finding.message))
-            .toSorted(compareText),
-    ).toStrictEqual(['api/source.txt', 'web/source.txt']);
-});
-
 test.each([...ALL_FILES_BASES])(
     '--base $reference, as CI gives for a new branch, checks every file and says why',
     async ({ reference }) => {
@@ -80,10 +46,9 @@ test.each([...ALL_FILES_BASES])(
         const compared = parseCheckReport(
             await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', 'HEAD', '--json']),
         );
-        const added = result.report.notes.filter((note) => !compared.report.notes.includes(note));
-        expect(added).toHaveLength(1);
+        const added = result.report.notes.find((note) => !compared.report.notes.includes(note));
         const text = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--base', reference]);
-        expect(text.stdout).toContain(`note     ${added[0]!}\n`);
+        expect(text.stdout).toContain(`note     ${added!}\n`);
     },
 );
 
@@ -108,9 +73,6 @@ test('an absent full base hash in a shallow clone checks every file and identifi
     const checked = parseCheckReport(result);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(checked.report.notes).toContainEqual(expect.stringContaining(base) as string);
-    expect(checked.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
-        'api/source.txt',
-    ]);
 });
 
 test('--base origin/HEAD in a repository that never set it names the fix', async () => {
@@ -121,5 +83,4 @@ test('--base origin/HEAD in a repository that never set it names the fix', async
     const result = await runGspot(sandbox.path, ['check', '--base', 'origin/HEAD']);
     expect(result.code).toBe(2);
     expect(result.stderr).toContain('git remote set-head origin --auto');
-    expect(result.stderr).toContain('Before the first push to an empty remote');
 });

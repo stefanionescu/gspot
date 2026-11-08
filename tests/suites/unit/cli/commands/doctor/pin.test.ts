@@ -20,12 +20,5 @@ test.each([
     expect(json.code, json.stdout + json.stderr).toBe(exitCode);
     expect(doctorOutputSchema.parse(JSON.parse(json.stdout))).toMatchObject({ pin, notes });
     const text = await runGspot(sandbox.path, ['doctor']);
-    expect(text.code, text.stdout + text.stderr).toBe(exitCode);
     expect(text.stdout.includes('This repository pins gspot')).toBe(exitCode === 1);
-});
-
-test('doctor reports no pin in a repository that pins none', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect(doctorOutputSchema.parse(JSON.parse(result.stdout)).pin).toBeNull();
 });

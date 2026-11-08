@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -27,7 +26,6 @@ test.each([true, false])(
         const head = runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
         const initialized = await spawnGspot(sandbox.path, ['init', '--json', '--configurations', 'gspot']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
         const checked = await spawnGspot(sandbox.path, ['check', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);

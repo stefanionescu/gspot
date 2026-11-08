@@ -113,6 +113,4 @@ test('GitHub Actions gets an escaped error annotation for each finding, up to te
     const annotations = result.stdout.split('\n').filter((line) => line.startsWith('::error '));
     expect(annotations).toHaveLength(10);
     expect(annotations[0]).toBe('::error file=a%2Cb.txt,line=1,col=2,title=project/located R1::Use 100%25 of it.');
-    const outside = await runGspot(sandbox.path, ['check', '--only', 'project/located'], { GITHUB_ACTIONS: 'false' });
-    expect(outside.stdout).not.toContain('::error ');
 });

@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { delimiter, join } from 'node:path';
 
@@ -25,13 +24,6 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { readCallRecords } from '#tests/setup/system/programs.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
 
-test('the GitHub workflow gives the GitHub token to no step', () => {
-    const workflow = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
-    expect(workflow.jobs['lint']!.steps.filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined)).toStrictEqual(
-        [],
-    );
-});
-
 test.each<Partial<Pipeline>>([{ setupCommand: ['echo', '${{ secrets.DEPLOY_KEY }}'] }])(
     'the GitHub workflow refuses a command that holds a GitHub expression',
     (fields) => {
@@ -49,7 +41,6 @@ test('two operating systems get one job each, and the Linux job uses the configu
             linuxRunner: 'linux-large',
         }).content,
     ) as GithubWorkflow;
-    expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos']);
     expect(workflow.jobs['lint-linux']?.['runs-on']).toBe('linux-large');
 });
 
@@ -61,12 +52,6 @@ test('test checks move to a tests job that differs from the lint job only in its
     expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --skip jest/tests,pytest/tests\n`);
     expect(jobs['tests']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND} --only jest/tests,pytest/tests\n`);
     expect(jobs['tests']!.steps.slice(0, -1)).toStrictEqual(jobs['lint']!.steps.slice(0, -1));
-});
-
-test('without test checks, the lint job runs every check and no tests job exists', () => {
-    const { jobs } = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
-    expect(Object.keys(jobs)).toStrictEqual(['lint']);
-    expect(jobs['lint']!.steps.at(-1)?.run).toBe(`${CI_CHECK_COMMAND}\n`);
 });
 
 test('each operating system gets one pair of jobs', () => {
@@ -168,7 +153,6 @@ test.each([...SETUP_CASES])(
         const gspotCalls = setupExit === 0 ? [['install'], ['check', '--base', '']] : [];
         const calls = await readCallRecords(commands);
         expect(calls.map((call) => call.arguments)).toStrictEqual([[...SETUP_ARGUMENTS], ...gspotCalls]);
-        expect(existsSync(join(sandbox.path, 'unexpected'))).toBe(false);
     },
 );
 

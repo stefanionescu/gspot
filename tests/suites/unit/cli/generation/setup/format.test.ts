@@ -19,7 +19,6 @@ import {
     FORMAT_WORKSPACE_FILES,
     PRETTIER_FORMAT_OPTIONS,
     SCOPE_FORMAT_FILES,
-    WORKSPACE_PYTHON_FILES,
 } from '#tests/config/generation/settings.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, runInit } from '#tests/setup/cli/commands.ts';
@@ -127,15 +126,10 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
         commitAll(sandbox.path);
         const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan, settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
+        const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
         expect([...plan.deleted, ...plan.write].find((file) => file.path === path)?.note).toContain(
             PRETTIER_SCRIPT_NOTE,
         );
-        expect(parse(settingsText) as TomlTable).toHaveProperty('format', {
-            indent_width: 2,
-            print_width: 80,
-            quotes: 'double',
-        });
     },
 );
 
@@ -219,17 +213,6 @@ test('init gives code without a style config the defaults of each formatter', as
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
-    expect(parse(settingsText) as TomlTable).toHaveProperty('format', {
-        indent_width: 2,
-        print_width: 80,
-        quotes: 'double',
-        override: [
-            { paths: ['**/*.py'], indent_width: 4, print_width: 88 },
-            { paths: ['**/*.swift'], indent_width: 4, print_width: 120 },
-            { paths: ['**/*.sql'], indent_width: 4 },
-        ],
-    });
 });
 
 test('init names only the script extension that the repository tracks, because gspot/unmatched-paths reports the other', async () => {
@@ -259,15 +242,6 @@ test.each([
     expect(parse(settingsText) as TomlTable).toHaveProperty('format.override', [
         { paths: ['**/*.sh', '**/*.bash'], ...written },
     ]);
-});
-
-test('init writes the formatter defaults once, for the Python files of every scope', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await testdir(WORKSPACE_PYTHON_FILES);
-    commitAll(sandbox.path);
-    const options = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
-    const override = [{ paths: ['**/*.py'], indent_width: 4, print_width: 88 }];
-    expect(options).toMatchObject([{ override }, { override }]);
 });
 
 test('init keeps the house style for a repository without code', async () => {

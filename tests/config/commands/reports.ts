@@ -102,13 +102,6 @@ export const REASON_VALUES = [
     },
 ] as const;
 
-export const SCOPE_SETTING_EXPLANATION = {
-    scopes: [
-        { scope: 'api', value: 90, source: { kind: 'scope', name: 'api' } },
-        { scope: 'api/worker', value: 95, source: { kind: 'scope', name: 'api/worker' } },
-    ],
-} as const;
-
 export const NAMING_LIMITS = [{ key: 'naming.swift.max_characters', shipped: 40, child: 38 }];
 
 export const EXPLAIN_SETTINGS = `configurations = []

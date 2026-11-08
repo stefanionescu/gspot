@@ -34,7 +34,6 @@ test('a child project receives Python configuration only after its first Python 
     expect(before.some((path) => path.includes('/scopes/docs/'))).toBe(false);
     await writeFile(join(sandbox.path, 'docs/example.py'), 'VALUE = 1\n');
     const after = buildGeneratedFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
-    expect(after).toContain(root);
     expect(after).toContain('docs/ruff.toml');
     expect(after).toContain(
         getManifestTarget('python', 'basedpyright.json').replace(

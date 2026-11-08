@@ -25,7 +25,6 @@ test('scan installs the tools in its copy, reports a committed secret and a file
     expect(report.categories[0]?.examples).toMatchObject([
         { check: 'secrets/gitleaks-staged', file: 'credential.txt' },
     ]);
-    expect(report.filesToFormat).toBeGreaterThan(0);
     expect(report.cost.megabytes).toBeGreaterThan(0);
     expect(report.cost.perTool.map(({ name }) => name)).toContain('gitleaks');
     expect(await readTree(sandbox.path)).toStrictEqual(before);

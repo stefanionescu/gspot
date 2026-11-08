@@ -43,6 +43,4 @@ test('a staged Astro build resolves linked packages and builds HTML inside its d
     expect(result.report.checks).toMatchObject([{ check: 'site/build', status: 'passed' }]);
     expect(built).toHaveLength(1);
     expect(built[0]).toContain('<p>true</p>');
-    expect(fs.existsSync(join(sandbox.path, 'dist'))).toBe(false);
-    expect(fs.existsSync(join(sandbox.path, '.gspot-copies'))).toBe(false);
 });

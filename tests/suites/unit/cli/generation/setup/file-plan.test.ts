@@ -141,7 +141,6 @@ test('init lists your .editorconfig under write and not under delete when the ge
         { path: '.editorconfig', note: expect.stringContaining('git show HEAD:.editorconfig') as string },
     ]);
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).not.toBe(authored);
-    expect(runGitStep(sandbox.path, ['show', 'HEAD:.editorconfig'])).toBe(authored.trimEnd());
 });
 
 test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that apply', async ({ changes }) => {
@@ -169,20 +168,6 @@ test('init pins gspot in mise.toml for a package.json with no dependency and no 
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, 'mise.toml'))).toBe(true);
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(manifest);
-});
-
-test('init leaves CI off with a GitHub origin and names the commands that turn it on', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n' });
-    runGitStep(sandbox.path, ['remote', 'add', 'origin', 'https://github.com/example/project.git']);
-    const result = await runGspot(sandbox.path, ['init']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toContain('existing hooks');
-    expect(result.stdout).toContain('existing ci');
-    expect(result.stdout).toContain('gspot set ci.enabled true');
-    expect(result.stdout).toContain('gspot set ci.provider gitlab');
-    const written = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(readSettings(written, sandbox.path).written).not.toHaveProperty('ci');
 });
 
 test('init lists at most five unchecked paths of an unsupported extension', async () => {

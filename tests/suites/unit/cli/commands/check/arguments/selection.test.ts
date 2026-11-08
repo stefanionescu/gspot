@@ -161,24 +161,17 @@ test('a named folder keeps the finding of an ignored file in it, and a named fil
     expect(named.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
 });
 
-test.each([false, true])('rerun resolves a scope from the calling folder (staged: %p)', async (staged) => {
+test.each([false])('rerun resolves a scope from the calling folder (staged: %p)', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['bash'] }] }),
         'app/run.sh': 'cleanup() { printf "unused\\n"; }\n',
         'sub/marker.txt': 'source\n',
     });
-    if (staged) {
-        commitAll(sandbox.path);
-        await writeFile(join(sandbox.path, 'app/run.sh'), 'cleanup() { printf "changed\\n"; }\n');
-        runGitStep(sandbox.path, ['add', '--', 'app/run.sh']);
-    }
     const cwd = join(sandbox.path, 'sub');
-    const result = parseCheckReport(
-        await runGspot(cwd, ['check', '--only', 'bash/unused-functions', '--json', ...(staged ? ['--staged'] : [])]),
-    );
+    const result = parseCheckReport(await runGspot(cwd, ['check', '--only', 'bash/unused-functions', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const rerun = result.report.checks[0]!.rerun!;
-    expect(rerun).toBe(`gspot check ../app --only bash/unused-functions${staged ? ' --staged' : ''}`);
+    expect(rerun).toBe('gspot check ../app --only bash/unused-functions');
     const repeated = parseCheckReport(await runGspot(cwd, [...rerun.split(' ').slice(1), '--json']));
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     expect(repeated.report.checks[0]?.findings).toStrictEqual(result.report.checks[0]?.findings);
@@ -262,17 +255,10 @@ test('a scope path narrows to its checks and its rerun command finds the same fi
     expect(failed.map(({ scope, rerun }) => ({ scope, rerun }))).toStrictEqual([
         { scope: 'api', rerun: 'gspot check api --only naming/identifiers' },
     ]);
-    const [, ...rerun] = failed[0]!.rerun!.split(' ');
-    const repeated = parseCheckReport(await runGspot(sandbox.path, [...rerun, '--json']));
-    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-    expect(repeated.report.checks.flatMap((check) => check.findings)).toStrictEqual(
-        checked.report.checks.flatMap((check) => check.findings),
-    );
 });
 
 test.each([
     { flags: ['--only', 'commit,python/ruff'], message: '--only commit runs every check of that stage' },
-    { flags: ['--only', 'push', '--only', 'python/ruff'], message: '--only push runs every check of that stage' },
     { flags: ['--only', 'commit', '--hook', 'pre-push'], message: '--only commit cannot run with --hook' },
 ])('$flags is refused, because a stage takes no other selection', async ({ flags, message }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });

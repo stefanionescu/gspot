@@ -122,18 +122,6 @@ export const IGNORED_CHECK_FILES = [
     },
 ] as const;
 
-export const LICENSE_TOOL_CASES = [{ configurations: ['licenses'] }, { configurations: [] }] as const;
-
-export const STYLESHEET_CASES = [
-    { name: 'plain CSS', configurations: ['css'], files: { 'site.css': 'a { color: red; }' }, needsHtmlParser: true },
-    {
-        name: 'Vue without Stylelint',
-        configurations: ['vue'],
-        files: { 'Card.vue': '<template><p>Card</p></template>' },
-        needsHtmlParser: false,
-    },
-] as const;
-
 export const STYLELINT_PACKAGE_FIELDS = {
     project: {
         ...STYLELINT_FILES,

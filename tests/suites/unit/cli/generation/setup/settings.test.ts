@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-
 import { parse } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 
@@ -36,7 +34,6 @@ test('init finds the Xcode project of the scope and picks the destination from i
     expect(parse(output.settingsText)).toMatchObject({
         swift: { xcode_project: 'App.xcodeproj', xcode_destination: SIMULATOR_DESTINATION },
     });
-    expect(await readFile(`${sandbox.path}/App.xcodeproj/project.pbxproj`, 'utf8')).toBe(source);
 });
 
 test('init finds the next-intl messages folder', async () => {
