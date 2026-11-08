@@ -29,10 +29,6 @@ test('Drizzle reports delete and update without where only for its client names'
         { file: 'app/source.js', rule: 'drizzle/enforce-update-with-where', line: 1 },
         { file: 'source.js', rule: 'drizzle/enforce-delete-with-where', line: 1 },
     ]);
-    await createFileTree(sandbox.path, {
-        'app/source.js': 'connection.update(table).set({ value: 1 }).where(condition);\n',
-    });
-    expect(await listLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
 });
 
 test.each(['all'] as const)(

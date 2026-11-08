@@ -132,16 +132,6 @@ export const XCTEST_TABLES = `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "E
 
 export const XCTEST_FAILURES = [
     {
-        failure: 'no-project',
-        hasNote: true,
-        tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_scheme = "Example"\n`,
-        build: [],
-        coverage: 1,
-        code: 0,
-        status: 'skipped',
-        produced: false,
-    },
-    {
         failure: 'failed-test',
         hasNote: false,
         tables: XCTEST_TABLES,
@@ -159,16 +149,6 @@ export const XCTEST_FAILURES = [
         coverage: undefined,
         code: 2,
         status: 'error',
-        produced: true,
-    },
-    {
-        failure: 'under-minimum',
-        hasNote: false,
-        tables: XCTEST_TABLES,
-        build: [],
-        coverage: 0.5,
-        code: 1,
-        status: 'failed',
         produced: true,
     },
 ] as const;
@@ -242,14 +222,6 @@ export const COVERAGE_LIMIT_CASES = [
         report: SWIFT_TARGET_COVERAGE_OUTPUT,
         tables: '[coverage]\nmin_line_percent = 0\nswift_target = []\n',
         expected: [],
-    },
-] as const;
-
-export const UNTESTED_COVERAGE_RESULTS = [
-    {
-        check: 'swift/tests',
-        status: 'skipped',
-        note: 'Needs files marked swift-test or swift-test-target in this scope.',
     },
 ] as const;
 

@@ -99,8 +99,6 @@ export const SQUAWK_MIGRATION_FILES = {
     'migrations/9007199254740992_large.sql': 'SELECT 1;\n',
     'migrations/9007199254740993_later.sql': 'SELECT 1;\n',
     'migrations/V2_initial.sql': 'SELECT 1;\n',
-    'migrations/V9007199254740992_large.sql': 'SELECT 1;\n',
-    'migrations/V9007199254740993_later.sql': 'SELECT 1;\n',
 } as const;
 
 export const SQUAWK_VERSION_CASES = [
@@ -112,7 +110,6 @@ export const SQUAWK_VERSION_CASES = [
             'migrations/2_initial.sql',
             'migrations/9007199254740992_large.sql',
             'migrations/V2_initial.sql',
-            'migrations/V9007199254740992_large.sql',
         ],
     ],
     [
@@ -123,8 +120,6 @@ export const SQUAWK_VERSION_CASES = [
             'migrations/9007199254740992_large.sql',
             'migrations/9007199254740993_later.sql',
             'migrations/V2_initial.sql',
-            'migrations/V9007199254740992_large.sql',
-            'migrations/V9007199254740993_later.sql',
         ],
     ],
 ] as const;

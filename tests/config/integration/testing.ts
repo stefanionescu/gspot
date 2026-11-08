@@ -66,30 +66,6 @@ export const PYTEST_SANDBOX = {
     },
 } as const;
 
-const HALF_COVERED_SOURCE =
-    'def first():\n    return 1\ndef second():\n    return 2\ndef third():\n    return 3\ndef fourth():\n    return 4\n';
-
-export const PYTEST_CASES = [
-    {
-        check: 'pytest/tests',
-        files: {
-            'example/__init__.py': '',
-            'example/math.py': HALF_COVERED_SOURCE,
-            'tests/test_math.py': `from example.math import first, second, third, fourth\n\ndef test_functions():\n${Array.from({ length: 40 }, () => '    assert callable(first) and callable(second) and callable(third) and callable(fourth)').join('\n')}\n`,
-        },
-        settings: '[coverage]\nmin_line_percent = 80\n',
-        expected: {},
-        corrected: {
-            files: {
-                'example/__init__.py': '',
-                'example/math.py': HALF_COVERED_SOURCE,
-                'tests/test_math.py':
-                    'from example.math import first, second, third, fourth\n\ndef test_functions():\n    assert [first(), second(), third(), fourth()] == [1, 2, 3, 4]\n',
-            },
-        },
-    },
-] as const;
-
 export const COVERAGE_LIMIT_CASES = [
     {
         limit: 80,

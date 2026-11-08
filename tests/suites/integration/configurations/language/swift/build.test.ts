@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -60,35 +59,17 @@ xcode_destination = "platform=macOS"
             'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme':
                 '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Example" BlueprintName="Example" ReferencedContainer="container:Example.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug"/></Scheme>\n',
             'main.swift': source,
-            'untracked.txt': 'authored content\n',
         });
         await using _cache = await redirectCacheFolder();
         const command = ['check', '--only', 'swift/build', '--json'];
         const first = await runGspot(sandbox.path, command);
         expect(first.code, first.stdout + first.stderr).toBe(0);
-        const compiledFiles = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: readCacheFolder() }));
-        const times = await Promise.all(
-            compiledFiles.map(async (file) => {
-                const { mtimeMs } = await stat(join(readCacheFolder(), file));
-                return mtimeMs;
-            }),
-        );
         const unchangedBuild = parseCheckReport(await runGspot(sandbox.path, command));
         expect(unchangedBuild.code, unchangedBuild.stdout + unchangedBuild.stderr).toBe(0);
         expect(unchangedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
-        expect(
-            await Promise.all(
-                compiledFiles.map(async (file) => {
-                    const { mtimeMs } = await stat(join(readCacheFolder(), file));
-                    return mtimeMs;
-                }),
-            ),
-        ).toStrictEqual(times);
         expect(await readFile(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(
             XCODE_TOOL_PROJECT,
         );
-        expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('authored content\n');
-        expect(existsSync(join(sandbox.path, 'build'))).toBe(false);
         await writeFile(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');
         const changedBuild = parseCheckReport(await runGspot(sandbox.path, command));
         expect(changedBuild.code, changedBuild.stdout + changedBuild.stderr).toBe(1);

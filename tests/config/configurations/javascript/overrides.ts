@@ -40,13 +40,6 @@ export const COALESCING_SOURCE = `export function fallback(value) {
 export const known = (value) => value ?? { known: true };
 `;
 
-export const COALESCING_CORRECTED = `export function fallback(value) {
-    if (value === undefined) return;
-    return value;
-}
-export const known = (value) => value ?? { known: true };
-`;
-
 export const CONFIGURATION_RULE_OPTIONS = {
     tables: '[tools.eslint.rules]\n"@typescript-eslint/no-floating-promises" = [{ ignoreVoid = true }]\n',
     files: {
@@ -56,17 +49,6 @@ export const CONFIGURATION_RULE_OPTIONS = {
         'source.ts': 'void Promise.resolve();\nPromise.resolve();\n',
     },
 } as const;
-
-export const DOCUMENTED_PRICE_SOURCE = `/**
-Add the two prices.
-@param {number} first the first price.
-@param {number} second the second price.
-@returns {number} the total.
-*/
-export function addPrices(first, second) {
-    return first + second;
-}
-`;
 
 export const RUNTIME_CASES = [{ runtime: 'browser' }, { runtime: 'worker' }, { runtime: 'react-native' }] as const;
 

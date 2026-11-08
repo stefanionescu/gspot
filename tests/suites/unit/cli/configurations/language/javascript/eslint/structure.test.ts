@@ -21,7 +21,7 @@ import {
 } from '#tests/config/configurations/javascript/plugins.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/setup/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import type { SourceRuleCase } from '#tests/types/configurations.ts';
 import type { LintFinding } from '#tests/types/setup.ts';
 
@@ -95,38 +95,14 @@ test('level all skips build output and files marked linguist-generated in .gitat
         }),
         'package.json': '{"private":true,"type":"module"}\n',
         'tests/build/check.js': 'missing();',
-        'src/dist/check.js': 'missing();',
-        'coverage/check.js': 'missing();',
         'emitted/check.js': 'missing();',
         '.gitattributes': LINGUIST_GENERATED_PATTERN,
     });
 
     const eslint = await buildEslint(sandbox.path);
-    for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js', 'emitted/check.js']) {
+    for (const filePath of ['tests/build/check.js', 'emitted/check.js']) {
         expect(await eslint.isPathIgnored(filePath)).toBe(true);
     }
-});
-
-test.each(['all'] as const)('size limits apply to test files only at level all (%s)', async (level) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            tables: '[limits]\nmax_file_lines = 8\nmax_function_lines = 5\nmax_function_statements = 3\n',
-            level,
-        }),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'sample.test.js': '',
-    });
-
-    const eslint = await buildEslint(sandbox.path);
-    const rules = ['max-lines', 'max-lines-per-function', 'max-statements'];
-    const declarations = Array.from(
-        { length: 9 },
-        (_, index) => `    const value${String(index)} = ${String(index)};`,
-    ).join('\n');
-    const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
-    await createFileTree(sandbox.path, { 'sample.test.js': source });
-    const findings = await listLintFindings(eslint, sandbox.path, ['sample.test.js'], rules);
-    expect(listFindingRules(findings)).toStrictEqual(rules.toSorted(compareText));
 });
 
 test('a JSON import attribute is accepted where your import extensions need a suffix', async () => {

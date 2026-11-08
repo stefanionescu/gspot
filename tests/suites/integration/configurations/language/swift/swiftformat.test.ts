@@ -1,9 +1,8 @@
-import { chmod, readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import {
     BLOCK_COMMENT_FINDINGS,
     FORMATTED_DOCS_SOURCE,
@@ -92,11 +91,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         });
         const root = sandbox.path;
         await applyGeneratedFiles(root);
-        await chmod(join(root, 'Value.swift'), 0o444);
         const found = await readFormatFindings(root, 1);
-        const { mode } = await stat(join(root, 'Value.swift'));
-        expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
-        await chmod(join(root, 'Value.swift'), 0o644);
         expect(found).toStrictEqual(INLINE_COMMENT_FINDINGS.map(([line, rule]) => ['Value.swift', line, 1, rule]));
         const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

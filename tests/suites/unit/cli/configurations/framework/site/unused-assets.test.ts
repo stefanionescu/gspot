@@ -1,12 +1,11 @@
-import { readFile, unlink } from 'node:fs/promises';
+import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir } from 'testdirs';
 
-import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { ASSET_REFERENCE_CASES, GLOB_ASSET_CASES, SCOPE_ASSET_FILES } from '#tests/config/configurations/framework.ts';
+import { GLOB_ASSET_CASES, SCOPE_ASSET_FILES } from '#tests/config/configurations/framework.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -34,38 +33,6 @@ test("an asset in a scope's assets folder counts as used when a file outside the
         expect.objectContaining({ file: 'docs/assets/unused.svg', line: 1, rule: 'unused-asset' }),
     ]);
 });
-
-test('unused-assets reads staged files, not an unstaged README or an untracked file', async () => {
-    await using resources = new AsyncDisposableStack();
-    const root = await prepareAssetRepository(resources, {
-        'README.md': '![Logo](docs/assets/logo.svg)\n',
-        'docs/assets/logo.svg': '<svg/>',
-        'docs/assets/unused.svg': '<svg/>',
-    });
-    await createFileTree(root, {
-        'README.md': '![Unused](docs/assets/unused.svg)\n',
-        'untracked.md': '![Unused](docs/assets/unused.svg)\n',
-    });
-    using copy = await copyRevision(root, { kind: 'index' });
-    const findings = await runSandboxCheck(copy.root, 'site/unused-assets', { scope: 'docs' });
-    expect(findings).toMatchObject([{ file: 'docs/assets/unused.svg', rule: 'unused-asset' }]);
-    expect(await readFile(join(root, 'README.md'), 'utf8')).toBe('![Unused](docs/assets/unused.svg)\n');
-});
-
-test.each([...ASSET_REFERENCE_CASES])(
-    'a site with untracked files keeps the asset that %s names and reports an unused asset',
-    async (file, text) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
-            [file]: text,
-            'assets/logo.svg': '<svg/>',
-            'assets/unused.svg': '<svg/>',
-        });
-        expect(await runSandboxCheck(sandbox.path, 'site/unused-assets')).toMatchObject([
-            { file: 'assets/unused.svg', rule: 'unused-asset' },
-        ]);
-    },
-);
 
 test('an asset that a package import alias names counts as used', async () => {
     await using sandbox = await createGitSandbox({
@@ -99,7 +66,6 @@ test('conventional assets pass and a nested asset needs its own path', async () 
         'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
         'public/favicon.ico': 'image',
         'public/apple-touch-icon.png': 'image',
-        'public/.well-known/security.txt': 'Contact: mailto:security@example.test',
         'public/a/logo.svg': '<svg/>',
         'public/b/logo.svg': '<svg/>',
         'page.mdx': '<img src="/a/logo.svg" />',

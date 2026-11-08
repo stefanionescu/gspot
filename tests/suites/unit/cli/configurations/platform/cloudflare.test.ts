@@ -19,11 +19,10 @@ test('cloudflare/redirects reports each malformed redirect and each status Cloud
     const path = '_redirects';
     const findings = await runSandboxCheck(sandbox.path, 'cloudflare/redirects');
     expect(findings.map(({ file, line, message }) => ({ file, line, message }))).toStrictEqual([
-        { file: path, line: 8, message: expect.stringContaining('404') as string },
-        { file: path, line: 9, message: expect.stringContaining('410') as string },
-        { file: path, line: 10, message: expect.stringContaining('302!') as string },
-        { file: path, line: 11, message: expect.any(String) as string },
-        { file: path, line: 12, message: expect.any(String) as string },
+        { file: path, line: 3, message: expect.stringContaining('404') as string },
+        { file: path, line: 4, message: expect.stringContaining('302!') as string },
+        { file: path, line: 5, message: expect.any(String) as string },
+        { file: path, line: 6, message: expect.any(String) as string },
     ]);
 });
 

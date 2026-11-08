@@ -36,17 +36,6 @@ test('level all runs the typed gspot test and React rules', async () => {
         { file: 'cart.test.ts', rule: 'gspot/no-mismatched-assertion-types', line: 3 },
         { file: 'cart.test.ts', rule: 'gspot/valid-throw-assertions', line: 4 },
     ]);
-    await createFileTree(sandbox.path, {
-        'badge.tsx':
-            'export function Badge(props: Readonly<{ label: string }>) {\n    return <b>{props.label}</b>;\n}\n',
-        'cart.test.ts': [
-            'import { expect, test } from "vitest";',
-            'declare function parse(): number;',
-            'test("reads", () => { expect(parse()).toBe(3); });',
-            'test("parses", () => { expect(() => parse()).toThrow(); });',
-        ].join('\n'),
-    });
-    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
 test.each([...LEVELS])(

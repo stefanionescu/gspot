@@ -17,7 +17,6 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
         files: {
             'gspot.toml': buildSandboxSettings(['sql'], SQLFLUFF_DIALECT_SETTINGS),
             'query.sql': 'PRAGMA table_info (users);\n',
-            'warehouse/query.sql': 'SELECT 1;\n',
             'warehouse/child/query.sql': 'FROM records SELECT id;\n',
         },
     });

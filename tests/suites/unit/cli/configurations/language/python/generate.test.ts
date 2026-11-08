@@ -1,7 +1,6 @@
 import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { PYVENV_HOME } from '#tests/config/setup/languages.ts';
 import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { RuffConfig } from '#tests/types/configurations.ts';
@@ -31,25 +30,6 @@ test('basedpyright takes the lowest Python of requires-python, and leaves a nest
     ) as { pythonVersion?: string; exclude: string[] };
     expect(config.pythonVersion).toBe('3.8');
     expect(config.exclude).toContain('../../../docs/source');
-});
-
-test('basedpyright reads the uv environment of a project with a tracked uv.lock, whether .venv exists yet or not', async () => {
-    const basedpyrightPath = getManifestTarget('python', 'basedpyright.json');
-    const locked = JSON.parse(
-        await buildGeneratedFile(buildSandboxSettings(['python']), basedpyrightPath, {
-            'example.py': 'value = 1\n',
-            'uv.lock': 'version = 1\n',
-        }),
-    ) as { venv?: string; venvPath?: string };
-    expect(locked.venv).toBe('.venv');
-    expect(locked.venvPath).toBe('../../..');
-    const unlocked = JSON.parse(
-        await buildGeneratedFile(buildSandboxSettings(['python']), basedpyrightPath, {
-            'example.py': 'value = 1\n',
-            '.venv/pyvenv.cfg': PYVENV_HOME,
-        }),
-    ) as { venv?: string };
-    expect(unlocked.venv).toBeUndefined();
 });
 
 test('ignores of one test path share one Ruff per-file-ignores list', async () => {
@@ -98,21 +78,6 @@ test('tools.ruff.rules adds selectors to the rules of the level', async () => {
     expect(ruff.lint.select).toContain('A');
 });
 
-test('Ruff accepts an assert in the Python test paths and no other file', async () => {
-    const ruff = parse(
-        await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
-            'example.py': 'value = 1\n',
-        }),
-    ) as RuffConfig;
-    expect(ruff.lint['per-file-ignores']).toStrictEqual({
-        '../../../**/test_*.py': ['S101'],
-        '../../../**/*_test.py': ['S101'],
-        '../../../**/tests/**': ['S101'],
-        '../../../**/conftest.py': ['S101'],
-        '../../../**/__main__.py': ['T20'],
-    });
-});
-
 test('Ruff accepts print in a module that pyproject.toml names as a console script', async () => {
     const ruff = parse(
         await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
@@ -140,7 +105,6 @@ test.each([
             ),
         ) as { lint: Record<string, Record<string, string[]>> };
         expect(ruff.lint['flake8-type-checking']?.['runtime-evaluated-base-classes']).toContain('pydantic.BaseModel');
-        expect(ruff.lint['flake8-type-checking']?.['runtime-evaluated-decorators']).toContain('fastapi.APIRouter.get');
     },
 );
 

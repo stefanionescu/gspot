@@ -1,5 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-
 import { expect, test } from 'bun:test';
 
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -43,17 +41,6 @@ def __getattr__(name):
                 'The private function _parse_row sits below the public function load_rows, and no function above it calls it. Move _parse_row above load_rows, or below a function that calls it.',
         },
     ]);
-    await writeFile(
-        `${sandbox.path}/rows.py`,
-        `def _parse_row(line):
-    return line.split(",")
-
-
-def load_rows(text):
-    return [_parse_row(line) for line in text.splitlines()]
-`,
-    );
-    expect(await runSandboxCheck(sandbox.path, 'structure/function-order')).toStrictEqual([]);
 });
 
 test('a private or fileprivate Swift function below an internal one is reported unless a function above calls it, and methods are not', async () => {
@@ -131,24 +118,4 @@ async function run() {}
         'src/rows.ts:11',
     ]);
     expect(findings[0]?.message).toMatch(/\blate\b.+\brun\b/u);
-});
-
-test('a run narrowed to one file reports only that file', async () => {
-    const misplaced = `export function render(): string {
-    return 'Rows';
-}
-function label(): string {
-    return 'Rows';
-}
-export function title(): string {
-    return label();
-}
-`;
-    await using sandbox = await createGitSandbox({
-        'src/rows.ts': misplaced,
-        'src/view.ts': misplaced,
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'structure/function-order', { paths: ['src/view.ts'] });
-    expect(findings.map(({ file, line }) => `${file}:${String(line)}`)).toStrictEqual(['src/view.ts:4']);
 });

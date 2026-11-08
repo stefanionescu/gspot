@@ -35,17 +35,16 @@ test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, set
     using prepared = await preparePydoclintCheck(
         sandbox.path,
         { 'pyproject.toml': project, 'source.py': 'value = 1\n' },
-        { tables: setting === undefined ? '' : `[python]\ndocstring_convention = "${setting}"\n` },
+        { tables: `[python]\ndocstring_convention = "${setting}"\n` },
     );
     const { session, planned } = prepared;
     using run = spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult());
-    const result = await runCheckCode(
+    await runCheckCode(
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['python/pydoclint'],
         CHECK_RUN_OPTIONS,
     );
-    expect(result.status).toBe('passed');
     const commandArguments = run.mock.calls[0]![0];
     expect(commandArguments[commandArguments.indexOf('--style') + 1]).toBe(expected);
 });

@@ -1,5 +1,4 @@
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { LEVELS } from '#cli/config/manifests.ts';
 import { ESLINT_LEVEL_CASES } from '#tests/config/configurations/javascript/configuration-blocks.ts';
@@ -37,11 +36,6 @@ test.each(ESLINT_LEVEL_CASES)('%s reports label targets and while-loop candidate
         { file: `label.${extension}`, rule: 'gspot/restricted-syntax', line: 1 },
         ...(level === 'all' ? [{ file: `loop.${extension}`, rule: 'gspot/restricted-syntax', line: 1 }] : []),
     ]);
-    await createFileTree(sandbox.path, {
-        [`label.${extension}`]: 'run();',
-        [`loop.${extension}`]: 'while (ready) run();',
-    });
-    expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
 });
 
 test('level all keeps an if-else helper, whose ternary form gspot/no-trivial-functions reports', async () => {

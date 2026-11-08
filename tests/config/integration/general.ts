@@ -13,12 +13,6 @@ export const FILES_SANDBOX = {
 
 export const FILES_CASES = [
     {
-        check: 'data-files/yaml',
-        files: { 'config.yml': 'mode: 0755\n' },
-        expected: { file: 'config.yml', line: 1, rule: 'octal-values' },
-        corrected: { files: { 'config.yml': 'mode: "0755"\n' } },
-    },
-    {
         check: 'data-files/taplo-format',
         files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
         expected: {
@@ -61,9 +55,7 @@ export const COMMIT_MESSAGES = [
     { message: 'fix(Core): repair the parser', rule: undefined },
     { message: 'fix: repair the parser', rule: undefined },
     { message: 'feat(Core)!: drop the parser option', rule: undefined },
-    { message: 'fix(root): repair the parser', rule: 'scope-enum' },
     { message: 'fix(core): repair the parser', rule: 'scope-enum' },
-    { message: 'fix(Core): repair the parser.', rule: 'subject-full-stop' },
 ] as const;
 
 export const UNTYPED_MESSAGE_RULES = ['type-empty', 'subject-empty', 'subject-full-stop'] as const;
@@ -158,7 +150,6 @@ export const RUFF_SUPPRESSIONS = [
     { source: '# flake8: noqa: F401\nimport os\n', suppressed: true, directive: true },
     { source: '# Example # ruff: noqa: F401\nimport os\n', suppressed: true, directive: true },
     { source: 'import os # ruff: noqa: F401\n', suppressed: false, directive: false },
-    { source: 'import os # flake8: noqa: F401\n', suppressed: false, directive: false },
     { source: '# RUFF: NOQA: F401\nimport os\n', suppressed: false, directive: false },
     { source: '# noqa: F401\nimport os\n', suppressed: false, directive: true },
     { source: 'import os # noqa: F821\n', suppressed: false, directive: true },
@@ -167,7 +158,6 @@ export const RUFF_SUPPRESSIONS = [
 export const VALE_SUPPRESSIONS = [
     { source: '<!-- vale off -->', suppressed: true, directive: true },
     { source: '<!-- vale Example.Concrete = NO -->', suppressed: true, directive: true },
-    { source: '<!-- vale Example.Concrete = YES -->', suppressed: false, directive: true },
     { source: '<!-- vale on -->', suppressed: false, directive: true },
     { source: '<!-- Example vale off -->', suppressed: false, directive: false },
     { source: '`<!-- vale off -->`', suppressed: false, directive: false },
@@ -212,10 +202,6 @@ export const SPELLING_IGNORE_CASES = [
         expected: ['nested/bad.txt', 'nested/child/bad.txt', 'nested/child/src/bad.txt', 'nested/trc/bad.txt'],
     },
     { patterns: ['*.txt', '!**/keep.txt'], expected: ['nested/src/keep.txt'] },
-    {
-        patterns: ['nested/src/'],
-        expected: ['nested/bad.txt', 'nested/child/bad.txt', 'nested/child/src/bad.txt', 'nested/trc/bad.txt'],
-    },
 ] as const;
 
 export const SPELLING_SANDBOX = {

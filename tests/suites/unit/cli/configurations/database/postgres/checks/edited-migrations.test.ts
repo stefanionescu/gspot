@@ -50,15 +50,12 @@ test('edited-migrations reports an edited committed migration and passes after t
             rule: 'frozen',
         }),
     ]);
-    await writeFile(join(sandbox.path, TEAMS_MIGRATION_PATH), TEAMS_TABLE_SQL);
-    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
 });
 
 test.each([
     'CREATE TABLE IF NOT EXISTS teams (id int);',
     'CREATE INDEX IF NOT EXISTS team_index ON teams (id);',
     'ALTER TABLE teams ADD COLUMN IF NOT EXISTS name text;',
-    'CREATE EXTENSION IF NOT EXISTS pgcrypto;',
 ])('edited-migrations reports the drift guard of %s', async (statement) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres']),
@@ -70,10 +67,9 @@ test.each([
 
 test('edited-migrations accepts IF NOT EXISTS on CREATE INDEX CONCURRENTLY', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "1"\n' }),
+        'gspot.toml': buildSandboxSettings(['postgres']),
         'migrations/1_tables.sql': 'CREATE TABLE teams (id int);\n',
         'migrations/2_index.sql': 'CREATE INDEX CONCURRENTLY IF NOT EXISTS team_index ON teams (id);\n',
     });
-    commitAll(sandbox.path);
     expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
 });

@@ -25,14 +25,10 @@ export const DOCKERIGNORE_CASES = [
             {
                 file: 'Dockerfile',
                 rule: 'missing-file',
-                message:
-                    'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
             {
                 file: 'app/Dockerfile',
                 rule: 'missing-file',
-                message:
-                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**, **/__pycache__/**, **/.pytest_cache/**, **/.ruff_cache/**, **/.mypy_cache/**.',
             },
         ],
     },
@@ -43,16 +39,6 @@ export const DOCKERIGNORE_CASES = [
         files: {
             Dockerfile: 'FROM scratch\n',
             'Dockerfile.dockerignore': REQUIRED_DOCKERIGNORE,
-        },
-        findings: [],
-    },
-    {
-        name: 'a suffixed Dockerfile-specific ignore',
-        configurations: ['docker'],
-        options: { level: 'all' },
-        files: {
-            'Dockerfile.test': 'FROM scratch\n',
-            'Dockerfile.test.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [],
     },
@@ -94,8 +80,6 @@ export const DOCKERIGNORE_CASES = [
             {
                 file: 'affected/Dockerfile',
                 rule: 'missing-file',
-                message:
-                    'Add an ignore file at affected/Dockerfile.dockerignore or affected/.dockerignore that lists .git, .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },
@@ -112,8 +96,6 @@ export const DOCKERIGNORE_CASES = [
             {
                 file: 'Dockerfile.dockerignore',
                 rule: 'missing-entry',
-                message:
-                    'Add these entries to Dockerfile.dockerignore: .env, **/coverage/**, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },

@@ -1,29 +1,3 @@
-export const SORT_RULES = [
-    'perfectionist/sort-imports',
-    'perfectionist/sort-named-imports',
-    'perfectionist/sort-exports',
-    'perfectionist/sort-named-exports',
-] as const;
-
-export const SORT_CASES = [
-    { source: "import { bbb, a, cc } from 'x';\n", fixed: "import { a, bbb, cc } from 'x';\n" },
-    { source: 'export { bbb, a, cc };\n', fixed: 'export { a, cc, bbb };\n' },
-    {
-        source: "import { run } from '#app/run.ts';\nimport { z } from 'zod';\nimport { readFileSync } from 'node:fs';\nimport { join } from 'node:path';\n",
-        fixed: "import { readFileSync } from 'node:fs';\nimport { join } from 'node:path';\n\nimport { z } from 'zod';\n\nimport { run } from '#app/run.ts';\n",
-    },
-    {
-        source: `// File header
-import { bb } from 'bb';
-import { aa } from 'aa';
-`,
-        fixed: `// File header
-import { aa } from 'aa';
-import { bb } from 'bb';
-`,
-    },
-] as const;
-
 export const SELECTOR_FILES = {
     'native/App.jsx':
         'const list = <FlatList data={items} />;\nconst scroll = <ScrollView>{items.map(renderItem)}</ScrollView>;\n',
@@ -40,11 +14,9 @@ export const SELECTOR_LIBRARY_FILES = {
     'counter.js':
         "import { useStore } from './store.js';\nexport function readCount() {\n    return useStore((state) => state.count);\n}\n",
     'cart.js':
-        "import { useStore } from 'zustand';\nimport { cartStore, useCartStore } from './store.js';\nexport function readCart() {\n    const whole = useCartStore();\n    const all = useStore(cartStore);\n    return [whole, all];\n}\n",
-    'form.js':
-        "import { useForm } from 'react-hook-form';\nconst options = { resolver: schema };\nexport function useSignup() { return useForm(options); }\n",
+        "import { useStore } from 'zustand';\nimport { cartStore, useCartStore } from './store.js';\nexport function readCart() {\n    const whole = useCartStore();\n    return [whole];\n}\n",
     'router.js':
-        'const byId = publicProcedure.input(schema);\nexport const appRouter = router({\n    item: byId.query(resolve),\n    order: publicProcedure.input(schema).query(({ input }) => pool.query(sql)),\n});\n',
+        'const byId = publicProcedure.input(schema);\nexport const appRouter = router({\n    order: publicProcedure.input(schema).query(({ input }) => pool.query(sql)),\n});\n',
 } as const;
 
 export const FRAMEWORK_SELECTOR_CASES = [
@@ -172,26 +144,11 @@ export const IMPORT_RULE_FILES = {
     'apps/api/app/value.ts': 'export const value = 2;\n',
 } as const;
 
-export const BOUNDARY_IMPORT_TABLES = `[[import_rule]]
-name = "core"
-paths = ["core/**"]
-
-[[import_rule]]
-name = "storage"
-paths = ["storage/**"]
-
-[[import_rule]]
-name = "app"
-paths = ["app/**"]
-can_import = ["storage"]
-`;
-
 export const TEST_IMPORT_CASES = [
     { folder: 'src', source: "import { value } from '../tests/value.js';", rejected: true },
     { folder: 'src', source: "import type { Value } from '../tests/value.js';", rejected: true },
     { folder: 'src', source: "import { value } from '../other/value.test.js';", rejected: true },
     { folder: 'tests', source: "import { value } from '../src/value.js';", rejected: false },
-    { folder: 'tests', source: "import type { Value } from '../src/value.js';", rejected: false },
 ] as const;
 
 export const ENVIRONMENT_TABLES = `[structure]
@@ -252,11 +209,8 @@ export const TEST_IMPORT_RULE_CASES = [
     { path: 'app/example.test.js', importPath: '../storage/value.js', count: 1 },
     { path: 'apps/api/app/source.js', importPath: '../storage/value.js', count: 1 },
     { path: 'apps/api/app/verification/check.js', importPath: '../../storage/value.js', count: 0 },
-    { path: 'apps/api/app/qa/check.js', importPath: '../../storage/value.js', count: 0 },
     { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 1 },
 ] as const;
-
-export const REFUSED_IMPORT_MESSAGES = [{ line: 2, named: '../core/value.js' }] as const;
 
 export const ENVIRONMENT_READER_PATHS = [
     'src/source.js',

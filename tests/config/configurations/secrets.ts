@@ -62,7 +62,6 @@ export const ENV_ACCESSOR_FILES = {
 `,
     'worker.ts': 'const endpoint = Deno.env.get("DENO_API");\nDeno.env.get("DENO_API");\n',
     'module.mts': 'export const endpoint = import.meta.env.MODULE_API;\n',
-    'common.cts': 'export const endpoint = process.env.COMMON_API;\n',
     'legacy.cjs': 'exports.endpoint = process.env.LEGACY_API;\n',
     'notes.txt': 'import.meta.env.UNREAD_API; Deno.env.get("UNREAD_API");\n',
 } as const;
@@ -73,7 +72,6 @@ SVELTE_API=example
 VUE_API=example
 DENO_API=example
 MODULE_API=example
-COMMON_API=example
 LEGACY_API=example
 `;
 
@@ -81,7 +79,6 @@ export const COMPONENT_ENVIRONMENT_FINDINGS = [
     { file: 'app.astro', line: 2, rule: 'missing-key' },
     { file: 'app.svelte', line: 1, rule: 'missing-key' },
     { file: 'app.vue', line: 1, rule: 'missing-key' },
-    { file: 'common.cts', line: 1, rule: 'missing-key' },
     { file: 'legacy.cjs', line: 1, rule: 'missing-key' },
     { file: 'module.mts', line: 1, rule: 'missing-key' },
     { file: 'worker.ts', line: 1, rule: 'missing-key' },

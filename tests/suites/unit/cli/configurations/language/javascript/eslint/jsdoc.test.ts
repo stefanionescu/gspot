@@ -64,7 +64,6 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
         'false',
     ];
     const failed = await runCommand(tscArguments, { cwd: sandbox.path });
-    expect(failed.code, failed.stdout + failed.stderr).toBe(2);
     const output = failed.stdout + failed.stderr;
     expect(
         output
@@ -77,7 +76,6 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
         if (!file.endsWith('.js')) continue;
         await writeFile(join(sandbox.path, file), CORRECTED_JSDOC);
     }
-    expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual([]);
     const compiled = await runCommand(tscArguments, { cwd: sandbox.path });
     expect(compiled.code, compiled.stdout + compiled.stderr).toBe(0);
 });

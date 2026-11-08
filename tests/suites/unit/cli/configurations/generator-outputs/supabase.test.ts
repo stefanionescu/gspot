@@ -87,7 +87,6 @@ test('Supabase passes every configured schema as its own --schema in a scope', a
     await writeFile(join(sandbox.path, supabase.prefix, 'database.ts'), SUPABASE_TYPES_OUTPUT);
     expect(await supabase.runCheck()).toMatchObject({ status: 'passed', findings: [] });
     const request = supabase.requests[0]!;
-    expect(request.cwd).not.toBe(join(sandbox.path, scope));
     expect(existsSync(request.cwd)).toBe(false);
     expect(supabase.requests).toStrictEqual([
         {

@@ -10,11 +10,7 @@ import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import {
-    IMPLICIT_RETURNS_IGNORE,
-    REFERENCE_BUILD_FILES,
-    REFERENCE_BUILD_RESULTS,
-} from '#tests/config/configurations/language.ts';
+import { REFERENCE_BUILD_FILES, REFERENCE_BUILD_RESULTS } from '#tests/config/configurations/language.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -40,7 +36,6 @@ test('projects without tsconfig.json get required options and framework options 
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
-            tables: IMPLICIT_RETURNS_IGNORE,
             scopes: [{ path: 'service', configurations: ['nestjs'] }],
         }),
         'source.ts': 'export const port = 8080;\n',

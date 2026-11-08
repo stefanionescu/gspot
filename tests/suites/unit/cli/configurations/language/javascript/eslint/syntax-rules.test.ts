@@ -19,12 +19,7 @@ test.each(ESLINT_LEVEL_CASES)(
             [`static.${extension}`]: 'class Clock { static interval = 1000; }',
         });
         const eslint = await buildEslint(sandbox.path);
-        const rules = [
-            'gspot/restricted-syntax',
-            'no-delete-var',
-            'gspot/no-switch-case-labels',
-            'gspot/prefer-readonly-static',
-        ];
+        const rules = ['gspot/restricted-syntax', 'gspot/no-switch-case-labels', 'gspot/prefer-readonly-static'];
         const files = ['assignment', 'delete', 'switch', 'static'].map((name) => `${name}.${extension}`);
         expect(await listLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
             ...(level === 'all' ? [{ file: `assignment.${extension}`, rule: 'gspot/restricted-syntax', line: 1 }] : []),

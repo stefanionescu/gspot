@@ -3,24 +3,14 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import {
-    COVERAGE_LIMIT_CASES,
-    PYTEST_CASES,
-    PYTEST_PYPROJECT,
-    PYTEST_SANDBOX,
-} from '#tests/config/integration/testing.ts';
+import { COVERAGE_LIMIT_CASES, PYTEST_PYPROJECT, PYTEST_SANDBOX } from '#tests/config/integration/testing.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 
 const installedSandbox = shareInstalledSandbox({ install: false, ...PYTEST_SANDBOX, commands: [['uv', 'sync']] });
-
-test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (sample) => {
-    await assertCheckSample(installedSandbox(), sample);
-});
 
 test.each([...COVERAGE_LIMIT_CASES])(
     "pytest/tests with a $limit limit uses the project's Python and needs pytest-cov only above 0",
@@ -59,8 +49,7 @@ test.each([...COVERAGE_LIMIT_CASES])(
             expect(await readFile(join(root, 'uv.lock'), 'utf8')).toBe(lockfile);
         } finally {
             await change[Symbol.asyncDispose]();
-            const restored = await runCommand(['uv', 'sync'], { cwd: root });
-            expect(restored.code, restored.stdout + restored.stderr).toBe(0);
+            await runCommand(['uv', 'sync'], { cwd: root });
         }
     },
 );

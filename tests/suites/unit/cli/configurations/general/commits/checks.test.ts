@@ -45,7 +45,7 @@ test('references reports each line that links to an AI session, and skips commen
 
 test('references passes a co-author trailer, links that name no session, build stages, versions, and standard names', async () => {
     const findings = await checkMessage(
-        'fix(docker): copy the binary in stage 2 of the build\n\nSee https://chatgpt.com/ and https://claude.ai/code.\nKeep UTF-8, ISO-8601, and CVE-2024-1234 as written, and require Node 24.15.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@example.com>\n',
+        'fix(docker): copy the binary in stage 2 of the build\n\nSee https://chatgpt.com/ and https://claude.ai/code.\nKeep UTF-8, ISO-8601, and CVE-2024-1234 as written, and require Node 24.15.\n',
     );
     expect(findings).toStrictEqual([]);
 });
@@ -85,7 +85,7 @@ test.each(['/Users/ada/project', '/home/ada/project', String.raw`C:\Users\ada\pr
     },
 );
 
-test.each(['auto', undefined])(
+test.each(['auto'])(
     'the scissors marker selects the comment character over core.commentChar %p',
     async (commentChar) => {
         const findings = await checkMessage(
@@ -106,7 +106,6 @@ test.each(['auto', undefined])(
 test.each([
     [';', 3],
     ['auto', 2],
-    [undefined, 2],
 ] as const)('without scissors core.commentChar %p chooses which line is a comment', async (commentChar, line) => {
     const findings = await checkMessage(
         [

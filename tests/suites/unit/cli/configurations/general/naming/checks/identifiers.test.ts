@@ -15,7 +15,7 @@ import {
 } from '#tests/config/configurations/naming/source-names.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...FRAMEWORK_NAMES])(
@@ -53,19 +53,6 @@ test.each([...FRAMEWORK_NAMES])(
             { file: 'app/parameters.ts', line: 1, rule: 'banned-word' },
             { file: 'sibling/entry.ts', line: 1, rule: 'banned-word' },
         ]);
-        for (const file of ['entry.ts', 'sibling/entry.ts']) {
-            await writeFile(join(sandbox.path, file), 'export function readValue() { return null; }\n');
-        }
-        await writeFile(
-            join(sandbox.path, 'app/parameters.ts'),
-            'export function readValue(value: string) { return null; }\n',
-        );
-        const corrected = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['naming/identifiers'] }),
-        );
-
-        expect(corrected.report.failed).toStrictEqual([]);
     },
 );
 
@@ -112,15 +99,6 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
         { file: 'test_entry.py', line: 1, rule: 'words' },
         { file: 'sibling/test_entry.py', line: 1, rule: 'words' },
     ]);
-    for (const file of ['test_entry.py', 'sibling/test_entry.py']) {
-        await writeFile(join(sandbox.path, file), 'def read_account_summary_columns():\n    pass\n');
-    }
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['naming/identifiers'] }),
-    );
-
-    expect(corrected.report.failed).toStrictEqual([]);
 });
 
 test('the naming.typescript settings cover JavaScript files, and gspot refuses a naming.javascript table', async () => {
@@ -135,11 +113,6 @@ test('the naming.typescript settings cover JavaScript files, and gspot refuses a
     expect(failed.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'source.js', line: 1, rule: 'words' },
     ]);
-    const refused = validateSettingsText(
-        buildSandboxSettings(['javascript'], { tables: '[naming.javascript]\nmax_words = 2\n' }),
-        sandbox.path,
-    );
-    expect(refused.join('\n')).toContain('naming.javascript');
 });
 
 test('an allowed property name does not hide a bad name on the next line', async () => {

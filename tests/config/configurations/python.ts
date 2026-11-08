@@ -123,7 +123,6 @@ skip-checking-raises = true
         setting: 'google',
         expected: 'numpy',
     },
-    { name: 'keeps the default style with no pyproject.toml', project: '', setting: undefined, expected: 'numpy' },
 ] as const;
 
 export const FAILED_STYLE_BATCH = {

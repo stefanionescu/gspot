@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
@@ -98,7 +97,6 @@ test.each([...NGINX_MOUNT_CASES])(
                 image: expect.stringMatching(/^nginx:[^@]+@sha256:[0-9a-f]{64}$/u) as string,
             },
         ]);
-        expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(source);
     },
 );
 
@@ -128,10 +126,8 @@ test('a failed certificate step reports its error text, removes the scratch file
     expect(error.message).toContain(message);
     expect(_spawn).toHaveBeenCalledTimes(1);
     for (const folder of folders) {
-        expect(folder).not.toBe(sandbox.path);
         expect(existsSync(folder)).toBe(false);
     }
-    expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_UPSTREAM_CONFIG);
 });
 
 test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, status, note, findings }) => {

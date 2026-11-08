@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -16,7 +15,6 @@ import {
 } from '#tests/config/integration/language.ts';
 import { LICENSE, README } from '#tests/config/setup/configurations.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -68,7 +66,6 @@ test("markdownlint at level all reports MD041 and a link text that gspot prohibi
     ]);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await readFile(join(root, 'app/guide.md'), 'utf8')).toBe(MARKDOWN_FILES['app/guide.md']);
-    expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(described);
 });
 
 test("markdownlint run by an editor reads the pointer files with each scope's options", async () => {
@@ -117,8 +114,6 @@ test('markdownlint reports line, column, and fixable for findings in files whose
             ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png"> https://example.com\n'])),
         },
     });
-    const configuration = getManifestTarget('markdown', 'markdownlint-cli2.mjs');
-    expect(existsSync(join(root, configuration))).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stderr).toBe(1);

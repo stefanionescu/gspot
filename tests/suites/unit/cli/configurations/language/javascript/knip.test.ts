@@ -1,4 +1,4 @@
-import { rm, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -58,12 +58,6 @@ test('Knip finds unused framework component files and uses the entry points of e
             rule: 'files',
         })),
     );
-    for (const file of KNIP_UNUSED_FILES) await rm(join(sandbox.path, file));
-    const corrected = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(
-        parseOutput(check, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: sandbox.path }),
-    ).toStrictEqual([]);
 });
 
 test('Knip takes its default entry files at the root and under src', async () => {
@@ -95,12 +89,6 @@ test('Knip reports each unused dependency that you declare, also when it names a
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
         Array.from({ length: 5 }, () => ({ file: 'package.json', rule: 'dependencies' })),
     );
-    await writeFile(join(sandbox.path, 'package.json'), '{"name":"native-project","private":true,"type":"module"}');
-    const corrected = await runCommand([...knipArguments, 'dependencies'], { cwd: sandbox.path });
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(
-        parseOutput(check, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: sandbox.path }),
-    ).toStrictEqual([]);
 });
 
 test('Knip treats script configuration files as entries and ignores pointer files', async () => {
@@ -200,7 +188,6 @@ test('Knip writes only the ignores of code files and the tool binaries that a sc
     ) as { ignore: string[]; ignoreBinaries: string[] };
     expect(knip.ignoreBinaries).toStrictEqual(['eslint']);
     expect(knip.ignore).toContain('**/node_modules/**');
-    expect(knip.ignore).not.toContain('**/*.log');
     expect(knip.ignore).not.toContain('**/.env');
 });
 

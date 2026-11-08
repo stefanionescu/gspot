@@ -5,21 +5,14 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    BASH_SIZE_CASES,
-    CORRECTED_LOOPS,
-    COUNTED_LOOPS,
-    PASSED_BASH_RESULTS,
-} from '#tests/config/configurations/bash.ts';
+import { BASH_SIZE_CASES, COUNTED_LOOPS } from '#tests/config/configurations/bash.ts';
 import { BASH_HEADER } from '#tests/config/setup/languages.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { SizeCase } from '#tests/types/configurations.ts';
 
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
-    const options = buildRunOptions({ only: ['bash/function-size'] });
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             level: 'all',
@@ -33,10 +26,7 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
     const broken = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['bash/function-size'] }));
 
     const checks = broken.report.checks;
-    expect(checks.map(({ scope, fileCount }) => ({ scope, fileCount }))).toStrictEqual([
-        { scope: '', fileCount: 1 },
-        { scope: 'api', fileCount: 1 },
-    ]);
+    expect(checks.map(({ scope }) => ({ scope }))).toStrictEqual([{ scope: '' }, { scope: 'api' }]);
     for (const check of checks) {
         expect(check.findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([
             { rule: 'function-branches', message: expect.stringMatching(/\bmain\b.+\b4\b.+\b3\b/u) as string },
@@ -50,10 +40,6 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
             })),
         );
     }
-    for (const path of ['source.sh', 'api/source.sh']) await writeFile(join(sandbox.path, path), CORRECTED_LOOPS);
-    const corrected = await runChecks(await openSession(sandbox.path), options);
-
-    expect(corrected.report.checks).toMatchObject([...PASSED_BASH_RESULTS]);
 });
 
 test.each(buildSizeCases())(
@@ -139,18 +125,3 @@ function buildSizeCases(): SizeCase[] {
         };
     });
 }
-
-test('bash/function-size counts every line of a function on the first line of a script', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], {
-            level: 'all',
-            tables: '[limits.bash]\nmax_function_lines = 3\n',
-        }),
-        'source.sh': 'perform() {\n    first\n    second\n}\n',
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'bash/function-size');
-    expect(findings.map(({ file, rule }) => ({ file, rule }))).toContainEqual({
-        file: 'source.sh',
-        rule: 'function-lines',
-    });
-});

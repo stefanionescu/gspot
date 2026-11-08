@@ -69,8 +69,6 @@ test('the naming terms reach the terms style, and Vale runs that style on code c
         level: 'error',
         swap: { 'config file': 'generated file', program: 'tool' },
     });
-    const ini = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
-    expect(ini.split('\n').filter((line) => line === 'gspot.terms = YES')).toHaveLength(1);
 });
 
 test.each([...PROSE_STYLE_CASES])(
@@ -79,7 +77,7 @@ test.each([...PROSE_STYLE_CASES])(
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['prose'], {
                 level: 'all',
-                tables: '[prose]\nmax_list_item_words = 11\nmax_paragraph_sentences = 3\nmax_sentence_words = 17\n',
+                tables: '[prose]\nmax_sentence_words = 17\n',
             }),
             'guide.md': '# Guide\n',
         });

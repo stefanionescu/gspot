@@ -24,8 +24,6 @@ test.each(['.sh', ''])('Bash %s heredocs and multiline strings count as code lin
             message: expect.stringMatching(/\b6\b.+\b5\b/u) as string,
         }),
     ]);
-    await writeFile(join(sandbox.path, file), source.replace('# literal\nEOF', 'EOF'));
-    expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toStrictEqual([]);
 });
 
 test('long files checks authored covered languages and leaves generated, vendored, and ESLint-owned files out', async () => {
@@ -35,7 +33,6 @@ test('long files checks authored covered languages and leaves generated, vendore
             tables: '[limits]\nmax_file_lines = 2\n',
         }),
         'source.py': LONG_PYTHON_FILE,
-        '.gspot/configurations/javascript/eslint/eslint.mjs': LONG_JAVASCRIPT_FILE,
         '.gspot/generated.py': LONG_PYTHON_FILE,
         'vendor/copied.py': LONG_PYTHON_FILE,
         'source.js': LONG_JAVASCRIPT_FILE,

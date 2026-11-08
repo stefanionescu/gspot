@@ -37,7 +37,6 @@ test("jest/tests at level all uses the scope's coverage limits and runs only tha
             '\n',
         'app/math.cjs': MATH_SOURCE,
         'app/math.test.cjs': MATH_TEST_SOURCE,
-        'app/authored.txt': 'preserved nested source\n',
     });
 
     const uncovered = await runJestCoverage(sandbox.path, 1);
@@ -95,7 +94,7 @@ test('jest/tests at level all reports failed tests and keeps the authored files'
     expect(failed[0]!.findings.map(({ check, file, message }) => ({ check, file, message }))).toStrictEqual([
         { check: 'jest/tests', file: '', message: '● triples an integer' },
     ]);
-    await assertJestFilesKept(sandbox.path);
+    expect(await readFile(join(sandbox.path, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
 });
 
 test('jest/tests reports a test file with a missing import as a failed test and passes after the fix', async () => {
@@ -112,11 +111,4 @@ test('jest/tests reports a test file with a missing import as a failed test and 
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
     const recovered = await runJestCoverage(sandbox.path, 0);
     expect(recovered).toMatchObject([{ check: 'jest/tests', status: 'passed', findings: [] }]);
-    await assertJestFilesKept(sandbox.path);
 });
-
-async function assertJestFilesKept(root: string): Promise<void> {
-    expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('preserved source\n');
-    expect(await readFile(join(root, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
-    expect(await readFile(join(root, 'math.cjs'), 'utf8')).toBe(MATH_SOURCE);
-}

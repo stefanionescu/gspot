@@ -62,13 +62,11 @@ export const FILE_FOLDER_CLASH_CASES = [
             files: {
                 'jobs/turned.sh': CLEAN_BASH_SCRIPT,
                 'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
-                'jobs/turn/second.sh': CLEAN_BASH_SCRIPT,
             },
         },
         files: {
             'jobs/turn.sh': CLEAN_BASH_SCRIPT,
             'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
-            'jobs/turn/second.sh': CLEAN_BASH_SCRIPT,
         },
         expected: {
             file: 'jobs/turn.sh',
@@ -141,25 +139,6 @@ export const FRAMEWORK_COMPONENT_CASES = [
     { framework: 'astro', name: 'index.astro', folder: 'src/pages', content: '<main>Example</main>\n' },
 ] as const;
 
-export const LONE_FILE_TREE = {
-    'lone/only.ts': '',
-    'typed/one.ts': '',
-    'typed/one.d.ts': '',
-    'module/one.mts': '',
-    'module/one.d.mts': '',
-    'pair/first.ts': '',
-    'pair/second.ts': '',
-    'component/logic.ts': '',
-    'component/View.astro': '<main>Example</main>',
-    'schema/parser.ts': '',
-    'schema/schema.json': '{}',
-    'parent/main.ts': '',
-    'parent/child/first.ts': '',
-    'parent/child/second.ts': '',
-    'dist/pkg/lone.ts': '',
-    'allowed/only.ts': '',
-} as const;
-
 export const ROUTE_FILE_CASES = [
     {
         framework: 'Next.js',
@@ -182,14 +161,6 @@ export const ROUTE_FILE_CASES = [
         },
         expected: 'src/lib/cards/Card.svelte',
     },
-] as const;
-
-export const LONE_CODE_FILES = [
-    'dist/pkg/lone.ts',
-    'lone/only.ts',
-    'module/one.mts',
-    'parent/main.ts',
-    'typed/one.ts',
 ] as const;
 
 export const PREFIX_TREE = {

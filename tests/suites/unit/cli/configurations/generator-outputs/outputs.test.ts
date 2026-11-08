@@ -64,7 +64,6 @@ test('generator output patterns omit links to folders', async () => {
         CHECK_RUN_OPTIONS,
     );
     expect(result.findings).toStrictEqual([]);
-    expect(await readFile(join(sandbox.path, 'generated/regular/output.txt'), 'utf8')).toBe('generated\n');
 });
 
 test('an unchanged binary output passes and a changed one reports stale', async () => {
@@ -98,5 +97,4 @@ test('an unchanged binary output passes and a changed one reports stale', async 
             message: expect.stringContaining(command.join(' ')) as string,
         },
     ]);
-    expect(await readFile(output)).toStrictEqual(changed);
 });

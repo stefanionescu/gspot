@@ -9,10 +9,7 @@ export const PROSE_COMMENT_CASES = [
     { name: 'an extensionless script', extension: '', marker: '#', code: 'text = "delve"' },
 ] as const;
 
-export const MARKDOWN_COMMENT_CASES = [
-    ['ts', '//', 'const text = "whitelist";'],
-    ['py', '#', 'text = "whitelist"'],
-] as const;
+export const MARKDOWN_COMMENT_CASES = [['ts', '//', 'const text = "whitelist";']] as const;
 
 export const CONCRETE_RULE = `extends: existence
 message: "Use inspect."

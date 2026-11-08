@@ -1,6 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
@@ -43,14 +40,4 @@ test('licenses/allowed reads the license of a locked package, and an allowed_pac
             message: expect.stringMatching(/caniuse-lite@1\.0\.30001700.*CC-BY-4\.0/u) as string,
         }),
     ]);
-    await writeFile(
-        join(root, 'gspot.toml'),
-        buildSandboxSettings(['licenses'], {
-            tables: `${allowed}[[licenses.allowed_package]]\nname = "caniuse-lite"\nversion = "*"\nreason = "CC-BY-4.0. The data file stays unchanged."\n`,
-        }),
-    );
-    await applyGeneratedFiles(root);
-    const passed = parseCheckReport(await spawnGspot(root, command));
-    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });

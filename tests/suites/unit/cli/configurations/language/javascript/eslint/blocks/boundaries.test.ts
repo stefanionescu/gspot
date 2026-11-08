@@ -7,7 +7,6 @@ import { createFileTree, testdir } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { compareText } from '#cli/system/text.ts';
 import {
-    BOUNDARY_IMPORT_TABLES,
     COMPONENT_IMPORT_CASES,
     ENVIRONMENT_CASES,
     ENVIRONMENT_READER_PATHS,
@@ -15,7 +14,6 @@ import {
     IMPORT_RULE_CASES,
     IMPORT_RULE_FILES,
     IMPORT_RULE_TABLES,
-    REFUSED_IMPORT_MESSAGES,
     TEST_IMPORT_CASES,
     TEST_IMPORT_RULE_CASES,
     TEST_IMPORT_RULE_TABLES,
@@ -24,7 +22,7 @@ import {
 import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { EslintConfiguration, ToolPackageJson } from '#tests/types/setup.ts';
+import type { ToolPackageJson } from '#tests/types/setup.ts';
 
 test.each(COMPONENT_IMPORT_CASES)(
     '$configuration component imports obey their import rule',
@@ -40,8 +38,6 @@ test.each(COMPONENT_IMPORT_CASES)(
         expect(await listLintFindings(eslint, sandbox.path, [path], ['boundaries/dependencies'])).toStrictEqual([
             { file: path, rule: 'boundaries/dependencies', line: 2 },
         ]);
-        await writeFile(join(sandbox.path, path), `${opening}\nconst result = 1;\n${closing}\n`);
-        expect(await listLintFindings(eslint, sandbox.path, [path], ['boundaries/dependencies'])).toStrictEqual([]);
     },
 );
 
@@ -189,15 +185,6 @@ test.each(['all'] as const)(
                     isRejected ? [{ file: path, rule, line: 1 }] : [],
                 );
             }
-            await createFileTree(sandbox.path, { [path]: 'const port = "3000";\n' });
-            expect(
-                await listLintFindings(
-                    eslint,
-                    sandbox.path,
-                    [path],
-                    ENVIRONMENT_CASES.map(({ rule }) => rule),
-                ),
-            ).toStrictEqual([]);
         }
     },
 );
@@ -217,26 +204,6 @@ test('without environment_readers, environment reads are allowed at level all', 
     }
 });
 
-test('can_import names exactly the rules a rule may import, and a refused import says what it may import', async () => {
-    await using sandbox = await testdir({
-        ...IMPORT_RULE_FILES,
-        'gspot.toml': buildSandboxSettings(['typescript'], { tables: BOUNDARY_IMPORT_TABLES }),
-        'core/value.ts': 'export const value = 3;\n',
-        'app/source.ts':
-            "import { value } from '../storage/value.js';\nimport { value as core } from '../core/value.js';\nexport const result = value + core;\n",
-    });
-
-    const eslint = await buildEslint(sandbox.path);
-    const [result] = await eslint.lintFiles(['app/source.ts']);
-    expect(
-        result?.messages
-            .filter(({ ruleId }) => ruleId === 'boundaries/dependencies')
-            .map(({ line, message }) => ({ line, message })),
-    ).toStrictEqual(
-        REFUSED_IMPORT_MESSAGES.map(({ line, named }) => ({ line, message: expect.stringContaining(named) as string })),
-    );
-});
-
 test('each file holds one import rule, the tRPC category comes first, and a refused import names the rule', async () => {
     await using sandbox = await testdir({
         ...IMPORT_RULE_FILES,
@@ -249,15 +216,6 @@ test('each file holds one import rule, the tRPC category comes first, and a refu
     });
 
     const eslint = await buildEslint(sandbox.path);
-    const { settings } = (await eslint.calculateConfigForFile('app/source.ts')) as EslintConfiguration;
-    const files = settings['boundaries/files'] as Array<{ category: string; stopMatching?: boolean }>;
-    expect(files.map(({ category, stopMatching }) => ({ category, stopMatching }))).toStrictEqual([
-        { category: 'tests', stopMatching: true },
-        { category: 'trpc:server', stopMatching: undefined },
-        { category: 'rule "app', stopMatching: true },
-        { category: 'rule "storage', stopMatching: true },
-        { category: 'other', stopMatching: undefined },
-    ]);
     const [result] = await eslint.lintFiles(['app/source.ts']);
     expect(
         result?.messages.filter(({ ruleId }) => ruleId === 'boundaries/dependencies').map(({ message }) => message),

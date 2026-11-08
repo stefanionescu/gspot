@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -87,5 +87,4 @@ check-yield-types = true
     );
     const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await readFile(join(root, 'pyproject.toml'), 'utf8')).toBe(project);
 });

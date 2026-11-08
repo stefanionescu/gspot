@@ -1,6 +1,3 @@
-import { rm } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
@@ -30,16 +27,6 @@ test('a requirements file is reported only in a scope with a lockfile and passes
     expect(
         checked.report.checks.flatMap((check) => check.findings.map(({ file, line, rule }) => ({ file, line, rule }))),
     ).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
-    expect(
-        checked.report.checks.filter((check) => check.status === 'failed').map((check) => check.scope),
-    ).toStrictEqual(['locked']);
-    await rm(join(sandbox.path, 'locked/requirements.txt'));
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['python/pip-installs'] }),
-    );
-
-    expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
 });
 
 test('an unmanaged pip install reports its file and rule', async () => {

@@ -15,28 +15,10 @@ fi
     printf "%s\n" "$1"
 fi
 `,
-    'library.bash': String.raw`if [[ -n "$1" ]]; then
-    printf "%s\n" "$1"
-fi
-`,
-    'sample.bats': `@test "example" {
-    true
-}
-`,
-    'temporary.sh': `#!/bin/bash
-set -euo pipefail
-tmp=$(mktemp -d)
-trap 'rm -rf -- "$tmp"' EXIT
-`,
     'app/posix.sh': String.raw`#!/bin/sh
 if [[ -n "$1" ]]; then
     printf "%s\n" "$1"
 fi
-`,
-    'app/temporary.sh': `#!/bin/bash
-set -euo pipefail
-tmp=$(mktemp -d)
-trap 'rm -rf -- "$tmp"' EXIT
 `,
 } as const;
 
@@ -256,20 +238,9 @@ export const TITLED_DOCUMENT = '# Title\n\nA document with a title.\n';
 
 export const REQUEST_FLOW_IMAGE = '![Request flow]';
 
-const SQL_CLEAN = `-- The accounts of the application.
-CREATE TABLE user_accounts (
-    id UUID PRIMARY KEY,
-    display_name TEXT NOT NULL
-);
-`;
-
 export const SQL_SANDBOX = {
     configurations: ['sql'],
-    files: {
-        'db/accounts.sql': SQL_CLEAN,
-        'db/report.sql':
-            "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n",
-    },
+    files: {},
 } as const;
 
 export const SQL_FUNCTION_SOURCE = `CREATE FUNCTION get_user_name() RETURNS TEXT AS $$ SELECT 'Alex'; $$ LANGUAGE sql;

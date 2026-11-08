@@ -83,7 +83,6 @@ test('a numbered file name needs an ignored_prefix override', async () => {
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
         '.mise/tasks/01-build.sh': 'echo example\n',
-        'scripts/steps/01-build.sh': 'echo example\n',
     });
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));

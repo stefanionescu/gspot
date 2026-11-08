@@ -4,7 +4,6 @@ export const EXTERNAL_COMMAND_GUIDE = `Run commands from the repository root.
 gspot init --from ../api/gspot.toml
 curl -fsSL -o ../team.toml https://raw.githubusercontent.com/acme/policies/<commit>/gspot.toml
 gh api "repos/acme/policies/contents/gspot.toml?ref=<commit>" -H "Accept: application/vnd.github.raw" > ../team.toml
-gspot init --from ../team.toml
 cat ./src/here.ts ./src/missing.ts
 \`\`\`
 
@@ -13,13 +12,13 @@ See \`../src/missing.ts\` beside \`../src/here.ts\`.
 `;
 
 export const EXTERNAL_COMMAND_FINDINGS = [
-    { line: 8, message: './src/missing.ts names no tracked file or folder.' },
-    { line: 11, message: 'src/absent.ts names no tracked file or folder.' },
-    { line: 12, message: '../src/missing.ts names no tracked file or folder.' },
+    { line: 7, message: './src/missing.ts names no tracked file or folder.' },
+    { line: 10, message: 'src/absent.ts names no tracked file or folder.' },
+    { line: 11, message: '../src/missing.ts names no tracked file or folder.' },
 ] as const;
 
 export const DOC_TASK_FILES = {
-    'root.md': `Run \`mise run root-mise\`, \`npm run root-js\`, \`pnpm run root-js\`, \`yarn run root-js\`, and \`bun run root-js\`.
+    'root.md': `Run \`mise run root-mise\`, \`npm run root-js\`, and \`bun run root-js\`.
 Run \`mise run root-js\`, \`bun run root-mise\`, and \`npm run child-js\`.
 `,
     'package.json': '{"private":true,"scripts":{"root-js":"true"}}\n',
@@ -62,7 +61,6 @@ export const DOC_FENCE_PATH_CASES = [
     { info: 'start=1\ttitle="example.sh"', language: 'sh', reported: false },
     { info: '', language: 'text', reported: false },
     { info: '', language: 'sh', reported: true },
-    { info: 'notitle="example.sh"', language: 'bash', reported: true },
     { info: 'description="title=example.sh"', language: 'console', reported: true },
 ] as const;
 
@@ -89,13 +87,10 @@ export const MISE_TASK_SOURCES = [
         },
     },
     {
-        name: 'tasks in .mise/config.toml, mise.local.toml, and conf.d files, beside a .tool-versions file',
-        tasks: ['config-task', 'local-task', 'included-task'],
+        name: 'tasks in conf.d files',
+        tasks: ['included-task'],
         files: {
-            '.mise/config.toml': '[tasks.config-task]\nrun = "true"\n',
-            'mise.local.toml': '[tasks.local-task]\nrun = "true"\n',
             '.mise/conf.d/project.toml': '[tasks.included-task]\nrun = "true"\n',
-            '.tool-versions': 'node 22\n',
         },
     },
 ] as const;

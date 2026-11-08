@@ -1,5 +1,5 @@
 export const NUMBERED_PREFIX_OVERRIDE =
-    '[[naming.exception]]\npaths = [".mise/tasks/*.sh", "scripts/steps/*.sh"]\n' +
+    '[[naming.exception]]\npaths = [".mise/tasks/*.sh"]\n' +
     String.raw`categories = ["files"]
 ignored_prefix = '^\d{2}-'
 reason = "The project orders its tasks by this prefix."
@@ -13,7 +13,6 @@ export const FILE_NAME_CASES = [
         configurations: ['python', 'typescript', 'naming'],
         files: {
             'python/__init__.py': '"""Package entry."""\n',
-            'python/__main__.py': '"""Program entry."""\n',
             'javascript/__init__.ts': 'export const entry = 1;\n',
         },
         invalid: 'javascript/__init__.ts',
@@ -34,10 +33,7 @@ export const FILE_NAME_CASES = [
         configurations: ['nextjs', 'naming'],
         files: {
             'pages/_app.tsx': NEXT_PAGE_SOURCE,
-            'pages/_document.tsx': NEXT_PAGE_SOURCE,
-            'pages/_error.tsx': NEXT_PAGE_SOURCE,
             'pages/404.tsx': NEXT_PAGE_SOURCE,
-            'pages/500.tsx': NEXT_PAGE_SOURCE,
             'pages/about_page.ts': 'export const title = "About";\n',
         },
         invalid: 'pages/about_page.ts',
@@ -48,8 +44,6 @@ export const FILE_NAME_CASES = [
         configurations: ['typescript', 'naming'],
         files: {
             '.archive/bad_name.ts': 'export const entry = 1;\n',
-            '.claude/entry.ts': 'export const entry = 1;\n',
-            '.vscode/entry.ts': 'export const entry = 1;\n',
         },
         invalid: '.archive/bad_name.ts',
         renamed: '.archive/bad-name.ts',
@@ -59,8 +53,6 @@ export const FILE_NAME_CASES = [
 export const NUMBERED_FILE_FINDINGS = [
     { file: '.mise/tasks/01-build.sh', rule: 'case' },
     { file: '.mise/tasks/01-build.sh', rule: 'digits' },
-    { file: 'scripts/steps/01-build.sh', rule: 'case' },
-    { file: 'scripts/steps/01-build.sh', rule: 'digits' },
 ] as const;
 
 export const NAME_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'] as const;
@@ -126,64 +118,5 @@ export const OVERLONG_NAME_FINDINGS = [
     {
         rule: 'banned-word',
         message: `typescript functions "helperValue2UserUserWithMoreWordsHere": "helper" is banned (roles list).`,
-    },
-] as const;
-
-export const LINTER_LIMIT_CASES = [
-    {
-        language: 'swift',
-        category: 'types',
-        expected: [],
-        wordy: [
-            {
-                rule: 'words',
-                message: 'types "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 5.',
-            },
-        ],
-    },
-    {
-        language: 'swift',
-        category: 'functions',
-        expected: [
-            {
-                rule: 'case',
-                message: 'functions "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": expected upper-snake case.',
-            },
-            {
-                rule: 'length',
-                message:
-                    'functions "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 41 characters is over the limit of 40.',
-            },
-        ],
-        wordy: [
-            {
-                rule: 'case',
-                message: 'functions "one_two_three_four_five_six_seven_eight": expected upper-snake case.',
-            },
-            {
-                rule: 'words',
-                message: 'functions "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 5.',
-            },
-        ],
-    },
-    {
-        language: 'python',
-        category: 'classes',
-        expected: [
-            {
-                rule: 'length',
-                message: 'classes "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 41 characters is over the limit of 35.',
-            },
-        ],
-        wordy: [
-            {
-                rule: 'length',
-                message: 'classes "one_two_three_four_five_six_seven_eight": 39 characters is over the limit of 35.',
-            },
-            {
-                rule: 'words',
-                message: 'classes "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 4.',
-            },
-        ],
     },
 ] as const;

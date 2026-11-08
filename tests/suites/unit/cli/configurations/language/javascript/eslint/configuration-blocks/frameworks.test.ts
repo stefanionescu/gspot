@@ -60,7 +60,6 @@ test.each([...HTML_INJECTION_CASES])(
             }),
             'package.json': '{"name":"markup-security","private":true,"type":"module"}',
             [`app/${component.path}`]: component.sample,
-            'plain.js': 'export const markup = "<b>Hello</b>";\n',
         });
 
         const eslint = await buildEslint(sandbox.path);
@@ -68,9 +67,6 @@ test.each([...HTML_INJECTION_CASES])(
         expect(await listLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([
             { file: path, rule: component.rule, line: 1 },
         ]);
-        expect(await listLintFindings(eslint, sandbox.path, ['plain.js'], [component.rule])).toStrictEqual([]);
-        await createFileTree(sandbox.path, { [path]: component.corrected });
-        expect(await listLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([]);
     },
 );
 

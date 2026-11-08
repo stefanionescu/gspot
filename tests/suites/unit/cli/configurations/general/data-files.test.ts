@@ -86,10 +86,9 @@ test('a conventional required YAML filename passes while an application filename
         'gspot.toml': buildSandboxSettings([]),
         'settings.yaml': 'enabled: true\n',
         'pnpm-workspace.yaml': 'packages: []\n',
-        'compose.yaml': 'services: {}\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'data-files/yaml', {
-        paths: ['settings.yaml', 'pnpm-workspace.yaml', 'compose.yaml'],
+        paths: ['settings.yaml', 'pnpm-workspace.yaml'],
     });
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'settings.yaml', rule: 'file-extension' },

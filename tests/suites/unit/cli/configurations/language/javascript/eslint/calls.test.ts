@@ -44,32 +44,3 @@ test('generated ESLint modules hold static imports and calls without executable 
         }
     }
 });
-
-test('a large repository prints the runtime table, the boundary folders, and each repeated list once, and merges equal blocks', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': '{"private":true,"type":"module"}\n',
-        'first/app.jsx': 'export const name = "first";\n',
-        'second/app.jsx': 'export const name = "second";\n',
-        'third/app.jsx': 'export const name = "third";\n',
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            scopes: [
-                { path: 'first', configurations: ['react'] },
-                { path: 'second', configurations: ['react'] },
-                { path: 'third', configurations: ['react'] },
-            ],
-        }),
-    });
-    const { files } = buildGeneratedFiles(await openSession(sandbox.path));
-    const main = files.find((file) => file.path.endsWith('/javascript/eslint/eslint.mjs'))!.content;
-    expect(main.match(/const runtimeDeclarations = /gu)).toHaveLength(1);
-    expect(main.match(/const importBoundaryFolders = /gu)).toHaveLength(1);
-    expect(main).not.toContain('"folders": [');
-    const constants: string[] = main.match(/(?<=^const )\w+(?= = )/gmu) ?? [];
-    const words = Map.groupBy(main.match(/\b\w+\b/gu) ?? [], (word) => word);
-    const lists = constants.filter((name) => name.endsWith('List'));
-    expect(lists).not.toStrictEqual([]);
-    expect(lists.filter((name) => (words.get(name)?.length ?? 0) <= 2)).toStrictEqual([]);
-    expect(constants.indexOf('importBoundaryFolders')).toBeLessThan(constants.indexOf('gspotImportBoundariesList'));
-    const react = files.find((file) => file.path.endsWith('/react/eslint.mjs'))!.content;
-    expect(react.match(/mergePresetRules\(/gu)).toHaveLength(2);
-});

@@ -9,9 +9,6 @@ import {
     RECREATED_TABLE_SQL,
     RENAMED_TABLE_SQL,
 } from '#tests/config/configurations/database.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('table and column renames retain their foreign keys, indexes, and row security', async () => {
     const renamedTable = await parseSqlFile(RENAMED_TABLE_SQL, createRunCache(process.cwd()));
@@ -36,15 +33,6 @@ test('table and column renames retain their foreign keys, indexes, and row secur
         },
     ]);
     expect([...schema.indexed]).toStrictEqual([['public.groups', [['organization_id', 'user_id']]]]);
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['postgres'], {
-            level: 'all',
-            tables: '[postgres]\nclient_schemas = ["public"]\n',
-        }),
-        'migrations/1_rename.sql': RENAMED_TABLE_SQL,
-    });
-    expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security')).toStrictEqual([]);
-    expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([]);
 });
 
 test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {

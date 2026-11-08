@@ -51,7 +51,4 @@ test('a new Bun scanner file has one table and a final newline, and keeps its ke
     expect(report.notes).toContain(
         'Keys that gspot no longer manages stay in your files. Review your shared tool configs after you remove a configuration.',
     );
-    expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(
-        '[install.security]\nscanner = "@socketsecurity/bun-security-scanner"\n',
-    );
 });

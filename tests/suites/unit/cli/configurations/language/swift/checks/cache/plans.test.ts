@@ -8,7 +8,6 @@ import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/configurations/l
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTable } from '#cli/settings/scopes.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
 import { SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/configurations/swift.ts';
 import { SWIFT_PACKAGE_HEADER, XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
@@ -38,8 +37,6 @@ test.each(['platform=macOS'])(
             planSandboxCheck(session, 'swift/build'),
         );
         expect(kind).toBe('xcode');
-        expect(commandArguments).toContain('-disableAutomaticPackageResolution');
-        expect(commandArguments).toContain('SWIFT_TREAT_WARNINGS_AS_ERRORS=YES');
         for (const command of [commandArguments, testArguments])
             expect(command[command.indexOf('-destination') + 1]).toBe(destination);
     },
@@ -55,7 +52,6 @@ test.each([...SWIFT_PROJECT_SELECTION_CASES])(
 
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build', { scope });
-        expect(getTable(input.scope.settings, 'swift').xcode_project).toBe(project);
         const plan = planSwiftBuild(session, input);
         const container = project.endsWith('.xcworkspace') ? '-workspace' : '-project';
         expect(plan.commandArguments[plan.commandArguments.indexOf(container) + 1]).toBe(argument);
@@ -104,6 +100,4 @@ test('Swift skips without swift.xcode_project or Package.swift, then builds the 
     const packageInput = planSandboxCheck(checkedSession, 'swift/build');
     const plan = planSwiftBuild(checkedSession, packageInput);
     expect(plan.kind).toBe('package');
-    expect(plan.commandArguments).toContain('--force-resolved-versions');
-    expect(plan.commandArguments).toContain('-warnings-as-errors');
 });

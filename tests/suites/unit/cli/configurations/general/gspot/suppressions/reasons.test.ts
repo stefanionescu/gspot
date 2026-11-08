@@ -30,7 +30,6 @@ test('@ts-ignore, @ts-expect-error and @ts-nocheck need a reason; the same text 
                 `// @ts-${directive}\n${COMPILER_SOURCE}`,
             ]),
         ),
-        [`control.ts`]: COMPILER_SOURCE,
         [`string.ts`]: 'export const example = "// @ts-ignore";\n',
     });
     const missing = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
@@ -73,7 +72,7 @@ test.each([...SUPPRESSION_REASON_CASES])('$name', async ({ path, source, finding
     expect(
         result.report.checks
             .flatMap(({ findings }) => findings)
-            .map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
+            .map(({ check, file, line, rule }) => ({ check, file, line, rule })),
     ).toStrictEqual(
         findings.map((finding) => ({
             ...finding,

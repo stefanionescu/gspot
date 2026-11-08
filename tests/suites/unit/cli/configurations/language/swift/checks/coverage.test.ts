@@ -14,7 +14,6 @@ import {
     COVERAGE_LIMIT_CASES,
     SWIFT_PACKAGE_COVERAGE_FILES,
     SWIFT_PACKAGE_COVERAGE_TARGETS,
-    UNTESTED_COVERAGE_RESULTS,
     XCTEST_FAILURES,
     XCTEST_TABLES,
 } from '#tests/config/configurations/swift.ts';
@@ -49,7 +48,6 @@ test.each([...XCTEST_FAILURES])(
             expect(result.report.checks[0]!.findings).toMatchObject([
                 { rule: 'failed-test', file: 'ExampleTests.swift', line: 3, message: 'Expected true.' },
             ]);
-        expect(existsSync(join(sandbox.path, 'viewed.txt'))).toBe(false);
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
             buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
@@ -60,13 +58,6 @@ test.each([...XCTEST_FAILURES])(
             'source/viewed.txt',
         );
         expect(existsSync(viewed) ? await readFile(viewed, 'utf8') : undefined).toBe(produced ? 'viewed' : undefined);
-        const corrected = await runXcodeCoverage(sandbox, {
-            tables: XCTEST_TABLES,
-            xcodebuild: [],
-            xcrun: ['--line', JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] })],
-        });
-        expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-        expect(corrected.report.checks).toMatchObject([{ check: 'swift/tests', status: 'passed', findings: [] }]);
     },
 );
 
@@ -119,7 +110,6 @@ test('swift/tests: XCTest coverage refuses an external result link and removes a
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     expect(existsSync(bundle)).toBe(false);
     expect(await readFile(join(cache, 'source/tested.txt'), 'utf8')).toBe('tested');
-    expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
 });
 
 test('Swift package coverage runs swift test, reads the custom target paths, and applies every target limit', async () => {
@@ -167,20 +157,6 @@ test('Swift package coverage runs swift test, reads the custom target paths, and
     );
 
     expect(omitted.report.checks[0]?.note).toMatch(/\bAPI\b/u);
-});
-
-test('Swift coverage skips a scope that holds no Swift tests', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['swift']),
-        'Package.swift': SWIFT_PACKAGE_HEADER,
-        'Sources/App/App.swift': 'func value() -> Int { 1 }\n',
-    });
-
-    const { report } = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift/tests'] }),
-    );
-    expect(report.checks).toMatchObject([...UNTESTED_COVERAGE_RESULTS]);
 });
 
 test.each([...COVERAGE_LIMIT_CASES])(

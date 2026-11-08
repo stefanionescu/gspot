@@ -14,7 +14,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 const installedSandbox = shareInstalledSandbox(HTML_SANDBOX);
 
@@ -22,14 +21,9 @@ test.each([...AUTOPLAY_CHECKS])(
     '$check reports audio and video autoplay and accepts user-controlled playback',
     async (row) => {
         const { root } = installedSandbox();
-        const build = buildProgramCommand('fakes/site-build', '--copy', 'page.html=dist/index.html');
         const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['html'], {
-                level: 'all',
-                tables: `[[scope]]\npath = "app"\nconfigurations = ["site"]\n[scope.site]\nbuild_command = ${JSON.stringify(build)}\n`,
-            }),
+            'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
             'index.html': AUTOPLAY_PAGE,
-            'app/page.html': AUTOPLAY_PAGE,
         };
         await using _sourceChange = await writeSandboxChanges(
             installedSandbox(),

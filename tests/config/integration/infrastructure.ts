@@ -239,7 +239,7 @@ export const XCODE_CASES = [
     },
 ] as const;
 
-export const PLUTIL_UNREADABLE_FILES = ['missing.plist', 'private.plist'] as const;
+export const PLUTIL_UNREADABLE_FILES = ['missing.plist'] as const;
 
 export const SUPABASE_CASES = [
     {

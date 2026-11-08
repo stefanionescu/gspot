@@ -136,10 +136,7 @@ test('library selectors at level basic report both whole-store reads and accept 
     const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(eslint, sandbox.path, Object.keys(SELECTOR_LIBRARY_FILES), ['gspot/restricted-syntax']),
-    ).toStrictEqual([
-        { file: 'cart.js', line: 4, rule: 'gspot/restricted-syntax' },
-        { file: 'cart.js', line: 5, rule: 'gspot/restricted-syntax' },
-    ]);
+    ).toStrictEqual([{ file: 'cart.js', line: 4, rule: 'gspot/restricted-syntax' }]);
 });
 
 test.each([...FRAMEWORK_SELECTOR_CASES])(

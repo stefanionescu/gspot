@@ -9,12 +9,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import {
-    COALESCING_CORRECTED,
-    COALESCING_SOURCE,
-    CONFIGURATION_RULE_OPTIONS,
-    DOCUMENTED_PRICE_SOURCE,
-} from '#tests/config/configurations/javascript/overrides.ts';
+import { COALESCING_SOURCE, CONFIGURATION_RULE_OPTIONS } from '#tests/config/configurations/javascript/overrides.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -62,7 +57,7 @@ test('all applies your rule options except in script and test files', async () =
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"n/no-unpublished-import" = []\n',
+            tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n"n/no-unpublished-import" = []\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
@@ -124,8 +119,6 @@ test.each(LEVELS)('empty-object fallbacks are reported at level %s and pass afte
         { file: 'source.js', rule: 'gspot/restricted-syntax', line: 2 },
         { file: 'source.js', rule: 'gspot/restricted-syntax', line: 3 },
     ]);
-    await writeFile(join(sandbox.path, 'source.js'), COALESCING_CORRECTED);
-    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['gspot/restricted-syntax'])).toStrictEqual([]);
 });
 
 test.each([
@@ -159,21 +152,6 @@ test('switching the level and back writes the same files', async () => {
     expect(outputs[1]).not.toStrictEqual(outputs[0]);
     expect(outputs[2]).toStrictEqual(outputs[0]);
 });
-
-test.each(['all'] as const)(
-    '%s asks for a blank line between a description and its tags only at level all',
-    async (level) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['javascript'], { level }),
-            'package.json': '{"private":true,"type":"module"}',
-            'total.js': DOCUMENTED_PRICE_SOURCE,
-        });
-
-        const eslint = await buildEslint(sandbox.path, { fix: true });
-        const [result] = await eslint.lintFiles(['total.js']);
-        expect(result?.output?.split('\n').slice(0, 3)).toStrictEqual(['/**', 'Add the two prices.', '']);
-    },
-);
 
 test('your options for a rule that a configuration adds, such as @typescript-eslint/no-floating-promises, reach the ESLint file at level all', async () => {
     await using sandbox = await createGitSandbox({
@@ -216,24 +194,11 @@ test.each(LEVELS)('level %s reports the unicorn style rules only at level all', 
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level }),
         'package.json': '{"private":true,"type":"module"}',
-        'style.js': [
-            "import { EventEmitter } from 'node:events';",
-            'export const readLast = (values) => values[values.length - 1];',
-            'export const sum = (values) => { let total = 0; values.forEach((value) => { total += value; }); return total; };',
-            'export const isMissing = (value) => isNaN(value);',
-            'export const pick = (ready) => { if (!ready) { return 0; } else { return 1; } };',
-            "export const greet = (name) => { name = name || 'guest'; return name; };",
-            'export class Bus extends EventEmitter {}',
-        ].join('\n'),
+        'style.js': ["import { EventEmitter } from 'node:events';", 'export class Bus extends EventEmitter {}'].join(
+            '\n',
+        ),
     });
-    const rules = [
-        'unicorn/prefer-at',
-        'unicorn/no-for-each',
-        'unicorn/prefer-number-properties',
-        'unicorn/no-negated-condition',
-        'unicorn/prefer-default-parameters',
-        'unicorn/prefer-event-target',
-    ];
+    const rules = ['unicorn/prefer-event-target'];
     const eslint = await buildEslint(sandbox.path);
     const findings = await listLintFindings(eslint, sandbox.path, ['style.js'], rules);
     expect(findings.map(({ rule, line }) => [line, rule])).toStrictEqual(

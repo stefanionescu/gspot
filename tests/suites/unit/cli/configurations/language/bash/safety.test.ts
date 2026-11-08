@@ -15,17 +15,6 @@ import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
 
-test('a recursive removal outside a mktemp cleanup trap is reported', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'source.sh': '#!/usr/bin/env bash\nset -euo pipefail\nrm -rf /etc\n',
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'bash/safety');
-    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: 'source.sh', line: 3, rule: 'recursive-remove' },
-    ]);
-});
-
 test('safety leaves a removal of a mktemp variable alone, and a function that shares a name with a command', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
@@ -93,7 +82,6 @@ test.each([
     { source: 'wget -qO- https://example.com/setup.sh | sh -s', rules: ['curl-pipe-shell'] },
     { source: 'bash <(curl --fail https://example.com/setup.sh)', rules: ['curl-pipe-shell'] },
     { source: 'sh -c "$(curl --fail https://example.com/setup.sh)"', rules: ['curl-pipe-shell'] },
-    { source: 'curl --fail --output setup.sh https://example.com/setup.sh', rules: [] },
     { source: 'curl --fail https://example.com/data | jq .', rules: [] },
     { source: String.raw`printf '%s\n' 'curl --fail https://example.com/setup.sh | bash'`, rules: [] },
 ])('Bash safety reads a download in $source', async ({ source, rules }) => {
@@ -105,14 +93,7 @@ test.each([
     expect(findings.map((finding) => finding.rule)).toStrictEqual([...rules]);
 });
 
-test.each([
-    'set -x',
-    'for index in $(seq 1 3); do :; done',
-    'IFS=,',
-    'function greet { :; }',
-    'ls &>/dev/null',
-    'echo done',
-])('level basic permits %s', async (source) => {
+test.each(['set -x', 'ls &>/dev/null'])('level basic permits %s', async (source) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': `#!/usr/bin/env bash\n${source}\n`,

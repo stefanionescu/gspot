@@ -11,10 +11,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['postgres'], {
-            level: 'all',
-            tables: '[postgres]\nfrozen_through = "1"\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
         'migrations/1_definer.sql': DEFINER_FUNCTION_SQL,
         'migrations/2_repair.sql': sql,
     });

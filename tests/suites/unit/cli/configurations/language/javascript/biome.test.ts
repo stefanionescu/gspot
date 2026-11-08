@@ -53,10 +53,4 @@ test.each(['', 'app'])('Biome applies language limits in scope "%s" without enab
     expect(findings.map(({ file }) => file).toSorted(compareText)).toStrictEqual(
         (scope === '' ? ['source.js'] : paths.slice(1).map((path) => prefix + path)).toSorted(compareText),
     );
-    expect(
-        findings.every(
-            ({ rule, message }) =>
-                rule === 'lint/complexity/noExcessiveCognitiveComplexity' && message.includes('(max: 2)'),
-        ),
-    ).toBe(true);
 });

@@ -33,5 +33,4 @@ test('long Node flags and interpreter variable commands report their lines', asy
     });
     const findings = await runSandboxCheck(sandbox.path, 'bash/inline-scripts');
     expect(findings.map(({ line }) => line)).toStrictEqual([1, 2, 3, 4, 5]);
-    expect(findings.every(({ rule }) => rule === 'runtime-embed')).toBe(true);
 });

@@ -1,6 +1,3 @@
-import { chmod } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { describe, expect, test } from 'bun:test';
 
 import { planChecks } from '#cli/engine/plan.ts';
@@ -31,13 +28,11 @@ test.skipIf(!hasToolBuild('plutil'))(
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['xcode']),
             'bad.plist': '<plist><dict>',
-            'private.plist': '<plist><dict/></plist>\n',
         });
 
         const session = await openSession(sandbox.path);
         const [planned] = planChecks(session, { stage: 'commit', only: ['xcode/plutil'] });
         const paths = { cwd: sandbox.path, root: sandbox.path };
-        await chmod(join(sandbox.path, 'private.plist'), 0);
         for (const path of PLUTIL_UNREADABLE_FILES) {
             const mixed = await runCommand(['plutil', '-lint', 'bad.plist', path], { cwd: sandbox.path });
             expect(mixed.code).toBe(1);
@@ -46,6 +41,5 @@ test.skipIf(!hasToolBuild('plutil'))(
             expect(note).toContain('bad.plist: ');
             expect(note).toContain(`\n${path}: `);
         }
-        await chmod(join(sandbox.path, 'private.plist'), 0o600);
     },
 );

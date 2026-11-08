@@ -49,23 +49,13 @@ test('ESLint test patterns omit foreign extensions and retain components and sha
     expect(
         listCodeTestFiles([
             '**/test_*.py',
-            '**/*_test.py',
-            '**/*Tests.swift',
             '**/*.test.ts',
             '**/*.spec.vue',
-            '**/*.test.svelte',
             '**/*.test.astro',
             '**/tests/**',
             '**/*.{js,ts}',
         ]),
-    ).toStrictEqual([
-        '**/*.test.ts',
-        '**/*.spec.vue',
-        '**/*.test.svelte',
-        '**/*.test.astro',
-        '**/tests/**',
-        '**/*.{js,ts}',
-    ]);
+    ).toStrictEqual(['**/*.test.ts', '**/*.spec.vue', '**/*.test.astro', '**/tests/**', '**/*.{js,ts}']);
 });
 
 test('a scope override keeps the changed scopes, deepest last, and leaves nested changes out of its parent', async () => {

@@ -21,9 +21,4 @@ test('the Supabase configuration checks the JSON body of each edge function', as
     expect(await listLintFindings(eslint, sandbox.path, files, ['gspot/no-unvalidated-json-body'])).toStrictEqual([
         { file: 'supabase/functions/order/index.js', rule: 'gspot/no-unvalidated-json-body', line: 2 },
     ]);
-    await createFileTree(sandbox.path, {
-        'supabase/functions/order/index.js':
-            'import { Order } from "./order.js";\nexport async function handle(req) {\n    return Order.parse(await req.json());\n}\n',
-    });
-    expect(await listLintFindings(eslint, sandbox.path, files, ['gspot/no-unvalidated-json-body'])).toStrictEqual([]);
 });

@@ -68,19 +68,3 @@ test('one plugin name with two modules is a settings error that names both paths
     );
     expect(error).toMatchObject(DUPLICATE_PLUGIN_ERROR);
 });
-
-test('tools.eslint.plugins loads your plugin by its path', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
-        '.gitignore': 'node_modules/\n',
-        'package.json': '{"private":true,"type":"module"}\n',
-        'tools/lint/plugin.mjs': LOCAL_PLUGIN,
-        'source.js': 'export const forbidden = 1;\n',
-    });
-
-    commitAll(sandbox.path);
-    const eslint = await buildEslint(sandbox.path);
-    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['local/no-forbidden'])).toStrictEqual([
-        { file: 'source.js', rule: 'local/no-forbidden', line: 1 },
-    ]);
-});

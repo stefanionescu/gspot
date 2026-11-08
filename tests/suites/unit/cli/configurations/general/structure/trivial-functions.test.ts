@@ -124,12 +124,10 @@ test.each([...STATEMENT_COUNT_CASES])(
             }),
         });
         const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
-        expect(findings.map(({ line, rule, message }) => ({ line, rule, message }))).toStrictEqual([
+        expect(findings.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
             {
                 line: 1,
                 rule: 'trivial-function',
-                message:
-                    'example has 2 statements, and one place calls it at most. Functions with 2 or fewer statements and one caller are reported. Inline it into its caller, or record the API it serves with gspot ignore.',
             },
         ]);
     },

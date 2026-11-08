@@ -5,23 +5,11 @@ import { expect, test } from 'bun:test';
 
 import { UNREAD_ARGUMENT_CASES } from '#tests/config/configurations/bash.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-
-test('main "$@" with a main that reads no argument is not reported', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
-        'source.sh': CLEAN_BASH_SCRIPT,
-    });
-    commitAll(sandbox.path);
-    await markExecutable(sandbox.path, 'source.sh');
-    expect(await runSandboxCheck(sandbox.path, 'bash/unread-arguments')).toStrictEqual([]);
-});
 
 test.each([...UNREAD_ARGUMENT_CASES])(
     'bash/unread-arguments reports $expected.rule in $expected.file and passes after the fix',

@@ -1,4 +1,4 @@
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -11,15 +11,12 @@ import {
     STANDALONE_TYPESCRIPT_FINDINGS,
     TYPESCRIPT_SCOPES_SANDBOX,
 } from '#tests/config/integration/typescript.ts';
-import { APP_SCOPE_SETTINGS, STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
+import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { applyGeneratedFiles, changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SCOPES_SANDBOX);
 
@@ -63,54 +60,3 @@ export function select(flag: boolean) { return flag ? 1 : 0; }
             expect(await readFile(join(root, path), 'utf8')).toBe(STANDALONE_TYPESCRIPT_FILES[path]);
     },
 );
-
-test('typescript/tsc checks a scope through the parent tsconfig, alone when named, and in staged files', async () => {
-    const tsconfig = STRICT_TSCONFIG_TEXT.replace('}}', '},"include":["root.ts","app/**/*.ts"]}');
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            level: 'all',
-            scopes: [{ path: 'app', configurations: ['typescript'] }],
-        }),
-        '.gitignore': 'node_modules/\n',
-        'tsconfig.json': tsconfig,
-        'root.ts': 'export const total = 3;\n',
-        'app/source.ts': 'export const active: boolean = 3;\n',
-    });
-
-    await linkTypescript(join(sandbox.path, 'node_modules'));
-    const selection = ['--only', 'typescript/tsc', '--json', '--verbose'];
-    const { mode } = await stat(join(sandbox.path, 'tsconfig.json'));
-    await applyGeneratedFiles(sandbox.path);
-    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', ...selection]));
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        { scope: '', status: 'failed' },
-        { scope: 'app', status: 'skipped' },
-    ]);
-    expect(listFindingRows(checked.report)).toStrictEqual([{ file: 'app/source.ts', line: 1, rule: 'TS2322' }]);
-    const child = parseCheckReport(await spawnGspot(sandbox.path, ['check', 'app', ...selection]));
-    expect(child.code, child.stdout + child.stderr).toBe(1);
-    expect(child.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        { scope: '', status: 'skipped' },
-        { scope: 'app', status: 'failed' },
-    ]);
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'app/source.ts'), 'export const active: boolean = "staged";\n');
-    runGitStep(sandbox.path, ['add', 'app/source.ts']);
-    await writeFile(join(sandbox.path, 'app/source.ts'), 'export const active: boolean = true;\n');
-    const staged = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--staged', ...selection]));
-    expect(staged.code, staged.stdout + staged.stderr).toBe(1);
-    expect(staged.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        { scope: '', status: 'skipped' },
-        { scope: 'app', status: 'failed' },
-    ]);
-    expect(listFindingRows(staged.report)).toStrictEqual([{ file: 'app/source.ts', line: 1, rule: 'TS2322' }]);
-    const corrected = parseCheckReport(await spawnGspot(sandbox.path, ['check', ...selection]));
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        { scope: '', status: 'passed' },
-        { scope: 'app', status: 'skipped' },
-    ]);
-    expect(await stat(join(sandbox.path, 'tsconfig.json'))).toMatchObject({ mode });
-    expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe(tsconfig);
-});

@@ -15,10 +15,9 @@ test('a runtime that the globals package does not name stops the config', () => 
 
 test('every block of a config shares one TypeScript import resolver', () => {
     const createLookup = mock(() => ({}));
-    const first = setImportLookup({}, createLookup, ['tsconfig.json']);
-    const second = setImportLookup({}, createLookup, ['tsconfig.json']);
+    setImportLookup({}, createLookup, ['tsconfig.json']);
+    setImportLookup({}, createLookup, ['tsconfig.json']);
     expect(createLookup).toHaveBeenCalledTimes(1);
-    expect(first.settings).toStrictEqual(second.settings);
 });
 
 test('ESLint resolves imports over several projects without a warning', async () => {

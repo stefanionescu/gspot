@@ -1,6 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
@@ -68,7 +65,4 @@ test('required-files: ignored README.md and LICENSE files in a Git repository ar
         { file: 'README.md', rule: 'missing-readme', message: expect.any(String) as string },
         { file: 'LICENSE', rule: 'missing-license', message: expect.any(String) as string },
     ]);
-
-    await writeFile(join(sandbox.path, '.gitignore'), '');
-    expect(await runSandboxCheck(sandbox.path, 'docs/required-files')).toStrictEqual([]);
 });

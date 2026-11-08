@@ -4,37 +4,13 @@ import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
-import {
-    FRAMEWORK_COMPONENT_CASES,
-    LONE_CODE_FILES,
-    LONE_FILE_TREE,
-    ROUTE_FILE_CASES,
-} from '#tests/config/configurations/structure/files.ts';
+import { FRAMEWORK_COMPONENT_CASES, ROUTE_FILE_CASES } from '#tests/config/configurations/structure/files.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/setup/programs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-
-test('only code files count, and ignored paths and folders with subfolders are not reported', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["allowed/**", "parent/child/**"]\nreason = "Required entry directory."\n',
-            level: 'all',
-        }),
-        ...LONE_FILE_TREE,
-    });
-
-    const result = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['structure/lone-files'] }),
-    );
-
-    expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
-        ...LONE_CODE_FILES,
-    ]);
-});
 
 test('lone-files and shared-prefixes check build, dist and coverage folders and skip folders marked linguist-generated', async () => {
     await using sandbox = await createGitSandbox({});

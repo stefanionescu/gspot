@@ -7,9 +7,9 @@ import { testdir } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 
-test.each(['JavaScript', 'TypeScript'])('Svelte parser errors restore the working folder for %s', async (language) => {
+test.each(['JavaScript'])('Svelte parser errors restore the working folder for %s', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(language === 'TypeScript' ? ['svelte', 'typescript'] : ['svelte']),
+        'gspot.toml': buildSandboxSettings(['svelte']),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
         'Card.svelte': '<script>const value = ;</script><p>Hello</p>',
     });

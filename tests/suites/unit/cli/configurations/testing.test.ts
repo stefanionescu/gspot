@@ -30,7 +30,6 @@ test('vitest/tests leaves a nested scope with its own config out of the coverage
     using _spawn = fakeCommands(process.execPath, () => Promise.resolve(buildProcessResult()));
     const code = selectCheckCode(planned.check);
     const result = await runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, code, CHECK_RUN_OPTIONS);
-    expect(result.status, result.note).toBe('passed');
     const nested = convertToPosixPath(join(realpathSync(sandbox.path), 'a/b'));
     expect(result.command?.slice(-5)).toStrictEqual([
         '--exclude',

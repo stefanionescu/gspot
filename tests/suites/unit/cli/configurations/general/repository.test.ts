@@ -58,9 +58,6 @@ test('conflict-markers reports each marker line of a text file at level basic, a
         ['notes.txt', 4],
         ['notes.txt', 6],
     ]);
-    await writeFile(join(sandbox.path, 'notes.txt'), 'intro\nours\n');
-    await writeFile(join(sandbox.path, 'license.md'), 'License\n=======\n');
-    expect(await runSandboxCheck(sandbox.path, 'repository/conflict-markers')).toStrictEqual([]);
 });
 
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {

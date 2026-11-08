@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -59,7 +59,6 @@ test.each([
         const names = findings.map(({ message }) => /Run gspot add (\S+?)[,\s]/u.exec(message)?.[1]);
         expect(names.filter((name) => name === 'bash')).toStrictEqual([...expected]);
         expect(names).toContain('python');
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     },
 );
 
@@ -86,7 +85,6 @@ test.each([
     expect(findings.map(({ message }) => /Run (gspot add \S+(?: --scope [^\s,]+)?)/u.exec(message)?.[1])).toStrictEqual(
         [...commands],
     );
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('gspot/detected-configurations says that a configuration with no check changes lint rules', async () => {

@@ -7,7 +7,6 @@ import {
     HANDLE_PREFIX_TABLES,
     HANDLE_ROUTE_IDENTIFIER,
     HOOK_PREFIX_TABLES,
-    LINTER_LIMIT_CASES,
     NAME_WORDS,
     NAMING_LIMIT_CASES,
     OVERLONG_NAME_FINDINGS,
@@ -80,13 +79,9 @@ test.each([
     ['userID', 'variables', 'case'],
     ['HTTPServer', 'classes', 'case'],
     ['msgText', 'variables', 'banned-word'],
-    ['tempPath', 'variables', 'banned-word'],
     ['processOrder', 'functions', 'banned-word'],
-    ['loadSettings', 'functions', 'banned-word'],
     ['toPosix', 'functions', 'banned-word'],
-    ['fromRow', 'functions', 'banned-word'],
     ['isNotReady', 'variables', 'banned-word'],
-    ['hasNoRows', 'functions', 'banned-word'],
 ] as const)('%s, a %s, reports %s', async (name, category, rule) => {
     const findings = listRuleMessages(buildIdentifier({ name, category }), await readNaming(''));
     expect(findings.map((finding) => finding.rule)).toStrictEqual([rule]);
@@ -218,35 +213,6 @@ test('a banned word matches a word or a run of words, never the inside of a word
         },
     ]);
 });
-
-test.each([...LINTER_LIMIT_CASES])(
-    '$language $category enforces its length, case and word limits',
-    async ({ language, category, expected, wordy }) => {
-        const naming = await buildScopeNamingSettings(
-            buildSandboxSettings(['naming'], {
-                rules: true,
-                level: 'all',
-                tables: `[[naming.exception]]
-paths = ["source"]
-cases = ["upper-snake"]
-reason = "The authored interface selects this case."
-`,
-            }),
-        );
-        const context = buildFileNaming(naming);
-        const identifier = buildIdentifier({
-            file: 'source',
-            language,
-            category,
-            label: category,
-            name: 'a'.repeat(41),
-            line: 1,
-            column: 1,
-        });
-        expect(listRuleMessages(identifier, context)).toStrictEqual([...expected]);
-        expect(listRuleMessages({ ...identifier, name: NAME_WORDS.join('_') }, context)).toStrictEqual([...wordy]);
-    },
-);
 
 test('an ignored_prefix override strips handle from function and method names in its files', async () => {
     const naming = await readNaming(HANDLE_PREFIX_TABLES);

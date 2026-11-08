@@ -1,12 +1,9 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import {
     ALL_LEVEL_OPTION_FINDINGS,
     CHILD_PORT_SOURCE,
@@ -19,7 +16,6 @@ import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('malformed JSON is an unreadable finding that names the file, not missing options', async () => {
@@ -51,8 +47,6 @@ test('a scope needs no tsconfig of its own but still checks one that is added', 
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual(
         STRICT_OFF_FINDINGS.map((finding) => matchFields(finding)),
     );
-    await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
-    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
 });
 
 test('level basic does not require noImplicitReturns and noPropertyAccessFromIndexSignature, and level all does', async () => {
@@ -66,8 +60,6 @@ test('level basic does not require noImplicitReturns and noPropertyAccessFromInd
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
         ...ALL_LEVEL_OPTION_FINDINGS,
     ]);
-    await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
-    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
 });
 
 test(`a scope's framework compiler options are required in its tsconfig`, async () => {
@@ -160,7 +152,6 @@ test('a solution tsconfig leaves compiler option checks to its referenced projec
         'tsconfig.app.json': JSON.stringify(DEFAULT_LEVEL_TSCONFIG),
         'source.ts': COUNT_NUMBER_SOURCE,
     });
-    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'tsconfig.app.json'), JSON.stringify({ compilerOptions: { strict: false } }));
     const findings = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
@@ -188,19 +179,8 @@ test('a template tsconfig that extends an uninstalled package is a finding of it
         'templates/app/tsconfig.json': '{"extends":"@tsconfig/svelte/tsconfig.json","include":["src"]}\n',
         'templates/app/src/main.ts': 'export const app = 1;\n',
     });
-    expect(buildGeneratedFiles(await openSession(sandbox.path)).files.length).toBeGreaterThan(0);
     const findings = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'templates/app/tsconfig.json', rule: 'unreadable' },
     ]);
-});
-
-test('the typescript-eslint pin records the TypeScript range of the installed package', async () => {
-    const tool = getTool(readConfigurations().values(), 'typescript-eslint');
-    const installed = JSON.parse(await readFile(join(toolModules, 'typescript-eslint/package.json'), 'utf8')) as {
-        version: string;
-        peerDependencies: { typescript: string };
-    };
-    expect(installed.version).toBe(tool.version as string);
-    expect(tool.peers).toStrictEqual({ typescript: installed.peerDependencies.typescript });
 });

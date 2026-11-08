@@ -14,21 +14,18 @@ export const HTML_INJECTION_CASES = [
         path: 'src/Greeting.jsx',
         rule: '@eslint-react/dom-no-dangerously-set-innerhtml',
         sample: 'export const Greeting = () => <div dangerouslySetInnerHTML={{ __html: "<b>Hello</b>" }} />;\n',
-        corrected: 'export const Greeting = () => <div>{"<b>Hello</b>"}</div>;\n',
     },
     {
         configuration: 'svelte',
         path: 'src/Greeting.svelte',
         rule: 'svelte/no-at-html-tags',
         sample: '<div>{@html "<b>Hello</b>"}</div>\n',
-        corrected: '<div>{"<b>Hello</b>"}</div>\n',
     },
     {
         configuration: 'vue',
         path: 'src/Greeting.vue',
         rule: 'vue/no-v-html',
         sample: '<template><div v-html="markup"></div></template>\n',
-        corrected: '<template><div>{{ markup }}</div></template>\n',
     },
 ] as const;
 
@@ -127,7 +124,6 @@ export const UNCHECKED_ROUTER_FILES: string[] = [
     'inherited/routers/action.ts',
     'outside/action.ts',
     'child/custom/action.ts',
-    'inherited/custom/action.ts',
     'plain/routers/action.ts',
 ];
 
@@ -171,15 +167,6 @@ export const ASSERTION_RULE_OWNERS = [
 
 const PORT_SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
-
-export const TYPE_EXPORT_FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    'tsconfig.json':
-        '{"compilerOptions":{"strict":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["index.ts","value.ts"]}\n',
-    'value.ts': 'export type Shape = { name: string };\nexport const value: Shape = { name: "example" };\n',
-    'index.ts':
-        'import { value, Shape } from "./value.js";\nexport { value };\nexport { Shape } from "./value.js";\nexport const shape: Shape = value;\n',
-} as const;
 
 export const TYPED_RULE_PROJECTS = [
     {

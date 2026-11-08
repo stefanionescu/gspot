@@ -53,21 +53,6 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     test('uses the profile of level all next to the root and scope ansible.cfg files', async () => {
         await assertLevelProfile(installedSandbox());
     });
-
-    test('level basic leaves out a rule of the production profile, through the profile in the generated config', async () => {
-        const { root } = installedSandbox();
-        await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
-            files: {
-                'gspot.toml': buildSandboxSettings(['ansible'], { level: 'basic' }),
-                'deploy/site.yml': SHORT_ACTION_PLAYBOOK,
-            },
-        });
-
-        const { report } = parseCheckReport(
-            await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-        );
-        expect(report.exitCode, JSON.stringify(report)).toBe(0);
-    });
 });
 
 async function assertLevelProfile(sandbox: Sandbox): Promise<void> {

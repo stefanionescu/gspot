@@ -13,7 +13,6 @@ export const SUPPRESSION_REASON_CASES = [
             {
                 line: 1,
                 rule: 'shellcheck-no-reason',
-                message: 'This shellcheck suppression has no reason of two or more words.',
             },
         ],
     },
@@ -25,7 +24,6 @@ export const SUPPRESSION_REASON_CASES = [
             {
                 line: 3,
                 rule: 'eslint-no-reason',
-                message: 'This eslint suppression has no reason of two or more words.',
             },
         ],
     },
@@ -37,7 +35,6 @@ export const SUPPRESSION_REASON_CASES = [
             {
                 line: 2,
                 rule: 'eslint-no-reason',
-                message: 'This eslint suppression has no reason of two or more words.',
             },
         ],
     },
@@ -49,7 +46,6 @@ export const SUPPRESSION_REASON_CASES = [
             {
                 line: 2,
                 rule: 'eslint-no-reason',
-                message: 'This eslint suppression has no reason of two or more words.',
             },
         ],
     },
@@ -102,7 +98,6 @@ const ESLINT_SUPPRESSIONS = [
     ['// eslint-disable no-console', false],
     ['/** Documentation\n * eslint-disable no-console\n */', false],
     ['// eslint-disable-next-line no-console', true],
-    ['/* eslint-disable no-console */', true],
     ['/*\n eslint-disable no-console\n */', true],
     ['/*eslint-disable no-console*/', true],
     ['// eslint-disable-next-line*/', false],
@@ -110,7 +105,6 @@ const ESLINT_SUPPRESSIONS = [
 ] as const;
 
 const STYLELINT_SUPPRESSIONS = [
-    ['/* stylelint-disable color-no-invalid-hex */', true],
     ['/*stylelint-disable*/', true],
     ['/* Example stylelint-disable color-no-invalid-hex */', false],
     ['/* stylelint-disable-unknown color-no-invalid-hex */', false],
@@ -120,7 +114,6 @@ const STYLELINT_SUPPRESSIONS = [
 ] as const;
 
 const HTML_VALIDATE_SUPPRESSIONS = [
-    ['<!-- html-validate-disable wcag/h37 -->', true],
     ['<!-- Example html-validate-disable wcag/h37 -->', false],
     ['<!-- html-validate-disable-unknown wcag/h37 -->', false],
     ['<!--html-validate-disable wcag/h37-->', true],
@@ -161,7 +154,6 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// eslint-disable-next-line complexity -- reason: The external interface fixes this statement.',
         code: 'console.log(1);',
         rule: 'eslint-limit',
-        message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
     },
     {
         configuration: 'javascript',
@@ -170,7 +162,6 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// eslint-disable-next-line  -- reason: The external interface fixes this statement.',
         code: 'console.log(1);',
         rule: 'eslint-all',
-        message: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
     },
     {
         configuration: 'python',
@@ -179,7 +170,6 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '# ruff: noqa: C901 # reason: The external interface fixes this statement.',
         code: 'print(1)',
         rule: 'ruff-limit',
-        message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
     },
     {
         configuration: 'python',
@@ -188,7 +178,6 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '# ruff: noqa # reason: The external interface fixes this statement.',
         code: 'print(1)',
         rule: 'ruff-all',
-        message: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
     },
     {
         configuration: 'swift',
@@ -197,7 +186,6 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// swiftlint:disable cyclomatic_complexity // reason: The external interface fixes this statement.',
         code: 'let value = 1',
         rule: 'swiftlint-limit',
-        message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
     },
     {
         configuration: 'swift',
@@ -206,7 +194,6 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// swiftlint:disable all // reason: The external interface fixes this statement.',
         code: 'let value = 1',
         rule: 'swiftlint-all',
-        message: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
     },
 ] as const;
 

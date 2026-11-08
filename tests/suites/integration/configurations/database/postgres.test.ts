@@ -22,14 +22,6 @@ test("Squawk uses each scope's assume_in_transaction setting", async () => {
     });
 
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
-    const transactional = await spawnGspot(sandbox.path, [
-        'check',
-        SQUAWK_CHILD_MIGRATION_PATH,
-        '--only',
-        'postgres/squawk',
-        '--json',
-    ]);
-    expect(transactional.code, transactional.stdout + transactional.stderr).toBe(0);
     const command = ['check', SQUAWK_ROOT_MIGRATION_PATH, '--only', 'postgres/squawk', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);

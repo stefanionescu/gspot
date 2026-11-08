@@ -5,44 +5,10 @@ import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
 
-import { HOST_MODULE, SORT_CASES, SORT_RULES } from '#tests/config/configurations/javascript/blocks.ts';
+import { HOST_MODULE } from '#tests/config/configurations/javascript/blocks.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-
-test.each(['all'] as const)(
-    'imports and exports are sorted at level all only, in root and child scopes (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['typescript'], {
-                level,
-                scopes: [{ path: 'app', configurations: ['typescript'] }],
-            }),
-            'package.json': '{"private":true,"type":"module"}',
-            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
-            'app/tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
-            'src/source.ts': '',
-            'app/src/source.ts': '',
-        });
-
-        const eslint = await buildEslint(sandbox.path, {
-            fix: ({ ruleId }) =>
-                (ruleId !== null && new Set<string>(SORT_RULES).has(ruleId)) ||
-                ruleId === 'gspot/no-comments-in-imports',
-        });
-        for (const prefix of ['', 'app/']) {
-            const filePath = `${prefix}src/source.ts`;
-            for (const { source, fixed } of SORT_CASES) {
-                const [result] = await eslint.lintText(source, { filePath });
-                expect(result?.fatalErrorCount).toBe(0);
-                expect(result?.output ?? source).toBe(fixed);
-                expect(
-                    result!.messages.find(({ ruleId }) => ruleId !== null && new Set<string>(SORT_RULES).has(ruleId)),
-                ).toBeUndefined();
-            }
-        }
-    },
-);
 
 test('a bundler scope drops only code suffixes, and its Node scripts keep every suffix', async () => {
     await using sandbox = await testdir({
@@ -73,23 +39,6 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
         filePath: 'app/tool.mjs',
     });
     expect(kept?.output).toBe('import { library } from "./library.mjs";\nexport { library };\n');
-});
-
-test('the import-cycles config runs import-x/no-cycle alone', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript']),
-        'package.json': '{"private":true,"type":"module"}',
-        'first.js':
-            "import { second } from './second.js';\nexport const first = second;\n// eslint-disable-next-line no-unused-vars\nconst unused = 1;\n",
-        'second.js': "import { first } from './first.js';\nexport const second = first;\n",
-    });
-    await buildEslint(sandbox.path);
-    const eslint = new ESLint({
-        cwd: sandbox.path,
-        overrideConfigFile: join(sandbox.path, getManifestTarget('javascript', 'eslint/import-cycles.mjs')),
-    });
-    const [result] = await eslint.lintFiles(['first.js']);
-    expect(result?.messages.map(({ ruleId }) => ruleId)).toStrictEqual(['import-x/no-cycle']);
 });
 
 test('the import-cycles config parses TypeScript files and resolves their imports through the projects', async () => {

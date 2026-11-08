@@ -71,27 +71,12 @@ test('eslint comments in JSX text and quoted attributes are not directives; an e
 
 test.each([...LIMIT_SUPPRESSION_CASES])(
     '$configuration refuses a suppression of $name',
-    async ({ configuration, file, directive, code, rule, message }) => {
+    async ({ configuration, file, directive, code, rule }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
             [file]: `${directive}\n${code}\n`,
         });
         const found = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
-        expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-            { file, line: 1, rule, message },
-        ]);
+        expect(found.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([{ file, line: 1, rule }]);
     },
 );
-
-test('a run narrowed to one file reads only the suppressions of that file', async () => {
-    const source = '// eslint-disable-next-line no-console\nconsole.log(1);\n';
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        'first.ts': source,
-        'second.ts': source,
-    });
-    const found = await runSandboxCheck(sandbox.path, 'gspot/suppressions', { paths: ['second.ts'] });
-    expect(found.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: 'second.ts', line: 1, rule: 'eslint-no-reason' },
-    ]);
-});

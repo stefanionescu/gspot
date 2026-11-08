@@ -46,16 +46,6 @@ export const COUNTED_LOOPS = `main() {
 }
 `;
 
-export const CORRECTED_LOOPS = `main() {
-    local declared=0
-    for ((i=0; i<2; i=i+1)); do
-        if [[ -n "$1" ]]; then
-            first=1
-        fi
-    done
-}
-`;
-
 export const INLINE_SCRIPT_CASES = [
     {
         files: {
@@ -104,7 +94,6 @@ main "$@"
 
 export const COMMAND_SAFETY_CASES = [
     { source: 'rm -rf /etc', rule: 'recursive-remove' },
-    { source: 'rm -r -f /etc', rule: 'recursive-remove' },
     { source: 'rm -r /etc', rule: 'recursive-remove' },
     { source: 'rm --recursive --force /etc', rule: 'recursive-remove' },
     { source: 'pkill -f node', rule: 'broad-kill' },

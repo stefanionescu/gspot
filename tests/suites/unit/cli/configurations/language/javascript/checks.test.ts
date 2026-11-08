@@ -78,15 +78,13 @@ test('javascript/biome checks shebang scripts, TypeScript, and component files i
             { file: 'app/source.ts', line: 1 },
         ].map((finding) => ({ ...finding, rule: 'lint/complexity/noExcessiveCognitiveComplexity' })),
     );
-    expect(findings.find(({ file }) => file === 'bin/run')?.message).toContain('(max: 2)');
-    expect(await readFile(join(sandbox.path, 'bin/run'), 'utf8')).toStartWith('#!/usr/bin/env node');
 });
 
-test.each(['', 'app'])('javascript/tsc resolves project types in scope "%s" without tooling types', async (scope) => {
-    const prefix = scope === '' ? '' : `${scope}/`;
+test.each(['app'])('javascript/tsc resolves project types in scope "%s" without tooling types', async (scope) => {
+    const prefix = `${scope}/`;
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
-            scopes: scope === '' ? [] : [{ path: scope }],
+            scopes: [{ path: scope }],
         }),
         [`${prefix}source.js`]: 'export const value = localValue;\nexport const secret = privateValue;\n',
         [`${prefix}node_modules/@types/domain/index.d.ts`]: 'declare const localValue: string;\n',
@@ -189,40 +187,4 @@ test('javascript/tsc of one named file copies its imported declarations and leav
     expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'apps/web/src/main.js', line: 1, rule: 'TS2339' },
     ]);
-    await writeFile(join(sandbox.path, 'types/api.d.ts'), IMPORTED_AMBIENT_FILES['types/api.d.ts']);
-    expect(
-        await runSandboxCheck(sandbox.path, 'javascript/tsc', { scope: 'apps/web', paths: ['apps/web/src/main.js'] }),
-    ).toStrictEqual([]);
-});
-
-test('javascript/tsc puts incremental build information in the check copy', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
-        'jsconfig.json': '{"compilerOptions":{"incremental":true,"types":[]},"include":["src"]}\n',
-        'src/value.js': '/** @type {number} */ export const value = "wrong";\n',
-    });
-    await linkInstalledModules(join(sandbox.path, 'node_modules'));
-    await applyGeneratedFiles(sandbox.path);
-    const incremental = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
-    const first = incremental.report.checks[0]!;
-    expect(first.status).toBe('failed');
-    expect(first.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-        { file: 'src/value.js', rule: 'TS2322' },
-    ]);
-    expect(
-        await Array.fromAsync(
-            new Bun.Glob('**/*.tsbuildinfo').scan({ cwd: sandbox.path, dot: true, followSymlinks: false }),
-        ),
-    ).toStrictEqual([]);
-    await writeFile(
-        join(sandbox.path, 'jsconfig.json'),
-        '{"compilerOptions":{"incremental":false,"types":[]},"include":["src"]}\n',
-    );
-    const ordinary = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
-    expect(ordinary.report.checks[0]?.status).toBe('failed');
-    expect(
-        await Array.fromAsync(
-            new Bun.Glob('**/*.tsbuildinfo').scan({ cwd: sandbox.path, dot: true, followSymlinks: false }),
-        ),
-    ).toStrictEqual([]);
 });

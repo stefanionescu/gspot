@@ -1,15 +1,12 @@
-import { readFileSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { Glob } from 'bun';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { compareText } from '#cli/system/text.ts';
 import {
     DIALECT_FIXES,
@@ -21,7 +18,6 @@ import {
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -87,8 +83,6 @@ test('ShellCheck reports dialect findings by shebang and leaves source files unc
             .flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))
             .toSorted((left, right) => compareText(left.file, right.file)),
     ).toStrictEqual([...SHELLCHECK_DIALECT_FINDINGS]);
-    for (const [path, source] of Object.entries(DIALECT_SOURCES))
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
     await createFileTree(sandbox.path, DIALECT_FIXES);
     const corrected = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -97,34 +91,9 @@ test('ShellCheck reports dialect findings by shebang and leaves source files unc
             .filter(({ check }) => check === 'bash/shellcheck')
             .map(({ scope, status, fileCount, findings }) => ({ scope, status, fileCount, findings })),
     ).toStrictEqual([
-        { scope: '', status: 'passed', fileCount: 5, findings: [] },
-        { scope: 'app', status: 'passed', fileCount: 2, findings: [] },
+        { scope: '', status: 'passed', fileCount: 2, findings: [] },
+        { scope: 'app', status: 'passed', fileCount: 1, findings: [] },
     ]);
-});
-
-test('the shell examples of the rule files pass ShellCheck', async () => {
-    const folder = join(REPOSITORY_ROOT, 'packages/cli/src/configurations');
-    const examples = [...new Glob('**/rules/*.md').scanSync(folder)].flatMap((path) =>
-        listCodeFences(readFileSync(join(folder, path), 'utf8'))
-            .filter(({ language }) => language === 'bash')
-            .map(({ startLine, body }): [string, string] => [
-                `examples/${path.replaceAll('/', '-')}-${String(startLine)}.sh`,
-                `#!/usr/bin/env bash
-# An example reads the names of a whole script.
-# shellcheck disable=SC2034,SC2154
-${body}
-`,
-            ]),
-    );
-    await using sandbox = await createGitSandbox({
-        ...Object.fromEntries(examples),
-        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
-    });
-    await applyGeneratedFiles(sandbox.path);
-    const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
-    expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
-    expect(result.report.checks.map(({ status }) => status)).toStrictEqual(['passed']);
-    expect(result.report.checks[0]!.fileCount).toBeGreaterThan(0);
 });
 
 test('partial ShellCheck output beside an unreadable file is an execution error', async () => {

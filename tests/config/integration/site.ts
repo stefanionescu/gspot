@@ -1,8 +1,6 @@
 const CORRECTED_INDEX_PAGE =
     '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>';
 
-const UNUSED_STYLE = '.unused { color: red; }';
-
 export const TWO_SITE_TABLES = `[[ignore]]
 check = "site/html-validate"
 rule = "wcag/h37"
@@ -53,7 +51,6 @@ export const OUTPUT_CASES = [
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><a href="/missing.html">Missing</a></body></html>',
-            'pages/style.css': UNUSED_STYLE,
         },
         findings: [INDEX_LINK_FINDING],
         corrected: {
@@ -68,7 +65,6 @@ export const OUTPUT_CASES = [
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><h1 id="good">Good</h1><a href="#good">Good</a><a href="#missing">Missing</a><a name="encoded id"></a><a href="#encoded%20id">Encoded</a></body></html>',
-            'pages/style.css': UNUSED_STYLE,
         },
         findings: [INDEX_LINK_FINDING],
         corrected: {
@@ -83,7 +79,6 @@ export const OUTPUT_CASES = [
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p>Landing page</p></body></html>',
-            'pages/style.css': UNUSED_STYLE,
             'pages/sitemap.xml':
                 '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://example.test/</loc></url>\n    <url><loc>https://example.test/about.html</loc></url>\n</urlset>\n',
             'pages/orphan.html':

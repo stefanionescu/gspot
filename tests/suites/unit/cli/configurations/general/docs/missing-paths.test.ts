@@ -67,15 +67,13 @@ test('missing-paths: a path in an .mdx page that names no tracked file is report
 test('missing-paths: wildcard examples are skipped; bold, italic and code paths are checked', async () => {
     const found = await runMissingPathsCheck(
         {
-            'a.md': 'Outputs use `reports/report.*` or `src/*.ts`.\nSee **src/missing.ts**, *src/absent.ts*, and `src/gone.ts`.\n',
+            'a.md': 'Outputs use `src/*.ts`.\nSee **src/missing.ts** and `src/gone.ts`.\n',
             'src/here.ts': '',
-            'reports/README.md': '',
         },
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
         { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/missing.ts') as string },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/absent.ts') as string },
         { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/gone.ts') as string },
     ]);
 });

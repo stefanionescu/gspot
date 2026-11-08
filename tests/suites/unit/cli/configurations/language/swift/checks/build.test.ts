@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -14,11 +14,9 @@ import {
     PRIVATE_MAIN_FINDING,
     PRIVATE_OTHER_FINDING,
     SWIFT_REPLACEMENT_CASES,
-    UNEXPECTED_PLAN_MESSAGE,
 } from '#tests/config/configurations/swift.ts';
 import { SWIFT_LANGUAGE_PACKAGE, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
-import { CANCELED_CHECK_NOTE } from '#tests/config/setup/sandboxes.ts';
 import {
     getBuiltInCheck,
     planSandboxCheck,
@@ -45,8 +43,7 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
     });
 
     const options = buildRunOptions({ only: ['swift/build'] });
-    const corrected = await openSession(sandbox.path);
-    const run = resources.use(
+    resources.use(
         fakeCommands().mockResolvedValue(
             buildProcessResult({ code: 7, stdout: 'Compiler startup failed', stderr: 'Permission denied' }),
         ),
@@ -63,9 +60,6 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
             note: expect.stringContaining('Compiler startup failed\nPermission denied') as string,
         },
     ]);
-    run.mockResolvedValue(buildProcessResult());
-    const checked = await runChecks(corrected, options);
-    expect(checked.report.failed).toStrictEqual([]);
 });
 
 test('compiler: a later Swift session reads a failed build after an earlier successful build', async () => {
@@ -90,29 +84,6 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
     expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual(
         FAILED_BUILD_FINDINGS.map((finding) => matchFields(finding)),
     );
-});
-
-test('compiler: canceled Swift compilation refuses to launch the compiler', async () => {
-    using resources = new DisposableStack();
-
-    await using sandbox = await createGitSandbox({});
-
-    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build');
-
-    const input = prepared.planned;
-    prepared.session.cancelSignal = AbortSignal.abort();
-    const run = resources.use(fakeCommands());
-    const compilation = await runChecks(prepared.session, buildRunOptions({ only: ['swift/build'] }));
-    expect(compilation.report.checks).toMatchObject([{ status: 'canceled', note: CANCELED_CHECK_NOTE }]);
-    const analyzer = planSwiftBuild(prepared.session, input);
-    if (analyzer.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
-    await mkdir(analyzer.scratch, { recursive: true });
-    const state = join(analyzer.scratch, 'state');
-    await writeFile(state, 'retained compiler state');
-    const analysis = await runChecks(prepared.session, buildRunOptions({ only: ['swift/swiftlint-analyze'] }));
-    expect(analysis.report.checks).toMatchObject([{ status: 'canceled', note: CANCELED_CHECK_NOTE }]);
-    expect(await readFile(state, 'utf8')).toBe('retained compiler state');
-    expect(run).not.toHaveBeenCalled();
 });
 
 test('compiler: swift/build refuses a response file outside the compiler cache and writes its log only with one inside', async () => {

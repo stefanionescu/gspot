@@ -37,11 +37,6 @@ export const ENGINE_PHASES = [
         reported: ['old/source.js', 'old/source.cjs'],
         corrections: [],
     },
-    {
-        name: 'after the engines fix',
-        reported: [],
-        corrections: ['old/source.js', 'old/source.cjs'],
-    },
 ] as const;
 
 const NODE_SCRIPT_SOURCE = `#!/usr/bin/env node
@@ -50,58 +45,42 @@ console.log(process.cwd());
 process.exit(0);
 `;
 
-const NODE_SCRIPT_CORRECTED = `#!/usr/bin/env node
-console.log(process.cwd());
-process.exit(0);
-`;
-
-const NODE_SCRIPT_OUTPUT = 'console.log("result");\nprocess.exit(0);\n';
-
 export const NODE_SCRIPT_CASES = [
     {
         file: 'scripts/run[one]',
         everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
-        corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/run{one,two}',
         everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
-        corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/run.task',
         everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
-        corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'child/scripts/run',
         everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
-        corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/run.ts',
         everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 2 }],
-        corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/typed.ts',
         everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
-        corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'scripts/run.js',
         everyLevel: [{ ruleId: 'no-unused-vars', line: 1 }],
-        corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'build.config.ts',
         everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
-        corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'src/source.ts',
         everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
-        corrected: 'export const result = 1;\n',
         all: [
             { ruleId: 'n/no-process-exit', line: 3 },
             { ruleId: 'no-console', line: 2 },

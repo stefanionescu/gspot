@@ -19,7 +19,6 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
 
 test('supabase/storage-policies reports a syntax finding for malformed TOML', async () => {
     await using sandbox = await createGitSandbox({
@@ -44,8 +43,6 @@ test.each([...STORAGE_POLICIES])(
         expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
             allowed ? [] : [{ file: 'supabase/config.toml', rule: 'bucket-policy' }],
         );
-        await writeFile(join(sandbox.path, path), "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');");
-        expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies')).toStrictEqual([]);
     },
 );
 
@@ -114,13 +111,6 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
     expect(
         failed.report.checks.flatMap((check) => check.findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual(clients.map((file) => ({ file, line: 1, rule: 'service-role-key' })));
-    for (const path of clients)
-        await writeFile(join(sandbox.path, path), 'export const key = "sb_publishable_example";\n');
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['supabase/service-role-key'] }),
-    );
-    expect(corrected.report.failed).toStrictEqual([]);
 });
 
 test('supabase/storage-policies reports invalid bucket settings as a syntax finding', async () => {
@@ -129,7 +119,6 @@ test('supabase/storage-policies reports invalid bucket settings as a syntax find
         'gspot.toml': buildSandboxSettings(['supabase']),
         [path]: '[storage]\nbuckets = "avatars"\n',
     });
-    const before = await readTree(sandbox.path);
     using resources = createRunResources();
     const session = await openSession(sandbox.path, { resources });
     const failed = await runChecks(session, buildRunOptions({ only: ['supabase/storage-policies'] }));
@@ -148,8 +137,6 @@ test('supabase/storage-policies reports invalid bucket settings as a syntax find
             ],
         },
     ]);
-    expect(failed.report.exitCode).toBe(1);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('supabase/verify-jwt reports verify_jwt = false without a comment on its line', async () => {

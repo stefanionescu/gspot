@@ -72,7 +72,6 @@ async function prepareSwiftScope(scopePath: string) {
         [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
     });
     await applyGeneratedFiles(root);
-    expect(existsSync(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
     const lifetime = resources.move();
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
 }

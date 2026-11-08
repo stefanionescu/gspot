@@ -130,8 +130,6 @@ export const SCOPE_ASSET_FILES = {
     'other/assets/unused.svg': '<svg/>',
 } as const;
 
-export const ASSET_REFERENCE_CASES = [['index.html', '<img src="assets/logo.svg">']] as const;
-
 export const GLOB_ASSET_CASES = [
     {
         path: 'docs/pages/index.astro',

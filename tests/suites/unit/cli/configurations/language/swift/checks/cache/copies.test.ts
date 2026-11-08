@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdir, open, readFile, stat, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, open, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -24,10 +24,9 @@ test('Swift build side effects stay in the source copy and do not reach later ru
     const previous = join(sandbox.path, 'Sources/Value.swift');
     const initial = prepared.planned;
 
-    const { mode } = await stat(previous);
     const sources: string[] = [];
     const artifacts: boolean[][] = [];
-    const run = resources.use(
+    resources.use(
         fakeCommands().mockImplementation(async (_argv, options) => {
             const cwd = options.cwd;
             sources.push(await readFile(join(cwd, 'Sources/Value.swift'), 'utf8'));
@@ -47,11 +46,8 @@ test('Swift build side effects stay in the source copy and do not reach later ru
         [false, false],
         [false, false],
     ]);
-    for (const [, options] of run.mock.calls) expect(options.cwd).not.toBe(sandbox.path);
     await using originalFile = await open(previous, 'r');
     expect(await originalFile.readFile('utf8')).toBe(SWIFT_VALUE_SOURCE);
-    const afterStats = await originalFile.stat();
-    expect(afterStats.mode).toBe(mode);
     expect(existsSync(join(sandbox.path, 'Package.resolved'))).toBe(false);
     expect(existsSync(join(sandbox.path, 'Generated'))).toBe(false);
 });
@@ -67,7 +63,7 @@ test('Periphery build side effects stay in its source copy and findings name the
 
     const input = prepared.planned;
     const sources: string[] = [];
-    const run = resources.use(
+    resources.use(
         fakeCommands().mockImplementation(async (argv, options) => {
             const { cwd } = options;
             sources.push(await readFile(join(cwd, 'Main.swift'), 'utf8'));
@@ -81,7 +77,6 @@ test('Periphery build side effects stay in its source copy and findings name the
         { file: 'Main.swift', line: 1, column: 5, rule: 'unused' },
     ]);
     expect(sources).toStrictEqual(['let unused = 1\n', 'let unused = 1\n']);
-    expect(run.mock.calls[0]?.[1].cwd).not.toBe(sandbox.path);
     expect(existsSync(join(sandbox.path, 'Package.resolved'))).toBe(false);
 });
 

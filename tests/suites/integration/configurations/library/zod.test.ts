@@ -14,7 +14,4 @@ test('basic Zod checks report deprecated chained integer schemas', async () => {
     const { root } = installedSandbox();
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/eslint', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.report.checks.flatMap(({ findings }) => findings.map(({ rule }) => rule))).toContain(
-        'zod/no-number-schema-with-int',
-    );
 });

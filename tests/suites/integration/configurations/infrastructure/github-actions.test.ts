@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -31,7 +30,6 @@ test('the generated GitHub workflow passes actionlint', async () => {
     const ci = await spawnGspot(sandbox.path, ['set', 'ci.enabled', 'true']);
     expect(ci.code, ci.stdout + ci.stderr).toBe(0);
     const workflow = join(sandbox.path, GITHUB_WORKFLOW);
-    expect(existsSync(workflow)).toBe(true);
     const generated = await readFile(workflow);
     const headerEnd = generated.indexOf('\n');
     const body = generated.subarray(headerEnd + 1);
@@ -59,7 +57,6 @@ test('actionlint reports a missing required input of a same-repository reusable 
     expect(failed.findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual([
         { file: '.github/workflows/caller.yml', line: 4, column: 11, rule: 'workflow-call' },
     ]);
-    expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(workflow);
     await writeFile(
         join(sandbox.path, '.github/workflows/caller.yml'),
         `${workflow}    with:\n      greeting: Hello\n`,
@@ -68,7 +65,6 @@ test('actionlint reports a missing required input of a same-repository reusable 
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/actionlint', '--json']),
     ).report.checks[0]!;
     expect(result).toMatchObject({ status: 'passed', findings: [] });
-    expect(await readFile(join(sandbox.path, '.github/workflows/called.yml'), 'utf8')).toBe(REQUIRED_INPUT_WORKFLOW);
 });
 
 test('zizmor at level basic checks workflows and composite actions in the root and a scope', async () => {

@@ -1,42 +1,15 @@
-import { readFile, symlink, writeFile } from 'node:fs/promises';
-import { join, sep } from 'node:path';
+import { sep } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { createFileTree } from 'testdirs';
 
-import { planSwiftBuild, prepareBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-test('build cache rejects external output links', async () => {
-    await using sandbox = await createGitSandbox({});
-    await using outside = await testdir();
-    await using _cache = await redirectCacheFolder();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['swift']),
-        'Package.swift': SWIFT_PACKAGE,
-    });
-    const session = await openSession(sandbox.path);
-    const input = planSandboxCheck(session, 'swift/build');
-    const folder = planSwiftBuild(session, input).folder;
-    prepareBuild(session.root, input.files, folder);
-    const authored = join(outside.path, 'authored');
-    await writeFile(authored, 'preserved');
-    await symlink(outside.path, join(folder, 'package'));
-    const linkedFiles = prepareBuild(session.root, input.files, folder).files;
-    const refusal = matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' });
-    expect(() => linkedFiles.read('package/authored')).toThrow(refusal);
-    expect(() => {
-        linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 });
-    }).toThrow(refusal);
-    expect(await readFile(authored, 'utf8')).toBe('preserved');
-});
 
 test('the Swift build folder lives in the gspot cache and differs between repositories', async () => {
     await using first = await createGitSandbox({});

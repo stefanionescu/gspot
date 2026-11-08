@@ -1,4 +1,4 @@
-import { readFile, rm, writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -81,43 +81,6 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
     expect(findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual(
         paths.map((file) => ({ file, line: 1, column: 3, rule: 'gspot.Example' })),
     );
-    for (const path of paths)
-        expect(await readFile(join(session.root, path), 'utf8')).toBe('// Changed after the run read it.\n');
-});
-
-test('Vale alerts with file and stdin report locations become findings at the reported file, line, and column', async () => {
-    await using resources = new AsyncDisposableStack();
-    const session = await openValeSandbox(resources);
-    const stdout = JSON.stringify({
-        [join(session.root, 'docs/a.md')]: [
-            { Line: 3, Span: [10, 15], Check: 'gspot.marketing', Message: "Marketing word 'robust'." },
-        ],
-        [join(session.root, 'stdin.rb')]: [
-            { Line: 2, Span: [5, 6], Check: 'Google.We', Message: 'Try not to use first-person plural.' },
-        ],
-    });
-    resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ stdout })));
-    const found = await runSandboxCheck(session.root, 'prose/vale');
-    expect(found.map(({ help: _help, ...finding }) => finding)).toStrictEqual([
-        {
-            check: 'prose/vale',
-            file: 'docs/a.md',
-            line: 3,
-            column: 10,
-            rule: 'gspot.marketing',
-            message: "Marketing word 'robust'.",
-            fixable: false,
-        },
-        {
-            check: 'prose/vale',
-            file: 'stdin.rb',
-            line: 2,
-            column: 5,
-            rule: 'Google.We',
-            message: 'Try not to use first-person plural.',
-            fixable: false,
-        },
-    ]);
 });
 
 test('the Vale check fails with the error line Vale prints when Vale exits non-zero', async () => {

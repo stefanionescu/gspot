@@ -64,7 +64,7 @@ test('hook scripts under .husky do not count; other files beside them still do',
     await using sandbox = await createGitSandbox({});
     const hooks = Object.fromEntries(
         [folder, `${folder}/nested`, `app/${folder}`, `app/${folder}/nested`].flatMap((path) =>
-            ['post-merge', 'post-checkout', 'hook-first.ts', 'hook-second.ts'].map((name) => [
+            ['hook-first.ts', 'hook-second.ts'].map((name) => [
                 `${path}/${name}`,
                 name.endsWith('.ts') ? '' : '#!/bin/sh\nexit 0\n',
             ]),

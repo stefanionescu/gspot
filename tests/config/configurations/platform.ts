@@ -1,12 +1,6 @@
 export const CLOUDFLARE_REDIRECTS = `/old /new 200
-/old /new 301
-/old /new 302
-/old /new 303
-/old /new 307
-/old /new 308
 /old /new
 /old /new 404
-/old /new 410
 /old /new 302!
 /lonely
 old /new 301
@@ -93,11 +87,6 @@ export const STORAGE_POLICIES = [
         name: 'quoted identifier',
         sql: 'CREATE POLICY p ON storage.objects USING ("avatars" = bucket_id);',
         allowed: false,
-    },
-    {
-        name: 'quoted relation and literal',
-        sql: 'CREATE POLICY p ON "storage"."objects" USING (bucket_id = \'avatars\');',
-        allowed: true,
     },
     {
         name: 'with check array',

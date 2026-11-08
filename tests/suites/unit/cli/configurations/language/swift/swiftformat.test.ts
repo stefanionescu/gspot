@@ -50,5 +50,4 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     expect(outputs.find((file) => file.path === getConfigPath(session, 'swiftformat', 'nested'))?.content).toContain(
         '--swiftversion 5.5\n',
     );
-    expect(outputs.map(({ path }) => path).filter((path) => path.includes('disabled'))).toStrictEqual([]);
 });

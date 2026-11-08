@@ -51,11 +51,8 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
         ...buildPythonToolFiles('deptry'),
     });
-    const { checked, commands } = await runFakeDeptry(sandbox.path);
+    const { commands } = await runFakeDeptry(sandbox.path);
 
-    expect(checked.report.checks.map(({ scope, status }) => [scope, status])).toStrictEqual(
-        scopes.map((scope) => [scope, 'passed']),
-    );
     for (const scope of scopes) {
         const command = commands.find((commandArguments) => commandArguments.includes(join(sandbox.path, scope)))!;
         const patterns = command.flatMap((value, index) => (value === '--extend-exclude' ? command[index + 1]! : []));

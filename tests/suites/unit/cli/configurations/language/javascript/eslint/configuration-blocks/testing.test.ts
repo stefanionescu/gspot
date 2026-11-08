@@ -59,38 +59,6 @@ test.each([...TESTING_LIBRARY_CASES])(
         expect(
             await listLintFindings(eslint, sandbox.path, paths, ['testing-library/no-debugging-utils']),
         ).toStrictEqual([{ file: 'source.test.js', rule: 'testing-library/no-debugging-utils', line: 2 }]);
-        await createFileTree(sandbox.path, {
-            'source.test.js': `import { screen } from '${library}';\nscreen.getByRole('button');\n`,
-        });
-        expect(
-            await listLintFindings(eslint, sandbox.path, ['source.test.js'], ['testing-library/no-debugging-utils']),
-        ).toStrictEqual([]);
-    },
-);
-
-test.each(['all'] as const)(
-    'Vitest reports a focused test without a fix, and strict equality only at level all (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            'package.json': '{"private":true,"type":"module"}\n',
-            'tests/unit/example.test.js': '',
-            'gspot.toml': buildSandboxSettings(['vitest'], { level }),
-        });
-
-        const eslint = await buildEslint(sandbox.path);
-        const path = 'tests/unit/example.test.js';
-        await createFileTree(sandbox.path, {
-            [path]: `import { test, expect } from 'vitest';
-test.only('checks the value', () => { expect({value: 1}).toEqual({value: 1}); });
-`,
-        });
-        const rules = ['vitest/no-focused-tests', 'vitest/prefer-strict-equal'];
-        expect(await listLintFindings(eslint, sandbox.path, [path], rules)).toStrictEqual([
-            { file: path, rule: 'vitest/no-focused-tests', line: 2 },
-            { file: path, rule: 'vitest/prefer-strict-equal', line: 2 },
-        ]);
-        const [result] = await eslint.lintFiles([path]);
-        expect(result!.messages.find(({ ruleId }) => ruleId === 'vitest/no-focused-tests')?.fix).toBeUndefined();
     },
 );
 

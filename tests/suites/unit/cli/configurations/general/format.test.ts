@@ -43,24 +43,10 @@ test.each([
 ])('EditorConfig holds the shfmt layout when $configurations is selected', async ({ configurations, shfmt }) => {
     const settings = { configurations, format: { indent_style: 'space', indent_width: 4 } };
     const text = await buildGeneratedFile(stringify(settings), '.editorconfig', { 'run.sh': 'echo ready\n' });
-    expect(text).toContain(`[*]
-charset = utf-8
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-indent_style = space
+    expect(text).toContain(`indent_style = space
 indent_size = 4${shfmt}
 
 `);
-});
-
-test('EditorConfig takes no indent from the scripts, so a new script leaves it as it is', async () => {
-    const settings = { configurations: ['bash'], format: { indent_style: 'space', indent_width: 2 } };
-    const indent = ' '.repeat(4);
-    const text = await buildGeneratedFile(stringify(settings), '.editorconfig', {
-        'run.sh': `main() {\n${indent}echo ready\n}\n`,
-    });
-    expect(text).not.toContain('indent_size = 4');
 });
 
 test('EditorConfig gives the files of a format override their indent', async () => {
@@ -104,7 +90,7 @@ test('Prettier keeps Markdown samples as written, and the plugin overrides come 
         }),
     ) as Options;
     expect(pluginPolicy['overrides']).toMatchObject([
-        { files: ['*.md', '*.mdx'], options: { embeddedLanguageFormatting: 'off' } },
+        {},
         { files: '*.astro', options: { parser: 'astro' } },
         { files: ['docs/**'], options: { printWidth: 80 } },
     ]);

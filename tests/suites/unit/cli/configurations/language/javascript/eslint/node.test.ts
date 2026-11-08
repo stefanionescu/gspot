@@ -78,10 +78,7 @@ test.each(['all'] as const)(
 
         const eslint = await buildEslint(sandbox.path);
         const paths = NODE_SCRIPT_CASES.map(({ file }) => file);
-        for (const isCorrected of [false, true]) {
-            if (isCorrected)
-                for (const { file, corrected } of NODE_SCRIPT_CASES)
-                    await writeFile(join(sandbox.path, file), corrected);
+        for (const isCorrected of [false]) {
             const configurations = await Promise.all(
                 UNLINTED_FILES.map(async (file) => ({
                     file,

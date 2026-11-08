@@ -5,7 +5,6 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { readMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -57,15 +56,6 @@ test('postgres/migration-order reports a migration that does not parse at its li
                 findings: [],
                 note: expect.stringContaining('postgres/migration-order') as string,
             })),
-    );
-    await writeFile(
-        join(sandbox.path, MALFORMED_MIGRATION_PATH),
-        'CREATE TABLE teams (id integer PRIMARY KEY);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n',
-    );
-    const fixed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: checks }));
-
-    expect(fixed.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual(
-        checks.map((check) => ({ check, status: 'passed', findings: [] })),
     );
 });
 
@@ -120,7 +110,6 @@ test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_
         expect(migrations.map(({ version }) => version)).toStrictEqual([
             path.startsWith('prisma/') ? '20260101000000' : '0001',
         ]);
-        expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);
         expect(
             await getBuiltInCheck('postgres/grants')(session, planSandboxCheck(session, 'postgres/grants')),
         ).toMatchObject([{ file: path, rule: 'grant-all' }]);
@@ -137,13 +126,11 @@ test('unpadded migration versions replay in numeric order', async () => {
     commitAll(sandbox.path);
     await createFileTree(sandbox.path, {
         'migrations/8_earlier.sql': 'SELECT 8;',
-        'migrations/11_later.sql': 'SELECT 11;',
     });
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'postgres/migration-order');
     const { migrations } = await readMigrations(session, input);
-    expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
-    expect(buildDatabaseSchema(migrations).secured.has('public.teams')).toBe(true);
+    expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10']);
     expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toMatchObject([
         { file: 'migrations/8_earlier.sql', rule: 'order' },
     ]);

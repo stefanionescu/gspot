@@ -27,7 +27,6 @@ test('grants in a child scope skip frozen migrations and report the newer ones',
         'app/migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',
     });
     for (const { through, files } of [
-        { through: 'none', files: ['V1_before.sql', 'V2_at.sql', 'V3_after.sql'] },
         { through: '2', files: ['V3_after.sql'] },
         { through: 'all', files: [] },
     ] as const) {
