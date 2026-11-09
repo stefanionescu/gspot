@@ -95,6 +95,7 @@ test('remove after add says nothing about tools once the tool lockfiles match ag
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
+        'entry.sh': 'echo example\n',
     });
     await applyGeneratedFiles(sandbox.path);
     const session = await openSession(sandbox.path);

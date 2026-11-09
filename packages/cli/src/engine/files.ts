@@ -43,11 +43,10 @@ function listTestedFiles(planned: PlannedScope, scopePath: string, runs: Check['
 }
 
 function listProjectMatches(
-    planned: PlannedScope,
-    { check, configuration }: ScopeCheck,
+    scope: Scope,
+    { check, configuration }: Pick<ScopeCheck, 'check' | 'configuration'>,
     { scopeFiles, scopePath }: { scopeFiles: TrackedFile[]; scopePath: string },
 ): TrackedFile[] {
-    const { scope } = planned;
     const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
     const isEveryFileRead = isRepositoryRun(check) && check.files === undefined;
     const projectFiles =
@@ -60,7 +59,7 @@ function listProjectMatches(
 function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
     const { check } = scopeCheck;
     const testedFiles = listTestedFiles(planned, scopePath, check.runs);
-    const matches = listProjectMatches(planned, scopeCheck, { scopeFiles: testedFiles, scopePath });
+    const matches = listProjectMatches(planned.scope, scopeCheck, { scopeFiles: testedFiles, scopePath });
     const { files } = stripIgnoredFiles(matches, check, planned.scope);
     if (listNarrowedFiles(planned, scopeCheck, files).length === 0) return [];
     const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
@@ -151,7 +150,7 @@ function listToolFiles(
     const hasFileList = check.command?.some((argument) => FILES_PLACEHOLDER.test(argument)) === true;
     let selected = files;
     if (check.runs === 'files') selected = listNarrowedFiles(planned, scopeCheck, files);
-    else if (hasFileList) selected = listProjectMatches(planned, scopeCheck, { scopeFiles: files, scopePath });
+    else if (hasFileList) selected = listProjectMatches(planned.scope, scopeCheck, { scopeFiles: files, scopePath });
     const readable = listReadableFiles(planned, check, selected);
     return check.command === undefined ? readable : readable.filter((file) => !file.tags.includes('symlink'));
 }
@@ -266,4 +265,20 @@ export function listCheckFiles(planned: Pick<PlannedCheck, 'scope' | 'files'>, c
             .filter((check) => check.id === checkId)
             .flatMap((check) => listCoveredFiles(check.files ?? configuration.files, planned.files, planned.scope)),
     );
+}
+
+/**
+Tell whether a check covers one of the given files, before ignores and narrowing, as a run selects them. A check of
+commit messages or of pushed history reads commits, and a command check from gspot.toml names its own program, so
+these always count.
+*/
+export function hasFilesToCheck(files: TrackedFile[], { scope, check, configuration }: ScopeCheck): boolean {
+    if (configuration === undefined || check.stage === 'message' || check.runs === 'history') return true;
+    const scopePath = isRepositoryRun(check) ? '' : scope.path;
+    const scopeFiles = files.filter((file) => isInScope(file.path, scopePath));
+    const matches =
+        check.runs === 'files'
+            ? listCheckFiles({ scope, files: scopeFiles }, check.id)
+            : listProjectMatches(scope, { check, configuration }, { scopeFiles, scopePath });
+    return matches.length > 0;
 }

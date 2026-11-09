@@ -2,6 +2,7 @@ import semver from 'semver';
 
 import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
+import { hasFilesToCheck } from '#cli/engine/files.ts';
 import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan.ts';
 import { findSystemSkip, isSettingEmpty } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -104,11 +105,14 @@ export function listHostCheckTools(checks: ScopeCheck[]): Set<string> {
 }
 
 /**
-Select the tools that checks, fixers, and their config files use. The tools cover every supported system, so committed
-output does not depend on this machine.
+Select the tools that checks with a file to read, their fixers, and their config files use, so a check with nothing to
+read installs nothing. The tools cover every supported system, so committed output does not depend on this machine.
 */
 export function selectToolConfigurations(session: SessionBase, checks: ScopeCheck[]): Configuration[] {
-    const toolNames = new Set(checks.flatMap((check) => listCheckTools(check)));
+    const { files } = session.repository;
+    const toolNames = new Set(
+        checks.filter((check) => hasFilesToCheck(files, check)).flatMap((check) => listCheckTools(check)),
+    );
     const prettierPlugins = listPrettierPlugins(session.scopes.flatMap(({ configurations }) => configurations));
     for (const { name } of prettierPlugins.keys()) toolNames.add(name);
     const configurations = listSelectedConfigurations(session.scopes);

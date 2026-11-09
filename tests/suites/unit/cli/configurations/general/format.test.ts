@@ -121,7 +121,9 @@ test('Prettier reads the bracket, arrow, and prose settings, in the table and in
     const format = { bracket_spacing: false, arrow_parens: 'avoid', prose_wrap: 'always' };
     const override = { paths: ['**/*.ts'], bracket_spacing: true };
     const settings = { configurations: [], format: { ...format, override: [override] } };
-    const text = await buildGeneratedFile(stringify(settings), getManifestTarget('format', 'prettier.json'), {});
+    const text = await buildGeneratedFile(stringify(settings), getManifestTarget('format', 'prettier.json'), {
+        'README.md': '# Example\n',
+    });
     expect(JSON.parse(text)).toMatchObject({
         bracketSpacing: false,
         arrowParens: 'avoid',

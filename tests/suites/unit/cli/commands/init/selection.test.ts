@@ -88,7 +88,7 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         'package.json': TOOL_ONLY_PACKAGE,
         'source.py': 'VALUE = 1\n',
     });
-    const tools = ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'];
+    const tools = ['eslint', 'knip', '@gspothq/eslint-plugin'];
     const generated = join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs'));
     const listSelectedTools = async (): Promise<string[]> => {
         const { devDependencies } = JSON.parse(

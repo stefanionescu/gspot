@@ -37,6 +37,7 @@ test('tool lockfiles report missing and changed projects and omit current projec
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python']),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
+        'main.py': 'value = 1\n',
     });
     const session = await openSession(sandbox.path);
     const generated = buildGeneratedFiles(session).files;
