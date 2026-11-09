@@ -6,7 +6,6 @@ import semver from 'semver';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import {
-    CI_NODE,
     LOCKFILES,
     NPM_TOOL,
     PACKAGE_MANAGER_HASH_SUFFIX,
@@ -176,9 +175,10 @@ export function buildStartRunner(name: StartRunner['name'], root: string): Start
 export function buildPackageManagerCommand(
     packageManager: PackageManagerCommand,
     commandArguments: readonly string[],
+    node: string,
 ): string[] {
     const command = [packageManager.name, ...commandArguments];
     return packageManager.version === undefined
         ? command
-        : ['mise', 'exec', CI_NODE, `${packageManager.name}@${packageManager.version}`, '--', ...command];
+        : ['mise', 'exec', node, `${packageManager.name}@${packageManager.version}`, '--', ...command];
 }

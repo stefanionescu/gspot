@@ -61,6 +61,7 @@ export type ActionPin = { name: string; sha: string; version: string };
 
 export type Pipeline = {
     version: string;
+    node: string;
     packageManager?: PackageManagerPin | undefined;
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];

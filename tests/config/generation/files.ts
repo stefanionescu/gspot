@@ -92,6 +92,7 @@ export const SETUP_ARGUMENTS = ['', 'two words', "a'b", 'line\nbreak'] as const;
 
 export const LINUX_PIPELINE = {
     version: '1.2.3',
+    node: 'node@22.0.0',
     packageManager: { name: 'npm' as const, version: '11.10.1' },
     operatingSystems: ['linux' as const],
     linuxRunner: 'ubuntu-24.04' as const,

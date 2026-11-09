@@ -5,7 +5,7 @@ import semver from 'semver';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
+import { CI_NODE, VERSION_FLAG } from '#cli/config/repository/javascript.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import {
@@ -93,7 +93,7 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
         packageManager.name === 'bun'
             ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.releaseAgeDays)}`]
             : commandArguments;
-    const command = buildPackageManagerCommand(packageManager.command, args);
+    const command = buildPackageManagerCommand(packageManager.command, args, CI_NODE);
     const result = await runInstallStep(install, command, {
         cwd: runFolder,
         env,
@@ -135,7 +135,7 @@ Verify the package manager executable before install changes any tool project fi
 export async function assertPackageManagerVersion(install: ToolInstall): Promise<void> {
     const { session, packageManager } = install;
     if (packageManager === undefined) return;
-    const versionCommand = buildPackageManagerCommand(packageManager.command, [VERSION_FLAG]);
+    const versionCommand = buildPackageManagerCommand(packageManager.command, [VERSION_FLAG], CI_NODE);
     const version = await runInstallStep(install, versionCommand, { cwd: session.root });
     const requirement = `${String(semver.major(packageManager.version))}.x`;
     const found = version.stdout.trim();

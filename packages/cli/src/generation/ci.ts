@@ -28,10 +28,11 @@ import {
     GITLAB_WORKFLOW,
 } from '#cli/config/generation.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { CI_NODE, FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 import { CI_PINS } from '#cli/config/settings/schema.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readCiNode } from '#cli/repository/javascript/gspot-pin.ts';
 import { buildPackageManagerCommand, findPackageManagerPin } from '#cli/repository/javascript/package-manager.ts';
 import { buildFrozenInstallArguments } from '#cli/repository/javascript/setup.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -50,7 +51,7 @@ function buildActionPin({ name, sha, version }: ActionPin): Scalar {
 
 function buildGspotTools(pipeline: Pipeline): string {
     const { packageManager } = pipeline;
-    const tools = [CI_NODE, `npm:${cliPackage.name}[allow_low_downloads=true]@${pipeline.version}`];
+    const tools = [pipeline.node, `npm:${cliPackage.name}[allow_low_downloads=true]@${pipeline.version}`];
     if (packageManager?.version !== undefined && packageManager.name !== 'npm')
         tools.push(`${packageManager.name}@${packageManager.version}`);
     return quoteCommand(tools);
@@ -125,12 +126,15 @@ function readProjectPackageManager(
     return [written, session.packageManager].find((each) => each?.name === name) ?? { name };
 }
 
-function buildFrozenInstall(session: Session, scopePath: string, lockfile: FrozenLockfile): readonly string[] {
+function buildFrozenInstall(
+    session: Session,
+    { scopePath, lockfile, node }: { scopePath: string; lockfile: FrozenLockfile; node: string },
+): readonly string[] {
     const command = FROZEN_INSTALLS[lockfile];
     const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
     const uv = getUvPin();
     const runner = name === undefined ? uv : readProjectPackageManager(session, scopePath, name);
-    return buildPackageManagerCommand(runner, buildFrozenInstallArguments(lockfile, runner.version));
+    return buildPackageManagerCommand(runner, buildFrozenInstallArguments(lockfile, runner.version), node);
 }
 
 /**
@@ -197,10 +201,11 @@ export function listTestChecks(session: Session): string[] {
 
 export function listProjectInstallLines(session: Session): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
+    const node = readCiNode(session.root);
     return session.scopes.flatMap(({ path: scopePath, configurations }) => {
         const installs = (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
             .filter((lockfile) => tracked.has(joinScope(scopePath, lockfile)))
-            .map((lockfile) => quoteCommand(buildFrozenInstall(session, scopePath, lockfile)));
+            .map((lockfile) => quoteCommand(buildFrozenInstall(session, { scopePath, lockfile, node })));
         const setup = configurations.flatMap((configuration) => configuration.ci_setup);
         const lines = [
             ...installs,

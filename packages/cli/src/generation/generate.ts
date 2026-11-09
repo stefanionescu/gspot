@@ -29,6 +29,7 @@ import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import { buildAgentsBlock, hasTopHeading, selectRuleFiles } from '#cli/generation/rules.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { readCiNode } from '#cli/repository/javascript/gspot-pin.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { findText } from '#cli/system/files/reads.ts';
@@ -45,6 +46,7 @@ function addWorkflow(session: Session, generated: Generation): void {
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version: cliPackage.version,
+            node: readCiNode(session.root),
             packageManager: session.packageManager,
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],

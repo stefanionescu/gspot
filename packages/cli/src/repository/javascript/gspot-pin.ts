@@ -6,6 +6,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import {
+    CI_NODE,
     DEFAULT_JSON_INDENT,
     GSPOT_MISE_OPTIONS,
     GSPOT_MISE_TOOL,
@@ -30,10 +31,10 @@ import type { Files } from '#cli/types/system.ts';
 
 const MISE_NODE_TOOL = 'node';
 
-function readMisePin(root: string): string | undefined {
+function readMisePin(root: string, tool: string): string | undefined {
     const text = findText(root, MISE_CONFIG_FILE);
     if (text === undefined) return undefined;
-    const pin = findValueAt(parseTomlFile(MISE_CONFIG_FILE, text), ['tools', GSPOT_MISE_TOOL]);
+    const pin = findValueAt(parseTomlFile(MISE_CONFIG_FILE, text), ['tools', tool]);
     const version = isTable(pin) ? pin['version'] : pin;
     return typeof version === 'string' ? version : undefined;
 }
@@ -88,9 +89,18 @@ export function listPinPrerequisites(root: string, runner: StartRunner['name']):
     return tools[MISE_NODE_TOOL] === undefined ? [MISE_NODE_PIN_COMMAND] : [];
 }
 
+/**
+Select the Node.js that CI runs gspot and the package managers with: the one that mise.toml pins, so CI runs what the
+developers run, or the one that gspot is tested with when mise.toml pins none.
+*/
+export function readCiNode(root: string): string {
+    const version = readMisePin(root, MISE_NODE_TOOL);
+    return version === undefined ? CI_NODE : `${MISE_NODE_TOOL}@${version}`;
+}
+
 export function readGspotPin(root: string): string | undefined {
     const specifier = readCliSpecifier(root);
-    if (specifier === undefined) return readMisePin(root);
+    if (specifier === undefined) return readMisePin(root, GSPOT_MISE_TOOL);
     const locked = readLockedVersions(createRunCache(root), '')?.get(cliPackage.name);
     return locked ?? semver.valid(specifier) ?? undefined;
 }
