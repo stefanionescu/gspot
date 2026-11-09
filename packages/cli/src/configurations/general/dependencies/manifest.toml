@@ -48,7 +48,7 @@ why = "A locked version with an advisory ships a vulnerability that attackers ca
 [[check]]
 command = ["syncpack", "lint", "--config", "{config_file:syncpack}"]
 example = "Two package.json files that pin different versions of one dependency report a mismatch. Set both to the same version, and update the lockfile."
-files = { filenames = ["package.json"] }
+files = { paths = ["**/*/package.json"] }
 help = "Set every package.json to the same version of the dependency, then update the lockfile."
 level = "all"
 name = "syncpack"
