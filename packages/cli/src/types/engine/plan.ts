@@ -53,7 +53,7 @@ export type PlanInventory = {
     ownFiles: Map<string, TrackedFile[]>;
 };
 
-export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
+export type SettingsSkip = { cause: 'level' | 'condition' | 'ignore' | 'setting'; note: string };
 
 export type PlannedCheck = ScopeCheck & {
     files: TrackedFile[];

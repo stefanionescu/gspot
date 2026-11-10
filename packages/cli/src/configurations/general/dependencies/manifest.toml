@@ -56,6 +56,7 @@ output = { format = "regex", pattern = "^\\s*✘ (?<message>.+ in (?<file>\\S+) 
 runs = "once"
 stage = "push"
 summary = "Checks that each dependency has ranges that agree across the workspace."
+when = { configuration = "javascript" }
 why = "Two versions of a dependency in one workspace behave differently, so a bug shows in only one package."
 
 [[check]]

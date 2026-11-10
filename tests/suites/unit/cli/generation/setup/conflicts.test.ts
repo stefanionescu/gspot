@@ -237,7 +237,7 @@ test('init replaces an authored Syncpack file and keeps syncpack.config.cts and 
         'syncpack.config.mts': EMPTY_DEFAULT_SOURCE,
     });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'gspot', '--level', 'all']);
+    const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'javascript', '--level', 'all']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, SYNCPACK_FILE.file))).toBe(false);
     expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');

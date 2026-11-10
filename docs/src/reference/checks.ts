@@ -93,6 +93,9 @@ export function formatCheckSection(reference: CliReference['checks'][number]): s
         formatCheckRun(reference),
         check.fix === undefined ? '' : CHECK_FIX_MESSAGE,
         check.when?.setting === undefined ? '' : `It skips until you set \`${check.when.setting}\`.`,
+        check.when?.configuration === undefined
+            ? ''
+            : `It runs only in a scope that selects the \`${check.when.configuration}\` configuration.`,
     ];
     const sections = [
         formatSection('Why', formatText(check.why), MINOR_HEADING_LEVEL),

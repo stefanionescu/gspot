@@ -54,13 +54,8 @@ function findFilenameSkip(
 }
 
 function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip | undefined {
-    const { configuration, dependencies, filenames, tags } = { ...planned.check.when };
+    const { dependencies, filenames, tags } = { ...planned.check.when };
     const scopePath = planned.scope.path;
-    if (configuration !== undefined && !planned.scope.settings.configurations.includes(configuration))
-        return {
-            cause: 'condition',
-            note: `Needs the ${configuration} configuration, which this scope does not select.`,
-        };
     return (
         findDependencySkip(dependencies, scopePath, repository.dependencyFiles) ??
         findFilenameSkip(filenames, scopePath, repository.files) ??
@@ -94,6 +89,12 @@ function findConfigSkip(settings: Settings, scope: Scope, check: Check): Setting
         : { cause: 'setting', note: `No selected configuration or ${LOCAL_RULES_SETTING} supplies local rules.` };
 }
 
+function findConfigurationSkip(scope: Scope, check: Check): SettingsSkip | undefined {
+    const configuration = check.when?.configuration;
+    if (configuration === undefined || scope.settings.configurations.includes(configuration)) return undefined;
+    return { cause: 'condition', note: `Needs the ${configuration} configuration, which this scope does not select.` };
+}
+
 export function isSettingEmpty(value: unknown): boolean {
     if (typeof value === 'object' && value !== null) return Object.values(value).flat().length === 0;
     const empty: unknown[] = [undefined, false, ''];
@@ -113,6 +114,8 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
 
 export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     if (settings.level !== 'all' && check.level !== 'basic') return { cause: 'level', note: 'off at level basic' };
+    const unselected = findConfigurationSkip(scope, check);
+    if (unselected !== undefined) return unselected;
     const ignored = findIgnoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
     const ruleFiles = findConfigSkip(settings, scope, check);

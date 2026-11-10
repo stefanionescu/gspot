@@ -11,6 +11,20 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakePlatform, isWindows } from '#tests/setup/system/platform.ts';
 
+test.each([
+    { configurations: [], hasSyncpack: false },
+    { configurations: ['javascript'], hasSyncpack: true },
+])(
+    'the npm tool project holds syncpack only with the javascript configuration: $configurations',
+    async ({ configurations, hasSyncpack }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(configurations, { level: 'all' }),
+        });
+        const session = await openSession(sandbox.path);
+        expect(Object.hasOwn(listPackagePins(session.toolConfigurations).npm, 'syncpack')).toBe(hasSyncpack);
+    },
+);
+
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });
     await using sandbox = await createGitSandbox({
