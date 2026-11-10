@@ -19,6 +19,7 @@ import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
@@ -96,10 +97,17 @@ async function inspectCommandTools(session: Session): Promise<Array<[string, Doc
     );
 }
 
+/**
+Inspect the tools that gspot install installs here: every npm and PyPI tool, and each mise tool whose checks have a
+file to read, as listHostCheckTools selects them.
+*/
 async function inspectScopeTools(session: Session): Promise<DoctorTool[]> {
     const platform = getOperatingSystem();
+    const checkTools = listHostCheckTools(session);
     const pins = listDistinctTools(session.toolConfigurations).filter(
-        (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
+        (tool) =>
+            findMissingBuild(tool, { platform, arch: process.arch }) === undefined &&
+            (findMisePin(tool) === undefined || checkTools.has(tool.name)),
     );
     const lookups = session.scopes.flatMap(({ path: scopePath, configurations }) => {
         const toolNames = new Set(

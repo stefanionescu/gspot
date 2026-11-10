@@ -96,16 +96,15 @@ export function hasValePackages(root: string): boolean {
 }
 
 /**
-Download the Vale packages, and replace the installed ones, when a selected configuration uses Vale.
+Download the Vale packages, and replace the installed ones, when gspot install installs Vale.
 Skip the download when every package folder exists and the release file names the pinned releases. Needs the network.
 */
 export async function installValePackages(install: ToolInstall, miseBinPaths: string[]): Promise<string> {
-    const { session } = install;
+    const { session, checkTools } = install;
     const { root } = session;
     const files = openFiles(root);
     deleteStaleTemporaryPaths(files, GSPOT_FOLDER, VALE_TEMPORARY_NAME);
-    const hasVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
-    if (!hasVale || session.settings.level === 'basic') return '';
+    if (!checkTools.has(VALE_TOOL) || session.settings.level === 'basic') return '';
     const releases = `${JSON.stringify(VALE_PACKAGE_RELEASES, null, JSON_INDENT)}\n`;
     if (files.read(GSPOT_PATHS.valeReleases)?.bytes.toString('utf8') === releases && hasValePackages(root)) return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);

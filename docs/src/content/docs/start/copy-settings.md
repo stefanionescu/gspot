@@ -30,9 +30,8 @@ EditorConfig, or Ruff file, or else from the Prettier defaults. The `[format]` t
 formatting keys.
 
 `gspot init` turns on each configuration of the file, even with none of its files in the new repository, so your coding
-agent gets its rules before the first file. Until such files exist, its checks report `skipped (no-files)`, and gspot
-installs none of their tools. To turn off a configuration that you do not need, run
-`gspot remove <name> --reason "<why>"`.
+agent gets its rules before the first file. Until such files exist, its checks report `skipped (no-files)`. To turn off
+a configuration that you do not need, run `gspot remove <name> --reason "<why>"`.
 
 `gspot init` copies the file once, so later changes to it do not reach the new repository. To share one setup with a
 team, keep the shared `gspot.toml` in a repository that everyone clones. To use the file without a clone, download it at

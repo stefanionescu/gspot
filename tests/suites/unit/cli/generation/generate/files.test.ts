@@ -7,7 +7,6 @@ import * as prettier from 'prettier';
 import { type Options } from 'prettier';
 import { createFileTree } from 'testdirs';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -72,7 +71,6 @@ test('every shipped configuration together builds each source config and generat
         'openapi.yaml': 'openapi: 3.1.0\ninfo:\n  title: Example\n  version: 1.0.0\npaths: {}\n',
         'app/package.json': '{"private":true}',
         'app/style.css': 'a { color: red; }\n',
-        'uv.lock': 'version = 1\n',
     });
     const generated = buildGeneratedFiles(await openSession(sandbox.path));
     const paths = [...generated.files, ...generated.blocks, ...generated.managedKeys].map(({ path }) =>
@@ -106,7 +104,7 @@ test('generated scope settings stay identical across process collations', async 
     expect(buildGeneratedFiles(session)).toStrictEqual(expected);
 });
 
-test('adding the first Markdown file adds the link checker to the mise tools and changes nothing else', async () => {
+test('adding the first Markdown files leaves generated output unchanged', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"packageManager":"npm@11.0.0"}',
@@ -117,17 +115,7 @@ test('adding the first Markdown file adds the link checker to the mise tools and
         'README.md': NOTES_MARKDOWN,
     });
     runGitStep(sandbox.path, ['add', '-A']);
-    const after = buildGeneratedFiles(await openSession(sandbox.path));
-    const [earlier, later] = [before, after].map((generation) => {
-        const project = generation.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
-        return Object.keys((parseToml(project.content) as { tools: object }).tools);
-    });
-    expect(later!.filter((name) => !earlier!.includes(name))).toStrictEqual(['lychee']);
-    const [beforeRest, afterRest] = [before, after].map((generation) => ({
-        ...generation,
-        files: generation.files.filter(({ path }) => path !== GSPOT_PATHS.miseProject),
-    }));
-    expect(afterRest).toStrictEqual(beforeRest);
+    expect(buildGeneratedFiles(await openSession(sandbox.path))).toStrictEqual(before);
 });
 
 test('format.indent_width reaches EditorConfig, Prettier and each config file', async () => {

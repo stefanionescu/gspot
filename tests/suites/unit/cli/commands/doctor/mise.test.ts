@@ -2,6 +2,7 @@ import { expect, test } from 'bun:test';
 
 import { MISE_INSTALL_URL } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { findMisePin, listDistinctTools } from '#cli/tools/pins.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -12,7 +13,10 @@ test('with no mise on PATH, doctor sends the tools that mise installs to mise, n
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);
     const programs = listDistinctTools(session.toolConfigurations).filter(({ kind }) => kind === 'program');
-    const fromMise = programs.filter((tool) => findMisePin(tool) !== undefined).map(({ name }) => name);
+    const installed = listHostCheckTools(session);
+    const fromMise = programs
+        .filter((tool) => findMisePin(tool) !== undefined && installed.has(tool.name))
+        .map(({ name }) => name);
     const fromNpm = programs.filter(({ installers }) => installers['npm'] !== undefined);
     await Promise.all(fromNpm.map(({ name }) => fakeNpmTool(sandbox.path, name)));
     using _lookup = fakeExecutableLookup((name) => (name === 'mise' || fromMise.includes(name) ? null : undefined));

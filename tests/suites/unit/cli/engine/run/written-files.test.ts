@@ -37,7 +37,6 @@ test.each([['a file of its own and the files that gspot writes', ['source.txt'],
                 }),
             }),
             'source.txt': 'Input.\n',
-            'index.js': 'export {};\n',
         });
         await applyGeneratedFiles(sandbox.path);
         const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/types'] }));

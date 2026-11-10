@@ -64,7 +64,12 @@ test('mise lock freshness refuses a download from another host and a checksum ot
 test.each(['manual'] as const)(
     'mise installs tools of %s checks under a trust for that call, and not beside another mise config file',
     async (stage) => {
-        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['spelling']),
+            '.env.example': 'API_URL=https://example.com\n',
+            'README.md': '# Example\n',
+            'uv.lock': 'version = 1\n',
+        });
         const session = await openSession(sandbox.path);
         session.configuredChecks = session.configuredChecks.map((planned) => ({
             ...planned,

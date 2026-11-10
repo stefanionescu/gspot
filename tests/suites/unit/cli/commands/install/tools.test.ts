@@ -34,7 +34,6 @@ test('writing the generated files starts no npm, and install reports a failed np
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
-        'README.md': '# Example\n',
     });
 
     using npm = fakeCommands('npm', () => Promise.resolve(buildProcessResult(FAILED_NPM_VERSION)));

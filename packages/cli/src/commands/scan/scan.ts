@@ -58,7 +58,7 @@ async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<
     await installTools(session, {
         writer: openFiles(copy.root),
         generated: { files: buildToolProjects(session) },
-        checkTools: listHostCheckTools(session.configuredChecks),
+        checkTools: listHostCheckTools(session),
         runsProjectInstall: false,
     });
     const leftOut = listCodeRunners(session);

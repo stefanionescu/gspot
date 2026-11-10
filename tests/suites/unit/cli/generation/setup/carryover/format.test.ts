@@ -63,7 +63,6 @@ test('init names an EditorConfig line setting that differs from what gspot write
     await using sandbox = await createGitSandbox({
         '.editorconfig': '[*]\nend_of_line = lf\n[*.bat]\nend_of_line = crlf\n',
         'run.bat': 'echo done\n',
-        'README.md': '# Example\n',
     });
     const { plan } = await runInit(sandbox.path);
     expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['end_of_line']);

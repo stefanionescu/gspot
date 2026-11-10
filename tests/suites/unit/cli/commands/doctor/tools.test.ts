@@ -191,10 +191,7 @@ test('doctor lists programs by name and folds the npm packages into one line', a
 });
 
 test('doctor --json reports every field when the required tools are missing', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'README.md': '# Example\n',
-    });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     using _lookup = fakeExecutableLookup(null);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(1);
@@ -245,7 +242,6 @@ test('doctor prints the install help of a missing system tool, because gspot ins
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['pytest'], { tables: '[coverage]\nmin_line_percent = 80\n' }),
         'test_main.py': 'def test_value():\n    assert True\n',
-        'settings.json': '{}\n',
     });
     const { listExecutablePaths } = locate;
     using _paths = spyOn(locate, 'listExecutablePaths').mockImplementation(async (root, program, search) =>

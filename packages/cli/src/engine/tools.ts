@@ -98,21 +98,29 @@ export function listCheckTools(planned: ScopeCheck): string[] {
     return [...names];
 }
 
-export function listHostCheckTools(checks: ScopeCheck[]): Set<string> {
+/**
+List the tools of the checks that run on this machine and have a file to read: the mise tools that gspot install
+installs. The tool projects still pin every tool, so the committed files do not depend on which files exist.
+*/
+export function listHostCheckTools({
+    configuredChecks,
+    repository,
+}: Pick<SessionBase, 'configuredChecks' | 'repository'>): Set<string> {
     const host = { platform: getOperatingSystem(), arch: process.arch };
-    const runnable = checks.filter((planned) => findSystemSkip(planned.check, planned.tool, host) === undefined);
+    const runnable = configuredChecks.filter(
+        (planned) =>
+            findSystemSkip(planned.check, planned.tool, host) === undefined &&
+            hasFilesToCheck(repository.files, planned),
+    );
     return new Set(runnable.flatMap((planned) => listCheckTools(planned)));
 }
 
 /**
-Select the tools that checks with a file to read, their fixers, and their config files use, so a check with nothing to
-read installs nothing. The tools cover every supported system, so committed output does not depend on this machine.
+Select the tools that checks, fixers, and their config files use. The tools cover every supported system, so committed
+output does not depend on this machine.
 */
 export function selectToolConfigurations(session: SessionBase, checks: ScopeCheck[]): Configuration[] {
-    const { files } = session.repository;
-    const toolNames = new Set(
-        checks.filter((check) => hasFilesToCheck(files, check)).flatMap((check) => listCheckTools(check)),
-    );
+    const toolNames = new Set(checks.flatMap((check) => listCheckTools(check)));
     const prettierPlugins = listPrettierPlugins(session.scopes.flatMap(({ configurations }) => configurations));
     for (const { name } of prettierPlugins.keys()) toolNames.add(name);
     const configurations = listSelectedConfigurations(session.scopes);

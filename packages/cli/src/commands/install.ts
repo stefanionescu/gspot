@@ -23,7 +23,7 @@ async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promi
     const { installed, missing, notes, steps } = await installTools(session, {
         writer,
         generated: { files: buildToolProjects(session) },
-        checkTools: listHostCheckTools(session.configuredChecks),
+        checkTools: listHostCheckTools(session),
     });
     const changes = listGeneratedChangeLines(report);
     let summary = TOOLS_CHANGED_MESSAGE;

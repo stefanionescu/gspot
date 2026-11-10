@@ -34,7 +34,7 @@ async function runBunInstall(root: string, installPackages: () => Promise<void>,
     const result = await installTools(session, {
         writer: openFiles(root),
         generated: { files: buildToolProjects(session) },
-        checkTools: listHostCheckTools(session.configuredChecks),
+        checkTools: listHostCheckTools(session),
     });
     return { result, installs };
 }
@@ -92,7 +92,7 @@ test('a failed mise install stops the install after the npm tool project, which 
         installTools(session, {
             writer: openFiles(sandbox.path),
             generated: { files: buildToolProjects(session) },
-            checkTools: listHostCheckTools(session.configuredChecks),
+            checkTools: listHostCheckTools(session),
         }),
     );
     expect(error.message).toContain('mise failed');

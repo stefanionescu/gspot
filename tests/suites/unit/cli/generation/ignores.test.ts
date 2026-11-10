@@ -75,7 +75,6 @@ test.each([true, false])('generated file lists include the CI workflow only when
             rules: true,
             tables: stringify({ ci: { enabled, provider: 'github' } }),
         }),
-        'README.md': '# Example\n',
     });
     const generated = buildGeneratedFiles(await openSession(sandbox.path));
     const prettierIgnore = generated.files.find(({ path }) => path === '.prettierignore')!.content;

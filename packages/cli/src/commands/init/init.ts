@@ -42,7 +42,7 @@ async function installInitTools(
     const installation = await installTools(session, {
         writer: openFiles(root),
         generated: { files: buildToolProjects(session) },
-        checkTools: listHostCheckTools(session.configuredChecks),
+        checkTools: listHostCheckTools(session),
     });
     const { installed, missing, steps } = installation;
     const notes = [...applied.notes, ...installation.notes];

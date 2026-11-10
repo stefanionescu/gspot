@@ -6,10 +6,10 @@ import { createFileTree } from 'testdirs';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { listCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
+import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text.ts';
-import { getTool, listPackagePins } from '#cli/tools/pins.ts';
+import { buildMiseInstall, getTool, listPackagePins } from '#cli/tools/pins.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { COVERAGE_PROVIDERS, NODE_REQUIREMENTS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
@@ -64,6 +64,20 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
         );
     },
 );
+
+test('install adds dotenv-linter once an env file exists, and the mise project pins it either way', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const before = await openSession(sandbox.path);
+    await writeFile(join(sandbox.path, '.env.example'), 'API_URL=https://example.com\n');
+    const after = await openSession(sandbox.path);
+    expect([before, after].map((session) => listHostCheckTools(session).has('dotenv-linter'))).toStrictEqual([
+        false,
+        true,
+    ]);
+    const project = buildMiseInstall(after.toolConfigurations).content;
+    expect(project).toContain('dotenv-linter');
+    expect(buildMiseInstall(before.toolConfigurations).content).toBe(project);
+});
 
 test('Prettier plugins join the selected tools even though checks do not name them', async () => {
     await using sandbox = await createGitSandbox({

@@ -35,7 +35,7 @@ export async function readToolProjectFiles(
 
 export async function buildSandboxToolInstall(session: Session, writer: Files): Promise<ToolInstall> {
     const generated = buildGeneratedFiles(session);
-    const checkTools = listHostCheckTools(session.configuredChecks);
+    const checkTools = listHostCheckTools(session);
     return await buildToolInstall(session, { writer, generated, checkTools, misePath: undefined });
 }
 

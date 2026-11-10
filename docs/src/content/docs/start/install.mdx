@@ -97,8 +97,9 @@ Without a `package.json`, `mise.toml` sets it. Then run `gspot install`, because
 `gspot install` installs the tools and turns on the Git hooks in the clone. If it changes a lockfile under `.gspot/`,
 commit that file.
 
-gspot installs a tool only when one of its checks has a file to read. After you add the first file of a new kind, such
-as the first Markdown file, run `gspot install` again. Until then, the `gspot/generated-files` check fails.
+`gspot install` installs a tool from mise only when one of its checks has a file to read. The files under `.gspot/` pin
+every tool either way. After you add the first file of a new kind, such as the first `.env` file, its check reports the
+tool as missing until you run `gspot install` again.
 
 ## If your package manager refuses a new gspot release
 

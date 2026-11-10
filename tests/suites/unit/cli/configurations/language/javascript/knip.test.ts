@@ -68,7 +68,7 @@ test('Knip takes its default entry files at the root and under src', async () =>
         'src/main.tsx': 'export const value = 1;\n',
         'src/unused.ts': 'export const value = 1;\n',
     };
-    await writeKnipProject(sandbox.path, buildSandboxSettings(['javascript', 'typescript']), files);
+    await writeKnipProject(sandbox.path, buildSandboxSettings(['javascript']), files);
     const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(result.stderr).toBe('');
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
@@ -180,7 +180,6 @@ test('Knip writes only the ignores of code files and the tool binaries that a sc
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"private":true,"type":"module","scripts":{"lint":"eslint . && echo done"}}',
-        'index.js': 'export {};\n',
     });
     const session = await openSession(sandbox.path);
     const knip = JSON.parse(
