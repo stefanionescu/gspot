@@ -33,6 +33,13 @@ export const SWIFT_SECURITY_EXPLANATIONS = {
         fix: 'Fetch the secret at run time, and keep it in the Keychain.',
         example: '`Bundle.main.object(forInfoDictionaryKey: "ApiSecret")` reports `secret-in-plist`.',
     },
+    [SWIFT_SECURITY_RULES.sqlInterpolation]: {
+        description: 'No SQLite call runs SQL text built by string interpolation.',
+        why: 'A value pasted into the SQL text can end the statement and add one of its own.',
+        fix: 'Write `?` in the SQL text, and pass each value with a `sqlite3_bind` function.',
+        example:
+            '`sqlite3_exec(db, "DELETE FROM notes WHERE id = \\(id)", nil, nil, nil)` reports `sql-interpolation`.',
+    },
 } as const satisfies RuleExplanations;
 
 export const SWIFT_TEST_EXPLANATIONS = {

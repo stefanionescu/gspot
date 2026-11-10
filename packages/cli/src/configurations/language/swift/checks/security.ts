@@ -10,6 +10,7 @@ import {
     SECRET_VALUE,
     SECRET_WORD,
     SWIFT_SECRET_FINDINGS,
+    SWIFT_SECURITY_RULES,
     UNSAFE_SWIFT_NAMES,
     USER_DEFAULTS_DECLARATION,
     USER_DEFAULTS_RECEIVER,
@@ -20,6 +21,21 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+const SQLITE_FUNCTIONS: ReadonlySet<string> = new Set([
+    'sqlite3_exec',
+    'sqlite3_prepare',
+    'sqlite3_prepare_v2',
+    'sqlite3_prepare_v3',
+    'sqlite3_prepare16',
+    'sqlite3_prepare16_v2',
+    'sqlite3_prepare16_v3',
+]);
+
+const SQL_INTERPOLATION_FINDING = {
+    rule: SWIFT_SECURITY_RULES.sqlInterpolation,
+    message: 'Write `?` in the SQL text, and pass the value with a `sqlite3_bind` function.',
+};
 
 function listCallValues(call: Node): Node[] {
     const argumentsNode = call.namedChildren
@@ -74,6 +90,21 @@ function listSecretNodes(syntaxRoot: Node, source: string): Array<readonly [Node
     });
 }
 
+function listInterpolatedQueries(syntaxRoot: Node): Array<readonly [Node, { rule: string; message: string }]> {
+    return syntaxRoot
+        .descendantsOfType('call_expression')
+        .flatMap((call) =>
+            SQLITE_FUNCTIONS.has(call.firstNamedChild?.text ?? '') &&
+            listCallValues(call).some(
+                (value) =>
+                    value.type.endsWith('string_literal') &&
+                    value.namedChildren.some((child) => child.type === 'interpolated_expression'),
+            )
+                ? [[call, SQL_INTERPOLATION_FINDING] as const]
+                : [],
+        );
+}
+
 async function checkSwiftSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];
@@ -84,7 +115,11 @@ async function checkSwiftSecurity(session: Session, planned: PlannedCheck): Prom
                 const unsafe = UNSAFE_SWIFT_NAMES.get(node.text);
                 return unsafe === undefined ? [] : [[node, unsafe] as const];
             });
-        for (const [node, finding] of [...names, ...listSecretNodes(source.rootNode, source.text)])
+        for (const [node, finding] of [
+            ...names,
+            ...listSecretNodes(source.rootNode, source.text),
+            ...listInterpolatedQueries(source.rootNode),
+        ])
             findings.push({
                 file: source.path,
                 line: node.startPosition.row + 1,

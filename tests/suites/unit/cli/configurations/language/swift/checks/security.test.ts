@@ -68,3 +68,19 @@ other.set(token, forKey: "token")
         [2, 5, 7].map((line) => ({ line, rule: 'secret-in-userdefaults' })),
     );
 });
+
+test('swift/security reports SQLite calls whose SQL text interpolates a value, and not bound parameters', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift']),
+        'Notes.swift': String.raw`sqlite3_exec(db, "DELETE FROM notes WHERE id = \(id)", nil, nil, nil)
+sqlite3_prepare_v2(db, "SELECT body FROM notes WHERE title = '\(title)'", -1, &statement, nil)
+sqlite3_prepare_v2(db, "SELECT body FROM notes WHERE title = ?", -1, &statement, nil)
+print("Deleted note \(id)")
+`,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'swift/security');
+    expect(findings.map(({ line, rule }) => [line, rule])).toStrictEqual([
+        [1, 'sql-interpolation'],
+        [2, 'sql-interpolation'],
+    ]);
+});

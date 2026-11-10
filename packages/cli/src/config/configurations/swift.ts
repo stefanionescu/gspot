@@ -161,6 +161,7 @@ export const SWIFT_SECURITY_RULES = {
     log: 'secret-in-log',
     defaults: 'secret-in-userdefaults',
     plist: 'secret-in-plist',
+    sqlInterpolation: 'sql-interpolation',
 };
 
 const WEAK_HASH = {

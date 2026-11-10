@@ -162,7 +162,7 @@ files = { extensions = [".swift"] }
 help = "Change the code the way the message says."
 name = "security"
 stage = "commit"
-summary = "Finds always-accessible Keychain items, MD5 and SHA-1 hashes, and each secret in UserDefaults, a plist read, or a log."
+summary = "Finds always-accessible Keychain items, MD5 and SHA-1 hashes, each secret in UserDefaults, a plist read, or a log, and SQLite calls whose SQL text interpolates a value."
 why = "A secret in plain storage or a log outlives the app that wrote it, and a broken hash protects nothing."
 
 [[check]]
