@@ -2,21 +2,21 @@
 
 ## 0.4.1
 
-gspot 0.4.1 installs a tool only when one of its checks has a file to read, stops running syncpack where it has nothing
-to compare, and runs the CI job with the Node.js that `mise.toml` pins. `WRITING.md` and `WORKING.md` gain three rules.
+gspot 0.4.1 installs a mise tool only when one of its checks has a file to read, installs syncpack only in JavaScript
+repositories, and runs the CI job with the Node.js that `mise.toml` pins. `WRITING.md` and `WORKING.md` gain three rules.
 The ESLint plugin moves to 0.2.6, with no change to its rules.
 
 ### Upgrade from 0.4.0
 
 1. Install 0.4.1 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.4.1`. With a
    mise pin, raise the version in `mise.toml` and run `mise install`.
-2. Run `gspot install`. It drops the tools of checks that have no file to read, so `.gspot/package.json`,
-   `.gspot/mise.toml`, `.gspot/pyproject.toml`, and their lockfiles can shrink. With CI on and a Node.js pin in
-   `mise.toml`, the workflow now installs that version.
+2. Run `gspot install`. It installs only the mise tools whose checks have a file to read. Without the `javascript`
+   configuration, `.gspot/package.json` drops syncpack, and a Vue repository without `typescript` drops vue-tsc. With CI
+   on and a Node.js pin in `mise.toml`, the workflow now installs that version.
 3. Commit `.gspot/`, the rule files, and the workflow that changed.
 
-After you add the first file of a new kind, such as the first Markdown file, run `gspot install` again. Until then, the
-`gspot/generated-files` check fails.
+After you add the first file of a new kind, such as the first `.env` file, run `gspot install` again. Until then, its
+check reports the tool as missing. The files under `.gspot/` stay the same.
 
 From 0.3.9, follow the 0.4.0 steps. 0.4.1 no longer names the flags, commands, and keys that 0.4.0 removed: an old hook
 script with `gspot check --stage` stops on an unknown option, and `limits.min_function_statements` stops as an unknown
@@ -35,12 +35,13 @@ key. Rename it to `trivial_function_statements` first.
 
 #### Fixes
 
-- gspot installs a tool only when one of its checks covers a file of the working tree. A repository with no `.env` file
-  no longer gets dotenv-linter, and one with no Markdown file no longer gets lychee. Checks of commit messages and of
-  pushed history, and `[[command_check]]` records, still install their tools. (45d5543)
-- `dependencies/syncpack` reads only a `package.json` below the root, where a workspace keeps its packages. A repository
-  whose only `package.json` sits at the root, such as one that only pins gspot, no longer runs or installs syncpack.
-  (5db5201)
+- `gspot install` installs a mise tool only when one of its checks has a file to read. A repository with no `.env` file
+  no longer gets dotenv-linter, and one with no Markdown file no longer gets lychee. The files under `.gspot/` still pin
+  every tool, so they stay the same when files come and go, and `gspot doctor` reports only the tools that
+  `gspot install` installs. (23b12c1)
+- `dependencies/syncpack` runs, and gets installed, only with the `javascript` configuration, and reads only a
+  `package.json` below the root, where a workspace keeps its packages. A check that needs a configuration the scope does
+  not select, such as `vue/vue-tsc` without `typescript`, no longer installs its tool either. (5db5201, 44cbf51)
 - The CI workflow installs the Node.js that `mise.toml` pins, and runs the dependency installs with it, so CI runs the
   version that your machine runs. Without a pin, it keeps the version that gspot pins for CI. (ec6e98d)
 
