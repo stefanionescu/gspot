@@ -45,6 +45,10 @@ asks for it or the checks of the repository include it.
 
 Write tests when the user asks or a check requires them. Fix each test that your change breaks.
 
+Never pipe a test, a check, or a CI command into `head`, `tail`, or `grep` to read its result. A pipe reports the exit
+code of its last command, so a failed run looks like a pass, and `head` can stop the run early. Write the output to a
+file, read the exit code, then read the file.
+
 ## Rules and checks
 
 Run `gspot explain <check>` to see what a check looks for and how to fix its findings. When a rule and a check conflict,
