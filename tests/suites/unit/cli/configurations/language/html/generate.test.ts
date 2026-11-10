@@ -48,6 +48,31 @@ test('source HTML leaves layout to Prettier while built pages keep their existin
     }
 });
 
+test('source HTML needs integrity on a script or stylesheet from another origin, and not on its own files', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['html']),
+        'index.html': '<!doctype html><title>Root</title>',
+    });
+    const file = buildGeneratedFiles(await openSession(sandbox.path)).files.find(({ path }) =>
+        path.endsWith('/html/html-validate.json'),
+    )!;
+    const validator = new HtmlValidate(JSON.parse(file.content) as ConfigData);
+    const listRules = async (source: string): Promise<string[]> => {
+        const report = await validator.validateString(source);
+        return report.results.flatMap(({ messages }) => messages.map(({ ruleId }) => ruleId));
+    };
+    expect(
+        await listRules(
+            '<!doctype html><html lang="en"><head><title>Example</title><script src="https://cdn.example.com/library.js"></script><script src="/app.js"></script></head><body></body></html>',
+        ),
+    ).toStrictEqual(['require-sri']);
+    expect(
+        await listRules(
+            '<!doctype html><html lang="en"><head><title>Example</title><script src="https://cdn.example.com/library.js" integrity="sha384-example" crossorigin="anonymous"></script><script src="/app.js"></script></head><body></body></html>',
+        ),
+    ).toStrictEqual([]);
+});
+
 test.each([
     ['a Starlight site', '{"private":true,"dependencies":{"@astrojs/starlight":"0.0.0-test"}}', []],
     ['another site', '{"private":true}', ['no-implicit-button-type', 'unique-landmark']],

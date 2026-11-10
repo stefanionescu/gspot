@@ -24,6 +24,9 @@ failed   html/html-validate  2 findings
   index.html:10:14  no-implicit-button-type  <button> is missing recommended "type" attribute
 ```
 
+gspot also turns on `require-sri` for scripts and stylesheets from another origin, such as a content delivery network.
+Add an `integrity` hash to each one, so the browser refuses a changed file.
+
 gspot turns off the style rules that Prettier decides, such as `attr-quotes` and `void-style`. At level `basic`, it also
 turns off `no-inline-style`, `prefer-button`, and `prefer-native-element`. Level `all` runs them, so a `style` attribute
 or a `div` with `role="button"` gets a finding.

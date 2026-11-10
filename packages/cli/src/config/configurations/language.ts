@@ -203,6 +203,7 @@ export const HTML_VALIDATE_RULES = {
     'attr-case': 'off',
     'element-case': 'off',
     'no-trailing-whitespace': 'off',
+    'require-sri': ['error', { target: 'crossorigin' }],
 } as const;
 
 export const HTML_VALIDATE_OVERRIDES: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
