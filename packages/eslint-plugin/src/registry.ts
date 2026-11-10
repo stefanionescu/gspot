@@ -59,6 +59,7 @@ import { xmlParserXxe } from './rules/security/xml-parser-xxe.ts';
 import { maxRequestSize } from './rules/servers/max-request-size.ts';
 import { noAnyOriginPolicy } from './rules/servers/no-any-origin-policy.ts';
 import { noProductionDebug } from './rules/servers/no-production-debug.ts';
+import { noUncheckedRequestData } from './rules/servers/no-unchecked-request-data.ts';
 import { noUnsafeFileUploads } from './rules/servers/no-unsafe-file-uploads.ts';
 import { requireCsrfMiddleware } from './rules/servers/require-csrf-middleware.ts';
 import { requireSessionRegeneration } from './rules/servers/require-session-regeneration.ts';
@@ -161,6 +162,7 @@ export const SECURITY_RULES = [
     noUnsafeFileUploads,
     noPublicFilePermissions,
     noProductionDebug,
+    noUncheckedRequestData,
     maxRequestSize,
     disabledResourceIntegrity,
     requireSessionRegeneration,
