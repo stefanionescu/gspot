@@ -8,6 +8,12 @@
         "attr-quotes": "off",
         "attr-case": "off",
         "element-case": "off",
-        "no-trailing-whitespace": "off"
+        "no-trailing-whitespace": "off",
+        "require-sri": [
+            "error",
+            {
+                "target": "crossorigin"
+            }
+        ]
     }
 }
