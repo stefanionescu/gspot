@@ -50,6 +50,7 @@ import { ANSIBLE_CHECKS } from '#cli/configurations/infrastructure/ansible/check
 import { DOCKER_COMPOSE_CHECKS } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { DOCKER_DOCKERIGNORE_CHECKS } from '#cli/configurations/infrastructure/docker/checks/dockerignore.ts';
 import { DOCKER_INSTRUCTIONS_CHECKS } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
+import { DOCKER_SERVICE_SECURITY_CHECKS } from '#cli/configurations/infrastructure/docker/checks/service-security.ts';
 import { DOCKER_TRIVY_IMAGE_CHECKS } from '#cli/configurations/infrastructure/docker/checks/trivy-image.ts';
 import { GITHUB_ACTIONS_CHECKS } from '#cli/configurations/infrastructure/github-actions/checks.ts';
 import { NGINX_CHECKS } from '#cli/configurations/infrastructure/nginx/checks.ts';
@@ -103,6 +104,7 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...DOCKER_COMPOSE_CHECKS,
     ...DOCKER_DOCKERIGNORE_CHECKS,
     ...DOCKER_INSTRUCTIONS_CHECKS,
+    ...DOCKER_SERVICE_SECURITY_CHECKS,
     ...DOCKER_TRIVY_IMAGE_CHECKS,
     ...DOCS_MISSING_PATHS_CHECKS,
     ...DOCS_REQUIRED_FILES_CHECKS,

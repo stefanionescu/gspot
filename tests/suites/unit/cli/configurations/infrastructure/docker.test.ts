@@ -213,3 +213,44 @@ test('docker/dockerignore reports a COPY source that the ignore file excludes', 
             .map(({ file, line, message }) => ({ file, line, message })),
     ).toStrictEqual([{ file: 'Dockerfile', line: 2, message: expect.stringContaining('private') as string }]);
 });
+
+test('docker/service-security reports a privileged service, the Docker socket, and an unconfined profile', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        'compose.yaml': `services:
+    agent:
+        image: example/agent:1.0.0
+        privileged: true
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - type: bind
+              source: /run/docker.sock
+              target: /run/docker.sock
+        security_opt:
+            - seccomp:unconfined
+`,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'docker/service-security');
+    expect(findings.map(({ line, rule }) => [line, rule])).toStrictEqual([
+        [4, 'privileged-container'],
+        [6, 'docker-socket'],
+        [8, 'docker-socket'],
+        [11, 'unconfined-profile'],
+    ]);
+});
+
+test('docker/service-security accepts data volumes and a hardening option', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        'compose.yaml': `services:
+    api:
+        image: example/api:1.0.0
+        privileged: false
+        volumes:
+            - ./data:/var/lib/api
+        security_opt:
+            - no-new-privileges:true
+`,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'docker/service-security')).toStrictEqual([]);
+});

@@ -1,4 +1,9 @@
-import { DOCKER_RULES, INSTRUCTION_RULES } from '#cli/config/configurations/infrastructure.ts';
+import {
+    DOCKER_RULES,
+    INSTRUCTION_RULES,
+    SERVICE_SECURITY_MESSAGES,
+    SERVICE_SECURITY_RULES,
+} from '#cli/config/configurations/infrastructure.ts';
 import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
@@ -22,6 +27,27 @@ export const DOCKERIGNORE_EXPLANATIONS = {
         example: '`COPY dist/ ./` with `dist` in `.dockerignore` reports `ignored-source`.',
     },
     ...SYNTAX_EXPLANATIONS,
+} as const satisfies RuleExplanations;
+
+export const SERVICE_SECURITY_EXPLANATIONS = {
+    [SERVICE_SECURITY_RULES.privileged]: {
+        description: 'No Compose service runs with `privileged: true`.',
+        why: 'A privileged container sees every device of the host, so one bug in the service gives the host away.',
+        fix: SERVICE_SECURITY_MESSAGES.privileged,
+        example: 'A service with `privileged: true` reports `privileged-container`.',
+    },
+    [SERVICE_SECURITY_RULES.dockerSocket]: {
+        description: 'No Compose service mounts the Docker socket.',
+        why: 'A process that reads the socket starts containers with any mount, so it controls the host.',
+        fix: SERVICE_SECURITY_MESSAGES.dockerSocket,
+        example: 'A volume `/var/run/docker.sock:/var/run/docker.sock` reports `docker-socket`.',
+    },
+    [SERVICE_SECURITY_RULES.unconfined]: {
+        description: 'No Compose service turns off its seccomp, AppArmor, or SELinux profile.',
+        why: 'These profiles block the system calls and files that an escape from the container needs.',
+        fix: SERVICE_SECURITY_MESSAGES.unconfined,
+        example: '`security_opt: [seccomp:unconfined]` reports `unconfined-profile`.',
+    },
 } as const satisfies RuleExplanations;
 
 export const INSTRUCTION_EXPLANATIONS = {

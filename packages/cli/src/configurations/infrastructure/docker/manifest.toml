@@ -70,6 +70,15 @@ summary = "Parses every Compose file with `docker compose config`, which needs n
 why = "Valid YAML can still hold a key that Compose rejects, and otherwise the first sign comes during a deploy."
 
 [[check]]
+example = "A Compose service with `privileged: true` reports `privileged-container`. Remove it, and add only the capabilities the service needs with `cap_add`."
+files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}"] }
+help = "Change the service the way the message says."
+name = "service-security"
+stage = "commit"
+summary = "Reports each Compose service that runs privileged, mounts the Docker socket, or turns off its seccomp, AppArmor, or SELinux profile."
+why = "Each of these hands the container control of the host, so one bug in the service compromises the machine."
+
+[[check]]
 example = "`RUN npm install` reports `lockfile-install`. Write `RUN npm ci`, which installs the lockfile as it is."
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
 help = "Apply the fix that the message names."

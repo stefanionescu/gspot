@@ -183,6 +183,19 @@ export const INSTRUCTION_MESSAGES = {
     dockerSocket: 'Do not give the container the Docker socket. A process that reads it controls the host.',
 } as const;
 
+export const SERVICE_SECURITY_RULES = {
+    privileged: 'privileged-container',
+    dockerSocket: 'docker-socket',
+    unconfined: 'unconfined-profile',
+} as const;
+
+export const SERVICE_SECURITY_MESSAGES = {
+    privileged: 'Remove `privileged`, and add only the capabilities this service needs with `cap_add`.',
+    dockerSocket: 'Do not mount the Docker socket. A process that reads it controls the host.',
+    unconfined:
+        'Keep the default seccomp, AppArmor, and SELinux profiles, or name a profile that allows what you need.',
+} as const;
+
 export const NPM_COMMAND = 'npm';
 
 export const NPM_INSTALL_VERBS: ReadonlySet<string> = new Set(['install', 'i']);
