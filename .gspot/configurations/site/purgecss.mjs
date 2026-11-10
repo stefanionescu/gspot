@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs';
 /**
 Split a built page or script into the words that can name a selector, without the colons that end a word.
-
-@param content the text of a built page or script.
 */
 export const defaultExtractor = (content) => (content.match(/[^<>"'`\s]+/gu) ?? [])
     .map((token) => {

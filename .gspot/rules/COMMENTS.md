@@ -6,7 +6,7 @@ Read this rule when you write or change a comment.
 
 A comment explains why, not what, and describes the code in its current form.
 
-Bad: `# Removed the old cache loader.` Good: `# The provider allows 100 requests an hour, so read the cache first.`
+Bad: `# Removed the old cache loader.` Good: `# The provider limits requests per hour, so read the cache first.`
 
 ## When to comment
 
@@ -26,5 +26,4 @@ Rewrite or delete a comment that describes behavior the code lacks, or the reaso
 
 - When you move or delete a declaration, do the same to its comment.
 - Do not write work status in a comment. For example, do not describe a paused job or a temporary choice.
-- Never copy a size, time, default, or list of values from the code into a comment; name the constant.
 - Track unfinished work in the issue tracker, not in a comment.

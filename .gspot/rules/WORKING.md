@@ -34,7 +34,7 @@ code needs a new file.
 - If you discover something unrelated that needs fixing, mention it to the user. Leave it unless the fix takes one small
   edit in a file you already change.
 - Do not add features, refactor surrounding code, or make unrequested improvements.
-- A request for a review or a plan stays read-only until the user allows changes.
+- A request for a review, a plan, an analysis, or a discussion stays read-only until the user allows changes.
 - Changes you did not make may belong to another agent or contributor working in parallel. Do not revert, stash, clean,
   or overwrite them. Keep working beside them, and ask the user only when your change overwrites or contradicts one.
 
@@ -44,6 +44,10 @@ Do not run verification broader than the change. Run no full test suite, build, 
 asks for it or the checks of the repository include it.
 
 Write tests when the user asks or a check requires them. Fix each test that your change breaks.
+
+Never pipe a test, a check, or a CI command into `head`, `tail`, or `grep` to read its result. A pipe reports the exit
+code of its last command, so a failed run looks like a pass, and `head` can stop the run early. Write the output to a
+file, read the exit code, then read the file.
 
 ## Rules and checks
 
