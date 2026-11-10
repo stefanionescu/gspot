@@ -75,7 +75,7 @@ files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*
 help = "Apply the fix that the message names."
 name = "instructions"
 stage = "commit"
-summary = "Finds `RUN` lines that can rewrite the lockfile or pipe a download into a shell, an nginx tag with no full version, and a shell as the `ENTRYPOINT`."
+summary = "Finds `RUN` lines that can rewrite the lockfile, pipe a download into a shell, or add a second Python index, an `ADD` of a URL with no checksum, the Docker socket as a `VOLUME`, an nginx tag with no full version, and a shell as the `ENTRYPOINT`."
 why = "A build that rewrites its lockfile or runs a downloaded script ships code that nobody reviewed, and a shell as process 1 swallows the stop signal."
 
 [[check]]

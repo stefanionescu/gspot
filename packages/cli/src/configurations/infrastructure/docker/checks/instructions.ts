@@ -25,6 +25,17 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
 import type { Session } from '#cli/types/tools.ts';
 
+const SECOND_INDEX_FLAG = /^--extra-index-url(?:=|$)/u;
+
+/**
+Instructions that a pattern of their text reports: an `ADD` of a URL without `--checksum`, and the Docker socket as a
+`VOLUME`.
+*/
+const INSTRUCTION_PATTERNS: ReadonlyArray<{ name: string; hit: keyof typeof INSTRUCTION_RULES; pattern: RegExp }> = [
+    { name: 'ADD', hit: 'remoteAdd', pattern: /^(?!.*--checksum=).*\bhttps?:\/\//u },
+    { name: 'VOLUME', hit: 'dockerSocket', pattern: /docker\.sock/u },
+];
+
 function isUnlockedInstall(command: Node): boolean {
     const [verb = '', ...rest] = command.childrenForFieldName('argument').map(({ text }) => text);
     const name = posix.basename(command.childForFieldName('name')?.text ?? '');
@@ -53,6 +64,13 @@ async function listRunHits(session: Session, text: string): Promise<Array<keyof 
             .descendantsOfType('command')
             .flatMap((command) => (isUnlockedInstall(command) ? ['lockfile' as const] : [])),
         ...tree.rootNode
+            .descendantsOfType('command')
+            .flatMap((command) =>
+                command.childrenForFieldName('argument').some(({ text }) => SECOND_INDEX_FLAG.test(text))
+                    ? ['secondIndex' as const]
+                    : [],
+            ),
+        ...tree.rootNode
             .descendantsOfType('pipeline')
             .flatMap((pipeline) => (isPipedDownload(pipeline) ? ['pipedDownload' as const] : [])),
     ];
@@ -68,7 +86,10 @@ function hasFloatingNginxTag(text: string): boolean {
 function listStaticHits({ name, text }: DockerInstruction): Array<keyof typeof INSTRUCTION_RULES> {
     const program = EXEC_FORM_START.exec(text)?.groups?.['program'] ?? '';
     if (name === 'ENTRYPOINT' && INTERPRETER_COMMANDS.has(posix.basename(program))) return ['shellEntrypoint'];
-    return name === 'FROM' && hasFloatingNginxTag(text) ? ['nginxTag'] : [];
+    const patterned = INSTRUCTION_PATTERNS.filter((row) => row.name === name && row.pattern.test(text)).map(
+        ({ hit }) => hit,
+    );
+    return name === 'FROM' && hasFloatingNginxTag(text) ? [...patterned, 'nginxTag'] : patterned;
 }
 
 async function checkInstructions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {

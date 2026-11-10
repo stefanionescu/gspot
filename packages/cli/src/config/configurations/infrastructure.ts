@@ -168,6 +168,9 @@ export const INSTRUCTION_RULES = {
     pipedDownload: 'piped-download',
     nginxTag: 'nginx-tag',
     shellEntrypoint: 'shell-entrypoint',
+    secondIndex: 'extra-index-url',
+    remoteAdd: 'remote-add',
+    dockerSocket: 'docker-socket',
 } as const;
 
 export const INSTRUCTION_MESSAGES = {
@@ -175,6 +178,9 @@ export const INSTRUCTION_MESSAGES = {
     pipedDownload: 'Do not pipe a download into a shell. Download a pinned file, check it, then run it.',
     nginxTag: 'Pin nginx to a full version, such as `nginx:1.27.3-alpine`.',
     shellEntrypoint: 'Run the program as the first `ENTRYPOINT` element, so that it receives the stop signal.',
+    secondIndex: 'Install from one index, through `--index-url`, instead of adding a second one.',
+    remoteAdd: 'Pass `--checksum=sha256:<hash>` to this `ADD`, or download the file in a `RUN` and check its hash.',
+    dockerSocket: 'Do not give the container the Docker socket. A process that reads it controls the host.',
 } as const;
 
 export const NPM_COMMAND = 'npm';

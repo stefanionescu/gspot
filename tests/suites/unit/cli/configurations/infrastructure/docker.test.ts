@@ -168,6 +168,9 @@ test.each([
     ['FROM nginx:1.27', 'nginx-tag'],
     ['FROM nginx', 'nginx-tag'],
     ['ENTRYPOINT ["/bin/sh", "-c", "nginx"]', 'shell-entrypoint'],
+    ['RUN pip install --extra-index-url https://pypi.example.com/simple app', 'extra-index-url'],
+    ['ADD https://example.com/tool.tar.gz /opt/', 'remote-add'],
+    ['VOLUME /var/run/docker.sock', 'docker-socket'],
 ])('docker/instructions reports %s as %s', async (line, rule) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
@@ -186,6 +189,9 @@ test.each([
     'FROM nginx@sha256:0000000000000000000000000000000000000000000000000000000000000000',
     'FROM node:24-alpine',
     'ENTRYPOINT ["nginx", "-g", "daemon off;"]',
+    'RUN pip install --index-url https://pypi.example.com/simple app',
+    'ADD --checksum=sha256:0000000000000000000000000000000000000000000000000000000000000000 https://example.com/tool.tar.gz /opt/',
+    'ADD ./tool.tar.gz /opt/',
 ])('docker/instructions accepts %s', async (line) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
