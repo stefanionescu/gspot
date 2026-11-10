@@ -1,5 +1,76 @@
 # Changelog
 
+## 0.4.2
+
+gspot 0.4.2 reports more security problems with the tools it already runs, adds a Compose check, and ships Semgrep rules
+for Django, Flask, PyJWT, and machine learning code in four new configurations. The ESLint plugin moves to 0.2.7 with a
+rule that follows request data in JavaScript.
+
+### Upgrade from 0.4.1
+
+1. Install 0.4.2 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.4.2`. With a
+   mise pin, raise the version in `mise.toml` and run `mise install`.
+2. Run `gspot install`, and commit `.gspot/`, the rule files, and the other files that changed. A repository with
+   GitHub workflows now gets the Bash grammar.
+3. Run `gspot check`. The checks that gained rules can report files that passed before; fix each finding, or ignore its
+   rule with a reason.
+4. If `gspot/detected-configurations` names `django`, `flask`, `pyjwt`, or `machine-learning`, run the `gspot add` line
+   that it prints, then `gspot install`. Each of them installs Semgrep, which runs on macOS and Linux.
+
+### Known issues
+
+- When a staged file also has unstaged edits, a commit checks a copy of what you staged, and a test file that imports
+  `eslint` can get false type errors there. Stage the rest of the file, or commit it separately.
+- Node.js 22 ships an npm older than 11.19.0, which `gspot init` and `gspot install` need. On Node.js 22, run
+  `npm install --global npm@latest` first.
+- A `.gitattributes` rule above the gspot block still loses to `* text=auto eol=lf`, because `gspot install` keeps the
+  order of a block that exists. Move such a rule below the block.
+- The rules that follow request data see a value within one function. A value passed to a helper, or a call through
+  an alias, is not followed.
+
+### Highlights
+
+#### Security checks
+
+- `html/html-validate` turns on `require-sri` for scripts and stylesheets from another origin, so each one needs an
+  `integrity` hash. (315f954)
+- `openapi/spectral` adds the OWASP rules for an API key or a credential in a URL, HTTP Basic auth, and insecure auth
+  schemes, from the new `@stoplight/spectral-owasp-ruleset` package. (e8e78cd)
+- `python/ruff` runs S105, S106, and S107 at level `all`, so `SECRET_KEY = "development"` reports a hardcoded secret
+  that Gitleaks misses for its low entropy. (10d4aa0)
+- `github-actions/workflow-shape` reports a `run:` script that pipes a download into a shell, and a secret in the
+  top-level `env` of a workflow. (fe33e92)
+- `docker/instructions` reports `pip install --extra-index-url`, an `ADD` of a URL without `--checksum`, and the Docker
+  socket as a `VOLUME`. (f4f21f7)
+- The new `docker/service-security` reports a Compose service that runs privileged, mounts the Docker socket, or turns
+  off its seccomp, AppArmor, or SELinux profile. (648d122)
+- `swift/security` reports a `sqlite3_exec` or `sqlite3_prepare` call whose SQL text interpolates a value. (47e7e4c)
+
+#### Semgrep configurations
+
+Each one turns on with its dependency and ships gspot's own rules, so Semgrep installs only where a rule applies.
+(4ceef55)
+
+- `django` and `flask`: request data that reaches a redirect, a file path, an outbound request, an HTML response, or
+  template text within one view, a view without CSRF protection, and insecure cookie settings.
+- `pyjwt`: a decode that skips the signature check, the `none` algorithm, and a signing key in the source.
+- `machine-learning`: `torch.load` with `weights_only=False`, `numpy.load` with `allow_pickle=True`, and
+  `trust_remote_code=True`. Level `all` adds `joblib.load` and hub downloads without a pinned `revision`.
+
+#### ESLint plugin 0.2.7
+
+- `gspot/no-unchecked-request-data` follows a field of `req` or `request` through the variables of one function into a
+  redirect, an HTML response, a view name, a file path, an outbound request, SQL text built in a variable, a regular
+  expression, a shell, or a property name. It reads `node:` and `fs/promises` imports. (50e85bc)
+- The `express` configuration drops its selectors for `res.redirect` and `res.send`, which the rule now covers. The
+  selector for request data in inline SQL templates stays. (5dee54a)
+
+### Development
+
+This repository runs gspot 0.4.1. (517ab38)
+
+Released 2026-11-10. [Compare with 0.4.1](https://github.com/stefanionescu/gspot/compare/v0.4.1...v0.4.2)
+
 ## 0.4.1
 
 gspot 0.4.1 installs a mise tool only when one of its checks has a file to read, installs syncpack only in JavaScript
