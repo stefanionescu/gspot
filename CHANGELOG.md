@@ -1,5 +1,71 @@
 # Changelog
 
+## 0.4.1
+
+gspot 0.4.1 installs a tool only when one of its checks has a file to read, stops running syncpack where it has nothing
+to compare, and runs the CI job with the Node.js that `mise.toml` pins. `WRITING.md` and `WORKING.md` gain three rules.
+The ESLint plugin moves to 0.2.6, with no change to its rules.
+
+### Upgrade from 0.4.0
+
+1. Install 0.4.1 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.4.1`. With a
+   mise pin, raise the version in `mise.toml` and run `mise install`.
+2. Run `gspot install`. It drops the tools of checks that have no file to read, so `.gspot/package.json`,
+   `.gspot/mise.toml`, `.gspot/pyproject.toml`, and their lockfiles can shrink. With CI on and a Node.js pin in
+   `mise.toml`, the workflow now installs that version.
+3. Commit `.gspot/`, the rule files, and the workflow that changed.
+
+After you add the first file of a new kind, such as the first Markdown file, run `gspot install` again. Until then, the
+`gspot/generated-files` check fails.
+
+From 0.3.9, follow the 0.4.0 steps. 0.4.1 no longer names the flags, commands, and keys that 0.4.0 removed: an old hook
+script with `gspot check --stage` stops on an unknown option, and `limits.min_function_statements` stops as an unknown
+key. Rename it to `trivial_function_statements` first.
+
+### Known issues
+
+- When a staged file also has unstaged edits, a commit checks a copy of what you staged, and a test file that imports
+  `eslint` can get false type errors there. Stage the rest of the file, or commit it separately.
+- Node.js 22 ships an npm older than 11.19.0, which `gspot init` and `gspot install` need. On Node.js 22, run
+  `npm install --global npm@latest` first.
+- A `.gitattributes` rule above the gspot block still loses to `* text=auto eol=lf`, because `gspot install` keeps the
+  order of a block that exists. Move such a rule below the block.
+
+### Highlights
+
+#### Fixes
+
+- gspot installs a tool only when one of its checks covers a file of the working tree. A repository with no `.env` file
+  no longer gets dotenv-linter, and one with no Markdown file no longer gets lychee. Checks of commit messages and of
+  pushed history, and `[[command_check]]` records, still install their tools. (45d5543)
+- `dependencies/syncpack` reads only a `package.json` below the root, where a workspace keeps its packages. A repository
+  whose only `package.json` sits at the root, such as one that only pins gspot, no longer runs or installs syncpack.
+  (5db5201)
+- The CI workflow installs the Node.js that `mise.toml` pins, and runs the dependency installs with it, so CI runs the
+  version that your machine runs. Without a pin, it keeps the version that gspot pins for CI. (ec6e98d)
+
+#### Rules
+
+- `WRITING.md` asks documentation and comments to name a setting, parameter, or config entry instead of copying its
+  value, and asks for a fresh read of the code, with its `file:line`, before a claim about what the code does. The
+  `COMMENTS.md` rule on copied values moves into it. (a642b63)
+- `WORKING.md` keeps an analysis or a discussion read-only until the user allows changes, as it did for a review or a
+  plan. (a642b63)
+
+#### Documentation
+
+- The site serves one `llms.txt`, with the supported languages and tools, then the steps to try and to set up gspot.
+  (e5dd377)
+- Each topic page has one job and a short title, and the upgrade page names the release age setting without its
+  default. (b54ea75, 2f8e569)
+
+### Development
+
+Doc comments that only restated a name are gone, and so are the tests that another test already proved. The messages for
+the flags, commands, and keys of 0.3.9 are gone too. (c0f925e, c6da4d8, af44b84, 8d01b2c, eb1c039, faf2b47, 0f1d984)
+
+Released 2026-11-10. [Compare with 0.4.0](https://github.com/stefanionescu/gspot/compare/v0.4.0...v0.4.1)
+
 ## 0.4.0
 
 gspot 0.4.0 removes `gspot baseline`, `gspot check --stage`, and `gspot check --changed`, so a hook script or CI line
