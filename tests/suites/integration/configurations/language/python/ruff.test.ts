@@ -30,6 +30,22 @@ import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
+test.each(['basic', 'all'] as const)('Ruff reports a hardcoded secret only at level all: %s', async (level) => {
+    const { root } = installedSandbox();
+    await using _sourceChange = await writeSandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(RUFF_SANDBOX.files, {
+            'gspot.toml': buildSandboxSettings(['python'], { level }),
+            'settings.py': '"""Application settings."""\n\nSECRET_KEY = "development"\n',
+        }),
+    );
+    const checked = parseCheckReport(
+        await spawnGspot(root, ['check', 'settings.py', '--only', 'python/ruff', '--json']),
+    );
+    const rules = listFindingRows(checked.report).map(({ rule }) => rule);
+    expect(rules.includes('S105'), checked.stdout).toBe(level === 'all');
+});
+
 test('Ruff selects the pytest lint rules only in the scope that selects pytest, and accepts an assert only in a test file', async () => {
     const { root } = installedSandbox();
     const sourceFiles = {
