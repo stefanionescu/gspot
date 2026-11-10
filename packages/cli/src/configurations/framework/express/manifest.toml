@@ -1,5 +1,5 @@
 [configuration]
-description = "Express services: request data passed straight to SQL text, res.send(), or res.redirect(), and values or stack traces in the error a client reads."
+description = "Express services: request data passed straight to SQL text, and values or stack traces in the error a client reads."
 requires = ["javascript"]
 suggests = ["openapi"]
 title = "Express"
@@ -14,18 +14,6 @@ selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpressio
 [[eslint.selectors]]
 message = "Request data goes into the SQL text of a database call, which allows SQL injection. Pass the value as a query parameter."
 selector = 'CallExpression[callee.property.name=/^(?:query|execute|raw|\$queryRawUnsafe)$/] > TemplateLiteral.arguments:first-child > MemberExpression.expressions[object.object.name="req"][object.property.name=/^(?:body|query|params)$/]'
-
-[[eslint.selectors]]
-message = "res.redirect() takes its target from the request, which allows an open redirect. Redirect only to a URL on an allowlist."
-selector = 'CallExpression[callee.object.name="res"][callee.property.name="redirect"][arguments.0.object.object.name="req"][arguments.0.object.property.name=/^(?:body|query|params)$/]'
-
-[[eslint.selectors]]
-message = "res.send() returns request data as HTML, which allows reflected XSS. Escape the value, or send JSON with res.json()."
-selector = 'CallExpression[callee.object.name="res"][callee.property.name="send"][arguments.0.object.object.name="req"][arguments.0.object.property.name=/^(?:body|query|params)$/]'
-
-[[eslint.selectors]]
-message = "res.send() returns request data as HTML, which allows reflected XSS. Escape the value, or send JSON with res.json()."
-selector = 'CallExpression[callee.object.name="res"][callee.property.name="send"] > TemplateLiteral.arguments > MemberExpression.expressions[object.object.name="req"][object.property.name=/^(?:body|query|params)$/]'
 
 [[eslint.selectors]]
 message = "A stack trace in an API response leaks implementation details. Log it on the server, and return a generic message."

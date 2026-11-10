@@ -61,22 +61,17 @@ path = "sibling"
 
 export const EXPRESS_SCOPE_FILES = {
     'app/package.json': '{"name":"security-app","private":true,"dependencies":{"express":"0.0.0-test"}}',
-    'source.js': 'res.send(req.body.message);\n',
-    'app/source.js': 'res.send(req.body.message);\n',
-    'app/child/source.js': 'res.send(req.body.message);\n',
-    'sibling/source.js': 'res.send(req.body.message);\n',
+    'source.js': 'db.query(`SELECT * FROM users WHERE id = ${req.body.id}`);\n',
+    'app/source.js': 'db.query(`SELECT * FROM users WHERE id = ${req.body.id}`);\n',
+    'app/child/source.js': 'db.query(`SELECT * FROM users WHERE id = ${req.body.id}`);\n',
+    'sibling/source.js': 'db.query(`SELECT * FROM users WHERE id = ${req.body.id}`);\n',
 } as const;
 
 export const EXPRESS_SOURCES = {
     'json.js': 'res.json({ name: req.query.name });\n',
-    'query-object.js': 'res.send(req.query);\n',
     'parameterized.js': 'db.query("SELECT * FROM users WHERE id = $1", [req.query.id]);\n',
-    'field.js': 'res.send(req.query.name);\n',
-    'response-template.js': 'res.send(`<p>${req.query.name}</p>`);\n',
     'query-template.js': 'db.query(`SELECT * FROM users WHERE id = ${req.query.id}`);\n',
     'execute-template.js': 'db.execute(`DELETE FROM users WHERE id = ${req.params.id}`);\n',
-    'redirect.js': 'res.redirect(req.query.next);\n',
-    'home.js': 'res.redirect("/home");\n',
     'stack.js': 'res.json({ stack: error.stack });\nres.status(500).send({ stack: error.stack });\n',
     'failure.js': 'res.json({ error: "Request failed" });\n',
     'client-message.js': 'res.json({ message: `Item ${identifier}` });\n',
@@ -85,10 +80,7 @@ export const EXPRESS_SOURCES = {
 export const EXPRESS_SOURCE_FINDINGS = [
     { file: 'client-message.js', line: 1 },
     { file: 'execute-template.js', line: 1 },
-    { file: 'field.js', line: 1 },
     { file: 'query-template.js', line: 1 },
-    { file: 'redirect.js', line: 1 },
-    { file: 'response-template.js', line: 1 },
     { file: 'stack.js', line: 1 },
     { file: 'stack.js', line: 2 },
 ] as const;
