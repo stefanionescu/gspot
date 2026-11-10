@@ -223,6 +223,18 @@ export const OPENAPI_CASES = [
         },
         expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },
     },
+    {
+        check: 'openapi/spectral',
+        files: {
+            'openapi.yaml': `${OPENAPI_DOCUMENT}components:
+    securitySchemes:
+        basic:
+            type: http
+            scheme: basic
+`,
+        },
+        expected: { file: 'openapi.yaml', rule: 'owasp:api2:2023-no-http-basic' },
+    },
 ] as const;
 
 export const XCODE_CASES = [

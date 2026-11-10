@@ -9,7 +9,14 @@ filenames = ["openapi.yaml", "openapi.yml", "openapi.json", "swagger.json", "swa
 name = "spectral"
 npm = "@stoplight/spectral-cli"
 off = { basic = ["info-contact", "info-description", "operation-description", "operation-tags"] }
+requires = ["@stoplight/spectral-owasp-ruleset"]
 version = "6.17.0"
+
+[[tool]]
+kind = "package"
+name = "@stoplight/spectral-owasp-ruleset"
+npm = "@stoplight/spectral-owasp-ruleset"
+version = "2.0.1"
 
 [[tool]]
 name = "ajv"
@@ -28,7 +35,7 @@ name = "spectral"
 output = { format = "regex", pattern = '^(?<file>.+):(?<line>\d+):(?<column>\d+) (?:error|warning) (?<rule>\S+) "(?<message>.*)"$' }
 runs = "scope"
 stage = "commit"
-summary = "Lints the file in `openapi.document` with the Spectral OpenAPI rules."
+summary = "Lints the file in `openapi.document` with the Spectral OpenAPI rules and the OWASP rules on credentials in URLs, HTTP Basic auth, and insecure auth schemes."
 when = { setting = "openapi.document" }
 why = "Teams generate clients from this document, so an operation with no ID or an undefined response breaks them."
 
