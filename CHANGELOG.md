@@ -3,7 +3,7 @@
 ## 0.4.1
 
 gspot 0.4.1 installs a mise tool only when one of its checks has a file to read, installs syncpack only in JavaScript
-repositories, and runs the CI job with the Node.js that `mise.toml` pins. `WRITING.md` and `WORKING.md` gain three rules.
+repositories, and runs the CI job with the Node.js that `mise.toml` pins. `WRITING.md` and `WORKING.md` gain four rules.
 The ESLint plugin moves to 0.2.6, with no change to its rules.
 
 ### Upgrade from 0.4.0
@@ -52,6 +52,8 @@ key. Rename it to `trivial_function_statements` first.
   `COMMENTS.md` rule on copied values moves into it. (a642b63)
 - `WORKING.md` keeps an analysis or a discussion read-only until the user allows changes, as it did for a review or a
   plan. (a642b63)
+- `WORKING.md` forbids piping a test, a check, or a CI command into `head`, `tail`, or `grep`, because a pipe reports the
+  exit code of its last command and a failed run looks like a pass. (2fcb057)
 
 #### Documentation
 
