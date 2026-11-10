@@ -21,6 +21,13 @@ Check commands, fields, defaults, limits, and supported versions against the imp
 evidence lacks required facts, narrow the claim. Link external facts to the primary source; never invent behavior to
 complete a page.
 
+Do not copy into documentation or a comment the value of a setting, parameter, or config entry, such as a limit, a
+default, a model name, or a prompt. Name the setting or the file that holds it, and explain a choice by the constraint
+it serves. A reference page that reads the value from its source can show it.
+
+Before you tell the user that the code does or lacks something, read that code again, even when you read it earlier in
+the session, and cite its `file:line`. Keep line numbers out of documentation, comments, and commit messages.
+
 Preserve exact API identifiers, public messages, official product names, and legal license text. Keep private reasoning
 and temporary notes out of shipped content.
 
