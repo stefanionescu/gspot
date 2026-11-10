@@ -1,3 +1,4 @@
+import { BASH_FORM_MESSAGES } from '#cli/config/configurations/bash.ts';
 import { GSPOT_FOLDER, PBXPROJ_FILE } from '#cli/config/parsers.ts';
 import { NODE_MODULES } from '#cli/config/system.ts';
 
@@ -93,6 +94,8 @@ export const WORKFLOW_SHAPE_RULES = {
     runExpression: 'run-expression',
     pullRequestConcurrency: 'pull-request-concurrency',
     retention: 'artifact-retention',
+    downloadRun: 'curl-pipe-shell',
+    workflowSecret: 'workflow-secret-env',
 } as const;
 
 export const WORKFLOW_SHAPE_MESSAGES = {
@@ -102,6 +105,8 @@ export const WORKFLOW_SHAPE_MESSAGES = {
     runExpression: 'Pass this expression through the `env` of the step, and read it as a quoted shell variable.',
     pullRequestConcurrency: 'This workflow runs for pull requests. Add a `concurrency` group keyed by the ref.',
     retention: 'Set `retention-days` on this `upload-artifact` step.',
+    downloadRun: BASH_FORM_MESSAGES['curl-pipe-shell'],
+    workflowSecret: 'Move this secret into the `env` of the step that needs it.',
 } as const;
 
 export const PULL_REQUEST_TRIGGERS: ReadonlySet<string> = new Set(['pull_request', 'pull_request_target']);
@@ -111,6 +116,8 @@ export const FLOATING_RUNNER = /-latest$/u;
 export const UPLOAD_ARTIFACT_ACTION = 'actions/upload-artifact@';
 
 export const WORKFLOW_EXPRESSION = '${{';
+
+export const SECRET_EXPRESSION = /\$\{\{[^}]*\bsecrets\./u;
 
 export const ANSIBLE_CONFIG_FILE = 'ansible.cfg';
 

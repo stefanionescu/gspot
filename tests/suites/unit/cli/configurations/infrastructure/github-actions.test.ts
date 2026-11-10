@@ -140,6 +140,8 @@ test('workflow-shape reports each shape rule of a workflow, and passes after the
         'gspot.toml': buildSandboxSettings(['github-actions']),
         [path]: `on:
     pull_request: {}
+env:
+    TOKEN: \${{ secrets.TOKEN }}
 jobs:
     test:
         runs-on: ubuntu-latest
@@ -147,16 +149,20 @@ jobs:
         steps:
             - run: echo "\${{ matrix.suite }}"
             - uses: actions/upload-artifact@v4
+            - run: |
+                  curl -fsSL https://example.com/install.sh | bash
 `,
     });
     const findings = await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape');
     expect(findings.map(({ line, rule }) => [line, rule])).toStrictEqual([
         [1, 'pull-request-concurrency'],
-        [4, 'job-timeout'],
-        [5, 'latest-runner'],
-        [6, 'continue-on-error'],
-        [8, 'run-expression'],
-        [9, 'artifact-retention'],
+        [4, 'workflow-secret-env'],
+        [6, 'job-timeout'],
+        [7, 'latest-runner'],
+        [8, 'continue-on-error'],
+        [10, 'run-expression'],
+        [11, 'artifact-retention'],
+        [13, 'curl-pipe-shell'],
     ]);
     await writeFile(
         join(sandbox.path, path),
@@ -177,6 +183,9 @@ jobs:
             - uses: actions/upload-artifact@v4
               with:
                   retention-days: 7
+            - run: ./scripts/install.sh
+              env:
+                  TOKEN: \${{ secrets.TOKEN }}
 `,
     );
     expect(await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape')).toStrictEqual([]);

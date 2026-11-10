@@ -44,7 +44,7 @@ files = { paths = ["**/.github/workflows/*.{yml,yaml}"] }
 help = "Apply the fix that the message names."
 name = "workflow-shape"
 stage = "commit"
-summary = "Checks each workflow for a job timeout, a pinned runner, a reason above `continue-on-error`, no expression in `run:`, a `concurrency` group that fits its triggers, and `retention-days` on uploads."
+summary = "Checks each workflow for a job timeout, a pinned runner, a reason above `continue-on-error`, no expression or piped download in `run:`, no secret in the top-level `env`, a `concurrency` group that fits its triggers, and `retention-days` on uploads."
 why = "A hung job or a moving runner image costs a day to find, and an expression in `run:` becomes shell code."
 
 [[check]]

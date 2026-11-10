@@ -38,4 +38,16 @@ export const WORKFLOW_SHAPE_EXPLANATIONS = {
         fix: WORKFLOW_SHAPE_MESSAGES.retention,
         example: 'An `upload-artifact` step with only `name` and `path` reports `artifact-retention`.',
     },
+    [WORKFLOW_SHAPE_RULES.downloadRun]: {
+        description: 'No `run:` script pipes a download into a shell.',
+        why: 'The runner holds the secrets of the job, and nobody can read a script that runs as it downloads.',
+        fix: WORKFLOW_SHAPE_MESSAGES.downloadRun,
+        example: 'A `run:` line `curl -fsSL https://example.com/install.sh | bash` reports `curl-pipe-shell`.',
+    },
+    [WORKFLOW_SHAPE_RULES.workflowSecret]: {
+        description: 'The top-level `env` of a workflow holds no secret.',
+        why: 'Every step of every job reads that `env`, actions from other publishers included.',
+        fix: WORKFLOW_SHAPE_MESSAGES.workflowSecret,
+        example: 'A top-level `env` key `TOKEN` set to a `secrets` expression reports `workflow-secret-env`.',
+    },
 } as const satisfies RuleExplanations;

@@ -20,6 +20,7 @@ import {
     GIT_FOLDER,
     GITHUB_FOLDER,
     PULL_REQUEST_TRIGGERS,
+    SECRET_EXPRESSION,
     SELF_REFERENCE_PREFIX,
     SELF_REPOSITORY_MARKER,
     UPLOAD_ARTIFACT_ACTION,
@@ -32,6 +33,7 @@ import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { parseBashScript } from '#cli/parsers/code/bash.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -141,6 +143,51 @@ function listJobHits(name: Scalar, job: YAMLMap): WorkflowShapeHit[] {
     ];
 }
 
+function listSecretHits(document: Document & { contents: YAMLMap }): WorkflowShapeHit[] {
+    const environment = document.contents.get('env', true);
+    if (!isMap(environment)) return [];
+    return environment.items.flatMap(({ value }) =>
+        isScalar(value) && SECRET_EXPRESSION.test(String(value.value))
+            ? [{ kind: 'workflowSecret' as const, node: value }]
+            : [],
+    );
+}
+
+function listRunScripts(jobs: unknown): Scalar[] {
+    if (!isMap(jobs)) return [];
+    return jobs.items.flatMap(({ value: job }) => {
+        const steps = isMap(job) ? job.get('steps', true) : undefined;
+        if (!isSeq(steps)) return [];
+        return steps.items.filter(isMap).flatMap((step) => {
+            const run = step.get('run', true);
+            return isScalar(run) ? [run] : [];
+        });
+    });
+}
+
+/**
+Report each `run:` script that pipes a download into a shell, with the Bash parser of bash/safety. A block scalar starts
+its script on the line after `run:`.
+*/
+async function listDownloadRuns(path: string, runs: Scalar[], lines: LineCounter): Promise<CheckFinding[]> {
+    const found = await Promise.all(
+        runs.map(async (run) => {
+            const { forms } = await parseBashScript(String(run.value));
+            const { line } = lines.linePos(run.range?.[0] ?? 0);
+            const isBlock = run.type === 'BLOCK_LITERAL' || run.type === 'BLOCK_FOLDED';
+            return forms
+                .filter(({ form }) => form === 'curl-pipe-shell')
+                .map((form) => ({
+                    file: path,
+                    line: line + form.line - (isBlock ? 0 : 1),
+                    rule: WORKFLOW_SHAPE_RULES.downloadRun,
+                    message: WORKFLOW_SHAPE_MESSAGES.downloadRun,
+                }));
+        }),
+    );
+    return found.flat();
+}
+
 function listConcurrencyHits(document: Document & { contents: YAMLMap }): WorkflowShapeHit[] {
     const triggers = listTriggers(document);
     const group = findKey(document.contents, 'concurrency');
@@ -182,33 +229,39 @@ async function checkActionlint(session: CheckSession, planned: PlannedCheck): Pr
     return restoreCommandPaths(result, scratch.path, session.root);
 }
 
-function checkWorkflowShape(session: Session, planned: PlannedCheck): CheckFinding[] {
-    return planned.files.flatMap(({ path }) => {
-        const text = readText(session.cache, path);
-        const lines = new LineCounter();
-        const document = parseDocument(text, { lineCounter: lines });
-        if (document.errors.length > 0 || !isMap(document.contents)) return [];
-        const source = text.split('\n');
-        const jobs = document.get('jobs', true);
-        const jobHits = isMap(jobs)
-            ? jobs.items.flatMap(({ key, value }) => (isScalar(key) && isMap(value) ? listJobHits(key, value) : []))
-            : [];
-        return [...listConcurrencyHits(document as Document & { contents: YAMLMap }), ...jobHits].flatMap(
-            ({ kind, node }) => {
-                const { line } = lines.linePos(node.range?.[0] ?? 0);
-                const previous = source.slice(0, line - 1).at(-1);
-                if (kind === 'continueOnError' && previous?.trimStart().startsWith('#') === true) return [];
-                return [
-                    {
-                        file: path,
-                        line,
-                        rule: WORKFLOW_SHAPE_RULES[kind],
-                        message: WORKFLOW_SHAPE_MESSAGES[kind],
-                    },
-                ];
-            },
-        );
-    });
+async function checkWorkflowShape(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const findings = await Promise.all(
+        planned.files.map(async ({ path }) => {
+            const text = readText(session.cache, path);
+            const lines = new LineCounter();
+            const document = parseDocument(text, { lineCounter: lines });
+            if (document.errors.length > 0 || !isMap(document.contents)) return [];
+            const source = text.split('\n');
+            const jobs = document.get('jobs', true);
+            const jobHits = isMap(jobs)
+                ? jobs.items.flatMap(({ key, value }) => (isScalar(key) && isMap(value) ? listJobHits(key, value) : []))
+                : [];
+            const workflow = document as Document & { contents: YAMLMap };
+            const downloadRuns = await listDownloadRuns(path, listRunScripts(jobs), lines);
+            const shapeFindings = [...listConcurrencyHits(workflow), ...listSecretHits(workflow), ...jobHits].flatMap(
+                ({ kind, node }) => {
+                    const { line } = lines.linePos(node.range?.[0] ?? 0);
+                    const previous = source.slice(0, line - 1).at(-1);
+                    if (kind === 'continueOnError' && previous?.trimStart().startsWith('#') === true) return [];
+                    return [
+                        {
+                            file: path,
+                            line,
+                            rule: WORKFLOW_SHAPE_RULES[kind],
+                            message: WORKFLOW_SHAPE_MESSAGES[kind],
+                        },
+                    ];
+                },
+            );
+            return [...shapeFindings, ...downloadRuns];
+        }),
+    );
+    return findings.flat();
 }
 
 export const GITHUB_ACTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {
