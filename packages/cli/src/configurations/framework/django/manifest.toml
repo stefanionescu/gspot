@@ -1,0 +1,12 @@
+[configuration]
+description = "Django views: Semgrep rules for request data in redirects, file paths, outbound requests, and HTML responses, CSRF exemptions, and insecure cookie settings."
+requires = ["python"]
+title = "Django"
+
+[detect]
+dependencies = ["django"]
+
+[[config_file]]
+per_scope = true
+target = "semgrep.yml"
+tool = "semgrep"

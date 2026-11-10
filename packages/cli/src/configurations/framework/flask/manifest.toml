@@ -1,0 +1,12 @@
+[configuration]
+description = "Flask routes: Semgrep rules for request data in redirects, file paths, outbound requests, template source, and HTML responses, and settings that turn off CSRF or cookie protection."
+requires = ["python"]
+title = "Flask"
+
+[detect]
+dependencies = ["flask"]
+
+[[config_file]]
+per_scope = true
+target = "semgrep.yml"
+tool = "semgrep"

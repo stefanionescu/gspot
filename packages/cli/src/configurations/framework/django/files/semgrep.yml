@@ -1,0 +1,134 @@
+rules:
+    - id: gspot.django.request-data-in-redirect
+      mode: taint
+      pattern-sources:
+          - patterns:
+                - pattern-either:
+                      - pattern: request.$PART
+                - metavariable-regex:
+                      metavariable: $PART
+                      regex: ^(GET|POST|COOKIES|headers|META|body|data|query_params)$
+      pattern-sinks:
+          - patterns:
+                - pattern-either:
+                      - pattern: redirect($URL, ...)
+                      - pattern: HttpResponseRedirect($URL, ...)
+                      - pattern: HttpResponsePermanentRedirect($URL, ...)
+                - pattern-not-inside: |
+                      if url_has_allowed_host_and_scheme(...):
+                          ...
+                - focus-metavariable: $URL
+      message: The redirect target comes from the request, so a link can send users to any site. Redirect only to a
+          URL that url_has_allowed_host_and_scheme accepts.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-601
+          category: security
+    - id: gspot.django.request-data-in-file-path
+      mode: taint
+      pattern-sources:
+          - patterns:
+                - pattern: request.$PART
+                - metavariable-regex:
+                      metavariable: $PART
+                      regex: ^(GET|POST|COOKIES|headers|META|body|data|query_params)$
+      pattern-sanitizers:
+          - pattern: os.path.basename(...)
+      pattern-sinks:
+          - patterns:
+                - pattern-either:
+                      - pattern: open($PATH, ...)
+                      - pattern: FileResponse(open($PATH, ...), ...)
+                      - pattern: Path($PATH, ...)
+                      - pattern: pathlib.Path($PATH, ...)
+                - focus-metavariable: $PATH
+      message: A file path comes from the request, so `../` reads any file the server can. Look the file up by a key, or
+          keep only the base name.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-22
+          category: security
+    - id: gspot.django.request-data-in-outbound-request
+      mode: taint
+      pattern-sources:
+          - patterns:
+                - pattern: request.$PART
+                - metavariable-regex:
+                      metavariable: $PART
+                      regex: ^(GET|POST|COOKIES|headers|META|body|data|query_params)$
+      pattern-sinks:
+          - patterns:
+                - pattern-either:
+                      - pattern: requests.$METHOD($URL, ...)
+                      - pattern: httpx.$METHOD($URL, ...)
+                      - pattern: urllib.request.urlopen($URL, ...)
+                      - pattern: urlopen($URL, ...)
+                - focus-metavariable: $URL
+      message: The server sends a request to a URL that the client chose, which reaches internal services. Allow only
+          known hosts.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-918
+          category: security
+    - id: gspot.django.request-data-in-html-response
+      mode: taint
+      pattern-sources:
+          - patterns:
+                - pattern: request.$PART
+                - metavariable-regex:
+                      metavariable: $PART
+                      regex: ^(GET|POST|COOKIES|headers|META|body|data|query_params)$
+      pattern-sanitizers:
+          - pattern: escape(...)
+          - pattern: django.utils.html.escape(...)
+          - pattern: format_html(...)
+      pattern-sinks:
+          - patterns:
+                - pattern: HttpResponse($CONTENT, ...)
+                - focus-metavariable: $CONTENT
+      message: The response returns request data as HTML, which allows reflected XSS. Render a template, or escape the
+          value with escape().
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-79
+          category: security
+    - id: gspot.django.csrf-exempt
+      pattern: |
+          @csrf_exempt
+          def $VIEW(...):
+              ...
+      message: This view accepts a cross-site request with the cookies of the user. Keep CSRF protection, and send the
+          token from the client.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-352
+          category: security
+    - id: gspot.django.insecure-cookie-setting
+      patterns:
+          - pattern: $SETTING = False
+          - metavariable-regex:
+                metavariable: $SETTING
+                regex: ^(SESSION_COOKIE_SECURE|CSRF_COOKIE_SECURE|SESSION_COOKIE_HTTPONLY)$
+      message: This setting lets the cookie travel over plain HTTP or reach page scripts. Set it to True.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-614
+          category: security

@@ -1,6 +1,6 @@
 ---
 title: Security
-configurations: [security, docker, github-actions, secrets]
+configurations: [security, docker, github-actions, secrets, pyjwt, machine-learning]
 ---
 
 gspot scans each commit and each push for secrets. A push that changes a lockfile also looks up the locked packages for
@@ -32,8 +32,17 @@ gspot ignore secrets/gitleaks-pushed --paths "tests/fixtures/keys.json" --reason
 
 ## Semgrep
 
-Semgrep runs before each push, on macOS and Linux, when a configuration ships Semgrep rules, as FastAPI does, or when you
-list rule files of your own. With neither, gspot does not install it, and gspot rejects a path that names no file:
+Semgrep runs before each push, on macOS and Linux, when a configuration ships Semgrep rules, or when you list rule files of
+your own. With neither, gspot does not install it. [FastAPI](/frameworks/fastapi/), [Django](/frameworks/django/), and
+[Flask](/frameworks/flask/) ship rules for request handlers, and these two configurations ship rules for Python
+libraries:
+
+| Configuration      | On when                                                                                        | Reports                                                                                                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pyjwt`            | The project depends on `PyJWT`                                                                 | A decode that skips the signature check, the `none` algorithm, and a signing key written in the source.                                                                                    |
+| `machine-learning` | The project depends on `torch`, `transformers`, `huggingface-hub`, `joblib`, or `scikit-learn` | `torch.load` with `weights_only=False`, `numpy.load` with `allow_pickle=True`, and `trust_remote_code=True`. Level `all` adds `joblib.load` and hub downloads without a pinned `revision`. |
+
+gspot rejects a rule file path that names no file:
 
 ```shell title="example"
 gspot set security.semgrep_rules rules/semgrep.yml

@@ -1,0 +1,34 @@
+rules:
+    - id: gspot.ml.unsafe-torch-load
+      pattern: torch.load(..., weights_only=False, ...)
+      message: weights_only=False runs any code that the file holds. Load with weights_only=True, or save the weights as
+          safetensors.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-502
+          category: security
+    - id: gspot.ml.numpy-pickle-load
+      pattern: numpy.load(..., allow_pickle=True, ...)
+      message: allow_pickle=True runs any code that the file holds. Save arrays without objects, and load with the
+          default allow_pickle=False.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-502
+          category: security
+    - id: gspot.ml.trust-remote-code
+      pattern: $LOAD(..., trust_remote_code=True, ...)
+      message: trust_remote_code=True runs Python code from the model repository on this machine. Use a model that
+          Transformers supports, or pin and review the code.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-94
+          category: security

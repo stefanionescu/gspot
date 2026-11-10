@@ -1,0 +1,18 @@
+[configuration]
+description = "Model and data loading: Semgrep rules for loads that run code from the file and for remote code from a model repository. Level all adds joblib loads and hub downloads without a pinned revision."
+requires = ["python"]
+title = "Machine learning"
+
+[detect]
+dependencies = ["torch", "transformers", "huggingface-hub", "joblib", "scikit-learn"]
+
+[[config_file]]
+per_scope = true
+target = "semgrep/basic.yml"
+tool = "semgrep"
+
+[[config_file]]
+level = "all"
+per_scope = true
+target = "semgrep/all.yml"
+tool = "semgrep"

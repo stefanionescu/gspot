@@ -1,0 +1,42 @@
+rules:
+    - id: gspot.pyjwt.unverified-decode
+      pattern-either:
+          - pattern: 'jwt.decode(..., options={..., "verify_signature": False, ...}, ...)'
+          - pattern: jwt.decode(..., verify=False, ...)
+      message: This decode skips the signature check, so anyone can forge the token. Verify it with the key and the
+          algorithm you expect.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-347
+          category: security
+    - id: gspot.pyjwt.none-algorithm
+      pattern-either:
+          - pattern: jwt.encode(..., algorithm="none", ...)
+          - pattern: jwt.decode(..., algorithms=[..., "none", ...], ...)
+      message: The `none` algorithm turns off the signature, so anyone can forge the token. Use a signing algorithm such
+          as HS256 or RS256.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-347
+          category: security
+    - id: gspot.pyjwt.hardcoded-key
+      pattern-either:
+          - pattern: jwt.encode($PAYLOAD, "...", ...)
+          - pattern: jwt.decode($TOKEN, "...", ...)
+          - pattern: jwt.encode($PAYLOAD, key="...", ...)
+          - pattern: jwt.decode($TOKEN, key="...", ...)
+      message: The signing key is in the source, so anyone who reads it can sign tokens. Load the key from the
+          environment or a secret store.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-798
+          category: security

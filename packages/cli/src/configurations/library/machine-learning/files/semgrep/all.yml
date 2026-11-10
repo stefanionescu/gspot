@@ -1,0 +1,30 @@
+rules:
+    - id: gspot.ml.joblib-load
+      pattern: joblib.load(...)
+      message: joblib.load runs any code that the file holds. Load only files that this project wrote, or save models
+          with skops or safetensors.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-502
+          category: security
+    - id: gspot.ml.unpinned-hub-download
+      patterns:
+          - pattern-either:
+                - pattern: $MODEL.from_pretrained($NAME, ...)
+                - pattern: huggingface_hub.hf_hub_download(...)
+                - pattern: huggingface_hub.snapshot_download(...)
+          - pattern-not: $MODEL.from_pretrained($NAME, ..., revision=$REVISION, ...)
+          - pattern-not: huggingface_hub.hf_hub_download(..., revision=$REVISION, ...)
+          - pattern-not: huggingface_hub.snapshot_download(..., revision=$REVISION, ...)
+      message: This download takes whatever the repository holds today, so a pushed change reaches this code unseen.
+          Pass revision= with a commit hash.
+      languages:
+          - python
+      severity: ERROR
+      metadata:
+          cwe:
+              - CWE-494
+          category: security
