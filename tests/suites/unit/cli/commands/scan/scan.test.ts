@@ -111,8 +111,9 @@ test('scan links the Python environment of the repository into its copy', async 
     await mkdir(join(sandbox.path, '.venv'));
     await writeFile(join(sandbox.path, '.venv/pyvenv.cfg'), 'home = /usr/bin\n');
     const { checks } = await runScan(sandbox.path);
+    // Without the link, the note asks for a .venv folder; with it, the note names the first tool that the run lacks.
     expect(checks.find(({ check }) => check === 'python/deptry')?.note).toMatch(
-        /^deptry \S+ is not installed\. Run gspot install\.$/u,
+        /^[\w.-]+ \S+ is not installed\. Run gspot install\.$/u,
     );
 });
 
