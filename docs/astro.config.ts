@@ -12,9 +12,9 @@ import { defineHastPlugin, type HastNode, type HastPluginEntry } from 'satteri';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { EDIT_URL, README_OPENING_BLOCKS, REPOSITORY_URL, SIDEBAR, SITE_TITLE } from '#docs/config/site.ts';
 
-const FAVICON = '/favicon.svg';
+const FAVICON = '/favicon.png';
 const ICONS = [
-    { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+    { rel: 'icon', href: '/favicon.ico', sizes: '16x16 32x32 48x48' },
     { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
     { rel: 'manifest', href: '/manifest.webmanifest' },
 ] as const;
