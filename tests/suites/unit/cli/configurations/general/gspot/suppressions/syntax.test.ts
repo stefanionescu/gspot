@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import {
     JSX_COMMENTS,
     LIMIT_SUPPRESSION_CASES,

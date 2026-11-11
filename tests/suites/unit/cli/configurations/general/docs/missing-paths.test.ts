@@ -6,7 +6,7 @@ import { createFileTree } from 'testdirs';
 
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import {
     COVERAGE_CHECK_TABLES,
     DOC_FENCE_PATH_CASES,

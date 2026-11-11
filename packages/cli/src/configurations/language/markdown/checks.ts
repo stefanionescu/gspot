@@ -25,8 +25,7 @@ import type {
     GrammarFenceParser,
 } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { CodeFence, ParseCache } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 

@@ -1,12 +1,7 @@
 import { noMixedReturnTypes } from '#eslint-plugin/rules/functions/no-mixed-return-types.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 const rule = noMixedReturnTypes;
-
-buildRuleTester().run('no-mixed-return-types', rule, {
-    valid: ['function read(raw) { if (raw) return "1"; return 1; }'],
-    invalid: [],
-});
 
 buildTypedRuleTester().run('no-mixed-return-types', rule, {
     valid: [

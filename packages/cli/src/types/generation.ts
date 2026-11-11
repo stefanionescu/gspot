@@ -65,7 +65,7 @@ export type Pipeline = {
     packageManager?: PackageManagerPin | undefined;
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];
-    operatingSystems: NonNullable<Settings['ci']>['operating_systems'];
+    operatingSystems: NonNullable<NonNullable<Settings['ci']>['operating_systems']>;
     linuxRunner: NonNullable<Settings['ci']>['linux_runner'];
     testChecks: string[];
 };
@@ -114,6 +114,7 @@ export type CarryoverRow = z.infer<typeof carryoverRowSchema>;
 export type RuleRead = {
     definition: (typeof PRINTED_RULE_TOOLS)[number];
     path: string;
+    others: string[];
     text: string;
     sample: string;
     user: RuleTable | undefined;

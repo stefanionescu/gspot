@@ -4,10 +4,10 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { CONFIG_TOML_FORMAT, NODE_TOOL, PYTHON_TOOL_PROJECT, UV_TOOL } from '#cli/config/tools/installers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import type { Configuration, Tool } from '#cli/types/manifests.ts';
 import type { LintCommandSearch } from '#cli/types/repository.ts';
 import type {
     GeneratedFile,
@@ -108,30 +108,6 @@ export function listReplacedTools(configurations: Configuration[]): Pick<LintCom
 
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
     return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
-}
-
-export function listDistinctTools(configurations: Configuration[]): Tool[] {
-    const tools = new Map<string, Tool>();
-    for (const configuration of configurations)
-        for (const tool of configuration.tools) {
-            if (!tools.has(tool.name)) tools.set(tool.name, tool);
-        }
-    return tools
-        .values()
-        .toArray()
-        .toSorted((first, second) => compareText(first.name, second.name));
-}
-
-export function getTool(configurations: Iterable<Configuration>, name: string): Tool {
-    for (const configuration of configurations) {
-        const tool = configuration.tools.find((declaration) => declaration.name === name);
-        if (tool !== undefined) return tool;
-    }
-    return { name, kind: 'program', system: true, installers: {} };
-}
-
-export function findToolName(check: Check): string | undefined {
-    return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
 
 export function findPackagePin(tool: Tool): PackagePin | undefined {

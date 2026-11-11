@@ -2,15 +2,12 @@ import { noDetachedCall } from '#eslint-plugin/rules/functions/no-detached-call.
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-detached-call', noDetachedCall, {
-    valid: ['read(value);', 'read\n();', 'tag`text`;'],
+    valid: ['read(value);', 'read\n();', 'tag`text`;', 'read\n(a, b);', 'make()\n(value);'],
     invalid: [
         ...['read\n(value);', '((read))\n(value);', 'read<Type>\n(value);'].map((code) => ({
             code,
             errors: [{ messageId: 'call' as const }],
         })),
-        ...['tag\n`text`;'].map((code) => ({
-            code,
-            errors: [{ messageId: 'template' as const }],
-        })),
+        { code: 'tag\n`text`;', errors: [{ messageId: 'template' }] },
     ],
 });

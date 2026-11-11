@@ -1,5 +1,6 @@
 import { FIX_CANCELED_MESSAGE, FIX_ROUNDS } from '#cli/config/engine.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
+import { findCommandTool } from '#cli/engine/plan.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
 import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
 import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
@@ -12,8 +13,7 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { compareText, listConflictMarkerLines } from '#cli/system/text.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
-import { getTool } from '#cli/tools/pins.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { FixerPlannedCheck, PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckSession, CommandLaunch, FixReport, FixResult, FixRounds, PathBytes } from '#cli/types/engine/run.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { FileContents, SpawnResult } from '#cli/types/system.ts';
@@ -71,7 +71,7 @@ async function runFixTool(
             ? await createCopy(session, listCopyFiles(session, selected, command))
             : undefined;
     const root = copy?.path ?? session.root;
-    const launch = buildCommandLaunch(selected, { session, command, root, toolPath: availability.path });
+    const launch = buildCommandLaunch(selected, { session, command, root, tool, toolPath: availability.path });
     const result = await runFixCommands(session, selected, launch);
     if (copy === undefined) return result;
     const files = openFiles(session.root);
@@ -84,15 +84,15 @@ async function runFixTool(
     return result;
 }
 
-async function runFixer(session: CheckSession, planned: PlannedCheck): Promise<FixResult> {
+async function runFixer(session: CheckSession, planned: FixerPlannedCheck): Promise<FixResult> {
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
-    const command = planned.check.fix as string[];
-    const name = command[0] as string;
-    const tool = planned.tool?.name === name ? planned.tool : getTool(readConfigurations().values(), name);
+    const command = planned.check.fix;
+    const [name] = command;
+    const tool = planned.tool?.name === name ? planned.tool : findCommandTool(readConfigurations().values(), name);
     return runFixTool(session, planned, { command, tool });
 }
 
@@ -126,11 +126,11 @@ function listPendingFixes({
     fixedContents,
     after,
 }: {
-    checks: PlannedCheck[];
+    checks: FixerPlannedCheck[];
     results: Map<number, FixResult>;
     fixedContents: Map<number, PathBytes>;
     after: PathBytes;
-}): Array<{ check: PlannedCheck; index: number }> {
+}): Array<{ check: FixerPlannedCheck; index: number }> {
     return checks.flatMap((check, index) => {
         const status = results.get(index)?.status;
         if (status === 'failed' || status === 'canceled') return [];
@@ -140,7 +140,7 @@ function listPendingFixes({
     });
 }
 
-async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], paths: string[]): Promise<FixRounds> {
+async function runFixerRounds(session: CheckSession, checks: FixerPlannedCheck[], paths: string[]): Promise<FixRounds> {
     const results = new Map<number, FixResult>();
     let firstBefore: PathBytes | undefined;
     let after: PathBytes = new Map();
@@ -205,7 +205,7 @@ export function listConflictedPaths(root: string, paths: string[]): string[] {
 }
 
 export async function runFixers(session: CheckSession, planned: PlannedCheck[]): Promise<FixReport> {
-    const fixable = planned.filter((check) => check.check.fix !== undefined);
+    const fixable = planned.filter((check): check is FixerPlannedCheck => check.check.fix !== undefined);
     const conflicted = listConflictedPaths(session.root, [
         ...new Set(fixable.flatMap((check) => listPlannedPaths(check))),
     ]);

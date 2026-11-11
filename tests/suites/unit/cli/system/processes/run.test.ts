@@ -76,6 +76,16 @@ test('reads both large output streams to the end and keeps exit code 1', async (
     expect(result.end).toBe('exited');
 });
 
+test('reads to the end the output of a program that exits without waiting for its output to drain', async () => {
+    await using sandbox = await testdir();
+    const count = 1024 * 1024;
+    const command = buildProgramCommand('processes/output', '--text', 'a', '--count', String(count), '--exit-now');
+    const result = await runProcess(command, { cwd: sandbox.path });
+    expect(result.code).toBe(0);
+    expect(result.stdout).toHaveLength(count);
+    expect(result.stderr).toHaveLength(count);
+});
+
 test('a missing program is a launch failure with its error output', async () => {
     await using sandbox = await testdir();
     const result = await runProcess([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });

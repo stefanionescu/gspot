@@ -9,17 +9,18 @@ import { listPackagePins } from '#cli/tools/pins.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
-    const [, program = ''] = buildProgramCommand('processes/eslint-plugin');
-    await cp(program, join(consumer, 'consumer.ts'));
+    await cp(join(REPOSITORY_ROOT, 'tests/setup/programs/processes/eslint-plugin.ts'), join(consumer, 'consumer.ts'));
     await writeFile(join(consumer, 'consumer.mts'), PLUGIN_TYPES_SOURCE);
     const options = { cwd: consumer, env: isolatedEnvironment };
     const checked = await runCommand(['node', 'consumer.ts'], options);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    const finding = [{ line: 2, messageId: 'private' }];
+    expect(JSON.parse(checked.stdout)).toStrictEqual([finding, finding, finding, finding]);
     const typed = await runCommand(
         [
             'node',

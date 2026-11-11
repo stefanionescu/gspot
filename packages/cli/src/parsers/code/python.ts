@@ -46,7 +46,7 @@ export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
     });
 }
 
-export async function parsePythonModule(path: string, text: string, cache?: ParseCache): Promise<PythonModule> {
+export async function parsePythonModule(path: string, text: string, cache: ParseCache): Promise<PythonModule> {
     const tree = await parseSource('python', text, cache);
     const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
     return {

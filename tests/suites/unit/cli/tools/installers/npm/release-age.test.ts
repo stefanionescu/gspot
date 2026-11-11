@@ -20,15 +20,27 @@ test('a Bun run reads the release age from the bunfig.toml that it gets with --c
     });
 });
 
-test.each(['--lockfile-only'])(
-    'a pnpm install %s gets the minimum release age and the gspot exclusions as flags',
-    (flag) => {
-        expect(prepareReleaseAge(['install', flag], { name: 'pnpm', version: '11.28.10' }, 7)).toStrictEqual([
-            'install',
-            flag,
+test.each([
+    {
+        name: 'npm',
+        flags: [
+            '--min-release-age=7',
+            '--min-release-age-exclude=@gspothq/cli',
+            '--min-release-age-exclude=@gspothq/eslint-plugin',
+        ],
+    },
+    {
+        name: 'pnpm',
+        flags: [
             '--config.minimum-release-age=10080',
             '--config.minimum-release-age-exclude=@gspothq/cli',
             '--config.minimum-release-age-exclude=@gspothq/eslint-plugin',
-        ]);
+        ],
     },
-);
+] as const)('$name install gets the minimum release age and the gspot exclusions as flags', ({ name, flags }) => {
+    expect(prepareReleaseAge(['install', '--lockfile-only'], { name, version: '11.0.0' }, 7)).toStrictEqual([
+        'install',
+        '--lockfile-only',
+        ...flags,
+    ]);
+});

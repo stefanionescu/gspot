@@ -31,14 +31,6 @@ export const ENGINE_PATHS = [
     'browser/source.js',
 ] as const;
 
-export const ENGINE_PHASES = [
-    {
-        name: 'before the engines fix',
-        reported: ['old/source.js', 'old/source.cjs'],
-        corrections: [],
-    },
-] as const;
-
 const NODE_SCRIPT_SOURCE = `#!/usr/bin/env node
 const unused = 1;
 console.log(process.cwd());

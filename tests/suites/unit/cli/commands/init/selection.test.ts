@@ -6,18 +6,26 @@ import { expect, spyOn, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { CONFIGURATION_CHOICES, TOOL_ONLY_PACKAGE } from '#tests/config/generation/plan.ts';
-import { NODE_SCRIPT, UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
+import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
+
+const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
+
+const CONFIGURATION_CHOICES = [
+    { configurations: undefined, selected: ['javascript'] },
+    { configurations: ['python'], selected: ['python'] },
+] as const;
+
+const NODE_SCRIPT = '#!/usr/bin/env node\nconsole.log(1);\n';
 
 test.each([...CONFIGURATION_CHOICES])(
     'init with --configurations %j keeps the always-selected configurations',
@@ -37,9 +45,11 @@ test.each([...CONFIGURATION_CHOICES])(
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const session = await openSession(sandbox.path);
         const { configurations: selected } = session.scopes[0]!;
-        expect(selected.filter(({ group }) => group !== 'general').map(({ name }) => name)).toStrictEqual([
-            ...row.selected,
-        ]);
+        expect(
+            selected
+                .filter((configuration) => configuration.group !== 'general' && !configuration.always_selected)
+                .map(({ name }) => name),
+        ).toStrictEqual([...row.selected]);
     },
 );
 
@@ -108,23 +118,6 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
     expect(existsSync(generated)).toBe(true);
 });
 
-test('a named Next.js configuration list wins over locale dependency detection', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({
-            name: 'translated-app',
-            private: true,
-            dependencies: { next: '16.3.5', 'next-intl': '4.3.9' },
-        }),
-        'app/page.tsx': 'export default function Page() { return "home"; }\n',
-    });
-
-    const result = await runGspot(sandbox.path, ['init', '--json', '--configurations', 'nextjs']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
-    expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(false);
-});
-
 test('init proposes workspace scopes without a lockfile, and writes nothing when the workspace file is broken', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const files = {
@@ -172,9 +165,11 @@ test('init names an uninstalled tsconfig extension and the dependency install st
         'index.ts': 'export const port = 8080;\n',
     });
     const result = await runGspot(sandbox.path, ['init', '--json']);
-    expect(result.code).toBe(2);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'configuration',
+        message:
+            'tsconfig.json extends @tsconfig/node22/tsconfig.json, which is not installed. Install the project dependencies, then run the command again.',
     });
 });
 

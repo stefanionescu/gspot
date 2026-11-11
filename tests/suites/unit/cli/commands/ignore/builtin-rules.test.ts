@@ -40,30 +40,15 @@ test('gspot ignore takes a documented rule of a built-in check that reports seve
     ]);
 });
 
-test('a documented YAML exception suppresses only its rule and path, and typos leave settings unchanged', async () => {
-    const settings = buildSandboxSettings(['data-files']);
+test('a documented YAML exception suppresses only its rule and path', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': settings,
+        'gspot.toml': buildSandboxSettings(['yaml']),
         'stream.yml': 'first: yes\n---\nsecond: true\n',
         'other.yml': 'first: true\n---\nsecond: false\n',
     });
-    const refused = await runGspot(sandbox.path, [
-        'ignore',
-        'data-files/yaml',
-        '--rule',
-        'document',
-        '--reason',
-        'The consumer requires a stream.',
-        '--json',
-    ]);
-    expect(refused.code).toBe(2);
-    expect(JSON.parse(refused.stdout)).toMatchObject({
-        error: 'arguments',
-        message: expect.stringContaining('document') as string,
-    });
     const ignored = await runGspot(sandbox.path, [
         'ignore',
-        'data-files/yaml',
+        'yaml/syntax',
         '--rule',
         'documents',
         '--paths',
@@ -72,7 +57,7 @@ test('a documented YAML exception suppresses only its rule and path, and typos l
         'The consumer requires a stream.',
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'data-files/yaml', '--json']));
+    const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'yaml/syntax', '--json']));
     expect(checked.code, checked.stderr).toBe(1);
     const findings = checked.report.checks.flatMap(({ findings }) =>
         findings.map(({ file, rule }) => ({ file, rule })),

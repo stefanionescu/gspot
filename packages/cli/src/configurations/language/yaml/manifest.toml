@@ -1,0 +1,18 @@
+allowed_words = ["YAML"]
+
+[configuration]
+always_selected = true
+description = "YAML files: valid syntax, unique keys, used anchors, quoted ambiguous values, and the .yml extension."
+title = "YAML"
+
+[files]
+extensions = [".yaml", ".yml"]
+
+[[check]]
+example = "Two `enabled` keys in one YAML mapping report a duplicate key. Keep one, and delete the other."
+files = { extensions = [".yaml", ".yml"] }
+help = "Fix the reported YAML value or layout."
+name = "syntax"
+stage = "commit"
+summary = "Checks YAML syntax, duplicate keys, anchors, ambiguous scalar values, and file conventions."
+why = "A YAML file that parses differently between consumers can silently change the values that the program reads."

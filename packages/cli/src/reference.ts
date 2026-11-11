@@ -1,5 +1,3 @@
-import semver from 'semver';
-
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { GROUP_LABELS } from '#cli/config/generation.ts';
@@ -13,10 +11,11 @@ import { describeCheck } from '#cli/engine/reference.ts';
 import { buildProgram } from '#cli/main.ts';
 import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { formatDetectionConditions, listRuleReferences } from '#cli/manifests/reference.ts';
-import { buildSetupReference } from '#cli/repository/javascript/setup.ts';
+import { buildSetupReference } from '#cli/repository/javascript/package-manager.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { buildSettingsReference } from '#cli/settings/reference.ts';
+import { MINIMUM_NODE_VERSION } from '#cli/system/runtime.ts';
 import { compareText } from '#cli/system/text.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { CliReference, CommandReference } from '#cli/types/main.ts';
@@ -101,7 +100,7 @@ export function readCliReference(): CliReference {
         schema: buildJsonSchema(),
         setup: buildSetupReference(),
         hookProgramMissing: HOOK_PROGRAM_MISSING,
-        runtimeMinimums: { node: semver.minVersion(cliPackage.engines.node)?.version as string },
+        runtimeMinimums: { node: MINIMUM_NODE_VERSION },
         packageManagerMinimums: RELEASE_AGE_VERSIONS,
         levelSummaries: { basic: LEVEL_SUMMARY, all: ALL_LEVEL_SUMMARY },
         allLevelTools: [...new Set(checks.flatMap(({ tools }) => tools))]

@@ -1,30 +1,40 @@
+import { posix } from 'node:path';
+
 import {
     CARRYOVER_ROW_START,
+    IGNORE_FILES,
     NOT_COMPARED_MESSAGE,
     PRINTED_RULE_TOOLS,
     REASON_PLACEHOLDER,
     RULE_PRINT_FLAG,
 } from '#cli/config/repository/setup.ts';
-import { compareRules, readPrintedRules } from '#cli/generation/setup/lint-rules.ts';
+import { compareRules, readPrintedRules } from '#cli/generation/setup/carryover/lint-rules.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp, quoteArgument } from '#cli/system/text.ts';
 import type { CarryoverRow, InitPlanning, RuleRead } from '#cli/types/generation.ts';
 
+const OTHER_CONFIG_MESSAGE = 'its rules, because <tool> reads <path> instead';
+
 /**
 Read the rules that the ESLint and Stylelint of the repository resolve. Call this before init replaces their configs.
+Each tool reads one config, the first in the order of its manifest, which is the order in which the tool looks for
+one. The read names the other configs of the tool, whose rules it does not hold.
 */
 export async function readUserRules(planning: InitPlanning): Promise<RuleRead[]> {
     const { detection, session } = planning;
     const { root, repository, toolConfigurations } = session;
     const tools = new Set(toolConfigurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)));
     const reads = PRINTED_RULE_TOOLS.flatMap((definition) => {
-        const config = detection.repositorySetup.conflictingConfigs.find(
-            ({ tool, shared }) => tool === definition.tool && !shared,
+        const [config, ...others] = detection.repositorySetup.conflictingConfigs.filter(
+            ({ tool, shared, path }) =>
+                tool === definition.tool && !shared && IGNORE_FILES.every(({ file }) => posix.basename(path) !== file),
         );
         const sample = repository.files.find(({ path }) => definition.sample.test(path))?.path;
-        return config === undefined || sample === undefined || !tools.has(definition.tool)
-            ? []
-            : [{ definition, path: config.path, text: findText(root, config.path) ?? '', sample }];
+        if (config === undefined || sample === undefined || !tools.has(definition.tool)) return [];
+        const { path } = config;
+        return [
+            { definition, path, others: others.map((other) => other.path), text: findText(root, path) ?? '', sample },
+        ];
     });
     return await Promise.all(
         reads.map(async (read) => ({
@@ -43,10 +53,19 @@ export async function readUserRules(planning: InitPlanning): Promise<RuleRead[]>
 /**
 Compare the rules of each replaced config with the rules that the installed tools of gspot resolve. The printed rules
 hold the shared configs that the file extends, so only a rule that the file itself names counts: a rule that a shared
-config turns off is not the user's choice, and needs no reason.
+config turns off is not the user's choice, and needs no reason. Each other config of a tool gets a row that names the
+config the tool read.
 */
 export async function compareInstalledRules(root: string, reads: RuleRead[]): Promise<CarryoverRow[]> {
-    return await Promise.all(
+    const unread = reads.flatMap(({ definition: { tool }, path: read, others }) =>
+        others.map((path): CarryoverRow => ({
+            ...CARRYOVER_ROW_START,
+            path,
+            tool,
+            dropped: [OTHER_CONFIG_MESSAGE.replace('<tool>', () => tool).replace('<path>', () => read)],
+        })),
+    );
+    const compared = await Promise.all(
         reads.map(async ({ definition, path, text, sample, user: printed }): Promise<CarryoverRow> => {
             const user =
                 printed &&
@@ -85,4 +104,5 @@ export async function compareInstalledRules(root: string, reads: RuleRead[]): Pr
             };
         }),
     );
+    return [...compared, ...unread];
 }

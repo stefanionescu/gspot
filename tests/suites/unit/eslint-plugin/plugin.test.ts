@@ -1,3 +1,4 @@
+import * as parser from '@typescript-eslint/parser';
 import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
 
@@ -30,4 +31,40 @@ test('a config that registers the plugin again lowers a limit of configs.all', (
     ];
     const messages = linter.verify('function work() {\n    first();\n    second();\n}\nwork();\n', config);
     expect(messages).toStrictEqual([]);
+});
+
+test('a rule that needs type information reports nothing in a file without a TypeScript program', () => {
+    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
+    const typedRules = Object.entries(plugin.rules).flatMap(([name, rule]) =>
+        rule.meta.docs?.requiresTypeChecking === true ? [[`gspot/${name}`, 'error'] as const] : [],
+    );
+    const config: object = {
+        files: ['**/*.tsx'],
+        languageOptions: { parser },
+        plugins: { gspot: plugin },
+        rules: Object.fromEntries(typedRules),
+    };
+    const source = [
+        "import { expect } from 'vitest';",
+        "const names = ['a'];",
+        "if ('a' in names) run();",
+        "if (names.indexOf('a') > 0) run();",
+        'names.map(String);',
+        'function log(value: unknown) {}',
+        '[1, 2].map(log);',
+        "function read(raw: string) { if (raw) return '1'; return 1; }",
+        'function save(draft: boolean) { if (draft) store(); else publish(); }',
+        'read(undefined);',
+        'class Store { constructor() { load(); } }',
+        'try { list.sort(); } catch {}',
+        "'title'.match('v1.2');",
+        'type Options = { size: number } & {};',
+        'function Badge(props: { label: string }) { return <b>{props.label}</b>; }',
+        "const script = document.createElement('script');",
+        "script.src = 'https://cdn.example.com/lib@1.2.3/lib.js';",
+        "window.postMessage({ ready: true }, '*');",
+        'expect(names.length).toBe(1);',
+        'export const view = <div>{names.length && <b />}</div>;',
+    ].join('\n');
+    expect(linter.verify(source, config, { filename: '/repo/src/view.tsx' })).toStrictEqual([]);
 });

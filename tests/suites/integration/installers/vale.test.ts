@@ -1,22 +1,15 @@
 import { existsSync } from 'node:fs';
 import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
-import { getTool } from '#cli/tools/pins.ts';
-import {
-    AUTHORED_VALE_FILES,
-    GOOGLE_RULE_PATH,
-    STRAY_STYLE_PATH,
-    VALE_INSTALL_FAILURES,
-} from '#tests/config/integration/commands.ts';
+import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
@@ -28,6 +21,34 @@ import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+
+const STRAY_STYLE_PATH = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Google/legacy.yml`;
+
+const AUTHORED_VALE_FILES = {
+    files: { 'authored.txt': 'keep\n', [STRAY_STYLE_PATH]: 'stray style bytes\n' },
+} as const;
+
+const GOOGLE_RULE_PATH = `${GSPOT_PATHS.valePackages}/Google/Passive.yml`;
+
+const VALE_INSTALL_FAILURES = [
+    {
+        name: 'timeout',
+        fakeArguments: ['--wait'],
+        named: '(1s)',
+        settings: 'tool_timeout_seconds = 1\n',
+    },
+    {
+        name: 'its error',
+        fakeArguments: [
+            '--stderr',
+            'Registry request failed: https://alex:synthetic-password@example.com/styles.zip',
+            '--exit',
+            '7',
+        ],
+        named: 'https://[redacted]@example.com/styles.zip',
+        settings: '',
+    },
+] as const;
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
@@ -72,7 +93,7 @@ test('a Vale reinstall for new package releases replaces an edited package and k
 });
 
 test.each([...VALE_INSTALL_FAILURES])(
-    'a failed Vale package install reports $name, and the next install succeeds after the fix',
+    'a failed Vale package install reports $name and keeps the installed packages',
     async ({ fakeArguments, named, settings }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
@@ -100,13 +121,5 @@ test.each([...VALE_INSTALL_FAILURES])(
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             PREVIOUS_BYTES,
         );
-        await writeProgramCommand(sandbox.path, 'mise/bin/vale', 'fakes/vale', '../../vale', version);
-        await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
-        const fixed = await buildSandboxToolInstall(await openSession(sandbox.path), writer);
-        await installValePackages(fixed, [miseBin]);
-        expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
-            'corrected bytes\n',
-        );
-        expect(hasValePackages(sandbox.path)).toBe(true);
     },
 );

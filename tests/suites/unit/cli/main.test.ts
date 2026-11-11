@@ -5,7 +5,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { JSON_ARGUMENT_ERRORS, MALFORMED_SETTINGS, VERSION_ARGUMENTS } from '#tests/config/main.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
@@ -37,23 +37,6 @@ test('an unknown command exits 2 and names the closest command', async () => {
         error: 'arguments',
         message: expect.stringMatching(/\bcheck\b/u) as string,
     });
-});
-
-test('gspot baseline exits 2 and names gspot ignore', async () => {
-    await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['baseline']);
-    expect(result.code).toBe(2);
-    expect(result.stderr).toContain('gspot ignore <check>');
-});
-
-test.each([
-    { commandArguments: ['baseline', '--help'], removed: 'baseline' },
-    { commandArguments: ['--verbose', 'baseline', '--help'], removed: 'baseline' },
-])('$commandArguments prints the line of the removed command and exits 2', async ({ commandArguments, removed }) => {
-    await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, commandArguments);
-    expect(result.code).toBe(2);
-    expect(result).toStrictEqual(await runGspot(sandbox.path, [removed]));
 });
 
 test('init requires a Git worktree before reading settings or writing, while its help works outside Git', async () => {
@@ -147,15 +130,11 @@ test('check treats --version after the separator as a file path', async () => {
         '--version': 'plain text\n',
     });
     runGitStep(sandbox.path, ['add', '.']);
-    const checked = await runGspot(sandbox.path, [
-        'check',
-        '--only',
-        'repository/encoding',
-        '--json',
-        '--',
-        '--version',
-    ]);
+    const checked = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'repository/encoding', '--json', '--', '--version']),
+    );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(checked.report.checks).toMatchObject([{ check: 'repository/encoding', status: 'passed', fileCount: 1 }]);
 });
 
 test('--verbose before the command reaches check, which then prints its passed checks', async () => {
@@ -164,4 +143,20 @@ test('--verbose before the command reaches check, which then prints its passed c
     const checked = await runGspot(sandbox.path, ['--verbose', 'check', '--only', 'repository/encoding']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.stdout).toMatch(/^passed +repository\/encoding +\d+ files? /mu);
+});
+
+test('a command refuses a removed configuration that gspot does not ship', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': `removed_configurations = { python3 = "The sample needs no Python checks." }\n`,
+    });
+    const refused = await runGspot(sandbox.path, ['list']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toContain('There is no configuration called python3.');
+});
+
+test('an option error after a global flag names the help of its command', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const refused = await runGspot(sandbox.path, ['--verbose', 'list', '--foo']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toContain('Run gspot list --help');
 });

@@ -31,10 +31,12 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     expect(error.message).toContain('refs/heads/upstream');
 });
 
-test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
+test('push comparison of an unborn HEAD has no commits, and a broken HEAD is a Git error instead of a base', async () => {
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
+    await writeFile(join(sandbox.path, '.git/HEAD'), 'broken\n');
+    expect(await captureRejection(readPushedCommits(sandbox.path))).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test.each(['origin', undefined, 'file:///unused'] as const)(

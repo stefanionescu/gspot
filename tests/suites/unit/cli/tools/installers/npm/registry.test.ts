@@ -6,11 +6,40 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { readRegistryEnvironment, writeNpmrc } from '#cli/tools/installers/npm/registry.ts';
-import { LINKED_NODE_FILES, NPM_PREFIX_ENVIRONMENT, NPMRC_REFUSALS } from '#tests/config/tools/npm.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+
+const NPMRC_REFUSALS = [
+    {
+        name: 'a registry password with a broken percent escape',
+        source: 'registry=https://u:pa%zz@host/\n',
+    },
+    {
+        name: 'a number setting with text',
+        source: 'maxsockets=not-a-number\n',
+    },
+] as const;
+
+const LINKED_NODE_FILES = {
+    'actual/bin/node': '',
+    'actual/etc/npmrc': 'registry=https://actual.example/\n',
+    'linked/bin/.keep': '',
+    'linked/etc/npmrc': 'registry=https://wrong.example/\n',
+    'project/package.json': '{"private":true}',
+};
+
+const NPM_PREFIX_ENVIRONMENT = {
+    PREFIX: undefined,
+    npm_config_prefix: undefined,
+    NPM_CONFIG_PREFIX: undefined,
+    npm_config_globalconfig: undefined,
+    NPM_CONFIG_GLOBALCONFIG: undefined,
+    NPM_CONFIG_USERCONFIG: undefined,
+    npm_config_registry: undefined,
+    NPM_CONFIG_REGISTRY: undefined,
+};
 
 test.each([...NPMRC_REFUSALS])('an invalid .npmrc setting stops the registry read: $name', async ({ source }) => {
     await using sandbox = await testdir({ '.npmrc': source, 'package.json': '{"private":true}\n' });

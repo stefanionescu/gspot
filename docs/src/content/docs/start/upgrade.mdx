@@ -36,36 +36,3 @@ and `gspot check --only push` shows the result first. Then run `gspot install` i
 
 To go back, check out the commit from before the upgrade. An upgrade can leave older tool versions and download caches
 outside your repository, and [Free disk space](/reference/generated-files/#free-disk-space) shows how to delete them.
-
-## Upgrade from 0.3.9
-
-This release removes commands, flags, and settings, so a repository on 0.3.9 also follows these steps.
-
-1. Replace the old flags in your scripts and CI steps. `gspot check --stage <stage>` becomes
-   `gspot check --only <stage>`, and `gspot check --changed` becomes `gspot check --base origin/main`, with your default
-   branch in place of `main`.
-2. Delete `gspot.baseline.json` and each `[[ignore]]` of `gspot/baseline`. Its old findings come back in the files that
-   you touch and at the next push, so follow
-   [Clean up the first findings](/start/quickstart/#clean-up-the-first-findings).
-3. Delete `bash/doc-comments` and `swift/doc-comments` from each `[[ignore]]`, `--only`, and `--skip`. This release does
-   not have these checks, so a command that names one exits with code 2.
-4. Rename `min_function_statements` to `trivial_function_statements` in each `limits` table, then run the commands above.
-   `gspot install` stops on each setting this release refuses. Each run names some of them, so repeat it until it
-   passes. It also writes the new Git hooks.
-5. Drop the group folder from each path that you wrote by hand, such as in an editor setting or a CI script.
-   `.gspot/configurations/<group>/<configuration>/` becomes `.gspot/configurations/<configuration>/`.
-6. Doc comment rules are off at every level. Delete `jsdoc/require-jsdoc` and `jsdoc/require-description` from
-   `tools.eslint.rules`, or the next check exits with code 2. To keep them, add a
-   [`[[tools.eslint.plugins]]` record](/configure/lint-rules/#plugins) with `package = "eslint-plugin-jsdoc"`. To keep
-   Ruff's docstring rules, name each code from `D100` to `D107` in `tools.ruff.rules`.
-7. A `swiftlint:disable` of `cyclomatic_complexity` now counts as a suppressed limit, so `gspot/suppressions` reports it.
-   At level `all`, the limit of 8 applies to that rule, where SwiftLint's default of 10 applied before. Level `basic`
-   still uses SwiftLint's default.
-8. `.editorconfig` takes its indent from the `format` settings alone, so `bash/shfmt` reports shell scripts that use
-   another indent. Run `gspot check --fix --only bash/shfmt`. Or write a `[[format.override]]` with the extensions you
-   have, such as `paths = ["**/*.sh"]` and `indent_width = 4`, then run `gspot install`.
-9. If a script reads the JSON output, `gspot doctor --json` has no `suggestions`, and `gspot check --json` prints
-   `checks[].command` only with `--verbose`.
-
-The first CI run after the upgrade commit reads every file and lists every old finding, because that commit changes
-`gspot.toml` or a file in `.gspot/`. To see them before you push, run `gspot check --base origin/main`.

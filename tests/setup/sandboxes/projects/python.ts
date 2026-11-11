@@ -3,17 +3,26 @@ import { join } from 'node:path';
 
 import { createFileTree } from 'testdirs';
 
-import {
-    PYTHON_INDEX_NAME,
-    PYTHON_PROJECT_FILES,
-    PYTHON_PROJECT_IGNORES,
-    UV_PROJECT_VARIABLES,
-} from '#tests/config/setup/sandboxes.ts';
+import { PYTHON_PROJECT_IGNORES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { PythonProject } from '#tests/types/setup.ts';
+
+const PYTHON_PROJECT_FILES = {
+    'pyproject.toml': `[project]
+name = "authored"
+version = "1.0.0"
+dependencies = ["authored-dependency"]
+`,
+    '.venv/authored.txt': 'keep the project environment',
+    'source.py': 'import os\n',
+} as const;
+
+const UV_PROJECT_VARIABLES = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'] as const;
+
+const PYTHON_INDEX_NAME = 'gspot-test';
 
 export async function createPythonProject(
     root: string,

@@ -9,12 +9,15 @@ import executables from 'which';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/configurations/general.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
+
+const SUPABASE_TYPES_OUTPUT = 'export type Database = { public: { Tables: {} } };\n';
 
 async function prepareSupabaseCheck(
     root: string,

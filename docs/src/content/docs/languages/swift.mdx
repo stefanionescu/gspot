@@ -18,6 +18,13 @@ Install the Swift toolchain, then install gspot with mise, as the [Quickstart](/
 project, the build and coverage checks need macOS, with Xcode chosen through `xcode-select`. `swift/periphery`,
 `swift/swiftlint-analyze`, and `xcode/plutil` run only on macOS.
 
+## Compiler warnings
+
+`swift/build` fails on a compiler warning in your own sources. A Swift package builds with warnings as errors. An Xcode
+scheme builds without that flag, because Xcode builds the packages that the project depends on with their warnings
+turned off, and the compiler refuses both options together. gspot reads the warnings of the build instead and reports
+each one whose file is in your repository.
+
 ## Xcode projects
 
 `gspot init` writes the Xcode project, scheme, and destination that it finds into `gspot.toml`. To set them yourself:

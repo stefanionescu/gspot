@@ -21,6 +21,18 @@ gspot set sql.dialect postgres
 The [`postgres` configuration](/reference/configurations/postgres/) sets it for you. SQLFluff reads each file as plain SQL,
 and does not expand Jinja or other templates.
 
+When one folder holds another dialect, such as SQLite migrations beside a Postgres database, set the dialect in the
+[scope](/configure/monorepos/#settings-in-a-scope) of that folder:
+
+```toml
+[[scope]]
+path = "d1"
+sql.dialect = "sqlite"
+```
+
+`naming/identifiers` reads SQL names with a Postgres parser. Under a dialect other than `ansi` or `postgres`, it checks
+the files that this parser can read, and reports no `syntax` finding for the others.
+
 ## Style
 
 Keywords, literals, and types are upper case, and identifiers and functions are lower case, so

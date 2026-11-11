@@ -1,6 +1,6 @@
 import { join, posix } from 'node:path';
 
-import { GENERATOR_IGNORED_FOLDERS, RULES } from '#cli/config/configurations/registry.ts';
+import { GENERATOR_IGNORED_FOLDERS, RULES } from '#cli/config/configurations/shared.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
@@ -14,8 +14,8 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { GeneratorOutput, GeneratorRun } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding, Substitutions } from '#cli/types/engine/tool-runs.ts';
+import type { CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
 
 function listMissingOutputs(session: CheckSession, outputs: GeneratorOutput[], commandText: string): CheckFinding[] {
     return outputs

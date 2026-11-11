@@ -3,13 +3,23 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { doctorOutputSchema } from '#cli/schemas/commands.ts';
-import { ANSWER_MODULE, ASTRO_PAGE, ASTRO_PAGE_PATH, COMPONENT_TSCONFIG } from '#tests/config/integration/framework.ts';
+import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/framework.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { doctorOutputSchema } from '#tests/setup/schemas.ts';
+
+const ASTRO_PAGE = `---
+const title: string = 'Home';
+---
+
+<h1>{title}</h1>
+<img src="logo.png" alt="The logo" />
+`;
+
+const ASTRO_PAGE_PATH = 'src/pages/index.astro';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['typescript', 'astro', 'format'],

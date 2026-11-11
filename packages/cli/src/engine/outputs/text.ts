@@ -6,7 +6,8 @@ import { LEADING_DOT_SLASH, MISSING_PATH_CODES } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
-import type { CheckOutput, Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import type { CheckOutput, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 const FILE_LINK = /^file:\/\/\/[^\s#?]+/u;
 

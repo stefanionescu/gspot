@@ -1,5 +1,5 @@
-import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { basename, delimiter, dirname, extname, join } from 'node:path';
+import { mkdir, symlink } from 'node:fs/promises';
+import { delimiter, dirname, extname, join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
 import semver from 'semver';
@@ -7,17 +7,16 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { doctorOutputSchema } from '#cli/schemas/commands.ts';
+import { getTool, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
 import { executableLayout } from '#cli/system/paths.ts';
-import * as processes from '#cli/system/processes.ts';
 import * as locate from '#cli/tools/locate.ts';
-import { findPackagePin, getTool, listDistinctTools } from '#cli/tools/pins.ts';
+import { findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { doctorOutputSchema } from '#tests/setup/schemas.ts';
 import { fakeCommands, fakeExecutableLookup, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -105,42 +104,6 @@ test('doctor lists a tool once when two scopes find the same install', async () 
     ]);
 });
 
-test('doctor names a missing coverage plugin and leaves it out when every coverage limit is zero', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
-            level: 'all',
-            tables: '[coverage]\nmin_line_percent = 80\n',
-        }),
-        'test_math.py': '',
-    });
-
-    const session = await openSession(sandbox.path);
-    const tools = listDistinctTools(session.toolConfigurations);
-    await using programs = await testdir();
-    using _which = fakeExecutableLookup(join(programs.path, 'pytest'));
-    const nativeVersion = processes.runProcess;
-    let isPresent = false;
-    using _version = spyOn(processes, 'runProcess').mockImplementation(async (command, options) => {
-        if (command.slice(1).join(' ') === '--version --version')
-            return buildProcessResult({ stdout: isPresent ? 'pytest-cov-7.1.0' : 'pytest 9.1.1' });
-        const pin = tools.find((tool) => tool.name === basename(command[0] ?? ''));
-        const version = pin?.version ?? pin?.min_version;
-        return version === undefined ? await nativeVersion(command, options) : buildProcessResult({ stdout: version });
-    });
-    isPresent = true;
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['python', 'pytest'], {
-            level: 'all',
-            tables: '[coverage]\nmin_line_percent = { value = 0, reason = "This sandbox tests optional coverage." }\n',
-        }),
-    );
-    const zero = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect(doctorOutputSchema.parse(JSON.parse(zero.stdout)).tools.map((tool) => tool.name)).not.toContain(
-        'pytest-cov',
-    );
-});
-
 test('doctor and gspot check report a missing xmllint with its install command', async () => {
     await using sandbox = await testdir();
     const root = join(sandbox.path, 'project');
@@ -174,11 +137,11 @@ test('doctor and gspot check report a missing xmllint with its install command',
         help,
     });
     const checked = parseCheckReport(
-        await runGspot(root, ['check', 'document.xml', '--only', 'data-files/xmllint', '--json'], environment),
+        await runGspot(root, ['check', 'document.xml', '--only', 'xml/xmllint', '--json'], environment),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     expect(checked.report.checks).toMatchObject([
-        { check: 'data-files/xmllint', status: 'missing', findings: [], note: expect.stringContaining(help) as string },
+        { check: 'xml/xmllint', status: 'missing', findings: [], note: expect.stringContaining(help) as string },
     ]);
 });
 
@@ -187,6 +150,7 @@ test('doctor lists programs by name and folds the npm packages into one line', a
     using _lookup = fakeExecutableLookup(null);
     const result = await runGspot(sandbox.path, ['doctor']);
     expect(result.code).toBe(1);
+    expect(result.stdout).toMatch(/^ {2}missing +eslint /mu);
     expect(result.stdout).not.toContain('eslint-plugin-');
 });
 

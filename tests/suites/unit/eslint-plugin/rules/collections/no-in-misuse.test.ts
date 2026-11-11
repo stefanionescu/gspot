@@ -1,10 +1,5 @@
 import { noInMisuse } from '#eslint-plugin/rules/collections/no-in-misuse.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-
-buildRuleTester().run('no-in-misuse without types', noInMisuse, {
-    valid: ['const names = ["a"]; if ("a" in names) run();'],
-    invalid: [],
-});
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('no-in-misuse', noInMisuse, {
     valid: [

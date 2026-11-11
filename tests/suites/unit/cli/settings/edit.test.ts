@@ -6,7 +6,9 @@ import { testdir } from 'testdirs';
 
 import { addScopeTable, buildEditedSettings, removeKey, setKey } from '#cli/settings/edit.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { INITIAL_SETTINGS, SCOPE_SETTING_WRITES, SEMGREP_IGNORE } from '#tests/config/settings/text.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
     await using sandbox = await testdir();
@@ -66,7 +68,14 @@ test('an invalid edit reports the setting without inventing a saved line', async
     );
     const invalid = readSettingsFile(sandbox.path);
     setKey(invalid.table, 'limits.max_function_lines', 'long');
-    expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow('limits.max_function_lines:');
+    expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'arguments',
+            message:
+                'limits.max_function_lines: The value "long" is not valid for limits.max_function_lines. Use a whole number of 0 or more.\nhttps://generativespotting.com/reference/gspot-toml/ lists every setting.',
+        }),
+    );
 });
 
 test('reordering keys does not change the file', async () => {

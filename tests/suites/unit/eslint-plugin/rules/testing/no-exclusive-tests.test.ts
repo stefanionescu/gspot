@@ -8,15 +8,21 @@ buildRuleTester().run('no-exclusive-tests', noExclusiveTests, {
         'test.describe.configure.only("adds", run);',
     ],
     invalid: [
-        ...['describe'].map((name) => ({
-            code: `${name}.only("adds", run);`,
+        {
+            code: 'it.only("adds", run);',
+            errors: [
+                { messageId: 'exclusive', suggestions: [{ messageId: 'removeOnly', output: 'it("adds", run);' }] },
+            ],
+        },
+        {
+            code: 'describe.only("cart", run);',
             errors: [
                 {
-                    messageId: 'exclusive' as const,
-                    suggestions: [{ messageId: 'removeOnly' as const, output: `${name}("adds", run);` }],
+                    messageId: 'exclusive',
+                    suggestions: [{ messageId: 'removeOnly', output: 'describe("cart", run);' }],
                 },
             ],
-        })),
+        },
         {
             code: 'test.describe.parallel.only("cart", run);',
             errors: [

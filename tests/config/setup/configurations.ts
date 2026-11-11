@@ -1,5 +1,3 @@
-import cliPackage from '#cli-package' with { type: 'json' };
-
 export const COMMAND_PLAYBOOK = `---
 - name: Deploy the service
   hosts: all
@@ -16,26 +14,6 @@ export const STYLELINT_PACKAGE_JSON = `{
   "stylelint": {"rules":{"property-no-unknown":null}}
 }
 `;
-
-export const STYLELINT_FILES = {
-    'package.json': STYLELINT_PACKAGE_JSON,
-    'source.css': 'a { opacity: 1; }\n',
-    'app/package.json': STYLELINT_PACKAGE_JSON,
-    'app/source.css': 'a { opacity: 1; }\n',
-    'app/child/package.json': STYLELINT_PACKAGE_JSON,
-    'other/package.json': STYLELINT_PACKAGE_JSON,
-    'plain/package.json': '{"private":true}\n',
-} as const;
-
-export const COMMITLINT_PACKAGE =
-    '{"name":"native-project","private":true,"commitlint":{"rules":{"type-enum":[2,"always",["special"]]}},"kept":[0,false,""]}\n';
-
-export const COMMITLINT_GSPOT_PACKAGE = COMMITLINT_PACKAGE.replace(
-    '"kept"',
-    () => `"devDependencies":{"${cliPackage.name}":"${cliPackage.version}"},"kept"`,
-);
-
-export const CALLED_WORKFLOW = '.github/workflows/called.yml';
 
 export const GROUPED_PBXPROJ = `// !$*UTF8*$!
 {
@@ -86,21 +64,9 @@ export const LICENSE = `MIT License
 Copyright (c) 2026 Alex Garcia
 `;
 
-export const GUIDE_READ_MARKDOWN = '# Guide\n\nRead the guide.\n';
-
 export const SCHEDULE_RELEASE_MARKDOWN = '# Schedule\n\nRelease on 03/04/2026.\n';
 
 export const NOTES_MARKDOWN = '# Notes\n';
-
-export const FORMAT_OVERRIDES_SETTINGS = `level = "all"\nconfigurations = ["format", "javascript"]\n[rule_files]\nenabled = false\n[format]\nindent_width = 2\nquotes = "double"\nsemicolons = false\n[[format.override]]\npaths = ["tests/**"]\nquotes = "single"\nsemicolons = true\n[[format.override]]\npaths = ["apps/web/**", "!apps/web/exempt.js"]\nquotes = "single"\n[[format.override]]\npaths = ["apps/web/admin/**"]\nquotes = "double"\nsemicolons = true\n[[scope]]\npath = "apps/web"\n[scope.format]\nindent_width = 4\n[[scope]]\npath = "apps/web/admin"\n[scope.format]\nindent_width = 8\n`;
-
-export const PRETTIER_OPTIONS_BY_FILE = [
-    { file: 'source.js', tabWidth: 2, singleQuote: false, semi: false, endOfLine: 'lf' },
-    { file: 'tests/unit.js', tabWidth: 2, singleQuote: true, semi: true, endOfLine: 'lf' },
-    { file: 'apps/web/café note.js', tabWidth: 4, singleQuote: true, semi: false, endOfLine: 'lf' },
-    { file: 'apps/web/exempt.js', tabWidth: 4, singleQuote: false, semi: false, endOfLine: 'lf' },
-    { file: 'apps/web/admin/page.js', tabWidth: 8, singleQuote: false, semi: true, endOfLine: 'lf' },
-] as const;
 
 export const CONFIG_PROJECT = {
     '.github/workflows/check.yml': `name: Check
@@ -133,7 +99,7 @@ jobs:
 `;
 
 export const NPM_CHECK_IGNORES = `[[ignore]]
-check = "data-files/v8r"
+check = "json/v8r"
 reason = "This sandbox exercises tools without JSON schema checks."
 [[ignore]]
 check = "format/editorconfig-checker"
@@ -142,10 +108,6 @@ reason = "This sandbox exercises tools without the npm editor checker."
 check = "format/prettier"
 reason = "This sandbox exercises tools without the npm formatter."
 `;
-
-export const TWO_WORDS = 'two words';
-
-export const AWS_KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');
 
 export const TYPO = {
     the: 'teh',

@@ -40,7 +40,7 @@ test('history checks compare committed migration changes with the selected base 
     ).toStrictEqual([{ file: 'migrations/20240101_early.sql', rule: 'order' }]);
 });
 
-test('edited-migrations reports an edited committed migration and passes after the edit is undone', async () => {
+test('edited-migrations reports an edited committed migration', async () => {
     await using sandbox = await createMigrationHistory();
     await writeFile(join(sandbox.path, TEAMS_MIGRATION_PATH), TEAMS_TABLE_SQL + NAME_COLUMN_SQL);
     expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([
@@ -48,6 +48,7 @@ test('edited-migrations reports an edited committed migration and passes after t
             file: TEAMS_MIGRATION_PATH,
             line: 1,
             rule: 'frozen',
+            help: 'Undo the edit, and put the change in a new migration.',
         }),
     ]);
 });
@@ -56,13 +57,20 @@ test.each([
     'CREATE TABLE IF NOT EXISTS teams (id int);',
     'CREATE INDEX IF NOT EXISTS team_index ON teams (id);',
     'ALTER TABLE teams ADD COLUMN IF NOT EXISTS name text;',
+    'CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;',
 ])('edited-migrations reports the drift guard of %s', async (statement) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres']),
         'migrations/1_tables.sql': `${statement}\n`,
     });
     const findings = await runSandboxCheck(sandbox.path, 'postgres/edited-migrations');
-    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'drift-guard', line: 1 }]);
+    expect(findings.map(({ rule, line, help }) => ({ rule, line, help }))).toStrictEqual([
+        {
+            rule: 'drift-guard',
+            line: 1,
+            help: 'Remove `IF NOT EXISTS`, so that the migration fails when the object already exists.',
+        },
+    ]);
 });
 
 test('edited-migrations accepts IF NOT EXISTS on CREATE INDEX CONCURRENTLY', async () => {

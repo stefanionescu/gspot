@@ -3,8 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';

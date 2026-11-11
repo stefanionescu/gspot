@@ -58,11 +58,11 @@ test('a block that stands alone is reported at the top of a file and inside a fu
             .map(({ line }) => line),
     ).toStrictEqual([2, 6]);
 });
-test.each(['basic'] as const)('form validation and list security run at level %s', async (level) => {
+test('form validation and list security run at level basic', async () => {
     await using sandbox = await testdir({
         ...SELECTOR_FILES,
         'gspot.toml': buildSandboxSettings(['javascript'], {
-            level,
+            level: 'basic',
             rules: true,
             scopes: [
                 { path: 'native', configurations: ['react-native'] },

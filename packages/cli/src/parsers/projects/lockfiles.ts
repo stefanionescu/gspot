@@ -30,6 +30,7 @@ import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import type { LockfileName } from '#cli/types/parsers.ts';
 import type { RunCache } from '#cli/types/system.ts';
 
@@ -227,6 +228,26 @@ export function readLockedVersions(cache: RunCache, folder: string): Map<string,
     return found === undefined
         ? undefined
         : parsers[found.lockfile](found.path, found.text, posix.relative(found.base, folder));
+}
+
+/**
+Find the line where a lockfile declares a package, so a finding points at the entry to change. The name entry of a TOML
+lockfile and the `node_modules` key of an npm lockfile come first, then a line with the name and the version, then the
+first line with the name. A lockfile that does not write the name gives line 1.
+*/
+export function findLockedPackageLine(text: string, name: string, version: string): number {
+    const escaped = escapeRegExp(name);
+    const named = new RegExp(String.raw`(?<![\w.-])(?<!@[\w.-]*/)${escaped}(?![\w./-])`, 'iu');
+    const entry = new RegExp(String.raw`^\s*(?:name\s*=\s*"${escaped}"|"(?:.*/)?node_modules/${escaped}":)`, 'iu');
+    const lines = text.split('\n');
+    const found = [
+        (line: string) => entry.test(line),
+        (line: string) => named.test(line) && line.includes(version),
+        (line: string) => named.test(line),
+    ]
+        .map((isMatch) => lines.findIndex((line) => isMatch(line)))
+        .find((index) => index !== -1);
+    return found === undefined ? 1 : found + 1;
 }
 
 export function listLockfileUrls(path: string, text: string): string[] {

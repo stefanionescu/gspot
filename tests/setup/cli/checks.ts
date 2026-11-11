@@ -7,15 +7,14 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { runBuiltInCheck } from '#cli/engine/results.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import * as environment from '#cli/system/environment.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import type { NamingSettings } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -81,7 +80,7 @@ export async function runSandboxCheck(
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         selectCheckCode(planned.check),
-        CHECK_RUN_OPTIONS,
+        {},
     );
     return result.findings;
 }
@@ -107,7 +106,7 @@ export function getBuiltInCheck(
             check,
             buildCheckSession(session, CHECK_GENERATION, selection),
             planned,
-            CHECK_RUN_OPTIONS,
+            {},
         );
         return [...result.findings];
     };

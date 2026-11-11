@@ -1,6 +1,4 @@
-import type { GithubWorkflow, GitlabPipeline, PythonProject, ToolProjectFiles } from '#tests/types/setup.ts';
-
-export type CiDocument = GithubWorkflow | GitlabPipeline;
+import type { PythonProject, ToolProjectFiles } from '#tests/types/setup.ts';
 
 export type IndexedPythonProject = PythonProject & { files: ToolProjectFiles };
 

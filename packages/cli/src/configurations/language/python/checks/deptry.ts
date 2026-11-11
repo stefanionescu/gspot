@@ -1,6 +1,6 @@
 import { join, posix } from 'node:path';
 
-import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/blocks.ts';
+import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/eslint/blocks.ts';
 import {
     DEPTRY_COMMAND,
     DEPTRY_EXCLUDE_FLAG,

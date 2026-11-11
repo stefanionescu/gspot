@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
 const installedSandbox = shareInstalledSandbox({
@@ -14,4 +14,7 @@ test('basic Zod checks report deprecated chained integer schemas', async () => {
     const { root } = installedSandbox();
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/eslint', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(listFindingRows(result.report).filter(({ file }) => file === 'schema.js')).toStrictEqual([
+        { file: 'schema.js', line: 2, rule: 'zod/no-number-schema-with-int' },
+    ]);
 });

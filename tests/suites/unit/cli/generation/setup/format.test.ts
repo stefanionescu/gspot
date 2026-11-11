@@ -7,41 +7,94 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { INVALID_PRETTIER_OPTIONS, UNREADABLE_PRETTIER_FILES } from '#tests/config/generation/carryover.ts';
-import {
-    FORMAT_FILE_CASES,
-    FORMAT_WORKSPACE_FILES,
-    PRETTIER_FORMAT_OPTIONS,
-    SCOPE_FORMAT_FILES,
-} from '#tests/config/generation/settings.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, runInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
-test.each(INVALID_PRETTIER_OPTIONS)(
-    'init drops $field of $file, which gspot.toml cannot hold, and goes on',
-    async ({ file, field, text }) => {
-        using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-        await using sandbox = await testdir({
-            ...FORMAT_WORKSPACE_FILES,
-            'source.js': 'export const value = 1;\n',
-            'app/source.js': 'export const value = 2;\n',
-            [file]: text,
-        });
-        commitAll(sandbox.path);
-        const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan } = initOutputSchema.parse(JSON.parse(result.stdout));
-        expect(plan.carryover.find(({ path }) => path === file)?.dropped).toStrictEqual([field]);
+const FORMAT_FILE_CASES = [
+    {
+        name: 'partial Prettier JSON configuration',
+        files: { '.prettierrc.json': '{"tabWidth":3}' },
+        expected: { indent_width: 3, print_width: 80, quotes: 'double' },
     },
-);
+    {
+        name: 'Prettier .prettierrc configuration',
+        files: { '.prettierrc': 'printWidth: 100\ntabWidth: 4\n' },
+        expected: { indent_width: 4, print_width: 100 },
+    },
+    {
+        name: 'Prettier .prettierrc.json5 configuration',
+        files: { '.prettierrc.json5': '{ printWidth: 100, tabWidth: 4, }\n' },
+        expected: { indent_width: 4, print_width: 100 },
+    },
+    {
+        name: 'Prettier ignore file beside EditorConfig',
+        files: { '.prettierignore': 'dist/\n', '.editorconfig': '[*]\nindent_size = 4\nmax_line_length = 100\n' },
+        expected: { indent_width: 4, print_width: 100 },
+    },
+    {
+        name: 'Prettier .prettierrc.toml configuration',
+        files: { '.prettierrc.toml': 'printWidth = 100\ntabWidth = 4\n' },
+        expected: { indent_width: 4, print_width: 100 },
+    },
+    {
+        name: 'Prettier package configuration',
+        files: { 'package.json': '{"prettier":{"tabWidth":6,"printWidth":100,"singleQuote":true}}' },
+        expected: { indent_width: 6, print_width: 100, quotes: 'single' },
+    },
+    {
+        name: 'EditorConfig project settings and section overrides',
+        files: { '.editorconfig': '[*]\nindent_size = 4\n[*.json]\nindent_size = 2\n', 'data.json': '{}\n' },
+        expected: { indent_width: 4, override: [{ paths: ['**/*.json'], indent_width: 2 }] },
+    },
+    {
+        name: 'EditorConfig before declared Prettier defaults',
+        files: {
+            'package.json': '{"devDependencies":{"prettier":"3.8.1"}}',
+            '.editorconfig': `root = true
+[*]
+indent_size = 6
+max_line_length = 96
+`,
+        },
+        expected: { indent_width: 6, print_width: 96, quotes: 'double' },
+    },
+] as const;
+
+const SCOPE_FORMAT_FILES = {
+    '.prettierrc.json': '{"tabWidth":2,"printWidth":90,"singleQuote":false}',
+    'app/.prettierrc.json': '{"tabWidth":6,"printWidth":100,"singleQuote":true}',
+    'app/source.js': 'export const app = 1;\n',
+    'app/deep/source.js': 'export const deep = 1;\n',
+    'sibling/source.js': 'export const sibling = 1;\n',
+} as const;
+
+const PRETTIER_FORMAT_OPTIONS = {
+    quotes: 'double',
+    override: [
+        { paths: ['**/*.ts', 'src/**/*.css'], indent_width: 2, print_width: 100 },
+        { paths: ['**/*.py'], print_width: 88, quotes: 'single' },
+    ],
+} as const;
+
+const FORMAT_WORKSPACE_FILES = {
+    'package.json': '{"private":true,"workspaces":["app","app/deep","sibling"]}',
+    'app/package.json': '{"private":true}',
+    'app/deep/package.json': '{"private":true}',
+    'sibling/package.json': '{"private":true}',
+} as const;
+
+const UNREADABLE_PRETTIER_FILES = [
+    { path: 'prettier.config.mjs', text: "import missing from './missing.mjs';\nexport default missing;\n" },
+    { path: '.prettierrc.json5', text: '// formatting\n{ tabWidth: 4, }\n' },
+] as const;
 
 async function readInitFormatOptions(root: string, commandArguments: string[]): Promise<FormatSettings[]> {
     const result = await runGspot(root, [...commandArguments, '--json']);
@@ -211,8 +264,12 @@ test('init gives code without a style config the defaults of each formatter', as
         'source.ts': 'export {};\n',
     });
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--configurations', 'format', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const formats = await readInitFormatOptions(sandbox.path, ['init', '--configurations', 'format']);
+    expect(formats[0]).toHaveProperty('override', [
+        { paths: ['**/*.py'], indent_width: 4, print_width: 88 },
+        { paths: ['**/*.swift'], indent_width: 4, print_width: 120 },
+        { paths: ['**/*.sql'], indent_width: 4 },
+    ]);
 });
 
 test('init names only the script extension that the repository tracks, because gspot/unmatched-paths reports the other', async () => {

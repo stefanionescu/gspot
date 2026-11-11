@@ -8,13 +8,9 @@ import {
     SQUAWK_CHECK,
     SYNTAX_RULE,
 } from '#cli/config/configurations/infrastructure.ts';
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
-import {
-    compareMigrationVersions,
-    extractMigrationVersion,
-    listSqlTokens,
-    parseSqlFile,
-} from '#cli/parsers/code/sql.ts';
+import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { readCommittedTexts, readHead } from '#cli/repository/revisions/files.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
@@ -23,6 +19,10 @@ import { compareText } from '#cli/system/text.ts';
 import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+const MIGRATION_VERSION = /^V?(?<version>\d+(?:[._]\d+)*)/u;
+
+const PRISMA_MIGRATION_FILE = 'migration.sql';
 
 const MIGRATIONS = Symbol('migrations');
 
@@ -52,6 +52,12 @@ function listMigrationPaths(planned: PlannedCheck): string[] {
     return migrations
         .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
         .map((file) => file.path);
+}
+
+function extractMigrationVersion(path: string): string | undefined {
+    const name = posix.basename(path);
+    const versioned = name === PRISMA_MIGRATION_FILE ? posix.basename(posix.dirname(path)) : name;
+    return MIGRATION_VERSION.exec(versioned)?.groups?.['version']?.replaceAll('_', '.');
 }
 
 export async function readMigrations(session: Session, planned: PlannedCheck): Promise<MigrationRead> {
@@ -96,6 +102,31 @@ export async function readParsedMigrations(session: Session, planned: PlannedChe
     const { migrations, findings } = await readMigrations(session, planned);
     if (findings.length > 0) throw new CheckStop('skipped', MIGRATION_SYNTAX_SKIP);
     return migrations;
+}
+
+export function compareMigrationVersions(left: string, right: string): number {
+    const first = left.replaceAll('_', '.').split('.');
+    const second = right.replaceAll('_', '.').split('.');
+    for (let index = 0; index < Math.max(first.length, second.length); index += 1) {
+        const before = BigInt(first[index] ?? '0');
+        const after = BigInt(second[index] ?? '0');
+        if (before !== after) return before < after ? -1 : 1;
+    }
+    return 0;
+}
+
+export function selectFrozenMigrations(paths: string[], through: string): Set<string> {
+    if (through === FROZEN_NONE) return new Set();
+    const cutoff = MIGRATION_VERSION.exec(through)?.groups?.['version'];
+    return new Set(
+        paths.filter((path) => {
+            const version = extractMigrationVersion(path);
+            return (
+                through === FROZEN_ALL ||
+                (version !== undefined && cutoff !== undefined && compareMigrationVersions(version, cutoff) <= 0)
+            );
+        }),
+    );
 }
 
 export function extractForwardText(text: string): string {

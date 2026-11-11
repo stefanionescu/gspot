@@ -1,4 +1,4 @@
-import { isAbsolute, join, posix, sep } from 'node:path';
+import { isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 
 import {
     DECLARATION_EXTENSIONS,
@@ -7,6 +7,7 @@ import {
     INSTALLED_DEPENDENCY_FOLDERS,
     PYTHON_EXECUTABLE,
 } from '#cli/config/system.ts';
+import { GspotError } from '#cli/system/errors.ts';
 
 export const executableLayout = process.platform === 'win32' ? EXECUTABLE_LAYOUTS.windows : EXECUTABLE_LAYOUTS.posix;
 
@@ -16,6 +17,16 @@ export function convertToPosixPath(path: string): string {
 
 export function isInside(local: string): boolean {
     return !(local === '..' || isAbsolute(local) || local.startsWith('../') || local.startsWith(`..${sep}`));
+}
+
+/**
+Resolve a path argument from the working folder, relative to the root. The refusal of a path outside the root names
+the argument: a flag such as --paths, or Path for a positional argument.
+*/
+export function buildArgumentPath(root: string, cwd: string, subject: string, argument = 'Path'): string {
+    const path = convertToPosixPath(relative(root, resolve(cwd, subject)));
+    if (!isInside(path)) throw new GspotError('arguments', `${argument} ${subject} is outside this repository.`);
+    return path;
 }
 
 /**

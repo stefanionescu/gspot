@@ -12,7 +12,7 @@ import type { Session } from '#cli/types/tools.ts';
 
 export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
     const languages = planned.scope.configurations
-        .filter((configuration) => configuration.group === 'language')
+        .filter((configuration) => configuration.group === 'language' && !configuration.always_selected)
         .map((configuration) => ({
             configuration,
             matches: buildFileMatcher(configuration.files),

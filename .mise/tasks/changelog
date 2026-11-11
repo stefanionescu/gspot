@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Print the material for the CHANGELOG.md section of a CLI version: the compare link, the breaking commits, the feat, fix, and perf subjects by scope, and the settings that changed."
+#MISE description="Print the material for the CHANGELOG.md section of a CLI version: the compare link, the breaking commits, and the feat, fix, and perf subjects by scope."
 #USAGE arg "<version>" help="The CLI version, such as 0.4.0"
 set -euo pipefail
 : "${usage_version:?mise must provide the version}"

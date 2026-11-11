@@ -6,9 +6,8 @@ import { findSettingsSkip } from '#cli/engine/skips.ts';
 import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { assertCheckExists, listCheckIds, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
-import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { isInScope } from '#cli/system/paths.ts';
+import { buildArgumentPath, isInScope } from '#cli/system/paths.ts';
 import { findProgram } from '#cli/system/programs.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
@@ -131,6 +130,12 @@ async function readSelection(
     return { selection: { content: 'working-tree', reference, base: reference, paths, commits }, ...note };
 }
 
+function addMissingToolsNote(report: RunReport, revision: RevisionSource | undefined): void {
+    const note = revision?.missingToolsNote;
+    if (note === undefined) return;
+    if (report.checks.some(({ status }) => status === 'missing')) report.notes.push(note);
+}
+
 export async function runTreeCheck(
     treeFolder: string,
     options: CheckOptions,
@@ -158,6 +163,7 @@ export async function runTreeCheck(
         const result = await runChecks(session, buildRunOptions(session, options, { selection, started }));
         if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
         if (note !== undefined) result.report.notes.push(note);
+        addMissingToolsNote(result.report, revision);
         result.report.notes.push(...onlyNotes.map((id) => formatLevelNote(id, result.report, session)));
         const text = formatTreeReport(session, result, { verbose: options.verbose, canceled: cancelSignal.aborted });
         return { text, json: result.report, exitCode: result.report.exitCode };

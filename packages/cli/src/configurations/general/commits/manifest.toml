@@ -25,7 +25,7 @@ tool = "commitlint"
 [[check]]
 command = ["commitlint", "--config", "{config_file:commitlint}", "--edit", "{message_file}"]
 example = "The message `changed stuff` has no type or scope. Write `fix(cli): report missing configuration` instead."
-help = "Write `<type>: <subject>` or `<type>(<scope>): <subject>` in a first line of 72 characters or fewer, with `!` before the colon for a breaking change. Change the accepted types with `gspot set commits.types`."
+help = "Write `<type>: <subject>` or `<type>(<scope>): <subject>` in a first line of 72 characters or fewer, with `!` before the colon for a breaking change. Leave a blank line after the first line, and keep each line of the body within the same length. Change the accepted types with `gspot set commits.types`."
 level = "all"
 name = "commitlint"
 stage = "message"

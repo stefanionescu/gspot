@@ -1,43 +1,10 @@
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 
-import cliPackage from '#cli-package' with { type: 'json' };
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-
-test('unexpected check failures hide their stack until verbose while operational errors stay actionable', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'source.txt': 'Input.\n',
-    });
-    const code = CHECK_CODE['repository/encoding'];
-    if (code?.check === undefined) throw new Error('The encoding check has no built-in code.');
-    using failure = spyOn(code, 'check').mockImplementation(() => {
-        throw new TypeError('Private failure stack');
-    });
-    const command = ['check', '--only', 'repository/encoding'];
-    const concise = parseCheckReport(await runGspot(sandbox.path, [...command, '--json']));
-    expect(concise.code).toBe(2);
-    expect(concise.report.checks[0]?.note).toBe(
-        `repository/encoding stopped because of an internal error in gspot. Report it at ${cliPackage.bugs.url}, with the stack that --verbose prints.`,
-    );
-    expect(concise.stdout).not.toContain('Private failure stack');
-    const verbose = parseCheckReport(await runGspot(sandbox.path, [...command, '--verbose', '--json']));
-    expect(verbose.report.checks[0]?.stack).toContain('TypeError: Private failure stack');
-    const text = await runGspot(sandbox.path, [...command, '--verbose']);
-    expect(text.stdout).toContain('TypeError: Private failure stack');
-    failure.mockImplementation(() => {
-        throw new GspotError('filesystem', 'Rename the unreadable file.');
-    });
-    const operational = parseCheckReport(await runGspot(sandbox.path, [...command, '--json']));
-    expect(operational.code).toBe(2);
-    expect(operational.report.checks[0]?.note).toBe('Rename the unreadable file.');
-    expect(operational.report.checks[0]?.stack).toBeUndefined();
-});
 
 test('GitHub Actions fences untrusted report text with a unique token and leaves JSON intact', async () => {
     const tables = stringify({

@@ -47,7 +47,7 @@ crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MO
 finding_header_pattern = "^(?:Oops!|ESLint: )"
 name = "eslint"
 npm = "eslint"
-replace = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts", "eslint.config.mts", "eslint.config.cts", ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", ".eslintrc.yml", ".eslintrc.yaml", ".eslintignore"]
+replace = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts", "eslint.config.mts", "eslint.config.cts", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.yaml", ".eslintrc.yml", ".eslintrc.json", ".eslintrc", ".eslintignore"]
 rule_url = "https://eslint.org/docs/latest/rules/{rule}"
 version = "10.13.0"
 
@@ -245,6 +245,11 @@ tool = "knip"
 [[config_file]]
 source = "eslint-functions.ts"
 target = "eslint/functions.mjs"
+tool = "eslint"
+
+[[config_file]]
+source = "eslint-fixes.ts"
+target = "eslint/fixes.mjs"
 tool = "eslint"
 
 [[config_file]]

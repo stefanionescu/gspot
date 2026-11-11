@@ -7,14 +7,6 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { LEVELS } from '#cli/config/manifests.ts';
-import {
-    DEBIAN_DOCKERFILE,
-    DOCKER_CASES,
-    DOCKER_SANDBOX,
-    ROOT_USER_DOCKERFILE,
-    TRIVY_SCOPE_RESULTS,
-    TRIVY_SCOPE_TABLES,
-} from '#tests/config/integration/infrastructure.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -25,6 +17,80 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+
+const DOCKER_SANDBOX = {
+    install: false,
+    configurations: ['docker'],
+    files: {
+        'api/Dockerfile': `FROM node:22.11.0-bookworm-slim
+WORKDIR /app
+COPY package.json ./
+USER node
+HEALTHCHECK CMD ["node", "--version"]
+CMD ["node", "index.js"]
+`,
+        'api/.dockerignore': `.git
+node_modules
+.env*
+`,
+        'api/compose.yml': `services:
+    api:
+        build: .
+`,
+        'api/package.json': `{
+    "name": "example",
+    "private": true
+}
+`,
+    },
+} as const;
+
+const DOCKER_COMPOSE_SAMPLE = {
+    check: 'docker/compose',
+    files: {
+        'api/compose.yml': `services:
+    api:
+        image: example/image
+        bogus: true
+`,
+    },
+    expected: { file: 'api/compose.yml', message: 'bogus' },
+};
+
+const ROOT_USER_DOCKERFILE = `FROM node:22.11.0-bookworm-slim
+WORKDIR /app
+USER root
+HEALTHCHECK CMD ["node", "--version"]
+CMD ["node", "index.js"]
+`;
+
+const DEBIAN_DOCKERFILE = `FROM debian:12
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+USER 1000
+`;
+
+const TRIVY_SCOPE_TABLES = `[[scope]]
+path = "app"
+
+[[scope]]
+path = "app/child"
+
+[[scope]]
+path = "sibling"
+
+[[ignore]]
+check = "docker/trivy-config"
+rule = "DS-0002"
+paths = ["app/**"]
+reason = "This test exercises scoped advisory exceptions."
+`;
+
+const TRIVY_SCOPE_RESULTS = [
+    { scope: '', status: 'failed' as const, files: ['Dockerfile'] },
+    { scope: 'app', status: 'passed' as const, files: [] },
+    { scope: 'app/child', status: 'passed' as const, files: [] },
+    { scope: 'sibling', status: 'failed' as const, files: ['sibling/Dockerfile'] },
+];
 
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
     await writeFile(join(root, 'payload.pem'), contents);
@@ -149,10 +215,10 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
 
 const installedSandbox = shareInstalledSandbox(DOCKER_SANDBOX);
 
-test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    const expected =
-        'message' in sample.expected
-            ? { ...sample.expected, message: expect.stringContaining(sample.expected.message) as string }
-            : sample.expected;
-    await assertCheckSample(installedSandbox(), { ...sample, expected });
+test('docker/compose reports api/compose.yml and passes after the fix', async () => {
+    const { expected } = DOCKER_COMPOSE_SAMPLE;
+    await assertCheckSample(installedSandbox(), {
+        ...DOCKER_COMPOSE_SAMPLE,
+        expected: { ...expected, message: expect.stringContaining(expected.message) as string },
+    });
 });

@@ -1,39 +1,4 @@
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
-import { GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
-
-export const PYDOCLINT_CHECK_ARGUMENTS = ['check', '--only', 'python/pydoclint', '--json'] as const;
-
-export const DOCSTRING_MODULES = {
-    'google.py': `def double(value: int) -> int:
-    """Double a number.
-
-    Args:
-        amount: The number.
-
-    Returns:
-        Twice the number.
-    """
-    return value * 2
-`,
-    'numpy.py': `EXAMPLE = """
-Args:
-"""
-
-def double(value: int) -> int:
-    """Double a number.
-
-    Parameters
-    ----------
-    amount
-        The number.
-
-    Returns
-    -------
-    The doubled number.
-    """
-    return value * 2
-`,
-} as const;
 
 export const RUFF_FORMAT_CASES = [
     {
@@ -113,10 +78,7 @@ def _eight(
     return value0 + value1 + value2 + value3 + value4 + value5 + value6 + value7
 `,
     finding: { code: 'PLR0913', location: { row: 8 } },
-    failureStatus: 1,
 } as const;
-
-export const ARITHMETIC_MODULE_PATH = 'example/math.py';
 
 export const ARITHMETIC_MODULE = `"""Arithmetic examples used by these tests."""
 
@@ -144,15 +106,6 @@ def triple(value: int) -> int:
     """
     return value * 3
 `;
-
-export const PYTHON_SANDBOX = {
-    configurations: ['python'],
-    files: {
-        'pyproject.toml': GOOGLE_PYPROJECT,
-        'example/__init__.py': '"""The test package."""\n',
-        [ARITHMETIC_MODULE_PATH]: ARITHMETIC_MODULE,
-    },
-} as const;
 
 export const RUFF_SANDBOX = {
     configurations: ['python', 'pytest'],

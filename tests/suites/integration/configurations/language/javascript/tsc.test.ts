@@ -4,12 +4,37 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { JSCONFIG_SANDBOX, KNIP_FOLDER_FILES, OWN_TYPESCRIPT_RESULTS } from '#tests/config/integration/javascript.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
 import { COMPILER_SOURCE } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+
+const JSCONFIG_SANDBOX = { configurations: ['javascript'], level: 'all', files: BASE_INSTALLED_FILES } as const;
+
+const OWN_TYPESCRIPT_RESULTS = [
+    {
+        check: 'javascript/tsc',
+        status: 'failed',
+        findings: [
+            {
+                file: 'source.js',
+                line: 1,
+                column: 22,
+                rule: 'TS2304',
+                fixable: false,
+            },
+        ],
+    },
+] as const;
+
+const KNIP_FOLDER_FILES = {
+    'package.json': '{"name":"root","private":true,"type":"module","main":"index.js"}',
+    'index.js': 'import "./docs/index.js";\n',
+    'docs/package.json': '{"name":"docs","private":true,"type":"module","main":"index.js"}',
+    'docs/index.js': 'console.log("docs");\n',
+} as const;
 
 const installedSandbox = shareInstalledSandbox(JSCONFIG_SANDBOX);
 

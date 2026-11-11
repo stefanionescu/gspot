@@ -12,13 +12,12 @@ import { SITE_BUILD_CHECKS } from '#cli/configurations/framework/site/checks/bui
 import { SITE_PAGES_CHECKS } from '#cli/configurations/framework/site/checks/pages.ts';
 import { SITE_UNUSED_ASSETS_CHECKS } from '#cli/configurations/framework/site/checks/unused-assets.ts';
 import { SVELTE_CHECKS } from '#cli/configurations/framework/svelte/checks.ts';
+import { AGENTS_CHECKS } from '#cli/configurations/general/agents/checks.ts';
 import { COMMITS_CHECKS } from '#cli/configurations/general/commits/checks.ts';
-import { DATA_FILES_CHECKS } from '#cli/configurations/general/data-files/checks.ts';
 import { DEPENDENCIES_CHECKS } from '#cli/configurations/general/dependencies/checks.ts';
 import { DOCS_MISSING_PATHS_CHECKS } from '#cli/configurations/general/docs/checks/missing-paths.ts';
 import { DOCS_REQUIRED_FILES_CHECKS } from '#cli/configurations/general/docs/checks/required-files.ts';
 import { DOCS_VERSION_STRINGS_CHECKS } from '#cli/configurations/general/docs/checks/version-strings.ts';
-import { ENGINEERING_CHECKS } from '#cli/configurations/general/engineering/checks.ts';
 import { GSPOT_CONFLICTING_CONFIGS_CHECKS } from '#cli/configurations/general/gspot/checks/conflicting-configs.ts';
 import { DETECTED_CONFIGURATIONS_CHECKS } from '#cli/configurations/general/gspot/checks/detected-configurations.ts';
 import { GSPOT_GENERATED_FILES_CHECKS } from '#cli/configurations/general/gspot/checks/generated-files.ts';
@@ -78,6 +77,7 @@ import { SWIFT_SECURITY_CHECKS } from '#cli/configurations/language/swift/checks
 import { SWIFT_SKIP_REASONS_CHECKS } from '#cli/configurations/language/swift/checks/skip-reasons.ts';
 import { SWIFT_SWIFTLINT_CHECKS } from '#cli/configurations/language/swift/checks/swiftlint.ts';
 import { TYPESCRIPT_CHECKS } from '#cli/configurations/language/typescript/checks.ts';
+import { YAML_CHECKS } from '#cli/configurations/language/yaml/checks.ts';
 import { TRANSLATIONS_CHECKS } from '#cli/configurations/library/translations/checks.ts';
 import { CLOUDFLARE_CHECKS } from '#cli/configurations/platform/cloudflare/checks.ts';
 import { SUPABASE_CHECKS } from '#cli/configurations/platform/supabase/checks.ts';
@@ -89,6 +89,7 @@ import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { Check } from '#cli/types/manifests.ts';
 
 export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
+    ...AGENTS_CHECKS,
     ...ANSIBLE_CHECKS,
     ...BASH_FUNCTION_SIZE_CHECKS,
     ...BASH_INLINE_SCRIPTS_CHECKS,
@@ -99,7 +100,6 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...BASH_UNUSED_FUNCTIONS_CHECKS,
     ...CLOUDFLARE_CHECKS,
     ...COMMITS_CHECKS,
-    ...DATA_FILES_CHECKS,
     ...DEPENDENCIES_CHECKS,
     ...DOCKER_COMPOSE_CHECKS,
     ...DOCKER_DOCKERIGNORE_CHECKS,
@@ -109,7 +109,6 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...DOCS_MISSING_PATHS_CHECKS,
     ...DOCS_REQUIRED_FILES_CHECKS,
     ...DOCS_VERSION_STRINGS_CHECKS,
-    ...ENGINEERING_CHECKS,
     ...EXPO_CHECKS,
     ...GITHUB_ACTIONS_CHECKS,
     ...GSPOT_CONFLICTING_CONFIGS_CHECKS,
@@ -174,6 +173,7 @@ export const CHECK_CODE: Readonly<Record<string, CheckCode>> = {
     ...TYPESCRIPT_CHECKS,
     ...VITEST_CHECKS,
     ...XCODE_CHECKS,
+    ...YAML_CHECKS,
 };
 
 export function selectCheckCode(check: Check): CheckCode | undefined {

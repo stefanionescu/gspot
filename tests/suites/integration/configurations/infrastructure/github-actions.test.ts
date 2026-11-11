@@ -5,18 +5,57 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GITHUB_WORKFLOW } from '#cli/config/generation.ts';
-import {
-    CHECKOUT_WORKFLOW,
-    COMPOSITE_ACTION,
-    REQUIRED_INPUT_WORKFLOW,
-    TEMPLATE_INJECTION_WORKFLOW,
-} from '#tests/config/integration/infrastructure.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+
+const COMPOSITE_ACTION = `name: Greet
+inputs:
+    message:
+        description: Message to print
+        required: true
+runs:
+    using: composite
+    steps:
+        - shell: bash
+          run: echo "\${{ inputs.message }}"
+`;
+
+const CHECKOUT_WORKFLOW = `on: workflow_dispatch
+permissions: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+`;
+
+const REQUIRED_INPUT_WORKFLOW = `on:
+  workflow_call:
+    inputs:
+      greeting:
+        type: string
+        required: true
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
+`;
+
+const TEMPLATE_INJECTION_WORKFLOW = `on: pull_request
+permissions: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "\${{ github.event.pull_request.title }}"
+`;
 
 test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Workflow test\n' });

@@ -10,28 +10,24 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installNpmToolProject, isEveryEnvironmentReady, listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { YARN_CLIENTS } from '#tests/config/setup/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
-test.each([...YARN_CLIENTS])(
-    'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',
-    async ({ packageManager }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([]),
-            'package.json': JSON.stringify({ private: true, packageManager: `yarn@${packageManager.version}` }),
-        });
-        const session = await openSession(sandbox.path);
-        const generated = buildGeneratedFiles(session);
-        const lockfiles = listStaleLockfiles(session, generated.files);
-        expect(
-            lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),
-        ).toStrictEqual([{ path: '.gspot/package-lock.json', kind: 'absent' }]);
-    },
-);
+test('Yarn 1.22.22 plans an npm tool lockfile without Yarn settings', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': JSON.stringify({ private: true, packageManager: 'yarn@1.22.22' }),
+    });
+    const session = await openSession(sandbox.path);
+    const generated = buildGeneratedFiles(session);
+    const lockfiles = listStaleLockfiles(session, generated.files);
+    expect(
+        lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),
+    ).toStrictEqual([{ path: '.gspot/package-lock.json', kind: 'absent' }]);
+});
 
 test('tool lockfiles report missing and changed projects and omit current projects', async () => {
     await using sandbox = await createGitSandbox({

@@ -6,13 +6,15 @@ import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { DRIVE_LETTER } from '#cli/config/system.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
+import { parseOsvScannerFindings } from '#cli/engine/outputs/osv-scanner.ts';
 import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
 import { findCanonicalPath, parseGroupedFindings, parseRegexFindings } from '#cli/engine/outputs/text.ts';
 import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
 import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
-import type { CheckOutput, Finding, OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import type { CheckOutput, OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
 
 const COPY_ROOT = new RegExp(`^(?<repository>.*)/${escapeRegExp(COPIES_FOLDER)}/[^/]+(?<folder>/.*)?$`, 'u');
 
@@ -65,6 +67,7 @@ export const OUTPUT_FORMATS = {
         namesRules: () => false,
     },
     knip: { parse: parseKnipFindings, namesFiles: () => true, namesRules: () => true },
+    'osv-scanner': { parse: parseOsvScannerFindings, namesFiles: () => true, namesRules: () => true },
     semgrep: { parse: parseSemgrepFindings, namesFiles: () => true, namesRules: () => true },
     vale: { parse: parseValeFindings, namesFiles: () => true, namesRules: () => true },
     regex: {

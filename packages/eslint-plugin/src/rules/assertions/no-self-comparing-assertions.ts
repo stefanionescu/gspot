@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
+import { haveSameTokens } from '../../language/syntax.ts';
 import { listImportedModules } from '../../libraries/packages.ts';
-import { isSameTokens } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { AssertionChain } from '../../types/assertions.ts';
 
@@ -61,7 +61,7 @@ export const noSelfComparingAssertions = createRule<[], 'duplicate'>({
                     const copies = values.filter(
                         (value, index) =>
                             value.type !== AST_NODE_TYPES.Literal &&
-                            values.slice(index + 1).some((other) => isSameTokens(value, other, context.sourceCode)),
+                            values.slice(index + 1).some((other) => haveSameTokens(value, other, context.sourceCode)),
                     );
                     for (const copy of copies) context.report({ node: copy, messageId: 'duplicate' });
                 }

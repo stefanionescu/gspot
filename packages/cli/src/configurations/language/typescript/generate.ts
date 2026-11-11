@@ -1,5 +1,5 @@
-import { DEFAULT_PROJECT_FILE_LIMIT, DEFAULT_PROJECT_LIMIT_OPTION } from '#cli/config/configurations/blocks.ts';
-import { ASTRO_FILES } from '#cli/config/configurations/framework.ts';
+import { DEFAULT_PROJECT_FILE_LIMIT, DEFAULT_PROJECT_LIMIT_OPTION } from '#cli/config/configurations/eslint/blocks.ts';
+import { ASTRO_FILES, ASTRO_SCRIPT_FILES } from '#cli/config/configurations/framework.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/configurations/language.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import {
@@ -8,8 +8,10 @@ import {
     type EslintScope,
 } from '#cli/types/configurations/language.ts';
 
+const ASTRO_CONFIGURATION = 'astro';
+
 function buildTypescriptBlocks(
-    scope: Pick<EslintScope, 'eslintFiles' | 'projects' | 'defaultProjectFiles'>,
+    scope: Pick<EslintScope, 'eslintFiles' | 'projects' | 'defaultProjectFiles' | 'settings'>,
 ): ConfigurationBlocks {
     const { eslintFiles, projects, defaultProjectFiles } = scope;
     const projectService =
@@ -22,7 +24,7 @@ function buildTypescriptBlocks(
                       [DEFAULT_PROJECT_LIMIT_OPTION]: defaultProjectFiles.length,
                   }),
               };
-    return [
+    const blocks: ConfigurationBlocks = [
         {
             fields: { files: eslintFiles.typescript },
             presets: [{ package: 'typescript-eslint', path: 'configs.base', merge: 'fields' }],
@@ -58,6 +60,15 @@ function buildTypescriptBlocks(
         },
         { fields: { files: eslintFiles.tests, rules: TYPESCRIPT_TEST_RULES } },
     ];
+    // The Astro processor lints each script of a component as a virtual .ts file, which the typed blocks above match and
+    // no project holds. Unless this block comes after them, typescript-eslint cannot parse the script, and the processor
+    // drops that parse error, so the script goes unlinted.
+    if (scope.settings.configurations.includes(ASTRO_CONFIGURATION))
+        blocks.push({
+            fields: { files: ASTRO_SCRIPT_FILES },
+            presets: [{ package: 'typescript-eslint', path: 'configs.disableTypeChecked', merge: 'fields' }],
+        });
+    return blocks;
 }
 
 export const TYPESCRIPT_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {

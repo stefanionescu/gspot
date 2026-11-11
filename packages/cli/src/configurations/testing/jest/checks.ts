@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { listOwnTestScopes, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
 
 /**
@@ -14,7 +14,7 @@ none.
 */
 async function runJest(
     session: CheckSession,
-    planned: PlannedCheck,
+    planned: ShippedPlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
     const nested = listOwnTestScopes(session, planned);

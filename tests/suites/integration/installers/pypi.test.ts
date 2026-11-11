@@ -9,11 +9,6 @@ import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import {
-    PYTHON_INDEX_CREDENTIALS,
-    UV_RELEASE_CUTOFF_LINE,
-    ZIP_FILE_OPTIONS,
-} from '#tests/config/integration/commands.ts';
-import {
     AUTHENTICATION_REQUIRED_MESSAGE,
     PYTHON_PROJECT_IGNORES,
     REGISTRY_HOST,
@@ -29,6 +24,15 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import type { IndexedPythonProject } from '#tests/types/integration.ts';
 
+const PYTHON_INDEX_CREDENTIALS = { user: 'gspot', password: 'synthetic-uv-password' } as const;
+
+const UV_RELEASE_CUTOFF_LINE = /^exclude-newer = .*$/mu;
+
+const ZIP_FILE_OPTIONS = {
+    regular: { os: 3, attrs: 0o10_0644 * 0x1_00_00 },
+    executable: { os: 3, attrs: 0o10_0755 * 0x1_00_00 },
+} as const;
+
 const resources = new AsyncDisposableStack();
 
 const UV_CONFIGURATION = 'uv.toml';
@@ -42,7 +46,7 @@ beforeAll(async () => {
 
 afterAll(() => resources.disposeAsync());
 
-test('Python tool project install keeps the authored and generated files with uv.toml', async () => {
+test('Python tool project install with uv.toml keeps the authored project files', async () => {
     await using sandbox = await createGitSandbox({});
     await using project = await createIndexedPythonProject(sandbox.path);
     const { rootProject } = project;

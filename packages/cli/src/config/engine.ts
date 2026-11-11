@@ -134,6 +134,10 @@ export const SEMGREP_PARSE_ERRORS: ReadonlySet<string> = new Set(['ParseError', 
 
 export const SEMGREP_PARSE_RULE = 'parse-error';
 
+// Semgrep warns when a line holds a nosemgrep comment for one rule and a match of another rule, which it still reports.
+export const SEMGREP_UNMATCHED_SUPPRESSION =
+    /found 'nosem' comment with id '[^']+', but no corresponding rule trying '[^']+'/u;
+
 export const LEADING_DOT_SLASH = /^\.\//u;
 
 export const STAGE_FILTERS = [...STAGES, 'all'] as const;
@@ -199,7 +203,7 @@ export const FORMATTER_CHECKS: ReadonlySet<string> = new Set([
     'python/ruff-format',
     'swift/swiftformat',
     'bash/shfmt',
-    'data-files/taplo-format',
+    'toml/taplo',
     'sql/sqlfluff',
 ]);
 

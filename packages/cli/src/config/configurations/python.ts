@@ -148,7 +148,8 @@ export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'descr
 
 export const CLASS_DOCSTRING_OPENING = /^(?:class that|class for|a class)\b/u;
 
-export const GOOGLE_DOCSTRING = /^[ \t]*(?:Args|Arguments|Keyword Args):[ \t]*$/mu;
+export const GOOGLE_DOCSTRING =
+    /^[ \t]*(?:Args|Arguments|Keyword Args|Keyword Arguments|Attributes|Returns|Yields|Raises):[ \t]*$/mu;
 
 export const NUMPY_DOCSTRING = /^[ \t]*Parameters[ \t]*\r?\n[ \t]*-{3,}[ \t]*$/mu;
 

@@ -90,7 +90,7 @@ test('a fatal command group stops before the next group runs', async () => {
     expect(commands).toStrictEqual([[process.execPath, 'first']]);
 });
 
-test.each(['crash'] as const)('a later %s preserves only selected, unignored findings', async () => {
+test('a later crash preserves only selected, unignored findings', async () => {
     const command = buildProgramCommand('fakes/tool', '{file}');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [{ ...BATCH_CHECK, command }] }) }),

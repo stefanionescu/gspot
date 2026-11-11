@@ -1,11 +1,11 @@
 import { expect, spyOn, test } from 'bun:test';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { doctorOutputSchema } from '#cli/schemas/commands.ts';
 import * as inspect from '#cli/tools/inspect.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { doctorOutputSchema } from '#tests/setup/schemas.ts';
 
 test.each([
     { pin: '0.0.1', exitCode: 1, notes: [expect.stringContaining('npm:@gspothq/cli@0.0.1') as string] },

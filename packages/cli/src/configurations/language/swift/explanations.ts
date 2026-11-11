@@ -1,5 +1,4 @@
-import { COVERAGE_RULE, FAILED_TEST_RULE } from '#cli/config/configurations/builds.ts';
-import { SWIFT_SECURITY_RULES } from '#cli/config/configurations/swift.ts';
+import { COVERAGE_RULE, FAILED_TEST_RULE, SWIFT_SECURITY_RULES } from '#cli/config/configurations/swift.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const SWIFT_SECURITY_EXPLANATIONS = {

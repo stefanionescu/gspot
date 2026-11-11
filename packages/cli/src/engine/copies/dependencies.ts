@@ -83,13 +83,7 @@ function readMatchingTsconfig(
     unchangedPaths: ReadonlySet<string>,
 ): ParsedTsconfig | undefined {
     if (!unchangedPaths.has(path)) return undefined;
-    let tsconfig: ParsedTsconfig | undefined;
-    try {
-        tsconfig = findTsconfig(cache.root, join(cache.root, path), cache);
-    } catch (error) {
-        if (!(error instanceof GspotError) || error.code !== 'configuration') throw error;
-        return undefined;
-    }
+    const tsconfig = findTsconfig(cache.root, join(cache.root, path), cache);
     const changed = tsconfig?.tsconfigFiles.some((file) => {
         const local = convertToPosixPath(relative(cache.root, file));
         return !splitSystemPath(local).includes(NODE_MODULES) && !unchangedPaths.has(local);

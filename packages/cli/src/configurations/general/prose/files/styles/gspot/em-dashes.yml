@@ -4,4 +4,5 @@ level: error
 nonword: true
 tokens:
     - '—'
-    - ' -- '
+    # The double hyphen after the launcher separates a command from its arguments.
+    - '(?<!\bmise exec) -- '

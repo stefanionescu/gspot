@@ -53,7 +53,8 @@ To turn the hooks on, run `gspot set hooks.enabled true`, then `gspot install`. 
 ## Existing hook managers
 
 If Husky, Lefthook, pre-commit, `simple-git-hooks`, or a hooks folder of your own already runs your Git hooks, gspot
-leaves it in charge, and `gspot install` prints what to add. A hook without those lines runs no gspot checks. For a hook
+leaves it in charge, and `gspot install` prints what to add. A `.githooks/` or `.git-hooks/` folder counts only when
+`core.hooksPath` points into it. A hook without those lines runs no gspot checks. For a hook
 folder or `simple-git-hooks`, add each line to the hook of the same name:
 
 ```shell

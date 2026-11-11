@@ -29,6 +29,10 @@ export const CI_PINS = {
     },
 } as const;
 
+export const FROZEN_ALL = 'all';
+
+export const FROZEN_NONE = 'none';
+
 export const FROZEN_VERSION = /^V?\d+$/u;
 
 export const INDENT_DEFAULT = 4;
@@ -200,11 +204,11 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     cloudflare: 'What `wrangler types` writes, for the check that keeps the file current.',
     commits: 'The types and scopes that a commit message may use.',
     coverage: 'The share of code that tests must cover.',
-    data_files: 'Schemas for data files that SchemaStore does not know.',
     dependencies: 'How gspot and the dependency checks treat new packages.',
     docker: 'Where base images may come from, and which severities Trivy reports.',
     docs: 'The external links that the link check leaves alone.',
     drizzle: 'How the Drizzle checks find your clients.',
+    json: 'Schemas for data files that SchemaStore does not know.',
     licenses: 'The licenses that dependencies may use, and the packages excepted from them.',
     nginx: 'The container that tests your nginx configuration.',
     openapi: 'The committed OpenAPI document, and the command that writes it.',

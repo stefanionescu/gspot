@@ -1,14 +1,12 @@
-import { statSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { z } from 'zod';
 
 import { GLOB_BRACKETS, REASONED_VALUE_KEY, RECORD_PATHS_KEY } from '#cli/config/settings/validation.ts';
-import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { convertToPosixPath, escapeGlob } from '#cli/system/paths.ts';
+import { buildArgumentPath, convertToPosixPath, escapeGlob } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
 
@@ -17,8 +15,7 @@ function escapeLiteralPath(root: string, path: string): string {
     for (let index = segments.length; index > 0; index -= 1) {
         const prefix = segments.slice(0, index).join('/');
         if (!GLOB_BRACKETS.test(prefix)) return path;
-        if (statSync(join(root, prefix), { throwIfNoEntry: false }) !== undefined)
-            return [escapeGlob(prefix), ...segments.slice(index)].join('/');
+        if (existsSync(join(root, prefix))) return [escapeGlob(prefix), ...segments.slice(index)].join('/');
     }
     return path;
 }
@@ -93,14 +90,11 @@ export function joinSettingPaths(key: string, value: unknown, scopePath: string,
 export function buildArgumentPaths(root: string, cwd: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
         const isNegative = path.startsWith('!');
-        try {
-            const selector = escapeLiteralPath(root, buildArgumentPath(root, cwd, isNegative ? path.slice(1) : path));
-            return isNegative ? `!${selector}` : selector;
-        } catch (error) {
-            throw new GspotError('arguments', `--paths ${path} is outside this repository. Name a path inside it.`, {
-                cause: error,
-            });
-        }
+        const selector = escapeLiteralPath(
+            root,
+            buildArgumentPath(root, cwd, isNegative ? path.slice(1) : path, '--paths'),
+        );
+        return isNegative ? `!${selector}` : selector;
     });
 }
 

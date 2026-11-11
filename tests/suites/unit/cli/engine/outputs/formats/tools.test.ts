@@ -7,7 +7,6 @@ import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import { EDITORCONFIG_REPORT, LINE_ENDING_CASES, WINDOWS_ROOT_CASES } from '#tests/config/engine/outputs.ts';
 import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
-import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 
 test.each([...LINE_ENDING_CASES])(
@@ -23,7 +22,7 @@ test.each([...LINE_ENDING_CASES])(
         expect(findings).toStrictEqual([
             {
                 check: check.id,
-                file: CAFE_SCRIPT_PATH,
+                file: 'scripts/café build.sh',
                 line: 1,
                 column: 6,
                 rule: 'SC2086',
@@ -38,7 +37,7 @@ test.each([...LINE_ENDING_CASES])(
 test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (source) => {
     await using sandbox = await testdir({ 'settings/café.toml': 'a=1\n' });
 
-    const check = getShippedCheck('data-files/taplo-format');
+    const check = getShippedCheck('toml/taplo');
     const path = join(sandbox.path, 'settings', 'café.toml');
     const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
     const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
@@ -59,10 +58,10 @@ test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (s
 test.each([...WINDOWS_ROOT_CASES])(
     'a Taplo syntax error in $root names its file and position and is not fixable',
     ({ root, stdout, stderr, line, column }) => {
-        const check = getShippedCheck('data-files/taplo-format');
+        const check = getShippedCheck('toml/taplo');
         expect(parseOutput(check, stdout, stderr, { root, cwd: root })).toStrictEqual([
             {
-                check: 'data-files/taplo-format',
+                check: 'toml/taplo',
                 file: 'settings.toml',
                 line,
                 column,

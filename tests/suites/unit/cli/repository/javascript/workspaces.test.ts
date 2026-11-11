@@ -5,13 +5,41 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
-import {
-    INACTIVE_LERNA_FILES,
-    NESTED_WORKSPACE_FILES,
-    OUTSIDE_WORKSPACE_FILES,
-} from '#tests/config/repository/detect.ts';
+import { compareText } from '#cli/system/text.ts';
+import { WORKSPACE_FILE_CASES } from '#tests/config/repository/setup.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+const INACTIVE_LERNA_FILES = {
+    'package.json': '{}',
+    'pnpm-workspace.yaml': 'packages: ["packages/*"]\n',
+    'lerna.json': 'malformed inactive configuration',
+    'packages/app/package.json': '{"name":"inside"}',
+} as const;
+
+const NESTED_WORKSPACE_FILES = {
+    'package.json': '{"workspaces":["packages/*"]}',
+    'pnpm-workspace.yaml': 'packages: ["packages/*"]',
+    'packages/parent/package.json': '{"name":"parent"}',
+    'child/package.json': '{}',
+    'empty/source.py': '',
+} as const;
+
+const OUTSIDE_WORKSPACE_FILES = [
+    ['pnpm-workspace.yaml', 'packages: ["../outside"]\n', '../outside'],
+    ['rush.json', '{"projects":[{"packageName":"outside","projectFolder":"packages/linked"}]}', 'packages/linked'],
+] as const;
+
+test.each([...WORKSPACE_FILE_CASES])('each workspace file lists its package folders: %j', async (files) => {
+    await using sandbox = await createGitSandbox({
+        ...files,
+        'packages/api/package.json': '{"dependencies":{"express":"5.0.0"}}',
+        'packages/lint/package.json': '{"devDependencies":{"eslint":"10.0.0"}}',
+    });
+
+    expect(listWorkspaceFolders(sandbox.path).toSorted(compareText)).toStrictEqual(['packages/api', 'packages/lint']);
+});
 
 test('workspace detection stays inside the folder', async () => {
     await using sandbox = await testdir(NESTED_WORKSPACE_FILES);
@@ -60,10 +88,17 @@ test('workspace detection does not parse an unused lower-priority file', async (
     expect(listWorkspaceFolders(sandbox.path)).toStrictEqual(['packages/app']);
 });
 
-test.each(['pnpm-workspace.yaml'])('an invalid %s is a GspotError that names the file', async (path) => {
-    await using sandbox = await testdir({ 'package.json': '{}', [path]: '{' });
+test('an invalid pnpm-workspace.yaml is a GspotError that names the file', async () => {
+    await using sandbox = await testdir({ 'package.json': '{}', 'pnpm-workspace.yaml': '{' });
 
     const invalid = await captureRejection(Promise.try(() => listWorkspaceFolders(sandbox.path)));
     expect(invalid).toMatchObject({ name: 'GspotError', code: 'filesystem', cause: expect.any(Error) as Error });
-    expect(invalid.message).toContain(path);
+    expect(invalid.message).toContain('pnpm-workspace.yaml');
+});
+
+test('a pnpm-workspace.yaml that cannot be read as a file keeps its read error', async () => {
+    await using sandbox = await testdir({ 'package.json': '{}', 'pnpm-workspace.yaml/.keep': '' });
+
+    const unreadable = await captureRejection(Promise.try(() => listWorkspaceFolders(sandbox.path)));
+    expect(unreadable).toMatchObject({ code: 'EISDIR' });
 });

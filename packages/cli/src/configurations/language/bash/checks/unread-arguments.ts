@@ -3,8 +3,7 @@ import { listFunctionCalls, readScripts } from '#cli/configurations/language/bas
 import { formatCount, formatNameList } from '#cli/system/text.ts';
 import type { ScriptFile } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function formatUnreadPositions(width: number, highest: number): string {
     const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));

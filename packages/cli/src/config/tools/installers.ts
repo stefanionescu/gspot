@@ -86,6 +86,8 @@ export const UV_REINSTALL_FLAG = '--reinstall';
 
 export const UV_PROJECT_INSTALL_ARGUMENTS = ['sync', '--locked', '--inexact'] as const;
 
+export const UV_STALE_LOCKFILE = /lockfile at .* needs to be updated/u;
+
 export const REQUIREMENT_PACKAGE_NAME = /^[^=]+/u;
 
 export const PYTHON_DEFAULT_INDEX_ORIGIN = 'https://pypi.org';
@@ -252,6 +254,8 @@ export const MINUTES_PER_DAY = 1440;
 
 export const MISE_BIN_PATHS_ARGUMENTS = [MISE_TOOL, 'bin-paths'] as const;
 
+export const MISE_TOOL_SOURCE_ARGUMENTS = ['ls', '--current', '--json'] as const;
+
 export const MISE_TRUSTED_PATHS_VARIABLE = 'MISE_TRUSTED_CONFIG_PATHS';
 
 export const MISE_CEILING_PATHS_VARIABLE = 'MISE_CEILING_PATHS';
@@ -263,6 +267,7 @@ export const UV_FLAGS = {
     with: '--with',
     directory: '--directory',
     config: '--config-file',
+    python: '--python',
 } as const;
 
 export const UV_PROJECT_ENVIRONMENT = 'UV_PROJECT_ENVIRONMENT';

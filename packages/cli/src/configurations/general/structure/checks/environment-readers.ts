@@ -1,3 +1,5 @@
+import type { Node } from 'web-tree-sitter';
+
 import { READ_OUTSIDE_READER_RULE, UNNAMED_VARIABLE_LABEL } from '#cli/config/configurations/structure.ts';
 import { VARIABLE_NAME } from '#cli/config/parsers.ts';
 import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
@@ -9,35 +11,19 @@ import {
 } from '#cli/parsers/code/environment.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { ParsedSource } from '#cli/types/configurations/general.ts';
+import type { ParsedLanguage } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-function listEnvironmentReads(
-    source: ParsedSource,
-    environmentFunctions: string[],
-    readerVariables: Set<string>,
-): EnvironmentRead[] {
-    const { language, rootNode } = source;
-    switch (language) {
-        case 'python': {
-            return listPythonEnvironmentReads(rootNode, environmentFunctions);
-        }
-        case 'bash': {
-            return listBashEnvironmentReads(rootNode, readerVariables);
-        }
-        case 'swift': {
-            return listSwiftEnvironmentReads(rootNode);
-        }
-        default: {
-            const unknown: never = language;
-            throw new Error(`No environment reader for ${String(unknown)}.`);
-        }
-    }
-}
+type ReaderNames = { environmentFunctions: string[]; readerVariables: Set<string> };
+
+const ENVIRONMENT_READS: Record<ParsedLanguage, (syntaxRoot: Node, names: ReaderNames) => EnvironmentRead[]> = {
+    python: (syntaxRoot, { environmentFunctions }) => listPythonEnvironmentReads(syntaxRoot, environmentFunctions),
+    bash: (syntaxRoot, { readerVariables }) => listBashEnvironmentReads(syntaxRoot, readerVariables),
+    swift: listSwiftEnvironmentReads,
+};
 
 async function listReaderVariables(
     session: Session,
@@ -66,7 +52,7 @@ async function checkEnvironmentReaders(session: Session, planned: PlannedCheck):
     const findings: CheckFinding[] = [];
     const others = planned.files.filter((file) => !isReader(file.path));
     await visitQueriedSources(session, { ...planned, files: others }, (source) => {
-        const reads = listEnvironmentReads(source, environmentFunctions, readerVariables);
+        const reads = ENVIRONMENT_READS[source.language](source.rootNode, { environmentFunctions, readerVariables });
         const lines = new Map<number, EnvironmentRead>();
         for (const read of reads) if (!lines.has(read.line)) lines.set(read.line, read);
         for (const [line, read] of lines)

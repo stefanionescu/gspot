@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import {
-    FRAMEWORK_NAMES,
+    FRAMEWORK_NAME,
     PYTHON_TYPE_SOURCE,
     REACT_COMPONENT_SOURCE,
     TEST_FILE_FINDINGS,
@@ -18,43 +18,37 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each([...FRAMEWORK_NAMES])(
-    `$configuration's allowed function name $name passes only inside its scope`,
-    async ({ configuration, name, bannedWords }) => {
-        const source = `export function ${name}() { return null; }\n`;
-        const variables = `export const ${name} = () => null;\n`;
-        const declarations = `    ${name}() { return null; }\n`;
-        const methods = `export class Reader {\n${declarations}}\n`;
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
-                level: 'all',
-                scopes: [{ path: 'app', configurations: [configuration] }, { path: 'sibling' }],
-                tables: `[naming]\nbanned_words = ${JSON.stringify(bannedWords)}\n`,
-            }),
-            'entry.ts': source,
-            'app/entry.ts': source,
-            'app/bindings.ts': variables,
-            'app/reader.ts': methods,
-            'app/parameters.ts': `export function readValue(${name}: string) { return null; }\n`,
-            'sibling/entry.ts': source,
-        });
+async function listIdentifierFindings(root: string) {
+    const { report } = await runChecks(await openSession(root), buildRunOptions({ only: ['naming/identifiers'] }));
+    return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
+}
 
-        const failed = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['naming/identifiers'] }),
-        );
+test("nextjs's allowed function name getServerSideProps passes only inside its scope", async () => {
+    const { configuration, name, bannedWords } = FRAMEWORK_NAME;
+    const source = `export function ${name}() { return null; }\n`;
+    const variables = `export const ${name} = () => null;\n`;
+    const declarations = `    ${name}() { return null; }\n`;
+    const methods = `export class Reader {\n${declarations}}\n`;
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
+            level: 'all',
+            scopes: [{ path: 'app', configurations: [configuration] }, { path: 'sibling' }],
+            tables: `[naming]\nbanned_words = ${JSON.stringify(bannedWords)}\n`,
+        }),
+        'entry.ts': source,
+        'app/entry.ts': source,
+        'app/bindings.ts': variables,
+        'app/reader.ts': methods,
+        'app/parameters.ts': `export function readValue(${name}: string) { return null; }\n`,
+        'sibling/entry.ts': source,
+    });
 
-        expect(
-            failed.report.checks.flatMap(({ findings }) =>
-                findings.map(({ file, line, rule }) => ({ file, line, rule })),
-            ),
-        ).toStrictEqual([
-            { file: 'entry.ts', line: 1, rule: 'banned-word' },
-            { file: 'app/parameters.ts', line: 1, rule: 'banned-word' },
-            { file: 'sibling/entry.ts', line: 1, rule: 'banned-word' },
-        ]);
-    },
-);
+    expect(await listIdentifierFindings(sandbox.path)).toStrictEqual([
+        { file: 'entry.ts', line: 1, rule: 'banned-word' },
+        { file: 'app/parameters.ts', line: 1, rule: 'banned-word' },
+        { file: 'sibling/entry.ts', line: 1, rule: 'banned-word' },
+    ]);
+});
 
 test('a word of naming.terms in an identifier reports the word to use instead, and the renamed identifier passes', async () => {
     await using sandbox = await createGitSandbox({
@@ -91,17 +85,13 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
         'sibling/test_entry.py': source,
     });
 
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
-
-    expect(
-        failed.report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
-    ).toStrictEqual([
+    expect(await listIdentifierFindings(sandbox.path)).toStrictEqual([
         { file: 'test_entry.py', line: 1, rule: 'words' },
         { file: 'sibling/test_entry.py', line: 1, rule: 'words' },
     ]);
 });
 
-test('the naming.typescript settings cover JavaScript files, and gspot refuses a naming.javascript table', async () => {
+test('the naming.typescript settings cover JavaScript files', async () => {
     const tables = '[naming.typescript]\nmax_words = 2\n';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { tables, level: 'all' }),
@@ -201,4 +191,37 @@ test('cors stays a domain word while core and its word forms remain banned', asy
     });
     const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
     expect(findings.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
+});
+
+test('a bash variable that a later readonly line names is reported once, at the line that declares it', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash', 'naming'], { level: 'all' }),
+        'reset.sh':
+            '#!/usr/bin/env bash\nSCRIPT_DIR="$(pwd)"\nreadonly SCRIPT_DIR\nreadonly CACHE_DIR="$(pwd)"\nreadonly LOG_DIR\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(findings.map(({ line, column, rule }) => ({ line, column, rule }))).toStrictEqual([
+        { line: 2, column: 1, rule: 'banned-word' },
+        { line: 4, column: 10, rule: 'banned-word' },
+        { line: 5, column: 10, rule: 'banned-word' },
+    ]);
+});
+
+test('a SQL file that Postgres cannot parse reports syntax, except in a scope that sets another sql.dialect', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['sql', 'postgres', 'naming'], {
+            tables: '[[scope]]\npath = "store"\n[scope.sql]\ndialect = "sqlite"\n',
+        }),
+        'pragma.sql': 'PRAGMA foreign_keys = ON;\n',
+        'store/pragma.sql': 'PRAGMA foreign_keys = ON;\n',
+        'store/tables.sql': 'CREATE TABLE user_helper (id integer);\n',
+    });
+    const session = await openSession(sandbox.path);
+    const { report } = await runChecks(session, buildRunOptions({ only: ['naming/identifiers'] }));
+    const findings = report.checks.flatMap((check) => check.findings);
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'pragma.sql', line: 1, rule: 'syntax' },
+        { file: 'store/tables.sql', line: 1, rule: 'banned-word' },
+    ]);
+    expect(findings[0]?.help).toContain('gspot set sql.dialect <dialect> --scope <folder>');
 });

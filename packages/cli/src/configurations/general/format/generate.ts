@@ -53,7 +53,7 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
         compareScopeDepth(first.scopePath, second.scopePath),
     );
     const tables: Array<{ scopePath: string; format: WrittenFormat }> = [];
-    for (const { scopePath = '', table } of orderedTables) {
+    for (const { scopePath, table } of orderedTables) {
         const authored = table.written['format'];
         if (table.format === undefined || !isTable(authored)) continue;
         const format = Object.fromEntries(

@@ -5,7 +5,7 @@ import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import {
     EMPTY_JSON_CASES,
     FIX_FIELD_CASES,

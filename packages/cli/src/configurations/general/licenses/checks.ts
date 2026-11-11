@@ -17,19 +17,21 @@ import {
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { LICENSE_EXPLANATIONS } from '#cli/configurations/general/licenses/explanations.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
+import { assertShippedCheck } from '#cli/engine/plan.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
+import { findLockedPackageLine, normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
+import { findSettingLine, readSettingsText } from '#cli/settings/file.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { AllowedPackage, LockedPackage } from '#cli/types/configurations/general.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { PlannedCheck, ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
 async function readLockedPackages(session: CheckSession, planned: PlannedCheck): Promise<LockedPackage[]> {
     const { allowed } = getTable(planned.scope.settings, 'licenses');
@@ -46,15 +48,44 @@ async function readLockedPackages(session: CheckSession, planned: PlannedCheck):
     );
     const { results } = parseToolOutput(OSV_SCANNER_NAME, result.stdout, osvLicenseReportSchema);
     const root = realpathSync(session.root);
-    return results.flatMap(({ source, packages }) =>
-        packages.map(({ package: locked, license_violations: licenses }) => ({
-            file: convertToPosixPath(relative(root, source.path)),
+    return results.flatMap(({ source, packages }) => {
+        const file = convertToPosixPath(relative(root, source.path));
+        const text = findText(session.cache, file) ?? '';
+        return packages.map(({ package: locked, license_violations: licenses }) => ({
+            file,
+            line: findLockedPackageLine(text, locked.name, locked.version),
             name: locked.ecosystem === OSV_PYTHON_ECOSYSTEM ? normalizePythonName(locked.name) : locked.name,
             version: locked.version,
             isPython: locked.ecosystem === OSV_PYTHON_ECOSYSTEM,
             licenses,
-        })),
-    );
+        }));
+    });
+}
+
+/**
+Report each ignore that names this check and whose paths cover neither a lockfile nor gspot.toml. The check reports
+at no other file, so such an ignore hides nothing.
+*/
+function listUnmatchedIgnores(session: CheckSession, planned: ShippedPlannedCheck): CheckFinding[] {
+    const isLockfile = buildFilenameMatcher(planned.configuration.files.filenames);
+    const reported = [
+        SETTINGS_FILE,
+        ...session.repository.files.map(({ path }) => path).filter((path) => isLockfile(path)),
+    ];
+    const { text } = readSettingsText(session.root);
+    return session.settings.ignore.flatMap((ignore, index) => {
+        if (ignore.check !== planned.check.id || ignore.paths === undefined) return [];
+        const isIgnored = buildPathMatcher(ignore.paths);
+        if (reported.some((path) => isIgnored(path))) return [];
+        return [
+            {
+                file: SETTINGS_FILE,
+                line: findSettingLine(text, session.settings.written, ['ignore', index]),
+                rule: LICENSE_RULES.unmatchedIgnore,
+                message: `The ignore for ${planned.check.id} with paths ${ignore.paths.join(', ')} covers no lockfile, so it ignores nothing. The check reports each package in its lockfile. Name the lockfile in paths, or remove the record.`,
+            },
+        ];
+    });
 }
 
 function isPackageAllowed(record: AllowedPackage, { name, version, isPython }: LockedPackage): boolean {
@@ -69,15 +100,16 @@ function isPackageAllowed(record: AllowedPackage, { name, version, isPython }: L
 }
 
 async function checkAllowed(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    assertShippedCheck(planned);
     const packages = await readLockedPackages(session, planned);
     if (packages.length === 0) throw new CheckStop('missing', EMPTY_SCAN_MESSAGE);
     const { allowed_package: records } = getTable(planned.scope.settings, 'licenses');
     const disallowed = packages
         .filter((locked) => locked.licenses.length > 0)
         .filter((locked) => records.every((record) => !isPackageAllowed(record, locked)))
-        .map(({ file, name, version, licenses }) => ({
+        .map(({ file, line, name, version, licenses }) => ({
             file,
-            line: 1,
+            line,
             rule: LICENSE_RULES.disallowedLicense,
             message: `${name}@${version} uses ${licenses.join(' or ')}, which is not allowed.`,
         }));
@@ -89,7 +121,7 @@ async function checkAllowed(session: CheckSession, planned: PlannedCheck): Promi
             rule: LICENSE_RULES.unusedRecord,
             message: `${record.name}@${record.version} matches no locked project dependency. Remove the \`[[licenses.allowed_package]]\` record or correct its name or version.`,
         }));
-    return [...disallowed, ...unused];
+    return [...disallowed, ...unused, ...listUnmatchedIgnores(session, planned)];
 }
 
 export const LICENSES_CHECKS: Readonly<Record<string, CheckCode>> = {

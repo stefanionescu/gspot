@@ -19,6 +19,7 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
@@ -234,7 +235,7 @@ test('staged checks read an indexed file when its working file is missing', asyn
     expect(ran.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 1 });
 });
 
-test('a staged check reads the pushed commits of the repository, not of the index copy', async () => {
+test('a staged check in a copy reads the pushed commits of the repository, not of the copy', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { level: 'all' }) });
     await applyGeneratedFiles(sandbox.path);
     runGitStep(sandbox.path, ['add', '-A']);
@@ -246,13 +247,11 @@ test('a staged check reads the pushed commits of the repository, not of the inde
     runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     await writeFile(join(sandbox.path, 'notes.md'), '# Staged notes\n');
     runGitStep(sandbox.path, ['add', '-A']);
+    await writeFile(join(sandbox.path, 'notes.md'), '# Unstaged notes\n');
     const commandArguments = ['check', '--staged', '--only', 'commits/commitlint-pushed', '--json'];
     const result = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.report.checks[0]).toMatchObject({
-        status: 'passed',
-        note: expect.stringMatching(/\b0\b/u) as string,
-    });
+    expect(result.report.checks[0]).toMatchObject({ status: 'passed', note: 'Checked 0 commit messages.' });
 });
 
 function isCaseFolding(): boolean {
@@ -264,3 +263,21 @@ function isCaseFolding(): boolean {
         rmSync(root, { recursive: true });
     }
 }
+
+test('a staged check with missing tools names the tool files of gspot that changed after they were staged', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'source.sh': BROKEN_IF_SCRIPT,
+    });
+    await applyGeneratedFiles(sandbox.path);
+    runGitStep(sandbox.path, ['add', '-A']);
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['bash', 'docker']));
+    await applyGeneratedFiles(sandbox.path);
+    using _lookup = fakeExecutableLookup(null);
+    const { code, report } = parseCheckReport(await runGspot(sandbox.path, ['check', '--staged', '--json']));
+    expect(code).toBe(2);
+    expect(report.checks.some(({ status }) => status === 'missing')).toBe(true);
+    expect(
+        report.notes.filter((note) => note.includes('.gspot/mise.toml has changes that are not staged')),
+    ).toHaveLength(1);
+});

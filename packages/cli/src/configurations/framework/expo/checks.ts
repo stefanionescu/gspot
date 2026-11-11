@@ -17,8 +17,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findInstalledDependency } from '#cli/tools/packages.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
 function parseExpoDoctor(stdout: string): string[] {
     const lines = stripVTControlCharacters(stdout)

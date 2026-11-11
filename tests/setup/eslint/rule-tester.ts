@@ -14,16 +14,22 @@ import {
 } from '#tests/config/setup/sandboxes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
+/**
+Build a RuleTester that parses TypeScript and JSX. The parser reads its source type only from the parser options, where
+the RuleTester writes `module` unless they name one, so the run's own `sourceType` is copied into them.
+*/
 export function buildRuleTester({
     root = RULE_TESTER_ROOT,
     languageOptions = {},
 }: { root?: string; languageOptions?: RuleTesterConfig['languageOptions'] } = {}): RuleTester {
+    const { sourceType = RULE_TESTER_PARSER_OPTIONS.sourceType } = languageOptions;
     return new RuleTester({
         languageOptions: {
             ...languageOptions,
             parser,
             parserOptions: {
                 ...RULE_TESTER_PARSER_OPTIONS,
+                sourceType,
                 ...languageOptions.parserOptions,
             },
         },

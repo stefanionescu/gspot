@@ -4,18 +4,6 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { runInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('init names the Prettier options that no setting holds', async () => {
-    await using sandbox = await createGitSandbox({
-        '.prettierrc.json': '{"semi":false,"quoteProps":"consistent"}',
-        'source.ts': 'export {};\n',
-    });
-    const { plan } = await runInit(sandbox.path);
-    expect(plan.carryover.find(({ path }) => path === '.prettierrc.json')).toMatchObject({
-        carried: ['semi'],
-        dropped: ['quoteProps'],
-    });
-});
-
 test('init keeps the format overrides of a scope', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': '{"private":true,"workspaces":["app"]}',

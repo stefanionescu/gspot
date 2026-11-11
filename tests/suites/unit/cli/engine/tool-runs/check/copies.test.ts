@@ -9,7 +9,6 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { PYVENV_HOME } from '#tests/config/setup/languages.ts';
 import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -17,6 +16,8 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeCommands, fakeExecutableLookup, fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+const PYVENV_HOME = 'home = /usr/bin\n';
 
 test('a Python check that runs in a copy uses the environment that the working tree installed', async () => {
     await using working = await createGitSandbox({});

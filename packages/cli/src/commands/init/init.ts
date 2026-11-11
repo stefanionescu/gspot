@@ -7,7 +7,7 @@ import {
     CONFIGURATIONS_OPTION,
     FROM_CONFLICT_MESSAGE,
     FROM_OPTION,
-    INSTALLATION_STOPPED_MESSAGE,
+    INIT_STOPPED_MESSAGE,
     LEVEL_OPTION,
     NEXT_PIN_MESSAGE,
     NEXT_STEPS_MESSAGE,
@@ -70,7 +70,7 @@ async function runInitCommand(
     const applied = await writeInitFiles(root, initPlan);
     return await runCancelableCommand(
         (cancelSignal) => installInitTools(root, { initPlan, applied }, cancelSignal),
-        INSTALLATION_STOPPED_MESSAGE,
+        INIT_STOPPED_MESSAGE,
     );
 }
 

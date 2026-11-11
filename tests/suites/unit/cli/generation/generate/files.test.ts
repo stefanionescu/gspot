@@ -7,7 +7,6 @@ import * as prettier from 'prettier';
 import { type Options } from 'prettier';
 import { createFileTree } from 'testdirs';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -20,21 +19,19 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
-test.each(['absent'])('%s attributes keep LF in every text file, also in a scope folder with a space', async () => {
+test('generated attributes mark the generated files of a scope folder with a space', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['security', 'format'], {
-            scopes: [{ path: 'web app', configurations: ['security', 'javascript', 'css'] }],
-        }),
-        'web app/page.js': 'export const page = 1;\n',
-        'web app/style.css': 'a { color: red; }\n',
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'ios app', configurations: ['swift'] }] }),
+        'ios app/Value.swift': SWIFT_VALUE_SOURCE,
     });
-
     const generated = buildGeneratedFiles(await openSession(sandbox.path));
     const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!;
-    expect(attributes.body).toStartWith('* text=auto eol=lf\n.gspot/** linguist-generated\n');
     await writeFile(join(sandbox.path, '.gitattributes'), `${attributes.body}\n`);
-    const outside = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
-    expect(outside).toContain('.stylelintrc.yml');
+    const checked = runBlockingCommand(['git', 'check-attr', 'linguist-generated', '--', 'ios app/.swiftlint.yml'], {
+        cwd: sandbox.path,
+        env: {},
+    });
+    expect(checked.stdout).toBe('ios app/.swiftlint.yml: linguist-generated: set\n');
 });
 
 test('generated attributes keep LF through an autocrlf checkout', async () => {
@@ -44,7 +41,7 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
     });
 
     await applyGeneratedFiles(sandbox.path);
-    const path = getRuleFilePath('engineering', 'WORKING.md');
+    const path = getRuleFilePath('agents', 'WORKING.md');
     const bytes = await readFile(join(sandbox.path, path));
     runGitStep(sandbox.path, ['add', '--', '.gitattributes', path]);
     await rm(join(sandbox.path, path));
@@ -79,7 +76,6 @@ test('every shipped configuration together builds each source config and generat
     const sourced = configurations.flatMap(({ configs }) =>
         configs.filter(({ source }) => source !== undefined).map(({ target }) => target.normalize('NFC').toLowerCase()),
     );
-    expect(paths).toContain('.stylelintrc.yml');
     expect(sourced.filter((target) => !paths.includes(target))).toStrictEqual([]);
     expect(paths.filter((path, index) => paths.indexOf(path) !== index)).toStrictEqual([]);
 });
@@ -121,7 +117,7 @@ test('adding the first Markdown files leaves generated output unchanged', async 
 test('format.indent_width reaches EditorConfig, Prettier and each config file', async () => {
     const width = 6;
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['format', 'data-files', 'python', 'swift', 'sql', 'markdown', 'bash'], {
+        'gspot.toml': buildSandboxSettings(['format', 'toml', 'python', 'swift', 'sql', 'markdown', 'bash'], {
             level: 'all',
             rules: true,
             tables: stringify({ format: { indent_width: width } }),
@@ -144,7 +140,7 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     expect(configuration.tabWidth).toBe(width);
     const ruff: unknown = parseToml(generated.get(getManifestTarget('python', 'ruff.toml'))!);
     expect(ruff).toHaveProperty('indent-width', width);
-    const taplo: unknown = parseToml(generated.get(getManifestTarget('data-files', 'taplo.toml'))!);
+    const taplo: unknown = parseToml(generated.get(getManifestTarget('toml', 'taplo.toml'))!);
     expect(taplo).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },
     });

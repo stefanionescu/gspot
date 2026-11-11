@@ -1,9 +1,4 @@
-import {
-    WEAKENING_FIXES,
-    WEAKENING_IGNORE_HELP,
-    WEAKENING_RULES,
-    WEAKENINGS_UNREAD_BASE,
-} from '#cli/config/configurations/structure.ts';
+import { WEAKENING_FIXES, WEAKENING_IGNORE_HELP, WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -43,7 +38,7 @@ function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weake
 function listConfigurationWeakenings(base: Settings, head: Settings, tracked: string[]): Weakening[] {
     const removals = listRemovedConfigurations(head);
     const tables = new Map(listSettingsTables(head).map(({ table, scopePath }) => [scopePath, table]));
-    return listSettingsTables(base).flatMap(({ table, scopePath = '' }) => {
+    return listSettingsTables(base).flatMap(({ table, scopePath }) => {
         const kept = tables.get(scopePath);
         if (kept === undefined && tracked.every((path) => !isInScope(path, scopePath))) return [];
         const removed = new Set([
@@ -83,7 +78,7 @@ function listSwitchWeakenings(base: Settings, head: Settings): Weakening[] {
 
 function listSettingMoves(base: Settings, head: Settings): Weakening[] {
     const tables = new Map(listSettingsTables(base).map(({ table, scopePath }) => [scopePath, table]));
-    return listSettingsTables(head).flatMap(({ table, scopePath = '' }) => {
+    return listSettingsTables(head).flatMap(({ table, scopePath }) => {
         const previous = tables.get(scopePath);
         if (previous === undefined) return [];
         const available = buildAvailableSettings(selectConfigurationsForScope(head, scopePath), head.level);
@@ -109,8 +104,8 @@ function listSettingMoves(base: Settings, head: Settings): Weakening[] {
 function listSettingsWeakenings(text: string, head: Settings, tracked: string[]): Weakening[] {
     const written = parseTomlFile(SETTINGS_FILE, text);
     const parsed = settingsSchema.safeParse(written);
-    if (!parsed.success) return [WEAKENINGS_UNREAD_BASE];
-    const base = buildSettings(parsed.data, written);
+    // A base that gspot refuses compares as the shipped defaults, so each weakening of the current file needs a reason.
+    const base = parsed.success ? buildSettings(parsed.data, written) : buildSettings(settingsSchema.parse({}), {});
     return [
         ...listIgnoreWeakenings(base.ignore, head.ignore),
         ...listConfigurationWeakenings(base, head, tracked),

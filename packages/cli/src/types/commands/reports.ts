@@ -56,6 +56,7 @@ export type RevisionSource = {
     untracked?: UntrackedFiles;
     started?: Date;
     dependencyNote?: string;
+    missingToolsNote?: string;
     unreadablePaths?: string[];
 };
 

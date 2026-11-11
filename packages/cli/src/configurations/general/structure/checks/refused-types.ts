@@ -14,7 +14,7 @@ import { formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { RuleLookup } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { SourceTree } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { ImportRule } from '#cli/types/settings.ts';

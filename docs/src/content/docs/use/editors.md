@@ -55,7 +55,7 @@ Give each extension that you use the path in `.gspot/configurations/<configurati
 
 ```json title=".vscode/settings.json"
 {
-    "evenBetterToml.taplo.configFile.path": ".gspot/configurations/data-files/taplo.toml",
+    "evenBetterToml.taplo.configFile.path": ".gspot/configurations/toml/taplo.toml",
     "typos.config": ".gspot/configurations/spelling/typos.toml",
     "vale.valeCLI.config": ".gspot/configurations/prose/vale.ini",
     "sqlfluff.config": ".gspot/configurations/sql/sqlfluff.cfg",

@@ -20,8 +20,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 

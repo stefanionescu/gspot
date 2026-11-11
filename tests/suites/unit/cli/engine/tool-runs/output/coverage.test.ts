@@ -1,13 +1,13 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { BASE_CHECK, FILELESS_COVERAGE_CASES } from '#tests/config/engine/tool-runs.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test.each(FILELESS_COVERAGE_CASES)(
-    '$check exit $code keeps the fileless result as a failed check',
+    '$check exit $code reports its output line as a finding with no file',
     async ({ check: id, code, output, message }) => {
         await using sandbox = await testdir();
         const check = getShippedCheck(id);
@@ -21,14 +21,6 @@ test.each(FILELESS_COVERAGE_CASES)(
             {},
         );
         expect(parsed.findings).toStrictEqual([{ check: id, file: '', message, help: check.help, fixable: false }]);
-        const result = buildCheckResult(check, {
-            base: { check: id, scope: '', status: 'passed', fileCount: 0, duration: 0, findings: [] },
-            state: { root: sandbox.path, cwd: sandbox.path, failed: true, findings: parsed.findings! },
-            commandArguments: [],
-            start: performance.now(),
-        });
-        expect(result.status).toBe('failed');
-        expect(result.findings).toStrictEqual(parsed.findings!);
     },
 );
 

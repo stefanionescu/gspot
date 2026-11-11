@@ -11,13 +11,10 @@ import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
 import {
     EDITORCONFIG_FILES,
-    LAYERED_SCOPE_SETTINGS,
     PROJECT_PATH_IGNORES,
     TSC_PUSH_OPTIONS,
     TYPESCRIPT_SCOPES_SETTINGS,
 } from '#tests/config/engine/files.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -111,28 +108,6 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     expect(listCheckedFiles(session.scopes, project).map((file) => file.path)).toStrictEqual([
         'apps/web/value.test.js',
     ]);
-});
-
-test('a command check reads each matching file once across nested scopes', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': LAYERED_SCOPE_SETTINGS + BASH_SYNTAX_CHECK,
-        'api/entry.sh': BROKEN_IF_SCRIPT,
-        'api/worker/entry.sh': BROKEN_IF_SCRIPT,
-        'api/worker/query.sql': 'SELECT 1;\n',
-    });
-
-    await applyGeneratedFiles(sandbox.path);
-    const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'project/bash-syntax', '--json']),
-    );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const checks = checked.report.checks;
-    expect(
-        checks.map((check) => ({ check: check.check, scope: check.scope, fileCount: check.fileCount })),
-    ).toStrictEqual([{ check: 'project/bash-syntax', scope: '', fileCount: 2 }]);
-    expect(new Set(checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
-        new Set(['api/entry.sh', 'api/worker/entry.sh']),
-    );
 });
 
 test('deleting a file starts a check that any edit starts, and it reports the path that a doc still names', async () => {

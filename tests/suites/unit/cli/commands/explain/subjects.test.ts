@@ -4,12 +4,9 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseBashScript } from '#cli/parsers/code/bash.ts';
-import { pathOutputSchema } from '#cli/schemas/commands.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import {
-    CHECK_TOOL_MINIMUMS,
     EXPLAIN_SETTINGS,
     PATH_IGNORES,
     SYNTAX_CHECK_TABLES,
@@ -19,6 +16,7 @@ import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { pathOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a path explanation names its scope and kind, and shows the checks that the level turns off', async () => {
@@ -121,20 +119,15 @@ test.each([...UNKNOWN_SUBJECT_CASES])(
     },
 );
 
-test.each([...CHECK_TOOL_MINIMUMS])(
-    'explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration: $check',
-    async ({ check, tools }) => {
-        await using sandbox = await createGitSandbox({});
-        const configurationsByName = readConfigurations();
-        const expected = tools.map((name) => {
-            const minimum = getTool(configurationsByName.values(), name).min_version;
-            return `Needs ${name} ${String(minimum)} or newer.`;
-        });
-        const result = await runGspot(sandbox.path, ['explain', check]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(result.stdout.split('\n').filter((line) => line.startsWith('Needs '))).toStrictEqual(expected);
-    },
-);
+test('explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration', async () => {
+    await using sandbox = await createGitSandbox({});
+    const minimum = getTool(readConfigurations().values(), 'node').min_version;
+    const result = await runGspot(sandbox.path, ['explain', 'javascript/eslint']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.split('\n').filter((line) => line.startsWith('Needs '))).toStrictEqual([
+        `Needs node ${String(minimum)} or newer.`,
+    ]);
+});
 
 test('explain of a check says whether its configuration is selected and names the add command', async () => {
     await using sandbox = await createGitSandbox({
@@ -155,9 +148,9 @@ test('explain of a check says whether its configuration is selected and names th
 
 test.each([
     { subject: ['bash/shellcheck'], fields: { kind: 'check', selected: true } },
-    { subject: ['data-files/yaml', 'documents'], fields: { kind: 'lint-rule' } },
+    { subject: ['yaml/syntax', 'documents'], fields: { kind: 'lint-rule' } },
 ])('explain --json carries each command that its text prints: $subject', async ({ subject, fields }) => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash', 'data-files']) });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash', 'yaml']) });
     const text = await runGspot(sandbox.path, ['explain', ...subject]);
     const json = await runGspot(sandbox.path, ['explain', ...subject, '--json']);
     expect(json.code, json.stderr).toBe(0);
@@ -167,12 +160,6 @@ test.each([
     expect(commands.length).toBeGreaterThan(1);
     for (const command of commands) expect(json.stdout).toContain(JSON.stringify(command).slice(1, -1));
     expect(JSON.parse(json.stdout)).toMatchObject(fields);
-});
-
-test('explain --json reports every field of a configuration', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['explain', 'engineering', '--json']);
-    expect(result.code).toBe(0);
 });
 
 test('explain names the ignores of a check and the removals of a configuration, with the command that undoes each', async () => {

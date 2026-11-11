@@ -6,7 +6,6 @@ import {
 } from '#cli/commands/edits.ts';
 import { GSPOT_REMOVE } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
 import { REMOVAL_REASON_SUGGESTION } from '#cli/config/settings/validation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
@@ -85,12 +84,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const summary =
         formatConfigurationChange({ action: 'Removed', changed: removed, where, unchanged, state: 'not selected' }) +
         removeUnusedSettings(input.table, scopePath);
-    const hasManagedKeys = readConfigurations()
-        .values()
-        .filter((configuration) => removed.includes(configuration.name))
-        .flatMap((configuration) => configuration.tools)
-        .some((tool) => tool.replace_key?.some((replacement) => replacement.pointer === true) === true);
-    return writeSettingsEdit(context, { summary, notes: hasManagedKeys ? [MANAGED_KEYS_NOTE] : [] });
+    return writeSettingsEdit(context, { summary });
 }
 
 function findRequirementChain(required: string, from: string, seen: Set<string>): string[] | undefined {

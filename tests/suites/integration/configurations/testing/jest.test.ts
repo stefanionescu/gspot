@@ -4,18 +4,37 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import type { RunReport } from '#cli/types/engine/run.ts';
-import {
-    CORRECTED_MATH_TEST_SOURCE,
-    COVERAGE_THRESHOLD_MESSAGE,
-    JEST_COVERAGE_TABLES,
-    JEST_PROJECT_FILES,
-    MATH_SOURCE,
-    MATH_TEST_SOURCE,
-} from '#tests/config/integration/testing.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+const MATH_SOURCE = `function total(values) { let sum = 0; for (const value of values) { if (value > 0) sum += value; } return sum; }
+function triple(value) { return value * 3; }
+module.exports = { total, triple };
+`;
+
+const MATH_TEST_SOURCE = `const { total, triple } = require("./math.cjs");
+test("adds positive values", () => { expect(total([2, -1, 3])).toBe(5); });
+`;
+
+const CORRECTED_MATH_TEST_SOURCE = `${MATH_TEST_SOURCE}test("triples an integer", () => { expect(triple(2)).toBe(6); });\n`;
+
+const JEST_PROJECT_FILES = {
+    'package.json': `${JSON.stringify({ name: 'jest-acceptance', private: true, devDependencies: { jest: SANDBOX_PACKAGES.jest } })}\n`,
+    'math.cjs': MATH_SOURCE,
+    'authored.txt': 'preserved source\n',
+    'coverage/authored.txt': 'preserved report\n',
+} as const;
+
+const JEST_COVERAGE_TABLES = `[coverage]
+min_line_percent = 80
+min_branch_percent = 80
+min_function_percent = 80
+min_statement_percent = 80
+`;
+
+const COVERAGE_THRESHOLD_MESSAGE = 'coverage threshold for lines (80%) not met: ';
 
 async function runJestCoverage(root: string, code: number): Promise<RunReport['checks']> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'jest/tests', '--json']));

@@ -135,12 +135,12 @@ test('per-file commands keep the arguments after the file', async () => {
 
     const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
     const planned = planChecks(session, { stage: 'all', only: ['sandbox/arguments'] })[0]!;
-    planned.tool = { name: 'echo', installers: {}, kind: 'program' };
     planned.check = { ...planned.check, env: { TOOL_RELEASE: 'v3.4.0' } };
     const setup = buildCommandLaunch(planned, {
         session,
         command: planned.check.command!,
         root: session.root,
+        tool: { name: 'echo', installers: {}, kind: 'program' },
         toolPath: process.execPath,
     });
     const result = await runProcess(setup.commandLines[0]!.commandArguments, {

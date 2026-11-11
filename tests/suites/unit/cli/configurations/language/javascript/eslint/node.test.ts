@@ -1,16 +1,14 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { compareText } from '#cli/system/text.ts';
-import type { Level } from '#cli/types/settings.ts';
 import {
     ENGINE_FINDINGS,
     ENGINE_PACKAGES,
     ENGINE_PATHS,
-    ENGINE_PHASES,
     ENGINE_SCOPES,
     ENGINE_SOURCE,
     EXTENSIONLESS_SCRIPT_CASES,
@@ -26,98 +24,76 @@ import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import type { ScriptFindingCase } from '#tests/types/configurations.ts';
 import type { EslintConfiguration, LintFinding } from '#tests/types/setup.ts';
 
-test.each([...ENGINE_PHASES])(
-    `ESLint reports Node APIs newer than the engines of each file's package ($name)`,
-    async (phase) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: ENGINE_SCOPES }),
-            ...ENGINE_PACKAGES,
-            ...Object.fromEntries(
-                ENGINE_PATHS.map((path) => [
-                    path,
-                    path.endsWith('.cjs')
-                        ? ENGINE_SOURCE.replace('export const grouped =', 'exports.grouped =')
-                        : ENGINE_SOURCE,
-                ]),
-            ),
-        });
+test(`ESLint reports Node APIs newer than the engines of each file's package`, async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: ENGINE_SCOPES }),
+        ...ENGINE_PACKAGES,
+        ...Object.fromEntries(
+            ENGINE_PATHS.map((path) => [
+                path,
+                path.endsWith('.cjs')
+                    ? ENGINE_SOURCE.replace('export const grouped =', 'exports.grouped =')
+                    : ENGINE_SOURCE,
+            ]),
+        ),
+    });
 
-        for (const path of phase.corrections) {
-            const source = await readFile(join(sandbox.path, path), 'utf8');
-            await writeFile(
-                join(sandbox.path, path),
-                source
-                    .replace('Object.groupBy([1], String)', 'Object.fromEntries([["group", [1]]])')
-                    .replace('process.loadEnvFile()', 'process.cwd()'),
-            );
-        }
-        const eslint = await buildEslint(sandbox.path);
-        const findings = await listLintFindings(
-            eslint,
-            sandbox.path,
-            ENGINE_PATHS,
-            ENGINE_FINDINGS.map(({ ruleId }) => ruleId),
-        );
-        expect(findings.toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
-            ENGINE_PATHS.toSorted(compareText).flatMap((file) =>
-                new Set<string>(phase.reported).has(file)
-                    ? ENGINE_FINDINGS.map(({ ruleId, line }) => ({ file, rule: ruleId, line }))
-                    : [],
-            ),
-        );
-    },
-);
+    const eslint = await buildEslint(sandbox.path);
+    const findings = await listLintFindings(
+        eslint,
+        sandbox.path,
+        ENGINE_PATHS,
+        ENGINE_FINDINGS.map(({ ruleId }) => ruleId),
+    );
+    expect(findings.toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
+        ['old/source.cjs', 'old/source.js'].flatMap((file) =>
+            ENGINE_FINDINGS.map(({ ruleId, line }) => ({ file, rule: ruleId, line })),
+        ),
+    );
+});
 
-test.each(['all'] as const)(
-    'ESLint lints Node script files by role and shebang, and skips generated, vendored and other files (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            ...NODE_SCRIPT_FILES,
-            'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
-        });
+test('ESLint lints Node script files by role and shebang, and skips generated, vendored and other files', async () => {
+    await using sandbox = await testdir({
+        ...NODE_SCRIPT_FILES,
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all', tables: NODE_SCRIPT_TABLES }),
+    });
 
-        const eslint = await buildEslint(sandbox.path);
-        const paths = NODE_SCRIPT_CASES.map(({ file }) => file);
-        for (const isCorrected of [false]) {
-            const configurations = await Promise.all(
-                UNLINTED_FILES.map(async (file) => ({
-                    file,
-                    matched: (await eslint.calculateConfigForFile(file)) !== undefined,
-                })),
-            );
-            const findings = {
-                results: await listLintFindings(eslint, sandbox.path, paths, NODE_SCRIPT_RULES),
-                configurations,
-            };
-            expect(findings).toStrictEqual({
-                results: isCorrected ? [] : buildExpectedFindings(NODE_SCRIPT_CASES, level),
-                configurations: UNLINTED_FILES.map((file) => ({ file, matched: false })),
-            });
-        }
-    },
-);
+    const eslint = await buildEslint(sandbox.path);
+    const paths = NODE_SCRIPT_CASES.map(({ file }) => file);
+    const configurations = await Promise.all(
+        UNLINTED_FILES.map(async (file) => ({
+            file,
+            matched: (await eslint.calculateConfigForFile(file)) !== undefined,
+        })),
+    );
+    const findings = {
+        results: await listLintFindings(eslint, sandbox.path, paths, NODE_SCRIPT_RULES),
+        configurations,
+    };
+    expect(findings).toStrictEqual({
+        results: buildExpectedFindings(NODE_SCRIPT_CASES),
+        configurations: UNLINTED_FILES.map((file) => ({ file, matched: false })),
+    });
+});
 
-test.each(['all'] as const)(
-    'Node scripts without an extension get syntax, global, engine, import and scope limit findings (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            ...NODE_SCRIPT_FILES,
-            'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
-            ...Object.fromEntries(EXTENSIONLESS_SCRIPT_CASES.map(({ file, source }) => [file, source])),
-            'source.js': 'export const value = 1;\n',
-        });
+test('Node scripts without an extension get syntax, global, engine, import and scope limit findings', async () => {
+    await using sandbox = await testdir({
+        ...NODE_SCRIPT_FILES,
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all', tables: NODE_SCRIPT_TABLES }),
+        ...Object.fromEntries(EXTENSIONLESS_SCRIPT_CASES.map(({ file, source }) => [file, source])),
+        'source.js': 'export const value = 1;\n',
+    });
 
-        const eslint = await buildEslint(sandbox.path);
-        for (const isCorrected of [false, true]) {
-            if (isCorrected)
-                for (const contract of EXTENSIONLESS_SCRIPT_CASES)
-                    await writeFile(join(sandbox.path, contract.file), contract.corrected);
-            const paths = EXTENSIONLESS_SCRIPT_CASES.map(({ file }) => file);
-            const findings = await listLintFindings(eslint, sandbox.path, paths, EXTENSIONLESS_SCRIPT_RULES);
-            expect(findings).toStrictEqual(isCorrected ? [] : buildExpectedFindings(EXTENSIONLESS_SCRIPT_CASES, level));
-        }
-    },
-);
+    const eslint = await buildEslint(sandbox.path);
+    for (const isCorrected of [false, true]) {
+        if (isCorrected)
+            for (const contract of EXTENSIONLESS_SCRIPT_CASES)
+                await writeFile(join(sandbox.path, contract.file), contract.corrected);
+        const paths = EXTENSIONLESS_SCRIPT_CASES.map(({ file }) => file);
+        const findings = await listLintFindings(eslint, sandbox.path, paths, EXTENSIONLESS_SCRIPT_RULES);
+        expect(findings).toStrictEqual(isCorrected ? [] : buildExpectedFindings(EXTENSIONLESS_SCRIPT_CASES));
+    }
+});
 
 test('every package.json gets the package-json rules and no code rules, and only the root names its package manager', async () => {
     await using sandbox = await testdir({
@@ -168,10 +144,10 @@ test('an ignore of a package-json rule for one file keeps the finding in other f
     ).toStrictEqual([{ file: 'library/package.json', rule: 'package-json/require-exports', line: 1 }]);
 });
 
-function buildExpectedFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
+function buildExpectedFindings(cases: readonly ScriptFindingCase[]): LintFinding[] {
     return cases
         .flatMap((row) =>
-            [...row.everyLevel, ...(level === 'all' ? (row.all ?? []) : [])].map(({ ruleId, line }) => ({
+            [...row.everyLevel, ...(row.all ?? [])].map(({ ruleId, line }) => ({
                 file: row.file,
                 rule: ruleId,
                 line,

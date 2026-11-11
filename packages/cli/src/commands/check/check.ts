@@ -2,10 +2,11 @@ import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 
+import { InvalidArgumentError } from '@commander-js/extra-typings';
+
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { formatAnnotations } from '#cli/commands/check/report.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { parseCheckNames } from '#cli/commands/edits.ts';
 import {
     BASE_OPTION,
     CHECK_INPUT_HOOKS,
@@ -22,8 +23,10 @@ import {
     SETUP_PATHS,
     SKIP_OPTION,
     STAGE_SETUP_MESSAGE,
+    UNSTAGED_TOOLS_NOTE,
 } from '#cli/config/commands/reports.ts';
 import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
+import { TOOL_PROJECT_FILES } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
@@ -40,6 +43,10 @@ import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
 import type { CheckCommandJson, CheckFlags, CheckOptions } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
+
+const CHECK_LIST_SEPARATOR = ',';
+
+const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();
@@ -205,11 +212,15 @@ async function runStagedCheck(
             untracked: { paths: [], unreadablePaths: untracked.unreadablePaths },
         });
     using copy = await copyRevision(root, { kind: 'index', paths: stagedPaths }, cancelSignal);
+    // The tools on disk follow the tool files on disk, and the copy asks for the tools of the staged settings.
+    const toolFiles = TOOL_PROJECT_FILES.filter((path) => unstagedPaths.has(path));
+    const changed = `${formatNameList(toolFiles)} ${toolFiles.length === 1 ? 'has' : 'have'}`;
     return await runTreeCheck(copy.root, options, cancelSignal, {
         toolsRoot: root,
         started,
         selection: { ...selection, reference: copy.tree },
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
+        ...(toolFiles.length > 0 && { missingToolsNote: UNSTAGED_TOOLS_NOTE.replace('<files>', () => changed) }),
         unreadablePaths: copy.unreadablePaths,
     });
 }
@@ -248,6 +259,15 @@ async function runCheckCommand(
     } finally {
         rewriteProgress('');
     }
+}
+
+function parseCheckNames(value: string, previous: string[] | undefined): string[] {
+    const checks = value
+        .split(CHECK_LIST_SEPARATOR)
+        .map((check) => check.trim())
+        .filter((check) => check !== '');
+    if (checks.length === 0) throw new InvalidArgumentError(EMPTY_CHECKS_MESSAGE);
+    return [...(previous ?? []), ...checks];
 }
 
 export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {

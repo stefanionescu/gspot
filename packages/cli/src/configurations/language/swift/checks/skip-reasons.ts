@@ -8,11 +8,10 @@ import {
     SKIP_REASON_ARGUMENT,
     SWIFT_STRING_LITERAL,
     XCTEST_PREFIX,
-} from '#cli/config/configurations/builds.ts';
+} from '#cli/config/configurations/swift.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function hasReason(reason: Node | undefined): boolean {

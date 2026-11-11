@@ -14,7 +14,6 @@ import {
     MISE_CONFIG_GLOB,
     MISE_FILES,
     MISE_RUN,
-    MISE_TASK_FOLDERS,
     PATH_CHARACTERS,
     PATH_TOKEN_SKIPS,
     RELATIVE_PATH_PREFIXES,
@@ -27,7 +26,7 @@ import {
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { TRAILING_SLASH } from '#cli/config/system.ts';
+import { MISE_TASK_FOLDERS, TRAILING_SLASH } from '#cli/config/system.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
 import { parseMiseTasks } from '#cli/configurations/general/docs/mise.ts';
@@ -44,8 +43,7 @@ import { escapeGlob, includeParentFolders, listEnclosingFolders, listExecutableN
 import { isTable } from '#cli/system/tables.ts';
 import type { PathIndex, ProseLine, TaskNames } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 const TASK_FILE = /(?:^|\/)(?:package\.json|\.?mise(?:\.local)?\.toml)$|(?:^|\/)\.?mise(?:-tasks)?\//u;

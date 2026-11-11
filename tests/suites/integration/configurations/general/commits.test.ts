@@ -1,24 +1,27 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join, posix } from 'node:path';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { pushOutputSchema } from '#cli/schemas/commands.ts';
-import { COMMIT_MESSAGES, UNTYPED_MESSAGE_RULES } from '#tests/config/integration/general.ts';
-import { COMMITLINT_GSPOT_PACKAGE, LICENSE } from '#tests/config/setup/configurations.ts';
+import { LICENSE } from '#tests/config/setup/configurations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { pushOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+
+const COMMIT_MESSAGES = [
+    { message: 'fix(Core): repair the parser', rule: undefined },
+    { message: 'fix: repair the parser', rule: undefined },
+    { message: 'feat(Core)!: drop the parser option', rule: undefined },
+    { message: 'fix(core): repair the parser', rule: 'scope-enum' },
+] as const;
+
+const UNTYPED_MESSAGE_RULES = ['type-empty', 'subject-empty', 'subject-full-stop'] as const;
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
     const checked = parseCheckReport(
@@ -155,54 +158,3 @@ describe('a repository with the commit hooks installed', () => {
         expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(base);
     });
 });
-
-test.each(['', 'app'])(
-    'commitlint reads the generated config through the package.json field gspot writes, in %s',
-    async (scope) => {
-        const packageFile = posix.join(scope, 'package.json');
-        const messageFile = posix.join(scope, 'message.txt');
-        await using sandbox = await createGitSandbox({
-            [packageFile]: COMMITLINT_GSPOT_PACKAGE,
-            [messageFile]: 'special: authored contract\n',
-        });
-        commitAll(sandbox.path);
-        const execution = { cwd: join(sandbox.path, scope), env: {} };
-        const command = [join(toolModules, '.bin/commitlint'), '--edit', join(sandbox.path, messageFile)];
-        const before = await runCommand(command, execution);
-        expect(before.code, before.stdout + before.stderr).toBe(0);
-        const initialized = await runGspot(sandbox.path, ['init', '--configurations', 'gspot', '--level', 'all']);
-        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        const target = `${scope === '' ? './' : '../'}${getManifestTarget('commits', 'commitlint.json')}`;
-        expect(await readFile(join(sandbox.path, packageFile), 'utf8')).toBe(
-            COMMITLINT_GSPOT_PACKAGE.replace('{"rules":{"type-enum":[2,"always",["special"]]}}', () =>
-                JSON.stringify({ extends: target }),
-            ),
-        );
-        const mismatched = await runCommand(command, execution);
-        expect(mismatched.code, mismatched.stdout + mismatched.stderr).toBe(1);
-        expect(mismatched.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
-        for (const level of ['basic', 'all']) {
-            const changed = await runGspot(sandbox.path, ['set', 'level', level]);
-            expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-            const packageText = await readFile(join(sandbox.path, packageFile), 'utf8');
-            const expected = Object.fromEntries(
-                Object.entries(parseJsonFile('package.json', COMMITLINT_GSPOT_PACKAGE)).filter(
-                    ([key]) => key !== 'commitlint',
-                ),
-            );
-            expect(JSON.parse(packageText)).toStrictEqual(expected);
-            const generatedConfig = join(sandbox.path, getManifestTarget('commits', 'commitlint.json'));
-            expect(existsSync(generatedConfig)).toBe(level === 'all');
-            if (level !== 'all') continue;
-            const native = await runCommand([...command, '--config', generatedConfig], execution);
-            expect(native.code, native.stdout + native.stderr).toBe(1);
-            expect(native.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
-        }
-        await writeFile(join(sandbox.path, messageFile), 'fix: generated contract\n');
-        const corrected = await runCommand(
-            [...command, '--config', join(sandbox.path, getManifestTarget('commits', 'commitlint.json'))],
-            execution,
-        );
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-);

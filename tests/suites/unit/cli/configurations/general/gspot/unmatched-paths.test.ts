@@ -68,3 +68,19 @@ test('a missing scope with rule options leaves install usable and unmatched path
         { file: 'gspot.toml', message: expect.stringContaining('scope.0.path') as string },
     ]);
 });
+
+test('a scope pattern that starts at the repository root names its scope-relative form, and a typo does not', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            scopes: [{ path: 'api', configurations: ['javascript'] }],
+            tables: '[scope.javascript]\nentry_files = ["api/functions/*/index.js", "api/absent/*.js"]\n',
+        }),
+        'api/functions/send/index.js': 'export const ready = true;\n',
+    });
+    commitAll(sandbox.path);
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
+    expect(findings.map(({ message }) => message)).toStrictEqual([
+        'api/api/functions/*/index.js under scope.0.javascript.entry_files matches no tracked file or folder. A path in a [[scope]] table is relative to that scope, so write "functions/*/index.js".',
+        'api/api/absent/*.js under scope.0.javascript.entry_files matches no tracked file or folder.',
+    ]);
+});

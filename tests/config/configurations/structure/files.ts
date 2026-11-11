@@ -1,40 +1,38 @@
 import { BASH_HEADER, CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 
-export const BASH_ENVIRONMENT_READ_CASES = [
-    {
-        check: 'structure/environment-readers',
-        files: {
-            'scripts/environment.sh': `#!/usr/bin/env bash
+export const BASH_ENVIRONMENT_READ_SAMPLE = {
+    check: 'structure/environment-readers',
+    files: {
+        'scripts/environment.sh': `#!/usr/bin/env bash
 #
 # Owns the environment.
 # Runtime: Bash 4.0+, macOS and Linux.
 
 readonly DEPLOY_TARGET="\${1:-}"
 `,
-            'scripts/reader.sh': `${BASH_HEADER}# main: runs the script.
+        'scripts/reader.sh': `${BASH_HEADER}# main: runs the script.
 main() {
     echo "\${DEPLOY_TARGET} $1"
 }
 
 main "$@"
 `,
-        },
-        settings: '[structure]\nenvironment_readers = ["scripts/environment.sh"]\n',
-        expected: { file: 'scripts/reader.sh', rule: 'read-outside-reader', line: 10 },
-        corrected: {
-            files: {
-                'scripts/environment.sh': '#!/usr/bin/env bash\nreadonly DEPLOY_TARGET="${1:-}"\n',
-                'scripts/reader.sh': `${BASH_HEADER}# main: runs the script.
+    },
+    settings: '[structure]\nenvironment_readers = ["scripts/environment.sh"]\n',
+    expected: { file: 'scripts/reader.sh', rule: 'read-outside-reader', line: 10 },
+    corrected: {
+        files: {
+            'scripts/environment.sh': '#!/usr/bin/env bash\nreadonly DEPLOY_TARGET="${1:-}"\n',
+            'scripts/reader.sh': `${BASH_HEADER}# main: runs the script.
 main() {
     echo "$1"
 }
 
 main "$@"
 `,
-            },
         },
     },
-] as const;
+} as const;
 
 export const PYTHON_ENVIRONMENT_SOURCE = `import os as system
 from os import environ as values, getenv as read
@@ -55,26 +53,24 @@ fifth = other("KEY")
 
 export const OS_VALUE_SOURCE = 'import os\nVALUE = os.environ["KEY"]\n';
 
-export const FILE_FOLDER_CLASH_CASES = [
-    {
-        check: 'structure/file-folder-clashes',
-        corrected: {
-            files: {
-                'jobs/turned.sh': CLEAN_BASH_SCRIPT,
-                'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
-            },
-        },
+export const FILE_FOLDER_CLASH_SAMPLE = {
+    check: 'structure/file-folder-clashes',
+    corrected: {
         files: {
-            'jobs/turn.sh': CLEAN_BASH_SCRIPT,
+            'jobs/turned.sh': CLEAN_BASH_SCRIPT,
             'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
         },
-        expected: {
-            file: 'jobs/turn.sh',
-            rule: 'file-folder-clash',
-            line: 1,
-        },
     },
-] as const;
+    files: {
+        'jobs/turn.sh': CLEAN_BASH_SCRIPT,
+        'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
+    },
+    expected: {
+        file: 'jobs/turn.sh',
+        rule: 'file-folder-clash',
+        line: 1,
+    },
+} as const;
 
 const SWIFT_TARGETS_PACKAGE = `// swift-tools-version:5.9
 import PackageDescription
@@ -135,9 +131,12 @@ export const SWIFT_IMPORT_FILES = {
     'Tests/CoreTests/ModelTests.swift': 'import Core\n',
 } as const;
 
-export const FRAMEWORK_COMPONENT_CASES = [
-    { framework: 'astro', name: 'index.astro', folder: 'src/pages', content: '<main>Example</main>\n' },
-] as const;
+export const FRAMEWORK_COMPONENT_CASE = {
+    framework: 'astro',
+    name: 'index.astro',
+    folder: 'src/pages',
+    content: '<main>Example</main>\n',
+} as const;
 
 export const ROUTE_FILE_CASES = [
     {

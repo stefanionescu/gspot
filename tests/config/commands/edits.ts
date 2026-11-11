@@ -10,21 +10,11 @@ paths = ["**/*.json"]
 reason = "These files retain generated formatting."
 `;
 
-export const UNSET_REFUSALS = [{ commandArguments: ['unset', 'level', 'extra'] }] as const;
-
 export const UNKNOWN_IGNORE_ARGUMENTS = [
     'ignore',
     'bash/shelcheck',
     '--reason',
     'The sample check name is misspelled.',
-] as const;
-
-export const LITERAL_ROUTE_CASES = [
-    {
-        folder: 'app/[id]',
-        path: 'app/[id]/**',
-        escaped: String.raw`app/\[id\]/**`,
-    },
 ] as const;
 
 const PARENT_CONFIGURATION_SETTINGS = `configurations = ["markdown"]
@@ -92,37 +82,6 @@ export const SCOPE_REMOVALS = [
 
 export const API_LANGUAGE_REASON = 'The API uses another language.';
 
-export const SET_SETTINGS = `configurations = ["markdown", "structure"]
-[rule_files]
-enabled = false
-[[scope]]
-path = "api"
-configurations = ["bash"]
-`;
-
-export const WEAKENED_SETTINGS = [
-    {
-        key: 'site.allowed_unlisted_pages',
-        value: 'account/index.html',
-        second: 'admin/index.html',
-    } as const,
-] as const;
-
-export const SET_REFUSALS = [
-    ['a rule turned off', ['set', 'tools.markdownlint.rules', '{ MD013 = false }']],
-    ['an undeclared scope', ['set', 'limits.max_file_lines', '100', '--scope', 'web']],
-    ['a setting of a configuration that no scope selects', ['set', 'licenses.allowed', 'MIT']],
-    ['an invalid level', ['set', 'level', 'everything']],
-] as const;
-
-export const KEPT_SETTING_CHANGES = [
-    [
-        'set',
-        ['set', 'limits.bash.max_file_lines', '200', '--reason', 'Generated scripts need this limit.'],
-        '[limits]\nbash = { max_file_lines = { value = 200, reason = "Generated scripts need this limit." } }',
-    ],
-] as const;
-
 export const STOPPED_APPLY_FILES = {
     'gspot.toml': `configurations = ["bash", "structure"]
 [rule_files]
@@ -131,26 +90,9 @@ enabled = false
     'entry.sh': 'echo example\n',
 } as const;
 
-export const UNKNOWN_SETTING_KEYS = [{ key: 'tools.eslint.unknown_key' }, { key: 'data_files.unknown_key' }] as const;
-
 export const STRING_SETTING_VALUES = [
     { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },
     { key: 'ci.linux_runner', words: ['true'], value: 'true' },
-] as const;
-
-export const SET_VALUE_REFUSALS = [
-    {
-        name: 'set with malformed TOML',
-        arguments: ['set', 'ci.setup_command', '['],
-    },
-    {
-        name: 'set without an existing list reason',
-        arguments: ['set', 'site.allowed_unlisted_pages', 'admin/index.html'],
-    },
-    {
-        name: 'set with an unnecessary reason',
-        arguments: ['set', 'spelling.locale', 'en-gb', '--reason', 'The project publishes content for local readers.'],
-    },
 ] as const;
 
 const COMMAND_VALUE_SETTINGS = `configurations = ["site"]
@@ -161,5 +103,3 @@ allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private
 `;
 
 export const REFUSAL_FILES = { 'gspot.toml': COMMAND_VALUE_SETTINGS, 'control.txt': 'preserve\n' } as const;
-
-export const CONFIGURATIONS_SETTINGS = 'configurations = []\n';

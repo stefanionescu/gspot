@@ -16,10 +16,10 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import type { EslintConfiguration } from '#tests/types/setup.ts';
 
-test.each(['all'] as const)('%s keeps the syntax selectors of a configuration inside its scope', async (level) => {
+test('all keeps the syntax selectors of a configuration inside its scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
-            level,
+            level: 'all',
             scopes: [{ path: 'app', configurations: ['react', 'drizzle'] }],
         }),
         'package.json': '{"private":true,"type":"module"}',
@@ -167,10 +167,10 @@ test('your options for a rule that a configuration adds, such as @typescript-esl
     ).toStrictEqual([{ file: 'source.ts', rule: '@typescript-eslint/no-floating-promises', line: 2 }]);
 });
 
-test.each(['basic'] as const)('%s keeps core bug checks and TypeScript recommended checks active', async (level) => {
+test('basic keeps core bug checks and TypeScript recommended checks active', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
-            level,
+            level: 'basic',
             tables: '[[tools.eslint.override]]\npaths = ["**/*.js", "**/*.ts"]\nruntime = "browser"\n',
         }),
         'package.json': '{"private":true,"type":"module"}',

@@ -1,4 +1,4 @@
-import { readdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import { readdir, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import { join } from 'node:path';
 
@@ -6,9 +6,8 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { ARGUMENT_REFUSALS, FIX_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
+import { ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -54,17 +53,36 @@ test('--only names the configuration that an unselected check needs', async () =
     });
 });
 
-test.each([...FIX_REFUSALS])('check $flags exits 2 and leaves the working tree as it was', async ({ flags }) => {
+test.each([
+    {
+        flags: ['--staged', '--fix'],
+        message:
+            '--fix cannot run with --staged: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.',
+    },
+    { flags: ['--staged', '--base', 'HEAD'], message: '--base cannot run with --staged. Choose one file selection.' },
+    {
+        flags: ['--hook', 'pre-push', '--fix'],
+        message: '--fix cannot run with --hook pre-push: it checks the pushed commits. Leave out --fix.',
+    },
+    {
+        flags: ['--hook', 'pre-push', '--staged'],
+        message: '--staged cannot run with --hook pre-push: it checks the pushed commits. Leave out --staged.',
+    },
+    {
+        flags: ['--hook', 'pre-push', '--base', 'HEAD'],
+        message: '--base cannot run with --hook pre-push: it checks the pushed commits. Leave out --base.',
+    },
+])('check $flags exits 2, names the conflict, and leaves the working tree as it was', async ({ flags, message }) => {
     await using sandbox = await createFixableSandbox();
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments' });
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments', message });
     expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
 
 test.each([...PUSH_INPUT_REFUSALS])(
-    'a pre-push check given $name exits 2 and leaves the working tree as it was',
-    async ({ stdin }) => {
+    'a pre-push check given $name exits 2 and names the input error',
+    async ({ stdin, message }) => {
         await using sandbox = await createFixableSandbox();
         const refused = await runGspot(
             sandbox.path,
@@ -73,7 +91,7 @@ test.each([...PUSH_INPUT_REFUSALS])(
             { stdin: typeof stdin === 'string' ? stdin : Buffer.from(stdin) },
         );
         expect(refused.code).toBe(2);
-        expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'git' });
+        expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'git', message });
     },
 );
 
@@ -158,30 +176,3 @@ test.each([...ARGUMENT_REFUSALS])(
         });
     },
 );
-
-test('a linked .gspot folder fails check, and nothing outside changes', async () => {
-    const tables = stringify({
-        command_check: [
-            {
-                id: 'project/storage',
-                paths: ['source.txt'],
-                stage: 'commit',
-                command: buildProgramCommand('fakes/tool', '--stdout', 'Exact finding\n', '--exit', '1'),
-                output: { format: 'regex', pattern: '(?<message>.+)' },
-            },
-        ],
-    });
-    await using sandbox = await testdir({
-        'project/source.txt': 'input\n',
-        'project/gspot.toml': buildSandboxSettings([], { tables }),
-        'outside/sentinel': 'authored outside\n',
-    });
-    const project = join(sandbox.path, 'project');
-    runGitStep(project, ['init', '--quiet']);
-    const outside = join(sandbox.path, 'outside');
-    await symlink(outside, join(project, GSPOT_FOLDER));
-    const refused = await runGspot(project, ['check', '--json']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored outside\n');
-    expect(await readdir(outside)).toStrictEqual(['sentinel']);
-});

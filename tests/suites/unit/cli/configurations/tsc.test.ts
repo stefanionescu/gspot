@@ -11,11 +11,13 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { REFERENCE_BUILD_FILES, REFERENCE_BUILD_RESULTS } from '#tests/config/configurations/language.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { linkInstalledModules, linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a project with its own tsconfig.json keeps its own compiler options', async () => {
     await using sandbox = await createGitSandbox({
@@ -98,4 +100,26 @@ test('a solution builds referenced projects in a copy and leaves each scope its 
     expect(
         remaining.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
     ).toStrictEqual([{ file: 'neighbor/source.ts', rule: 'TS18047' }]);
+});
+
+test('typescript/tsc notes that a missing module is a package of this repository', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        '.gitignore': 'node_modules/\n',
+        'package.json': '{"name":"root","private":true,"workspaces":["packages/*"]}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"module":"esnext","moduleResolution":"bundler"}}',
+        'packages/shared/package.json': '{"name":"@example/shared","exports":"./dist/index.js"}',
+        'entry.ts': 'import { value } from "@example/shared/values";\n\nexport const copy: number = value;\n',
+    });
+    await linkTypescript(join(sandbox.path, 'node_modules'));
+    commitAll(sandbox.path);
+    await applyGeneratedFiles(sandbox.path);
+    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['typescript/tsc'] }));
+    expect(result.report.checks.map(({ status, note }) => ({ status, note }))).toStrictEqual([
+        {
+            status: 'failed',
+            note: '@example/shared is a package of this repository, and its types may need a build. Run your build, then check again.',
+        },
+    ]);
+    expect(listFindingRows(result.report)).toStrictEqual([{ file: 'entry.ts', line: 1, rule: 'TS2307' }]);
 });

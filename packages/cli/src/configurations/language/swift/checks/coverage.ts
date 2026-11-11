@@ -22,7 +22,7 @@ import {
     XCCOV_COMMAND,
     XCODE_COVERAGE_FLAGS,
     XCTEST_FAILURE_LINE,
-} from '#cli/config/configurations/builds.ts';
+} from '#cli/config/configurations/swift.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
 import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
@@ -40,8 +40,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CoverageOutput, CoverageRun, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 import type { TableSettings } from '#cli/types/settings.ts';
 import type { Files } from '#cli/types/system.ts';
 

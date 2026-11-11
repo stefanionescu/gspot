@@ -102,8 +102,6 @@ export const REASON_VALUES = [
     },
 ] as const;
 
-export const NAMING_LIMITS = [{ key: 'naming.swift.max_characters', shipped: 40, child: 38 }];
-
 export const EXPLAIN_SETTINGS = `configurations = []
 
 [[scope]]\npath = "api"
@@ -115,8 +113,6 @@ rule = "SC2086"
 paths = ["api/build.sh"]
 reason = "The script deliberately splits a list of arguments."
 `;
-
-export const CHECK_TOOL_MINIMUMS = [{ check: 'javascript/eslint', tools: ['node'] }] as const;
 
 export const PATH_IGNORES = [
     {
@@ -136,5 +132,3 @@ export const UNKNOWN_SUBJECT_CASES = [
     ],
     ['./missing.sh', 'missing.sh is not a file in this repository.'],
 ] as const;
-
-export const API_SCOPE_FILES = { 'README.md': '# Example\n', 'api/entry.sh': 'echo api\n' } as const;

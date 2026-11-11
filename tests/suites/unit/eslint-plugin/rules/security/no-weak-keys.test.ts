@@ -14,5 +14,9 @@ buildRuleTester().run('no-weak-keys', noWeakKeys, {
                 { messageId: 'weakCurve', line: 4 },
             ],
         },
+        {
+            code: "crypto.generateKeyPairSync('dsa', { modulusLength: 2048, divisorLength: 160 });",
+            errors: [{ messageId: 'shortKey', data: { option: 'divisorLength', minimum: '224', algorithm: 'dsa' } }],
+        },
     ],
 });

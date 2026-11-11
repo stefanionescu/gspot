@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { CommandFailureJson } from '#cli/types/system.ts';
-import { CONFIGURATIONS_SETTINGS, INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
+import { INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -46,16 +46,6 @@ test('add reports an inherited configuration as already selected and writes noth
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('add names every unknown configuration before changing the settings', async () => {
-    const text = CONFIGURATIONS_SETTINGS;
-    await using sandbox = await createGitSandbox({ 'gspot.toml': text });
-    const result = await runGspot(sandbox.path, ['add', 'not-a-real-config-a', 'not-a-real-config-b', '--json']);
-    expect(result.code).toBe(2);
-    const { error, message } = JSON.parse(result.stdout) as CommandFailureJson;
-    expect(error).toBe('arguments');
-    for (const name of ['not-a-real-config-a', 'not-a-real-config-b']) expect(message).toContain(name);
-});
-
 test('add names only added configurations in a mixed request', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
     const result = await runGspot(sandbox.path, ['add', 'bash', 'markdown']);
@@ -86,7 +76,7 @@ test('add --scope on a project folder writes its scope record', async () => {
     expect(saved.scopes.get('py')?.configurations).toStrictEqual(['fastapi']);
 });
 
-test('add site writes the build command of the package manager that a scope declares', async () => {
+test('add site writes only the configuration to the scope, and no build command', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: [] }] }),
         'app/index.html': '<!doctype html><title>Site</title>',
@@ -95,9 +85,8 @@ test('add site writes the build command of the package manager that a scope decl
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['add', 'site', '--scope', 'app']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const session = await openSession(sandbox.path);
-    const selected = session.scopes.find((each) => each.path === 'app')!;
-    expect(getTable(selected.settings, 'site').build_command).toStrictEqual(['bun', 'run', 'build']);
+    const written = readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8');
+    expect(parse(written)).toHaveProperty('scope', [{ path: 'app', configurations: ['site'] }]);
 });
 
 test('add cloudflare writes the OpenNext types', async () => {

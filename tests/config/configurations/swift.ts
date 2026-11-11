@@ -124,8 +124,6 @@ export const FAILED_BUILD_FINDINGS = [
     },
 ] as const;
 
-export const SWIFT_REPLACEMENT_CASES = [{ checkId: 'swift/build', rule: 'compiler' }] as const;
-
 const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nmin_line_percent = 80\n';
 
 export const XCTEST_TABLES = `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`;

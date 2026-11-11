@@ -222,10 +222,7 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.psql', parseSqlComments],
     ['.html', (text) => parseGrammarComments('html', text)],
     ['.htm', (text) => parseGrammarComments('html', text)],
-    ...['.md'].map((extension): [string, CommentParser] => [
-        extension,
-        (text) => parseGrammarComments('html', text, { source: extractMarkdownHtml(text) }),
-    ]),
+    ['.md', (text) => parseGrammarComments('html', text, { source: extractMarkdownHtml(text) })],
     ['.mdx', parseMdxComments],
     ['.css', (text) => parseGrammarComments('css', text)],
 ]);

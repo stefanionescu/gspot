@@ -52,41 +52,36 @@ async function assertSourceRules(
     }
 }
 
-test.each(['all'] as const)(
-    'Knip entry files still get the trivial-file rules at %s, in nested scopes',
-    async (level) => {
-        await using sandbox = await testdir({
-            'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
-            'src/start.js': STARTER_SOURCE,
-            'src/main.js': ENTRYPOINT_SOURCE,
-            'src/task.js': ENTRYPOINT_SOURCE,
-            'api/src/start.js': STARTER_SOURCE,
-            'api/src/main.js': ENTRYPOINT_SOURCE,
-            'api/src/task.js': ENTRYPOINT_SOURCE,
-        });
+test('Knip entry files still get the trivial-file rules at all, in nested scopes', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
+        'src/start.js': STARTER_SOURCE,
+        'src/main.js': ENTRYPOINT_SOURCE,
+        'src/task.js': ENTRYPOINT_SOURCE,
+        'api/src/start.js': STARTER_SOURCE,
+        'api/src/main.js': ENTRYPOINT_SOURCE,
+        'api/src/task.js': ENTRYPOINT_SOURCE,
+    });
 
-        const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRYPOINT_TABLES });
-        expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual([
-            ...TRIVIAL_ENTRYPOINT_FILES,
-        ]);
-        await writeFile(
-            join(sandbox.path, 'src/main.js'),
-            "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
-        );
-        const mainFindings = [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }];
-        const findings = await listTrivialFindings(sandbox.path, settings);
-        expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
-        expect(listTrivialFiles(findings)).toStrictEqual(
-            TRIVIAL_ENTRYPOINT_FILES.filter((file) => file !== 'src/main.js'),
-        );
-        await writeFile(
-            join(sandbox.path, 'src/main.js'),
-            "import { start } from './start.js';\nexport function boot() { start(); }\n",
-        );
-        const publicFindings = await listTrivialFindings(sandbox.path, settings);
-        expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual([]);
-    },
-);
+    const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: ENTRYPOINT_TABLES });
+    expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual([
+        ...TRIVIAL_ENTRYPOINT_FILES,
+    ]);
+    await writeFile(
+        join(sandbox.path, 'src/main.js'),
+        "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
+    );
+    const mainFindings = [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }];
+    const findings = await listTrivialFindings(sandbox.path, settings);
+    expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
+    expect(listTrivialFiles(findings)).toStrictEqual(TRIVIAL_ENTRYPOINT_FILES.filter((file) => file !== 'src/main.js'));
+    await writeFile(
+        join(sandbox.path, 'src/main.js'),
+        "import { start } from './start.js';\nexport function boot() { start(); }\n",
+    );
+    const publicFindings = await listTrivialFindings(sandbox.path, settings);
+    expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual([]);
+});
 
 test('level all skips build output and files marked linguist-generated in .gitattributes', async () => {
     await using sandbox = await testdir({

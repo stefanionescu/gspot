@@ -154,10 +154,9 @@ test('gspot/weakenings compares with the base of the run, not the last commit', 
     expect(report.checks.flatMap(({ findings }) => findings.map(({ rule }) => rule))).toStrictEqual(['level']);
 });
 
-test('gspot/weakenings notes a base that this version of gspot cannot read, and compares nothing', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': 'retired_key = true\n' });
+test('gspot/weakenings compares with the shipped defaults when gspot refuses the base gspot.toml', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': 'unknown_key = true\n' });
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([]));
-    const { rules } = await runWeakenings(sandbox.path);
-    expect(rules).toStrictEqual([]);
+    expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: ['hooks', 'rule-files'], notes: [] });
 });

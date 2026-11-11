@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test';
 import {
     ENVIRONMENT_READER_SCOPE_TABLES,
     LAYOUT_RULE_CASES,
-    SCRIPT_LAYOUT_CASES,
+    SCRIPT_LAYOUT_SAMPLE,
 } from '#tests/config/configurations/bash.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -24,13 +24,10 @@ test('an environment reader that only its scope declares may run top-level comma
     expect(await runSandboxCheck(sandbox.path, 'bash/script-layout', { scope: 'tools' })).toStrictEqual([]);
 });
 
-test.each([...SCRIPT_LAYOUT_CASES])(
-    '$check reports $expected.rule in $expected.file and passes after the fix',
-    async (sample) => {
-        await using sandbox = await createSandbox(BASH_SANDBOX);
-        await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
-    },
-);
+test('bash/script-layout reports strict-mode in scripts/headless.sh and passes after the fix', async () => {
+    await using sandbox = await createSandbox(BASH_SANDBOX);
+    await assertCheckSample(sandbox, SCRIPT_LAYOUT_SAMPLE, BASH_SANDBOX.cleanSource);
+});
 
 test('library declarations span array and heredoc lines without creating flow findings', async () => {
     await using sandbox = await createGitSandbox({

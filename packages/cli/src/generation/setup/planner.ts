@@ -1,10 +1,10 @@
-import { CODE_LANGUAGES } from '#cli/config/configurations/blocks.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/eslint/blocks.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { readCarryover } from '#cli/generation/setup/carryover.ts';
+import { readCarryover } from '#cli/generation/setup/carryover/read.ts';
 import { deleteConflictingConfigs, readConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
 import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
 import { readPrettierScripts } from '#cli/generation/setup/format.ts';
@@ -12,13 +12,13 @@ import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/set
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { readGspotPin, writeGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { buildStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import { listLintCommands, listOtherFormatScripts } from '#cli/repository/lint-commands.ts';
 import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
+import { readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/version-pin.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { readSettings } from '#cli/settings/read.ts';
@@ -137,7 +137,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         pinPath,
         lintCommands: [
             ...listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
-            ...listOtherFormatScripts({ root, ...listReplacedTools(applicable) }),
+            ...listOtherFormatScripts({ root, files: repository.files, ...listReplacedTools(applicable) }),
         ],
         carryover: carryover.rows,
         crlfPaths: await listCrlfIndexPaths(root),
@@ -166,7 +166,8 @@ export async function writeInitFiles(root: string, initPlan: InitPlanning): Prom
     const writer = openFiles(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
-    if (initPlan.pinPath !== undefined) writeGspotPin(writer, initPlan.pinPath);
+    if (initPlan.pinPath === PACKAGE_JSON) writePackagePin(writer);
+    if (initPlan.pinPath === MISE_CONFIG_FILE) writeMisePin(writer);
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });
     const kept = deleteConflictingConfigs(writer, initPlan.plan.deleted, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));

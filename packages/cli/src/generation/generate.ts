@@ -29,20 +29,24 @@ import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import { buildAgentsBlock, hasTopHeading, selectRuleFiles } from '#cli/generation/rules.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { readCiNode } from '#cli/repository/javascript/gspot-pin.ts';
+import { readCiNode } from '#cli/repository/version-pin.ts';
+import { ciFields } from '#cli/schemas/settings/tables.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
 import { buildMiseInstall, buildPythonProjectTable, listNpmProjectPins } from '#cli/tools/pins.ts';
-import type { Pipeline, RuleFile } from '#cli/types/generation.ts';
+import type { RuleFile } from '#cli/types/generation.ts';
 import type { GeneratedFile, Generation, Session } from '#cli/types/tools.ts';
 
 function addWorkflow(session: Session, generated: Generation): void {
     const { settings, scopes } = session;
     if (settings.ci?.enabled !== true) return;
     const available = buildAvailableSettings(listSelectedConfigurations(scopes), settings.level);
+    const operatingSystems = ciFields.operating_systems
+        .unwrap()
+        .parse(getSettingValue(available, settings, CI_SYSTEMS_SETTING, '')?.value);
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version: cliPackage.version,
@@ -50,8 +54,7 @@ function addWorkflow(session: Session, generated: Generation): void {
             packageManager: session.packageManager,
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
-            operatingSystems: getSettingValue(available, settings, CI_SYSTEMS_SETTING, '')
-                ?.value as Pipeline['operatingSystems'],
+            operatingSystems,
             linuxRunner: settings.ci.linux_runner,
             testChecks: listTestChecks(session),
         }),

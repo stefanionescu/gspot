@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import { SVELTE_CHECK_FINDINGS, SVELTE_CHECK_OUTPUT, SVELTE_PROJECTS } from '#tests/config/configurations/framework.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

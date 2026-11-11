@@ -97,26 +97,26 @@ test.each(['-->', '--!>'])('an HTML suppression that ends with %s still needs a 
 });
 
 test('a nosemgrep comment is reported even with a reason', async () => {
-    await using sandbox = await createGitSandbox({});
     const path = 'source.ts';
-    const source = '// nosemgrep: example.rule -- The external interface requires this call.\nconst value = 1;\n';
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], { level: 'all' }),
-        [path]: source,
+        [path]: '// nosemgrep: example.rule -- The external interface requires this call.\nconst value = 1;\n',
     });
     const failed = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
 
-    expect(failed.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message }))).toStrictEqual([
+    expect(
+        failed.map(({ check, file, line, rule, message, help }) => ({ check, file, line, rule, message, help })),
+    ).toStrictEqual([
         {
             check: 'gspot/suppressions',
             file: path,
             line: 1,
             rule: 'semgrep',
             message: expect.any(String) as string,
+            help: 'Remove the suppression and fix the finding. gspot accepts no suppression comment of this tool, with or without a reason.',
         },
     ]);
-    const corrected = 'const value = 1;\n';
-    await writeFile(join(sandbox.path, path), corrected);
+    await writeFile(join(sandbox.path, path), 'const value = 1;\n');
 
     expect(await runSandboxCheck(sandbox.path, 'gspot/suppressions')).toStrictEqual([]);
 });

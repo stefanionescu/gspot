@@ -31,6 +31,9 @@ without an import.
 | React Native sources                                                                 | Native globals                                            |
 | Next.js sources                                                                      | Node.js built-ins, because server components can use them |
 
+A plain script that an HTML page loads is an ordinary module. `javascript/eslint` reports `no-undef` for `document` in
+it until a record gives it the `browser` runtime.
+
 To give some files another runtime, add a `[[tools.eslint.override]]` record, with paths from the root folder of the
 repository. When two records match a file, the later record wins.
 

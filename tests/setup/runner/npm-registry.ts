@@ -2,18 +2,18 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import {
-    AUTHENTICATION_REQUIRED_MESSAGE,
-    GSPOT_PACKAGE_SCOPE,
-    NPM_PACK_FLAGS,
-    PACKED_PACKAGES_FILE,
-    PACKED_PUBLISH_TIME,
-    REGISTRY_HOST,
-    UPSTREAM_REGISTRY,
-} from '#tests/config/setup/sandboxes.ts';
+import { AUTHENTICATION_REQUIRED_MESSAGE, PACKED_PACKAGES_FILE, REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/setup.ts';
+
+const GSPOT_PACKAGE_SCOPE = '@gspothq/';
+
+const NPM_PACK_FLAGS = ['--ignore-scripts', '--json'] as const;
+
+const PACKED_PUBLISH_TIME = '2025-01-01T00:00:00.000Z';
+
+const UPSTREAM_REGISTRY = 'https://registry.npmjs.org/';
 
 async function answerRegistryRequest(
     request: Request,

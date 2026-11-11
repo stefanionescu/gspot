@@ -85,23 +85,20 @@ test.each(['/Users/ada/project', '/home/ada/project', String.raw`C:\Users\ada\pr
     },
 );
 
-test.each(['auto'])(
-    'the scissors marker selects the comment character over core.commentChar %p',
-    async (commentChar) => {
-        const findings = await checkMessage(
-            [
-                'fix(cli): retain the requested message',
-                '; https://chatgpt.com/share/comment',
-                '# https://chatgpt.com/share/body',
-                '; ------------------------ >8 ------------------------',
-                '+ https://chatgpt.com/share/diff',
-            ].join('\n'),
-            commentChar,
-        );
-        expect(findings).toHaveLength(1);
-        expect(findings[0]?.message).toStartWith('Line 3 ');
-    },
-);
+test('the scissors marker selects the comment character over core.commentChar auto', async () => {
+    const findings = await checkMessage(
+        [
+            'fix(cli): retain the requested message',
+            '; https://chatgpt.com/share/comment',
+            '# https://chatgpt.com/share/body',
+            '; ------------------------ >8 ------------------------',
+            '+ https://chatgpt.com/share/diff',
+        ].join('\n'),
+        'auto',
+    );
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toStartWith('Line 3 ');
+});
 
 test.each([
     [';', 3],

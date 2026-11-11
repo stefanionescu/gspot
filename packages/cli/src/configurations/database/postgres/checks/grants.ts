@@ -1,13 +1,14 @@
 import type { GrantStmt } from '@pgsql/types';
 
 import { GRANT_ALL_MESSAGE, GRANT_ALL_RULE } from '#cli/config/configurations/infrastructure.ts';
-import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import {
+    readParsedMigrations,
+    selectFrozenMigrations,
+} from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 async function checkGrants(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {

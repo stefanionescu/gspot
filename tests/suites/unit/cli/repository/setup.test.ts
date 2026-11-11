@@ -9,7 +9,6 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
 import {
     HOOK_FOLDER_FILES,
-    LINKED_HOOK_FILES,
     LINKED_RUFF_SECTION,
     PRETTIER_SETTINGS_FILES,
     SIMPLE_GIT_HOOKS_PACKAGES,
@@ -38,7 +37,8 @@ test('tool discovery reads tool sections through a link inside the repository', 
     expect(repositorySetup.conflictingConfigs).toStrictEqual([LINKED_RUFF_SECTION]);
 });
 
-test.each(['.claude/rules'])('a linked %s counts as present without reading a rules folder outside', async (path) => {
+test('a linked .claude/rules counts as present without reading a rules folder outside', async () => {
+    const path = '.claude/rules';
     await using sandbox = await createGitSandbox({
         'project/source.ts': 'export {};\n',
         'outside/guide.md': 'external rules\n',
@@ -81,22 +81,23 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
     expect(hooks).toStrictEqual([{ kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] }]);
 });
 
-test('hook discovery reports other hook folders and leaves gspot, task scripts, and an inactive Husky folder out', async () => {
+test('hook discovery reports only the hook folder that core.hooksPath points into, and leaves gspot and task scripts out', async () => {
     await using sandbox = await createGitSandbox(HOOK_FOLDER_FILES);
 
     const { hooks } = await readHooks({ root: sandbox.path });
-    expect(hooks.toSorted((left, right) => compareText(left.path, right.path))).toStrictEqual([
-        { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
-        { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
-    ]);
+    expect(hooks).toStrictEqual([]);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.husky/_']);
-    const active = await readHooks({ root: sandbox.path });
-    expect(active.hooks.filter(({ kind }) => kind === 'husky')).toStrictEqual([
-        { kind: 'husky', path: '.husky', files: ['pre-commit'] },
+    const husky = await readHooks({ root: sandbox.path });
+    expect(husky.hooks).toStrictEqual([{ kind: 'husky', path: '.husky', files: ['pre-commit'] }]);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.githooks/_']);
+    const own = await readHooks({ root: sandbox.path });
+    expect(own.hooks.toSorted((left, right) => compareText(left.path, right.path))).toStrictEqual([
+        { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
+        { kind: 'hooksPath', path: '.githooks/_', files: [] },
     ]);
 });
 
-test('a linked .githooks counts as githooks without reading hook files outside', async () => {
+test('a linked .githooks that core.hooksPath points into counts as githooks without reading hook files outside', async () => {
     const path = '.githooks';
     await using sandbox = await createGitSandbox({
         'project/source.ts': 'export {};\n',
@@ -105,17 +106,20 @@ test('a linked .githooks counts as githooks without reading hook files outside',
 
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '-q']);
+    runGitStep(root, ['config', 'core.hooksPath', `${path}/_`]);
     await symlink('../outside', join(root, path), 'dir');
     const linked = await readHooks({ root: root });
-    expect(linked.hooks).toStrictEqual([]);
+    expect(linked.hooks.filter(({ kind }) => kind === 'githooks')).toStrictEqual([]);
     await unlink(join(root, path));
     await createFileTree(root, { 'authored-hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
     await symlink('authored-hooks', join(root, path), 'dir');
     const authored = await readHooks({ root: root });
-    expect(authored.hooks).toStrictEqual([{ kind: 'githooks', path, files: ['pre-commit'] }]);
+    expect(authored.hooks.filter(({ kind }) => kind === 'githooks')).toStrictEqual([
+        { kind: 'githooks', path, files: ['pre-commit'] },
+    ]);
 });
 
-test.each([...LINKED_HOOK_FILES])('a linked $path counts as $kind configuration', async ({ path, kind }) => {
+test('a linked .lefthook.yml counts as lefthook configuration', async () => {
     await using sandbox = await createGitSandbox({
         'project/source.ts': 'export {};\n',
         'outside/configuration': 'authored hook configuration\n',
@@ -123,12 +127,12 @@ test.each([...LINKED_HOOK_FILES])('a linked $path counts as $kind configuration'
 
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '-q']);
-    await symlink('../outside/configuration', join(root, path));
+    await symlink('../outside/configuration', join(root, '.lefthook.yml'));
     await writeFile(join(root, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
     await chmod(join(root, '.git/hooks/pre-commit'), 0o755);
     const { hooks } = await readHooks({ root: root });
     expect(hooks).toStrictEqual([
-        { kind, path, files: [] },
+        { kind: 'lefthook', path: '.lefthook.yml', files: [] },
         { kind: 'hooksPath', path: '.git/hooks', files: ['pre-commit'] },
     ]);
 });

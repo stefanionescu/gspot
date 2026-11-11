@@ -11,10 +11,9 @@ import {
 } from '#cli/config/engine.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { findToolName } from '#cli/tools/pins.ts';
 import { canReadRuleExplanations } from '#cli/tools/rules.ts';
 import { type PlannedCheck, type RunSelection } from '#cli/types/engine/plan.ts';
 import type {
@@ -23,9 +22,9 @@ import type {
     CheckResult,
     CheckRunOptions,
     CheckSession,
+    Finding,
     RunOptions,
 } from '#cli/types/engine/run.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
 

@@ -56,7 +56,7 @@ test('a workspace bin into untracked build output is left out of the copy', asyn
     expect(copied).toMatchObject({ package: true, bin: { code: 'ENOENT' } });
 });
 
-test('an installed package links to the working tree and a dot folder stays out', async () => {
+test('a dot folder of node_modules stays out of the copy', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { ...EXTERNAL_DEPENDENCY_FILES, 'node_modules/.hidden/secret.txt': 'hidden' });
     runGitStep(sandbox.path, ['init']);
@@ -107,9 +107,9 @@ test('a nested revision copy links each package of .gspot/node_modules', async (
     expect(copied).toStrictEqual({ linked: true, source: VALUE_ONE_LINE });
 });
 
-test.each([''])('revision copies link the installed Vale packages under %s', async (prefix) => {
+test('revision copies link the installed Vale packages', async () => {
     await using sandbox = await testdir();
-    const config = `${prefix}${GSPOT_PATHS.valeConfig}`;
+    const config = GSPOT_PATHS.valeConfig;
     const packagePath = `${GSPOT_PATHS.valePackages}/Example/rule.yml`;
     await createFileTree(sandbox.path, {
         [config]: 'StylesPath = ../../vale\nPackages = Example\n',
@@ -230,7 +230,7 @@ test('an index copy clones the ignored build output that a package.json names in
     expect(existsSync(join(withoutFiles.root, 'dist/index.js'))).toBe(false);
 });
 
-test('a copy links installed dependencies with no lockfile, and keeps tracked ones as the revision holds them', async () => {
+test('a copy keeps tracked dependencies as the revision holds them', async () => {
     await using sandbox = await createGitSandbox({
         '.gitignore': 'app/node_modules/\n',
         'app/package.json': '{}',

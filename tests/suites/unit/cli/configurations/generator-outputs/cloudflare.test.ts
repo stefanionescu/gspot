@@ -8,11 +8,9 @@ import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
-import { CLOUDFLARE_ENV_SOURCE, UNTRACKED_CLOUDFLARE_FINDINGS } from '#tests/config/configurations/general.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -20,6 +18,16 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildProcessResult, runCommand } from '#tests/setup/system/processes.ts';
+
+const UNTRACKED_CLOUDFLARE_FINDINGS = [
+    {
+        file: 'cloudflare-env.d.ts',
+        rule: 'untracked',
+        message: 'cloudflare-env.d.ts is not tracked. Commit it, so the other checks and this check can read it.',
+    },
+] as const;
+
+const CLOUDFLARE_ENV_SOURCE = 'interface CloudflareEnv {}\n';
 
 async function fakeWrangler(root: string): Promise<DisposableStack> {
     const pin = getTool(readConfigurations().values(), 'wrangler');
@@ -57,7 +65,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         selectCheckCode(planned.check),
-        CHECK_RUN_OPTIONS,
+        {},
     );
     expect(result.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
@@ -85,7 +93,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         buildCheckSession(untracked, CHECK_GENERATION),
         untrackedCheck,
         selectCheckCode(untrackedCheck.check),
-        CHECK_RUN_OPTIONS,
+        {},
     );
     expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
@@ -96,7 +104,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         buildCheckSession(tracked, CHECK_GENERATION),
         trackedCheck,
         selectCheckCode(trackedCheck.check),
-        CHECK_RUN_OPTIONS,
+        {},
     );
     expect(trackedResult.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([

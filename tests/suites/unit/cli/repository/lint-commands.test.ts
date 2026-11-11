@@ -1,6 +1,6 @@
 import { expect, spyOn, test } from 'bun:test';
 
-import { listLintCommands } from '#cli/repository/lint-commands.ts';
+import { listLintCommands, listOtherFormatScripts } from '#cli/repository/lint-commands.ts';
 import type { LintCommand } from '#cli/types/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -196,4 +196,55 @@ test('lint commands read the strings of a package.json and leave its other value
         ['script', 'eslint .'],
         ['hook', 'npx eslint .'],
     ]);
+});
+
+test('lint commands: a mise task that calls a tool counts, and so does a script that runs the task', async () => {
+    await using sandbox = await createGitSandbox({
+        '.mise/tasks/lint/js.sh': '#!/usr/bin/env bash\n#MISE description="Run eslint"\neslint .\n',
+        'mise.toml':
+            '[tasks.format]\nrun = "prettier --write ."\n\n[tasks.build]\nrun = ["tsc -b"]\n\n[tasks.run]\nrun = ["ruff check"]\n',
+        'package.json': JSON.stringify(
+            {
+                scripts: {
+                    format: 'mise run format',
+                    lint: 'mise lint:js',
+                    build: 'mise run build',
+                    all: 'npm run format',
+                },
+            },
+            null,
+            2,
+        ),
+    });
+    const rows = await listRows(sandbox.path);
+    expect(rows.map(({ file, line, source, command, tool }) => [file, line, source, command, tool])).toStrictEqual([
+        ['package.json', 3, 'script', 'mise run format', 'prettier'],
+        ['package.json', 4, 'script', 'mise lint:js', 'eslint'],
+        ['package.json', 6, 'script', 'npm run format', 'prettier'],
+        ['.mise/tasks/lint/js.sh', 3, 'mise-task', 'eslint .', 'eslint'],
+        ['mise.toml', 2, 'mise-task', 'prettier --write .', 'prettier'],
+        ['mise.toml', 8, 'mise-task', 'ruff check', 'ruff'],
+    ]);
+});
+
+test('lint commands: a file task in .mise-tasks counts, and so does a script that runs it', async () => {
+    await using sandbox = await createGitSandbox({
+        '.mise-tasks/lint/js': '#!/usr/bin/env bash\neslint .\n',
+        'package.json': JSON.stringify({ scripts: { lint: 'mise run lint:js' } }, null, 2),
+    });
+    const rows = await listRows(sandbox.path);
+    expect(rows.map(({ file, line, source, command, tool }) => [file, line, source, command, tool])).toStrictEqual([
+        ['package.json', 3, 'script', 'mise run lint:js', 'eslint'],
+        ['.mise-tasks/lint/js', 2, 'mise-task', 'eslint .', 'eslint'],
+    ]);
+});
+
+test('lint commands: a format script that runs a mise task of a known tool is no other formatter', async () => {
+    await using sandbox = await createGitSandbox({
+        'mise.toml': '[tasks.format]\nrun = "prettier --write ."\n\n[tasks.tidy]\nrun = "dprint fmt"\n',
+        'package.json': JSON.stringify({ scripts: { format: 'mise run format', 'format:all': 'mise run tidy' } }),
+    });
+    const { files } = await readTestRepository(sandbox.path);
+    const rows = listOtherFormatScripts({ root: sandbox.path, files, tools: new Set(['prettier']) });
+    expect(rows.map(({ tool }) => tool)).toStrictEqual(['format:all']);
 });

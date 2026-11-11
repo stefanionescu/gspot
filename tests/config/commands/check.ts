@@ -1,3 +1,5 @@
+import { PUSH_INPUT_MESSAGE } from '#cli/config/commands/reports.ts';
+import { INVALID_PUSH_INPUT_MESSAGE } from '#cli/config/repository/git.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 
 export const NAMING_SCOPE_SETTINGS = {
@@ -8,8 +10,6 @@ export const NAMING_SCOPE_SETTINGS = {
         { path: 'web', configurations: ['javascript', 'naming'] },
     ],
 } as const;
-
-export const ALL_FILES_BASES = [{ reference: '' }, { reference: '0'.repeat(40) }] as const;
 
 export const AUTHORED_SCRIPT = 'echo authored\n';
 
@@ -41,16 +41,16 @@ const UTF16_MARKER_BYTE = 0xfe;
 
 const LINE_FEED_BYTE = 0x0a;
 
-export const FIX_REFUSALS = [{ flags: ['--staged', '--fix'] }, { flags: ['--hook', 'pre-push', '--fix'] }] as const;
-
 export const PUSH_INPUT_REFUSALS = [
     {
         name: 'text that is no ref update',
         stdin: 'not a ref update\n',
+        message: INVALID_PUSH_INPUT_MESSAGE,
     },
     {
         name: 'bytes that are not UTF-8',
         stdin: [INVALID_UTF8_BYTE, UTF16_MARKER_BYTE, LINE_FEED_BYTE],
+        message: PUSH_INPUT_MESSAGE,
     },
 ] as const;
 

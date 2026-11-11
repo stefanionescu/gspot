@@ -62,7 +62,8 @@ root folder of the repository. Each path must match at least one file. To give m
 
 ## Ignore a dependency advisory
 
-To ignore one advisory, give its ID as the rule:
+One vulnerability can have several advisory IDs, one from each database that lists it. gspot reports it once, under
+the first ID, and lists the others in the message. To ignore it, give the ID that the finding prints as the rule:
 
 ```shell
 gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason "<why>"

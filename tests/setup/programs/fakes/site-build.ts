@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { SITE_BUILD_OPTIONS } from '#tests/config/setup/programs.ts';
+const SITE_BUILD_OPTIONS = { copy: { type: 'string', multiple: true }, import: { type: 'string' } } as const;
 
 const { values } = parseArgs({ options: SITE_BUILD_OPTIONS });
 const pairs = values.copy ?? [];

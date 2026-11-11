@@ -1,0 +1,38 @@
+allowed_words = ["JSON"]
+
+[configuration]
+always_selected = true
+description = "JSON, YAML, and TOML files with a known JSON Schema: each file matches its schema."
+title = "JSON"
+
+[files]
+extensions = [".json", ".jsonc", ".json5"]
+
+[[tool]]
+name = "v8r"
+npm = "v8r"
+requires = ["ajv"]
+version = "6.1.0"
+
+[[tool]]
+kind = "package"
+name = "ajv"
+npm = "ajv"
+version = "8.20.0"
+
+[[config_file]]
+target = "v8r.yml"
+tool = "v8r"
+
+[[check]]
+command = ["v8r", "--output-format", "text", "{files}"]
+env = { V8R_CONFIG_FILE = "{config_file:v8r}" }
+example = "A JSON file with a string where its schema requires a boolean reports a mismatch. Replace the string with `true` or `false`."
+files = { paths = ["**/*.{json,jsonc,yaml,yml,toml}", "!**/package.json", "!**/tsconfig*.json", "!**/jsconfig.json", "!**/.github/workflows/**", "!**/mise.toml", "!**/.mise.toml", "!**/mise.*.toml", "!**/.mise.*.toml", "!**/.mise/**", "!**/.config/mise/**", "!**/gspot.toml"] }
+help = "Fix the key v8r names, or map the file to its schema under json.schemas."
+name = "v8r"
+needs = ["network"]
+output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
+stage = "push"
+summary = "Validates SchemaStore files that other checks do not own, such as Compose, Dependabot, and Renovate files."
+why = "A key the schema rejects never takes effect, and nobody notices until the expected behavior fails to appear."

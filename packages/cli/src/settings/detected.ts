@@ -4,7 +4,6 @@ import type ts from 'typescript';
 
 import { PBXPROJ_SUFFIX, TSCONFIG_FILE } from '#cli/config/parsers.ts';
 import {
-    BUILD_SCRIPT,
     BUNDLER_PACKAGES,
     CLOUDFLARE_CONFIGURATION,
     IMPORT_EXTENSION_SETTING,
@@ -14,7 +13,6 @@ import {
     OPENAPI_CONFIGURATION,
     OPENNEXT_PACKAGE,
     OPENNEXT_TYPE_DEFAULTS,
-    SITE_CONFIGURATION,
     SWIFT_CONFIGURATION,
     TRANSLATIONS_CONFIGURATION,
     XCODE_DESTINATIONS,
@@ -23,11 +21,10 @@ import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
 import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
@@ -62,13 +59,6 @@ function buildSwiftTable(selection: ScopeConfigurations, { repository, scopes }:
             ...(destination !== undefined && { xcode_destination: destination }),
         },
     };
-}
-
-function buildSiteTable(selection: ScopeConfigurations, { repository }: DetectedScopes): TomlTable {
-    if (selection.selected.every(({ name }) => name !== SITE_CONFIGURATION)) return {};
-    const sources = repository.files.filter((file) => file.kind === 'source').map((file) => file.path);
-    const { name } = detectPackageManager(repository.root, sources);
-    return { site: { build_command: [name, ...BUILD_SCRIPT] } };
 }
 
 function buildCloudflareTable(selection: ScopeConfigurations, { repository }: DetectedScopes): TomlTable {
@@ -115,7 +105,7 @@ function hasTsImports(repository: Repository, scopePath: string, cache: RunCache
             file.kind === 'source' &&
             isInScope(file.path, scopePath) &&
             extensions.includes(posix.extname(file.path)) &&
-            TS_SUFFIX_IMPORT.test(findText(cache, file.path) ?? ''),
+            TS_SUFFIX_IMPORT.test(readText(cache, file.path)),
     );
 }
 
@@ -144,7 +134,6 @@ export function buildDetectedTables(
             {
                 ...buildSwiftTable(selection, detected),
                 ...buildOpenApiTable(selection, detected),
-                ...buildSiteTable(selection, detected),
                 ...buildCloudflareTable(selection, detected),
                 ...buildTranslationsTable(selection, detected),
                 ...buildImportExtensionTable(selection, detected.repository, cache),

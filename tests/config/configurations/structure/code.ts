@@ -52,10 +52,9 @@ const SWIFT_ACCESSORS = `struct A {
     }
 }`;
 
-export const BASH_TRIVIAL_FUNCTION_CASES = [
-    {
-        files: {
-            'scripts/tiny.sh': `${BASH_HEADER}# _tiny: one line, one caller.
+export const BASH_TRIVIAL_FUNCTION_SAMPLE = {
+    files: {
+        'scripts/tiny.sh': `${BASH_HEADER}# _tiny: one line, one caller.
 _tiny() {
     echo "$1"
 }
@@ -69,10 +68,9 @@ main() {
 
 main "$@"
 `,
-        },
-        expected: { file: 'scripts/tiny.sh', rule: 'trivial-function', line: 9 },
     },
-] as const;
+    expected: { file: 'scripts/tiny.sh', rule: 'trivial-function', line: 9 },
+} as const;
 
 export const TRIVIAL_FUNCTION_CASES = [
     {

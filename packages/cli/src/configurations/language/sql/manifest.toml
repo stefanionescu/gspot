@@ -38,9 +38,10 @@ tool = "sqlfluff"
 command = ["sqlfluff", "lint", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
 example = "The query `select id from user_accounts;` reports CP01 for lowercase keywords. Write it as `SELECT id FROM user_accounts;`."
 exit_codes = [1]
-help = "Fix the line that SQLFluff names."
+fix = ["sqlfluff", "fix", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
+help = "Run the `fix:` command that the report prints for the rules that fix themselves, then fix each line that SQLFluff still names."
 name = "sqlfluff"
-output = { format = "json", children = ["violations"], fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
+output = { format = "json", children = ["violations"], fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description", fixable = "fixes" } }
 stage = "commit"
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect that `sql.dialect` names."
 why = "When every SQL file follows one style, a reviewer can focus on what each statement does."

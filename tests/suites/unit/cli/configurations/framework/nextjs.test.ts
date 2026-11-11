@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
@@ -9,6 +9,7 @@ import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import * as processes from '#cli/system/processes.ts';
 import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
@@ -20,7 +21,7 @@ import {
     ROUTE_TYPES_COMMENT,
     UNRELATED_FILE,
 } from '#tests/config/configurations/framework.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -92,7 +93,7 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
     const routesSeen: string[] = [];
     using fakes = fakeNextjsCommands((command, options) => fakeNextjsBuild(command, options, routesSeen));
     const { folders } = fakes;
-    const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], CHECK_RUN_OPTIONS);
+    const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], {});
     expect(found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message }))).toStrictEqual([
         {
             check: 'nextjs/tsc',
@@ -103,12 +104,29 @@ test('nextjs/tsc in a child scope reports its finding, passes after the fix, and
         },
     ]);
     await writeFile(join(sandbox.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
-    expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], CHECK_RUN_OPTIONS)).toMatchObject({
+    expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'], {})).toMatchObject({
         status: 'passed',
         findings: [],
     });
     expect(routesSeen).toStrictEqual([GENERATED_ROUTES, GENERATED_ROUTES]);
     expect(folders.map((cwd) => existsSync(cwd))).toStrictEqual(folders.map(() => false));
+    const tsconfig = join(sandbox.path, scope, 'tsconfig.json');
+    const { mode } = await stat(tsconfig);
+    expect({
+        tsconfig: await readFile(tsconfig, 'utf8'),
+        mode: mode & 0o777,
+        nextEnv: await readFile(join(sandbox.path, scope, 'next-env.d.ts'), 'utf8'),
+        routes: await readFile(join(sandbox.path, scope, '.next/types/routes.d.ts'), 'utf8'),
+        cache: [...(await readFile(join(sandbox.path, scope, '.next/local-cache.bin')))],
+        unrelated: await readFile(join(sandbox.path, UNRELATED_FILE.path), 'utf8'),
+    }).toStrictEqual({
+        tsconfig: '{"compilerOptions":{"strict":true}}\n',
+        mode: normalizeFileMode({ mode: 0o640 }),
+        nextEnv: AUTHORED_NEXT_ENV,
+        routes: ROUTE_TYPES_COMMENT,
+        cache: [...NEXT_CACHE_BYTES],
+        unrelated: UNRELATED_FILE.text,
+    });
 });
 
 test('nextjs/tsc removes its copy after a failed type generation and keeps a concurrent edit to tsconfig.json', async () => {
@@ -130,17 +148,13 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
     const error = await captureRejection(
-        runCheckCode(
-            buildCheckSession(session, CHECK_GENERATION),
-            planned,
-            CHECK_CODE['nextjs/tsc'],
-            CHECK_RUN_OPTIONS,
-        ),
+        runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, CHECK_CODE['nextjs/tsc'], {}),
     );
     expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
     expect(error.message).toContain(message);
     expect(scratch).not.toBe('');
     expect(existsSync(scratch)).toBe(false);
+    expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
 });
 
 async function fakeNextjsBuild(

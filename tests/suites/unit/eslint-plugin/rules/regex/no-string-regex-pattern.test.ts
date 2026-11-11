@@ -1,10 +1,5 @@
 import { noStringRegexPattern } from '#eslint-plugin/rules/regex/no-string-regex-pattern.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-
-buildRuleTester().run('no-string-regex-pattern without types', noStringRegexPattern, {
-    valid: ['"title".match("v1.2");'],
-    invalid: [],
-});
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('no-string-regex-pattern', noStringRegexPattern, {
     valid: [

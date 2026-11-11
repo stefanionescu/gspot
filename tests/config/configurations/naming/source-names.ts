@@ -1,6 +1,8 @@
-export const FRAMEWORK_NAMES = [
-    { configuration: 'nextjs', name: 'getServerSideProps', bannedWords: ['get server side props'] },
-] as const;
+export const FRAMEWORK_NAME = {
+    configuration: 'nextjs',
+    name: 'getServerSideProps',
+    bannedWords: ['get server side props'],
+} as const;
 
 export const TEST_PATH_SETTINGS = `level = "all"
 configurations = ["javascript", "swift", "naming"]

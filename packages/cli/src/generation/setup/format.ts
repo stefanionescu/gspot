@@ -20,7 +20,8 @@ import {
 } from '#cli/config/generation.ts';
 import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { PRETTIER_ROOT_FILES, UNREADABLE_CONFIG_MESSAGE } from '#cli/config/repository/setup.ts';
-import { detectScriptIndent } from '#cli/generation/setup/script-indent.ts';
+import { detectScriptIndent } from '#cli/generation/setup/carryover/script-indent.ts';
+import { getTool } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
@@ -37,7 +38,6 @@ import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { muteOutput } from '#cli/system/terminal.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import type {
     EditorconfigSection,
     FormatSearch,

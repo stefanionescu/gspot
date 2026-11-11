@@ -20,8 +20,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
 function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckFinding[] {
     const lines = stdout.split('\n');

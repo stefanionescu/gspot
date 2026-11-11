@@ -1,37 +1,34 @@
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { settingOutputSchema } from '#cli/schemas/commands.ts';
-import { NAMING_LIMITS, REASON_VALUES } from '#tests/config/commands/reports.ts';
+import { REASON_VALUES } from '#tests/config/commands/reports.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { settingOutputSchema } from '#tests/setup/schemas.ts';
 
-test.each(NAMING_LIMITS)(
-    "explain shows each scope's default and value naming limit: $key",
-    async ({ key, shipped, child }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['naming'], {
-                level: 'all',
-                scopes: [{ path: 'app' }],
-                tables: '[scope.naming.swift]\nmax_characters = 38\n',
-            }),
-            'entry.sh': 'echo example\n',
-            'app/entry.sh': 'echo example\n',
-        });
+test("explain shows each scope's default and value naming limit", async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['naming'], {
+            level: 'all',
+            scopes: [{ path: 'app' }],
+            tables: '[scope.naming.swift]\nmax_characters = 38\n',
+        }),
+        'entry.sh': 'echo example\n',
+        'app/entry.sh': 'echo example\n',
+    });
 
-        const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
-        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        expect(JSON.parse(explained.stdout)).toMatchObject({
-            kind: 'setting',
-            scopes: [
-                { scope: '', value: shipped },
-                { scope: 'app', default: shipped, value: child },
-            ],
-        });
-    },
-);
+    const explained = await runGspot(sandbox.path, ['explain', 'naming.swift.max_characters', '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(JSON.parse(explained.stdout)).toMatchObject({
+        kind: 'setting',
+        scopes: [
+            { scope: '', value: 40 },
+            { scope: 'app', default: 40, value: 38 },
+        ],
+    });
+});
 
 test('explain reads an inherited limits.max_function_lines value and its reason, and writes nothing', async () => {
     await using sandbox = await createGitSandbox({});
@@ -173,23 +170,39 @@ test.each(['basic', 'all'] as const)('set and explain report whether a limit run
     });
 });
 
-test('explain shows a setting that no scope accepts, such as level, only at the root and with no --scope', async () => {
+test('explain shows a setting that no scope accepts, such as level, only at the root', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { level: 'all', rules: true, scopes: [{ path: 'docs' }] }),
         'docs/guide.md': '# Guide\n',
     });
-    const explained = await runGspot(sandbox.path, ['explain', 'level']);
+    const explained = await runGspot(sandbox.path, ['explain', 'level', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(settingOutputSchema.parse(JSON.parse(explained.stdout)).scopes).toStrictEqual([
+        { scope: '', default: 'basic', value: 'all', source: { kind: 'root', name: 'gspot.toml' } },
+    ]);
 });
 
 test('explain reads a shipped default before init and prints plain command examples', async () => {
     await using sandbox = await createGitSandbox({});
     const result = await runGspot(sandbox.path, ['explain', 'limits.max_file_lines', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(settingOutputSchema.parse(JSON.parse(result.stdout)).scopes).toStrictEqual([
+        { scope: '', default: expect.any(Number) as number },
+    ]);
+    const text = await runGspot(sandbox.path, ['explain', 'limits.max_file_lines']);
+    expect(text.stdout).toContain('No gspot.toml here: these are the shipped values\n');
     const rules = await runGspot(sandbox.path, ['explain', 'tools.eslint.rules']);
     expect(rules.code, rules.stdout + rules.stderr).toBe(0);
     expect(rules.stdout).toContain('gspot ignore javascript/eslint --rule <rule> --reason "<why>"');
     expect(rules.stdout).not.toContain('`');
+});
+
+test('explain of a setting stops on a gspot.toml that gspot refuses, and writes nothing', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: '[unknown_table]\nvalue = 1\n' }),
+    });
+    const failure = await assertRefusalWithoutWrites(sandbox.path, ['explain', 'limits.max_file_lines'], 'settings');
+    expect(failure.message).toContain('unknown_table');
 });
 
 test('explain sends a naming category that follows its parent to the setting that set takes', async () => {

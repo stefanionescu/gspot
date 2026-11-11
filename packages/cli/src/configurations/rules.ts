@@ -1,10 +1,9 @@
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { findToolName } from '#cli/tools/pins.ts';
 import { readLintRuleExplanation } from '#cli/tools/rules.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { RuleExplanation, RuleExplanationOptions, Session } from '#cli/types/tools.ts';

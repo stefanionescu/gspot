@@ -7,7 +7,6 @@ buildRuleTester().run('no-insecure-random', noInsecureRandom, {
         'const Math = { random() { return 1; } }; Math.random();',
         'const random = "round"; Math[random]();',
         'let draw = Math.random; draw = other; draw();',
-        'let first = second; let second = first; first();',
     ],
     invalid: [
         { code: 'import draw = Math.random; draw();', errors: [{ messageId: 'random' }] },

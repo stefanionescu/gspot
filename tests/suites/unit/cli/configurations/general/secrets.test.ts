@@ -10,7 +10,7 @@ import {
     ENVIRONMENT_FUNCTION_EXAMPLE,
     ENVIRONMENT_FUNCTION_FINDINGS,
     ENVIRONMENT_SCOPE_RESULTS,
-    ENVIRONMENT_TEXT_CASES,
+    ENVIRONMENT_TEXT_CASE,
     READER_PROJECT_FILES,
     SCOPE_FUNCTION_CORRECTIONS,
     SCOPE_READER_PROJECT_FILES,
@@ -66,9 +66,9 @@ test('a scope with env reads and no example env file is skipped with a note', as
     await using sandbox = await createGitSandbox({
         '.env.example': 'KNOWN=value\n',
         'app/source.ts': 'process.env.MISSING;\n',
-        'gspot.toml': buildSandboxSettings(['data-files'], {
+        'gspot.toml': buildSandboxSettings(['yaml'], {
             level: 'all',
-            scopes: [{ path: 'app', configurations: ['data-files'] }],
+            scopes: [{ path: 'app', configurations: ['yaml'] }],
         }),
     });
     const checked = await runChecks(
@@ -88,7 +88,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
 });
 
 test('import.meta.env and Deno.env reads in component and module files need example keys', async () => {
-    const settings = buildSandboxSettings(['data-files'], { level: 'all' });
+    const settings = buildSandboxSettings(['yaml'], { level: 'all' });
     await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         '.env.example': 'KNOWN=example\n',
@@ -102,7 +102,8 @@ test('import.meta.env and Deno.env reads in component and module files need exam
     expect(await runSandboxCheck(sandbox.path, 'secrets/environment-examples')).toStrictEqual([]);
 });
 
-test.each([...ENVIRONMENT_TEXT_CASES])('$name', async ({ files, changed, findings: expected }) => {
+test('a key listed as a commented line counts as listed', async () => {
+    const { files, changed, findings: expected } = ENVIRONMENT_TEXT_CASE;
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['secrets']),
         ...files,

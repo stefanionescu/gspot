@@ -3,7 +3,7 @@ import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { parse } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -62,27 +62,19 @@ test('a failed uv sync hides index passwords', async () => {
 });
 
 test('a successful uv run refuses a password in its new lockfile and the saved one stays', async () => {
-    await using sandbox = await createGitSandbox(PYTHON_INSTALL_FILES);
+    const stale = PYTHON_TOOL_LOCKFILE.replace('==4.0.0', '==5.0.0');
+    await using sandbox = await createGitSandbox({ ...PYTHON_INSTALL_FILES, [GSPOT_PATHS.uvLockfile]: stale });
 
     using _boundary = fakeCommands('synthetic-uv', async (_command, options) => {
         await writeFile(join(options.cwd, 'uv.lock'), `${PYTHON_TOOL_LOCKFILE}\n# test+password\n`);
         return buildProcessResult();
     });
-    const writer = openFiles(sandbox.path);
-    const session = await openSession(sandbox.path);
-    const read = writer.read.bind(writer);
-    using _read = spyOn(writer, 'read').mockImplementation((path) =>
-        path === GSPOT_PATHS.uvLockfile ? undefined : read(path),
-    );
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
     const lockfileError = await captureRejection(
-        planPythonLockfile(
-            await buildSandboxToolInstall(session, writer),
-            { path: GSPOT_PATHS.pythonProject, content: PYTHON_TOOL_PROJECT },
-            'synthetic-uv',
-        ),
+        planPythonLockfile(install, { path: GSPOT_PATHS.pythonProject, content: PYTHON_TOOL_PROJECT }, 'synthetic-uv'),
     );
     expect(lockfileError).toMatchObject({ code: 'install', message: UV_LOCKFILE_CREDENTIAL_MESSAGE });
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(stale);
 });
 
 test('the uv lockfile check ignores name spelling and requirement order and refuses invalid TOML and a range', () => {
@@ -200,4 +192,53 @@ test('install syncs each project that has a uv lockfile, and only those', async 
     const lines = await installPythonProjects(install, 'project-uv');
     expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked', '--inexact']]);
     expect(lines).toStrictEqual(['installed the Python environment of the repository root']);
+});
+
+test.each([
+    {
+        name: 'a stale uv.lock',
+        stderr: 'error: The lockfile at `uv.lock` needs to be updated, but `--locked` was provided.',
+        advice: 'Run uv lock in the repository root to update uv.lock, then run gspot install again.',
+    },
+    {
+        name: 'another uv sync failure',
+        stderr: 'error: Failed to fetch: `https://pypi.org/simple/requests/`',
+        advice: 'Check the network or proxy, then run again.',
+    },
+])('$name ends the install error with the advice: $advice', async ({ stderr, advice }) => {
+    await using sandbox = await createGitSandbox({
+        ...PYTHON_INSTALL_FILES,
+        'pyproject.toml': '[project]\nname = "root"\nversion = "1.0.0"\n',
+        'uv.lock': 'version = 1\n',
+    });
+    using _boundary = fakeCommands('project-uv', () => Promise.resolve(buildProcessResult({ code: 1, stderr })));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const installationError = await captureRejection(installPythonProjects(install, 'project-uv'));
+    expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(installationError.message.split('\n').at(-1)).toBe(advice);
+});
+
+test.each([
+    { name: 'a mise config of the repository pins', source: 'mise.toml', flags: ['--python', '/pins/python'] },
+    { name: 'only a mise config outside the repository names', source: '../mise.toml', flags: [] },
+])('install builds a new project environment on the Python that $name: $flags', async ({ source, flags }) => {
+    await using sandbox = await createGitSandbox({
+        ...PYTHON_INSTALL_FILES,
+        'pyproject.toml': '[project]\nname = "root"\nversion = "1.0.0"\n',
+        'uv.lock': 'version = 1\n',
+    });
+    const session = await openSession(sandbox.path);
+    const listed = JSON.stringify([
+        { version: '3.12.0', source: { type: 'mise.toml', path: join(session.root, source) } },
+    ]);
+    using _boundary = fakeCommands(
+        ([program]) => program === 'project-uv' || program === 'project-mise',
+        ([program, action]) => {
+            if (program !== 'project-mise') return Promise.resolve(buildProcessResult());
+            return Promise.resolve(buildProcessResult({ stdout: action === 'ls' ? listed : '/pins/python\n' }));
+        },
+    );
+    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    await installPythonProjects({ ...install, misePath: 'project-mise' }, 'project-uv');
+    expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked', '--inexact', ...flags]]);
 });

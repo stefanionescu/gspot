@@ -39,5 +39,7 @@ version = "*"
 reason = "LGPL-3.0-or-later. sharp loads the library as a separate file."
 ```
 
-gspot reports a record that matches no package in the lockfile. Python package names match the way pip matches them:
+gspot reports a record that matches no package in the lockfile. A finding points at the line of its package in the
+lockfile, so an `[[ignore]]` for this check names the lockfile in its `paths`. An ignore whose `paths` name another file,
+such as `pyproject.toml`, covers nothing, and the check reports it as `unmatched-ignore`. Python package names match the way pip matches them:
 letter case and runs of `.`, `_`, and `-` do not matter.

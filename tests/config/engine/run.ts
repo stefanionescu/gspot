@@ -43,21 +43,19 @@ export const COVERAGE_PROVIDERS = [
     },
 ] as const;
 
-export const FIX_LINTER_CASES = [
-    {
-        configuration: 'javascript',
-        tool: 'eslint',
-        executable: 'eslint.js',
-        path: 'sample.js',
-        config: 'native.mjs',
-        nativeConfiguration: 'export default [{ rules: { semi: ["error", "always"], "no-undef": "error" } }];',
-        invalidConfiguration: 'throw new Error("Invalid native configuration");',
-        formatter: ['--format', 'json'],
-        sample: 'missing()\n',
-        partial: 'missing();\n',
-        corrected: 'export {};\n',
-    },
-] as const;
+export const FIX_LINTER_CASE = {
+    configuration: 'javascript',
+    tool: 'eslint',
+    executable: 'eslint.js',
+    path: 'sample.js',
+    config: 'native.mjs',
+    nativeConfiguration: 'export default [{ rules: { semi: ["error", "always"], "no-undef": "error" } }];',
+    invalidConfiguration: 'throw new Error("Invalid native configuration");',
+    formatter: ['--format', 'json'],
+    sample: 'missing()\n',
+    partial: 'missing();\n',
+    corrected: 'export {};\n',
+} as const;
 
 export const FIXER_RESULTS = [
     {
@@ -94,9 +92,12 @@ export const FIXER_RESULTS = [
     },
 ] as const;
 
-export const TSC_REPLACEMENTS = [
-    { configuration: 'vue', check: 'vue/vue-tsc', source: 'src/App.vue', text: '<template><p>App</p></template>' },
-] as const;
+export const TSC_REPLACEMENT = {
+    configuration: 'vue',
+    check: 'vue/vue-tsc',
+    source: 'src/App.vue',
+    text: '<template><p>App</p></template>',
+} as const;
 
 export const SCOPE_WIDE_IGNORE_CASES = [
     { paths: ['api/**'], ignored: true },

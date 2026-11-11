@@ -1,18 +1,15 @@
-import { symlink, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, symlink, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import * as processes from '#cli/system/processes.ts';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { getTool } from '#cli/tools/pins.ts';
-import { PACKAGE_METADATA_FAILURES, SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools/versions.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { findMissingDependencies, inspectTool } from '#cli/tools/inspect.ts';
+import { SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools/versions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -94,47 +91,41 @@ test('a library linked inside the tool project is accepted and one linked outsid
     });
 });
 
-test.each([...PACKAGE_METADATA_FAILURES])(
-    'a tool project library with a non-string $field is refused until it is fixed',
-    async ({ field, packageJson }) => {
-        await using sandbox = await testdir();
-        const path = join(sandbox.path, `${GSPOT_PATHS.nodeModules}/teller/package.json`);
-        const previous = JSON.stringify(packageJson);
-        await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/teller/package.json`]: previous });
-        const context = buildToolSearch(sandbox.path);
-        const tool = {
-            name: 'teller',
-            kind: 'package' as const,
-            version: '5.0.1',
-            installers: { npm: { name: 'teller', version: '5.0.1' } },
-        };
-        expect(await captureRejection(inspectTool(context, tool))).toMatchObject({
-            name: 'GspotError',
-            code: 'parse',
-            message: expect.stringContaining(`${GSPOT_PATHS.nodeModules}/teller/package.json: ${field}`) as string,
-        });
-        await writeFile(path, '{"name":"teller","version":"5.0.1"}');
-        expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
-    },
-);
+test('a tool project library with a non-string version is refused until it is fixed', async () => {
+    await using sandbox = await testdir();
+    const path = join(sandbox.path, `${GSPOT_PATHS.nodeModules}/teller/package.json`);
+    await createFileTree(sandbox.path, {
+        [`${GSPOT_PATHS.nodeModules}/teller/package.json`]: '{"name":"teller","version":false}',
+    });
+    const context = buildToolSearch(sandbox.path);
+    const tool = {
+        name: 'teller',
+        kind: 'package' as const,
+        version: '5.0.1',
+        installers: { npm: { name: 'teller', version: '5.0.1' } },
+    };
+    expect(await captureRejection(inspectTool(context, tool))).toMatchObject({
+        name: 'GspotError',
+        code: 'parse',
+        message: expect.stringContaining(`${GSPOT_PATHS.nodeModules}/teller/package.json: version`) as string,
+    });
+    await writeFile(path, '{"name":"teller","version":"5.0.1"}');
+    expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
+});
 
-test.each(['typescript/tsc'])(
-    '%s is missing until a node_modules folder holds the dependencies of its scope',
-    async (check) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['typescript']),
-            'package.json': '{"private":true,"type":"module","dependencies":{"zod":"4.0.0"}}',
-            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
-            'source.ts': 'export const value = 1;\n',
-        });
-        const note = 'Install the project dependencies first: node_modules is missing in the repository root.';
-        const missing = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-        expect(missing.report.checks).toMatchObject([{ status: 'missing', note }]);
-        await writeFile(
-            join(sandbox.path, 'package.json'),
-            '{"private":true,"type":"module","devDependencies":{"@gspothq/cli":"0.0.0-test"}}',
-        );
-        const ownPackages = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-        expect(ownPackages.report.checks[0]?.note).not.toBe(note);
-    },
-);
+test('a check that needs the dependencies of its scope is missing until a node_modules folder holds them', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        'package.json': '{"private":true,"type":"module","dependencies":{"zod":"4.0.0"}}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
+        'source.ts': 'export const value = 1;\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = session.configuredChecks.find(({ check }) => check.id === 'typescript/tsc')!;
+    expect(findMissingDependencies(session, planned)).toStrictEqual({
+        status: 'missing',
+        note: 'Install the project dependencies first: node_modules is missing in the repository root.',
+    });
+    await mkdir(join(sandbox.path, 'node_modules'));
+    expect(findMissingDependencies(session, planned)).toBeUndefined();
+});

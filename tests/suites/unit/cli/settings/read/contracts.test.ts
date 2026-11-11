@@ -37,7 +37,8 @@ test('a generator command must declare at least one output', () => {
     expect(parseSettings(text, sandbox.path)).toStrictEqual([
         {
             path: ['command_check', 0, 'outputs'],
-            message: expect.any(String) as string,
+            message:
+                'The value [] is not valid for command_check.0.outputs. Use a valid list value: The files that the command writes. With outputs, the check runs the command in a copy and reports each output that differs from the committed file.',
         },
     ]);
 });
@@ -48,7 +49,8 @@ test('pytest refuses a function coverage limit because it supports line coverage
     expect(parseSettings(text, sandbox.path)).toStrictEqual([
         {
             path: ['coverage', 'min_function_percent'],
-            message: expect.any(String) as string,
+            message:
+                'There is no setting called coverage.min_function_percent. The settings that exist under that table are coverage.min_line_percent.',
         },
     ]);
 });
@@ -69,7 +71,10 @@ test('adding an external Python module needs a reason and accepts a recorded rea
     using sandbox = createTemporaryFolder();
     const text = buildSandboxSettings(['python'], { tables: '[python]\nexternals = ["private_sdk"]\n' });
     expect(parseSettings(text, sandbox.path)).toStrictEqual([
-        { path: ['python', 'externals', 'reason'], message: expect.any(String) as string },
+        {
+            path: ['python', 'externals', 'reason'],
+            message: 'python.externals needs a reason. Write python.externals = { value = [...], reason = "<why>" }.',
+        },
     ]);
     const reasoned = text.replace(
         '["private_sdk"]',
@@ -92,7 +97,9 @@ test.each(CONFIGURATION_CONFLICTS)(
     'a selected and removed configuration is refused at $path',
     async ({ text, path }) => {
         await using sandbox = await testdir({ 'app/.keep': '' });
-        expect(parseSettings(text, sandbox.path)).toStrictEqual([{ path, message: expect.any(String) as string }]);
+        expect(parseSettings(text, sandbox.path)).toStrictEqual([
+            { path, message: 'bash is both selected and removed. Keep it in only one list.' },
+        ]);
     },
 );
 
@@ -100,7 +107,11 @@ test('an empty ignore path list is refused while an omitted list means every pat
     using sandbox = createTemporaryFolder();
     const text = '[[ignore]]\ncheck = "bash/shellcheck"\npaths = []\nreason = "External tooling checks Bash."\n';
     expect(parseSettings(text, sandbox.path)).toStrictEqual([
-        { path: ['ignore', 0, 'paths'], message: expect.any(String) as string },
+        {
+            path: ['ignore', 0, 'paths'],
+            message:
+                'paths = [] matches no path. Leave out paths to ignore bash/shellcheck everywhere, or list the paths.',
+        },
     ]);
     expect(readSettings(text.replace('paths = []\n', ''), sandbox.path).ignore[0]?.paths).toBeUndefined();
 });
@@ -109,6 +120,9 @@ test.each(['bad id', 'bad,id', 'commit', 'push'])('a command check cannot take t
     using sandbox = createTemporaryFolder();
     const text = `[[command_check]]\nid = "${id}"\ncommand = ["echo"]\npaths = ["**"]\nstage = "commit"\n`;
     expect(parseSettings(text, sandbox.path)).toStrictEqual([
-        { path: ['command_check', 0, 'id'], message: expect.any(String) as string },
+        {
+            path: ['command_check', 0, 'id'],
+            message: `The value ${JSON.stringify(id)} is not valid for command_check.0.id. Use a check ID without whitespace or commas, other than commit and push, which --only reads as stages.`,
+        },
     ]);
 });

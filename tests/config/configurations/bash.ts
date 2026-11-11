@@ -75,11 +75,10 @@ main "$@"
     },
 ] as const;
 
-export const BASH_SAFETY_CASES = [
-    {
-        check: 'bash/safety',
-        files: {
-            'scripts/unsafe.sh': `${BASH_HEADER}# main: runs the script.
+export const BASH_SAFETY_SAMPLE = {
+    check: 'bash/safety',
+    files: {
+        'scripts/unsafe.sh': `${BASH_HEADER}# main: runs the script.
 main() {
     cd "\${HOME}"
     touch "\${HOME}/x" || true
@@ -87,10 +86,9 @@ main() {
 
 main "$@"
 `,
-        },
-        expected: { file: 'scripts/unsafe.sh', rule: 'ignored-failure', line: 11 },
     },
-] as const;
+    expected: { file: 'scripts/unsafe.sh', rule: 'ignored-failure', line: 11 },
+} as const;
 
 export const COMMAND_SAFETY_CASES = [
     { source: 'rm -rf /etc', rule: 'recursive-remove' },
@@ -184,11 +182,10 @@ main() {
 main "$@"
 `;
 
-export const UNUSED_FUNCTION_CASES = [
-    {
-        check: 'bash/unused-functions',
-        files: {
-            'scripts/orphan.sh': `${BASH_HEADER}# _orphan: nobody calls this.
+export const UNUSED_FUNCTION_SAMPLE = {
+    check: 'bash/unused-functions',
+    files: {
+        'scripts/orphan.sh': `${BASH_HEADER}# _orphan: nobody calls this.
 _orphan() {
     echo a
     echo b
@@ -196,10 +193,9 @@ _orphan() {
 }
 
 ${BASH_MAIN}`,
-        },
-        expected: { file: 'scripts/orphan.sh', rule: 'never-called', line: 9 },
     },
-] as const;
+    expected: { file: 'scripts/orphan.sh', rule: 'never-called', line: 9 },
+} as const;
 
 export const LITERAL_FUNCTION_REFERENCES = ['xargs -n1 _each', 'export -f _each'] as const;
 
@@ -208,22 +204,20 @@ export const PASSED_BASH_RESULTS = [
     { status: 'passed' as const, findings: [] },
 ];
 
-export const SCRIPT_LAYOUT_CASES = [
-    {
-        check: 'bash/script-layout',
-        files: {
-            'scripts/headless.sh': `#!/usr/bin/env bash
+export const SCRIPT_LAYOUT_SAMPLE = {
+    check: 'bash/script-layout',
+    files: {
+        'scripts/headless.sh': `#!/usr/bin/env bash
 main() {
     echo hi
 }
 
 main "$@"
 `,
-        },
-        expected: { file: 'scripts/headless.sh', rule: 'strict-mode', line: 2 },
-        executable: ['scripts/headless.sh'],
     },
-] as const;
+    expected: { file: 'scripts/headless.sh', rule: 'strict-mode', line: 2 },
+    executable: ['scripts/headless.sh'],
+} as const;
 
 export const ENVIRONMENT_READER_SCOPE_TABLES = `[[scope]]
 path = "tools"

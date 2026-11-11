@@ -1,6 +1,6 @@
 import { basename, join } from 'node:path/posix';
 
-import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
+import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
 import {
     BUILD_OUTPUT_FOLDERS,
     BUILD_OUTPUT_PATTERNS,

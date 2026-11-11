@@ -33,7 +33,7 @@ import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { findText, readBytes, readText } from '#cli/system/files/reads.ts';
+import { readBytes, readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type {
     GeneratedPaths,
@@ -133,7 +133,7 @@ export function readLinguistPatterns(cache: RunCache, paths: string[]): string[]
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
-                    const authored = stripBlock(findText(cache, path) ?? '', { path });
+                    const authored = stripBlock(readText(cache, path), { path });
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(mergeAttributes(rule.attributes)).some(

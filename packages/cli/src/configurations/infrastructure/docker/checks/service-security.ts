@@ -4,8 +4,7 @@ import { SERVICE_SECURITY_MESSAGES, SERVICE_SECURITY_RULES } from '#cli/config/c
 import { SERVICE_SECURITY_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 const DOCKER_SOCKET = /docker\.sock(?::|$)/u;

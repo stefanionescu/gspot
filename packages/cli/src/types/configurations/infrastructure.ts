@@ -4,7 +4,7 @@ import type { z } from 'zod';
 
 import type { WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/infrastructure.ts';
 import type { composeSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { NumberedLine, SqlFile, SqlNodeFields, SqlStatement } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 

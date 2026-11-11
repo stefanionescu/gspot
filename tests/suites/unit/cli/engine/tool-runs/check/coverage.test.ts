@@ -8,7 +8,7 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { COVERAGE_PROJECT_FILES } from '#tests/config/engine/tool-runs.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -41,7 +41,7 @@ test.each(COVERAGE_PROJECT_FILES)(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             selectCheckCode(planned.check),
-            CHECK_RUN_OPTIONS,
+            {},
         );
         expect(result.status, result.note).toBe('passed');
         expect(commands).toHaveLength(1);

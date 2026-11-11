@@ -28,11 +28,10 @@ import {
     XCODE_SCHEME_FLAG,
     XCODE_SCHEME_MESSAGE,
     XCODE_TEST_ACTION,
-    XCODE_WARNINGS_AS_ERRORS,
     XCODE_WORKSPACE_FLAG,
     XCODE_WORKSPACE_SUFFIX,
     XCODEBUILD_PROGRAM,
-} from '#cli/config/configurations/builds.ts';
+} from '#cli/config/configurations/swift.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
 import { MODE_BITS, PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -181,7 +180,7 @@ export function planSwiftBuild(session: Session, planned: PlannedCheck): SwiftBu
         folder,
         log,
         store: join(products, XCODE_INDEX_STORE),
-        commandArguments: [XCODEBUILD_PROGRAM, ...SWIFT_BUILD_COMMANDS.xcode, ...target, XCODE_WARNINGS_AS_ERRORS],
+        commandArguments: [XCODEBUILD_PROGRAM, ...SWIFT_BUILD_COMMANDS.xcode, ...target],
         testArguments: [XCODEBUILD_PROGRAM, XCODE_TEST_ACTION, ...target],
     };
 }

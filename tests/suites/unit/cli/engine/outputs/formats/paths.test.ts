@@ -15,7 +15,7 @@ import { isLinux } from '#tests/setup/system/platform.ts';
 test('grouped output drops line endings and makes absolute paths relative', async () => {
     await using sandbox = await testdir({ 'settings/café.toml': 'a=1\n' });
 
-    const base = getShippedCheck('data-files/taplo-format');
+    const base = getShippedCheck('toml/taplo');
     const check: Check = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
     const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
@@ -49,7 +49,7 @@ test('a message that names a file by its resolved absolute path names it relativ
 test.skipIf(isLinux)('an absolute path that names the root in another case is still relative to it', async () => {
     await using sandbox = await testdir({ 'example/math.py': 'answer = 1\n' });
 
-    const base = getShippedCheck('data-files/taplo-format');
+    const base = getShippedCheck('toml/taplo');
     const check: Check = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path.toUpperCase(), 'example', 'math.py')}:\n  1: Incorrect spacing\n`;
     expect(parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([

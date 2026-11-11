@@ -22,13 +22,11 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { canIgnoreRule } from '#cli/engine/results.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
-import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { listPinPrerequisites } from '#cli/repository/javascript/gspot-pin.ts';
+import { findToolName, listChecksById, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
+import { listPinPrerequisites } from '#cli/repository/version-pin.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
-import { findToolName, listDistinctTools } from '#cli/tools/pins.ts';
 import type { ScanCategory, ScanInput, ScanReport, ScanSection } from '#cli/types/commands/reports.ts';
-import type { RunReport } from '#cli/types/engine/run.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding, RunReport } from '#cli/types/engine/run.ts';
 
 function selectCategory({ check }: Finding): string {
     const configuration = check.split('/', 1)[0] as string;
@@ -36,9 +34,12 @@ function selectCategory({ check }: Finding): string {
     return category?.name ?? SCAN_CODE_CATEGORY;
 }
 
+/**
+List the rules with the most findings. A check that names no rule counts as one row with an empty rule, so its
+findings show in the category that counts them.
+*/
 function listTopRules(findings: Finding[]): ScanCategory['rules'] {
-    const named = findings.filter(({ rule }) => rule !== undefined);
-    const groups = Map.groupBy(named, ({ check, rule = '' }) => `${check} ${rule}`);
+    const groups = Map.groupBy(findings, ({ check, rule = '' }) => `${check} ${rule}`);
     return groups
         .values()
         .map((found) => {
@@ -56,11 +57,9 @@ function buildCategories(findings: Finding[]): ScanCategory[] {
         const found = groups.get(name) ?? [];
         if (found.length === 0) return [];
         const rules = listTopRules(found);
-        const [top] = rules;
-        const largest =
-            top === undefined ? found : found.filter(({ check, rule }) => check === top.check && rule === top.rule);
-        const examples = largest.slice(0, SCAN_EXAMPLES_SHOWN);
-        return [{ name, count: found.length, rules, examples }];
+        const [top] = rules as [ScanCategory['rules'][number], ...ScanCategory['rules']];
+        const largest = found.filter(({ check, rule = '' }) => check === top.check && rule === top.rule);
+        return [{ name, count: found.length, rules, examples: largest.slice(0, SCAN_EXAMPLES_SHOWN) }];
     });
 }
 
@@ -112,8 +111,8 @@ function formatRuleRows(rules: ScanCategory['rules']): string[] {
     const { check, rule } = largest;
     const found = listChecksById(readConfigurations().values()).get(check)?.check;
     return [
-        ...rules.map((each) => `${each.check} ${each.rule}  ${formatCount(each.count, 'finding')}`),
-        found !== undefined && canIgnoreRule(found, selectCheckCode(found))
+        ...rules.map((each) => `${[each.check, each.rule].join(' ').trimEnd()}  ${formatCount(each.count, 'finding')}`),
+        rule !== '' && found !== undefined && canIgnoreRule(found, selectCheckCode(found))
             ? `To leave a rule out: gspot ignore ${check} --rule ${rule} --reason "<why>"`
             : `To leave files out: gspot ignore ${check} --paths <path> --reason "<why>"`,
     ];

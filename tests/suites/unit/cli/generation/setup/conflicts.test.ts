@@ -9,7 +9,6 @@ import { createFileTree, testdir } from 'testdirs';
 import { LINT_FOLDER_MESSAGE } from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import {
@@ -38,6 +37,7 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -80,7 +80,8 @@ test('the init plan deletes the conflicting config files and lists the lint fold
     expect(existsSync(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
 
-test.each(['setup.cfg'])('init leaves a shared %p in place and names its SQLFluff section', async (path) => {
+test('init leaves a shared setup.cfg in place and names its SQLFluff section', async () => {
+    const path = 'setup.cfg';
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, { [path]: SHARED_SETUP_CONFIG, 'query.sql': 'SELECT 1;\n' });

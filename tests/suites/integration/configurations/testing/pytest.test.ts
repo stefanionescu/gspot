@@ -3,12 +3,63 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { COVERAGE_LIMIT_CASES, PYTEST_PYPROJECT, PYTEST_SANDBOX } from '#tests/config/integration/testing.ts';
+import { ARITHMETIC_MODULE } from '#tests/config/integration/python.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+
+const PYTEST_PYPROJECT = `[project]
+name = "example"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = ["pytest==9.1.1", "pytest-cov==7.1.0"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+`;
+
+const ARITHMETIC_TESTS = `"""Tests of the arithmetic."""
+
+from example.math import double, triple
+
+def test_multiplication() -> None:
+    """Both functions multiply."""
+    assert double(2) == 4
+    assert triple(2) == 6
+`;
+
+const PYTEST_SANDBOX = {
+    configurations: ['python', 'pytest', 'naming'],
+    files: {
+        'pyproject.toml': PYTEST_PYPROJECT,
+        'example/__init__.py': '"""The package."""\n',
+        'example/math.py': ARITHMETIC_MODULE,
+        'tests/__init__.py': '"""Arithmetic tests."""\n',
+        'tests/test_math.py': ARITHMETIC_TESTS,
+    },
+} as const;
+
+const COVERAGE_LIMIT_CASES = [
+    {
+        limit: 80,
+        coverage: '[coverage]\nmin_line_percent = 80\n',
+        code: 2,
+        result: {
+            status: 'missing',
+            note: 'pytest-cov is not installed. Install pytest-cov in the Python environment used by pytest.',
+            coverage: undefined,
+        },
+    },
+    {
+        limit: 0,
+        coverage:
+            '[coverage]\nmin_line_percent = { value = 0, reason = "This test checks execution without coverage collection." }\n',
+        code: 0,
+        result: { status: 'passed', note: undefined, coverage: false },
+    },
+] as const;
 
 const installedSandbox = shareInstalledSandbox({ install: false, ...PYTEST_SANDBOX, commands: [['uv', 'sync']] });
 

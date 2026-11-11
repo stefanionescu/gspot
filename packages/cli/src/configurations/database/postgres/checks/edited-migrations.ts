@@ -8,14 +8,14 @@ import {
     extractForwardText,
     readCommittedMigrations,
     readParsedMigrations,
+    selectFrozenMigrations,
 } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { EDITED_MIGRATION_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
-import { listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { listNodeFields } from '#cli/parsers/code/sql.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 import type { SqlStatement } from '#cli/types/parsers.ts';
 
 function hasDriftGuard(statement: SqlStatement): boolean {
@@ -44,6 +44,7 @@ async function checkEditedMigrations(session: CheckSession, planned: PlannedChec
                     ...getPosition(migration.text, statement.start),
                     rule: DRIFT_GUARD_RULE,
                     message: DRIFT_GUARD_MESSAGE,
+                    help: EDITED_MIGRATION_EXPLANATIONS[DRIFT_GUARD_RULE].fix,
                 })),
         );
     const texts = await readCommittedMigrations(
@@ -60,6 +61,7 @@ async function checkEditedMigrations(session: CheckSession, planned: PlannedChec
                 line: 1,
                 rule: FROZEN_RULE,
                 message: FROZEN_EDIT_MESSAGE,
+                help: EDITED_MIGRATION_EXPLANATIONS[FROZEN_RULE].fix,
             },
         ];
     });

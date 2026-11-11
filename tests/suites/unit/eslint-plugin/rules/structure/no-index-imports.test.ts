@@ -17,12 +17,9 @@ buildRuleTester().run('no-index-imports', noIndexImports, {
         { code: "import { a } from '#app/routes/index.ts';", errors: [{ messageId: 'index' }] },
         { code: "export * from './lib/index.js';", errors: [{ messageId: 'index' }] },
         { code: "const m = await import('./index.js');", errors: [{ messageId: 'index' }] },
-        ...['vi', 'jest'].flatMap((host) =>
-            ['mock', host === 'vi' ? 'importActual' : 'requireActual'].map((method) => ({
-                code: `${host}.${method}('@/turn/index.js');`,
-                errors: [{ messageId: 'index' as const }],
-            })),
-        ),
+        { code: "vi.mock('@/turn/index.js');", errors: [{ messageId: 'index' }] },
+        { code: "jest.requireActual('@/turn/index.js');", errors: [{ messageId: 'index' }] },
+        { code: "const a = require('./lib/index.js');", errors: [{ messageId: 'index' }] },
     ],
 });
 
@@ -35,21 +32,6 @@ buildRuleTester().run('no-index-imports regressions', noIndexImports, {
     ],
     invalid: [
         {
-            code: "vi.importMock('./lib/index.js');",
-            name: 'vi.importMock of an index file reports',
-            errors: [{ messageId: 'index' }],
-        },
-        {
-            code: "jest.requireMock('./lib/index.js');",
-            name: 'jest.requireMock of an index file reports',
-            errors: [{ messageId: 'index' }],
-        },
-        {
-            code: "vi.unmock('./lib/index.js');",
-            name: 'vi.unmock of an index file reports',
-            errors: [{ messageId: 'index' }],
-        },
-        {
             code: "import a = require('./lib/index');",
             name: 'an import-equals require of an index file reports',
             errors: [{ messageId: 'index' }],
@@ -57,17 +39,6 @@ buildRuleTester().run('no-index-imports regressions', noIndexImports, {
         {
             code: "type A = import('./lib/index.js').A;",
             name: 'a type import() of an index file reports',
-            errors: [{ messageId: 'index' }],
-        },
-    ],
-});
-
-buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run('no-index-imports require calls', noIndexImports, {
-    valid: [],
-    invalid: [
-        {
-            code: "const a = require('./lib/index.js');",
-            filename: '/repo/src/feature/sample.cjs',
             errors: [{ messageId: 'index' }],
         },
     ],

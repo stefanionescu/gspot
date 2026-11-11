@@ -25,8 +25,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { print, printWarning } from '#cli/system/terminal.ts';
 import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { CheckCommandJson } from '#cli/types/commands/reports.ts';
-import type { CheckResult, CheckStatus, FixReport, RunReport } from '#cli/types/engine/run.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckResult, CheckStatus, Finding, FixReport, RunReport } from '#cli/types/engine/run.ts';
 
 const GITHUB_ANNOTATION_LIMIT = 10;
 

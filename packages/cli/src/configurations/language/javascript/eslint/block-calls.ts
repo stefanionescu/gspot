@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 
 import picomatch from 'picomatch';
 
-import { ESLINT_INDENT, GSPOT_PRESET_LEVELS } from '#cli/config/configurations/blocks.ts';
+import { ESLINT_INDENT, GSPOT_PRESET_LEVELS } from '#cli/config/configurations/eslint/blocks.ts';
 import {
     ESLINT_NAMED_IMPORTS,
     ESLINT_PACKAGE_IMPORTERS,

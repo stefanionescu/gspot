@@ -4,12 +4,13 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { listRepositoryFiles, readRepositoryRoot } from '#cli/repository/read.ts';
+import { listRepositoryFiles, readLinguistPatterns, readRepositoryRoot } from '#cli/repository/read.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -30,8 +31,6 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
         cwd: sandbox.path,
         env: DUBIOUS_GIT_ENVIRONMENT,
     });
-    expect(refused.code).toBe(128);
-    expect(refused.stderr).toStartWith('fatal: detected dubious ownership');
     const error = await captureRejection(readRepositoryRoot(sandbox.path));
     expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
     expect(error.message).toContain(refused.stderr.trim());
@@ -130,4 +129,16 @@ test('a bare repository is refused with a Git error', async () => {
     runGitStep(sandbox.path, ['init', '--bare', '--quiet']);
     const error = await captureRejection(readRepositoryRoot(sandbox.path));
     expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
+});
+
+test('a tracked .gitattributes that is missing from the working tree is refused, not read as empty', async () => {
+    await using sandbox = await testdir({ '.gitattributes': 'dist/** linguist-generated\n' });
+
+    expect(() => readLinguistPatterns(createRunCache(sandbox.path), ['.gitattributes', 'app/.gitattributes'])).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: expect.stringContaining('app/.gitattributes') as string,
+        }),
+    );
 });

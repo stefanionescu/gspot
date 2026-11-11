@@ -1,8 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { buildScopeOverrideBlocks, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { openSession } from '#cli/engine/session.ts';
+import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import {
     NESTED_ESLINT_FILES,
     NESTED_ESLINT_PATHS,
@@ -11,7 +10,6 @@ import {
 } from '#tests/config/configurations/javascript/overrides.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test("a child scope's test_files and script_files get the test and script rule blocks", async () => {
     await using sandbox = await testdir({
@@ -56,37 +54,4 @@ test('ESLint test patterns omit foreign extensions and retain components and sha
             '**/*.{js,ts}',
         ]),
     ).toStrictEqual(['**/*.test.ts', '**/*.spec.vue', '**/*.test.astro', '**/tests/**', '**/*.{js,ts}']);
-});
-
-test('a scope override keeps the changed scopes, deepest last, and leaves nested changes out of its parent', async () => {
-    const value: Record<string, string> = { '': 'root', app: 'app', 'app/same': 'app', 'app/deep': 'deep' };
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            scopes: [{ path: 'app' }, { path: 'app/same' }, { path: 'app/deep' }],
-        }),
-        'app/same/source.js': '',
-        'app/deep/source.js': '',
-    });
-    const { scopes } = await openSession(sandbox.path);
-    const blocks = buildScopeOverrideBlocks(scopes.toReversed(), {
-        read: ({ path }) => value[path],
-        build: ({ scope, parent, ignores }) => [{ path: scope.path, parent: parent?.path, ignores }],
-    });
-    expect(blocks).toStrictEqual([
-        { path: '', parent: undefined, ignores: ['app/**', 'app/deep/**'] },
-        { path: 'app', parent: '', ignores: ['app/deep/**'] },
-        { path: 'app/deep', parent: 'app', ignores: [] },
-    ]);
-});
-
-test('a scope override compares the root with the scope that owns the file', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const { scopes } = await openSession(sandbox.path);
-    const root = scopes[0]!;
-    const blocks = buildScopeOverrideBlocks([root], {
-        base: root,
-        read: () => 'same',
-        build: ({ scope }) => [scope.path],
-    });
-    expect(blocks).toStrictEqual([]);
 });

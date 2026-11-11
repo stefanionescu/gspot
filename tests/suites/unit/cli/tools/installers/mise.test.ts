@@ -61,65 +61,62 @@ test('mise lock freshness refuses a download from another host and a checksum ot
     expect(isMiseLockfileFresh([{ ...project[0]!, checksums: {} }], lock)).toBe(false);
 });
 
-test.each(['manual'] as const)(
-    'mise installs tools of %s checks under a trust for that call, and not beside another mise config file',
-    async (stage) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['spelling']),
-            '.env.example': 'API_URL=https://example.com\n',
-            'README.md': '# Example\n',
-            'uv.lock': 'version = 1\n',
-        });
-        const session = await openSession(sandbox.path);
-        session.configuredChecks = session.configuredChecks.map((planned) => ({
-            ...planned,
-            check: { ...planned.check, stage },
-        }));
-        const writer = openFiles(sandbox.path);
-        const install = await buildSandboxToolInstall(session, writer);
-        install.misePath = 'mise';
-        const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
-        await createFileTree(sandbox.path, { [project.path]: project.content });
-        const trusted = join(realpathSync(sandbox.path), GSPOT_PATHS.miseProject);
-        using _environment = overrideEnvironment({ MISE_CEILING_PATHS: sandbox.path });
-        const pins = listMisePins(session.toolConfigurations);
-        const audited = new Map(pins.map((pin) => [pin.name, pin.checksums['linux-x64']]));
-        using _commands = fakeCommands('mise', async (command, options) => {
-            if (command[1] === 'lock') {
-                expect(options.env).toHaveProperty('MISE_TRUSTED_CONFIG_PATHS', options.cwd);
-                expect(options.env).toHaveProperty('MISE_CEILING_PATHS', dirname(options.cwd));
-                const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
-                const tools = Object.fromEntries(
-                    Object.entries(project.tools).map(([name, version]) => [
-                        name,
-                        [
-                            {
-                                version: typeof version === 'string' ? version : version.version,
-                                'platforms.linux-x64': {
-                                    url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
-                                    checksum: audited.get(name),
-                                },
+test('mise installs tools of manual checks under a trust for that call, and not beside another mise config file', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['spelling']),
+        '.env.example': 'API_URL=https://example.com\n',
+        'README.md': '# Example\n',
+        'uv.lock': 'version = 1\n',
+    });
+    const session = await openSession(sandbox.path);
+    session.configuredChecks = session.configuredChecks.map((planned) => ({
+        ...planned,
+        check: { ...planned.check, stage: 'manual' },
+    }));
+    const writer = openFiles(sandbox.path);
+    const install = await buildSandboxToolInstall(session, writer);
+    install.misePath = 'mise';
+    const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
+    await createFileTree(sandbox.path, { [project.path]: project.content });
+    const trusted = join(realpathSync(sandbox.path), GSPOT_PATHS.miseProject);
+    using _environment = overrideEnvironment({ MISE_CEILING_PATHS: sandbox.path });
+    const pins = listMisePins(session.toolConfigurations);
+    const audited = new Map(pins.map((pin) => [pin.name, pin.checksums['linux-x64']]));
+    using _commands = fakeCommands('mise', async (command, options) => {
+        if (command[1] === 'lock') {
+            expect(options.env).toHaveProperty('MISE_TRUSTED_CONFIG_PATHS', options.cwd);
+            expect(options.env).toHaveProperty('MISE_CEILING_PATHS', dirname(options.cwd));
+            const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
+            const tools = Object.fromEntries(
+                Object.entries(project.tools).map(([name, version]) => [
+                    name,
+                    [
+                        {
+                            version: typeof version === 'string' ? version : version.version,
+                            'platforms.linux-x64': {
+                                url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
+                                checksum: audited.get(name),
                             },
-                        ],
-                    ]),
-                );
-                await writeFile(join(options.cwd, 'mise.lock'), stringify({ tools }, { inlineTableStart: 3 }));
-            } else if (command[1] === 'install')
-                expect(options.env).toMatchObject({ MISE_LOCKED: '1', MISE_TRUSTED_CONFIG_PATHS: trusted });
-            return buildProcessResult();
-        });
-        await installMiseTools(install);
-        const installs = [['mise', 'install', ...pins.map((pin) => pin.name)]];
-        const lockfile = await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8');
-        expect(isMiseLockfileFresh(pins, lockfile)).toBe(true);
-        await writeFile(join(sandbox.path, '.gspot/mise.local.toml'), '[env]\n');
-        expect(await captureRejection(installMiseTools(install))).toMatchObject({
-            code: 'install',
-            message: MISE_PROJECT_MESSAGE,
-        });
-        expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual(installs);
-    },
-);
+                        },
+                    ],
+                ]),
+            );
+            await writeFile(join(options.cwd, 'mise.lock'), stringify({ tools }, { inlineTableStart: 3 }));
+        } else if (command[1] === 'install')
+            expect(options.env).toMatchObject({ MISE_LOCKED: '1', MISE_TRUSTED_CONFIG_PATHS: trusted });
+        return buildProcessResult();
+    });
+    await installMiseTools(install);
+    const installs = [['mise', 'install', ...pins.map((pin) => pin.name)]];
+    const lockfile = await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8');
+    expect(isMiseLockfileFresh(pins, lockfile)).toBe(true);
+    await writeFile(join(sandbox.path, '.gspot/mise.local.toml'), '[env]\n');
+    expect(await captureRejection(installMiseTools(install))).toMatchObject({
+        code: 'install',
+        message: MISE_PROJECT_MESSAGE,
+    });
+    expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual(installs);
+});
 
 test('mise fills missing release checksums from the audited pins without fetching archives', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
@@ -241,10 +238,10 @@ test('a GitHub limit named before the output is cut names the token, and not the
     expect(message).not.toContain(NETWORK_ADVICE);
 });
 
-test.each(['tools = ['])('mise lock starts fresh from the broken lockfile %j', async (broken) => {
+test('mise lock starts fresh from a broken lockfile', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling']),
-        [GSPOT_PATHS.miseLockfile]: broken,
+        [GSPOT_PATHS.miseLockfile]: 'tools = [',
     });
     const session = await openSession(sandbox.path);
     const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));

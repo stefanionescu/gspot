@@ -38,8 +38,7 @@ import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { escapeRegExp, getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function extractAssetSetName(path: string): string {

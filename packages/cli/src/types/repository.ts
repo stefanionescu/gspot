@@ -131,9 +131,8 @@ export type ScopeContents = {
 };
 
 export type ConfigurationEvidence = {
-    configuration: string;
+    configuration: Configuration;
     evidence: string;
-    group: Group;
     count?: number;
 };
 
@@ -183,7 +182,10 @@ export type LintCommandSearch = {
     pins: Record<string, string>;
 };
 
-export type CommandSearch = Pick<LintCommandSearch, 'tools'> & { scripts: ReadonlyMap<string, string> };
+export type CommandSearch = Pick<LintCommandSearch, 'tools'> & {
+    scripts: ReadonlyMap<string, string>;
+    miseTasks: ReadonlyMap<string, string>;
+};
 
 export type LintCommandPlace = { file: string; text: string; source: LintCommandSource };
 

@@ -21,14 +21,13 @@ import {
 } from '#cli/engine/tool-runs/placeholders.ts';
 import { buildSecondaryToolEnvironment, runToolProcess } from '#cli/engine/tool-runs/tool.ts';
 import { listSecondaryTools } from '#cli/engine/tools.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
 import { readToolCommandPrefix } from '#cli/tools/packages.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import { buildCopyPythonEnvironment, listCopyPythonArguments } from '#cli/tools/uv.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckRunOptions, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
@@ -87,7 +86,7 @@ async function runCommands(
             };
         addCommandLine(planned, tool, { commandLine, result, findings: parsed.findings }, state);
     }
-    return buildCheckResult(check, { base, state, commandArguments, start: slot.start });
+    return buildCheckResult(planned, { base, state, commandArguments, start: slot.start });
 }
 
 function findMissingConfig(
@@ -110,7 +109,7 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
             ? await createCopy(session, listCopyFiles(session, planned, command))
             : undefined;
     const root = copy?.path ?? session.root;
-    const commandSetup = buildCommandLaunch(planned, { session, command, root, toolPath });
+    const commandSetup = buildCommandLaunch(planned, { session, command, root, tool, toolPath });
     commandSetup.env = await buildSecondaryToolEnvironment(
         session,
         listSecondaryTools(planned.scope, planned.check, command),
@@ -187,14 +186,11 @@ export function buildCommandSubstitutions(
 
 export function buildCommandLaunch(
     planned: PlannedCheck,
-    expansion: { session: CheckSession; command: string[]; root: string; toolPath: string },
+    expansion: { session: CheckSession; command: string[]; root: string; tool: Tool; toolPath: string },
 ): CommandLaunch {
-    const { session, root, toolPath } = expansion;
+    const { session, root, tool, toolPath } = expansion;
     const { cwd, files, substitutions, env } = buildCommandSetup(session, planned, root);
-    const command = [
-        ...readToolCommandPrefix(session.toolsRoot, planned.tool as Tool, toolPath),
-        ...expansion.command.slice(1),
-    ];
+    const command = [...readToolCommandPrefix(session.toolsRoot, tool, toolPath), ...expansion.command.slice(1)];
     const commandArguments = expandCommand(session, planned, command, substitutions);
     const commandLines = command.some((argument) => FILES_PLACEHOLDER.test(argument))
         ? buildCommandLines(planned, { session, command, substitutions })
@@ -213,13 +209,14 @@ export async function runCommandCheck(
     planned: PlannedCheck,
     options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
 ): Promise<CheckResult> {
-    const tool = planned.tool as Tool;
+    const { tool } = planned;
+    const authored = stripCoverageArguments(planned, options);
+    // The plan gives a tool to each check with a command, and a check without one passes the command it builds.
+    if (tool === undefined || authored === undefined)
+        throw new Error(`${planned.check.id} runs a command, but it has no command or no tool.`);
     const base = buildBaseResult(planned, session);
     const setup = buildCommandSetup(session, planned, session.root);
-    const command = [
-        ...(stripCoverageArguments(planned, options) as string[]),
-        ...listCopyPythonArguments(tool, setup.env),
-    ];
+    const command = [...authored, ...listCopyPythonArguments(tool, setup.env)];
     const { cwd } = setup;
     const missing = findMissingConfig(planned, { session, command, base });
     if (missing !== undefined) return missing;

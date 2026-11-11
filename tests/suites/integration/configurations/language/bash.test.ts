@@ -8,13 +8,6 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { compareText } from '#cli/system/text.ts';
-import {
-    DIALECT_FIXES,
-    DIALECT_SOURCES,
-    SHELLCHECK_DIALECT_FINDINGS,
-    SYNTAX_CASES,
-    SYNTAX_FILES,
-} from '#tests/config/integration/language.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -22,6 +15,53 @@ import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+
+const DIALECT_SOURCES = {
+    'posix.sh': String.raw`#!/bin/sh
+if [[ -n "$1" ]]; then
+    printf "%s\n" "$1"
+fi
+`,
+    'fallback.sh': String.raw`if [[ -n "$1" ]]; then
+    printf "%s\n" "$1"
+fi
+`,
+    'app/posix.sh': String.raw`#!/bin/sh
+if [[ -n "$1" ]]; then
+    printf "%s\n" "$1"
+fi
+`,
+} as const;
+
+const DIALECT_FIXES = {
+    ...DIALECT_SOURCES,
+    'posix.sh': String.raw`#!/bin/sh
+if [ -n "$1" ]; then
+    printf "%s\n" "$1"
+fi
+`,
+    'app/posix.sh': String.raw`#!/bin/sh
+if [ -n "$1" ]; then
+    printf "%s\n" "$1"
+fi
+`,
+} as const;
+
+const SHELLCHECK_DIALECT_FINDINGS = [
+    { file: 'app/posix.sh', rule: 'SC3010' },
+    { file: 'posix.sh', rule: 'SC3010' },
+] as const;
+
+const SYNTAX_FILES = {
+    'script.sh': 'echo example\n',
+    launcher: '#!/usr/bin/env -S bash -e\necho example\n',
+    'script.zsh': 'repeat 2 do print example; done\n',
+    zlauncher: '#!/usr/bin/env -S zsh -f\nrepeat 2 do print example; done\n',
+    'script.bats': `@test "example" {
+    true
+}
+`,
+} as const;
 
 test('ShellCheck reports a finding in a filename that starts with a dash', async () => {
     await using sandbox = await createGitSandbox({
@@ -69,7 +109,7 @@ load_helper() { :; }
     ).toStrictEqual([...row.findings]);
 });
 
-test('ShellCheck reports dialect findings by shebang and leaves source files unchanged', async () => {
+test('ShellCheck reports dialect findings by shebang', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),
         ...DIALECT_SOURCES,
@@ -96,7 +136,7 @@ test('ShellCheck reports dialect findings by shebang and leaves source files unc
     ]);
 });
 
-test('partial ShellCheck output beside an unreadable file is an execution error', async () => {
+test('partial ShellCheck output beside an unreadable file gives a note that names the file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'sample.sh': '#!/usr/bin/env bash\necho $unquoted\n',
@@ -112,37 +152,28 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     expect(note).toContain('missing.sh');
 });
 
-test.skipIf(isWindows).each([...SYNTAX_CASES])(
-    '$check accepts clean files and reports a syntax error in $path',
-    async (row) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
-            ...SYNTAX_FILES,
-        });
+test.skipIf(isWindows)('bash/zsh-syntax accepts clean files and reports a syntax error in script.zsh', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
+        ...SYNTAX_FILES,
+    });
 
-        await applyGeneratedFiles(sandbox.path);
-        const clean = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
-        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-        expect(clean.report.checks).toMatchObject([{ status: 'passed', fileCount: row.files.length, findings: [] }]);
-        const path = join(sandbox.path, row.path);
-        await writeFile(path, row.broken);
-        const broken = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
-        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        expect(broken.report.checks).toMatchObject([
-            {
-                check: row.check,
-                status: 'failed',
-                findings: [
-                    {
-                        file: row.path,
-                        line: row.line,
-                        message: expect.stringContaining(row.message) as string,
-                    },
-                ],
-            },
-        ]);
-    },
-);
+    await applyGeneratedFiles(sandbox.path);
+    const command = ['check', '--only', 'bash/zsh-syntax', '--json'];
+    const clean = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+    expect(clean.report.checks).toMatchObject([{ status: 'passed', fileCount: 2, findings: [] }]);
+    await writeFile(join(sandbox.path, 'script.zsh'), 'if then\n');
+    const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+    expect(broken.report.checks).toMatchObject([
+        {
+            check: 'bash/zsh-syntax',
+            status: 'failed',
+            findings: [{ file: 'script.zsh', line: 2, message: expect.stringContaining('parse error') as string }],
+        },
+    ]);
+});
 
 test('shfmt reports a syntax error as a finding and passes after the script is repaired', async () => {
     await using sandbox = await createGitSandbox({

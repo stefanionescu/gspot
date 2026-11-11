@@ -5,12 +5,12 @@ import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { hasFilesToCheck } from '#cli/engine/files.ts';
 import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan.ts';
 import { findSystemSkip, isSettingEmpty } from '#cli/engine/skips.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { findTool, getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { findPackagePin, getTool } from '#cli/tools/pins.ts';
+import { findPackagePin } from '#cli/tools/pins.ts';
 import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
@@ -55,10 +55,12 @@ function isToolUsed(scopes: Scope[], conditions: Tool['when']): boolean {
     );
 }
 
+// The program of a [[command_check]] is a name that no configuration declares, and it has no peers.
 function addPeerPackages(names: Set<string>, configurations: readonly Configuration[]): void {
     const pending = [...names];
     for (let name = pending.pop(); name !== undefined; name = pending.pop()) {
-        const peers = findPackagePin(getTool(configurations, name))?.requires ?? [];
+        const tool = findTool(configurations, name);
+        const peers = (tool === undefined ? undefined : findPackagePin(tool)?.requires) ?? [];
         for (const peer of peers) {
             if (names.has(peer)) continue;
             names.add(peer);
@@ -152,7 +154,7 @@ export function pinProjectTypescript(
     configurations: Configuration[],
     session: Pick<SessionBase, 'cache' | 'repository'>,
 ): Configuration[] {
-    const range = getTool(configurations, TYPESCRIPT_ESLINT_TOOL).peers?.[TYPESCRIPT_PACKAGE];
+    const range = findTool(configurations, TYPESCRIPT_ESLINT_TOOL)?.peers?.[TYPESCRIPT_PACKAGE];
     const version = range === undefined ? undefined : readProjectTypescript(session);
     if (range === undefined || version === undefined || !semver.satisfies(version, range)) return configurations;
     return configurations.map((configuration) => ({

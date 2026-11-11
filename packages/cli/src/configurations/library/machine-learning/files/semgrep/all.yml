@@ -19,6 +19,9 @@ rules:
           - pattern-not: $MODEL.from_pretrained($NAME, ..., revision=$REVISION, ...)
           - pattern-not: huggingface_hub.hf_hub_download(..., revision=$REVISION, ...)
           - pattern-not: huggingface_hub.snapshot_download(..., revision=$REVISION, ...)
+          - pattern-not: $MODEL.from_pretrained($NAME, ..., local_files_only=True, ...)
+          - pattern-not: huggingface_hub.hf_hub_download(..., local_files_only=True, ...)
+          - pattern-not: huggingface_hub.snapshot_download(..., local_files_only=True, ...)
       message: This download takes whatever the repository holds today, so a pushed change reaches this code unseen.
           Pass revision= with a commit hash.
       languages:

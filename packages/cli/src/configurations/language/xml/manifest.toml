@@ -1,0 +1,24 @@
+allowed_words = ["XML"]
+
+[configuration]
+always_selected = true
+description = "XML files, storyboards, and XIB files: each file parses."
+title = "XML"
+
+[files]
+extensions = [".xml"]
+
+[[tool]]
+name = "xmllint"
+system = true
+
+[[check]]
+command = ["xmllint", "--noout", "{files}"]
+example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
+files = { extensions = [".xml", ".storyboard", ".xib"] }
+help = "Fix the line xmllint names."
+name = "xmllint"
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
+stage = "commit"
+summary = "Parses every XML file with xmllint."
+why = "A malformed XML file fails only when a program reads it, often in a build or at run time."

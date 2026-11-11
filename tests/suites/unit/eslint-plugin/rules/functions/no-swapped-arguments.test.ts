@@ -16,6 +16,7 @@ buildRuleTester().run('no-swapped-arguments', rule, {
         'function merge(first, second) {} if (first.length > second.length) merge(second, first);',
         'function split({ head }, tail) {} split(tail, head);',
         'function mid(lo, hi) { return lo > hi ? mid(hi, lo) : 0; }',
+        'function ff(a, b, c, d) {} ff(c, d, a, b);',
     ],
     invalid: [
         {

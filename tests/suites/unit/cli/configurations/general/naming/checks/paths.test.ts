@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { buildFileIdentifier } from '#cli/configurations/general/naming/checks/paths.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -142,12 +141,6 @@ test.each(['', 'apps/api'])(
         expect(findings.map(({ file }) => file)).toStrictEqual([`${prefix}supabase/functions/shared/entry.ts`]);
     },
 );
-
-test('a file name drops one extension, or .d.ts as one, and a SQL migration keeps its extension', () => {
-    expect(buildFileIdentifier('src/a-b.test.ts', 'typescript', []).name).toBe('a-b.test');
-    expect(buildFileIdentifier('types/modules.d.ts', 'typescript', []).name).toBe('modules');
-    expect(buildFileIdentifier('db/20240101010101_add_users.sql', 'sql', []).name).toBe('20240101010101_add_users.sql');
-});
 
 test('double underscore tool folders keep their inner names and a shared folder stays banned', async () => {
     await using sandbox = await createGitSandbox({

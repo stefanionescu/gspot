@@ -1,5 +1,6 @@
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
+import { listDistinctTools } from '#cli/manifests/read.ts';
 import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
@@ -20,7 +21,7 @@ import {
 import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { findMisePin, findMissingBuild, findPackagePin, listDistinctTools } from '#cli/tools/pins.ts';
+import { findMisePin, findMissingBuild, findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { BrokenTool, InstallResult, Session, ToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
 

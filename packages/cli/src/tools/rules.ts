@@ -16,7 +16,7 @@ import {
     SWIFTLINT_RULE_IDENTIFIER,
 } from '#cli/config/tools/programs.ts';
 import { VALE_PACKAGES_MESSAGE, VALE_RULE_IDENTIFIER, VALE_STYLES_PATH, VALE_TOOL } from '#cli/config/tools/vale.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { findTool, getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
@@ -28,7 +28,6 @@ import { isInside } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { hasValePackages } from '#cli/tools/installers/vale.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { RuleExplanation, RuleExplanationOptions, RuleToolSearch } from '#cli/types/tools.ts';
@@ -41,6 +40,10 @@ const RULE_READER_TOOLS: ReadonlySet<string> = new Set([
     ESLINT_MANIFEST_TOOL,
     STYLELINT_MANIFEST_TOOL,
 ]);
+
+// ESLint cannot name the gspot setting that declares the global names of another runtime.
+const UNDEFINED_NAME_FIX =
+    'Declare or import the name. For a global name of another runtime, such as `document` in a browser script, write a [[tools.eslint.override]] record in gspot.toml with the paths of the files and runtime = "browser", then run gspot install.';
 
 const RUFF_SUMMARY_FIELD = /\{(\w+)?(?::[^{}]*)?\}/gu;
 
@@ -248,7 +251,7 @@ manifest. Without either, gspot has no list of the rules to explain or to check 
 export function canReadRuleExplanations(tool: string, rule: string): boolean {
     if (isUnlistedRule(tool, rule)) return false;
     if (RULE_READER_TOOLS.has(tool)) return true;
-    return getTool(readConfigurations().values(), tool).rule_url !== undefined;
+    return findTool(readConfigurations().values(), tool)?.rule_url !== undefined;
 }
 
 export async function readLintRuleExplanation(
@@ -272,5 +275,7 @@ export async function readLintRuleExplanation(
     if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool))
         return readManifestRuleExplanation(tool, identifier);
     const rule = await readInstalledRule(root, tool, identifier);
-    return rule === undefined ? undefined : getRuleMetadata(rule, findRulePage(tool, identifier));
+    if (rule === undefined) return undefined;
+    const docs = getRuleMetadata(rule, findRulePage(tool, identifier));
+    return tool === ESLINT_MANIFEST_TOOL && identifier === 'no-undef' ? { fix: UNDEFINED_NAME_FIX, ...docs } : docs;
 }

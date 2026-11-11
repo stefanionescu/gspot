@@ -1,15 +1,15 @@
 import type { Node } from 'web-tree-sitter';
-import type { CST } from 'yaml';
 import type { z } from 'zod';
 
-import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/registry.ts';
+import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
 import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
 import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { namingExceptionSchema } from '#cli/schemas/manifests/tools.ts';
 import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { ConfigOutput, FormatSettings, PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
-import type { Finding, Substitutions } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { NumberedLine, ParsedTsconfig, SqlFile } from '#cli/types/parsers.ts';
 import type { Config, TrackedFile } from '#cli/types/repository.ts';
@@ -33,10 +33,6 @@ export type TypeScriptReferenceCopy = {
     cache: RunCache;
     projects: Map<string, ParsedTsconfig>;
 };
-
-export type YamlFinding = { offset: number; rule: string; message: string };
-
-export type YamlAnchorToken = Pick<CST.SourceToken, 'offset' | 'source'>;
 
 export type TaskNames = { mise: Set<string>; scripts: Set<string>; binaries: Set<string> };
 
@@ -62,7 +58,14 @@ export type SuppressionSyntax = {
 
 export type AllowedPackage = ConfigurationTables['licenses']['allowed_package'][number];
 
-export type LockedPackage = { file: string; name: string; version: string; isPython: boolean; licenses: string[] };
+export type LockedPackage = {
+    file: string;
+    line: number;
+    name: string;
+    version: string;
+    isPython: boolean;
+    licenses: string[];
+};
 
 export type ProseRouteBatch = [ProseRoute, ...ProseRoute[]];
 

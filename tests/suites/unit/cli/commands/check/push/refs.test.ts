@@ -1,10 +1,10 @@
 import { expect, test } from 'bun:test';
 
-import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { assertWorkingTreeKept, createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { pushOutputSchema } from '#tests/setup/schemas.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a missing local commit stops a pre-push check and leaves the working tree as it was', async () => {

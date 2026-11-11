@@ -2,8 +2,6 @@ import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 
-export const CHECK_LIST_SEPARATOR = ',';
-
 export const PUSH_STDIN_MESSAGE =
     '--hook pre-push reads the lines that Git writes to standard input. Run it from the pre-push hook.';
 
@@ -25,8 +23,6 @@ export const HOOK_OPTION = '--hook <hook>';
 
 export const PUSH_INPUT_MESSAGE = 'Git sent pre-push input that is not UTF-8 text.';
 
-export const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';
-
 export const GIT_SETUP_FILES_ARGUMENTS = ['ls-files', '--cached', '-z', '--', SETTINGS_FILE, GSPOT_FOLDER] as const;
 
 export const SETUP_PATHS = [SETTINGS_FILE, `${GSPOT_FOLDER}/`] as const;
@@ -34,6 +30,8 @@ export const SETUP_PATHS = [SETTINGS_FILE, `${GSPOT_FOLDER}/`] as const;
 export const GIT_STAGED_SETTINGS_ARGUMENTS = ['show', `:${SETTINGS_FILE}`] as const;
 
 export const STAGE_SETUP_MESSAGE = `Stage ${SETTINGS_FILE} and ${GSPOT_FOLDER}/.`;
+
+export const UNSTAGED_TOOLS_NOTE = `<files> changes that are not staged, so the installed tools are not the tools of the staged settings. ${STAGE_SETUP_MESSAGE}`;
 
 export const NOTHING_STAGED_MESSAGE = 'Nothing is staged.';
 
@@ -157,12 +155,14 @@ export const LINT_RULE_LABELS = [
 export const GIT_UNBORN_HEAD_ARGUMENTS = ['symbolic-ref', 'HEAD', 'refs/heads/main'] as const;
 
 export const SCAN_SETTINGS_MESSAGE =
-    'This repository already has a gspot.toml, so gspot scan has nothing to preview. Run gspot check.';
+    'This repository already has a gspot.toml, so gspot scan has nothing to preview. Run gspot check. To try an upgrade or a level change, commit first, so that you can check out that commit to go back.';
 
 export const SCAN_NO_FILES_MESSAGE =
     'gspot scan checks a copy of the tracked files, and this repository tracks none. Stage your files with git add, then run gspot scan again.';
 
 export const SCAN_STOPPED_MESSAGE = 'Scan stopped before it finished. Your repository did not change.';
+
+export const SCAN_LOCKFILE_MESSAGE = 'Stage <lockfile>, so the scan picks the same package manager as init.';
 
 export const SCAN_EXAMPLES_SHOWN = 3;
 
@@ -176,17 +176,17 @@ export const SCAN_CATEGORIES = [
     { name: 'Dependencies', configurations: ['dependencies', 'licenses'] },
     { name: SCAN_CODE_CATEGORY, configurations: [] },
     { name: 'Docs and spelling', configurations: ['docs', 'markdown', 'prose', 'spelling'] },
-    { name: 'Layout', configurations: ['data-files', 'naming', 'repository', 'structure'] },
+    { name: 'Layout', configurations: ['json', 'naming', 'repository', 'structure', 'toml', 'xml', 'yaml'] },
     { name: 'Setup', configurations: ['commits', 'gspot'] },
 ] as const;
 
 export const SCAN_FORMAT_CHECKS: ReadonlySet<string> = new Set([
     'bash/shfmt',
-    'data-files/taplo-format',
     'format/editorconfig-checker',
     'format/prettier',
     'python/ruff-format',
     'swift/swiftformat',
+    'toml/taplo',
 ]);
 
 export const SCAN_BUILT_IN_TOOL = 'gspot';

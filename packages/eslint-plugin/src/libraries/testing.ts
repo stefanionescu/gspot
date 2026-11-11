@@ -137,12 +137,6 @@ export function readTestTable(node: TableCall, context: FileContext): TSESTree.N
     return isTable && callback !== undefined && table?.type !== AST_NODE_TYPES.SpreadElement ? table : undefined;
 }
 
-export function isSameTokens(left: TSESTree.Node, right: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const leftTokens = source.getTokens(left).map(({ value }) => value);
-    const rightTokens = source.getTokens(right).map(({ value }) => value);
-    return left.type === right.type && leftTokens.join('\0') === rightTokens.join('\0');
-}
-
 export function isTestRelatedPath(path: string, configured: unknown): boolean {
     if (path.split(/[\\/]/u).some((folder) => TEST_FOLDERS.has(folder))) return true;
     const extensions: unknown[] =

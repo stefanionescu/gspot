@@ -2,11 +2,26 @@ import { basename } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { VALE_SUPPRESSION_SETTINGS, VALE_SUPPRESSIONS } from '#tests/config/integration/general.ts';
 import { readSuppressionResults } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+
+const VALE_SUPPRESSIONS = [
+    { source: '<!-- vale off -->', suppressed: true, directive: true },
+    { source: '<!-- vale Example.Concrete = NO -->', suppressed: true, directive: true },
+    { source: '<!-- vale on -->', suppressed: false, directive: true },
+    { source: '<!-- Example vale off -->', suppressed: false, directive: false },
+    { source: '`<!-- vale off -->`', suppressed: false, directive: false },
+    { source: '```markdown\n<!-- vale off -->\n```', suppressed: false, directive: false },
+] as const;
+
+const VALE_SUPPRESSION_SETTINGS = `StylesPath = styles
+[formats]
+mdx = md
+[*]
+BasedOnStyles = Example
+`;
 
 test('suppression detection finds Vale comments and skips documented examples', async () => {
     const documents = VALE_SUPPRESSIONS.flatMap((suppression, index) =>

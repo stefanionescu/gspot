@@ -1,21 +1,128 @@
 # Changelog
 
+## 0.4.3
+
+gspot 0.4.3 fixes the defects that a run of 0.4.2 on 19 repositories found. It changes no rule and loosens none. Three
+of the fixes unblock a push: a site whose pages import a large file, an Xcode project with package dependencies, and a
+model loaded from a local folder. The ESLint plugin stays at 0.2.7.
+
+This section is not released, and its entries cite no commit yet.
+
+### Breaking changes
+
+- `data-files` becomes the `json`, `yaml`, `toml`, and `xml` configurations, and `engineering` becomes `agents`. In
+  `gspot.toml`, rename `[data_files]` to `[json]`, so `[[data_files.schemas]]` becomes `[[json.schemas]]`, and write
+  the new check IDs in `[[ignore]]` and `--only`:
+
+| 0.4.2                             | 0.4.3                 |
+| --------------------------------- | --------------------- |
+| `data-files/taplo-format`         | `toml/taplo`          |
+| `data-files/v8r`                  | `json/v8r`            |
+| `data-files/xmllint`              | `xml/xmllint`         |
+| `data-files/yaml`                 | `yaml/syntax`         |
+| `engineering/nested-agents-files` | `agents/nested-files` |
+
+### Known issues
+
+- When a staged file also has unstaged edits, a commit checks a copy of what you staged, and a test file that imports
+  `eslint` can get false type errors there. Stage the rest of the file, or commit it separately.
+- Node.js 22 ships an npm older than 11.19.0, which `gspot init` and `gspot install` need. On Node.js 22, run
+  `npm install --global npm@latest` first.
+- A `.gitattributes` rule above the gspot block still loses to `* text=auto eol=lf`, because `gspot install` keeps the
+  order of a block that exists. Move such a rule below the block.
+- A `[[scope]]` value that starts at the root of the repository still passes `gspot install`. `gspot/unmatched-paths`
+  reports it and prints the form to write.
+- `naming/identifiers` reads SQL as Postgres. Under another `sql.dialect`, it checks no name in a file that the Postgres
+  parser cannot read.
+- `python/pydoclint` DOC503 asks for the name after `raise`, also when that name is a helper function or a variable.
+
+### Highlights
+
+#### Checks that stopped a push
+
+- `site/build` and the other checks that build in a copy now copy every tracked file. A file over
+  `repository.max_file_kilobytes`, such as a video that a page imports, was missing from the copy, and the build failed.
+- `swift/build` builds an Xcode scheme that has Swift package dependencies. It no longer passes
+  `SWIFT_TREAT_WARNINGS_AS_ERRORS=YES` to every target, which Xcode 26 refuses for package targets. It reads the
+  warnings of the build and reports each one in your own sources, so a warning still fails the check.
+- `gspot.ml.unpinned-hub-download` accepts a load with `local_files_only=True`, which downloads nothing. A load
+  without it, or with `local_files_only=False`, is still reported.
+- The CI workflow runs `gspot check` under `mise exec`, so a command check reads the `[env]` of your mise config again.
+- gspot reads the whole output of a tool. A tool that exits with output still in a pipe lost what came after 64 KB, and
+  `html/html-validate` then failed with `The output is not JSON`.
+- A `[[command_check]]` with regex output that exits 0 reports only the lines that name a file or a line.
+
+#### Findings that were wrong
+
+- `dependencies/osv-scanner` reports one finding for each vulnerability, not one for each advisory ID. The finding
+  lists the other IDs, names the fixed versions, and points at the line of the package in the lockfile.
+- `licenses/allowed` points at the line of the package in the lockfile, and reports an ignore whose `paths` can never
+  match as `unmatched-ignore`.
+- When `gspot.toml` at the base revision does not fit the schema, `gspot/weakenings` compares the current file with the
+  shipped defaults and reports each weakening that has no reason.
+- `gspot/detected-configurations` honors an `[[ignore]]` that has only `paths`, and each line names the evidence of its
+  own scope.
+- `naming/identifiers` reports a Bash variable once when a `readonly` line follows its assignment, and no longer
+  reports Postgres syntax errors for a folder whose `sql.dialect` is another dialect.
+- `structure/jscpd` leaves the lines of an import block out of the length of a clone.
+- A module that `javascript.externals` lists passes the import rules when it resolves to a file. The test file and tRPC
+  policies still apply to it.
+- `prose/commit-message` accepts the `--` after `mise exec`. A double hyphen between words is still reported.
+- `gspot.heading-case` accepts a word in capitals that starts with a digit, such as `3D`.
+- `spelling/typos` leaves out the message files of other languages in `translations.messages_folder`.
+- `python/pydoclint` picks the Google style for a file whose docstrings hold only `Returns:`, `Raises:`, or
+  `Attributes:` sections.
+- gspot reports the findings of a Semgrep run in which a `nosemgrep` comment names a rule that did not match, where it
+  stopped with `Semgrep could not complete the scan`.
+
+#### Fixers
+
+- `gspot check --fix` fixes the SQLFluff findings that have a fix, and no longer marks a rule without one as fixable.
+- The fix for `unicorn/no-asterisk-prefix-in-documentation-comments` leaves no line of spaces in an indented comment.
+- The fix for `unicorn/consistent-boolean-name` no longer writes a name such as `isWasReady`. The finding stays, and
+  you choose the name.
+
+#### Settings
+
+- The refusal of an unknown record table names the right line.
+- With a pin in `package.json` and another in `mise.toml`, the message names both versions.
+- `gspot set tools.<tool>.rules` stops with the reason when it cannot read the rule catalog of the tool, such as before
+  `gspot install`.
+- A `tools.stylelint.rules.property-no-vendor-prefix` setting whose `ignoreProperties` holds a name without its prefix
+  is refused, because Stylelint matches the property as written and the fixer then deletes the prefix.
+
+#### Install, init, and scan
+
+- `gspot install` no longer writes the generated files a second time after an upgrade, and prints the note about keys
+  it no longer manages only after `set`, `unset`, and `remove`.
+- `gspot init` and `gspot add` leave `site.build_command` unset, and the site build runs the `build` script with the
+  package manager of the repository.
+- Without a `.venv`, `gspot install` builds the project environment with the Python that the mise config pins.
+- A stale `uv.lock` gets the advice to run `uv lock`, where it got the advice to check the network.
+- Ctrl-C while `gspot init` installs tools prints the state of the repository and the command that finishes the setup.
+- A staged check that finds tool files unstaged names them and says to stage `gspot.toml` and `.gspot/`.
+- `gspot scan` compares every ESLint and Stylelint config, reads the hooks of Husky, `core.hooksPath`, and `.git/hooks`,
+  finds lint commands in mise tasks, lists the findings that have no rule, and names an untracked lockfile.
+- A `.githooks/` folder that Git does not use no longer counts as a hook manager.
+- `gspot init` lists `typos.toml` in the table of what it carries over.
+- A typo in `removed_configurations` is refused.
+
+#### Messages and crashes
+
+- A closed output pipe ends gspot quietly, and a dangling `lefthook.yml` link no longer stops `gspot doctor`.
+- `gspot list settings` prints a long value on its own line and each record of a list on its own line.
+- An argument error after a global flag names the help of its command.
+- `gspot explain naming/identifiers banned-word` lists the words that each level bans.
+- `gspot explain javascript/eslint no-undef` names the `[[tools.eslint.override]]` setting for a browser script.
+- The help of `commits/commitlint`, `python/pydoclint` DOC503, `postgres/edited-migrations`, and the refusal of a
+  `nosemgrep` comment now say what to write.
+- The scan refusal in a repository that has a `gspot.toml` says how to try an upgrade.
+
 ## 0.4.2
 
 gspot 0.4.2 reports more security problems with the tools it already runs, adds a Compose check, and ships Semgrep rules
 for Django, Flask, PyJWT, and machine learning code in four new configurations. The ESLint plugin moves to 0.2.7 with a
 rule that follows request data in JavaScript.
-
-### Upgrade from 0.4.1
-
-1. Install 0.4.2 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.4.2`. With a
-   mise pin, raise the version in `mise.toml` and run `mise install`.
-2. Run `gspot install`, and commit `.gspot/`, the rule files, and the other files that changed. A repository with
-   GitHub workflows now gets the Bash grammar.
-3. Run `gspot check`. The checks that gained rules can report files that passed before; fix each finding, or ignore its
-   rule with a reason.
-4. If `gspot/detected-configurations` names `django`, `flask`, `pyjwt`, or `machine-learning`, run the `gspot add` line
-   that it prints, then `gspot install`. Each of them installs Semgrep, which runs on macOS and Linux.
 
 ### Known issues
 
@@ -77,22 +184,6 @@ gspot 0.4.1 installs a mise tool only when one of its checks has a file to read,
 repositories, and runs the CI job with the Node.js that `mise.toml` pins. `WRITING.md` and `WORKING.md` gain four rules.
 The ESLint plugin moves to 0.2.6, with no change to its rules.
 
-### Upgrade from 0.4.0
-
-1. Install 0.4.1 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.4.1`. With a
-   mise pin, raise the version in `mise.toml` and run `mise install`.
-2. Run `gspot install`. It installs only the mise tools whose checks have a file to read. Without the `javascript`
-   configuration, `.gspot/package.json` drops syncpack, and a Vue repository without `typescript` drops vue-tsc. With CI
-   on and a Node.js pin in `mise.toml`, the workflow now installs that version.
-3. Commit `.gspot/`, the rule files, and the workflow that changed.
-
-After you add the first file of a new kind, such as the first `.env` file, run `gspot install` again. Until then, its
-check reports the tool as missing. The files under `.gspot/` stay the same.
-
-From 0.3.9, follow the 0.4.0 steps. 0.4.1 no longer names the flags, commands, and keys that 0.4.0 removed: an old hook
-script with `gspot check --stage` stops on an unknown option, and `limits.min_function_statements` stops as an unknown
-key. Rename it to `trivial_function_statements` first.
-
 ### Known issues
 
 - When a staged file also has unstaged edits, a commit checks a copy of what you staged, and a test file that imports
@@ -146,52 +237,7 @@ gspot 0.4.0 removes `gspot baseline`, `gspot check --stage`, and `gspot check --
 from 0.3.9 stops until you change it. Several `gspot.toml` keys and `[[ignore]]` records stop every command with exit 2,
 and generated configs move to a shorter path. A repository that used a baseline sees its old findings again. A commit
 now reports old findings only in the files it touches. `gspot check --fix` no longer rewrites SQL, spelling, or
-environment files, and `gspot scan` no longer runs your tests or your build. Read the upgrade steps before you install.
-
-### Upgrade from 0.3.9
-
-1. Install 0.4.0 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.4.0`. With a
-   mise pin, raise the version in `mise.toml` and run `mise install`. Each commit now stops on
-   `gspot check --stage was removed` until step 3.
-2. Edit `gspot.toml` by hand, because `gspot set` stops on the same errors. `gspot install` names only some bad keys in
-   each run, so repeat it until it stops naming them.
-    - Rename each `limits.min_function_statements` and `limits.<language>.min_function_statements` to
-      `trivial_function_statements`, with the same value.
-    - Delete `type-enum` and `scope-enum` from `tools.commitlint.rules`, and set `commits.types` or `commits.scopes`.
-    - Give a `[[command_check]]` with the ID `commit` or `push` a new ID.
-    - Delete each `[[ignore]]` of `gspot/baseline`, `bash/doc-comments`, or `swift/doc-comments`. Rename
-      `ansible/ansible-lint-production` to `ansible/ansible-lint`.
-    - Delete each `.gspot/rules/` entry for `NODE.md`, `BUN.md`, `JEST.md`, `VITEST.md`, `PYTEST.md`, `PACKAGING.md`, or
-      `YAML.md` from `rule_files.exclude`.
-    - With a `[licenses]` table or a `[[licenses.allowed_package]]` record and no `licenses` configuration, run
-      `gspot add licenses`, or delete them.
-    - Delete `jsdoc/require-jsdoc` and `jsdoc/require-description` from `tools.eslint.rules`. No command names these,
-      and `javascript/eslint` exits 2 on them after step 3. Breaking changes says how to keep them.
-3. Run `gspot install`. It writes the new hooks, moves the generated configs, and deletes the old tree and the removed
-   rule files. A hook manager that calls `.gspot/hooks/*` needs no change.
-4. Delete `gspot.baseline.json`. `format/prettier` can report the file if you keep it, because `.prettierignore` stops
-   listing it.
-5. Replace the old flags in your scripts and CI jobs. `--stage commit` becomes `--only commit`, `--stage push` becomes
-   `--only push`, and `--changed` becomes `--base origin/main`, with your default branch. So
-   `gspot check --changed --stage push` becomes `gspot check --base origin/main --only push`. The generated CI job needs
-   no edit.
-6. Drop the group folder from each path that you wrote by hand to a generated config, such as an editor setting or a CI
-   script. `.gspot/configurations/language/javascript/knip.json` becomes `.gspot/configurations/javascript/knip.json`.
-7. With shell scripts, run `gspot check --only bash/shfmt`. If it reports a script with another indent, run
-   `gspot check --fix --only bash/shfmt`. Or write a `[[format.override]]` with the extensions you have, such as
-   `paths = ["**/*.sh"]` and `indent_width = 4`, then run `gspot install`.
-8. Update each script that reads `--json` output, with the JSON output changes below.
-9. Stage `gspot.toml`, your package manifest and lockfile, `.gspot/`, and the other generated files, then commit them
-   together. The hook reads only what you staged, so old findings in other files do not stop it. A blank line left by a
-   hand edit fails `data-files/taplo-format`, and the report prints the fix.
-10. Run `gspot check --base origin/main` before you push. The upgrade commit changes `gspot.toml` and `.gspot/`, so this
-    run and the CI run read every file and list what the baseline hid. Fix each finding, or run
-    `gspot ignore <check> --rule <rule> --paths <old files> --reason "<why>"` and commit. A check that lists no rules
-    takes `--paths` alone. If `gspot/detected-configurations` fails, run the `gspot add` line that it prints. Then
-    push. On this push, `gspot/weakenings` prints `compared no settings` if the old `gspot.toml` held a key that step 2
-    changed.
-11. In each other clone, install the dependencies, such as with `npm ci`, and run `gspot install`. Until then its hooks
-    stop with `This repository pins gspot 0.4.0; this is gspot 0.3.9.`
+environment files, and `gspot scan` no longer runs your tests or your build.
 
 ### Breaking changes
 
@@ -517,8 +563,7 @@ gspot install.` where it said to run `gspot install`, which did not help. (f344f
   87d66db)
 - `gspot init --from` has its own page, [Copy settings](https://generativespotting.com/start/copy-settings/). Page
   descriptions and field rows that repeated a name are gone. (5c7f8f5, d056cbc, 4d18692)
-- The README and every page are rewritten in connected prose around what a reader does. The
-  [Upgrade](https://generativespotting.com/start/upgrade/) page holds the steps from 0.3.9, and `/use/baseline`
+- The README and every page are rewritten in connected prose around what a reader does. `/use/baseline`
   redirects to the Quickstart. (b3fd3b4, 4ce7401, 67846c6, 4245ffb, cbd0933, 5ac6d8e, b6c5a25, 1dad64b, 7845054,
   9ee940f, 83d1aeb, ba86564, b6dcb3a, e1a1443, 4807496, c859780, 6aa5c6d, 23b37aa, 35b6ca9, 9836548, d2abea1, 6de6abc,
   9fd299b, 32a64c6, fe60237, 67cc203, 129686d, 32ea351, 2f8812e, 7e98d0d, a05060a, 5f955f3, 2bac957, 50d450b, 811c23e)
@@ -536,34 +581,7 @@ Released 2026-11-06. [Compare with 0.3.9](https://github.com/stefanionescu/gspot
 gspot 0.3.9 removes `gspot apply`: `gspot install` now writes every generated file, and `gspot init` also installs the
 tools and turns on the Git hooks. Three `gspot.toml` keys take new names, and every command exits 2 until you rename
 them. The `--json` output of most commands changes. Level `basic` reports less in Bash, Python, and ESLint, and a plain
-`gspot check` now scans every file for secrets. A committed baseline needs a prune. Read the upgrade steps before you
-install.
-
-### Upgrade from 0.3.8
-
-1. Install 0.3.9 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.3.9`. With a
-   mise pin, raise the version in `mise.toml` and run `mise install`.
-2. Edit `gspot.toml`. Rename `[[naming.override]]` to `[[naming.exception]]` and `security.rule_files` to
-   `security.semgrep_rules`, and move each `naming.javascript` key to `naming.typescript`. Run `gspot doctor`, and
-   delete each `tools.markdownlint.rules` or `tools.eslint.rules` key that its error names. At level `basic`, that
-   includes the options of the unicorn rules that left the level.
-3. If you set a general limit such as `limits.max_function_lines`, check the language limits that gspot ships, such as
-   `limits.bash.max_function_lines`. The general key no longer reaches them. To keep your value, write the language key.
-   A value above the shipped limit needs a reason.
-4. Replace `gspot apply` with `gspot install` in your scripts and CI jobs. Then run `gspot install`.
-5. In `.gitattributes`, move each rule of yours that sets `eol` or `text`, or uses `binary`, below the gspot block,
-   which now starts with `* text=auto eol=lf`. Then, if `git ls-files --eol` lists `i/crlf`, run
-   `git add --renormalize .`.
-6. Run `gspot check --fix`, and review the diff. It rewrites more than style, and at level `basic` it deletes
-   suppressions of the rules that left the level, as Known issues says. At level `all`, it sorts your imports into the
-   new groups.
-7. If you commit `gspot.baseline.json`, run `gspot baseline --prune`. It clears the `stale-baseline` findings that the
-   last step printed.
-8. Update each script that reads `--json` output, with the JSON output changes below. In a custom CI job, install the
-   project dependencies before `gspot check`.
-9. Run `gspot check`, and fix what it reports. Commit everything these steps changed: `gspot.toml`,
-   `gspot.baseline.json`, `.gspot/`, the other generated files, the package manifest and lockfile, and the files that
-   `--fix` rewrote. The commit hook checks every file, because `gspot.toml` and `.gspot/` changed.
+`gspot check` now scans every file for secrets. A committed baseline needs a prune.
 
 ### Breaking changes
 
@@ -958,42 +976,6 @@ settings and seven checks take new names, `gspot init` stops asking before it wr
 moves to 10 and Stylelint to 17. The ESLint plugin 0.2.3 grows from 9 to 183 rules and replaces eslint-plugin-sonarjs,
 which gspot stops running. The upgrade needs work: gspot refuses a `gspot.toml` with an old key, and level `basic`
 reports more, so expect new findings.
-
-### Upgrade from 0.3.7
-
-1. Commit your work. Install 0.3.8 with your package manager, such as
-   `npm install --save-dev --save-exact @gspothq/cli@0.3.8`, or with
-   `mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@0.3.8`.
-2. Edit `gspot.toml`. Delete the `#:schema` line, write `level = "basic"` in place of `level = "recommended"`, rename
-   each key that the table below lists, and delete each key that the bullets after it name. Delete `duplication` from
-   `configurations`. Rewrite `removed_configurations = { value = ["nextjs"], reason = "..." }` as a table with one line
-   per name. `gspot check` and `gspot apply` name each key that they refuse.
-3. In `[[ignore]]` records, rename the old check IDs with the table below and `data-files/yamllint` to
-   `data-files/yaml`, and delete each record of `site/size` or `security/semgrep-registry`. Move a `javascript/eslint`
-   record of `import-x/no-cycle` to `javascript/import-cycles`. At level `all`, move a record of `ansible/ansible-lint`
-   to `ansible/ansible-lint-production`. In records, suppression comments, and `tools.eslint.rules`, rename
-   `gspot/no-client-env` to `gspot/no-client-environment` and `jsx-a11y/*` to `jsx-a11y-x/*`. Replace each `react/*`
-   rule with the `@eslint-react/*` rule that reports the same thing, where one exists, because the names differ. Delete
-   each `sonarjs/*`, `barrel-files/*`, and `react-native/*` rule, because ESLint reports a comment that names one as
-   `Definition for rule ... was not found.`
-4. If Husky, Lefthook, pre-commit, or your own hook folder runs the hooks, replace each `gspot check --hook` line with
-   the script line, such as `.gspot/hooks/pre-commit "$@"`. Add `.gspot/hooks/commit-msg "$@"` to the `commit-msg` hook
-   too, because `commits/references` runs at both levels. `gspot install` prints each line.
-5. Run `gspot apply`. It deletes `.gspot/version`, `.gspot/gspot.schema.json`, the rule files at their old paths, and
-   the gspot block of the root `.gitignore`.
-6. Delete each `.stylelintrc.json` that gspot 0.3.7 wrote, at the root and in scope folders. `gspot apply` leaves them.
-7. Run `gspot install`. It exits 2 below npm 11.19.0, pnpm 10.16.0, or Bun 1.3.0, whichever your repository uses. A Yarn
-   repository needs that npm version. Node.js ships npm 11.19.0 from 24.20 and 26.7, so on an older Node.js run
-   `npm install --global npm@latest` first. With Bun, delete `.gspot/node_modules` first. `gspot install` also stops
-   when a pinned tool came out less than `dependencies.min_release_age_days` days ago, 7 by default. Set `GITHUB_TOKEN`
-   when mise reaches the GitHub rate limit.
-8. Run `gspot check`. Run the `gspot add` or `gspot remove` line that `gspot/detected-configurations` prints, replace
-   the lint commands that `gspot/conflicting-configs` names, and run each `fix:` line. Run `uv sync` in each Python
-   project that a `missing` line names. Run `gspot baseline` to accept the rest. It stops while a check cannot run, and
-   it leaves out the findings of `secrets/*` and `gspot/*`, which you fix.
-9. Update each script that passes a removed flag or reads `--json` output, with the lists below.
-10. Commit `gspot.toml`, `gspot.baseline.json`, `.gspot/`, the other generated files, and your pin. Each other clone
-    then installs the pin with its package manager, such as `npm ci` or `mise install`, and runs `gspot install`.
 
 ### Breaking changes
 
@@ -1603,13 +1585,6 @@ gspot 0.3.7 gives the generated GitHub workflow one `lint` job per system, and a
 of the Linux job. It also fixes two failures in check runs and moves Zod past a memory advisory. With GitHub CI, the
 upgrade needs a change to your required status checks. The ESLint plugin stays at 0.2.2.
 
-### Upgrade from 0.3.6
-
-1. Install 0.3.7 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.3.7`.
-2. Run `gspot apply`, then `gspot install`.
-3. With GitHub CI, update the required status checks of each protected branch, as the breaking changes below say.
-4. Run `gspot check`, and commit `.gspot/` and the other generated files that changed.
-
 ### Breaking changes
 
 GitHub workflow:
@@ -1666,22 +1641,6 @@ gspot 0.3.6 renames many checks, lint rules, settings, and JSON fields. `gspot e
 and import-linter are gone, and lychee replaces linkinator. An ignore past its `until` date now fails
 `gspot/suppressions`, and ESLint plugin 0.2.2 reports every small named function at level `all`. The upgrade needs edits
 to `gspot.toml` and to each script that reads `--json` output, so read the steps before you install.
-
-### Upgrade from 0.3.5
-
-1. Install 0.3.6 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.3.6`.
-2. In a Git repository, move a `gspot.toml` that sits below the Git root to the root, as a `[[scope]]` record.
-3. Edit `gspot.toml`, with the `gspot.toml` changes below. `gspot apply` names each key and configuration that it
-   refuses.
-4. Rename checks and lint rules in `[[ignore]]` records, in suppression comments, and in `--only` scripts, with the
-   tables below and the ESLint plugin list. gspot refuses an old check name. It accepts an old rule name in a record,
-   and the findings of that rule come back.
-5. Run `gspot apply`. It moves the generated files, rewrites `eslint.config.mjs`, and adds a `#:schema` line to
-   `gspot.toml`.
-6. Run `gspot install`. Until then, `gspot/generated-files` fails on the tool lockfile.
-7. Add `--reason` to each `gspot remove` in your scripts, and update each script that reads `--json` output.
-8. Run `gspot check`, fix the new findings, and commit `gspot.toml`, `.gspot/`, and the other generated files that
-   changed.
 
 ### Breaking changes
 
@@ -1951,10 +1910,6 @@ Released 2026-10-23. [Compare with 0.3.5](https://github.com/stefanionescu/gspot
 gspot 0.3.5 stops Vale from reading fenced code as prose, a false positive that 0.3.4 introduced. The ESLint plugin
 stays at 0.2.1.
 
-### Upgrade from 0.3.4
-
-Install 0.3.5, run `gspot apply` and `gspot install`, and commit the generated files that changed.
-
 ### Known issues
 
 - `docs/missing-paths` stops with exit code 2 on a documented path outside the repository, such as
@@ -1974,10 +1929,6 @@ Released 2026-10-20. [Compare with 0.3.4](https://github.com/stefanionescu/gspot
 
 gspot 0.3.4 removes four false positives that 0.3.3 reports, in `gspot/replaced-files`, Vale, `files/v8r`, and
 `docs/lychee`. The ESLint plugin stays at 0.2.1.
-
-### Upgrade from 0.3.3
-
-Install 0.3.4, run `gspot apply` and `gspot install`, and commit the generated files that changed.
 
 ### Known issues
 
@@ -2007,21 +1958,6 @@ gspot 0.3.3 applies `[[import_rule]]` to Python and Swift, adds Python checks at
 checks, and loads your own ESLint plugins. It also fixes many false positives and fixers that broke imports. The upgrade
 needs work: `allowed_words` takes a new shape, Python formats with double quotes by default, and `--only` takes one
 value. ESLint plugin 0.2.1 ships with this release.
-
-### Upgrade from 0.3.2
-
-1. Install 0.3.3 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.3.3`.
-2. In `gspot.toml`, write `allowed_words` as a table of word and reason, such as
-   `allowed_words = { Nebulix = "The product name." }`.
-3. To keep single quotes in Python, write `format.quotes = "single"`. To keep one English dialect, write
-   `spelling.locale = "en-us"` or the dialect you use.
-4. Delete the entries of `tools.eslint.rules` and `tools.stylelint.rules` for a rule that your level does not run.
-5. At level `all`, rename `@typescript-eslint/no-magic-numbers` to `gspot/no-magic-numbers` in options, ignores, and
-   suppression comments.
-6. In scripts, replace `--only python/ruff javascript/eslint` with `--only python/ruff,javascript/eslint`.
-7. Run `gspot apply`, then `gspot install`. At level `all` in a Python repository, `gspot install` adds `vulture`.
-8. Run `gspot check`, fix or ignore the new findings, and commit `gspot.toml`, `.gspot/`, and the other generated files
-   that changed.
 
 ### Breaking changes
 
@@ -2217,18 +2153,6 @@ gspot 0.3.2 folds the `swift-tests` configuration into `swift`, so two check IDs
 configuration, language, and plugin pages. A repository without Swift needs only steps 1 and 6. The ESLint plugin stays
 at 0.2.0.
 
-### Upgrade from 0.3.1
-
-1. Install 0.3.2 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.3.2`.
-2. In `gspot.toml`, remove `swift-tests` from each `configurations` list and each `removed_configurations` list.
-3. Rename `swift-tests/coverage` to `swift/coverage` and `swift-tests/skip-reasons` to `swift/skip-reasons` in your
-   `[[ignore]]` records and `--only` flags.
-4. To keep those checks off in a scope that removed or never listed `swift-tests`, add an `[[ignore]]` record by hand,
-   with `check = "swift/coverage"`, `paths = ["<scope>/**"]`, and `reason = "<why>"`. `gspot ignore` refuses to run
-   until step 6 moves the pin.
-5. Point a `rules.exclude` entry for `SWIFT-TESTS.md` at `.gspot/configurations/language/swift/rules/SWIFT-TESTS.md`.
-6. Run `gspot apply`, then `gspot install` and `gspot check`, and commit the files that changed.
-
 ### Breaking changes
 
 - The `swift-tests` configuration is gone, and gspot refuses its name in `configurations`. `swift` holds its checks, its
@@ -2281,22 +2205,6 @@ gspot 0.3.1 stops changing how your project installs packages, so the 7-day hold
 in `.gspot/`. The `dependencies/release-age` check goes with that hold, and level `recommended` asks a tsconfig only for
 `strict`. Husky 9 repositories stop crashing, and a refused `gspot.toml` key names the fix. The upgrade needs one
 `gspot.toml` edit when you ignore the removed check. The ESLint plugin stays at 0.2.0.
-
-### Upgrade from 0.3.0
-
-1. Install 0.3.1 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.3.1`.
-2. Delete any `[[ignore]]` record for `dependencies/release-age`.
-3. Run `gspot apply`, then `gspot install` and `gspot check`, and commit the files that changed.
-4. Optional: to stop holding back your own installs, delete the keys that gspot wrote before:
-
-    | File                  | Keys                                                             |
-    | --------------------- | ---------------------------------------------------------------- |
-    | `bunfig.toml`         | `[install] minimumReleaseAge`, `minimumReleaseAgeExcludes`       |
-    | `.npmrc`              | `min-release-age`, `min-release-age-exclude[]`                   |
-    | `pnpm-workspace.yaml` | `minimumReleaseAge`, `minimumReleaseAgeExclude`                  |
-    | `.yarnrc.yml`         | `npmMinimalAgeGate`, `npmPreapprovedPackages`                    |
-    | `pyproject.toml`      | `[tool.uv] exclude-newer`                                        |
-    | `mise.toml`           | `[settings] minimum_release_age`, `minimum_release_age_excludes` |
 
 ### Breaking changes
 
@@ -2354,19 +2262,6 @@ gspot 0.3.0 moves the files it writes into one folder per configuration and repl
 `[[import_rule]]` records. It removes the `coverage` configuration and four checks, and `gspot.toml` refuses naming keys
 that no code reads. The upgrade needs edits to `gspot.toml`. The ESLint plugin stays at 0.2.0. Version 0.2.3 was never
 published, so this release holds its fixes.
-
-### Upgrade from 0.2.2
-
-1. Install 0.3.0 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.3.0`.
-2. In `gspot.toml`, turn each `[[architecture.module]]` into an `[[import_rule]]`, and move each role to its new key.
-3. Remove `coverage` from each `configurations` list, and delete or move each ignore of a removed check.
-4. Point `rules.exclude` at `.gspot/configurations/`, and delete each limit or naming key that gspot refuses.
-5. Run `gspot apply`. It writes `.gspot/configurations/` and deletes the old files under `.gspot/config/` and
-   `.gspot/rules/`. A `.semgrepignore` that stays is your own. gspot's Semgrep checks do not read it, so keep it only
-   for a `semgrep scan` that you run by hand.
-6. Run `gspot install` and `gspot check`.
-7. Commit `gspot.toml`, `.gspot/`, the other generated files that changed, and `package.json` with its lockfile or
-   `mise.toml`.
 
 ### Breaking changes
 
@@ -2526,17 +2421,6 @@ Released 2026-10-18. [Compare with 0.2.2](https://github.com/stefanionescu/gspot
 gspot 0.2.2 fixes the upgrade from 0.1 and the npm release hold, and stops writing `CLAUDE.md`. `@gspothq/eslint-plugin`
 stays at 0.2.0. Run `gspot apply` to rewrite `.npmrc` and to remove the `CLAUDE.md` block.
 
-### Upgrade from 0.2.1
-
-1. Install 0.2.2 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.2.2`. In an npm
-   repository during the first 7 days after this release, add `--min-release-age=0` once, because the `.npmrc` from
-   0.2.1 holds `@gspothq/cli` back.
-2. Run `gspot apply`.
-3. Run `gspot install`.
-4. Commit `package.json` with its lockfile or `mise.toml`, `.npmrc`, `.gspot/`, and the removal of `CLAUDE.md`.
-
-From 0.1, follow the 0.2.0 upgrade steps too. One `gspot apply` is enough with 0.2.2.
-
 ### Breaking changes
 
 - gspot writes the agent rules into `AGENTS.md` only. `gspot apply` removes the `@AGENTS.md` block from `CLAUDE.md`,
@@ -2575,13 +2459,6 @@ Released 2026-10-17. [Compare with 0.2.1](https://github.com/stefanionescu/gspot
 gspot 0.2.1 fixes `gspot install` in npm repositories that use the ESLint plugin, during the release hold of a new
 plugin version. `@gspothq/eslint-plugin` stays at 0.2.0, and the upgrade needs no edits.
 
-### Upgrade from 0.2.0
-
-1. Install 0.2.1 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.2.1`. In an npm
-   repository during the first 7 days after this release, add `--min-release-age=0`, as "Known issues" says.
-2. Run `gspot apply`, which moves the pin in `.gspot/version`.
-3. Run `gspot install`, and commit `.gspot/` with `package.json` and its lockfile, or `mise.toml`.
-
 ### Known issues
 
 - gspot writes one `min-release-age-exclude=` line per package in `.npmrc`, and npm keeps only the last line. npm then
@@ -2615,20 +2492,6 @@ only what did not pass. It renames 11 checks, 13 limit settings, and several fla
 `swift-snapshot-testing` configuration, and needs Node.js 24.15. `gspot apply` stops editing `gspot.toml` and replaces
 each generated file that gspot owns, even one with local edits. The upgrade needs manual work, because gspot refuses the
 old names. `@gspothq/eslint-plugin` is also 0.2.0.
-
-### Upgrade from 0.1.1
-
-1. Use Node.js 24.15 or newer.
-2. Install 0.2.0 with your package manager, such as `npm install --save-dev --save-exact @gspothq/cli@0.2.0`.
-3. Edit `gspot.toml`. Rename or delete each setting and check ID that "Breaking changes" lists. `gspot apply` names what
-   it refuses.
-4. Optional: delete the `#:schema` line at the top of `gspot.toml`. It points at the 0.1.1 schema, and gspot keeps it.
-5. Run `gspot apply`. It stops once on the files that 0.1.1 wrote outside `.gspot/`, as "Known issues" says. Run
-   `gspot apply` again.
-6. Run `gspot install`.
-7. Update your scripts and your Husky or Lefthook lines for `--message-file`, `--base`, `--configurations none`, and the
-   JSON changes below.
-8. Run `gspot check`, and commit `gspot.toml`, `.gspot/`, and the other generated files that changed.
 
 ### Breaking changes
 

@@ -1,7 +1,13 @@
 import { parseArgs } from 'node:util';
 
-import { SPAWN_DESCENDANT_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
+import { WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+const SPAWN_DESCENDANT_OPTIONS = {
+    marker: { type: 'string' },
+    line: { type: 'string' },
+    forward: { type: 'string' },
+} as const;
 
 const { values } = parseArgs({ options: SPAWN_DESCENDANT_OPTIONS });
 const descendant = Bun.spawn(

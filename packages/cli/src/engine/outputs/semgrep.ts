@@ -1,9 +1,20 @@
-import { SEMGREP_PARSE_ERRORS, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_RULE } from '#cli/config/engine.ts';
+import {
+    SEMGREP_PARSE_ERRORS,
+    SEMGREP_PARSE_EXIT,
+    SEMGREP_PARSE_RULE,
+    SEMGREP_UNMATCHED_SUPPRESSION,
+} from '#cli/config/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
+/**
+Read the JSON report of Semgrep. A source parse error is a finding, and any other error stops the check, apart from
+the warning about a nosemgrep comment that names another rule than the one that matched: the scan finished, and the
+match is in the results.
+*/
 export function parseSemgrepFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
     const report = parseToolOutput('Semgrep', stdout, semgrepOutputSchema);
@@ -18,6 +29,7 @@ export function parseSemgrepFindings(output: ToolOutput): Finding[] {
         fixable: false,
     }));
     for (const error of report.errors) {
+        if (SEMGREP_UNMATCHED_SUPPRESSION.test(error.message)) continue;
         const type = typeof error.type === 'string' ? error.type : error.type[0];
         const span = error.spans?.find((each) => each.file === error.path);
         if (span === undefined || error.code !== SEMGREP_PARSE_EXIT || !SEMGREP_PARSE_ERRORS.has(type))

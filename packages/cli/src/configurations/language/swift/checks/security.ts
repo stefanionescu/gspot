@@ -18,8 +18,7 @@ import {
 import { SWIFT_SECURITY_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 const SQLITE_FUNCTIONS: ReadonlySet<string> = new Set([

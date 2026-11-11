@@ -9,7 +9,6 @@ import { createFileTree, testdir } from 'testdirs';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { GspotError } from '#cli/system/errors.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { GENERATED_WRITE_MESSAGE } from '#tests/config/generation/plan.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -17,6 +16,8 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+const GENERATED_WRITE_MESSAGE = 'Generated write denied';
 
 test('init keeps the old config file when the generated one cannot be written', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
@@ -83,4 +84,21 @@ test('init keeps a replaced config that changes after the plan reads it', async 
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(edited);
     expect(result.stdout).toContain('kept typos.toml: it changed after init read it');
+});
+
+test('init stopped by SIGINT while it installs tools names what it wrote and the command that finishes the setup', async () => {
+    using _install = spyOn(installers, 'installTools').mockImplementation(() => {
+        process.emit('SIGINT');
+        return Promise.reject(new Error('Installation canceled.'));
+    });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'README.md': '# Example\n' });
+    commitAll(sandbox.path);
+    const stopped = await runGspot(sandbox.path, ['init', '--json']);
+    expect(stopped.code).toBe(130);
+    const failure = JSON.parse(stopped.stdout) as { error: string; message: string };
+    expect(failure.error).toBe('canceled');
+    expect(failure.message).toContain('gspot.toml');
+    expect(failure.message).toContain('Run gspot install to finish the setup.');
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
 });

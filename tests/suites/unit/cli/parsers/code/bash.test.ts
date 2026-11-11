@@ -8,7 +8,12 @@ import {
     QUOTED_TRAP_CALLS,
     TRAP_CALLS,
 } from '#tests/config/parsers/bash.ts';
-import { CONTINUED_TRAP_SOURCE } from '#tests/config/setup/languages.ts';
+
+const CONTINUED_TRAP_SOURCE = String.raw`tmp=$(mktemp -d)
+trap "\
+rm -rf -- \"\$tmp\"; \
+false || :" EXIT
+`;
 
 test('comment masking keeps quoted hashes and line numbers and drops blank lines', async () => {
     const parsed = await parseBashScript('\n# note\necho "a # b" # c\n  ');

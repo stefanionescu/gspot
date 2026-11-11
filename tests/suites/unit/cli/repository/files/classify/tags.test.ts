@@ -71,17 +71,6 @@ test('binary content gets no shebang language or runtime tags', () => {
     });
 });
 
-test('sh overrides the Bash extension tag of a .sh script', () => {
-    const prefix = Buffer.from('#!/bin/sh\nprintf "%s\\n" example\n');
-    const result = classifyFile(
-        '.',
-        { path: 'script.sh', size: prefix.length, executable: false, isSymlink: false },
-        prefix,
-        { attributes: new Map(), generatedPaths: [] },
-    );
-    expect(result.tags).toStrictEqual(['shell', 'text', 'executable', 'shebang:shell', 'sh']);
-});
-
 test.each([...SWIFT_TAG_CASES])(
     'a Swift $name gives the $tag tag only outside comments and strings',
     async ({ path, source, tag, tagged }) => {

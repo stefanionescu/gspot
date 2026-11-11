@@ -16,22 +16,20 @@ import {
 } from '#cli/config/engine.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { listConflictedPaths, runFixers } from '#cli/engine/fixes.ts';
-import { isActive, planChecks } from '#cli/engine/plan.ts';
+import { assertShippedCheck, isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildRunReport } from '#cli/engine/report.ts';
 import { buildBaseResult, formatReproduceCommand, normalizeResultPaths, runBuiltInCheck } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { lookUpCommandTools, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { buildArgumentPath } from '#cli/repository/scopes.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { convertToPosixPath, isInScope } from '#cli/system/paths.ts';
+import { buildArgumentPath, convertToPosixPath, isInScope } from '#cli/system/paths.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { findMissingDependencies, findToolPath } from '#cli/tools/inspect.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
 import type {
@@ -299,5 +297,7 @@ export async function runCheckCode(
     options: CheckRunOptions,
 ): Promise<CheckResult> {
     if (code?.check !== undefined) return runBuiltInCheck(code.check, session, planned, options);
-    return (code?.run ?? runCommandCheck)(session, planned, options);
+    if (code?.run === undefined) return runCommandCheck(session, planned, options);
+    assertShippedCheck(planned);
+    return code.run(session, planned, options);
 }

@@ -5,14 +5,29 @@ import { GRAMMARS_FOLDER } from '#cli/config/parsers.ts';
 import { GIT_VARIABLE_PREFIX } from '#cli/config/repository/git.ts';
 import { CACHE_FOLDER_NAME } from '#cli/config/system.ts';
 import { buildSpawnEnvironment, readCacheFolder, readEnvironmentVariable } from '#cli/system/environment.ts';
-import {
-    CACHE_FOLDER,
-    CONFIG_FOLDER,
-    GIT_ISOLATION_ENVIRONMENT,
-    MISSING_TEST_RUN_FOLDER,
-    TEMPORARY_FOLDER,
-} from '#tests/config/setup/sandboxes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+
+const GIT_ISOLATION_ENVIRONMENT = {
+    GIT_CONFIG_NOSYSTEM: '1',
+    GIT_CONFIG_GLOBAL: '',
+    GIT_AUTHOR_NAME: 't',
+    GIT_AUTHOR_EMAIL: 't@t',
+    GIT_COMMITTER_NAME: 't',
+    GIT_COMMITTER_EMAIL: 't@t',
+    GIT_CONFIG_COUNT: '2',
+    GIT_CONFIG_KEY_0: 'maintenance.auto',
+    GIT_CONFIG_VALUE_0: 'false',
+    GIT_CONFIG_KEY_1: 'gc.auto',
+    GIT_CONFIG_VALUE_1: '0',
+} as const;
+
+const MISSING_TEST_RUN_FOLDER = 'Set TEST_RUN_FOLDER before running the test suite.';
+
+const CACHE_FOLDER = 'cache';
+
+const TEMPORARY_FOLDER = 'temporary';
+
+const CONFIG_FOLDER = 'config';
 
 export const REPOSITORY_ROOT = join(import.meta.dir, '../../..');
 

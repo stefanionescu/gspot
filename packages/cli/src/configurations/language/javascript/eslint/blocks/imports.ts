@@ -13,7 +13,7 @@ import {
     PATH_SEPARATOR_PATTERN,
     REGEX_SYMBOLS,
     TYPESCRIPT_EXTENSION_MAP,
-} from '#cli/config/configurations/blocks.ts';
+} from '#cli/config/configurations/eslint/blocks.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import {
     buildExtensionGlob,

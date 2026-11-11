@@ -5,13 +5,37 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { compareText } from '#cli/system/text.ts';
-import { NGINX_INCLUDE_FILES, NGINX_SCOPE_TABLES, NGINX_SERVER } from '#tests/config/integration/infrastructure.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { hasToolBuild, isLinux } from '#tests/setup/system/platform.ts';
+
+const NGINX_SERVER = `server {
+    listen 443 ssl;
+    include /etc/nginx/tls#local.conf;
+    location / { proxy_pass "http://api:3000"; }
+}
+`;
+
+const NGINX_SCOPE_TABLES = `[nginx]
+image = "nginx:1.29.3-alpine@"
+[[scope]]
+path = "proxy"
+
+configurations = []
+[scope.nginx]
+image = "nginx:1.29.3-alpine"
+`;
+
+const NGINX_INCLUDE_FILES = {
+    'proxy/nginx.conf': 'events {}\nhttp { include "conf.d/*.conf"; }\n',
+    'proxy/tls#local.conf': `ssl_certificate "/etc/nginx/ssl/server  certificate.pem"; ssl_certificate_key "/etc/nginx/ssl/server key.pem";
+# include /outside/ignored.conf;
+`,
+    'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
+} as const;
 
 test.skipIf(!isLinux || Bun.which('docker') === null)(
     'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',

@@ -1,8 +1,9 @@
 import { existsSync } from 'node:fs';
 import { dirname, join, posix, relative, resolve } from 'node:path';
 
-import { LernaTool, PnpmTool, RushTool } from '@manypkg/tools';
+import { InvalidMonorepoError, LernaTool, PnpmTool, RushTool } from '@manypkg/tools';
 import { globSync } from 'tinyglobby';
+import { YAMLError } from 'yaml';
 import { z } from 'zod';
 
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
@@ -16,7 +17,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { findContainedPath, findText } from '#cli/system/files/reads.ts';
+import { findContainedPath, readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath, extractParentFolder, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
@@ -36,11 +37,22 @@ function expandWorkspaceGlobs(root: string, globs: string[]): string[] {
         .map((folder) => relative(root, folder));
 }
 
+/**
+Run a call of the monorepo library that reads a workspace file. A malformed file makes the library throw a syntax
+error from JSON, JSON5, or YAML, a type error for a value of the wrong shape, or, for a Rush project without a
+package.json, an invalid monorepo error. Each of those names the file; any other error passes through.
+*/
 function readWorkspaceFile<Value>(file: string, read: () => Value): Value {
     try {
         return read();
     } catch (error) {
-        if (!(error instanceof Error) || error instanceof GspotError) throw error;
+        if (
+            !(error instanceof SyntaxError) &&
+            !(error instanceof YAMLError) &&
+            !(error instanceof TypeError) &&
+            !(error instanceof InvalidMonorepoError)
+        )
+            throw error;
         throw new GspotError('filesystem', `${file} is not a valid workspace file: ${error.message}. Fix the file.`, {
             cause: error,
         });
@@ -56,7 +68,7 @@ function listWorkspacePackages(root: string): string[] {
             list: () =>
                 expandWorkspaceGlobs(
                     root,
-                    parseYamlFile(PNPM_WORKSPACE_FILE, findText(root, PNPM_WORKSPACE_FILE) ?? '', workspaceGlobsSchema)
+                    parseYamlFile(PNPM_WORKSPACE_FILE, readText(root, PNPM_WORKSPACE_FILE), workspaceGlobsSchema)
                         .packages ?? [],
                 ),
         },
@@ -66,7 +78,7 @@ function listWorkspacePackages(root: string): string[] {
             list: () =>
                 expandWorkspaceGlobs(
                     root,
-                    parseJsonFile(LERNA_FILE, findText(root, LERNA_FILE) ?? '', workspaceGlobsSchema).packages ?? [
+                    parseJsonFile(LERNA_FILE, readText(root, LERNA_FILE), workspaceGlobsSchema).packages ?? [
                         'packages/*',
                     ],
                 ),
@@ -74,7 +86,10 @@ function listWorkspacePackages(root: string): string[] {
         {
             file: RUSH_FILE,
             isRoot: () => RushTool.isMonorepoRootSync(root),
-            list: () => RushTool.getPackagesSync(root).packages.map((found) => found.relativeDir),
+            list: () =>
+                readWorkspaceFile(RUSH_FILE, () => RushTool.getPackagesSync(root)).packages.map(
+                    (found) => found.relativeDir,
+                ),
         },
         {
             file: PACKAGE_JSON,
@@ -86,7 +101,7 @@ function listWorkspacePackages(root: string): string[] {
         },
     ];
     const source = sources.find(({ file, isRoot }) => readWorkspaceFile(file, isRoot));
-    return source === undefined ? [] : readWorkspaceFile(source.file, source.list);
+    return source === undefined ? [] : source.list();
 }
 
 const WORKSPACE_SOURCES = Symbol('workspace sources');

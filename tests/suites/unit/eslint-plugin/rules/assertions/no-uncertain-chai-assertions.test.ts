@@ -25,5 +25,9 @@ buildRuleTester().run('no-uncertain-chai-assertions', noUncertainChaiAssertions,
             code: 'import "chai";\nlist.should.not.have.members([1]);',
             errors: [{ messageId: 'uncertain' }],
         },
+        {
+            code: 'import { expect } from "chai";\nexpect(run).to.change(cart, "total").by(1);',
+            errors: [{ messageId: 'uncertain' }],
+        },
     ],
 });

@@ -149,18 +149,6 @@ const validationTargetSchema = z.strictObject({
 });
 
 export const toolConfigurationSchemas = {
-    data_files: z
-        .strictObject({
-            schemas: validationTargetSchema
-                .array()
-                .default([])
-                .meta({
-                    configurations: ['data-files'],
-                    description:
-                        'File patterns mapped to schema URLs, for files that the SchemaStore catalog does not know.',
-                }),
-        })
-        .optional(),
     docker: z
         .strictObject({
             allowed_registries: z
@@ -178,6 +166,18 @@ export const toolConfigurationSchemas = {
                 .meta({
                     configurations: ['docker'],
                     description: 'The severities Trivy reports.',
+                }),
+        })
+        .optional(),
+    json: z
+        .strictObject({
+            schemas: validationTargetSchema
+                .array()
+                .default([])
+                .meta({
+                    configurations: ['json'],
+                    description:
+                        'File patterns mapped to schema URLs, for files that the SchemaStore catalog does not know.',
                 }),
         })
         .optional(),
@@ -213,7 +213,7 @@ export const toolConfigurationSchemas = {
                     leftOut: 'repository',
                     configurations: ['sql'],
                     description:
-                        'The SQL dialect that SQLFluff parses, such as postgres. The postgres configuration sets it.',
+                        'The SQL dialect that SQLFluff parses, such as postgres. The postgres configuration sets it. A `[[scope]]` sets another dialect for its folder.',
                 }),
         })
         .optional(),

@@ -2,12 +2,34 @@ import { appendFileSync, existsSync, renameSync, rmSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import {
-    FAKE_TOOL_OPTIONS,
-    POLL_INTERVAL_MILLISECONDS,
-    WAIT_INTERVAL_MILLISECONDS,
-} from '#tests/config/setup/programs.ts';
+import { POLL_INTERVAL_MILLISECONDS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 import { splitAssignment } from '#tests/setup/system/programs.ts';
+
+const FAKE_TOOL_OPTIONS = {
+    'version-line': { type: 'string' },
+    'require-cwd': { type: 'string' },
+    'refuse-file': { type: 'string' },
+    write: { type: 'string', multiple: true },
+    'write-hex': { type: 'string', multiple: true },
+    delete: { type: 'string', multiple: true },
+    append: { type: 'string', multiple: true },
+    text: { type: 'string' },
+    record: { type: 'string' },
+    environment: { type: 'string', multiple: true },
+    stdin: { type: 'boolean' },
+    line: { type: 'string', multiple: true },
+    stdout: { type: 'string' },
+    stderr: { type: 'string' },
+    'stdout-hex': { type: 'string' },
+    'print-pid': { type: 'boolean' },
+    mark: { type: 'string' },
+    until: { type: 'string' },
+    wait: { type: 'boolean' },
+    repeat: { type: 'string' },
+    signal: { type: 'string' },
+    'copy-stdin': { type: 'boolean' },
+    exit: { type: 'string' },
+} as const;
 
 const { values, positionals } = parseArgs({ options: FAKE_TOOL_OPTIONS, allowPositionals: true, strict: false });
 const option = Object.fromEntries(

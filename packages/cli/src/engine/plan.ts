@@ -1,15 +1,21 @@
 import { COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
 import { buildPlanInventory, isRepositoryRun, isRootOnlyCheck, selectCheckFiles } from '#cli/engine/files.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { findTool, findToolName, readConfigurations } from '#cli/manifests/read.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { findToolName, getTool } from '#cli/tools/pins.ts';
-import type { CheckState, PlannedCheck, PlannedScope, PlanOptions, RunSelection } from '#cli/types/engine/plan.ts';
-import type { Check, Configuration } from '#cli/types/manifests.ts';
+import type {
+    CheckState,
+    PlannedCheck,
+    PlannedScope,
+    PlanOptions,
+    RunSelection,
+    ShippedPlannedCheck,
+} from '#cli/types/engine/plan.ts';
+import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { ScopeCheck, Session } from '#cli/types/tools.ts';
 
@@ -79,7 +85,7 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
     const tool =
         name === undefined
             ? undefined
-            : getTool([...session.toolConfigurations, ...readConfigurations().values()], name);
+            : findCommandTool([...session.toolConfigurations, ...readConfigurations().values()], name);
     const plannedCheck: PlannedCheck = {
         scope: isRepositoryRun(check) ? rootScope : scope,
         check,
@@ -134,11 +140,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const { settings, scopes } = session;
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const narrowedPaths = buildNarrowedPaths(options);
-    const inventory = buildPlanInventory(
-        session.repository.files,
-        narrowedPaths,
-        options.selection?.content === 'index',
-    );
+    const inventory = buildPlanInventory(session.repository.files, narrowedPaths, options.selection);
     const scopePaths = scopes.map(({ path }) => path);
     const enumerated = Map.groupBy(
         listKeptScopeChecks(settings, scopes, (_scope, check) => isWanted(check, options)).filter(
@@ -171,10 +173,11 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     });
 }
 
-export function listOwnTestScopes(session: Session, planned: PlannedCheck): string[] {
-    const configuration = planned.configuration as Configuration;
+export function listOwnTestScopes(session: Session, planned: ShippedPlannedCheck): string[] {
     return listNestedScopes(
-        session.scopes.filter((scope) => runsTestsItself(session, scope, configuration)).map(({ path }) => path),
+        session.scopes
+            .filter((scope) => runsTestsItself(session, scope, planned.configuration))
+            .map(({ path }) => path),
         planned.scope.path,
     );
 }
@@ -192,6 +195,22 @@ export function buildCheckState(planned: PlannedCheck | undefined): CheckState {
     if (planned === undefined) return { status: 'skipped', cause: 'replaced' };
     if (planned.skip !== undefined) return { status: 'skipped', cause: planned.skip.cause };
     return isActive(planned) ? { status: 'on' } : { status: 'skipped', cause: 'no-files' };
+}
+
+/**
+Find the tool that runs the program of a written command, such as a [[command_check]] or its fix: the tool that a
+configuration declares under that name, or else the program on the PATH.
+*/
+export function findCommandTool(configurations: Iterable<Configuration>, name: string): Tool {
+    return findTool(configurations, name) ?? { name, kind: 'program', system: true, installers: {} };
+}
+
+/**
+Narrow a check that a configuration ships. Only a [[command_check]] has no configuration.
+*/
+export function assertShippedCheck(planned: PlannedCheck): asserts planned is ShippedPlannedCheck {
+    if (planned.configuration === undefined)
+        throw new Error(`${planned.check.id} has check code but no configuration.`);
 }
 
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
@@ -256,7 +275,7 @@ export function listEnabledChecks(scopes: Scope[], settings: Settings): ScopeChe
         (scope, check) => isWanted(check, { stage: 'any' }) && findSettingsSkip(settings, scope, check) === undefined,
     ).map(({ scope, check, configuration }) => {
         const name = findToolName(check);
-        const tool = name === undefined ? undefined : getTool(configurations, name);
+        const tool = name === undefined ? undefined : findCommandTool(configurations, name);
         return { scope: isRepositoryRun(check) ? root : scope, check, configuration, tool };
     });
 }

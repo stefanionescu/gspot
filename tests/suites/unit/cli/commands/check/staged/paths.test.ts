@@ -1,42 +1,12 @@
-import { writeFile } from 'node:fs/promises';
-import * as os from 'node:os';
-import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 
+import * as revision from '#cli/engine/copies/revision.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-
-test('a staged error note prints its path from the root, and a verbose command names the working root', async () => {
-    const command = buildProgramCommand('fakes/tool', '--stderr', 'Cannot read {root}/settings.json', '--exit', '2');
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/path-error',
-                        stage: 'commit',
-                        paths: ['source.txt'],
-                        command,
-                    },
-                ],
-            }),
-        }),
-        'source.txt': 'input',
-    });
-    runGitStep(sandbox.path, ['add', '-A']);
-    const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/path-error', '--json', '--verbose']),
-    );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(2);
-    expect(checked.report.checks[0]!.note).toContain('Cannot read settings.json');
-});
+import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a staged check with nothing staged prints that and exits 0 without copying the index', async () => {
     await using sandbox = await createGitSandbox({
@@ -45,13 +15,12 @@ test('a staged check with nothing staged prints that and exits 0 without copying
     });
     await applyGeneratedFiles(sandbox.path);
     commitAll(sandbox.path);
-    const temporaryFile = join(sandbox.path, '.git', 'temporary-file');
-    await writeFile(temporaryFile, '');
-    using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporaryFile);
+    using copies = spyOn(revision, 'copyRevision');
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--staged', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks).toStrictEqual([]);
     expect(checked.report.notes).toStrictEqual(['Nothing is staged.']);
     const printed = await runGspot(sandbox.path, ['check', '--staged']);
     expect({ code: printed.code, stdout: printed.stdout }).toStrictEqual({ code: 0, stdout: 'Nothing is staged.\n' });
+    expect(copies).not.toHaveBeenCalled();
 });

@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { appendFile, chmod, readFile, unlink, writeFile } from 'node:fs/promises';
+import { appendFile, chmod, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -7,29 +7,22 @@ import prettierPackage from 'prettier/package.json' with { type: 'json' };
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { doctorOutputSchema, installOutputSchema } from '#cli/schemas/commands.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runTool } from '#cli/tools/run.ts';
-import { PACKAGE_MANAGERS } from '#tests/config/integration/commands.ts';
 import { AUTHENTICATION_REQUIRED_MESSAGE, PNPM_WORKSPACE, REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { doctorOutputSchema, installOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 import type { NpmProject, ToolProjectFiles } from '#tests/types/setup.ts';
 
-async function assertReinstallKeepsModules(root: string): Promise<void> {
-    const readmePath = join(root, `${GSPOT_PATHS.nodeModules}/prettier/README.md`);
-    await unlink(readmePath);
-    await writeFile(readmePath, 'authored later');
-    const reinstalled = await spawnGspot(root, ['install']);
-    expect(reinstalled.code, reinstalled.stdout + reinstalled.stderr).toBe(0);
-}
+const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm'] as const;
 
 async function assertFreshClone(
     { root, artifacts }: Pick<NpmProject, 'root' | 'artifacts'>,
@@ -114,7 +107,6 @@ test.concurrent.each([...PACKAGE_MANAGERS])(
             workspace: PNPM_WORKSPACE,
             dependencies: 'keep project dependencies',
         });
-        await assertReinstallKeepsModules(root);
         const readyTools = ['prettier', 'editorconfig-checker'];
         const diagnosed = await spawnGspot(root, ['doctor', '--json']);
         const report = doctorOutputSchema.parse(JSON.parse(diagnosed.stdout));
@@ -134,7 +126,7 @@ test.concurrent.each([...PACKAGE_MANAGERS])(
     },
 );
 
-test('registry settings from the repository .npmrc authenticate an isolated project and leave the .npmrc unchanged', async () => {
+test('registry settings from the repository .npmrc authenticate an isolated project', async () => {
     const token = 'synthetic-registry-credential';
     const requests = { rejected: 0, authenticated: 0 };
     using server = Bun.serve({

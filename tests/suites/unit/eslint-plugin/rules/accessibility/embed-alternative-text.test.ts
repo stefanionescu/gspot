@@ -2,7 +2,10 @@ import { embedAlternativeText } from '#eslint-plugin/rules/accessibility/embed-a
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('embed-alternative-text', embedAlternativeText, {
-    valid: ['const chart = <object data="chart.svg">Sales by month</object>;'],
+    valid: [
+        'const chart = <object data="chart.svg">Sales by month</object>;',
+        'const a = <object data="x"><input type="text" /></object>;',
+    ],
     invalid: [
         { code: 'const a = <object data="x">{/* chart */}</object>;', errors: [{ messageId: 'missingContent' }] },
         { code: 'const a = <object data="x">{...items}</object>;', errors: [{ messageId: 'missingContent' }] },

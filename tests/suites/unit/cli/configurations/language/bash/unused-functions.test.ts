@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { LITERAL_FUNCTION_REFERENCES, UNUSED_FUNCTION_CASES } from '#tests/config/configurations/bash.ts';
+import { LITERAL_FUNCTION_REFERENCES, UNUSED_FUNCTION_SAMPLE } from '#tests/config/configurations/bash.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -11,21 +11,22 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each([...UNUSED_FUNCTION_CASES])(
-    '$check reports $expected.rule in $expected.file and passes after the fix',
-    async (sample) => {
-        await using sandbox = await createSandbox(BASH_SANDBOX);
-        await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
-    },
-);
+test('bash/unused-functions reports never-called in scripts/orphan.sh and passes after the fix', async () => {
+    await using sandbox = await createSandbox(BASH_SANDBOX);
+    await assertCheckSample(sandbox, UNUSED_FUNCTION_SAMPLE, BASH_SANDBOX.cleanSource);
+});
 
-test('Bats lifecycle hooks are called by the runner', async () => {
+test('Bats lifecycle hooks are called by the runner, and the same names in a script are not', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'test.bats':
             '#!/usr/bin/env bats\nsetup() { echo ready; }\nteardown() { echo done; }\nsetup_file() { echo ready; }\nteardown_file() { echo done; }\n',
+        'helpers.sh': '#!/usr/bin/env bash\nsetup() { echo ready; }\n',
     });
-    expect(await runSandboxCheck(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
+    const findings = await runSandboxCheck(sandbox.path, 'bash/unused-functions');
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'helpers.sh', line: 2, rule: 'never-called' },
+    ]);
 });
 
 test('a call from any script in the scope counts, without a source line', async () => {

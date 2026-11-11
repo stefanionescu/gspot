@@ -9,7 +9,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('an unsupported runtime honors JSON before loading commands', async () => {
     await using sandbox = await testdir();
-    const message = validateRuntimeVersion({ node: '0.0.0' }, cliPackage.engines);
+    const message = validateRuntimeVersion({ node: '0.0.0' });
     const command = buildProgramCommand('processes/node-version', '0.0.0', CLI_BIN, 'check', '--json');
     const result = await runCommand(command, { cwd: sandbox.path });
     expect(result.code).toBe(2);

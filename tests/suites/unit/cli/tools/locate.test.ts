@@ -8,11 +8,8 @@ import { testdir } from 'testdirs';
 
 import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
 import * as processes from '#cli/system/processes.ts';
-import { formatUnavailableNote, inspectTool } from '#cli/tools/inspect.ts';
 import { listExecutablePaths, readMiseBinPaths } from '#cli/tools/locate.ts';
-import type { Tool } from '#cli/types/manifests.ts';
 import type { SpawnOptions } from '#cli/types/system.ts';
-import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -92,12 +89,4 @@ test('a failed mise call gives its exit code and its error', async () => {
         failure: expect.stringContaining('mise ERROR the disk is full') as string,
     });
     expect(paths.failure).toMatch(/\b3\b/u);
-    const tool: Tool = {
-        name: 'shfmt',
-        kind: 'program',
-        version: '3.12.0',
-        installers: { mise: { name: 'shfmt', version: '3.12.0', checksums: {} } },
-    };
-    const inspection = await inspectTool(buildToolSearch(sandbox.path, { miseFailure: paths.failure }), tool);
-    expect(formatUnavailableNote(tool, inspection)).toBe(paths.failure!);
 });

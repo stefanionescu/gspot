@@ -7,7 +7,6 @@ import { createFileTree, type TestdirResult } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { installOutputSchema } from '#cli/schemas/commands.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import * as processes from '#cli/system/processes.ts';
 import { FAILED_NPM_VERSION } from '#tests/config/commands/reports.ts';
@@ -17,6 +16,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { installOutputSchema } from '#tests/setup/schemas.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';

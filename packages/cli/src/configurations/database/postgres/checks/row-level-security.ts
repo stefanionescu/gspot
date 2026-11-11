@@ -8,17 +8,19 @@ import {
     SECURITY_INVOKER_MESSAGE,
     SQL_COMMENT,
 } from '#cli/config/configurations/infrastructure.ts';
-import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
+import {
+    readParsedMigrations,
+    selectFrozenMigrations,
+} from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { ROW_SECURITY_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
-import { findNodeFields, listNodeFields, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Migration } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { SqlNodeFields, SqlStatement } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 

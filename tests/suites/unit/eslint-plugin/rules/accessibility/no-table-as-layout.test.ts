@@ -2,7 +2,10 @@ import { noTableAsLayout } from '#eslint-plugin/rules/accessibility/no-table-as-
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-table-as-layout', noTableAsLayout, {
-    valid: ['const table = <table role="grid"><tr><th>Name</th></tr></table>;'],
+    valid: [
+        'const table = <table role="grid"><tr><th>Name</th></tr></table>;',
+        'const a = <div role="presentation" />;',
+    ],
     invalid: [
         {
             code: 'const e = <TABLE role="PRESENTATION" />;\nconst f = <table role={`none`} />;\nconst g = <table role={role} />;',

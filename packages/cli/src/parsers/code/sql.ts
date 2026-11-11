@@ -1,16 +1,6 @@
-import { basename, dirname } from 'node:path/posix';
-
 import type { Node, ParseResult } from '@pgsql/types';
 
-import {
-    DOLLAR_TAG_BLOCKER,
-    FROZEN_ALL,
-    FROZEN_NONE,
-    IDENTIFIER_START,
-    MIGRATION_VERSION,
-    PRISMA_MIGRATION_FILE,
-    WORD_CHARACTER,
-} from '#cli/config/parsers.ts';
+import { DOLLAR_TAG_BLOCKER, IDENTIFIER_START, WORD_CHARACTER } from '#cli/config/parsers.ts';
 import { remember } from '#cli/system/cache.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type {
@@ -155,37 +145,6 @@ function listSqlStatements(source: string, statements: NonNullable<ParseResult['
         built.push(...(nodes as SqlStatement[]));
     }
     return built;
-}
-
-export function selectFrozenMigrations(paths: string[], through: string): Set<string> {
-    if (through === FROZEN_NONE) return new Set();
-    const cutoff = MIGRATION_VERSION.exec(through)?.groups?.['version'];
-    return new Set(
-        paths.filter((path) => {
-            const version = extractMigrationVersion(path);
-            return (
-                through === FROZEN_ALL ||
-                (version !== undefined && cutoff !== undefined && compareMigrationVersions(version, cutoff) <= 0)
-            );
-        }),
-    );
-}
-
-export function extractMigrationVersion(path: string): string | undefined {
-    const name = basename(path);
-    const versioned = name === PRISMA_MIGRATION_FILE ? basename(dirname(path)) : name;
-    return MIGRATION_VERSION.exec(versioned)?.groups?.['version']?.replaceAll('_', '.');
-}
-
-export function compareMigrationVersions(left: string, right: string): number {
-    const first = left.replaceAll('_', '.').split('.');
-    const second = right.replaceAll('_', '.').split('.');
-    for (let index = 0; index < Math.max(first.length, second.length); index += 1) {
-        const before = BigInt(first[index] ?? '0');
-        const after = BigInt(second[index] ?? '0');
-        if (before !== after) return before < after ? -1 : 1;
-    }
-    return 0;
 }
 
 const PARSED_SQL_FILES = Symbol('parsed sql files');

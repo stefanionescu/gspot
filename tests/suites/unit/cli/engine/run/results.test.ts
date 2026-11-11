@@ -5,13 +5,13 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
 import * as locate from '#cli/tools/locate.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import { QUALITY_SEARCH_ARGUMENTS, SCOPE_CHECK_FILES, SCOPE_FINDINGS } from '#tests/config/engine/run.ts';
-import { CANCELED_CHECK_NOTE } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -20,6 +20,16 @@ import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
+
+const CANCELED_CHECK_NOTE = 'The check was canceled.';
+
+function selectFailingCheckCode() {
+    return {
+        check: () => {
+            throw new TypeError('Private failure stack');
+        },
+    };
+}
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
     await using sandbox = await createGitSandbox({});
@@ -212,6 +222,28 @@ test('a check with malformed JSON reports an error, and the other checks keep th
             note: expect.stringContaining('source.txt') as string,
         },
         { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
+    ]);
+});
+
+test('a check that fails inside gspot reports the internal error note, and its stack only under verbose', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'source.txt': 'Input.\n',
+    });
+    const note = `repository/encoding stopped because of an internal error in gspot. Report it at ${cliPackage.bugs.url}, with the stack that --verbose prints.`;
+    const concise = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['repository/encoding'], selectCheckCode: selectFailingCheckCode }),
+    );
+    expect(concise.report.checks.map(({ status, note: text, stack }) => ({ status, note: text, stack }))).toStrictEqual(
+        [{ status: 'error', note, stack: undefined }],
+    );
+    const verbose = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['repository/encoding'], selectCheckCode: selectFailingCheckCode, verbose: true }),
+    );
+    expect(verbose.report.checks).toMatchObject([
+        { status: 'error', note, stack: expect.stringContaining('TypeError: Private failure stack') as string },
     ]);
 });
 

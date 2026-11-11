@@ -1,5 +1,3 @@
-import * as parser from '@typescript-eslint/parser';
-
 import { noCommentedCode } from '#eslint-plugin/rules/structure/no-commented-code.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
@@ -11,6 +9,16 @@ buildRuleTester().run('no-commented-code', noCommentedCode, {
         '// Call readUser() before sending a response.',
         '/* eslint no-console: "error" */',
         '// TODO: replace readUser() with the cache.',
+        {
+            name: 'the script parser of an Astro component decides what parses as code',
+            code: '// sendResponse(user);',
+            languageOptions: { parserOptions: { parser: { parse: () => ({ body: [] }) } } },
+        },
+        {
+            name: 'a script parser of a Vue component decides what parses as code',
+            code: '// sendResponse(user);',
+            languageOptions: { parserOptions: { parser: { ts: { parse: () => ({ body: [] }) } } } },
+        },
     ],
     invalid: [
         { code: '// const delimiter = "{";', errors: [{ messageId: 'code' }] },
@@ -20,17 +28,5 @@ buildRuleTester().run('no-commented-code', noCommentedCode, {
         { code: '/* sendResponse(user); */', errors: [{ messageId: 'code' }] },
         { code: '// if (ready) {\n//   sendResponse(user);\n// }', errors: [{ messageId: 'code' }] },
         { code: '// sendResponse(user); }', errors: [{ messageId: 'code' }] },
-        {
-            name: 'parses with the script parser of an Astro component',
-            code: '// sendResponse(user);',
-            languageOptions: { parserOptions: { parser: { parse: parser.parse } } },
-            errors: [{ messageId: 'code' }],
-        },
-        {
-            name: 'parses with the script parsers of a Vue component',
-            code: '// sendResponse(user);',
-            languageOptions: { parserOptions: { parser: { ts: parser } } },
-            errors: [{ messageId: 'code' }],
-        },
     ],
 });

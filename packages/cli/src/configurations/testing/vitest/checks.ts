@@ -4,7 +4,7 @@ import { join, posix } from 'node:path';
 import { listOwnTestScopes, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
 
 const EXCLUDE_FLAG = '--exclude';
@@ -16,7 +16,7 @@ uncovered unless `coverage.all` is off, and `--coverage.exclude` drops its defau
 */
 async function runVitest(
     session: CheckSession,
-    planned: PlannedCheck,
+    planned: ShippedPlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
     const nested = listOwnTestScopes(session, planned);

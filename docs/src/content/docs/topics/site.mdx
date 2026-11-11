@@ -13,9 +13,10 @@ Before each push, gspot builds the site, then runs these checks:
 
 <ChecksTable guide="topics/site" />
 
-`gspot init` and `gspot add` write the command that runs your `build` script into `site.build_command`.
-`site.build_folder`, the folder of the built files, is `dist` by default. Set either one when it does not fit your
-project.
+Without `site.build_command`, gspot runs the `build` script with the package manager of the repository. The build runs
+in a copy of the tracked files, which also holds the files over `repository.max_file_kilobytes`, such as a video that a
+page imports. `site.build_folder`, the folder of the built files, is `dist` by default. Set either one when it does not
+fit your project.
 
 Run `gspot check --only site/sitemap,site/lychee` to build the site and check its sitemap and internal links. The checks
 read the built files without starting a server, and the link check makes no network requests.

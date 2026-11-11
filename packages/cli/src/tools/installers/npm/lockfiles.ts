@@ -150,15 +150,6 @@ function isPinLocked(
     );
 }
 
-function isInvalidLockfile(error: unknown): boolean {
-    if (error instanceof GspotError) return error.code === 'parse';
-    return (
-        error instanceof Error &&
-        (['SyntaxError', 'YAMLParseError', 'YAMLException'].includes(error.name) ||
-            error.message.startsWith('Expected an indexed object, got '))
-    );
-}
-
 export function stripBunRegistryUrls(lockfile: string, environment: Record<string, string>): string {
     const parsed = parseJsonFile(BUN_LOCKFILE, lockfile, bunLockfileSchema);
     let edited = lockfile;
@@ -189,7 +180,7 @@ export function isLockfileFresh(
             Object.entries(dependencies).every((pin) => isPinLocked(packageManager, document, pin))
         );
     } catch (error) {
-        if (isInvalidLockfile(error)) return false;
+        if (error instanceof GspotError && error.code === 'parse') return false;
         throw error;
     }
 }

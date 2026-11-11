@@ -11,12 +11,58 @@ import { buildCheckSession, runCheckCode, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { LARGE_FILE_TABLES, LOCAL_FILE_PATHS } from '#tests/config/configurations/general.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildRunOptions, CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+
+const LOCAL_FILE_PATHS = {
+    indexOnly: ['.env.'],
+    refused: [
+        '.env',
+        '.env.local',
+        '.env.example.local',
+        'nested/.dev.vars.production',
+        'node_modules/.env.example',
+        'python/.venv/lib/package.py',
+        'python/nested/venv/lib/package.py',
+        'python/deep/.venv/lib/package.py',
+        'swift/.build/output.bin',
+        'sibling/node_modules/package/index.js',
+        'sibling/.dev.vars',
+    ],
+    allowed: [
+        '.env.example',
+        'nested/.env.example',
+        'python/node_modules/package/index.js',
+        'swift/node_modules/package/index.js',
+        'sibling/.venv/lib/package.py',
+        '.venv/lib/package.py',
+        '.build/output.bin',
+        'python/source.py',
+    ],
+    scopes: `[[scope]]
+path = "python"
+configurations = ["python"]
+removed_configurations = { javascript = "This scope uses its own language tools without JavaScript dependencies." }
+[[scope]]
+path = "python/deep"
+[[scope]]
+path = "swift"
+configurations = ["swift"]
+removed_configurations = { javascript = "This scope uses its own language tools without JavaScript dependencies." }
+[[scope]]
+path = "sibling"
+`,
+} as const;
+
+const LARGE_FILE_TABLES = `[[scope]]
+path = "app"
+
+[repository]
+max_file_kilobytes = 1
+`;
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
     await using sandbox = await createGitSandbox({});
@@ -124,7 +170,7 @@ test('a staged outward link plans local-files, and a run that stages another fil
             buildCheckSession(session, CHECK_GENERATION),
             check,
             selectCheckCode(check.check),
-            CHECK_RUN_OPTIONS,
+            {},
         );
         return result.findings.map(({ file, rule, line }) => ({ file, rule, line }));
     };
@@ -132,7 +178,7 @@ test('a staged outward link plans local-files, and a run that stages another fil
     expect(await run(['notes.txt'])).toStrictEqual([]);
 });
 
-test('oversized and invalid UTF-8 files get one repository finding and leave other checks', async () => {
+test('oversized and invalid UTF-8 files leave other checks, and the invalid UTF-8 file gets one encoding finding', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { tables: '[repository]\nmax_file_kilobytes = 1\n' }),
         'large.md': 'x'.repeat(1025),

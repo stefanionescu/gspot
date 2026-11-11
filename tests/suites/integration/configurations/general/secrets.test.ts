@@ -5,18 +5,40 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { API_TOKEN, DOTENV_LINTER_CASES, FIXED_SECRET_FILES, SECRET_FILES } from '#tests/config/integration/general.ts';
-import { AWS_KEY_ID } from '#tests/config/setup/configurations.ts';
+import { API_TOKEN } from '#tests/config/integration/general.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { pushOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import type { GitleaksHistory } from '#tests/types/integration.ts';
+
+const AWS_KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');
+
+const AWS_CREDENTIALS = `aws_access_key_id = "${AWS_KEY_ID}"\n`;
+
+const SECRET_FILES = {
+    'credential,é.py': `api_key = "${API_TOKEN}"\n`,
+    'identity.py': AWS_CREDENTIALS,
+} as const;
+
+const FIXED_SECRET_FILES = {
+    'credential,é.py': 'import os\napi_key = os.environ["API_KEY"]\n',
+    'identity.py': 'import os\naws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]\n',
+} as const;
+
+const DOTENV_LINTER_SAMPLE = {
+    check: 'secrets/dotenv-linter',
+    files: {
+        '.env.example': 'PORT=3000\nsecret_key=example\n',
+    },
+    expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
+    corrected: { files: { '.env.example': 'PORT=3000\n' } },
+} as const;
 
 async function prepareSecrets(root: string): Promise<void> {
     runGitStep(root, ['init', '-q']);
@@ -219,6 +241,6 @@ const installedSandbox = shareInstalledSandbox({
     files: { '.env.example': 'PORT=3000\n' },
 });
 
-test.each([...DOTENV_LINTER_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    await assertCheckSample(installedSandbox(), sample);
+test('secrets/dotenv-linter reports .env.example and passes after the fix', async () => {
+    await assertCheckSample(installedSandbox(), DOTENV_LINTER_SAMPLE);
 });

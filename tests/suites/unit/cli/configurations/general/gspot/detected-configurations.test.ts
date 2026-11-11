@@ -87,6 +87,38 @@ test.each([
     );
 });
 
+test('gspot/detected-configurations reads no evidence in the paths of an ignore that names no rule', async () => {
+    const files = {
+        'services/package.json': '{"private":true,"dependencies":{"zod":"4.1.5"}}',
+        'services/source.ts': 'export const value = 1;\n',
+        'tools/entry.sh': 'echo ready\n',
+    };
+    const ignore = '[[ignore]]\npaths = ["services/**"]\nreason = "Another tool checks the services."\n';
+    await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': buildSandboxSettings(['markdown']) });
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['bash', 'javascript', 'typescript', 'zod']);
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['markdown'], { tables: ignore }));
+    expect(await listDetectedNames(sandbox.path)).toStrictEqual(['bash']);
+});
+
+test('gspot/detected-configurations gives each configuration the evidence of the scope that the command names', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'package.json': '{"private":true,"devDependencies":{"left-pad":"1.3.0"}}',
+        'services/package.json': '{"private":true,"dependencies":{"vitest":"4.1.11"}}',
+        'services/source.ts': 'export const value = 1;\n',
+        'services/page-script.js': 'export const page = 1;\n',
+        'supabase/package.json': '{"private":true}',
+        'supabase/types.ts': 'export const table = 1;\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/detected-configurations');
+    expect(findings.map(({ message }) => message.replace(/, or gspot remove.*$/u, ''))).toStrictEqual([
+        'No check reads javascript (package.json). Run gspot add javascript',
+        'No check reads typescript (1 .ts file). Run gspot add typescript --scope services',
+        'No check reads vitest (vitest in services/package.json). Run gspot add vitest --scope services',
+        'No check reads typescript (1 .ts file). Run gspot add typescript --scope supabase',
+    ]);
+});
+
 test('gspot/detected-configurations says that a configuration with no check changes lint rules', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),

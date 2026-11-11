@@ -26,6 +26,7 @@ import {
     VALE_PACKAGES,
     VALE_TOOL,
 } from '#cli/config/tools/vale.ts';
+import { getTool } from '#cli/manifests/read.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
@@ -33,7 +34,6 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildToolAvailability, inspectTool } from '#cli/tools/inspect.ts';
 import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import type { ArchiveDownload, DownloadSession, ToolInstall } from '#cli/types/tools.ts';
 
 function selectProxyAdvice(): string {

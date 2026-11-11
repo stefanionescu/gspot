@@ -6,7 +6,8 @@ import { reportedTypoSchema } from '#cli/schemas/engine.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { Finding, ReportedTypo, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import type { ReportedTypo, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
     const held = cache.get(path);

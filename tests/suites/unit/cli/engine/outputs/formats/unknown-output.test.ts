@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import { CHECK_OUTPUTS, OUTPUT_PARSE_RESULTS } from '#tests/config/engine/outputs.ts';
 
 function readParseResult(parse: () => Finding[]): { findings: readonly Finding[] } | { error: string } {

@@ -2,7 +2,7 @@ import type { z } from 'zod';
 
 import type { SKIP_CAUSES, STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { checkStateSchema } from '#cli/schemas/engine.ts';
-import type { Check, Tool } from '#cli/types/manifests.ts';
+import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { RepositoryListing, TrackedFile, UntrackedFiles } from '#cli/types/repository.ts';
 import type { Defined, Scope, Settings, TableValues } from '#cli/types/settings.ts';
 import type { RunCache } from '#cli/types/system.ts';
@@ -61,6 +61,10 @@ export type PlannedCheck = ScopeCheck & {
     triggerPaths: string[];
     narrowedLinks?: string[] | undefined;
 };
+
+export type ShippedPlannedCheck = PlannedCheck & { configuration: Configuration };
+
+export type FixerPlannedCheck = PlannedCheck & { check: Omit<Check, 'fix'> & { fix: [string, ...string[]] } };
 
 export type StageFilter = (typeof STAGE_FILTERS)[number];
 

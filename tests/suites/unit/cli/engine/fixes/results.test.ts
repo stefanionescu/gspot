@@ -21,13 +21,13 @@ import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-test.each([0])('the fixer tool owns crash detection when exit is %p', async (code) => {
+test('the fixer tool owns crash detection when exit is 0', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(
         session,
-        buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', String(code)),
+        buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', '0'),
     );
     planned.check = { ...planned.check, exit_codes: [3] };
     const shipped = manifests.readConfigurations();

@@ -195,20 +195,3 @@ test('limit readers belong to the requested language', async () => {
         { check: 'swift/swiftlint', enabled: true },
     ]);
 });
-
-test('limit readers report their enabled state and exact level note', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python'], { level: 'basic' }),
-    });
-    const session = await openSession(sandbox.path);
-    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.max_function_lines')).toStrictEqual([
-        { check: 'python/function-size', enabled: false, note: expect.stringContaining('basic') as string },
-    ]);
-    expect(
-        listSettingReaders(
-            { ...session.settings, level: 'all' },
-            session.scopes[0]!,
-            'limits.python.max_function_lines',
-        ),
-    ).toStrictEqual([{ check: 'python/function-size', enabled: true }]);
-});

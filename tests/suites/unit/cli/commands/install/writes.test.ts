@@ -7,7 +7,6 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { installOutputSchema } from '#cli/schemas/commands.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/edits.ts';
@@ -16,6 +15,7 @@ import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { installOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
@@ -31,7 +31,7 @@ test('install leaves generated files writable, keeps their bytes, and deletes a 
     expect(installOutputSchema.parse(JSON.parse(applied.stdout)).deleted).toContain(`${GSPOT_FOLDER}/obsolete/old.txt`);
     expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
     expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
-    const rulePath = getRuleFilePath('engineering', 'WORKING.md');
+    const rulePath = getRuleFilePath('agents', 'WORKING.md');
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
     expect(attributes.mode & 0o200).toBe(0o200);

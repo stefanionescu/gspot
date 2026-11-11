@@ -4,8 +4,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';

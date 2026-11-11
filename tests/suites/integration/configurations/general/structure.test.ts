@@ -4,15 +4,31 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import type { RunReport } from '#cli/types/engine/run.ts';
-import {
-    DUPLICATED_METADATA,
-    DUPLICATED_PYTHON_LOGIC,
-    SHARED_IMPORTS,
-    SHARED_PYTHON_IMPORTS,
-} from '#tests/config/integration/general.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+
+const DUPLICATED_METADATA = JSON.stringify(
+    Array.from({ length: 40 }, (_, value) => ({ name: `entry-${String(value)}`, value })),
+    null,
+    4,
+);
+
+const SHARED_IMPORTS = Array.from(
+    { length: 12 },
+    (_, index) => `import { value${String(index)} } from './values/value-${String(index)}.ts';`,
+).join('\n');
+
+const SHARED_PYTHON_IMPORTS = Array.from(
+    { length: 12 },
+    (_, index) =>
+        `import module_${String(index)} as alias_${String(index)}\nfrom package_${String(index)} import (\n    first_${String(index)},\n    second_${String(index)},\n)\nfrom package_${String(index)} import third_${String(index)}, \\\n    fourth_${String(index)}`,
+).join('\n');
+
+const DUPLICATED_PYTHON_LOGIC = Array.from(
+    { length: 20 },
+    (_, index) => `    total += values[${String(index)}] * ${String(index + 2)}`,
+).join('\n');
 
 const COUNT_STEPS = Array.from(
     { length: 30 },

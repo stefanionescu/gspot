@@ -3,9 +3,10 @@ import { posix } from 'node:path';
 import ignore from 'ignore';
 
 import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder, isInside } from '#cli/system/paths.ts';
 import type { GitignoreMatcher } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
@@ -58,7 +59,8 @@ export function buildGitignoreMatcher(cache: RunCache, trackedPaths: string[]): 
 /**
 List the patterns of the tracked .gitignore files outside .gspot/, each anchored at the folder of its file. Every clone
 tracks the same files, so every clone lists the same patterns. A pattern that matches a tracked file stays out, because
-Git checks a tracked file whatever its ignore files say.
+Git checks a tracked file whatever its ignore files say. The block that gspot manages stays out too: an install can
+rewrite it, and the generated files must not change with it.
 */
 export function listGitignorePatterns(cache: RunCache, trackedPaths: string[]): string[] {
     const patterns = [
@@ -66,7 +68,7 @@ export function listGitignorePatterns(cache: RunCache, trackedPaths: string[]): 
             trackedPaths
                 .filter((path) => posix.basename(path) === GITIGNORE_FILE && !isGspotPath(path))
                 .flatMap((file) =>
-                    (findText(cache, file) ?? '')
+                    stripBlock(readText(cache, file), { path: file })
                         .split('\n')
                         .flatMap((line) => anchorPattern(line, extractParentFolder(file))),
                 ),

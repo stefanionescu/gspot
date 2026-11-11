@@ -1,10 +1,5 @@
 import { noTryPromise } from '#eslint-plugin/rules/promises/no-try-promise.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-
-buildRuleTester().run('no-try-promise', noTryPromise, {
-    valid: ['try { list.sort(); } catch {}'],
-    invalid: [],
-});
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('no-try-promise', noTryPromise, {
     valid: [

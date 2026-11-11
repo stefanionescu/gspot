@@ -85,7 +85,7 @@ test('build: a build that reads an untracked file fails until the file is in the
     expect(corrected.built).toBe(true);
 });
 
-test.each([0])("build: a run deletes the build's copy after exit %i", async (code) => {
+test("build: a run deletes the build's copy after exit 0", async () => {
     const buildCommand = buildProgramCommand('fakes/tool');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
@@ -102,7 +102,7 @@ test.each([0])("build: a run deletes the build's copy after exit %i", async (cod
             cwd = options.cwd!;
             await mkdir(join(cwd, 'dist'), { recursive: true });
             await writeFile(join(cwd, 'dist/index.html'), 'isolated output');
-            return buildProcessResult({ code });
+            return buildProcessResult({ code: 0 });
         }),
     );
     const runResources = createRunResources();
@@ -203,4 +203,23 @@ test('build: a failed site build skips every check that reads the build, and a n
     const rebuilt = await runChecks(next, buildRunOptions({ only: ['site/build'] }));
 
     expect(rebuilt.report.checks).toMatchObject([{ check: 'site/build', status: 'passed', findings: [] }]);
+});
+
+test('build: without site.build_command, the build script runs with the package manager of the repository', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
+        'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}\n',
+        'package.json': '{"private":true,"scripts":{"build":"astro build"}}\n',
+    });
+    commitAll(sandbox.path);
+    using commands = fakeCommands('bun');
+    commands.mockImplementation(async (_argv, options) => {
+        await mkdir(join(options.cwd, 'dist'), { recursive: true });
+        return buildProcessResult({ code: 0 });
+    });
+    using resources = createRunResources();
+    const session = await openSession(sandbox.path, { resources });
+    const result = await runChecks(session, buildRunOptions({ only: ['site/build'] }));
+    expect(result.report.checks).toMatchObject([{ check: 'site/build', status: 'passed' }]);
+    expect(commands.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([['run', 'build']]);
 });

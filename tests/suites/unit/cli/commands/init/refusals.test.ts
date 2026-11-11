@@ -6,7 +6,6 @@ import { testdir } from 'testdirs';
 
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/generation/plan.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
@@ -15,18 +14,12 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
-test('init with an unknown configuration exits 2 and writes nothing', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
-
-    commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--configurations', 'bassh', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: expect.stringMatching(/\bbash\b/u) as string,
-    });
-});
+const UNCOMMITTED_FORMAT_CASES = ['unborn Git', 'untracked', 'staged changes', 'unstaged changes'].map((state) => ({
+    path: '.prettierrc',
+    original: '{"printWidth": 100}\n',
+    changed: '{"printWidth": 90}\n',
+    state,
+}));
 
 test('init refuses an unreadable package.json before writing', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

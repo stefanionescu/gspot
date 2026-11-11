@@ -20,27 +20,21 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 
-test.each(['platform=macOS'])(
-    'Xcode build plans keep destination %s for the build and the tests',
-    async (destination) => {
-        await using sandbox = await createGitSandbox({});
-        const destinationLine = `xcode_destination = ${JSON.stringify(destination)}\n`;
-        await createFileTree(sandbox.path, {
-            'Package.swift': SWIFT_PACKAGE,
-            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
-                tables: `[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n${destinationLine}`,
-            }),
-        });
-        const session = await openSession(sandbox.path);
-        const { kind, commandArguments, testArguments } = planSwiftBuild(
-            session,
-            planSandboxCheck(session, 'swift/build'),
-        );
-        expect(kind).toBe('xcode');
-        for (const command of [commandArguments, testArguments])
-            expect(command[command.indexOf('-destination') + 1]).toBe(destination);
-    },
-);
+test('Xcode build plans keep destination platform=macOS for the build and the tests', async () => {
+    await using sandbox = await createGitSandbox({});
+    const destinationLine = 'xcode_destination = "platform=macOS"\n';
+    await createFileTree(sandbox.path, {
+        'Package.swift': SWIFT_PACKAGE,
+        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
+            tables: `[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n${destinationLine}`,
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    const { kind, commandArguments, testArguments } = planSwiftBuild(session, planSandboxCheck(session, 'swift/build'));
+    expect(kind).toBe('xcode');
+    for (const command of [commandArguments, testArguments])
+        expect(command[command.indexOf('-destination') + 1]).toBe('platform=macOS');
+});
 
 test.each([...SWIFT_PROJECT_SELECTION_CASES])(
     'the swift/build plan $name',

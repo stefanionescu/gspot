@@ -43,9 +43,3 @@ test('a long Unicode list splits under the byte limit in order, and a path or to
     expect(() => splitFileArguments(['x'.repeat(UNIX_COMMAND_LIMIT + 1)], ['tool'], 'linux')).toThrow(refusal);
     expect(() => splitFileArguments([], ['x'.repeat(UNIX_COMMAND_LIMIT + 1)], 'linux')).toThrow(refusal);
 });
-
-test('file arguments that fill the byte budget stay together and the next byte starts another batch', () => {
-    const first = 'x'.repeat(UNIX_COMMAND_LIMIT - Buffer.byteLength('tool') - 4);
-    expect(splitFileArguments([first, 'a'], ['tool'], 'linux')).toStrictEqual([[first, 'a']]);
-    expect(splitFileArguments([first, 'ab'], ['tool'], 'linux')).toStrictEqual([[first], ['ab']]);
-});

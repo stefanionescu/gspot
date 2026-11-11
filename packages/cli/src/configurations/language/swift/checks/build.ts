@@ -1,4 +1,5 @@
-import { join, relative } from 'node:path';
+import { existsSync } from 'node:fs';
+import { isAbsolute, join, relative } from 'node:path';
 
 import {
     BUILD_LEVELS,
@@ -10,8 +11,10 @@ import {
     RULE_SUFFIX,
     SWIFT_BUILD_NAME,
     SWIFTC_CALL,
+    WARNING_LEVELS,
     XCODE_CLEAN_ACTION,
-} from '#cli/config/configurations/builds.ts';
+    XCODE_WARNINGS_MARKER,
+} from '#cli/config/configurations/swift.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { acquireBuildLock, planSwiftBuild, prepareBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
@@ -20,8 +23,7 @@ import { remember } from '#cli/system/cache.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { SwiftBuildOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 import type { Files } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -75,9 +77,17 @@ function expandResponseFiles(line: string, folder: string, files: Files): string
     });
 }
 
+/**
+Build the package or the Xcode scheme, and report the compiler errors. A package build passes `-warnings-as-errors`.
+An Xcode build cannot: a build setting on the command line reaches the package dependencies too, which Xcode compiles
+with `-suppress-warnings`, and the compiler refuses both options together. So an Xcode build reports each warning in a
+repository file as a finding. An incremental build prints a warning only for a file that it compiles again, so a run
+with warnings leaves a marker, and the next run builds from clean.
+*/
 async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);
-    const { output, code, source } = await runSwiftBuild(session, planned, plan, { clean: false });
+    const hasWarningMarker = plan.kind === 'xcode' && existsSync(join(plan.folder, XCODE_WARNINGS_MARKER));
+    const { output, code, source, files } = await runSwiftBuild(session, planned, plan, { clean: hasWarningMarker });
     const restored = output.replaceAll(
         source.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`),
         () =>
@@ -86,11 +96,16 @@ async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Pr
                 (_match, before: string, folder: string) => `${before}/${folder}/`,
             ),
     );
-    const found = parseOutputFindings(session, restored, {
-        levels: BUILD_LEVELS,
-        defaultRule: COMPILER_RULE,
-    });
-    return assertToolFindings({ code, stdout: restored, stderr: '' }, found, SWIFT_BUILD_NAME);
+    const errors = parseOutputFindings(session, restored, { levels: BUILD_LEVELS, defaultRule: COMPILER_RULE });
+    const warnings =
+        plan.kind === 'xcode'
+            ? parseOutputFindings(session, restored, { levels: WARNING_LEVELS, defaultRule: COMPILER_RULE }).filter(
+                  ({ file }) => !isAbsolute(file),
+              )
+            : [];
+    if (warnings.length > 0) files.write(XCODE_WARNINGS_MARKER, { bytes: Buffer.alloc(0), mode: PRIVATE_FILE });
+    else if (hasWarningMarker) files.deleteFile(XCODE_WARNINGS_MARKER);
+    return assertToolFindings({ code, stdout: restored, stderr: '' }, [...errors, ...warnings], SWIFT_BUILD_NAME);
 }
 
 export async function runSwiftBuild(

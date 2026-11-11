@@ -40,8 +40,8 @@ needs = ["network"]
 runs = "once"
 stage = "push"
 command = ["osv-scanner", "scan", "source", "--config", "{config_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "{files:prefix=--lockfile=:}"]
-help = "Upgrade the package the finding names."
-output = { format = "json", list = "results", children = ["packages", "vulnerabilities"], fields = { file = "source.path", rule = "id", message = ["package.name", "package.version", "summary"] } }
+help = "Upgrade the package to a fixed version that the finding names, and update the lockfile."
+output = { format = "osv-scanner" }
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "A locked version with an advisory ships a vulnerability that attackers can look up."
 

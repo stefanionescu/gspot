@@ -14,4 +14,11 @@ export const LICENSE_EXPLANATIONS = {
         fix: 'Delete the record, or fix the package name or version range that it gives.',
         example: 'A record for `left-pad` after the lockfile drops `left-pad` reports `unused-record`.',
     },
+    [LICENSE_RULES.unmatchedIgnore]: {
+        description: 'Each `[[ignore]]` record for `licenses/allowed` names a lockfile or `gspot.toml` in its `paths`.',
+        why: 'The check reports each package in its lockfile, so an ignore for another file ignores nothing and still reads as an accepted license.',
+        fix: 'Name the lockfile in `paths`, or delete the record and accept each package in a `[[licenses.allowed_package]]` record.',
+        example:
+            'An ignore for `licenses/allowed` with `paths = ["pyproject.toml"]` beside a `uv.lock` reports `unmatched-ignore`.',
+    },
 } as const satisfies RuleExplanations;

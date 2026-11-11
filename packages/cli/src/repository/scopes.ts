@@ -1,31 +1,15 @@
-import { relative, resolve } from 'node:path';
-
 import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { EVERY_FILE_GLOBS, LINT_FOLDERS } from '#cli/config/repository/setup.ts';
 import { FOLDER_CONTENTS, GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import {
-    convertToPosixPath,
-    escapeGlob,
-    findEnclosingFolder,
-    isInInstalledFolder,
-    isInScope,
-    isInside,
-} from '#cli/system/paths.ts';
+import { escapeGlob, findEnclosingFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 
 const scopeFolderSets = new WeakMap<ReadonlyArray<{ path: string }>, ReadonlySet<string>>();
-
-export function buildArgumentPath(root: string, cwd: string, subject: string): string {
-    const path = convertToPosixPath(relative(root, resolve(cwd, subject)));
-    if (!isInside(path)) throw new GspotError('arguments', `Path ${subject} is outside this repository.`);
-    return path;
-}
 
 export function listNestedScopes(paths: readonly string[], scopePath: string): string[] {
     return paths.filter((path) => path !== scopePath && isInScope(path, scopePath));

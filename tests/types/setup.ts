@@ -2,7 +2,7 @@ import type { Linter } from 'eslint';
 import type { z } from 'zod';
 
 import type { miseLockfileSchema } from '#cli/schemas/tools.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';
 import type { Level } from '#cli/types/settings.ts';
 import type { SpawnResult } from '#cli/types/system.ts';

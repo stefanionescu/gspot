@@ -2,17 +2,41 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import { compareText } from '#cli/system/text.ts';
-import {
-    SPELLING_IGNORE_CASES,
-    SPELLING_LOCALE_SETTINGS,
-    SPELLING_SANDBOX,
-} from '#tests/config/integration/general.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxChanges, changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+
+const SPELLING_IGNORE_CASES = [
+    {
+        patterns: ['nested/src/**'],
+        expected: ['nested/bad.txt', 'nested/child/bad.txt', 'nested/child/src/bad.txt', 'nested/trc/bad.txt'],
+    },
+    { patterns: ['*.txt', '!**/keep.txt'], expected: ['nested/src/keep.txt'] },
+] as const;
+
+const SPELLING_SANDBOX = {
+    install: false,
+    configurations: ['spelling'],
+    level: 'all',
+    files: BASE_INSTALLED_FILES,
+} as const;
+
+const SPELLING_LOCALE_SETTINGS = {
+    level: 'all',
+    tables: `[spelling]
+locale = "en-us"
+[[scope]]
+path = "british"
+[scope.spelling]
+locale = "en-gb"
+[[scope]]
+path = "british/child"
+`,
+} as const;
 
 const installedSandbox = shareInstalledSandbox(SPELLING_SANDBOX);
 
@@ -91,6 +115,25 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
         ...Object.fromEntries(paths.map((path) => [`nested/${path.replace(TYPO.the, 'the')}`, 'café the\n'])),
     });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+});
+
+test('typos skips the message files of other languages, and checks the English ones and files outside the folder', async () => {
+    const checked = await runTyposCheck({
+        'gspot.toml': buildSandboxSettings(['spelling', 'javascript', 'translations'], {
+            tables: stringify({ translations: { messages_folder: 'src/translations' } }),
+        }),
+        'src/translations/en.json': `{ "title": "${TYPO.the}" }\n`,
+        'src/translations/en-GB/home.json': `{ "title": "${TYPO.the}" }\n`,
+        'src/translations/de.json': `{ "title": "${TYPO.the}" }\n`,
+        'src/translations/fr/home.json': `{ "title": "${TYPO.the}" }\n`,
+        'src/de.json': `{ "title": "${TYPO.the}" }\n`,
+    });
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.files).toStrictEqual([
+        'src/de.json',
+        'src/translations/en-GB/home.json',
+        'src/translations/en.json',
+    ]);
 });
 
 async function runTyposCheck(files: Record<string, string>) {

@@ -73,7 +73,7 @@ describe('which rule files gspot writes', () => {
     test('a rule file whose sections are all for level all is written only at all', () => {
         expect(defaultLevel.has(getRuleFilePath('naming', 'NAMING.md'))).toBe(false);
         expect(all.has(getRuleFilePath('naming', 'NAMING.md'))).toBe(true);
-        expect(defaultLevel.has(getRuleFilePath('engineering', 'WORKING.md'))).toBe(true);
+        expect(defaultLevel.has(getRuleFilePath('agents', 'WORKING.md'))).toBe(true);
     });
 
     test('rule files that need a file or a dependency are written only when it is there', async () => {

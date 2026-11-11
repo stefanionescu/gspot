@@ -1,5 +1,5 @@
 import { noAnyOriginMessages } from '#eslint-plugin/rules/web/no-any-origin-messages.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
     valid: [
@@ -50,9 +50,4 @@ buildTypedRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
             errors: [{ messageId: 'unverifiedOrigin', line: 1 }],
         },
     ],
-});
-
-buildRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
-    valid: ["window.postMessage({ ready: true }, '*');"],
-    invalid: [],
 });

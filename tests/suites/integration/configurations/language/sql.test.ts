@@ -1,13 +1,33 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { SQL_FUNCTION_SOURCE, SQL_SANDBOX, SQLFLUFF_DIALECT_SETTINGS } from '#tests/config/integration/language.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+
+const SQL_SANDBOX = {
+    configurations: ['sql'],
+    files: {},
+} as const;
+
+const SQL_FUNCTION_SOURCE = `CREATE FUNCTION get_user_name() RETURNS TEXT AS $$ SELECT 'Alex'; $$ LANGUAGE sql;
+SELECT get_user_name();
+`;
+
+const SQLFLUFF_DIALECT_SETTINGS = {
+    tables: `[sql]
+dialect = "postgres"
+[[scope]]
+path = "warehouse"
+[scope.sql]
+dialect = "duckdb"
+[[scope]]
+path = "warehouse/child"
+`,
+} as const;
 
 const installedSandbox = shareInstalledSandbox(SQL_SANDBOX);
 
@@ -67,4 +87,27 @@ test('SQLFluff reports uppercase function names', async () => {
         { line: 1, column: 17, rule: 'CP03' },
         { line: 2, column: 8, rule: 'CP03' },
     ]);
+});
+
+test('SQLFluff marks only the findings that its fixer corrects, and --fix rewrites them', async () => {
+    const { root } = installedSandbox();
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
+        files: {
+            'gspot.toml': buildSandboxSettings(['sql'], { tables: '[sql]\ndialect = "postgres"\n' }),
+            'keywords.sql': 'select id from user_accounts;\n',
+            'wildcard.sql': 'SELECT * FROM orders;\n',
+        },
+    });
+    const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'sql/sqlfluff', '--json']));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(
+        failed.report.checks[0]!.findings.map(({ file, column, rule, fixable }) => ({ file, column, rule, fixable })),
+    ).toStrictEqual([
+        { file: 'keywords.sql', column: 1, rule: 'CP01', fixable: true },
+        { file: 'keywords.sql', column: 11, rule: 'CP01', fixable: true },
+        { file: 'wildcard.sql', column: 8, rule: 'AM04', fixable: false },
+    ]);
+    const fixed = await spawnGspot(root, ['check', 'keywords.sql', '--only', 'sql/sqlfluff', '--fix', '--json']);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    expect(await readFile(join(root, 'keywords.sql'), 'utf8')).toBe('SELECT id FROM user_accounts;\n');
 });

@@ -161,7 +161,7 @@ test('a named folder keeps the finding of an ignored file in it, and a named fil
     expect(named.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
 });
 
-test.each([false])('rerun resolves a scope from the calling folder (staged: %p)', async () => {
+test('rerun resolves a scope from the calling folder', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['bash'] }] }),
         'app/run.sh': 'cleanup() { printf "unused\\n"; }\n',

@@ -1,5 +1,14 @@
-import { copyFileSync, lstatSync, mkdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, posix, relative } from 'node:path';
+import {
+    copyFileSync,
+    lstatSync,
+    mkdirSync,
+    realpathSync,
+    rmSync,
+    statSync,
+    symlinkSync,
+    writeFileSync,
+} from 'node:fs';
+import { basename, dirname, join, posix, relative, resolve } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 
 import {
@@ -20,17 +29,18 @@ import {
     GIT_VERIFY_HEAD_ARGUMENTS,
     RAW_BLOB_ATTRIBUTES,
 } from '#cli/config/engine.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
 import { GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { copyDependencies, readDeclarationDependencies, readIgnoredPaths } from '#cli/engine/copies/dependencies.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { copyValePackages } from '#cli/engine/copies/vale.ts';
 import { readGitText, runGit } from '#cli/repository/git/run.ts';
 import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { preparePath } from '#cli/system/files/bounded.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
@@ -160,6 +170,13 @@ async function checkOutRawFiles(copyRoot: string, cancelSignal: AbortSignal | un
     writeFileSync(attributes, RAW_BLOB_ATTRIBUTES);
     await readGitText(copyRoot, GIT_CHECKOUT_ARGUMENTS, { cancelSignal });
     rmSync(attributes);
+}
+
+export function copyValePackages(root: string, copyRoot: string): void {
+    const source = join(root, GSPOT_PATHS.valePackages);
+    if (statSync(source, { throwIfNoEntry: false })?.isDirectory() !== true) return;
+    const target = preparePath({ root: realpathSync(resolve(copyRoot)) }, GSPOT_PATHS.valePackages);
+    symlinkSync(source, target, process.platform === 'win32' ? 'junction' : 'dir');
 }
 
 /**

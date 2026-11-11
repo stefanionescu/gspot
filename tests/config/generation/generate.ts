@@ -1,5 +1,15 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { NPM_CHECK_IGNORES, STYLELINT_FILES } from '#tests/config/setup/configurations.ts';
+import { NPM_CHECK_IGNORES, STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
+
+const STYLELINT_FILES = {
+    'package.json': STYLELINT_PACKAGE_JSON,
+    'source.css': 'a { opacity: 1; }\n',
+    'app/package.json': STYLELINT_PACKAGE_JSON,
+    'app/source.css': 'a { opacity: 1; }\n',
+    'app/child/package.json': STYLELINT_PACKAGE_JSON,
+    'other/package.json': STYLELINT_PACKAGE_JSON,
+    'plain/package.json': '{"private":true}\n',
+} as const;
 
 export const MARKDOWNLINT_SCOPE_TABLES = `[[scope]]
 path = "same"

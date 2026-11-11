@@ -6,7 +6,7 @@ import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -24,7 +24,7 @@ test('the built-in dispatcher attaches the check ID, fixability, and default hel
         ],
         buildCheckSession(session, CHECK_GENERATION),
         { ...planned, check: { ...planned.check, help: 'Rename this identifier.' } },
-        CHECK_RUN_OPTIONS,
+        {},
     );
     expect(result.status).toBe('failed');
     expect(result.findings).toStrictEqual([

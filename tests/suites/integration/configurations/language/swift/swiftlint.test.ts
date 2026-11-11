@@ -2,9 +2,12 @@ import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import {
     CAST_SWIFT,
     CORRECTED_PARSER_SOURCE,
@@ -17,7 +20,7 @@ import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -159,12 +162,33 @@ test.skipIf(!hasToolBuild('swiftlint'))(
     },
 );
 
+async function prepareParameterProject(
+    root: string,
+    supplied: 'default' | number,
+): Promise<{ maximum: unknown; defaultMaximum: unknown }> {
+    const { value: defaultMaximum } = buildAvailableSettings(
+        [readConfigurations().get('structure')!],
+        'all',
+    ).defaults.get('limits.max_function_parameters')!;
+    const maximum = supplied === 'default' ? defaultMaximum : supplied;
+    const limits =
+        maximum === defaultMaximum
+            ? ''
+            : `[limits.swift]\nmax_function_parameters = { value = ${String(maximum)}, reason = "The project API declares eight required parameters." }\n`;
+    await createFileTree(root, {
+        'gspot.toml': buildSandboxSettings(['swift'], { tables: limits, level: 'all' }),
+        [PARAMETER_LIMIT_CASE.file]: PARAMETER_LIMIT_CASE.source,
+    });
+    await applyGeneratedFiles(root);
+    return { maximum, defaultMaximum };
+}
+
 test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
     'SwiftLint counts parameters with maximum %p',
     async (supplied) => {
         const scenario = PARAMETER_LIMIT_CASE;
         await using sandbox = await createGitSandbox({});
-        const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
+        const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, supplied);
         const result = runBlockingCommand(
             [
                 'swiftlint',
@@ -238,8 +262,10 @@ test.skipIf(!hasToolBuild('swiftlint'))(
             'no_such_rule',
             '--reason',
             REASON,
+            '--json',
         ]);
         expect(refused.code).toBe(2);
+        expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments' });
         const ignored = await spawnGspot(root, [
             'ignore',
             'swift/swiftlint',
@@ -249,5 +275,7 @@ test.skipIf(!hasToolBuild('swiftlint'))(
             REASON,
         ]);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+        const settings = parse(await readFile(join(root, 'gspot.toml'), 'utf8')) as { ignore?: unknown };
+        expect(settings.ignore).toStrictEqual([{ check: 'swift/swiftlint', rule: 'line_length', reason: REASON }]);
     },
 );

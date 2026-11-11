@@ -13,13 +13,32 @@ import { runTool } from '#cli/tools/run.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type { ToolInstall, ToolRelease } from '#cli/types/tools.ts';
 
+/**
+Read the registry page of a release. A registry that gspot cannot reach, or that does not answer in time, gives no
+page: fetch rejects with a TypeError for a network failure.
+*/
+async function readReleasePage(
+    install: ToolInstall,
+    release: ToolRelease,
+): Promise<{ ok: boolean; status: number; text: string } | undefined> {
+    try {
+        const response = await fetch(release.url, {
+            signal: AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND),
+        });
+        return { ok: response.ok, status: response.status, text: await response.text() };
+    } catch (error) {
+        if (error instanceof TypeError || (error instanceof DOMException && error.name === 'TimeoutError'))
+            return undefined;
+        throw error;
+    }
+}
+
 async function readReleaseState(install: ToolInstall, release: ToolRelease): Promise<'absent' | 'held' | undefined> {
-    const response = await fetch(release.url, {
-        signal: AbortSignal.timeout(install.session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND),
-    });
-    if (response.status === NOT_FOUND_STATUS) return 'absent';
-    if (!response.ok) return undefined;
-    const body: unknown = await response.json();
+    const page = await readReleasePage(install, release);
+    if (page === undefined) return undefined;
+    if (page.status === NOT_FOUND_STATUS) return 'absent';
+    if (!page.ok) return undefined;
+    const body: unknown = JSON.parse(page.text);
     const published =
         release.kind === 'npm'
             ? npmReleaseSchema.parse(body).time[release.version]
@@ -87,7 +106,8 @@ export function listPythonReleases(pins: readonly string[]): ToolRelease[] {
 
 /**
 Say why the registry refused pinned tools that a failed resolution names. A release inside the hold waits for its age,
-and a release that the registry does not have needs another pin. A failed registry lookup adds nothing.
+and a release that the registry does not have needs another pin. A registry that answers with an error, that gspot
+cannot reach, or that does not answer in time adds nothing.
 */
 export async function explainReleaseAgeHold(
     install: ToolInstall,
@@ -98,11 +118,7 @@ export async function explainReleaseAgeHold(
     if (named.length === 0 || install.releaseAgeDays === 0) return '';
     const releaseStates = await Promise.all(
         named.map(async (release) => {
-            try {
-                return { label: release.label, state: await readReleaseState(install, release) };
-            } catch {
-                return { label: release.label, state: undefined };
-            }
+            return { label: release.label, state: await readReleaseState(install, release) };
         }),
     );
     const absent = releaseStates.filter(({ state }) => state === 'absent').map(({ label }) => label);

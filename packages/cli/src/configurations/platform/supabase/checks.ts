@@ -50,8 +50,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 

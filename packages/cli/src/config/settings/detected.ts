@@ -1,5 +1,3 @@
-export const BUILD_SCRIPT = ['run', 'build'] as const;
-
 export const OPENNEXT_PACKAGE = '@opennextjs/cloudflare';
 
 export const OPENNEXT_TYPE_DEFAULTS = {
@@ -39,7 +37,5 @@ export const TRANSLATIONS_CONFIGURATION = 'translations';
 export const MESSAGES_FOLDER = 'messages';
 
 export const MESSAGES_FILE_SUFFIX = '.json';
-
-export const SITE_CONFIGURATION = 'site';
 
 export const SWIFT_CONFIGURATION = 'swift';

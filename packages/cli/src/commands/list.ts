@@ -15,6 +15,7 @@ import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { formatCount, formatScope } from '#cli/system/text.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { ConfigurationsListJson, SettingsListJson } from '#cli/types/commands/reports.ts';
@@ -41,6 +42,17 @@ function formatSettingSource({ kind, name }: SettingOrigin): string {
     return kind === 'root' ? name : kind;
 }
 
+/**
+List the lines of one value. Each record of a record list takes its own line, because one line of several records
+is too long to read.
+*/
+function formatValueLines(value: unknown): string[] {
+    if (value === undefined) return [NOT_SET];
+    if (Array.isArray(value) && value.length > 0 && value.every((record) => isTable(record)))
+        return value.map((record) => JSON.stringify(record));
+    return [JSON.stringify(value)];
+}
+
 function buildSettingsResult(session: Session): CommandResult {
     const settings = buildSettingRows(session.settings, session.scopes);
     const groups = Map.groupBy(settings, ({ setting, value, reasonFor, source }) =>
@@ -49,12 +61,17 @@ function buildSettingsResult(session: Session): CommandResult {
     const width = Math.max(...settings.map((row) => row.setting.length)) + KEY_GAP;
     const lines = groups
         .values()
-        .map((rows) => {
+        .flatMap((rows) => {
             const [row] = rows as [(typeof settings)[number]];
-            const value = row.value === undefined ? NOT_SET : JSON.stringify(row.value);
+            const values = formatValueLines(row.value);
+            const [first] = values as [string];
+            const isInline = values.length === 1 && first.length <= VALUE_WIDTH;
             const where = session.scopes.length === 1 ? '' : `  in ${formatScopeGroup(rows.map(({ scope }) => scope))}`;
             const condition = row.reasonFor === undefined ? '' : REASON_CONDITIONS[row.reasonFor];
-            return `${row.setting.padEnd(width)}${value.padEnd(VALUE_WIDTH)} ${condition.padEnd(REASON_HEADER.length)}  ${formatSettingSource(row.source)}${where}`;
+            return [
+                `${row.setting.padEnd(width)}${(isInline ? first : '').padEnd(VALUE_WIDTH)} ${condition.padEnd(REASON_HEADER.length)}  ${formatSettingSource(row.source)}${where}`,
+                ...(isInline ? [] : values.map((value) => `${''.padEnd(width)}${value}`)),
+            ];
         })
         .toArray();
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);

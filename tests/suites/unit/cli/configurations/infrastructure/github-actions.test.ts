@@ -9,10 +9,9 @@ import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import * as processes from '#cli/system/processes.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import {
     ACTIONLINT_EXITS,
     OUTSIDE_GITHUB_ACTIONS,
@@ -20,7 +19,7 @@ import {
 } from '#tests/config/configurations/infrastructure.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeToolExecutables, writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -48,7 +47,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['github-actions/actionlint'],
-        CHECK_RUN_OPTIONS,
+        {},
     );
     expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
@@ -78,7 +77,7 @@ test.each([...WORKFLOW_TEXT_CASES])(
             buildCheckSession(session, CHECK_GENERATION),
             planned!,
             selectCheckCode(planned!.check),
-            CHECK_RUN_OPTIONS,
+            {},
         );
         expect(result.status, JSON.stringify(result)).toBe('passed');
         expect(run).toHaveBeenCalledTimes(1);
@@ -120,7 +119,7 @@ test.each([...ACTIONLINT_EXITS])(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             CHECK_CODE['github-actions/actionlint'],
-            CHECK_RUN_OPTIONS,
+            {},
         );
         expect(result.status, JSON.stringify(result)).toBe(status);
         const [call] = await readCallRecords(record);

@@ -14,8 +14,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder, isInside } from '#cli/system/paths.ts';
 import { listConflictMarkerLines } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function listLinkFindings(root: string, path: string): CheckFinding[] {

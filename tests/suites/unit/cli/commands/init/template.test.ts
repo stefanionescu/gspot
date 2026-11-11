@@ -8,18 +8,90 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { compareText } from '#cli/system/text.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import type { CommandFailureJson } from '#cli/types/system.ts';
-import {
-    COMMENTED_TEMPLATE,
-    TEAM_LEFT_OUT,
-    TEAM_TEMPLATE,
-    TEMPLATE_REFUSALS,
-    TEMPLATE_SCOPE_FILES,
-} from '#tests/config/generation/settings.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+
+const TEAM_TEMPLATE = `# gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
+
+configurations = ["typescript"]
+level = "all"
+test_files = ["**/*.spec.ts"]
+
+# The parsers are state machines.
+[limits]
+max_function_lines = { value = 80, reason = "The parsers are state machines." }
+
+[javascript]
+import_extension = "js"
+
+[tools.eslint.rules]
+eqeqeq = ["smart"]
+
+[[scope]]
+path = "apps/web"
+configurations = ["react"]
+
+[[command_check]]
+id = "licenses"
+command = ["./scripts/licenses.sh"]
+paths = ["**/*"]
+stage = "manual"
+
+[[ignore]]
+check = "commits/commitlint"
+rule = "subject-case"
+reason = "Our commit subjects start with a ticket number."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "no-console"
+paths = ["scripts/**"]
+reason = "The scripts print their output."
+
+[ci]
+enabled = true
+provider = "github"
+
+[nginx]
+image = "nginx:stable"
+
+[[import_rule]]
+name = "app"
+paths = ["app/**"]
+
+[[ignore]]
+check = "licenses"
+reason = "The command runs separately."
+`;
+
+const TEAM_LEFT_OUT = [
+    { key: 'ci.enabled', note: 'CI stays off; run gspot set ci.enabled true' },
+    { key: 'ci.provider', note: 'CI stays off; run gspot set ci.enabled true' },
+    { key: 'nginx.image', note: 'runs code' },
+    { key: '[[import_rule]] app', note: 'names paths of that repository' },
+    { key: '[[ignore]] licenses', note: 'ignores a command check' },
+    { key: 'test_files', note: 'names paths of that repository' },
+    { key: 'javascript.import_extension', note: 'describes that repository' },
+    { key: '[[scope]] apps/web', note: 'names paths of that repository' },
+    { key: '[[command_check]] licenses', note: 'runs code' },
+    { key: '[[ignore]] javascript/eslint no-console', note: 'names paths of that repository' },
+];
+
+const TEMPLATE_SCOPE_FILES = {
+    'package.json': '{"private":true,"workspaces":["apps/*"],"devDependencies":{"left-pad":"1.0.0"}}',
+    'apps/web/package.json': '{"private":true,"dependencies":{"react":"1.0.0"}}',
+    'apps/web/app.tsx': 'export const App = () => <main>Hello</main>;\n',
+};
+
+const COMMENTED_TEMPLATE = `# Old team preface
+configurations = ['typescript']
+
+# Keep modules short.
+[limits]
+max_file_lines = 100
+`;
 
 test('init --from copies the settings that fit any repository and lists each one it leaves out', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
@@ -52,14 +124,51 @@ test('init --from copies the settings that fit any repository and lists each one
     expect(written).not.toContain('[ci]');
 });
 
-test.each(TEMPLATE_REFUSALS)(
+test.each([
+    {
+        name: 'a missing file',
+        files: {},
+        from: 'missing.toml',
+        error: 'arguments',
+        message: 'There is no file at missing.toml.',
+    },
+    {
+        name: 'a folder',
+        files: { 'folder/a.txt': '' },
+        from: 'folder',
+        error: 'arguments',
+        message: '--from needs a file, and folder is a folder.',
+    },
+    {
+        name: 'invalid UTF-8',
+        files: { 'invalid.toml': Buffer.from('ff', 'hex') },
+        from: 'invalid.toml',
+        error: 'settings',
+        message: 'invalid.toml must contain valid UTF-8 text.',
+    },
+    {
+        name: 'an unknown setting',
+        files: { 'team.toml': 'configurations = []\nunknown_key = 1\n' },
+        from: 'team.toml',
+        error: 'settings',
+        message: expect.stringContaining('team.toml:2: unknown_key: There is no setting called unknown_key.') as string,
+    },
+    {
+        name: 'an unknown configuration',
+        files: { 'team.toml': 'configurations = ["pythn"]\n' },
+        from: 'team.toml',
+        error: 'settings',
+        message: expect.stringContaining(
+            'team.toml:1: configurations.0: There is no configuration called pythn.',
+        ) as string,
+    },
+] as const)(
     'init --from refuses $name, names the file, and writes nothing',
-    async ({ files, from }) => {
+    async ({ files, from, error, message }) => {
         using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
         await using sandbox = await createGitSandbox(files);
-        const result = await runGspot(sandbox.path, ['init', '--from', from, '--json']);
-        expect(result.code).toBe(2);
-        expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain(from);
+        const failure = await assertRefusalWithoutWrites(sandbox.path, ['init', '--from', from], error);
+        expect(failure.message).toEqual(message);
     },
 );
 
@@ -147,7 +256,7 @@ test('in a monorepo, a framework of the file goes to the scope that detects it',
     expect(settings.scopes.get('apps/web')?.configurations).toContain('react');
 });
 
-test('what init reads from this repository wins over the file', async () => {
+test('init --from copies the level of the file, and the .editorconfig of this repository wins over its format', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using team = await testdir({
         'gspot.toml': 'configurations = ["typescript"]\nlevel = "all"\n[format]\nindent_width = 8\n',
@@ -156,10 +265,10 @@ test('what init reads from this repository wins over the file', async () => {
         '.editorconfig': 'root = true\n[*]\nindent_size = 2\nindent_style = space\n',
     });
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--level', 'basic']);
+    const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml')]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const written = parseTomlFile('gspot.toml', await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
-    expect(written['level']).toBeUndefined();
+    expect(written['level']).toBe('all');
     expect(written['format']).toMatchObject({ indent_width: 2 });
 });
 

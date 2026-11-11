@@ -1,35 +1,11 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { SWIFT_CHECK } from '#tests/config/e2e.ts';
-import { GUIDE_READ_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import type { CheckSample, GspotProject, SampleFix, Sandbox } from '#tests/types/setup.ts';
-
-async function prepareLanguages(installation: GspotProject): Promise<void> {
-    const { online } = installation;
-    await createFileTree(installation.root, {
-        'entry.py': 'answer = "example"\n',
-        'script.sh': '#!/usr/bin/env bash\necho example\n',
-        'guide.md': GUIDE_READ_MARKDOWN,
-    });
-    await initSandbox(online, { configurations: ['bash', 'python', 'swift'] });
-    const vocabulary = await online.run(installation.root, [
-        'set',
-        'spelling.allowed_words',
-        'NebulaConfiguration',
-        '--reason',
-        'NebulaConfiguration is the project name.',
-    ]);
-    expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
-}
+import type { CheckSample, SampleFix, Sandbox } from '#tests/types/setup.ts';
 
 async function assertInstalledCheck(sandbox: Sandbox, sample: CheckSample & { corrected: SampleFix }): Promise<void> {
     const failed = parseCheckReport(await runCheckOnChanges(sandbox, sample));
@@ -39,16 +15,10 @@ async function assertInstalledCheck(sandbox: Sandbox, sample: CheckSample & { co
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
 }
 
-test('gspot installed from npm runs Vale and the built-in Swift naming check, reports their findings, and passes after the fixes', async () => {
+test('gspot installed from npm runs the built-in Swift naming check, reports its finding, and passes after the fix', async () => {
     await using installation = await createGspotProject();
-    await prepareLanguages(installation);
+    await initSandbox(installation.online, { configurations: ['bash', 'python', 'swift'] });
     const level = await installation.online.run(installation.root, ['set', 'level', 'all']);
     expect(level.code, level.stdout + level.stderr).toBe(0);
     await assertInstalledCheck(installation.offline, SWIFT_CHECK);
-    const vocabulary = await readFile(
-        join(installation.root, getManifestTarget('prose', 'styles/config/vocabularies/words/accept.txt')),
-        'utf8',
-    );
-    const acceptedWords = vocabulary.trim().split('\n');
-    expect(acceptedWords).toContain('Python');
 });

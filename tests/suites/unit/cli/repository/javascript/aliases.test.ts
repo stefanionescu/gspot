@@ -8,8 +8,21 @@ import { readPackageAliases, readScopeAliases } from '#cli/repository/javascript
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { ALIAS_PROJECT, SCOPE_ALIASES } from '#tests/config/repository/detect.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+
+const ALIAS_PROJECT = {
+    'package.json': '{"imports":{"#app/*":"./src/*","#root/*":"./root/*","#shared/*":"./package/*"}}',
+    'tsconfig.json': '{"compilerOptions":{"paths":{"@root/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',
+    'web/package.json': '{"imports":{"#app/*":"./src/*","#shared/*":"./package/*"}}',
+    'web/tsconfig.json': '{"compilerOptions":{"paths":{"@web/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',
+} as const;
+
+const SCOPE_ALIASES = {
+    '#app/*': 'src/*',
+    '#root/*': 'root/*',
+    '@root/*': 'typed/*',
+    '#shared/*': 'compiler/*',
+} as const;
 
 test('alias reads report a malformed tsconfig.json', async () => {
     await using sandbox = await testdir({ 'tsconfig.json': '{ "compilerOptions": { "paths": {} },' });

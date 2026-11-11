@@ -9,8 +9,7 @@ import { findLine, listLintCommands } from '#cli/repository/lint-commands.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck): CheckFinding[] {
     const tools = new Set(

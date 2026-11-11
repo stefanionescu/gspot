@@ -2,8 +2,7 @@ import { expect } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { CheckResult } from '#cli/types/engine/run.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckResult, Finding } from '#cli/types/engine/run.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';

@@ -4,7 +4,7 @@ import { createFileTree } from 'testdirs';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
-import { FRAMEWORK_COMPONENT_CASES, ROUTE_FILE_CASES } from '#tests/config/configurations/structure/files.ts';
+import { FRAMEWORK_COMPONENT_CASE, ROUTE_FILE_CASES } from '#tests/config/configurations/structure/files.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/setup/programs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -44,23 +44,21 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
     );
 });
 
-test.each([...FRAMEWORK_COMPONENT_CASES])(
-    'a lone $framework component is reported once its framework is selected',
-    async ({ framework, name, folder, content }) => {
-        await using sandbox = await createGitSandbox({});
-        const route = `${folder}/users/${name}`;
-        const neighbor = `${folder}/teams/${name}`;
-        const settings = buildSandboxSettings(['typescript', framework], { level: 'all' });
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
-            'package.json': '{"name":"example","private":true,"type":"module"}\n',
-            [route]: content,
-            [neighbor]: content,
-        });
-        const findings = await runSandboxCheck(sandbox.path, 'structure/lone-files');
-        expect(findings.map((finding) => finding.file)).toStrictEqual([neighbor, route]);
-    },
-);
+test('a lone astro component is reported once its framework is selected', async () => {
+    const { framework, name, folder, content } = FRAMEWORK_COMPONENT_CASE;
+    await using sandbox = await createGitSandbox({});
+    const route = `${folder}/users/${name}`;
+    const neighbor = `${folder}/teams/${name}`;
+    const settings = buildSandboxSettings(['typescript', framework], { level: 'all' });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settings,
+        'package.json': '{"name":"example","private":true,"type":"module"}\n',
+        [route]: content,
+        [neighbor]: content,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'structure/lone-files');
+    expect(findings.map((finding) => finding.file)).toStrictEqual([neighbor, route]);
+});
 
 test.each([...ROUTE_FILE_CASES])(
     'a folder with only a $framework route file is a route, not a lone file',

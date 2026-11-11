@@ -88,15 +88,13 @@ function formatConflictingConfigs(summary: DetectionSummary): string[] {
 }
 
 export function formatDetection(summary: DetectionSummary): string {
-    const detected = summary.detected.filter(
-        (evidence) => readConfigurations().get(evidence.configuration)?.always_selected !== true,
-    );
+    const detected = summary.detected.filter((evidence) => !evidence.configuration.always_selected);
     const languages = detected
-        .filter((evidence) => evidence.group === 'language')
+        .filter((evidence) => evidence.configuration.group === 'language')
         .map((evidence) =>
             evidence.count === undefined
-                ? `${evidence.configuration} (${evidence.evidence})`
-                : `${evidence.configuration} ${String(evidence.count)}`,
+                ? `${evidence.configuration.name} (${evidence.evidence})`
+                : `${evidence.configuration.name} ${String(evidence.count)}`,
         );
     const rows = [
         formatDetectionRow(GROUP_LABELS.language.toLowerCase(), languages),
@@ -107,8 +105,8 @@ export function formatDetection(summary: DetectionSummary): string {
                 formatDetectionRow(
                     label.toLowerCase(),
                     detected
-                        .filter((evidence) => evidence.group === group)
-                        .map((evidence) => `${evidence.configuration}  ${evidence.evidence}`),
+                        .filter((evidence) => evidence.configuration.group === group)
+                        .map((evidence) => `${evidence.configuration.name}  ${evidence.evidence}`),
                 ),
             ),
         formatDetectedScopes(summary),

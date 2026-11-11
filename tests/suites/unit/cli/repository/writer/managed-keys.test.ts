@@ -6,9 +6,11 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { hasManagedKeys, planManagedKeys, writePlans } from '#cli/repository/writer.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {
@@ -38,7 +40,8 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     expect(metadata.mode & 0o777).toBe(isWindows ? 0o666 : 0o640);
 });
 
-test.each(['tool.jsonc'])('%s key edits keep comments, containers and array order', async (path) => {
+test('tool.jsonc key edits keep comments, containers and array order', async () => {
+    const path = 'tool.jsonc';
     await using sandbox = await testdir();
     const previous = '// Keep this comment.\n{ "kept": {}, "entries": [0, false, ""], }\n';
     await createFileTree(sandbox.path, { [path]: previous });
@@ -59,6 +62,14 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
 
     const writer = openFiles(sandbox.path);
     const changes = [{ key: ['tasks', 'gspot:check', 'run'], value: CHECK_COMMAND }];
+    expect(() => planManagedKeys(writer, 'broken.toml', changes)).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'parse',
+            message: expect.stringContaining('broken.toml') as string,
+        }),
+    );
+    expect(await readFile(join(sandbox.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
     writePlans(writer, [planManagedKeys(writer, 'mise.toml', changes)]);
     const installed = await readFile(join(sandbox.path, 'mise.toml'), 'utf8');
     expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: CHECK_COMMAND } } });

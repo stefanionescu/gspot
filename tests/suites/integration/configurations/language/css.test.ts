@@ -5,19 +5,79 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import {
-    ALL_LEVEL_STYLELINT_TABLES,
-    CORRECTED_STYLESHEETS,
-    STYLELINT_COMMAND,
-    STYLESHEETS,
-    TAILWIND_FILES,
-} from '#tests/config/integration/language.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+
+const STYLESHEETS = {
+    'build/site.css': `a {
+    color: #ff0000;
+    width: 1.5px;
+    -webkit-text-size-adjust: 100%;
+}
+`,
+    'app/site.css': `.example {
+    color: #f00;
+    width: 1.5px;
+    -webkit-backdrop-filter: blur(2px);
+}
+`,
+} as const;
+
+const ALL_LEVEL_STYLELINT_TABLES = `[tools.stylelint.rules]
+color-hex-length = "short"
+number-max-precision = 0
+[[scope]]
+path = "app"
+
+configurations = []
+[scope.tools.stylelint.rules]
+color-hex-length = "long"
+`;
+
+const CORRECTED_STYLESHEETS = {
+    'build/site.css': `a {
+    color: #f00;
+    width: 1px;
+    text-size-adjust: 100%;
+}
+`,
+    'app/site.css': `.example {
+    color: #ff0000;
+    width: 1px;
+    backdrop-filter: blur(2px);
+}
+`,
+} as const;
+
+const TAILWIND_FILES = {
+    'package.json': '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
+    'build/site.css': `@tailwind utilities;
+
+a {
+    color: theme("colors.brand");
+}
+`,
+    'app/package.json': '{"private":true,"devDependencies":{"tailwindcss":"4.1.13"}}\n',
+    'app/site.css': `@tailwind utilities;
+
+a {
+    color: theme("colors.brand");
+}
+`,
+    'other/package.json': '{"private":true}\n',
+    'other/site.css': `@tailwind utilities;
+
+a {
+    color: theme("colors.brand");
+}
+`,
+} as const;
+
+const STYLELINT_COMMAND = ['check', '--only', 'css/stylelint', '--json'] as const;
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['css'],

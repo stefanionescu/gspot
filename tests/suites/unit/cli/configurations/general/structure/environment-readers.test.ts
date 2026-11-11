@@ -6,7 +6,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import {
-    BASH_ENVIRONMENT_READ_CASES,
+    BASH_ENVIRONMENT_READ_SAMPLE,
     OS_VALUE_SOURCE,
     PYTHON_ENVIRONMENT_SOURCE,
 } from '#tests/config/configurations/structure/files.ts';
@@ -109,10 +109,7 @@ test('each scope uses its own environment readers', async () => {
     ]);
 });
 
-test.each([...BASH_ENVIRONMENT_READ_CASES])(
-    '$check reports $expected.rule in $expected.file and passes after the fix',
-    async (sample) => {
-        await using sandbox = await createSandbox(BASH_SANDBOX);
-        await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
-    },
-);
+test('structure/environment-readers reports read-outside-reader in scripts/reader.sh and passes after the fix', async () => {
+    await using sandbox = await createSandbox(BASH_SANDBOX);
+    await assertCheckSample(sandbox, BASH_ENVIRONMENT_READ_SAMPLE, BASH_SANDBOX.cleanSource);
+});

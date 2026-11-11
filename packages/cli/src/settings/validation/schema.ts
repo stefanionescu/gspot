@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
-import { NO_CHECK_PATHS_MESSAGE, RECORD_PATHS_MESSAGE } from '#cli/config/settings/validation.ts';
+import {
+    NO_CHECK_PATHS_MESSAGE,
+    RECORD_PATHS_MESSAGE,
+    REMOVED_CONFIGURATIONS,
+} from '#cli/config/settings/validation.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -130,7 +134,16 @@ export function validateSettings(settings: Settings, root: string, selecting: re
             })),
         ),
     ];
-    const unknown = listUnknownConfigurations(written);
+    const removed: WrittenConfiguration[] = [
+        ...settings.removed_configurations.map((name) => ({ name, path: [REMOVED_CONFIGURATIONS, name] })),
+        ...settings.scopes.values().flatMap((scope, scopeIndex) =>
+            scope.removed_configurations.map((name) => ({
+                name,
+                path: ['scope', scopeIndex, REMOVED_CONFIGURATIONS, name],
+            })),
+        ),
+    ];
+    const unknown = listUnknownConfigurations([...written, ...removed]);
     if (unknown.length > 0) return unknown;
     const scopes = new Map(
         settings.scopes

@@ -12,6 +12,8 @@ import {
     HOOK_ID_SEPARATOR,
     LINT_COMMAND_FIXES,
     LINT_STAGED_KEY,
+    MISE_RUNNER,
+    MISE_TASK_FOLDER,
     OTHER_FORMATTER_MESSAGE,
     OVERLAPPING_TOOLS,
     PRE_COMMIT_TOOL,
@@ -30,7 +32,7 @@ import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { lintCommandPackageSchema, preCommitConfigSchema } from '#cli/schemas/repository.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { getRequired, isTable } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import type {
     CommandSearch,
     LintCommand,
@@ -39,6 +41,10 @@ import type {
     LintCommandSearch,
 } from '#cli/types/repository.ts';
 
+const MISE_TASKS_KEY = 'tasks';
+
+const TASK_NAME_SEPARATOR = ':';
+
 function findCalledTool(command: string, search: CommandSearch, seen = new Set<string>()): string | undefined {
     const words = command
         .split(COMMAND_SEPARATORS)
@@ -46,14 +52,16 @@ function findCalledTool(command: string, search: CommandSearch, seen = new Set<s
         .map((word) => word.replace(BIN_FOLDER_PREFIX, ''));
     const direct = words.find((word) => search.tools.has(word));
     if (direct !== undefined) return direct;
-    const tasks = words.flatMap((word, index) => {
+    const called = words.flatMap((word, index) => {
         if (!RUNNER_NAMES.includes(word)) return [];
         const next = words[index + 1];
-        return [(next === RUN_WORD ? words[index + TASK_AFTER_RUN] : next) ?? ''];
+        const task = (next === RUN_WORD ? words[index + TASK_AFTER_RUN] : next) ?? '';
+        const body = (word === MISE_RUNNER ? search.miseTasks : search.scripts).get(task);
+        return body === undefined ? [] : [body];
     });
-    const called = tasks.filter((task) => search.scripts.has(task) && !seen.has(task));
     return called
-        .map((task) => findCalledTool(getRequired(search.scripts, task, 'script'), search, seen.add(task)))
+        .filter((body) => !seen.has(body))
+        .map((body) => findCalledTool(body, search, seen.add(body)))
         .find((tool) => tool !== undefined);
 }
 
@@ -116,6 +124,45 @@ function parseLineRows(place: LintCommandPlace, search: CommandSearch): LintComm
         .split(LINE_BREAK)
         .filter((line) => !COMMENT_LINE.test(line))
         .flatMap((line) => buildRow(place, line, search, line.replaceAll(QUOTE_MARK, ' ')));
+}
+
+function listMiseRunCommands(place: LintCommandPlace): Array<[name: string, commands: string[]]> {
+    const [document] = parseCommandDocuments(place) ?? [];
+    const tasks = isTable(document) ? document[MISE_TASKS_KEY] : undefined;
+    return Object.entries(isTable(tasks) ? tasks : {}).map(([name, task]) => [
+        name,
+        [isTable(task) ? task[RUN_WORD] : undefined].flat().filter((each): each is string => typeof each === 'string'),
+    ]);
+}
+
+/**
+List the mise tasks by the name that `mise run` takes, each with the commands it runs. A file task takes its name from
+its path below the tasks folder, without the extension, and a task in mise.toml from its table.
+*/
+function readMiseTasks(places: LintCommandPlace[]): Map<string, string> {
+    return new Map(
+        places
+            .filter(({ source }) => source === 'mise-task')
+            .flatMap((place): Array<[string, string]> => {
+                if (!MISE_TASK_FOLDER.test(place.file))
+                    return listMiseRunCommands(place).map(([name, commands]) => [name, commands.join('\n')]);
+                const { dir, name } = posix.parse(place.file.replace(MISE_TASK_FOLDER, ''));
+                const lines = place.text.split(LINE_BREAK).filter((line) => !COMMENT_LINE.test(line));
+                return [
+                    [
+                        posix.join(dir, name).replaceAll('/', () => TASK_NAME_SEPARATOR),
+                        lines.join('\n').replaceAll(QUOTE_MARK, ' '),
+                    ],
+                ];
+            }),
+    );
+}
+
+function parseMiseTaskRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
+    if (MISE_TASK_FOLDER.test(place.file)) return parseLineRows(place, search);
+    return listMiseRunCommands(place)
+        .flatMap(([, commands]) => commands)
+        .flatMap((command) => command.split(LINE_BREAK).flatMap((line) => buildRow(place, line, search)));
 }
 
 function readDependencyRows({ root, pins }: LintCommandSearch): LintCommand[] {
@@ -182,16 +229,19 @@ export function findLine(text: string, needle: string, from = 1): number {
 List the format scripts of the root package that call a tool gspot does not know. It stays out of listLintCommands,
 because a row there fails a commit, and gspot cannot tell what such a tool formats.
 */
-export function listOtherFormatScripts({ root, tools }: Pick<LintCommandSearch, 'root' | 'tools'>): LintCommand[] {
+export function listOtherFormatScripts(input: Pick<LintCommandSearch, 'root' | 'files' | 'tools'>): LintCommand[] {
+    const { root, tools } = input;
     const text = findText(root, PACKAGE_JSON);
     if (text === undefined) return [];
     const manifest = tryParseFile(() => parseJsonFile(PACKAGE_JSON, text, lintCommandPackageSchema));
     if (manifest === undefined) return [];
-    const scripts = new Map(Object.entries(manifest.scripts));
+    const search = {
+        tools,
+        scripts: new Map(Object.entries(manifest.scripts)),
+        miseTasks: readMiseTasks(readPlaces(input)),
+    };
     return Object.entries(manifest.scripts)
-        .filter(
-            ([name, command]) => FORMAT_SCRIPT.test(name) && findCalledTool(command, { tools, scripts }) === undefined,
-        )
+        .filter(([name, command]) => FORMAT_SCRIPT.test(name) && findCalledTool(command, search) === undefined)
         .map(([name, command]) => ({
             file: PACKAGE_JSON,
             line: findLine(text, `"${name}"`),
@@ -213,9 +263,10 @@ export function listUnparsedCiFiles(input: Pick<LintCommandSearch, 'root' | 'fil
 }
 
 /**
-List what calls or repeats a tool that gspot replaces. The list holds package scripts, lint-staged entries, hook lines,
-pre-commit entries, and CI steps. It also holds root devDependencies that gspot installs too, and the settings of the
-tools that a replaced tool covers.
+List each place in the user's repository that still runs or configures a tool that gspot now runs. These places are
+package scripts, lint-staged entries, hook lines, pre-commit entries, CI steps, and mise tasks that reach such a tool.
+The list also holds root devDependencies that gspot pins too, and the settings files and sections of tools that a gspot
+tool covers.
 */
 export function listLintCommands(input: LintCommandSearch): LintCommand[] {
     const places = readPlaces(input);
@@ -226,7 +277,7 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
             return manifest === undefined ? [] : [{ place, manifest }];
         });
     const scripts = new Map(packages.flatMap(({ manifest }) => Object.entries(manifest.scripts)));
-    const search = { ...input, scripts };
+    const search = { ...input, scripts, miseTasks: readMiseTasks(places) };
     const staged = [
         ...packages.flatMap(({ place, manifest }) => {
             const keyLine = findLine(place.text, `"${LINT_STAGED_KEY}"`);
@@ -259,6 +310,7 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
             .flatMap((place) =>
                 HOOK_FOLDER_PATH.test(place.file) ? parseLineRows(place, wide) : parseDocumentRows(place, wide),
             ),
+        ...places.filter(({ source }) => source === 'mise-task').flatMap((place) => parseMiseTaskRows(place, wide)),
         ...readDependencyRows(input),
         ...readOverlappingToolRows(input),
     ];

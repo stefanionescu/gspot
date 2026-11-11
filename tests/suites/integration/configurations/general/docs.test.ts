@@ -5,7 +5,6 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { compareText } from '#cli/system/text.ts';
-import { LINK_PAGE, LINK_SCOPE_TABLES, ROOT_LINK_FILES } from '#tests/config/integration/general.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -13,6 +12,26 @@ import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { LinkFailure } from '#tests/types/integration.ts';
+
+const LINK_PAGE = `<!doctype html>
+<html lang="en"><head><title>Setup</title></head><body><h1 id="setup">Setup</h1><p>Current setup.</p></body></html>
+`;
+
+const LINK_SCOPE_TABLES = `[docs]
+allowed_urls = { value = ["/root-only$"], reason = "The root guide describes an unavailable endpoint." }
+[[scope]]
+path = "app"
+configurations = []
+[scope.docs]
+allowed_urls = { value = ["/child-only$"], reason = "The child guide describes an unavailable endpoint." }
+`;
+
+const ROOT_LINK_FILES = {
+    'root.md': '# Links\n\nRead [the setup guide](/guides/setup.md#setup).\n',
+    'guides/setup.md': '# Setup\n',
+    'guides/shop.mdx': '# Shop\n\n<a href={link}>Open the shop</a>\n',
+    'web/index.md': '# Shop\n\nRead [the install page](/start/install/).\n',
+} as const;
 
 async function assertLinkFailures(root: string, checkId: string, failures: readonly LinkFailure[]): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', checkId, '--json']));

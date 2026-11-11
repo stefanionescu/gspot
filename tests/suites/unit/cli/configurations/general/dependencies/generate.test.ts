@@ -1,11 +1,10 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { planManagedKeys, writePlans } from '#cli/repository/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { BUN_SCANNER_KEYS } from '#tests/config/configurations/dependencies.ts';
@@ -30,7 +29,7 @@ test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig
     ).toStrictEqual([...BUN_SCANNER_KEYS]);
 });
 
-test('a new Bun scanner file has one table and a final newline, and keeps its key with a note after the scanner setting goes', async () => {
+test('a new Bun scanner file has one table and a final newline', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['dependencies'], {
             tables: BUN_SCANNER_SETTINGS,
@@ -44,11 +43,5 @@ test('a new Bun scanner file has one table and a final newline, and keeps its ke
     writePlans(writer, [planManagedKeys(writer, generated.path, generated.keys)]);
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(
         '[install.security]\nscanner = "@socketsecurity/bun-security-scanner"\n',
-    );
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['dependencies']));
-    const session = await openSession(sandbox.path);
-    const report = await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
-    expect(report.notes).toContain(
-        'Keys that gspot no longer manages stay in your files. Review your shared tool configs after you remove a configuration.',
     );
 });

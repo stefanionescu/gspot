@@ -6,7 +6,7 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
-import { TYPO_REPORT, TYPOS_FINDING_CASES, TYPOS_REPORT_ERRORS } from '#tests/config/engine/outputs.ts';
+import { TYPO_REPORT, TYPOS_FINDING_CASES } from '#tests/config/engine/outputs.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -14,7 +14,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
-test('the typos format tells findings from fatal exits', async () => {
+test('the typos format reads the report of an exit 2 into findings', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling']),
         'sample.txt': `${TYPO.the}\n`,
@@ -39,7 +39,8 @@ test('the typos format tells findings from fatal exits', async () => {
     );
 });
 
-test.each([...TYPOS_REPORT_ERRORS])('typos refuses $name', async ({ output }) => {
+test('typos refuses a report of a missing source', async () => {
+    const output = { ...TYPO_REPORT, path: 'missing.txt' };
     const stdout = JSON.stringify(output);
     await using sandbox = await testdir({ 'sample.txt': `${TYPO.the}\n` });
     const check = getShippedCheck('spelling/typos');

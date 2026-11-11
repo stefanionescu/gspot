@@ -83,7 +83,7 @@ test('osv-scanner reports the katex advisory of the home example, and passes aft
     await using installation = await createGspotProject();
     const root = join(installation.workspace, 'katex-example');
     mkdirSync(root);
-    const { pulled, advisory, summary, fix } = CAUGHT_EXAMPLE;
+    const { pulled, advisory, fix } = CAUGHT_EXAMPLE;
     writeKatexLockfile(root, pulled.version);
     commitAll(root);
     await initSandbox({ root, run: installation.online.run }, { configurations: ['dependencies'] });
@@ -103,8 +103,10 @@ test('osv-scanner reports the katex advisory of the home example, and passes aft
         expect(shown.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
             expected.advisories.map((rule) => ({ file: 'package-lock.json', rule })),
         );
-        for (const finding of shown) expect(finding.message).toContain(`${pulled.name}: ${pulled.version}: `);
-        for (const finding of shown) expect(finding.message).toEndWith(summary);
+        for (const finding of shown) {
+            expect(finding.message).toStartWith(`${pulled.name}@${pulled.version}: `);
+            expect(finding.message).toMatch(/ Fixed in \S+(?:, \S+)*\.$/u);
+        }
     }
 });
 

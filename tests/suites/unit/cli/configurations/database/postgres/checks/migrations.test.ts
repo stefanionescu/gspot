@@ -4,7 +4,7 @@ import { basename, join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { readMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
+import { readMigrations, selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -15,13 +15,14 @@ import {
     POSTGRES_CHECKS,
     ROW_SECURITY_SQL,
 } from '#tests/config/configurations/database.ts';
+import { FROZEN_MIGRATION_CASES, FROZEN_MIGRATION_PATHS } from '#tests/config/parsers/comments.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
-test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
+test('postgres/migration-order reports a migration that does not parse at its line and column, and the other postgres checks skip', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], {
             level: 'all',
@@ -153,3 +154,10 @@ test('Flyway component versions remain distinct and dollar-quoted down markers s
     expect(migrations[1]?.text).toContain("SELECT 'value'");
     expect(migrations[1]?.text).not.toContain('DROP TABLE');
 });
+
+test.each([...FROZEN_MIGRATION_CASES])(
+    'freeze version $through selects the frozen migrations',
+    ({ through, frozen }) => {
+        expect([...selectFrozenMigrations([...FROZEN_MIGRATION_PATHS], through)]).toStrictEqual([...frozen]);
+    },
+);

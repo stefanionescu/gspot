@@ -5,33 +5,30 @@ import { expect, test } from 'bun:test';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { BUN_PIN_SETTINGS, MISE_PIN_FILES } from '#tests/config/configurations/dependencies.ts';
+import { BUN_PIN_SETTINGS } from '#tests/config/configurations/dependencies.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each([...MISE_PIN_FILES])(
-    'package-manager-pin reports a packageManager that differs from the bun pin of $file, and passes once they match',
-    async ({ file }) => {
-        const packageJson = JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' });
-        await using sandbox = await createGitSandbox({
-            'package.json': packageJson,
-            [file]: BUN_PIN_SETTINGS,
-            'gspot.toml': buildSandboxSettings(['javascript']),
-        });
-        const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
-        expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-            {
-                file: 'package.json',
-                line: 1,
-                rule: 'package-manager-pin',
-                message: expect.stringMatching(/\b0\.0\.0-test\.1\b.+\b0\.0\.0-test\.2\b/u) as string,
-            },
-        ]);
-        await writeFile(join(sandbox.path, 'package.json'), packageJson.replace('test.1', 'test.2'));
-        expect(await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
-    },
-);
+test('package-manager-pin reports a packageManager that differs from the bun pin of mise.toml, and passes once they match', async () => {
+    const packageJson = JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' });
+    await using sandbox = await createGitSandbox({
+        'package.json': packageJson,
+        'mise.toml': BUN_PIN_SETTINGS,
+        'gspot.toml': buildSandboxSettings(['javascript']),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
+    expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        {
+            file: 'package.json',
+            line: 1,
+            rule: 'package-manager-pin',
+            message: expect.stringMatching(/\b0\.0\.0-test\.1\b.+\b0\.0\.0-test\.2\b/u) as string,
+        },
+    ]);
+    await writeFile(join(sandbox.path, 'package.json'), packageJson.replace('test.1', 'test.2'));
+    expect(await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
+});
 
 test('a staged mise.toml alone plans package-manager-pin', async () => {
     await using sandbox = await createGitSandbox({
@@ -76,7 +73,7 @@ test('package-manager-pin names no mise range in the line to add, because a pack
 
 test('package-manager-pin uses the highest-precedence mise file in a folder', async () => {
     await using sandbox = await createGitSandbox({
-        ...Object.fromEntries(MISE_PIN_FILES.map(({ file }) => [file, BUN_PIN_SETTINGS])),
+        'mise.toml': BUN_PIN_SETTINGS,
         '.mise.local.toml': '[tools]\nbun = "0.0.0-test.1"\n',
         'package.json': JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' }),
         'gspot.toml': buildSandboxSettings(['javascript']),

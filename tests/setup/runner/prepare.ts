@@ -3,14 +3,13 @@ import { join } from 'node:path';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_BIN_PATHS_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/tools/installers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { buildMiseInstall, findMisePin, listDistinctTools } from '#cli/tools/pins.ts';
+import { listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
+import { buildMiseInstall, findMisePin } from '#cli/tools/pins.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import {
     GSPOT_LAUNCHER_PATH,
     LINE_BREAK,
     MISE_TRUST,
-    TOOL_INSTALL_FOLDER,
     TOOL_PATHS_FILE,
     TOOL_PINS_FILE,
 } from '#tests/config/setup/sandboxes.ts';
@@ -19,6 +18,8 @@ import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder
 import { writeLauncher } from '#tests/setup/system/fakes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+
+const TOOL_INSTALL_FOLDER = 'tools';
 
 await runNpmPack(TEST_RUN_FOLDER, [
     { ...eslintPluginPackage, source: join(REPOSITORY_ROOT, 'packages/eslint-plugin') },

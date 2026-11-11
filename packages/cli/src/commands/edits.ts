@@ -1,7 +1,5 @@
 import { relative } from 'node:path';
 
-import { InvalidArgumentError } from '@commander-js/extra-typings';
-
 import {
     ADD_REMOVE_MESSAGE,
     FIX_INSTALL_MESSAGE,
@@ -9,7 +7,8 @@ import {
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION } from '#cli/config/commands/help.ts';
-import { CHECK_LIST_SEPARATOR, EMPTY_CHECKS_MESSAGE } from '#cli/config/commands/reports.ts';
+import { BUNFIG_FILE, SCANNER_KEY } from '#cli/config/configurations/general.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findEmptySetting } from '#cli/engine/skips.ts';
@@ -17,8 +16,9 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatApplyReport, listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listCheckIds } from '#cli/manifests/read.ts';
 import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/manifests/select.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
-import { buildArgumentPath, selectScope } from '#cli/repository/scopes.ts';
+import { joinScope, selectScope } from '#cli/repository/scopes.ts';
 import { scopeSchema } from '#cli/schemas/settings/file.ts';
 import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
@@ -26,12 +26,15 @@ import { findSetting } from '#cli/settings/inherit.ts';
 import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildArgumentPath } from '#cli/system/paths.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList, quoteArgument } from '#cli/system/text.ts';
 import type {
     CommandLocation,
@@ -79,6 +82,46 @@ function listEmptySettingNotes(previous: Session | undefined, session: Session):
             });
     });
     return [...new Set(notes)];
+}
+
+// A configuration that leaves the scope stops managing the keys its tools write into a config file of the repository.
+function hasReleasedSharedKeys(before: Scope, after: Scope): boolean {
+    const kept = new Set(after.configurations.map(({ name }) => name));
+    return before.configurations.some(
+        (configuration) =>
+            !kept.has(configuration.name) &&
+            configuration.tools.some((tool) => tool.replace_key?.some(({ pointer }) => pointer === true) === true),
+    );
+}
+
+// A scanner that the repository sets by itself in bunfig.toml is no change of this edit.
+function hasReleasedScanner(before: Scope, after: Scope, writer: Files): boolean {
+    if (
+        getTable(before.settings, 'dependencies').bun_scanner === undefined ||
+        getTable(after.settings, 'dependencies').bun_scanner !== undefined
+    )
+        return false;
+    const path = joinScope(after.path, BUNFIG_FILE);
+    const bunfig = writer.read(path);
+    return (
+        bunfig !== undefined &&
+        findValueAt(parseTomlFile(path, bunfig.bytes.toString('utf8')), SCANNER_KEY) !== undefined
+    );
+}
+
+/**
+Note an edit after which gspot stops managing keys that stay in the files of the repository: the keys of a removed
+configuration in a shared config file, or the Bun scanner key in bunfig.toml.
+*/
+function listReleasedKeyNotes(previous: Session | undefined, session: Session, writer: Files): string[] {
+    if (previous === undefined) return [];
+    const isReleased = session.scopes.some((scope) => {
+        const before = previous.scopes.find(({ path }) => path === scope.path);
+        return (
+            before !== undefined && (hasReleasedSharedKeys(before, scope) || hasReleasedScanner(before, scope, writer))
+        );
+    });
+    return isReleased ? [MANAGED_KEYS_NOTE] : [];
 }
 
 async function writeEditedFiles(
@@ -250,6 +293,7 @@ export async function writeSettingsEdit(
     report.notes.push(
         ...(await listInstallNotes(session, generated, report)),
         ...(options.notes ?? []),
+        ...listReleasedKeyNotes(context.session, session, writer),
         ...listEmptySettingNotes(context.session, session),
     );
     const written = report.written.length + report.updated.length + report.deleted.length;
@@ -261,15 +305,6 @@ export async function writeSettingsEdit(
         json: { ...report, summary: shown, changed: result.changed },
         exitCode: 0,
     };
-}
-
-export function parseCheckNames(value: string, previous: string[] | undefined): string[] {
-    const checks = value
-        .split(CHECK_LIST_SEPARATOR)
-        .map((check) => check.trim())
-        .filter((check) => check !== '');
-    if (checks.length === 0) throw new InvalidArgumentError(EMPTY_CHECKS_MESSAGE);
-    return [...(previous ?? []), ...checks];
 }
 
 export const pathsOption: CommandOption = {

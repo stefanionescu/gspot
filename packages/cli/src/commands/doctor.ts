@@ -18,20 +18,22 @@ import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import { findCommandTool } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { findToolName, listDistinctTools } from '#cli/manifests/read.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { findGspotPinMismatch, readGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { findGspotPinMismatch, readGspotPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { findProgram } from '#cli/system/programs.ts';
 import { compareText } from '#cli/system/text.ts';
 import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { findMisePin, findMissingBuild, findToolName, getTool, listDistinctTools } from '#cli/tools/pins.ts';
+import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
 import { findMissingEnvironment } from '#cli/tools/uv.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { CiState, DoctorReport, DoctorTool } from '#cli/types/commands/reports.ts';
@@ -86,7 +88,7 @@ reports a missing one as check does. gspot install does not install such a progr
 async function inspectCommandTools(session: Session): Promise<Array<[string, DoctorTool]>> {
     return await Promise.all(
         [...listCommandPrograms(session)].map(async (name): Promise<[string, DoctorTool]> => {
-            const tool = getTool(session.toolConfigurations, name);
+            const tool = findCommandTool(session.toolConfigurations, name);
             const inspection = await lookUpTool(session, tool, session.root);
             const note = inspection.note ?? (AVAILABLE_TOOL_STATES.has(inspection.state) ? undefined : inspection.help);
             return [

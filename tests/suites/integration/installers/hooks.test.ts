@@ -7,8 +7,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/repository/javascript.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX, UNQUOTED_SCRIPT } from '#tests/config/integration/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
@@ -20,6 +20,12 @@ import { runtimePinsSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+const UNQUOTED_FINDING_PREFIX = '  scripts/b.sh:2:6  SC2086  ';
+
+const UNQUOTED_SCRIPT = '#!/usr/bin/env bash\necho $1\n';
+
+const HOOKS_OFF_SETTINGS = '[hooks]\nenabled = false\n';
 
 async function assertCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
     await using cloneRoot = await createGitSandbox({});
@@ -74,7 +80,9 @@ test('a fresh clone checks before its install, keeps its tracked files through t
     await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\nprintf \'%s\\n\' "$1"\n');
     runGitStep(sandbox.path, ['add', '-A']);
     runGitStep(sandbox.path, ['commit', '--no-verify', '-qm', 'Add the generated files']);
-    await assertCloneHooks(sandbox.path, { NO_COLOR: '1' });
+    // init pins the published gspot in mise.toml, and mise starts a pinned tool before the PATH. With that pin off, the
+    // hook starts the build that the test PATH names.
+    await assertCloneHooks(sandbox.path, { NO_COLOR: '1', MISE_DISABLE_TOOLS: GSPOT_MISE_TOOL });
 });
 
 test('a commit in a linked worktree runs staged checks and blocks a finding', async () => {
@@ -109,7 +117,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     commitAll(main);
     const environment = { NO_COLOR: '1' };
     await runGspotStep({ root: main, run: spawnGspot }, ['install']);
-    const formatted = await spawnGspot(main, ['check', '--only', 'data-files/taplo-format', '--fix']);
+    const formatted = await spawnGspot(main, ['check', '--only', 'toml/taplo', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     commitAll(main);
     runGitStep(main, ['worktree', 'add', '-q', '-b', 'topic', linked]);
@@ -156,7 +164,7 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
     const installed = await spawnGspot(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
-    const formatted = await spawnGspot(project, ['check', '--only', 'data-files/taplo-format', '--fix']);
+    const formatted = await spawnGspot(project, ['check', '--only', 'toml/taplo', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
     await writeFile(join(sandbox.path, 'source.txt'), 'corrected working tree\n');

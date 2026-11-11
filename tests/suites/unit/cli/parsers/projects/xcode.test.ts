@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 
 import { parseBuildSettings, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { FIRST_GROUP_SWIFT_PATH, PROJECT_SYNTAX_CASES, XCODE_PROJECT_REFUSALS } from '#tests/config/parsers/formats.ts';
+import { FIRST_GROUP_SWIFT_PATH, PROJECT_SYNTAX_CASES } from '#tests/config/parsers/formats.ts';
 import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -35,7 +35,8 @@ test('quoted project strings keep escapes and ignore comment-like text', () => {
     ).toBe('/repo/First é Group/Shared.swift');
 });
 
-test.each([...XCODE_PROJECT_REFUSALS])('a project with $name is refused', ({ source }) => {
+test('a project with an unresolved source tree is refused', () => {
+    const source = GROUPED_PBXPROJ.replace('sourceTree = SOURCE_ROOT;', 'sourceTree = CUSTOM_BUILD_ROOT;');
     expect(() => parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj')).toThrow(
         matchFields<GspotError>({ name: 'GspotError', code: 'parse' }),
     );

@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -19,6 +19,12 @@ test('init replaces formatter files, keeps authored notes and CLAUDE.md, and che
         configurations: ['bash', 'python', 'swift'],
     });
     expect(initialized.stdout + initialized.stderr).not.toContain('formatter std');
+    expect(await readFile(join(root, 'prettier.config.mjs'), 'utf8')).not.toBe(STARTING_FILES['prettier.config.mjs']);
+    expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toStartWith(STARTING_FILES['AGENTS.md']);
+    expect({
+        claude: await readFile(join(root, 'CLAUDE.md'), 'utf8'),
+        authored: await readFile(join(root, 'authored.txt'), 'utf8'),
+    }).toStrictEqual({ claude: STARTING_FILES['CLAUDE.md'], authored: STARTING_FILES['authored.txt'] });
     const checked = parseCheckReport(
         await sandbox.offline.run(root, [
             'check',
@@ -32,6 +38,7 @@ test('init replaces formatter files, keeps authored notes and CLAUDE.md, and che
     expect(checks.map(({ check, status }) => ({ check, status }))).toStrictEqual(
         ['bash/shellcheck', 'dependencies/lockfiles', 'format/prettier'].map((check) => ({ check, status: 'failed' })),
     );
+    expect(new Set(checks[0]!.findings.map(({ file }) => file))).toStrictEqual(new Set(['broken.sh']));
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
     const corrected = parseCheckReport(
         await sandbox.offline.run(root, ['check', '--only', 'bash/shellcheck', '--json']),

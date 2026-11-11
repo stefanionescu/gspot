@@ -1,4 +1,4 @@
-import { CALLED_WORKFLOW } from '#tests/config/setup/configurations.ts';
+const CALLED_WORKFLOW = '.github/workflows/called.yml';
 
 const CALLED_WORKFLOW_REFERENCES = [
     [`$/${CALLED_WORKFLOW}`, `./${CALLED_WORKFLOW}`],

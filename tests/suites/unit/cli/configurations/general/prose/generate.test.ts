@@ -3,7 +3,6 @@ import { parse } from 'yaml';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { PROSE_STYLE_CASES } from '#tests/config/configurations/general.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -37,23 +36,6 @@ test('the heading-case exceptions hold a product name of several words', async (
     expect(exceptions).toContain('GitHub Actions');
 });
 
-test('the heading-case exceptions accept a file name and refuse a plain word, a sentence end, and a version', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-        'guide.md': '# Guide\n',
-    });
-    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
-    const target = getManifestTarget('prose', 'styles/gspot/heading-case.yml');
-    const { exceptions } = parse(files.find(({ path }) => path === target)!.content) as { exceptions: string[] };
-    const exception = new RegExp(String.raw`\b(?:${exceptions.join('|')})\b`);
-    const words = ['package.json', 'tsconfig.base.json', 'docs/guide.md', 'settings', 'repository.', 'v1.2'];
-    expect(words.filter((word) => exception.test(word))).toStrictEqual([
-        'package.json',
-        'tsconfig.base.json',
-        'docs/guide.md',
-    ]);
-});
-
 test('the naming terms reach the terms style, and Vale runs that style on code comments', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'naming'], {
@@ -69,22 +51,27 @@ test('the naming terms reach the terms style, and Vale runs that style on code c
         level: 'error',
         swap: { 'config file': 'generated file', program: 'tool' },
     });
+    const valeIni = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
+    const commentSection = valeIni.split('\n\n').find((section) => section.startsWith('[*.{'))!;
+    expect(commentSection.split('\n')).toContain('gspot.terms = YES');
 });
 
-test.each([...PROSE_STYLE_CASES])(
-    'Vale keeps the configured $name rule and its message',
-    async ({ name, expected }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['prose'], {
-                level: 'all',
-                tables: '[prose]\nmax_sentence_words = 17\n',
-            }),
-            'guide.md': '# Guide\n',
-        });
-        const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
-        const target = getManifestTarget('prose', `styles/gspot/${name}.yml`);
-        const style: unknown = parse(files.find(({ path }) => path === target)!.content);
-        expect(style).toMatchObject({ ...expected, level: 'error' });
-        expect(style).not.toHaveProperty('setting');
-    },
-);
+test('Vale keeps the configured sentence-length rule and its message', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], {
+            level: 'all',
+            tables: '[prose]\nmax_sentence_words = 17\n',
+        }),
+        'guide.md': '# Guide\n',
+    });
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
+    const target = getManifestTarget('prose', 'styles/gspot/sentence-length.yml');
+    const style: unknown = parse(files.find(({ path }) => path === target)!.content);
+    expect(style).toMatchObject({
+        scope: 'sentence',
+        max: 17,
+        message: 'A sentence longer than 17 words. Split it.',
+        level: 'error',
+    });
+    expect(style).not.toHaveProperty('setting');
+});

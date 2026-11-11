@@ -10,12 +10,7 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/configurations/general.ts';
-import {
-    FORMAT_OVERRIDES_SETTINGS,
-    NESTED_YAML,
-    PRETTIER_OPTIONS_BY_FILE,
-} from '#tests/config/setup/configurations.ts';
+import { NESTED_YAML } from '#tests/config/setup/configurations.ts';
 import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -23,19 +18,31 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
-    'a format override selector that EditorConfig cannot express is a settings error ($pattern)',
-    async ({ pattern, message }) => {
-        const format = { override: [{ paths: [pattern], indent_width: 2 }] };
-        const generated = buildGeneratedFile(
-            buildSandboxSettings(['javascript'], { rules: true, tables: stringify({ format }) }),
-            'eslint.config.mjs',
-            { 'app/source.js': 'export {};\n' },
-        );
-        const error = await captureRejection(generated);
-        expect(error).toMatchObject({ name: 'GspotError', code: 'settings', message });
-    },
-);
+const FORMAT_OVERRIDES_SETTINGS = `level = "all"\nconfigurations = ["format", "javascript"]\n[rule_files]\nenabled = false\n[format]\nindent_width = 2\nquotes = "double"\nsemicolons = false\n[[format.override]]\npaths = ["tests/**"]\nquotes = "single"\nsemicolons = true\n[[format.override]]\npaths = ["apps/web/**", "!apps/web/exempt.js"]\nquotes = "single"\n[[format.override]]\npaths = ["apps/web/admin/**"]\nquotes = "double"\nsemicolons = true\n[[scope]]\npath = "apps/web"\n[scope.format]\nindent_width = 4\n[[scope]]\npath = "apps/web/admin"\n[scope.format]\nindent_width = 8\n`;
+
+const PRETTIER_OPTIONS_BY_FILE = [
+    { file: 'source.js', tabWidth: 2, singleQuote: false, semi: false, endOfLine: 'lf' },
+    { file: 'tests/unit.js', tabWidth: 2, singleQuote: true, semi: true, endOfLine: 'lf' },
+    { file: 'apps/web/café note.js', tabWidth: 4, singleQuote: true, semi: false, endOfLine: 'lf' },
+    { file: 'apps/web/exempt.js', tabWidth: 4, singleQuote: false, semi: false, endOfLine: 'lf' },
+    { file: 'apps/web/admin/page.js', tabWidth: 8, singleQuote: false, semi: true, endOfLine: 'lf' },
+] as const;
+
+test('a format override selector that EditorConfig cannot express is a settings error', async () => {
+    const format = { override: [{ paths: ['src/*.+(ts|js)'], indent_width: 2 }] };
+    const generated = buildGeneratedFile(
+        buildSandboxSettings(['javascript'], { rules: true, tables: stringify({ format }) }),
+        'eslint.config.mjs',
+        { 'app/source.js': 'export {};\n' },
+    );
+    const error = await captureRejection(generated);
+    expect(error).toMatchObject({
+        name: 'GspotError',
+        code: 'settings',
+        message:
+            'EditorConfig cannot represent selector "src/*.+(ts|js)". Keep this override in a `[[format.override]]` record with a selector that EditorConfig can read.',
+    });
+});
 
 test.each([
     { configurations: ['bash'], shfmt: '\nswitch_case_indent = true\nsimplify = true' },
@@ -90,7 +97,7 @@ test('Prettier keeps Markdown samples as written, and the plugin overrides come 
         }),
     ) as Options;
     expect(pluginPolicy['overrides']).toMatchObject([
-        {},
+        { files: ['*.md', '*.mdx'], options: { embeddedLanguageFormatting: 'off' } },
         { files: '*.astro', options: { parser: 'astro' } },
         { files: ['docs/**'], options: { printWidth: 80 } },
     ]);

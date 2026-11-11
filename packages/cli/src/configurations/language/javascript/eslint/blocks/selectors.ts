@@ -1,4 +1,8 @@
-import { ALIAS_IMPORT_SELECTORS, BASE_SELECTORS, ENVIRONMENT_SELECTOR } from '#cli/config/configurations/blocks.ts';
+import {
+    ALIAS_IMPORT_SELECTORS,
+    BASE_SELECTORS,
+    ENVIRONMENT_SELECTOR,
+} from '#cli/config/configurations/eslint/blocks.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';

@@ -76,8 +76,8 @@ export type ProcessTermination = {
 
 export type SpawnCompletion = Pick<
     Result<{ encoding: 'utf8'; reject: false }>,
-    'code' | 'exitCode' | 'signal' | 'failed' | 'shortMessage' | 'stderr'
-> & { stdout?: string | undefined; cause?: unknown };
+    'code' | 'exitCode' | 'signal' | 'failed' | 'shortMessage'
+> & { stdout?: string | undefined; stderr?: string | undefined; cause?: unknown };
 
 export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
 

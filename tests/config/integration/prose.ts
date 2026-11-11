@@ -1,42 +1,5 @@
-import { dirname } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GUIDE } from '#tests/config/integration/language.ts';
 import { LICENSE, README, TYPO } from '#tests/config/setup/configurations.ts';
-
-export const PROSE_COMMENT_CASES = [
-    { name: 'a .mts file', extension: 'mts', marker: '//', code: 'const text = "delve";' },
-    { name: 'an extensionless script', extension: '', marker: '#', code: 'text = "delve"' },
-] as const;
-
-export const MARKDOWN_COMMENT_CASES = [['ts', '//', 'const text = "whitelist";']] as const;
-
-export const CONCRETE_RULE = `extends: existence
-message: "Use inspect."
-level: error
-tokens: [delve]
-`;
-
-export const PROSE_CASES = [
-    {
-        check: 'prose/vale',
-        files: {
-            'docs/selling.md': `# A page
-
-This powerful cache makes the application much faster.
-`,
-        },
-        expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
-        corrected: {
-            files: {
-                'docs/selling.md': `# A page
-
-This cache returns stored records.
-`,
-            },
-        },
-    },
-] as const;
 
 export const PACKAGE_STYLE_CASES = [
     { sample: 'Released July first.', findings: [[1, 'gspot.date-ordinals']] },
@@ -73,7 +36,7 @@ export const STYLE_CASES = [
     {
         rule: 'em-dashes',
         path: 'directives.md',
-        source: '# Guide\n\nA sentence -- with punctuation.\n\nUse `// eslint-disable-next-line no-console -- reason: the command prints its result`.\n\nUse `value -- item`.\n\n```javascript\n// eslint-disable-next-line no-console -- reason: the command prints its result\n```\n',
+        source: '# Guide\n\nA sentence -- with punctuation.\n\nUse `// eslint-disable-next-line no-console -- reason: the command prints its result`.\n\nUse `value -- item`.\n\n```javascript\n// eslint-disable-next-line no-console -- reason: the command prints its result\n```\n\nRun mise exec -- gspot check.\n',
         findings: [
             {
                 line: 3,
@@ -244,6 +207,12 @@ Read the settings.
 `,
         findings: [{ line: 2, rule: 'gspot.heading-case' }],
     },
+    {
+        rule: 'heading-case',
+        path: 'digits.md',
+        source: '# 3D: generate\n\nRead the settings.\n\n## 3D Generate Things\n\nRead the options.\n',
+        findings: [{ line: 5, rule: 'gspot.heading-case' }],
+    },
 ] as const;
 
 export const HEADING_CASE_GUIDE = `---
@@ -290,14 +259,6 @@ export const VERSION_RANGE_SOURCE = [
     'Use version 3.2.0\nor later.',
     '',
 ].join('\n');
-
-export const EXAMPLE_STYLE_FOLDER = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Example`;
-
-export const VALE_INI = `StylesPath = styles
-MinAlertLevel = suggestion
-[*]
-BasedOnStyles = Example
-`;
 
 export const PROSE_SANDBOX = {
     configurations: ['prose'],

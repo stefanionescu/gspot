@@ -48,7 +48,7 @@ test('a rule file that rule_files.exclude names leaves the index', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
-            tables: `[rule_files]\nexclude = ["${getRuleFilePath('engineering', 'CLI.md')}"]\n`,
+            tables: `[rule_files]\nexclude = ["${getRuleFilePath('agents', 'CLI.md')}"]\n`,
         }),
     });
 
@@ -77,14 +77,11 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
 
 test('the AGENTS.md Commands section names its launcher once', () => {
     const command = 'pnpm exec gspot';
-    const block = buildAgentsBlock({
-        files: [],
-        hasOwnTitle: false,
-        startCommand: command,
-        hooksEnabled: true,
-    });
-    const commands = block.slice(block.indexOf(COMMANDS_HEADING));
-    expect(commands).toContain(`The rules write \`gspot\` for \`${command}\`.`);
+    const block = buildAgentsBlock({ files: [], hasOwnTitle: false, startCommand: command, hooksEnabled: true });
+    const commands = block.slice(block.indexOf(COMMANDS_HEADING)).split('\n');
+    expect(commands.filter((line) => line.includes(command))).toStrictEqual([
+        `The rules write \`gspot\` for \`${command}\`.`,
+    ]);
 });
 
 test.each([

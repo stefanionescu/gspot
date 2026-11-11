@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
@@ -10,6 +10,7 @@ import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import {
     INDEX_SETTINGS,
+    NETWORK_ADVICE,
     PYTHON_DEFAULT_INDEX_ORIGIN,
     PYTHON_PACKAGE_ORIGINS,
     PYTHON_TOOL_NOUN,
@@ -22,8 +23,10 @@ import {
     UV_PROJECT_ENVIRONMENT,
     UV_PROJECT_INSTALL_ARGUMENTS,
     UV_SETTINGS_FILE,
+    UV_STALE_LOCKFILE,
     UV_TOOL,
 } from '#cli/config/tools/installers.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -45,7 +48,8 @@ import {
     runInstallStep,
     runRequiredInstallStep,
 } from '#cli/tools/installers/steps.ts';
-import { buildPythonProjectTable, getTool, listPackagePins } from '#cli/tools/pins.ts';
+import { findRepositoryPython } from '#cli/tools/locate.ts';
+import { buildPythonProjectTable, listPackagePins } from '#cli/tools/pins.ts';
 import type { ReplacementRequest } from '#cli/types/repository.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type {
@@ -76,14 +80,10 @@ async function runUv(
         env: { [UV_PROJECT_ENVIRONMENT]: join(runFolder, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
         step: `running uv ${commandArguments.join(' ')} for ${GSPOT_PATHS.pythonProject}`,
     });
-    if (result.end === 'missing')
-        throw new GspotError(
-            'install',
-            formatUnavailableNote(getTool(install.session.toolConfigurations, UV_TOOL), {
-                name: UV_TOOL,
-                state: 'missing',
-            }),
-        );
+    if (result.end === 'missing') {
+        const uv = getTool(readConfigurations().values(), UV_TOOL);
+        throw new GspotError('install', formatUnavailableNote(uv, { name: UV_TOOL, state: 'missing' }));
+    }
     if (result.code !== 0) {
         const output = redactInstallOutput(result, credentials);
         const pins = listPackagePins(install.session.toolConfigurations).python;
@@ -223,13 +223,38 @@ export async function installPythonProjects(install: ToolInstall, executable: st
         const place = folder === '' ? 'the repository root' : folder;
         return { folder, place };
     });
-    for (const { folder, place } of lines)
-        await runRequiredInstallStep(install, [executable, ...UV_PROJECT_INSTALL_ARGUMENTS], {
-            cwd: join(root, folder),
+    for (const { folder, place } of lines) {
+        const cwd = join(root, folder);
+        const python = await listInterpreterArguments(install, cwd);
+        await runRequiredInstallStep(install, [executable, ...UV_PROJECT_INSTALL_ARGUMENTS, ...python], {
+            cwd,
             step: `installing the Python environment of ${place}`,
             name: `uv sync in ${place}`,
+            readAdvice: (result) =>
+                UV_STALE_LOCKFILE.test(result.stderr)
+                    ? `Run uv lock in ${place} to update ${UV_LOCKFILE}, then run gspot install again.`
+                    : NETWORK_ADVICE,
         });
+    }
     return lines.map(({ place }) => `installed the Python environment of ${place}`);
+}
+
+/**
+Name the Python for a project environment that does not exist yet: the one that a mise config file of the repository
+sets for the project folder. uv picks the interpreter when mise is absent, or when no such file sets one. An
+environment that exists keeps its Python, because uv builds an environment again for another one and drops what the
+project added to it.
+*/
+async function listInterpreterArguments(install: ToolInstall, cwd: string): Promise<string[]> {
+    const { misePath, session } = install;
+    const hasEnvironment = statSync(join(cwd, PYTHON_ENVIRONMENT_FOLDER), { throwIfNoEntry: false }) !== undefined;
+    if (misePath === undefined || hasEnvironment) return [];
+    const python = await findRepositoryPython(session.root, cwd, {
+        misePath,
+        cancelSignal: session.cancelSignal,
+        timeoutSeconds: session.settings.tool_timeout_seconds,
+    });
+    return python === undefined ? [] : [UV_FLAGS.python, python];
 }
 
 export function isPythonLockfileFresh(

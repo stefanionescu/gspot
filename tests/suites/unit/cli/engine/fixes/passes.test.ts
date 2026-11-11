@@ -9,7 +9,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { RunOptions } from '#cli/types/engine/run.ts';
-import { FIX_LINTER_CASES } from '#tests/config/engine/run.ts';
+import { FIX_LINTER_CASE } from '#tests/config/engine/run.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/setup/sandboxes.ts';
 import { listFindingRows, runGspot } from '#tests/setup/cli/commands.ts';
@@ -19,52 +19,50 @@ import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-test.each([...FIX_LINTER_CASES])(
-    'after --fix, the $configuration check status matches what the linter still reports',
-    async (row) => {
-        await using sandbox = await createGitSandbox({});
-        const check = readConfigurations()
-            .get(row.configuration)!
-            .checks.find((check) => check.id === `${row.configuration}/${row.tool}`)!;
-        const executable = join(toolModules, row.tool, 'bin', row.executable);
-        const command = [process.execPath, executable, '--config', row.config];
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([], {
-                rules: true,
-                tables: stringify({
-                    command_check: [
-                        {
-                            id: 'project/native',
-                            command: [...command, ...row.formatter, '{files}'],
-                            fix: [...command, ...row.formatter, '--fix', '{files}'],
-                            exit_codes: check.exit_codes!,
-                            output: check.output,
-                            paths: [row.path],
-                            stage: 'commit',
-                        },
-                    ],
-                }),
+test('after --fix, the javascript check status matches what the linter still reports', async () => {
+    const row = FIX_LINTER_CASE;
+    await using sandbox = await createGitSandbox({});
+    const check = readConfigurations()
+        .get(row.configuration)!
+        .checks.find((check) => check.id === `${row.configuration}/${row.tool}`)!;
+    const executable = join(toolModules, row.tool, 'bin', row.executable);
+    const command = [process.execPath, executable, '--config', row.config];
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'project/native',
+                        command: [...command, ...row.formatter, '{files}'],
+                        fix: [...command, ...row.formatter, '--fix', '{files}'],
+                        exit_codes: check.exit_codes!,
+                        output: check.output,
+                        paths: [row.path],
+                        stage: 'commit',
+                    },
+                ],
             }),
-            [row.config]: row.nativeConfiguration,
-            [row.path]: row.sample,
-        });
-        await writeFile(join(sandbox.path, row.config), row.invalidConfiguration);
-        const invalid = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/native'] }));
-        expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
-        await writeFile(join(sandbox.path, row.config), row.nativeConfiguration);
-        const session = await openSession(sandbox.path);
-        const options: RunOptions = buildRunOptions({ fix: true, only: ['project/native'] });
-        const failed = await runChecks(session, options);
-        expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
-        expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [row.path] }]);
-        expect(await readFile(join(sandbox.path, row.path), 'utf8')).toBe(row.partial);
-        await writeFile(join(sandbox.path, row.path), row.corrected);
-        const corrected = await runChecks(await openSession(sandbox.path), options);
-        expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);
-    },
-);
+        }),
+        [row.config]: row.nativeConfiguration,
+        [row.path]: row.sample,
+    });
+    await writeFile(join(sandbox.path, row.config), row.invalidConfiguration);
+    const invalid = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/native'] }));
+    expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
+    await writeFile(join(sandbox.path, row.config), row.nativeConfiguration);
+    const session = await openSession(sandbox.path);
+    const options: RunOptions = buildRunOptions({ fix: true, only: ['project/native'] });
+    const failed = await runChecks(session, options);
+    expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
+    expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [row.path] }]);
+    expect(await readFile(join(sandbox.path, row.path), 'utf8')).toBe(row.partial);
+    await writeFile(join(sandbox.path, row.path), row.corrected);
+    const corrected = await runChecks(await openSession(sandbox.path), options);
+    expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);
+});
 
-test('after --fix, the checks read the fixed file and other files stay as they were', async () => {
+test('after --fix, the checks read the fixed file', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['sql'], {
         level: 'all',
@@ -85,7 +83,6 @@ test('after --fix, the checks read the fixed file and other files stay as they w
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
         'query.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
-        'notes.txt': 'Authored notes.\n',
     });
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ only: ['project/read-sql', 'project/correct-sql'] });

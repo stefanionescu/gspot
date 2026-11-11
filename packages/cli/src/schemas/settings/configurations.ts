@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/parsers.ts';
-import { BUILD_SCRIPT } from '#cli/config/settings/detected.ts';
-import { FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
+import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import {
@@ -149,11 +147,11 @@ const configurationTables = {
     secrets: generalTableSchemas.secrets,
     site: z
         .strictObject({
-            build_command: commandSchema.default(['npm', ...BUILD_SCRIPT]).meta({
+            build_command: commandSchema.optional().meta({
                 leftOut: 'code',
                 configurations: ['site'],
                 description:
-                    'The command that builds the site. Init and gspot add write the build script of the package manager.',
+                    'The command that builds the site. Without it, gspot runs the build script with the package manager of the repository.',
             }),
             build_folder: destinationPathSchema.default('dist').meta({
                 configurations: ['site'],

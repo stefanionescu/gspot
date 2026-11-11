@@ -8,7 +8,7 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('a requirements file is reported only in a scope with a lockfile and passes once removed', async () => {
+test('a requirements file is reported only in a scope with a lockfile', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], LOCKED_SCOPE_SETTINGS),
         'requirements.txt': 'root-dependency\n',
@@ -29,11 +29,11 @@ test('a requirements file is reported only in a scope with a lockfile and passes
     ).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
 });
 
-test('an unmanaged pip install reports its file and rule', async () => {
+test('an unmanaged pip install reports its file and rule, and a commented one does not', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python']),
         'uv.lock': 'version = 1\n',
-        'install.sh': 'pip install requests\n',
+        'install.sh': 'pip install requests\n# pip install requests\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'python/pip-installs');
     expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([

@@ -1,7 +1,8 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { COMMITLINT_PACKAGE, STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 
-export const PRESERVE_SOURCE = 'preserve this source\n';
+const COMMITLINT_PACKAGE =
+    '{"name":"native-project","private":true,"commitlint":{"rules":{"type-enum":[2,"always",["special"]]}},"kept":[0,false,""]}\n';
 
 export const REPLACED_PYPROJECT_TABLES = [
     {
@@ -98,33 +99,6 @@ export const SYNCPACK_FILE = {
     isIgnored: true
 `,
 } as const;
-
-export const GIT_PLAN_CASES = [{ name: 'a Git repository', changes: [] }] as const;
-
-export const QUALITY_PACKAGE_FILES = {
-    'package.json': '{"name":"shop","private":true,"type":"module","dependencies":{"react":"19.0.0"}}\n',
-    'src/app.tsx': 'export const App = () => null;\n',
-    'quality/package.json': '{"name":"shop-quality","private":true,"dependencies":{"ts-morph":"26.0.0"}}\n',
-    'quality/check.ts': 'export const value = 1;\n',
-    '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
-} as const;
-
-const UNCOMMITTED_FORMAT_FILES = [
-    { path: '.prettierrc', original: '{"printWidth": 100}\n', changed: '{"printWidth": 90}\n' },
-] as const;
-
-export const UNCOMMITTED_FORMAT_CASES = ['unborn Git', 'untracked', 'staged changes', 'unstaged changes'].flatMap(
-    (state) => UNCOMMITTED_FORMAT_FILES.map((file) => ({ ...file, state })),
-);
-
-export const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
-
-export const CONFIGURATION_CHOICES = [
-    { configurations: undefined, selected: ['javascript'] },
-    { configurations: ['python'], selected: ['python'] },
-] as const;
-
-export const GENERATED_WRITE_MESSAGE = 'Generated write denied';
 
 export const INVALID_CSS = `a {
     invalid-property: 1;

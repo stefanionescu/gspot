@@ -1,5 +1,5 @@
 import { preferReadonlyProps } from '#eslint-plugin/rules/react/prefer-readonly-props.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 const rule = preferReadonlyProps;
 
@@ -71,9 +71,4 @@ buildTypedRuleTester().run('prefer-readonly-props', rule, {
             ],
         },
     ],
-});
-
-buildRuleTester().run('prefer-readonly-props without types', rule, {
-    valid: ['function Badge(props: { label: string }) { return <b>{props.label}</b>; }'],
-    invalid: [],
 });

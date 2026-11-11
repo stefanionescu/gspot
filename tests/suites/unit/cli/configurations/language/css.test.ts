@@ -16,8 +16,8 @@ const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolMo
     default: typeof stylelintModule;
 };
 
-test.each(['vue'])('a CSS-only scope checks properties inside a %s component style', async (extension) => {
-    const path = `Card.${extension}`;
+test('a CSS-only scope checks properties inside a vue component style', async () => {
+    const path = 'Card.vue';
     const code = '<style>p { nonexistent-property: red; }</style>\n';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['css']),

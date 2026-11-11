@@ -4,8 +4,7 @@ import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import {
     COMPOSE_SOURCES,
     DOCKERIGNORE_ALLOWLISTS,
@@ -15,7 +14,7 @@ import {
     TRIVY_REGISTRY_FAILURE,
 } from '#tests/config/configurations/docker.ts';
 import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -44,7 +43,7 @@ test('Compose docker-compose.production.yml runs after docker-compose.yml in one
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['docker/compose'],
-        CHECK_RUN_OPTIONS,
+        {},
     );
     expect(result.findings).toStrictEqual([]);
     expect(result.status).toBe('passed');

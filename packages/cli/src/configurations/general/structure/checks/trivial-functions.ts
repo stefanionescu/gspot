@@ -26,12 +26,11 @@ import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/struc
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { ParsedLanguage, ParsedSource } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 type TrivialFunction = { finding: CheckFinding; key?: string };
@@ -187,7 +186,7 @@ async function countNameUses(
     const names = [...keys].map((key) => key.slice(key.indexOf(' ') + 1));
     const files = listCheckFiles({ scope: planned.scope, files: session.repository.files }, planned.check.id).filter(
         (file) => {
-            const text = findText(session.cache, file.path) ?? '';
+            const text = readText(session.cache, file.path);
             return names.some((name) => text.includes(name));
         },
     );

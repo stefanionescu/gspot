@@ -103,6 +103,14 @@ export const MISSING_CODE = 127;
 
 export const PATHEXT_DEFAULT = '.COM;.EXE;.BAT;.CMD';
 
+export const MISE_TASK_FOLDERS = [
+    'mise-tasks',
+    '.mise-tasks',
+    'mise/tasks',
+    '.mise/tasks',
+    '.config/mise/tasks',
+] as const;
+
 export const OUTSIDE_PROGRAMS: ReadonlySet<string> = new Set(['git', 'mise', 'node', 'npm']);
 
 export const GIT_METADATA_NAME = '.git';
@@ -122,6 +130,8 @@ export const CANCELED_START_MESSAGE = 'The command was canceled before it starte
 export const EMPTY_COMMAND_MESSAGE = 'An empty command cannot run.';
 
 export const OUTPUT_LIMIT = 256 * 1024 * 1024;
+
+export const OUTPUT_POLL_MILLISECONDS = 1000;
 
 export const RESULT_JSON_INDENT = 2;
 

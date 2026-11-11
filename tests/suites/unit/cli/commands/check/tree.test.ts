@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { BASH_SYNTAX_PUSH_CHECK, HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -46,4 +46,18 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
     const installed = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(installed.stderr).toBe('');
+});
+
+test('--only runs a check that the level turns off and notes that it stays off in hooks', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const checked = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']),
+    );
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'docs/required-files', status: 'failed' },
+    ]);
+    expect(checked.report.notes).toStrictEqual([
+        'docs/required-files: --only allows this check to run here; it stays off in hooks at level basic.',
+    ]);
 });

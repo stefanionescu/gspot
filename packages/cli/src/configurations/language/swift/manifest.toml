@@ -120,7 +120,7 @@ needs = ["build", "network"]
 operating_systems = ["macos", "linux"]
 runs = "scope"
 stage = "push"
-summary = "Builds the package or Xcode scheme once per scope, with warnings as errors, and reports the compiler errors."
+summary = "Builds the package or Xcode scheme once per scope, and reports the compiler errors and the warnings in your own sources. A package build treats warnings as errors."
 tool = ["swift", "xcodebuild"]
 why = "Swift checks types only during a build."
 

@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { chmod, readFile, unlink, writeFile } from 'node:fs/promises';
+import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -33,13 +33,9 @@ test.skipIf(isWindows)(
         expect(checked.code).toBe(1);
         expect(
             checked.report.checks.flatMap(({ findings }) => findings).find(({ file }) => file === '.editorconfig'),
-        ).toMatchObject({
-            file: '.editorconfig',
-            rule: 'changed',
-            diff: 'old mode 600\nnew mode 644\n',
-        });
-        const human = await runGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--verbose']);
-        expect(human.code).toBe(1);
+        ).toMatchObject({ rule: 'changed', diff: 'old mode 600\nnew mode 644\n' });
+        const { mode } = await stat(path);
+        expect(mode & 0o777).toBe(0o600);
     },
 );
 
@@ -117,52 +113,40 @@ test('generated-files reports absent files and tool lockfiles without writing th
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test.each([{ configurations: [], lockfiles: [GSPOT_PATHS.miseLockfile] }])(
-    'generated-files leaves absent $lockfiles for install after a write of the generated files',
-    async ({ configurations, lockfiles }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(configurations, { tables: NPM_CHECK_IGNORES }),
-        });
-        await applyGeneratedFiles(sandbox.path);
-        const before = await readTree(sandbox.path);
-        const checked = parseCheckReport(
-            await runGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']),
-        );
-        expect(
-            checked.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
-        ).toStrictEqual(lockfiles.map((file) => ({ file, rule: 'absent' })));
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-    },
-);
-
-test('generated-files compares edited files, a conflict and managed blocks while leaving unrelated files alone', async () => {
+test('generated-files leaves an absent mise lockfile for install after a write of the generated files', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash', 'markdown'], { rules: true }),
-        'entry.sh': 'echo example\n',
-        'README.md': '# Example\n',
+        'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
     });
     await applyGeneratedFiles(sandbox.path);
-    const session = await openSession(sandbox.path);
-    const shellcheckrc = getConfigPath(session, 'shellcheckrc');
-    for (const path of [shellcheckrc, GSPOT_PATHS.npmProject, 'AGENTS.md']) {
-        const absolute = join(sandbox.path, path);
-        const text = await readFile(absolute, 'utf8');
-        await chmod(absolute, 0o644);
-        const prefix = path === shellcheckrc ? '' : '<'.repeat(7) + ' ours\n';
-        const edited =
-            path === 'AGENTS.md'
-                ? text.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->')
-                : `${prefix}${text}# Edited.\n`;
-        await writeFile(absolute, edited);
-    }
-    await unlink(join(sandbox.path, 'README.md'));
-    await writeFile(join(sandbox.path, 'settings.json'), '{}\n');
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['bash'], { rules: true }));
+    const before = await readTree(sandbox.path);
+    const checked = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']),
+    );
+    expect(
+        checked.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
+    ).toStrictEqual([{ file: GSPOT_PATHS.miseLockfile, rule: 'absent' }]);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('generated-files reports an edit inside a managed block with the diff of the block', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
+        'entry.sh': 'echo example\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const path = join(sandbox.path, 'AGENTS.md');
+    const text = await readFile(path, 'utf8');
+    await writeFile(
+        path,
+        text.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
+    );
     const before = await readTree(sandbox.path);
     const checked = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--verbose', '--json']),
     );
-    const findings = checked.report.checks.flatMap(({ findings }) => findings);
-    expect(findings.find(({ file }) => file === 'AGENTS.md')?.diff).toContain('-Edited inside.');
+    expect(checked.code).toBe(1);
+    expect(
+        checked.report.checks.flatMap(({ findings }) => findings).find(({ file }) => file === 'AGENTS.md'),
+    ).toMatchObject({ rule: 'changed', diff: expect.stringContaining('-Edited inside.') as string });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

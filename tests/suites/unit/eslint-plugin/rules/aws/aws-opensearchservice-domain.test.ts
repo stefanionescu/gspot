@@ -16,5 +16,9 @@ buildRuleTester().run('aws-opensearchservice-domain', awsOpensearchserviceDomain
                 },
             ],
         },
+        {
+            code: "import * as os from 'aws-cdk-lib/aws-opensearchservice';\nnew os.Domain(this, 'b', { encryptionAtRest: { enabled: false } });",
+            errors: [{ messageId: 'unencrypted', data: { engine: 'OpenSearch' }, line: 2 }],
+        },
     ],
 });

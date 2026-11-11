@@ -31,7 +31,6 @@ import {
     PIN_COMMANDS,
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
-    REMOVED_COMMANDS,
     UNKNOWN_COMMAND_ERROR_CODE,
     UNKNOWN_COMMAND_NAME,
     UNKNOWN_OPTION_ERROR_CODE,
@@ -41,8 +40,8 @@ import {
 } from '#cli/config/main.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
 import { buildGitError, runGit } from '#cli/repository/git/run.ts';
-import { assertGspotPin } from '#cli/repository/javascript/gspot-pin.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
+import { assertGspotPin } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { print, printError, printResult, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
 import { formatNameList } from '#cli/system/text.ts';
@@ -93,7 +92,8 @@ function formatArgumentError(error: CommanderError, program: Command, command: s
 function printFailure(error: unknown, program: Command, options: string[]): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
-        const command = program.commands.find((each) => each.name() === options[0])?.name();
+        const first = options.find((option) => !option.startsWith('-'));
+        const command = program.commands.find((each) => each.name() === first)?.name();
         printError({ error: 'arguments', message: formatArgumentError(error, program, command) });
         return EXIT_ERROR;
     }
@@ -265,8 +265,6 @@ export async function runProgram(commandArguments: string[], cwd: string): Promi
     });
     try {
         const [name = ''] = program.parseOptions(commandArguments).operands;
-        if (Object.hasOwn(REMOVED_COMMANDS, name))
-            throw new GspotError('arguments', REMOVED_COMMANDS[name as keyof typeof REMOVED_COMMANDS]);
         if (isVersionRun(program, name)) {
             printResult({ text: cliPackage.version, json: {}, exitCode: 0 });
             return 0;

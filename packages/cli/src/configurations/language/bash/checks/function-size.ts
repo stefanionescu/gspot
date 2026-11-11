@@ -4,8 +4,7 @@ import { FUNCTION_SIZE_EXPLANATIONS } from '#cli/configurations/language/bash/ex
 import { listCodeLines } from '#cli/parsers/code/bash.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 async function checkBashFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {

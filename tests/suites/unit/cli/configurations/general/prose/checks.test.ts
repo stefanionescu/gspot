@@ -7,15 +7,9 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { getTool } from '#cli/tools/pins.ts';
-import {
-    EMPTY_VALE_INI,
-    VALE_ALERT,
-    VALE_INSTALLED_FILES,
-    VALE_SANDBOX_FILES,
-} from '#tests/config/configurations/general.ts';
+import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/configurations/general.ts';
 import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { getBuiltInCheck, openFakeToolSession, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -24,6 +18,19 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+const VALE_ALERT = {
+    Line: 1,
+    Span: [3, 5],
+    Check: 'gspot.Example',
+    Message: 'Use a concrete example.',
+} as const;
+
+const VALE_SANDBOX_FILES = {
+    ...VALE_INSTALLED_FILES,
+    [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
+    'example.md': '# Documentation\n',
+};
 
 async function openValeSandbox(resources: AsyncDisposableStack) {
     const settings = buildSandboxSettings(['prose', 'markdown'], { level: 'all' });
@@ -102,7 +109,7 @@ test('the Vale check fails before running Vale when the Vale packages are not in
     await rm(join(session.root, GSPOT_PATHS.valeConfig));
     using run = fakeCommands();
     const uninstalledError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
-    expect(uninstalledError).toMatchObject({ name: 'CheckStop' });
+    expect(uninstalledError).toMatchObject({ name: 'CheckStop', status: 'missing' });
     expect(run).not.toHaveBeenCalled();
 });
 

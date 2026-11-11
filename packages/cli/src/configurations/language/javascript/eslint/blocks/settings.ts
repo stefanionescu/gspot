@@ -12,7 +12,7 @@ import {
     TRIVIAL_FILES_RULE,
     TRIVIAL_FUNCTIONS_RULE,
     TYPED_LANGUAGES,
-} from '#cli/config/configurations/blocks.ts';
+} from '#cli/config/configurations/eslint/blocks.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import {
     buildExtensionGlob,
@@ -197,7 +197,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scopePath, second.scopePath),
     );
-    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scopePath = '', table }) => {
+    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scopePath, table }) => {
         const owner = scopesByPath.get(scopePath);
         const options = table.tools?.['eslint'];
         return owner === undefined || options === undefined ? [] : { scope: owner, settings: options };

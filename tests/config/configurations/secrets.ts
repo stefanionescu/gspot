@@ -131,17 +131,14 @@ path = "sibling"
 environment_examples = [".env.example"]
 `;
 
-export const ENVIRONMENT_TEXT_CASES = [
-    {
-        name: 'a key listed as a commented line counts as listed',
-        files: { '.env.example': '# TOKEN=example\n', 'source.ts': 'process.env.TOKEN;\n' },
-        changed: { '.env.example': '# Other keys\n' },
-        findings: [
-            {
-                file: 'source.ts',
-                rule: 'missing-key',
-                message: 'TOKEN is read here and appears in no example environment file.',
-            },
-        ],
-    },
-] as const;
+export const ENVIRONMENT_TEXT_CASE = {
+    files: { '.env.example': '# TOKEN=example\n', 'source.ts': 'process.env.TOKEN;\n' },
+    changed: { '.env.example': '# Other keys\n' },
+    findings: [
+        {
+            file: 'source.ts',
+            rule: 'missing-key',
+            message: 'TOKEN is read here and appears in no example environment file.',
+        },
+    ],
+} as const;

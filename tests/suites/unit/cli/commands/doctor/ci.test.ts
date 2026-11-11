@@ -3,6 +3,7 @@ import { expect, test } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { doctorOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const GITHUB_CI = 'off; gspot set ci.enabled true writes the check workflow';
@@ -42,6 +43,14 @@ test.each([
     runGitStep(sandbox.path, ['config', 'remote.origin.url', remote]);
     const result = await runGspot(sandbox.path, ['doctor']);
     expect(result.stdout).toContain(`ci: ${ci}\n`);
+});
+
+test('doctor --json reports the CI provider that the settings turn on', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: '[ci]\nenabled = true\nprovider = "github"\n' }),
+    });
+    const result = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect(doctorOutputSchema.parse(JSON.parse(result.stdout)).ci).toMatchObject({ enabled: true, provider: 'github' });
 });
 
 test('doctor lists a submodule', async () => {

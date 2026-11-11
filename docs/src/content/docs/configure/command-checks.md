@@ -64,6 +64,9 @@ By default, any exit code other than 0 means that the command found something. I
 and others for crashes, set `exit_codes = [1]`. Any other non-zero code then stops the check with an error, and gspot
 exits with `2`, even when the tool printed findings first.
 
+When the command exits with 0, gspot reports only the findings that name a file or a line, such as the warnings of a
+linter. The check passes when the output holds none, so a command can print its progress.
+
 ## Read the output
 
 `output.format` sets how gspot reads the output, and

@@ -52,6 +52,10 @@ export const outputSchema = z
                         'Read a file heading matched by file_pattern, followed by findings matched by pattern.',
                 }),
                 z.literal('knip').meta({ description: 'Read Knip JSON issue categories and source positions.' }),
+                z.literal('osv-scanner').meta({
+                    description:
+                        'Read OSV-Scanner JSON, with one finding for each vulnerability, its advisory IDs, and its fixed versions.',
+                }),
                 z.literal('semgrep').meta({
                     description: 'Read Semgrep JSON results and source parse errors, with locations and rule IDs.',
                 }),

@@ -6,14 +6,13 @@ import {
     SWIFTLINT_ANALYZE_COMMAND,
     SWIFTLINT_CONFIG_FLAG,
     SWIFTLINT_TOOL,
-} from '#cli/config/configurations/builds.ts';
+} from '#cli/config/configurations/swift.ts';
 import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
 async function checkSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);

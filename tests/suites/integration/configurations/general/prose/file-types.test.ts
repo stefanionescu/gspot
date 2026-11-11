@@ -1,24 +1,54 @@
 import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import {
-    CONCRETE_RULE,
-    EXAMPLE_STYLE_FOLDER,
-    MARKDOWN_COMMENT_CASES,
-    PROSE_CASES,
-    PROSE_COMMENT_CASES,
-    PROSE_SANDBOX,
-    VALE_INI,
-} from '#tests/config/integration/prose.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+
+const PROSE_COMMENT_CASES = [
+    { name: 'a .mts file', extension: 'mts', marker: '//', code: 'const text = "delve";' },
+    { name: 'an extensionless script', extension: '', marker: '#', code: 'text = "delve"' },
+] as const;
+
+const CONCRETE_RULE = `extends: existence
+message: "Use inspect."
+level: error
+tokens: [delve]
+`;
+
+const PROSE_SAMPLE = {
+    check: 'prose/vale',
+    files: {
+        'docs/selling.md': `# A page
+
+This powerful cache makes the application much faster.
+`,
+    },
+    expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
+    corrected: {
+        files: {
+            'docs/selling.md': `# A page
+
+This cache returns stored records.
+`,
+        },
+    },
+} as const;
+
+const EXAMPLE_STYLE_FOLDER = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Example`;
+
+const VALE_INI = `StylesPath = styles
+MinAlertLevel = suggestion
+[*]
+BasedOnStyles = Example
+`;
 
 test('prose/vale reports a finding in a .sh file and passes after the fix', async () => {
     const sandbox = installedSandbox();
@@ -39,31 +69,28 @@ test('prose/vale reports a finding in a .sh file and passes after the fix', asyn
     expect(corrected.status, corrected.note).toBe('passed');
 });
 
-test.each([...MARKDOWN_COMMENT_CASES])(
-    'Vale parses Markdown in %s comments without treating source strings as prose',
-    async (extension, marker, code) => {
-        const sandbox = installedSandbox();
-        const path = `source.${extension}`;
-        await using _change = await changeSandbox(sandbox, {
-            files: {
-                [path]: [
-                    `${marker} Pass \`whitelist\` to the command.`,
-                    `${marker} This whitelist holds the records.`,
-                    code,
-                    `${marker} @param whitelist the command name`,
-                    `${marker} @param value This whitelist holds the records.`,
-                    '',
-                ].join('\n'),
-            },
-        });
-        const result = await spawnRootCheck(sandbox.root, 'prose/vale');
-        expect(result.status, result.note).toBe('failed');
-        expect(result.findings.filter(({ rule }) => rule === 'gspot.conscious-language')).toStrictEqual([
-            matchFields({ file: path, line: 2, rule: 'gspot.conscious-language' }),
-            matchFields({ file: path, line: 5, rule: 'gspot.conscious-language' }),
-        ]);
-    },
-);
+test('Vale parses Markdown in ts comments without treating source strings as prose', async () => {
+    const sandbox = installedSandbox();
+    const path = 'source.ts';
+    await using _change = await changeSandbox(sandbox, {
+        files: {
+            [path]: [
+                '// Pass `whitelist` to the command.',
+                '// This whitelist holds the records.',
+                'const text = "whitelist";',
+                '// @param whitelist the command name',
+                '// @param value This whitelist holds the records.',
+                '',
+            ].join('\n'),
+        },
+    });
+    const result = await spawnRootCheck(sandbox.root, 'prose/vale');
+    expect(result.status, result.note).toBe('failed');
+    expect(result.findings.filter(({ rule }) => rule === 'gspot.conscious-language')).toStrictEqual([
+        matchFields({ file: path, line: 2, rule: 'gspot.conscious-language' }),
+        matchFields({ file: path, line: 5, rule: 'gspot.conscious-language' }),
+    ]);
+});
 
 test.each([...PROSE_COMMENT_CASES])(
     'prose/vale keeps the language and the scope path of $name, which it sends on stdin',
@@ -99,6 +126,6 @@ test.each([...PROSE_COMMENT_CASES])(
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
-test.each([...PROSE_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    await assertCheckSample(installedSandbox(), sample);
+test('prose/vale reports gspot.marketing and passes after the fix', async () => {
+    await assertCheckSample(installedSandbox(), PROSE_SAMPLE);
 });

@@ -41,22 +41,6 @@ export const INIT_FILES = {
     'quality/lint.sh': CLEAN_BASH_SCRIPT,
 } as const;
 
-export const CANCELED_CHECK_NOTE = 'The check was canceled.';
-
-export const GIT_ISOLATION_ENVIRONMENT = {
-    GIT_CONFIG_NOSYSTEM: '1',
-    GIT_CONFIG_GLOBAL: '',
-    GIT_AUTHOR_NAME: 't',
-    GIT_AUTHOR_EMAIL: 't@t',
-    GIT_COMMITTER_NAME: 't',
-    GIT_COMMITTER_EMAIL: 't@t',
-    GIT_CONFIG_COUNT: '2',
-    GIT_CONFIG_KEY_0: 'maintenance.auto',
-    GIT_CONFIG_VALUE_0: 'false',
-    GIT_CONFIG_KEY_1: 'gc.auto',
-    GIT_CONFIG_VALUE_1: '0',
-} as const;
-
 export const RULE_TESTER_ROOT = '/repo';
 
 export const RULE_TESTER_PARSER_OPTIONS = {
@@ -80,21 +64,9 @@ export const GSPOT_LAUNCHER_PATH = 'bin/gspot';
 
 export const TOOL_PINS_FILE = 'mise.toml';
 
-export const TOOL_INSTALL_FOLDER = 'tools';
-
 export const MISE_TRUST = ['mise', 'trust'] as const;
 
-export const GSPOT_PACKAGE_SCOPE = '@gspothq/';
-
-export const NPM_PACK_FLAGS = ['--ignore-scripts', '--json'] as const;
-
-export const PACKED_PUBLISH_TIME = '2025-01-01T00:00:00.000Z';
-
-export const UPSTREAM_REGISTRY = 'https://registry.npmjs.org/';
-
 export const PACKED_PACKAGES_FILE = 'packages.json';
-
-export const TEST_TIMEOUT_MILLISECONDS = 360_000;
 
 export const CHILD_WAIT_MILLISECONDS = 15_000;
 
@@ -102,39 +74,11 @@ export const AUTHENTICATION_REQUIRED_MESSAGE = 'Authentication required';
 
 export const LINE_BREAK = /\r?\n/u;
 
-export const MISSING_TEST_RUN_FOLDER = 'Set TEST_RUN_FOLDER before running the test suite.';
-
-export const CACHE_FOLDER = 'cache';
-
-export const TEMPORARY_FOLDER = 'temporary';
-
-export const CONFIG_FOLDER = 'config';
-
 export const NPM_INSTALL_FLAGS = ['--ignore-scripts', '--no-audit', '--no-fund'] as const;
 
 export const PNPM_WORKSPACE = 'packages:\n  - "**"\n';
 
-export const PUSH_CONTENT = {
-    base: 'echo base\n',
-    reviewed: 'echo reviewed\n',
-    broken: 'if then\n',
-    working: 'echo repaired only in the working tree\n',
-    settings: 'invalid working policy',
-} as const;
-
 export const REGISTRY_HOST = '127.0.0.1';
-
-export const NPM_REGISTRY_TOKEN = 'synthetic-package-install-token';
-
-export const SANDBOX_PACKAGE_JSON = {
-    name: 'example',
-    version: '1.0.0',
-    private: true,
-    description: 'A sandbox.',
-    type: 'module',
-} as const;
-
-export const SANDBOX_GITIGNORE = 'node_modules\n';
 
 export const SANDBOX_PACKAGES = {
     '@nestjs/common': '11.2.3',
@@ -152,40 +96,8 @@ export const SANDBOX_PACKAGES = {
     wrangler: '4.151.1',
 } as const;
 
-export const NPM_PROJECT_FILES = {
-    'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
-    'source.js': 'export const greeting="hello";',
-    'node_modules/authored.txt': 'keep project dependencies',
-} as const;
-
-export const NPM_PROJECT_IGNORES = [
-    'data-files/v8r',
-    'javascript/eslint',
-    'javascript/tsc',
-    'javascript/knip',
-] as const;
-
-export const NPM_PROJECT_ROOT_PACKAGE = {
-    private: true,
-    devDependencies: { eslint: '0.0.0-authored' },
-    scripts: { test: 'authored-command' },
-    workspaces: ['**'],
-} as const;
-
-export const PYTHON_PROJECT_FILES = {
-    'pyproject.toml': `[project]
-name = "authored"
-version = "1.0.0"
-dependencies = ["authored-dependency"]
-`,
-    '.venv/authored.txt': 'keep the project environment',
-    'source.py': 'import os\n',
-} as const;
-
-export const UV_PROJECT_VARIABLES = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'] as const;
-
 export const PYTHON_PROJECT_IGNORES = [
-    'data-files/v8r',
+    'json/v8r',
     'security/semgrep',
     'format/editorconfig-checker',
     'python/basedpyright',
@@ -193,15 +105,6 @@ export const PYTHON_PROJECT_IGNORES = [
     'python/deptry',
     'python/vulture',
 ] as const;
-
-export const PYTHON_INDEX_NAME = 'gspot-test';
-
-export const LFS_ATTRIBUTES = '*.bin filter=lfs diff=lfs merge=lfs -text\n';
-
-export const NESTED_SCOPE_FILES = {
-    'outside.txt': 'repository context',
-    'nested settings/source.txt': 'committed',
-} as const;
 
 const BASH_SYNTAX_COMMAND = `[[command_check]]
 id = "project/bash-syntax"
@@ -220,10 +123,6 @@ export const TEAMS_TABLE_SQL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
 
 export const TEAMS_MIGRATION_PATH = 'migrations/20240201_teams.sql';
 
-export const IGNORE_ALL_PATTERN = '*\n';
-
 export const CHANGED_CONTEXT = 'changed context';
 
 export const EMPTY_TOOL_INSTALL = { installed: [], missing: [], notes: [], steps: [] };
-
-export const SANDBOX_REMOVAL_REASON = 'The sandbox exercises selected checks without this configuration.';

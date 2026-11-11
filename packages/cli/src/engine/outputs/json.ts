@@ -9,7 +9,8 @@ import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 const UNSAFE_FIXES: ReadonlySet<unknown> = new Set(['unsafe', 'display-only']);
 
@@ -72,7 +73,13 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
         message,
         help,
         fixable: getFieldValues('fixable').some((values) =>
-            values.some((value) => value !== undefined && value !== null && !UNSAFE_FIXES.has(value)),
+            values.some(
+                (value) =>
+                    value !== undefined &&
+                    value !== null &&
+                    !UNSAFE_FIXES.has(value) &&
+                    !(Array.isArray(value) && value.length === 0),
+            ),
         ),
     };
     setPosition(finding, format.line_base ?? 1, getField('line'), getField('column'));

@@ -6,19 +6,30 @@ import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { createFileTree, testdir } from 'testdirs';
 
 import type { ToolPackageManager } from '#cli/types/tools.ts';
-import {
-    NPM_PROJECT_FILES,
-    NPM_PROJECT_IGNORES,
-    NPM_PROJECT_ROOT_PACKAGE,
-    NPM_REGISTRY_TOKEN,
-    PNPM_WORKSPACE,
-} from '#tests/config/setup/sandboxes.ts';
+import { PNPM_WORKSPACE } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { NpmProject, NpmRegistry } from '#tests/types/setup.ts';
+
+const NPM_REGISTRY_TOKEN = 'synthetic-package-install-token';
+
+const NPM_PROJECT_FILES = {
+    'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
+    'source.js': 'export const greeting="hello";',
+    'node_modules/authored.txt': 'keep project dependencies',
+} as const;
+
+const NPM_PROJECT_IGNORES = ['json/v8r', 'javascript/eslint', 'javascript/tsc', 'javascript/knip'] as const;
+
+const NPM_PROJECT_ROOT_PACKAGE = {
+    private: true,
+    devDependencies: { eslint: '0.0.0-authored' },
+    scripts: { test: 'authored-command' },
+    workspaces: ['**'],
+} as const;
 
 async function writeNpmProject(options: {
     root: string;

@@ -53,7 +53,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         files: configuration.files,
         fix: buildProgramCommand('fakes/tool', '--text', 'restored', '{scope}/source.ts'),
     };
-    const fileCheck = { ...check, id: 'data-files/v8r', runs: 'files' as const };
+    const fileCheck = { ...check, id: 'json/v8r', runs: 'files' as const };
     for (const scope of session.scopes) {
         if (scope.path !== '') scope.configurations = [{ ...configuration, tools: [], checks: [check, fileCheck] }];
     }
@@ -88,7 +88,7 @@ test.each(LAST_FILE_CHANGES)(
         const api = planned.find((check) => check.scope.path === 'api')!;
         expect(api.files).toStrictEqual([]);
         expect(api.triggerPaths).toStrictEqual(['api/source.ts']);
-        const fileChecks = planChecks(session, { ...TSC_PUSH_OPTIONS, only: ['data-files/v8r'], ...revision });
+        const fileChecks = planChecks(session, { ...TSC_PUSH_OPTIONS, only: ['json/v8r'], ...revision });
         expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
         expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
             operation === 'delete' ? [] : ['web/source.ts'],

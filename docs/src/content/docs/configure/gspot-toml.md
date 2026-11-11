@@ -129,7 +129,7 @@ folder that holds a project file. Write the rest yourself, then run `gspot insta
 | `[[javascript.banned_imports]]` | An import to refuse, and what to import instead.             |
 | `[[coverage.swift_target]]`     | The coverage minimum of one Swift target.                    |
 | `[[licenses.allowed_package]]`  | One package version allowed under a license you reviewed.    |
-| `[[data_files.schemas]]`        | A JSON Schema for data files that SchemaStore does not know. |
+| `[[json.schemas]]`              | A JSON Schema for data files that SchemaStore does not know. |
 
 `gspot set` and `gspot unset` also take `javascript.banned_imports` and the two plugin lists, as one inline TOML list.
 

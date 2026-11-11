@@ -89,9 +89,9 @@ function findConfigurationEvidence(
         EVIDENCE_FINDERS.values()
             .map((source) => source(configuration.detect, contents))
             .find((found) => found !== undefined) ?? findContentEvidence(root, configuration.detect, contents);
-    if (evidence !== undefined) return { configuration: configuration.name, group: configuration.group, ...evidence };
+    if (evidence !== undefined) return { configuration, ...evidence };
     return configuration.always_selected && contents.scopePath === ''
-        ? { configuration: configuration.name, group: configuration.group, evidence: EVERY_REPOSITORY_EVIDENCE }
+        ? { configuration, evidence: EVERY_REPOSITORY_EVIDENCE }
         : undefined;
 }
 
@@ -186,21 +186,25 @@ export function detectConditions(
     );
 }
 
+/**
+List the configurations that gspot selects with no `configurations` entry: each always-selected configuration of any
+group, and each general configuration that the files of the repository match.
+*/
 export function listAutomaticConfigurations(
     repository?: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
 ): string[] {
-    const general = new Map([...readConfigurations()].filter(([, configuration]) => configuration.group === 'general'));
+    const configurations = readConfigurations();
     const automatic = new Set(
-        general
+        configurations
             .values()
             .filter((configuration) => configuration.always_selected)
             .map((configuration) => configuration.name),
     );
     if (repository === undefined) return [...automatic];
-    const detected = new Set(detectConfigurations(repository).map(({ configuration }) => configuration));
-    for (const configuration of general.values())
-        if (detected.has(configuration.name)) automatic.add(configuration.name);
-    return general
+    const detected = new Set(detectConfigurations(repository).map(({ configuration }) => configuration.name));
+    for (const configuration of configurations.values())
+        if (configuration.group === 'general' && detected.has(configuration.name)) automatic.add(configuration.name);
+    return configurations
         .keys()
         .filter((name) => automatic.has(name))
         .toArray();

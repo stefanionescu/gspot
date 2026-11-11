@@ -1,6 +1,6 @@
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { findMissingBuild, getTool } from '#cli/tools/pins.ts';
+import { findMissingBuild } from '#cli/tools/pins.ts';
 
 export const isWindows = process.platform === 'win32';
 

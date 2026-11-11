@@ -1,5 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 
 export const INSTALLED_TOOL_FOLDERS = {
     npm: GSPOT_PATHS.nodeModules,
@@ -41,7 +42,9 @@ export const FOREIGN_CI_FILES = new Set([
 
 export const TASK_AFTER_RUN = 2;
 
-export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, 'mise'];
+export const MISE_RUNNER = 'mise';
+
+export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, MISE_RUNNER];
 
 export const GITLAB_CI_FILE = '.gitlab-ci.yml';
 
@@ -71,8 +74,15 @@ export const LINT_STAGED_KEY = 'lint-staged';
 
 export const HOOK_FOLDER_PATH = /^(?:\.githooks|\.husky|\.git-hooks)\//u;
 
+export const MISE_TASK_FOLDER = new RegExp(
+    `^(?:${MISE_TASK_FOLDERS.map((folder) => folder.replaceAll('.', '[.]')).join('|')})/`,
+    'u',
+);
+
 export const COMMAND_FILES = [
     { path: /(?:^|\/)package\.json$/u, source: 'script' },
+    { path: MISE_TASK_FOLDER, source: 'mise-task' },
+    { path: /^\.?mise\.toml$/u, source: 'mise-task' },
     { path: /(?:^|\/)(?:\.lintstagedrc(?:\..+)?|lint-staged\.config\..+)$/u, source: 'lint-staged' },
     { path: /^\.pre-commit-config\.yaml$/u, source: 'pre-commit' },
     { path: HOOK_FOLDER_PATH, source: 'hook' },
@@ -87,6 +97,7 @@ export const OTHER_FORMATTER_MESSAGE =
 
 export const LINT_COMMAND_NAMES = {
     script: 'This script',
+    'mise-task': 'This mise task',
     ci: 'This CI step',
     hook: 'This hook',
     'lint-staged': 'This lint-staged entry',
@@ -97,6 +108,7 @@ export const LINT_COMMAND_NAMES = {
 
 export const LINT_COMMAND_FIXES = {
     script: 'Replace the lint and format parts of this script with gspot check.',
+    'mise-task': 'Replace the lint and format parts of this task with gspot check.',
     ci: 'gspot check installs and runs this tool. Run gspot check in CI instead of this line.',
     hook: 'Delete this line: the hooks of gspot run the checks.',
     'lint-staged': 'Delete this entry: the hooks of gspot run the checks.',
@@ -254,6 +266,7 @@ export const CARRIED_TOOLS: ReadonlySet<string> = new Set([
     'ruff',
     'markdownlint-cli2',
     'commitlint',
+    'typos',
 ]);
 
 export const MARKDOWNLINT_TARGET = `${GSPOT_PATHS.configurations}/markdown/markdownlint.jsonc`;

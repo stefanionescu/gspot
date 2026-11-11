@@ -3,15 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, test } from 'bun:test';
 
-import {
-    FASTAPI_CONFIGURATION_CASES,
-    FASTAPI_PROJECT,
-    FASTAPI_SCOPE_SETTINGS,
-    FASTAPI_SOURCE,
-    SEMGREP_CHECK,
-    SEMGREP_CHECK_ID,
-    SEMGREP_SANDBOX,
-} from '#tests/config/integration/semgrep.ts';
+import { SEMGREP_CHECK, SEMGREP_CHECK_ID, SEMGREP_SANDBOX } from '#tests/config/integration/semgrep.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -19,6 +11,41 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+
+const FASTAPI_PROJECT = `[project]
+name = "example"
+version = "1.0.0"
+dependencies = ["fastapi"]
+`;
+
+const FASTAPI_SCOPE_SETTINGS = `[[scope]]
+path = "app"
+configurations = ["fastapi"]
+
+[[scope]]
+path = "app/child"
+
+[[scope]]
+path = "sibling"
+`;
+
+const FASTAPI_SOURCE = `from fastapi import HTTPException
+
+def lookup():
+    try:
+        return load_user()
+    except ValueError as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+`;
+
+const FASTAPI_CONFIGURATION_CASES = [
+    {
+        rule: 'cors-wildcard-with-credentials',
+        source: 'app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True)\n',
+        fixed: 'app.add_middleware(CORSMiddleware, allow_origins=["https://example.test"], allow_credentials=True)\n',
+    },
+    { rule: 'debug-enabled', source: 'app = FastAPI(debug=True)\n', fixed: 'app = FastAPI(debug=False)\n' },
+] as const;
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

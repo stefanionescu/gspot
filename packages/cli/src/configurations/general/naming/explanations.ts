@@ -1,6 +1,16 @@
 import { RULES as NAMING_RULES } from '#cli/config/configurations/naming.ts';
 import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import { readNamingDefaults } from '#cli/manifests/read.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+
+// The page of banned-word prints the lists from the manifest that the check reads, so the two cannot differ.
+const SHIPPED_WORD_LISTS = Object.entries(readNamingDefaults().lists)
+    .map(([group, list]) => {
+        const position = list.first_word === true ? ' as the first word' : '';
+        const categories = list.categories === undefined ? '' : ` of ${list.categories.join(' and ')}`;
+        return `${group.replaceAll('_', ' ')}${position}${categories} (${list.words.join(', ')})`;
+    })
+    .join('; ');
 
 export const NAMING_EXPLANATIONS = {
     [NAMING_RULES.case]: {
@@ -34,7 +44,7 @@ export const NAMING_EXPLANATIONS = {
         example: '`orderOrderLines` reports `duplicate-words`; `orderLines` does not.',
     },
     [NAMING_RULES.bannedWord]: {
-        description: 'A name holds no word that `naming.banned_words` or the shipped word lists ban.',
+        description: `A name holds no word that \`naming.banned_words\` or a shipped word list bans. The shipped lists are ${SHIPPED_WORD_LISTS}.`,
         why: 'A word such as `manager` or `helper` hides what the code holds or does.',
         fix: 'Choose a word that names the role, or keep the name through `allowed_names` in a `[[naming.exception]]` record.',
         example: '`sessionManager` reports `banned-word`; `sessionStore` does not.',

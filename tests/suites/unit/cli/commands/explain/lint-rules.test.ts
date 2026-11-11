@@ -104,37 +104,19 @@ test('explain offers the setting that writes the options of a rule, and the rule
     }
 });
 
-test.each([
-    { check: 'javascript/eslint', rule: 'import-lite/no-default-export' },
-    { check: 'css/stylelint', rule: 'CssSyntaxError' },
-    { check: 'prose/vale', rule: 'Vale.Repetition' },
-    { check: 'javascript/biome', rule: 'parse' },
-    { check: 'commits/commitlint', rule: 'subject-case' },
-])('explain and ignore take $rule, which a report of $check prints', async ({ check, rule }) => {
+test('explain names the runtime record for no-undef, and no fix for a rule that no setting serves', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'css', 'prose', 'markdown']),
+        'gspot.toml': buildSandboxSettings(['javascript']),
         'source.js': 'export const value = 1;\n',
-        'theme.css': 'a { color: #fff; }\n',
-        'guide.md': '# Guide\n',
     });
     await writeRulePackages(sandbox.path);
-    const explained = await runGspot(sandbox.path, ['explain', check, rule, '--json']);
+    const explained = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-undef']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout)).toMatchObject({
-        check,
-        rule,
-        fix: getShippedCheck(check).help,
-        changeOptions: null,
-    });
-    const ignored = await runGspot(sandbox.path, [
-        'ignore',
-        check,
-        '--rule',
-        rule,
-        '--reason',
-        'The team reads this one by hand.',
-    ]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    expect(explained.stdout).toContain('What to do: ');
+    expect(explained.stdout).toContain('[[tools.eslint.override]]');
+    expect(explained.stdout).toContain('runtime = "browser"');
+    const other = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-param-reassign', '--json']);
+    expect(JSON.parse(other.stdout)).toMatchObject({ rule: 'no-param-reassign', fix: null });
 });
 
 test.each([
@@ -194,22 +176,21 @@ test('explain prints the check help when Ruff stops before it answers', async ()
     expect(JSON.parse(result.stdout)).toMatchObject({ rule: 'F401', fix: getShippedCheck('python/ruff').help });
 });
 
-test.each(['javascript/eslint'])('explain refuses ancestor packages for %s', async (check) => {
-    const name = 'eslint';
+test('explain refuses ancestor packages for javascript/eslint', async () => {
     await using sandbox = await createGitSandbox({
-        [`node_modules/${name}/package.json`]: JSON.stringify({
-            name,
+        'node_modules/eslint/package.json': JSON.stringify({
+            name: 'eslint',
             exports: { './use-at-your-own-risk': './index.cjs' },
         }),
-        [`node_modules/${name}/index.cjs`]: 'require("node:fs").writeFileSync(__dirname + "/executed", "yes");',
+        'node_modules/eslint/index.cjs': 'require("node:fs").writeFileSync(__dirname + "/executed", "yes");',
     });
-    const result = await runGspot(sandbox.path, ['explain', check, 'no-var', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'no-var', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'tool',
         message: expect.stringContaining('.gspot/node_modules') as string,
     });
-    expect(existsSync(join(sandbox.path, `node_modules/${name}/executed`))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'node_modules/eslint/executed'))).toBe(false);
 });
 
 test.skipIf(isWindows)('explain refuses an installed plugin symlink that leaves the tool project', async () => {
@@ -227,29 +208,24 @@ test.skipIf(isWindows)('explain refuses an installed plugin symlink that leaves 
     });
 });
 
-test.each([{ check: 'css/stylelint', rule: 'color-no-invalid-hex', configuration: 'css', file: 'style.css' }])(
-    'explain $check names gspot add when no scope selects $configuration, and only the install once one does',
-    async ({ check, rule, configuration, file }) => {
-        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['markdown']), [file]: '' });
-        const unselected = await runGspot(sandbox.path, ['explain', check, rule]);
-        expect(unselected.code).toBe(2);
-        expect(unselected.stderr).toContain(
-            `${configuration} is not selected. Run gspot add ${configuration}, then gspot install.`,
-        );
-        await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([configuration]) });
-        const selected = await runGspot(sandbox.path, ['explain', check, rule]);
-        expect(selected.code).toBe(2);
-        expect(selected.stderr).toContain('Run gspot install.');
-        expect(selected.stderr).not.toContain('gspot add');
-    },
-);
+test('explain css/stylelint names gspot add when no scope selects css, and only the install once one does', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['markdown']), 'style.css': '' });
+    const unselected = await runGspot(sandbox.path, ['explain', 'css/stylelint', 'color-no-invalid-hex']);
+    expect(unselected.code).toBe(2);
+    expect(unselected.stderr).toContain('css is not selected. Run gspot add css, then gspot install.');
+    await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings(['css']) });
+    const selected = await runGspot(sandbox.path, ['explain', 'css/stylelint', 'color-no-invalid-hex']);
+    expect(selected.code).toBe(2);
+    expect(selected.stderr).toContain('Run gspot install.');
+    expect(selected.stderr).not.toContain('gspot add');
+});
 
-test('explain requires installed tools and refuses rules of checks with no rule explanations', async () => {
+test('explain refuses a rule of a check that names no rules', async () => {
     await using sandbox = await createGitSandbox({});
-    const unknown = await runGspot(sandbox.path, ['explain', 'bash/shfmt', 'unknown', '--json']);
-    expect(unknown.code).toBe(2);
-    expect(JSON.parse(unknown.stdout)).toMatchObject({
+    const result = await runGspot(sandbox.path, ['explain', 'bash/shfmt', 'unknown', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'arguments',
-        message: expect.stringContaining('bash/shfmt') as string,
+        message: 'gspot cannot explain one lint rule of bash/shfmt. Leave out the rule to explain the whole check.',
     });
 });

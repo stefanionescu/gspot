@@ -25,9 +25,15 @@ export function selectConfigurations(names: string[]): Configuration[] {
     return walk.order;
 }
 
+/**
+List the configurations whose files hold source code. An always-selected language configuration, such as json or yaml,
+reads data files and stays out.
+*/
 export function listSourceConfigurations(configurations: Configuration[]): Configuration[] {
     const groups: readonly string[] = SOURCE_FILE_GROUPS;
-    return configurations.filter((configuration) => groups.includes(configuration.group));
+    return configurations.filter(
+        (configuration) => groups.includes(configuration.group) && !configuration.always_selected,
+    );
 }
 
 export function listSelectedConfigurations(

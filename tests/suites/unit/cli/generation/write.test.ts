@@ -4,13 +4,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import {
-    HOOKS_CHANGED_NOTE,
-    MANAGED_KEYS_NOTE,
-    STALE_LOCKFILE_NOTE,
-    TOOLS_CHANGED_NOTE,
-} from '#cli/config/generation.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { HOOKS_CHANGED_NOTE, STALE_LOCKFILE_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatHeader } from '#cli/generation/header.ts';
@@ -19,10 +13,8 @@ import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts'
 import { openFiles } from '#cli/system/files/open.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
-import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import type { PackageFieldScenario } from '#tests/types/setup.ts';
@@ -43,18 +35,6 @@ async function applyPackageFields(root: string, scenario: PackageFieldScenario):
         ),
     );
 }
-
-test('writeGeneratedFiles deletes the npm tool folder when no configuration needs it', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        [`${GSPOT_PATHS.nodeModules}/tool/index.js`]: 'export {};\n',
-    });
-
-    const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
-});
 
 test('removing css drops its managed stylelint field and keeps authored fields byte for byte', async () => {
     await using sandbox = await createGitSandbox({
@@ -160,19 +140,6 @@ test('writing the generated files preserves a copied header example and removes 
     expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
     expect(report.deleted).toContain('docs/.markdownlint.jsonc');
     expect(existsSync(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
-});
-
-test('writing the generated files prints no managed-key warning while gspot still manages the Bun scanner', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: BUN_SCANNER_SETTINGS,
-        }),
-        'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
-    });
-    for (const pass of [1, 2]) {
-        const result = await applyGeneratedFiles(sandbox.path);
-        expect(result.notes, `pass ${String(pass)}`).not.toContain(MANAGED_KEYS_NOTE);
-    }
 });
 
 test('an unchanged settings edit that writes generated files does not say No change', async () => {

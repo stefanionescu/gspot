@@ -3,7 +3,6 @@ import { join } from 'node:path';
 
 import { describe, expect, test } from 'bun:test';
 
-import { ANSIBLE_CONFIG, ANSIBLE_PLAYBOOK, ANSIBLE_SANDBOX } from '#tests/config/integration/infrastructure.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -11,6 +10,23 @@ import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import type { Sandbox } from '#tests/types/setup.ts';
+
+const ANSIBLE_CONFIG = '[defaults]\ninventory = inventory\n';
+
+const ANSIBLE_PLAYBOOK = `---
+- name: Deploy the service
+  hosts: all
+  tasks:
+    - name: Restart the service
+      ansible.builtin.systemd:
+        name: test
+        state: restarted
+`;
+
+const ANSIBLE_SANDBOX = {
+    configurations: ['ansible'],
+    files: { 'deploy/ansible.cfg': ANSIBLE_CONFIG, 'deploy/site.yml': ANSIBLE_PLAYBOOK },
+} as const;
 
 const SHORT_ACTION_PLAYBOOK = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
 

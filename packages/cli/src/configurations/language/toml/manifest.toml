@@ -1,0 +1,32 @@
+allowed_words = ["TOML"]
+
+[configuration]
+always_selected = true
+description = "TOML files: each file parses and uses the layout that taplo writes."
+title = "TOML"
+
+[files]
+extensions = [".toml"]
+
+[[tool]]
+min_version = "0.9.0"
+mise = { name = "taplo", checksums = { "linux-x64" = "sha256:8fe196b894ccf9072f98d4e1013a180306e17d244830b03986ee5e8eabeb6156", "linux-arm64" = "sha256:033681d01eec8376c3fd38fa3703c79316f5e14bb013d859943b60a07bccdcc3", "macos-x64" = "sha256:898122cde3a0b1cd1cbc2d52d3624f23338218c91b5ddb71518236a4c2c10ef2", "macos-arm64" = "sha256:713734314c3e71894b9e77513c5349835eefbd52908445a0d73b0c7dc469347d", "windows-x64" = "sha256:1615eed140039bd58e7089109883b1c434de5d6de8f64a993e6e8c80ca57bdf9" } }
+name = "taplo"
+replace = ["taplo.toml", ".taplo.toml"]
+version = "0.10.0"
+
+[[config_file]]
+target = "taplo.toml"
+tool = "taplo"
+
+[[check]]
+command = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
+example = "The TOML line `enabled=true` differs from the taplo output. Run `gspot check --fix` to get `enabled = true`."
+files = { extensions = [".toml"] }
+fix = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "{files}"]
+help = "Run the `fix:` command that the report prints."
+name = "taplo"
+output = { format = "taplo" }
+stage = "commit"
+summary = "Checks that every TOML file parses and matches the taplo output under the shared settings."
+why = "One formatter keeps a diff about the values, not the spacing."

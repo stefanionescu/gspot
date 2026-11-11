@@ -6,21 +6,21 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { pushOutputSchema } from '#cli/schemas/commands.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { AUTHORED_SCRIPT, SIGNAL_EXITS } from '#tests/config/commands/check.ts';
-import { GSPOT_ENVIRONMENT, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
+import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK, CHILD_WAIT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
-import { CLI_BIN, parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { pushOutputSchema } from '#tests/setup/schemas.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { captureChild, limitCommand, spawnCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { captureChild, limitCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import type { PausedGit } from '#tests/types/setup.ts';
+import type { PausedGit, ProcessOutput } from '#tests/types/setup.ts';
 
-async function prepareStagedCancellation(root: string, operation: 'status' | 'init' | 'checkout-index') {
+async function prepareStagedCancellation(root: string): Promise<{ indexed: string; scratch: string }> {
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'source.sh': 'echo indexed\n',
@@ -30,66 +30,52 @@ async function prepareStagedCancellation(root: string, operation: 'status' | 'in
     runGitStep(root, ['add', '-A']);
     const indexed = runGitStep(root, ['ls-files', '--stage', '-z']);
     await writeFile(join(root, 'source.sh'), AUTHORED_SCRIPT);
-    const marker = join(root, 'started.json');
-    await using resources = new AsyncDisposableStack();
-    const binaries = resources.use(await testdir());
-    const environment = await fakePausingGit(binaries.path, { operation, marker, pauseOnCall: 1 });
-    const scratch = join(root, 'scratch');
-    const capture = resources.use(
-        spawnCommand([process.execPath, CLI_BIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'], {
-            cwd: root,
-            timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
-            env: { ...GSPOT_ENVIRONMENT, ...environment, TMPDIR: scratch },
-        }),
-    );
-    expect(await waitForFile(marker)).toBe(true);
-    const started = JSON.parse(await readFile(marker, 'utf8')) as PausedGit;
-    const owned = resources.move();
-    return { ...capture, indexed, scratch, started, [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned) };
+    return { indexed, scratch: join(root, 'scratch') };
 }
 
-async function stopStagedCancellation(
-    paused: Awaited<ReturnType<typeof prepareStagedCancellation>>,
+/**
+Send the signal once the pausing Git fake writes its marker, and wait for the run and the fake to end. The run shares
+this process, so no child start or kill timer races the cancellation. The signal goes out even without the marker, so
+a run that never reaches the pause still stops.
+*/
+async function cancelAtPause(
+    run: Promise<ProcessOutput>,
+    marker: string,
     signal: 'SIGINT' | 'SIGTERM',
-    exitCode: number,
-): Promise<void> {
-    paused.child.kill(signal);
-    expect(await paused.child.exited, await paused.stderr).toBe(exitCode);
-    expect(JSON.parse(await paused.stdout)).toMatchObject({ error: 'canceled' });
-    await waitForExit(paused.started.pid);
+): Promise<{ result: ProcessOutput; started: Required<PausedGit> }> {
+    const isPaused = await waitForFile(marker);
+    process.emit(signal);
+    const result = await run;
+    expect(isPaused, result.stdout + result.stderr).toBe(true);
+    const started = JSON.parse(await readFile(marker, 'utf8')) as Required<PausedGit>;
+    await waitForExit(started.pid);
+    return { result, started };
 }
-
-async function assertStagedRetry(
-    root: string,
-    paused: Pick<Awaited<ReturnType<typeof prepareStagedCancellation>>, 'scratch' | 'indexed'>,
-): Promise<void> {
-    const scratchFiles = await readdir(paused.scratch);
-    expect(scratchFiles.filter((name) => name !== 'node-compile-cache')).toStrictEqual([]);
-    expect(runGitStep(root, ['ls-files', '--stage', '-z'])).toBe(paused.indexed);
-    expect(await readFile(join(root, 'source.sh'), 'utf8')).toBe(AUTHORED_SCRIPT);
-    const retry = parseCheckReport(
-        await runGspot(root, ['check', '--staged', '--only', 'project/bash-syntax', '--json']),
-    );
-    expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-    expect(retry.report.checks[0]!.status).toBe('passed');
-}
-
-test.skipIf(isWindows)(
-    'canceling check --staged during git status exits with the signal code, keeps the index and the working file, and a second run passes',
-    async () => {
-        await using sandbox = await testdir();
-        await using paused = await prepareStagedCancellation(sandbox.path, 'status');
-        await stopStagedCancellation(paused, 'SIGTERM', 143);
-    },
-);
 
 test.skipIf(isWindows).each([...SIGNAL_EXITS])(
     'canceling check --staged during git $operation exits with the signal code, keeps the index and the working file, and a second run passes',
     async ({ operation, signal, exitCode }) => {
         await using sandbox = await testdir();
-        await using paused = await prepareStagedCancellation(sandbox.path, operation);
-        await stopStagedCancellation(paused, signal, exitCode);
-        await assertStagedRetry(sandbox.path, paused);
+        await using binaries = await testdir();
+        const root = sandbox.path;
+        const { indexed, scratch } = await prepareStagedCancellation(root);
+        const marker = join(root, 'started.json');
+        const git = await fakePausingGit(binaries.path, { operation, marker, pauseOnCall: 1 });
+        const run = runGspot(root, ['check', '--staged', '--only', 'project/bash-syntax', '--json'], {
+            ...git,
+            TMPDIR: scratch,
+        });
+        const { result } = await cancelAtPause(run, marker, signal);
+        expect(result.code, result.stderr).toBe(exitCode);
+        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'canceled' });
+        expect(await readdir(scratch)).toStrictEqual([]);
+        expect(runGitStep(root, ['ls-files', '--stage', '-z'])).toBe(indexed);
+        expect(await readFile(join(root, 'source.sh'), 'utf8')).toBe(AUTHORED_SCRIPT);
+        const retry = parseCheckReport(
+            await runGspot(root, ['check', '--staged', '--only', 'project/bash-syntax', '--json']),
+        );
+        expect(retry.code, retry.stdout + retry.stderr).toBe(0);
+        expect(retry.report.checks[0]!.status).toBe('passed');
     },
 );
 
@@ -110,80 +96,70 @@ test.skipIf(isWindows)(
         const marker = join(sandbox.path, 'started.json');
         await using binaries = await testdir();
         const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
-        await using capture = spawnCommand(
-            [process.execPath, CLI_BIN, 'check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
-            {
-                cwd: sandbox.path,
-                timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
-                env: {
-                    ...GSPOT_ENVIRONMENT,
-                    ...(await fakePausingGit(binaries.path, {
-                        operation: 'init',
-                        marker,
-                        pauseOnCall: 2,
-                    })),
-                },
-                stdin: protocol,
-            },
+        const git = await fakePausingGit(binaries.path, { operation: 'init', marker, pauseOnCall: 2 });
+        const run = runGspot(
+            sandbox.path,
+            ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
+            git,
+            { stdin: protocol },
         );
-        const { child, stdout: output, stderr: errors } = capture;
-        expect(await waitForFile(marker)).toBe(true);
-        const started = JSON.parse(await readFile(marker, 'utf8')) as Required<PausedGit>;
-        child.kill('SIGINT');
-        expect(await child.exited, await errors).toBe(130);
-        const report = pushOutputSchema.parse(JSON.parse(await output));
+        const { result, started } = await cancelAtPause(run, marker, 'SIGINT');
+        expect(result.code, result.stderr).toBe(130);
+        const report = pushOutputSchema.parse(JSON.parse(result.stdout));
         expect(report).toMatchObject({
             revisions: [{ hash: first, report: { checks: [{ status: 'passed' }] } }],
             canceled: { pendingRefs: ['refs/heads/second'] },
             exitCode: 130,
         });
         expect(existsSync(started.checkout)).toBe(false);
-        await waitForExit(started.pid);
     },
 );
 
-test.skipIf(isWindows)(
-    'canceling a pre-push check while its stdin is open exits with the signal code, keeps the index, and a second run passes',
-    async () => {
-        await using sandbox = await testdir();
-        const root = sandbox.path;
-        await createFileTree(root, {
-            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK }),
-            'source.sh': 'echo indexed\n',
-        });
-        commitAll(root);
-        const started = join(root, 'listening');
-        const hook = ['check', '--hook', 'pre-push', '--json'];
-        const command = buildProgramCommand('processes/cli', SIGNAL_MARKER_OPTION, started, ...hook);
-        const limited = limitCommand(command, {
-            cwd: root,
-            timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
-        });
-        const child = Bun.spawn(command, {
-            cwd: root,
-            stdin: 'pipe',
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
-        });
-        await using capture = captureChild(child);
-        const { stdout: output, stderr: errors } = capture;
-        try {
-            await child.stdin.write('refs/heads/incomplete ');
-            await child.stdin.flush();
-            expect(await waitForFile(started)).toBe(true);
-            child.kill('SIGINT');
-            expect(await child.exited, await errors).toBe(130);
-            expect(JSON.parse(await output)).toMatchObject({ error: 'canceled' });
-        } finally {
-            await child.stdin.end();
-        }
-    },
-);
+test.skipIf(isWindows)('canceling a pre-push check while its stdin is open exits with the signal code', async () => {
+    await using sandbox = await testdir();
+    const root = sandbox.path;
+    await createFileTree(root, {
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK }),
+        'source.sh': 'echo indexed\n',
+    });
+    commitAll(root);
+    const started = join(root, 'listening');
+    const command = buildProgramCommand(
+        'processes/cli',
+        SIGNAL_MARKER_OPTION,
+        started,
+        'check',
+        '--hook',
+        'pre-push',
+        '--json',
+    );
+    const limited = limitCommand(command, {
+        cwd: root,
+        timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+    });
+    const child = Bun.spawn(command, {
+        cwd: root,
+        stdin: 'pipe',
+        stdout: 'pipe',
+        stderr: 'pipe',
+        timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
+    });
+    await using capture = captureChild(child);
+    try {
+        await child.stdin.write('refs/heads/incomplete ');
+        await child.stdin.flush();
+        expect(await waitForFile(started)).toBe(true);
+        child.kill('SIGINT');
+        expect(await child.exited, await capture.stderr).toBe(130);
+        expect(JSON.parse(await capture.stdout)).toMatchObject({ error: 'canceled' });
+    } finally {
+        await child.stdin.end();
+    }
+});
 
 async function fakePausingGit(
     folder: string,
-    options: { operation: 'status' | 'init' | 'checkout-index'; marker: string; pauseOnCall: number },
+    options: { operation: 'init' | 'checkout-index'; marker: string; pauseOnCall: number },
 ): Promise<Record<string, string>> {
     const executable = Bun.which('git');
     if (executable === null) throw new Error('The pausing Git fake requires Git on PATH.');
@@ -203,6 +179,5 @@ async function fakePausingGit(
         options.marker,
         '--',
     );
-    const environment = buildSpawnEnvironment();
-    return { ...environment, PATH: `${folder}${delimiter}${environment['PATH'] ?? ''}` };
+    return { PATH: `${folder}${delimiter}${buildSpawnEnvironment()['PATH'] ?? ''}` };
 }

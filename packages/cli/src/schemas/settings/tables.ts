@@ -70,7 +70,6 @@ export const ciSchema = z
     })
     .transform((ci) => ({
         ...ci,
-        operating_systems: ci.operating_systems ?? ciFields.operating_systems.parse(undefined),
         linux_runner: ci.linux_runner ?? ciFields.linux_runner.parse(undefined),
     }))
     .meta({

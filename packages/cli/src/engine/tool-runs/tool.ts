@@ -1,14 +1,14 @@
 import { basename, delimiter, dirname } from 'node:path';
 
 import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
+import { findCommandTool } from '#cli/engine/plan.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { listSecondaryTools } from '#cli/engine/tools.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
 import { readToolCommandPrefix } from '#cli/tools/packages.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
@@ -22,7 +22,7 @@ async function readCheckTool(
     name: string,
     options: CheckToolOptions,
 ): Promise<CheckTool> {
-    const tool = getTool(readConfigurations().values(), name);
+    const tool = findCommandTool(readConfigurations().values(), name);
     const env = { ...planned.check.env, ...options.env };
     const availability = await findToolPath(session, tool, options.cwd);
     if ('status' in availability) {

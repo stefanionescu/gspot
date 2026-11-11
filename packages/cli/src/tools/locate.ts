@@ -5,13 +5,14 @@ import which from 'which';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { PYTHON_ENVIRONMENT_FOLDER, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
 import {
     MISE_BIN_PATHS_ARGUMENTS,
     MISE_CEILING_PATHS_VARIABLE,
     MISE_PROJECT_MESSAGE,
     MISE_STALE_PROJECT_MESSAGE,
     MISE_TOOL,
+    MISE_TOOL_SOURCE_ARGUMENTS,
     MISE_TRUSTED_PATHS_VARIABLE,
 } from '#cli/config/tools/installers.ts';
 import {
@@ -24,10 +25,12 @@ import {
     TOOL_ENVIRONMENT,
 } from '#cli/config/tools/programs.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { miseToolSourcesSchema } from '#cli/schemas/tools.ts';
 import { remember } from '#cli/system/cache.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { convertToPosixPath, executableLayout, listExecutableNames } from '#cli/system/paths.ts';
+import { convertToPosixPath, executableLayout, isInside, listExecutableNames } from '#cli/system/paths.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { filterOutsidePaths, findProgram } from '#cli/system/programs.ts';
 import { buildMiseInstall, listMisePins } from '#cli/tools/pins.ts';
@@ -152,6 +155,26 @@ export async function listExecutablePaths(
     const managed = [...programs, ...found];
     if (managed.length > 0) return { paths: managed };
     return await listSystemExecutablePaths(root, name, options.timeoutSeconds);
+}
+
+/**
+Find the Python that a mise config file of the repository sets for a folder. A Python that only a config file above the
+repository names does not count, because the repository does not ask for it.
+*/
+export async function findRepositoryPython(
+    root: string,
+    cwd: string,
+    options: { misePath: string; timeoutSeconds: number; cancelSignal?: AbortSignal | undefined },
+): Promise<string | undefined> {
+    const { misePath, ...limits } = options;
+    const spawn = { cwd, env: TOOL_ENVIRONMENT, ...limits };
+    const listed = await runProcess([misePath, ...MISE_TOOL_SOURCE_ARGUMENTS, PYTHON_EXECUTABLE], spawn);
+    if (listed.code !== 0) return undefined;
+    const source = parseToolOutput(MISE_TOOL, listed.stdout, miseToolSourcesSchema)[0]?.source?.path;
+    if (source === undefined || !isInside(relative(root, source))) return undefined;
+    const found = await runProcess([misePath, MISE_WHICH, PYTHON_EXECUTABLE], spawn);
+    const python = found.stdout.trim();
+    return found.code === 0 && python !== '' ? python : undefined;
 }
 
 export function readToolBinPaths(session: ToolLookupSession): Promise<MiseBinPaths> {

@@ -8,18 +8,18 @@ import executables from 'which';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { GIT_PROGRAM } from '#cli/config/repository/git.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import * as processes from '#cli/system/processes.ts';
 import type { runProcess } from '#cli/system/processes.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import * as locate from '#cli/tools/locate.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import { type Tool } from '#cli/types/manifests.ts';
-import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import type { ProgramName } from '#tests/types/setup.ts';
+
+const UNPINNED_NPM_MESSAGE = 'The npm package fake requires a pinned tool version.';
 
 export async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
     await mkdir(dirname(target), { recursive: true });

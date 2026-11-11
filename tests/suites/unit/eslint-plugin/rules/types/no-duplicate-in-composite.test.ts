@@ -8,5 +8,6 @@ buildRuleTester().run('no-duplicate-in-composite', noDuplicateInComposite, {
             code: 'type Id = string | number | string;',
             errors: [{ messageId: 'duplicate', data: { text: 'string' }, column: 29 }],
         },
+        { code: 'type Both = A & B & A;', errors: [{ messageId: 'duplicate', data: { text: 'A' } }] },
     ],
 });

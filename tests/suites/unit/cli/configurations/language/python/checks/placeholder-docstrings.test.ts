@@ -15,14 +15,19 @@ test.each([...PLACEHOLDER_DOCSTRING_CASES])(
     },
 );
 
-test.each(['Class that holds an order.', 'Class for orders.', 'A class of orders.'])(
-    'python/placeholder-docstrings reports the class docstring %s',
-    async (docstring) => {
+test.each<{ docstring: string; lines: number[] }>([
+    { docstring: 'Class that holds an order.', lines: [1] },
+    { docstring: 'Class for orders.', lines: [1] },
+    { docstring: 'A class of orders.', lines: [1] },
+    { docstring: 'Classifies orders by region.', lines: [] },
+])(
+    'python/placeholder-docstrings reports the class docstring $docstring on lines $lines',
+    async ({ docstring, lines }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
             'model.py': `class Order:\n    """${docstring}"""\n`,
         });
         const findings = await runSandboxCheck(sandbox.path, 'python/placeholder-docstrings');
-        expect(findings.map(({ line }) => line)).toStrictEqual([1]);
+        expect(findings.map(({ line }) => line)).toStrictEqual(lines);
     },
 );

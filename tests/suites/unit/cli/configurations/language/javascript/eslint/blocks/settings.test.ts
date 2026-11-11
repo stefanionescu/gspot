@@ -83,3 +83,24 @@ test('only the scope that depends on vite gets the VITE_ prefix', async () => {
         publicPrefixes: ['VITE_'],
     });
 });
+
+test('an Astro script block may read only PUBLIC_ environment variables, and its frontmatter may read any', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['astro', 'typescript']),
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
+        'src/components/Widget.astro': `---
+const title = process.env.SECRET_TITLE;
+---
+<p>{title}</p>
+<script>
+    console.info(process.env.PUBLIC_URL);
+    console.info(process.env.SECRET_TOKEN);
+</script>
+`,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const file = 'src/components/Widget.astro';
+    expect(await listLintFindings(eslint, sandbox.path, [file], ['gspot/no-client-environment'])).toStrictEqual([
+        { file, rule: 'gspot/no-client-environment', line: 7 },
+    ]);
+});

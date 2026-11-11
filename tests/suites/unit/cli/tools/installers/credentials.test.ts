@@ -1,12 +1,12 @@
 import { expect, test } from 'bun:test';
 
 import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/installers.ts';
-import {
-    assertCredentialFreeLockfile,
-    extractUrlPasswords,
-    redactInstallOutput,
-} from '#cli/tools/installers/credentials.ts';
-import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS } from '#tests/config/tools/npm.ts';
+import { extractUrlPasswords, redactInstallOutput } from '#cli/tools/installers/credentials.ts';
+
+const REGISTRY_PASSWORDS = [
+    ['https://alex@example.com/simple', []],
+    ['https://alex:test%2Bpassword@example.com/simple', ['test%2Bpassword', 'test+password']],
+] as const;
 
 test.each(REGISTRY_PASSWORDS)('registry passwords are read in both encodings from %s', (url, expected) => {
     expect(extractUrlPasswords(url)).toStrictEqual([...expected]);
@@ -16,17 +16,6 @@ test('a URL that does not parse has no password, and a bare percent stays as wri
     expect(extractUrlPasswords('https://exa mple.com/simple')).toStrictEqual([]);
     expect(extractUrlPasswords('https://user:100%@example.com/simple')).toStrictEqual(['100%', '100%']);
 });
-
-test.each([...LEAKED_LOCKFILES])(
-    'a lockfile that holds a registry password in %s is refused with the message, and a clean one passes',
-    (lockfile) => {
-        const passwords = ['synthetic/password+with spaces'];
-        const failure = 'Existing files were preserved.';
-        expect(() => {
-            assertCredentialFreeLockfile(lockfile, passwords, failure);
-        }).toThrow(new Error(failure));
-    },
-);
 
 test('installation output hides the password in a registry URL', () => {
     expect(

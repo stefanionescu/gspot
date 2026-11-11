@@ -7,7 +7,6 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import type { TomlTable } from '#cli/types/settings.ts';
-import { LITERAL_ROUTE_CASES } from '#tests/config/commands/edits.ts';
 import { BROKEN_IF_SCRIPT, TERMS_SOURCE } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -124,30 +123,27 @@ test('ignore without a check keeps the paths out of every check and every config
     expect(contents).not.toHaveProperty('ignore');
 });
 
-test.each([...LITERAL_ROUTE_CASES])(
-    'ignore escapes literal $folder and unignore removes its deleted path',
-    async ({ folder, path, escaped }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['typescript']),
-            [`${folder}/terms/page.tsx`]: TERMS_SOURCE,
-        });
-        commitAll(sandbox.path);
-        const ignored = await runGspot(sandbox.path, [
-            'ignore',
-            'structure/lone-files',
-            '--paths',
-            path,
-            '--reason',
-            'Next.js route groups hold one page each.',
-        ]);
-        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-        const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-        expect(written['ignore']).toMatchObject([{ paths: [escaped] }]);
-        expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
-        await rm(join(sandbox.path, folder), { recursive: true });
-        const restored = await runGspot(sandbox.path, ['unignore', 'structure/lone-files', '--paths', path]);
-        expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-        const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
-        expect(contents).not.toHaveProperty('ignore');
-    },
-);
+test('ignore escapes the literal app/[id] and unignore removes its deleted path', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        'app/[id]/terms/page.tsx': TERMS_SOURCE,
+    });
+    commitAll(sandbox.path);
+    const ignored = await runGspot(sandbox.path, [
+        'ignore',
+        'structure/lone-files',
+        '--paths',
+        'app/[id]/**',
+        '--reason',
+        'Next.js route groups hold one page each.',
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toMatchObject([{ paths: [String.raw`app/\[id\]/**`] }]);
+    expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
+    await rm(join(sandbox.path, 'app/[id]'), { recursive: true });
+    const restored = await runGspot(sandbox.path, ['unignore', 'structure/lone-files', '--paths', 'app/[id]/**']);
+    expect(restored.code, restored.stdout + restored.stderr).toBe(0);
+    const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
+    expect(contents).not.toHaveProperty('ignore');
+});

@@ -7,8 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { UV_TOOL } from '#cli/config/tools/installers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { PYTHON_TUTORIAL, SWIFT_TUTORIAL } from '#tests/config/e2e.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';

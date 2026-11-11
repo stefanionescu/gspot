@@ -9,14 +9,26 @@ import {
     BASH_SYNTAX_PUSH_CHECK,
     CHANGED_CONTEXT,
     HOOKS_SETTINGS,
-    LFS_ATTRIBUTES,
-    NESTED_SCOPE_FILES,
-    PUSH_CONTENT,
     TEAMS_MIGRATION_PATH,
     TEAMS_TABLE_SQL,
 } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+
+const PUSH_CONTENT = {
+    base: 'echo base\n',
+    reviewed: 'echo reviewed\n',
+    broken: 'if then\n',
+    working: 'echo repaired only in the working tree\n',
+    settings: 'invalid working policy',
+} as const;
+
+const LFS_ATTRIBUTES = '*.bin filter=lfs diff=lfs merge=lfs -text\n';
+
+const NESTED_SCOPE_FILES = {
+    'outside.txt': 'repository context',
+    'nested settings/source.txt': 'committed',
+} as const;
 
 export async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
     expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);

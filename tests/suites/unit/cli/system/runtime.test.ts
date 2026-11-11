@@ -1,11 +1,10 @@
 import { expect, test } from 'bun:test';
 
-import { validateRuntimeVersion } from '#cli/system/runtime.ts';
+import { MINIMUM_NODE_VERSION, validateRuntimeVersion } from '#cli/system/runtime.ts';
 
 test('gspot refuses a Node.js older than the minimum version in engines and names that version', () => {
-    const engines = { node: '>=24.0.0' };
-    expect(validateRuntimeVersion({ node: '24.0.0' }, engines)).toBeUndefined();
-    expect(validateRuntimeVersion({ node: '22.12.0' }, engines)).toBe(
-        'gspot needs Node.js 24.0.0 or newer (found 22.12.0). If your terminal has a newer Node.js, this Git client gives hooks another PATH. Start it from a terminal, or add that folder to its PATH.',
+    expect(validateRuntimeVersion({ node: MINIMUM_NODE_VERSION })).toBeUndefined();
+    expect(validateRuntimeVersion({ node: '0.0.0' })).toBe(
+        `gspot needs Node.js ${MINIMUM_NODE_VERSION} or newer (found 0.0.0). If your terminal has a newer Node.js, this Git client gives hooks another PATH. Start it from a terminal, or add that folder to its PATH.`,
     );
 });

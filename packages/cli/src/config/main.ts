@@ -9,12 +9,6 @@ export const PIN_COMMANDS: ReadonlySet<string> = new Set([
     'unset',
 ]);
 
-export const REMOVED_COMMANDS = {
-    apply: 'gspot install writes the generated files. Run gspot install.',
-    baseline:
-        'gspot baseline was removed. Fix old findings, or run gspot ignore <check> --rule <rule> --paths <old files> --reason "<why>". Delete gspot.baseline.json, and any [[ignore]] of gspot/baseline.',
-} as const;
-
 export const PROCESS_ARGUMENTS_START = 2;
 
 export const UNKNOWN_COMMAND_NAME = /unknown command '([^']+)'/u;

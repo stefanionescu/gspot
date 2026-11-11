@@ -115,6 +115,9 @@ so that the lint rules that read types find the route types.
 The job runs gspot and these commands with the Node.js version that `mise.toml` pins, so CI runs the version that your
 machine runs. Without a Node.js pin in `mise.toml`, the job uses the version that gspot pins for CI.
 
+The job runs `gspot check` under `mise exec`, so a `[[command_check]]` reads the variables that the `[env]` table of your
+mise config sets.
+
 To run your own install command instead, set `ci.setup_command`. The job runs it before `gspot install`, and stops if it
 fails:
 

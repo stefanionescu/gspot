@@ -6,8 +6,7 @@ import { expect, test } from 'bun:test';
 import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/tools/pins.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import {
     NGINX_FAILURE_CASES,
     NGINX_MOUNT_CASES,

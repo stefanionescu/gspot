@@ -40,7 +40,7 @@ test('generated Gradle and Maven launchers are classified generated and never se
     ]);
     expect(
         detectConfigurations({ root: session.root, files: session.repository.files, dependencyFiles: [] }).map(
-            ({ configuration }) => configuration,
+            ({ configuration }) => configuration.name,
         ),
     ).not.toContain('bash');
     await writeFile(join(sandbox.path, '.gitattributes'), 'mvnw linguist-vendored\n');

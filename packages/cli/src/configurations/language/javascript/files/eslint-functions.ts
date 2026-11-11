@@ -133,11 +133,11 @@ export function buildComponentMatcher(parser: ComponentParser, typescriptParser?
     };
 }
 
-export function importAstroPlugin(moduleUrl: string = import.meta.url): unknown {
+export function importAstroPlugin(): unknown {
     const previousFolder = process.cwd();
     try {
-        process.chdir(dirname(fileURLToPath(moduleUrl)));
-        const require = createRequire(moduleUrl);
+        process.chdir(dirname(fileURLToPath(import.meta.url)));
+        const require = createRequire(import.meta.url);
         const pluginRequire = createRequire(require.resolve('eslint-plugin-astro/package.json'));
         const plugin: unknown = pluginRequire('./lib/index.mjs');
         return typeof plugin === 'object' && plugin !== null && 'default' in plugin ? plugin.default : plugin;
@@ -151,14 +151,14 @@ Read Svelte's parser dependencies from the generated tool project.
 
 @returns a component parser that restores the working folder after each parse.
 */
-export function importSvelteParser(moduleUrl: string = import.meta.url): ComponentParser {
-    const parser = createRequire(moduleUrl)('svelte-eslint-parser') as ComponentParser;
+export function importSvelteParser(): ComponentParser {
+    const parser = createRequire(import.meta.url)('svelte-eslint-parser') as ComponentParser;
     return {
         ...parser,
         parseForESLint(code, options) {
             const previousFolder = process.cwd();
             try {
-                process.chdir(dirname(fileURLToPath(moduleUrl)));
+                process.chdir(dirname(fileURLToPath(import.meta.url)));
                 return parser.parseForESLint(code, options);
             } finally {
                 process.chdir(previousFolder);

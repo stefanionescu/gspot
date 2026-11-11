@@ -71,11 +71,11 @@ export const MISE_TASK_SOURCES = [
         files: { 'mise-tasks/docs/_default': '#!/usr/bin/env bash\ntrue\n' },
     },
     {
-        name: 'task aliases in mise.toml',
-        tasks: ['compile', 'verify', 'validate'],
+        name: 'string tasks, command lists, and task aliases in mise.toml',
+        tasks: ['lint', 'format', 'compile', 'verify', 'validate'],
         files: {
             'mise.toml':
-                '[tasks.build]\nalias = "compile"\nrun = "true"\n[tasks.test]\nalias = ["verify", "validate"]\nrun = "true"\n',
+                'tasks.lint = "true"\ntasks.format = ["true"]\n[tasks.build]\nalias = "compile"\nrun = "true"\n[tasks.test]\nalias = ["verify", "validate"]\nrun = "true"\n',
         },
     },
     {

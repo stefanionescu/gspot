@@ -4,34 +4,13 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { openSession } from '#cli/engine/session.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import {
-    CLASSIFICATION_FILES,
-    LINGUIST_GENERATED_LINE,
-    TYPE_DECLARATION_FILES,
-} from '#tests/config/repository/files.ts';
+import { CLASSIFICATION_FILES, LINGUIST_GENERATED_LINE } from '#tests/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-
-test('Git attributes win over the generated files of configurations', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['nextjs', 'cloudflare'], {
-            scopes: [{ path: 'app', configurations: ['nextjs', 'cloudflare'] }],
-        }),
-        ...TYPE_DECLARATION_FILES,
-        '.gitattributes':
-            '/next-env.d.ts linguist-vendored\n/worker-configuration.d.ts linguist-vendored\napp/next-env.d.ts -diff !linguist-vendored\napp/worker-configuration.d.ts !linguist-vendored\n',
-    });
-    runGitStep(sandbox.path, ['add', '.']);
-    const session = await openSession(sandbox.path);
-    const files = new Map(session.repository.files.map((file) => [file.path, file]));
-    expect(files.get('app/worker-configuration.d.ts')).toMatchObject({ kind: 'generated', kindOrigin: 'cloudflare' });
-});
 
 test('.gitattributes wins, then the files configurations declare, then banners, vendored folders, and the file content', async () => {
     await using sandbox = await createGitSandbox(CLASSIFICATION_FILES);

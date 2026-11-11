@@ -1,13 +1,5 @@
 import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 
-export const SYNTAX_ERRORS = [
-    {
-        path: 'package.json',
-        source: '{',
-        position: 'package.json:1:2',
-    },
-];
-
 export const MALFORMED_BLOCKS = [
     { path: 'AGENTS.md', source: '<!-- >>> gspot managed >>> -->\nbody\n' },
     { path: 'AGENTS.md', source: 'body\n<!-- <<< gspot managed <<< -->\n' },
@@ -101,13 +93,6 @@ export const LOCKED_VERSION_CASES = [
         file: 'yarn.lock',
         folder: 'app',
         text: '__metadata:\n  version: 8\n"react@npm:^18.0.0, react@npm:^18.3.0":\n  version: 18.3.1\n"react@npm:17.0.2":\n  version: 17.0.2\n"react-dom@npm:18.3.1":\n  version: 18.3.1\n',
-    },
-] as const;
-
-export const XCODE_PROJECT_REFUSALS = [
-    {
-        name: 'unresolved source tree',
-        source: GROUPED_PBXPROJ.replace('sourceTree = SOURCE_ROOT;', 'sourceTree = CUSTOM_BUILD_ROOT;'),
     },
 ] as const;
 

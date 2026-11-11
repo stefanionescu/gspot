@@ -35,7 +35,7 @@ import type {
     NamingCheck,
     NamingSettings,
 } from '#cli/types/configurations/general.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_DIGITS);

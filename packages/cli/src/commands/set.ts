@@ -6,7 +6,7 @@ import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
-import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
@@ -17,7 +17,6 @@ import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import { findToolName } from '#cli/tools/pins.ts';
 import { canReadRuleExplanations } from '#cli/tools/rules.ts';
 import type {
     CommandDefinition,
@@ -206,10 +205,7 @@ async function assertLintRules(edit: SettingsEditContext, key: string, change: P
     const { session } = edit;
     for (const rule of Object.keys(change.value as TomlTable)) {
         if (!canReadRuleExplanations(tool, rule)) continue;
-        const docs = await readCheckRuleExplanation(session.root, check, rule, session).catch((error: unknown) => {
-            if (error instanceof GspotError) return { unread: true };
-            throw error;
-        });
+        const docs = await readCheckRuleExplanation(session.root, check, rule, session);
         if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${check.id}.`);
     }
 }

@@ -4,11 +4,12 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { PACKAGE_STYLE_CASES, PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
-import { GUIDE_READ_MARKDOWN } from '#tests/config/setup/configurations.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+
+const GUIDE_READ_MARKDOWN = '# Guide\n\nRead the guide.\n';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 

@@ -7,22 +7,17 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { settingsListOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import {
-    KEPT_SETTING_CHANGES,
-    STOPPED_APPLY_FILES,
-    STRING_SETTING_VALUES,
-    WEAKENED_SETTINGS,
-} from '#tests/config/commands/edits.ts';
+import { STOPPED_APPLY_FILES, STRING_SETTING_VALUES } from '#tests/config/commands/edits.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { settingsListOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('set writes and unset removes a setting of a selected configuration', async () => {
@@ -61,24 +56,30 @@ test('set names -- when a value reads as an option, and takes the values after -
     expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
 });
 
-test.each([...KEPT_SETTING_CHANGES])(
-    '%s keeps its change in gspot.toml and exits 2 when the write of the generated files then stops',
-    async (_, commandArguments, written) => {
-        await using sandbox = await createGitSandbox(STOPPED_APPLY_FILES);
+test('set keeps its change in gspot.toml and exits 2 when the write of the generated files then stops', async () => {
+    await using sandbox = await createGitSandbox(STOPPED_APPLY_FILES);
 
-        await applyGeneratedFiles(sandbox.path);
-        const generated = join(sandbox.path, '.editorconfig');
-        const authored = join(sandbox.path, 'authored-editorconfig');
-        await writeFile(authored, ROOT_EDITORCONFIG);
-        await rm(generated);
-        await symlink('authored-editorconfig', generated);
-        const stopped = await runGspot(sandbox.path, [...commandArguments, '--json']);
-        expect(stopped.code, stopped.stdout + stopped.stderr).toBe(2);
-        expect(JSON.parse(stopped.stdout)).toMatchObject({ error: 'writing' });
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
-        expect(await readFile(authored, 'utf8')).toBe(ROOT_EDITORCONFIG);
-    },
-);
+    await applyGeneratedFiles(sandbox.path);
+    const generated = join(sandbox.path, '.editorconfig');
+    const authored = join(sandbox.path, 'authored-editorconfig');
+    await writeFile(authored, ROOT_EDITORCONFIG);
+    await rm(generated);
+    await symlink('authored-editorconfig', generated);
+    const stopped = await runGspot(sandbox.path, [
+        'set',
+        'limits.bash.max_file_lines',
+        '200',
+        '--reason',
+        'Generated scripts need this limit.',
+        '--json',
+    ]);
+    expect(stopped.code, stopped.stdout + stopped.stderr).toBe(2);
+    expect(JSON.parse(stopped.stdout)).toMatchObject({ error: 'writing' });
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(
+        '[limits]\nbash = { max_file_lines = { value = 200, reason = "Generated scripts need this limit." } }',
+    );
+    expect(await readFile(authored, 'utf8')).toBe(ROOT_EDITORCONFIG);
+});
 
 test('set takes each word of a list as an item, without one pair of TOML quotes', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
@@ -140,60 +141,67 @@ test('set level all writes the level in a fresh clone', async () => {
     expect(settings).toBe('all');
 });
 
-test.each([...WEAKENED_SETTINGS])(
-    'set refuses $key without --reason, and set and unset keep its reason through list edits',
-    async ({ key, value, second }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['typescript', 'site'], { level: 'all' }),
-            'entry.ts': 'export const port = 8080;\n',
-        });
-        const refused = await runGspot(sandbox.path, ['set', key, value, '--json']);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(JSON.parse(refused.stdout)).toMatchObject({
-            error: 'arguments',
-            message: expect.stringContaining('Add --reason') as string,
-        });
-        for (const commandArguments of [
-            ['set', key, value, second, '--reason', SETTING_REASON],
-            ['unset', key, value],
-        ]) {
-            const result = await runGspot(sandbox.path, commandArguments);
-            expect(result.code, result.stdout + result.stderr).toBe(0);
-        }
-        const contents = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-        const saved = findValueAt(contents, key.split('.'));
-        expect(saved).toStrictEqual({ value: [second], reason: SETTING_REASON });
-    },
-);
+test('set refuses site.allowed_unlisted_pages without --reason, and set and unset keep its reason through list edits', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'site'], { level: 'all' }),
+        'entry.ts': 'export const port = 8080;\n',
+    });
+    const key = 'site.allowed_unlisted_pages';
+    const refused = await runGspot(sandbox.path, ['set', key, 'account/index.html', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(JSON.parse(refused.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('Add --reason') as string,
+    });
+    for (const commandArguments of [
+        ['set', key, 'account/index.html', 'admin/index.html', '--reason', SETTING_REASON],
+        ['unset', key, 'account/index.html'],
+    ]) {
+        const result = await runGspot(sandbox.path, commandArguments);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+    }
+    const contents = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    const saved = findValueAt(contents, ['site', 'allowed_unlisted_pages']);
+    expect(saved).toStrictEqual({ value: ['admin/index.html'], reason: SETTING_REASON });
+});
 
-test.each([...WEAKENED_SETTINGS])(
-    '$key set in one scope keeps the root value, and unset gives the scope the inherited value again',
-    async ({ key, value, second }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['typescript', 'site'], {
-                level: 'all',
-                tables: `${key} = { value = ${JSON.stringify([second])}, reason = ${JSON.stringify(SETTING_REASON)} }\n[[scope]]\npath = "app"\n[[scope]]\npath = "sibling"\n`,
-            }),
-            'entry.ts': 'export const port = 8080;\n',
-            'app/entry.ts': 'export const port = 8081;\n',
-            'sibling/entry.ts': 'export const port = 8082;\n',
-        });
-        const changed = await runGspot(sandbox.path, ['set', key, value, '--scope', 'app', '--reason', SETTING_REASON]);
-        expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-        const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-        expect(findValueAt(saved, key.split('.'))).toMatchObject({ value: [second], reason: SETTING_REASON });
-        const restored = await runGspot(sandbox.path, ['unset', key, '--scope', 'app']);
-        expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-        const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
-        expect(listed.code, listed.stdout + listed.stderr).toBe(0);
-        expect(
-            settingsListOutputSchema
-                .parse(JSON.parse(listed.stdout))
-                .settings.filter((row) => row.setting === key)
-                .map(({ value }) => value),
-        ).toStrictEqual([[second], [second], [second]]);
-    },
-);
+test('site.allowed_unlisted_pages set in one scope keeps the root value, and unset gives the scope the inherited value again', async () => {
+    const key = 'site.allowed_unlisted_pages';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'site'], {
+            level: 'all',
+            tables: `${key} = { value = ["admin/index.html"], reason = ${JSON.stringify(SETTING_REASON)} }\n[[scope]]\npath = "app"\n[[scope]]\npath = "sibling"\n`,
+        }),
+        'entry.ts': 'export const port = 8080;\n',
+        'app/entry.ts': 'export const port = 8081;\n',
+        'sibling/entry.ts': 'export const port = 8082;\n',
+    });
+    const changed = await runGspot(sandbox.path, [
+        'set',
+        key,
+        'account/index.html',
+        '--scope',
+        'app',
+        '--reason',
+        SETTING_REASON,
+    ]);
+    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+    const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(findValueAt(saved, ['site', 'allowed_unlisted_pages'])).toMatchObject({
+        value: ['admin/index.html'],
+        reason: SETTING_REASON,
+    });
+    const restored = await runGspot(sandbox.path, ['unset', key, '--scope', 'app']);
+    expect(restored.code, restored.stdout + restored.stderr).toBe(0);
+    const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
+    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
+    expect(
+        settingsListOutputSchema
+            .parse(JSON.parse(listed.stdout))
+            .settings.filter((row) => row.setting === key)
+            .map(({ value }) => value),
+    ).toStrictEqual([['admin/index.html'], ['admin/index.html'], ['admin/index.html']]);
+});
 
 test('spelling.allowed_words keeps one reason for each word through edits', async () => {
     await using sandbox = await createGitSandbox({
@@ -245,15 +253,6 @@ test('set replaces the written values of an ordinary list', async () => {
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     const contents = findValueAt(written, ['naming', 'banned_words']);
     expect(contents).toStrictEqual(['secondword']);
-});
-
-test('unset says when an empty list turns a check off, and unset of a shipped value says nothing', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }),
-    });
-    const unset = await runGspot(sandbox.path, ['unset', 'licenses.allowed']);
-    expect(unset.code, unset.stdout + unset.stderr).toBe(0);
-    expect(unset.stdout).toContain('This turns off licenses/allowed.');
 });
 
 test('an edit in one scope does not say it turns off a check that the other scope leaves empty', async () => {

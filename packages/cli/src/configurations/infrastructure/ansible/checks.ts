@@ -11,8 +11,7 @@ import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { findProjectFolder, isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
 import { isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
 async function lintProject(
     session: CheckSession,

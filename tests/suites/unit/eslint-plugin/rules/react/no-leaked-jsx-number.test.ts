@@ -17,7 +17,10 @@ const tester = buildRuleTester({
 });
 
 tester.run('no-leaked-jsx-number', noLeakedJsxNumber, {
-    valid: [{ code: 'declare const count: number;\nexport const view = <div>{count > 0 && <b />}</div>;', filename }],
+    valid: [
+        { code: 'declare const count: number;\nexport const view = <div>{count > 0 && <b />}</div>;', filename },
+        { code: 'declare const name: string;\nexport const view = <div>{name && <b />}</div>;', filename },
+    ],
     invalid: [
         {
             code: 'declare const count: number;\nexport const view = <div>{count && <b />}</div>;',

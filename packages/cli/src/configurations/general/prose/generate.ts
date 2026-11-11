@@ -43,6 +43,9 @@ import type { Session } from '#cli/types/tools.ts';
 
 const TERMS_MESSAGE = "Use '%s' instead of '%s'.";
 
+// A word such as 3D starts with a digit, so Vale cannot read it as a capitalized first word.
+const DIGIT_WORD_PATTERN = String.raw`\b\d+[A-Z][A-Z\d]*\b`;
+
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]
         .toSorted(compareText)
@@ -167,7 +170,7 @@ export const PROSE_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
             ...HEADING_CASE_STYLE,
             extends: 'capitalization',
             level: 'error',
-            exceptions: [...listExceptions(listAllowedWords(planned.session)), FILE_NAME_PATTERN],
+            exceptions: [...listExceptions(listAllowedWords(planned.session)), FILE_NAME_PATTERN, DIGIT_WORD_PATTERN],
         });
     },
     'prose/styles/gspot/paragraph-length.yml': (planned) => buildLengthStyle(planned, 'paragraph'),

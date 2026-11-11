@@ -10,19 +10,47 @@ import { listProjectDependencyNames, readDependencyFiles, readPackageJson } from
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text.ts';
-import {
-    INVALID_DEPENDENCY_FILES,
-    PACKAGE_FIELDS,
-    PROJECT_DEPENDENCY_FILES,
-    PROJECT_DEPENDENCY_SCOPES,
-    PYTHON_DEPENDENCY_CASES,
-    REACT_VUE_PACKAGES,
-    ROOT_PACKAGE_WITHOUT_DEPENDENCIES,
-} from '#tests/config/repository/detect.ts';
+import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/detect.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+const PACKAGE_FIELDS = {
+    name: 'example-package',
+    dependencies: { next: '16.0.0' },
+    'simple-git-hooks': null,
+    customSettings: { enabled: true },
+} as const;
+
+const PROJECT_DEPENDENCY_FILES = {
+    'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',
+    'app/package.json': '{"devDependencies":{"tailwindcss":"4.1.13"}}',
+    'other/package.json': '{"dependencies":{"next":"16.3.5"}}',
+    'empty/package.json': '{"private":true}',
+} as const;
+
+const PROJECT_DEPENDENCY_SCOPES = [
+    { scope: '', names: ['@nestjs/swagger'] },
+    { scope: 'application', names: ['@nestjs/swagger'] },
+    { scope: 'app', names: ['tailwindcss'] },
+    { scope: 'app/styles', names: ['tailwindcss'] },
+    { scope: 'empty', names: [] },
+] as const;
+
+const INVALID_DEPENDENCY_FILES = [
+    ['package.json', '{"dependencies":{"typescript":7}}'],
+    ['pyproject.toml', '[project'],
+] as const;
+
+const REACT_VUE_PACKAGES = {
+    'package.json': '{"name":"root-sandbox","private":true,"dependencies":{"react":"19.0.0"}}',
+    'app/package.json': '{"name":"child-sandbox","private":true,"dependencies":{"vue":"3.5.0"}}',
+    'main.js': 'export const ready = true;\n',
+    'app/main.js': 'export const ready = true;\n',
+} as const;
+
+const ROOT_PACKAGE_WITHOUT_DEPENDENCIES = '{"name":"root-sandbox","private":true,"dependencies":{}}';
 
 test('Python dependency groups with includes keep every dependency', async () => {
     await using sandbox = await createGitSandbox({

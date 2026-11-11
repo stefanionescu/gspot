@@ -1,7 +1,8 @@
 import { KNIP_ISSUE_MESSAGES } from '#cli/config/engine.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { knipOutputSchema } from '#cli/schemas/engine.ts';
-import type { Finding, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 export function parseKnipFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;

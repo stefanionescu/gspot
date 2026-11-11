@@ -3,8 +3,7 @@ import { join, posix } from 'node:path';
 
 import { readGitPaths } from '#cli/repository/git/run.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import type { CheckCode, CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 const EMPTY_FOLDER_RULE = 'empty-folder';
 

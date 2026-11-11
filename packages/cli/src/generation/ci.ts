@@ -32,10 +32,13 @@ import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javasc
 import { CI_PINS } from '#cli/config/settings/schema.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { readCiNode } from '#cli/repository/javascript/gspot-pin.ts';
-import { buildPackageManagerCommand, findPackageManagerPin } from '#cli/repository/javascript/package-manager.ts';
-import { buildFrozenInstallArguments } from '#cli/repository/javascript/setup.ts';
+import {
+    buildFrozenInstallArguments,
+    buildPackageManagerCommand,
+    findPackageManagerPin,
+} from '#cli/repository/javascript/package-manager.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { readCiNode } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
 import { getUvPin } from '#cli/tools/pins.ts';
@@ -55,6 +58,14 @@ function buildGspotTools(pipeline: Pipeline): string {
     if (packageManager?.version !== undefined && packageManager.name !== 'npm')
         tools.push(`${packageManager.name}@${packageManager.version}`);
     return quoteCommand(tools);
+}
+
+/**
+Run the checks under mise exec, which loads the [env] of the mise config files of the repository. A command check
+reads those variables, and the search path of the job holds the tools without them.
+*/
+function buildCheckLine(tools: string, checkCommand: string): string {
+    return `mise exec ${tools} -- ${checkCommand}`;
 }
 
 function buildJob(
@@ -90,7 +101,7 @@ function buildJob(
             {
                 name: CI_STEP_NAMES.check,
                 env: { [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION },
-                run: checkCommand + '\n',
+                run: `${buildCheckLine(tools, checkCommand)}\n`,
             },
         ],
     };
@@ -177,7 +188,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
         `PATH="$(mise bin-paths ${tools} | paste -sd : -):\${PATH}"`,
         'export PATH',
     ];
-    const check = [GITLAB_BASE_LINE, CI_CHECK_COMMAND].join('\n');
+    const check = [GITLAB_BASE_LINE, buildCheckLine(tools, CI_CHECK_COMMAND)].join('\n');
     const content = stringify({
         gspot: {
             image: `${GITLAB_MISE_IMAGE}:${CI_PINS.mise.version}-debian`,

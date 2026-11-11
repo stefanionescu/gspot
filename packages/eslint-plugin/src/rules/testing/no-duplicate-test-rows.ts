@@ -1,8 +1,8 @@
 import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { TABLE_CALL } from '../../config/testing.ts';
-import { unwrapExpression } from '../../language/syntax.ts';
-import { isSameTokens, readTestTable } from '../../libraries/testing.ts';
+import { haveSameTokens, unwrapExpression } from '../../language/syntax.ts';
+import { readTestTable } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { TableCall } from '../../types/testing.ts';
 
@@ -14,7 +14,7 @@ function listCopies(table: TSESTree.Node | undefined, source: TSESLint.SourceCod
         (each): each is TSESTree.Expression => each !== null && each.type !== AST_NODE_TYPES.SpreadElement,
     );
     for (const row of values) {
-        const first = groups.keys().find((each) => isSameTokens(each, row, source)) ?? row;
+        const first = groups.keys().find((each) => haveSameTokens(each, row, source)) ?? row;
         groups.set(first, [...(groups.get(first) ?? []), row]);
     }
     return groups

@@ -16,11 +16,6 @@ import {
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import * as processes from '#cli/system/processes.ts';
-import {
-    NON_EXACT_PNPM_VERSIONS,
-    PACKAGE_MANAGER_PIN_CASES,
-    UNSUPPORTED_PACKAGE_MANAGERS,
-} from '#tests/config/repository/detect.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -29,6 +24,52 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+const PACKAGE_MANAGER_PIN_CASES = [
+    [
+        'a packageManager with a hash suffix',
+        { 'package.json': '{"packageManager":"pnpm@9.1.0+sha512.0a1b2c"}' },
+        'pnpm@9.1.0',
+    ],
+    [
+        'an exact devEngines version',
+        { 'package.json': '{"devEngines":{"packageManager":{"name":"yarn","version":"4.2.0"}}}' },
+        'yarn@4.2.0',
+    ],
+    [
+        'an explicit manager before a competing lockfile and devEngines declaration',
+        {
+            'package.json':
+                '{"packageManager":"npm@10.9.0","devEngines":{"packageManager":{"name":"yarn","version":"4.2.0"}}}',
+            'pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
+        },
+        'npm@10.9.0',
+    ],
+    [
+        'the first devEngines manager in a list',
+        {
+            'package.json':
+                '{"devEngines":{"packageManager":[{"name":"yarn","version":"4.2.0"},{"name":"npm","version":"10.9.0"}]}}',
+        },
+        'yarn@4.2.0',
+    ],
+] as const;
+
+const NON_EXACT_PNPM_VERSIONS = [
+    ['{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}', '^9.1.0', 'devEngines.packageManager'],
+    ['{"packageManager":"pnpm@^9.1.0"}', 'pnpm@^9.1.0', 'packageManager'],
+    ['{"packageManager":"pnpm"}', 'pnpm', 'packageManager'],
+] as const;
+
+const UNSUPPORTED_PACKAGE_MANAGERS = [
+    { field: 'packageManager', written: 'cnpm@9.0.0', packageJson: { packageManager: 'cnpm@9.0.0' } },
+    { field: 'packageManager', written: 'pnpm@9.0.0@x', packageJson: { packageManager: 'pnpm@9.0.0@x' } },
+    {
+        field: 'devEngines.packageManager',
+        written: '9.0.0',
+        packageJson: { devEngines: { packageManager: { name: 'cnpm', version: '9.0.0' } } },
+    },
+] as const;
 
 test('the pnpm install of gspot names the workspace root, because pnpm refuses a plain add there', async () => {
     await using sandbox = await testdir({
@@ -132,6 +173,13 @@ test('a lockfile beside a later nested package selects its manager', async () =>
     expect(detectPackageManager(sandbox.path, ['web/package.json', 'apps/admin/package.json'])).toStrictEqual({
         name: 'pnpm',
     });
+});
+
+test('with no pin and no lockfile, the package manager is npm', async () => {
+    await using sandbox = await testdir({
+        'package.json': JSON.stringify({ scripts: { build: 'bun run compile', analyze: 'bunx next build' } }),
+    });
+    expect(detectPackageManager(sandbox.path, [])).toStrictEqual({ name: 'npm' });
 });
 
 test('the first nested package by name selects the package manager, in any order of the tracked paths', async () => {

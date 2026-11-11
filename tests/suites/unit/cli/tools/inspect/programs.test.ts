@@ -6,24 +6,17 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { formatUnavailableNote, inspectTool, lookUpTool } from '#cli/tools/inspect.ts';
-import { listExecutablePaths } from '#cli/tools/locate.ts';
-import { getTool } from '#cli/tools/pins.ts';
+import { formatUnavailableNote, inspectTool } from '#cli/tools/inspect.ts';
 import type { Tool } from '#cli/types/manifests.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands, fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
 test('tool inspection finds the project compiler, and the repository compiler from a copy', async () => {
@@ -82,49 +75,6 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
     const inspection = await inspectTool(buildToolSearch(sandbox.path), getTool(readConfigurations().values(), 'tsc'));
     expect(inspection.state).toBe('system');
     expect(inspection.path).toBe(active);
-});
-
-async function fakeMiseTsc(root: string, status: number) {
-    const executable = join(root, 'mise/installs/tsc/0.0.0-test', isWindows ? 'tsc.cmd' : 'tsc');
-    await writeProgramCommand(
-        root,
-        'mise/shims/tsc',
-        'fakes/tool',
-        '--stderr',
-        'The shim must not run in a source copy.\n',
-        '--exit',
-        '1',
-    );
-    await writeProgramCommand(root, 'mise/installs/tsc/0.0.0-test/tsc', 'fakes/tool', '--line', '0.0.0-test');
-    await writeProgramCommand(
-        root,
-        'bin/mise',
-        'fakes/tool',
-        '--require-cwd',
-        join(root, 'work'),
-        '--line',
-        executable,
-        '--exit',
-        String(status),
-    );
-    using fakes = new DisposableStack();
-    fakes.use(overrideEnvironment({ MISE_DATA_DIR: join(root, 'mise') }));
-    fakes.use(
-        fakeExecutableLookup((name) =>
-            join(root, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
-        ),
-    );
-    const { paths } = await listExecutablePaths(join(root, 'work'), 'tsc', {
-        timeoutSeconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined),
-        folders: [join(root, 'work')],
-    });
-    return { executable, paths };
-}
-
-test('mise finds the program of the repository, and it runs from a copy', async () => {
-    await using sandbox = await testdir({ 'work/.keep': '', 'copy/.keep': '' });
-    const { executable, paths } = await fakeMiseTsc(sandbox.path, 0);
-    expect(paths).toStrictEqual([executable]);
 });
 
 test('a pinned program whose only executable is a mise shim that mise cannot resolve gives the mise error', async () => {
@@ -237,18 +187,6 @@ test('a missing managed program names mise being absent from PATH instead of cla
     );
 });
 
-test('a lookup keeps its inspection in the tool cache, and a system tool looks again in another folder', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const session = await openSession(sandbox.path);
-    using _which = fakeExecutableLookup((name) => (name === 'mise' ? null : process.execPath));
-    using commands = fakeCommands(process.execPath, () => Promise.resolve(buildProcessResult({ stdout: '2.0.0\n' })));
-    const tool: Tool = { name: 'teller', kind: 'program', system: true, min_version: '1.0.0', installers: {} };
-    await lookUpTool(session, tool, sandbox.path);
-    await lookUpTool(session, tool, sandbox.path);
-    await lookUpTool(session, tool, join(sandbox.path, 'app'));
-    expect(commands).toHaveBeenCalledTimes(2);
-});
-
 test('a project tool names the install command of its package manager, or the missing install', async () => {
     const tool = getTool(readConfigurations().values(), 'vitest');
     using _which = fakeExecutableLookup(null);
@@ -272,4 +210,20 @@ test('at a pnpm workspace root, a project tool names the install command that pn
     });
     const inspected = await inspectTool(buildToolSearch(sandbox.path), tool);
     expect(inspected.help).toBe('Run pnpm add --workspace-root --save-dev --save-exact vitest.');
+});
+
+test('a mise-pinned program keeps the refusal of the mise lookup when PATH holds only an older one', async () => {
+    await using sandbox = await testdir();
+    await writeProgramCommand(sandbox.path, 'active/vale', 'fakes/tool', '--line', '0.0.1');
+    using _which = fakeExecutableLookup(join(sandbox.path, 'active', isWindows ? 'vale.cmd' : 'vale'));
+    const tool: Tool = {
+        name: 'vale',
+        kind: 'program',
+        version: '3.0.0',
+        installers: { mise: { name: 'vale', version: '3.0.0', checksums: {} } },
+    };
+    const refusal = 'gspot may not read the mise tool project.';
+    const inspection = await inspectTool(buildToolSearch(sandbox.path, { miseFailure: refusal }), tool);
+    expect(inspection.state).toBe('missing');
+    expect(formatUnavailableNote(tool, inspection)).toBe(refusal);
 });

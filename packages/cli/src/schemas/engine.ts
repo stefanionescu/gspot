@@ -79,6 +79,38 @@ const valeAlertSchema = z.object({
 
 export const valeOutputSchema = z.record(z.string().min(1), valeAlertSchema.array());
 
+const osvEventSchema = z.object({ fixed: z.string().min(1).optional() });
+
+const osvRangeSchema = z.object({ events: osvEventSchema.array().default([]) });
+
+const osvAffectedSchema = z.object({
+    package: z.object({ name: z.string() }).optional(),
+    ranges: osvRangeSchema.array().default([]),
+});
+
+const osvAdvisorySchema = z.object({
+    id: z.string().min(1),
+    summary: z.string().min(1).optional(),
+    affected: osvAffectedSchema.array().default([]),
+});
+
+const osvGroupSchema = z.object({ ids: z.tuple([z.string().min(1)], z.string().min(1)) });
+
+const osvSourceSchema = z.object({ path: z.string().min(1) });
+
+export const osvPackageSchema = z.object({
+    package: z.object({ name: z.string().min(1), version: z.string() }),
+    vulnerabilities: osvAdvisorySchema.array().default([]),
+    groups: osvGroupSchema.array().default([]),
+});
+
+const osvScannerResultSchema = z.object({
+    source: osvSourceSchema,
+    packages: osvPackageSchema.array().default([]),
+});
+
+export const osvScannerReportSchema = z.object({ results: osvScannerResultSchema.array().default([]) });
+
 export const reportedTypoSchema = z.object({
     type: z.literal('typo'),
     path: z.string().min(1),

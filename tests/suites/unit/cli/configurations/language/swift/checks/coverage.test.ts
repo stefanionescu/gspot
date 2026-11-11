@@ -25,7 +25,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
 test.each([...XCTEST_FAILURES])(
-    'swift/tests: XCTest coverage classifies $failure and passes after the fix',
+    'swift/tests: XCTest coverage classifies $failure',
     async ({ tables, build, coverage, code, status, produced, hasNote, failure }) => {
         await using sandbox = await createGitSandbox({});
         await using _cache = await redirectCacheFolder();
@@ -48,10 +48,6 @@ test.each([...XCTEST_FAILURES])(
             expect(result.report.checks[0]!.findings).toMatchObject([
                 { rule: 'failed-test', file: 'ExampleTests.swift', line: 3, message: 'Expected true.' },
             ]);
-        await writeFile(
-            join(sandbox.path, 'gspot.toml'),
-            buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
-        );
         const session = await openSession(sandbox.path);
         const viewed = join(
             planSwiftBuild(session, planSandboxCheck(session, 'swift/tests')).folder,

@@ -1,5 +1,5 @@
 import { disabledResourceIntegrity } from '#eslint-plugin/rules/web/disabled-resource-integrity.ts';
-import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildTypedRuleTester().run('disabled-resource-integrity', disabledResourceIntegrity, {
     valid: [
@@ -22,11 +22,4 @@ buildTypedRuleTester().run('disabled-resource-integrity', disabledResourceIntegr
             errors: [{ messageId: 'missingIntegrity', line: 1 }],
         },
     ],
-});
-
-buildRuleTester().run('disabled-resource-integrity', disabledResourceIntegrity, {
-    valid: [
-        "const script = document.createElement('script');\nscript.src = 'https://cdn.example.com/lib@1.2.3/lib.js';",
-    ],
-    invalid: [],
 });

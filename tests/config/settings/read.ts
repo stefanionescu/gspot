@@ -39,12 +39,12 @@ export const DUPLICATED_REASON_ERRORS = [
     {
         key: 'limits.max_file_lines',
         text: '[limits]\nmax_file_lines = { value = 400, reason = "x" }\n',
-        where: 'gspot.toml:3: limits.max_file_lines.reason',
+        where: 'gspot.toml:3: limits.max_file_lines.reason: limits.max_file_lines needs a reason of two or more words that says why: "x" is refused.',
     },
     {
         key: 'docs.allowed_urls',
         text: '[docs]\nallowed_urls = { value = ["https://example.com/docs"], reason = "x" }\n',
-        where: 'gspot.toml:3: docs.allowed_urls.reason',
+        where: 'gspot.toml:3: docs.allowed_urls.reason: docs.allowed_urls needs a reason of two or more words that says why: "x" is refused.',
     },
 ];
 
@@ -55,7 +55,9 @@ export const KEY_PATH_CASES = [
         options: {
             tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "latest"\nreason = "Reviewed its MIT license."\n',
         },
-        where: ['gspot.toml:4: licenses.allowed_package.0.version'],
+        where: [
+            'gspot.toml:4: licenses.allowed_package.0.version: The value "latest" is not valid for licenses.allowed_package.0.version. Name an exact version, a semver range such as ^1.2.0, or * for every version.',
+        ],
         correction: ['"latest"', '"^1.2.3"'],
     },
     {
@@ -64,7 +66,9 @@ export const KEY_PATH_CASES = [
         options: {
             tables: '[[naming.exception]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
         },
-        where: ['gspot.toml:4: naming.exception.0.ignored_names_pattern'],
+        where: [
+            'gspot.toml:4: naming.exception.0.ignored_names_pattern: The value "(" is not valid for naming.exception.0.ignored_names_pattern. Use a valid Unicode regular expression.',
+        ],
         correction: ['"("', '"^_"'],
     },
     {
@@ -72,14 +76,18 @@ export const KEY_PATH_CASES = [
         configurations: ['javascript'],
         options: { rules: true, tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n' },
         correction: ['paths = []', 'paths = ["src"]'],
-        where: ['gspot.toml:3: tools.eslint.override.0.paths'],
+        where: [
+            'gspot.toml:3: tools.eslint.override.0.paths: The value [] is not valid for tools.eslint.override.0.paths. Use a valid list value: The files that these lint rule options apply to.',
+        ],
     },
     {
         name: 'numeric rule options',
         configurations: ['javascript'],
         options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n' },
         correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
-        where: ['gspot.toml:4: tools.eslint.override.0.rules.eqeqeq'],
+        where: [
+            'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To ignore eqeqeq, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+        ],
     },
 ] as const;
 
@@ -97,27 +105,24 @@ export const RULE_FILE_SETTINGS = {
 } as const;
 
 export const RULE_FILE_ERRORS = [
-    'gspot.toml:4: tools.eslint.plugins.0.path',
-    'gspot.toml:7: security.semgrep_rules.0',
-    'gspot.toml:11: scope.0.tools.eslint.plugins.0.path',
-    'gspot.toml:12: scope.0.security.semgrep_rules.0',
+    'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs names no file. Point path at a file, relative to its table.',
+    'gspot.toml:7: security.semgrep_rules.0: missing-root.yml names no file. Point semgrep_rules at a file, relative to its table.',
+    'gspot.toml:11: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs names no file. Point path at a file, relative to its table.',
+    'gspot.toml:12: scope.0.security.semgrep_rules.0: missing-scope.yml names no file. Point semgrep_rules at a file, relative to its table.',
 ] as const;
 
-export const EMPTY_REASONS = ['', 'because'] as const;
-
-export const INVALID_TOOL_ENUMS = [
-    {
-        configuration: 'docker',
-        tables: '[docker]\nseverity = ["SEVERE"]\n',
-        where: 'gspot.toml:3: docker.severity.0',
-    },
+export const EMPTY_REASONS = [
+    { reason: '', refusal: 'an empty reason is refused' },
+    { reason: 'because', refusal: '"because" is refused' },
 ] as const;
 
 export const SCOPE_CONFIGURATION_SETTINGS = [
     {
         name: 'a sibling configuration does not expose its settings to another scope',
         text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.sql]\ndialect = "sqlite"\n',
-        errors: ['gspot.toml:8: scope.1.sql.dialect'],
+        errors: [
+            'gspot.toml:8: scope.1.sql.dialect: There is no setting called sql.dialect. No setting exists under that table.',
+        ],
     },
     {
         name: 'a selected scope exposes its own configuration settings',

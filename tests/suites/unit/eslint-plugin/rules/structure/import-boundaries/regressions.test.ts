@@ -65,28 +65,6 @@ buildRuleTester().run<'alias' | 'escape', [Partial<ImportBoundariesOptions[0]>]>
                 output: null,
             },
             {
-                code: "import a = require('../../other/a');",
-                filename: '/repo/apps/api/src/b.ts',
-                options: [
-                    {
-                        folders: ['apps/api'],
-                    },
-                ],
-                name: 'a TypeScript import-equals require that leaves the folder reports',
-                errors: [{ messageId: 'escape' }],
-            },
-            {
-                code: "type A = import('../../other/a').A;",
-                filename: '/repo/apps/api/src/b.ts',
-                options: [
-                    {
-                        folders: ['apps/api'],
-                    },
-                ],
-                name: 'a type import() that leaves the folder reports',
-                errors: [{ messageId: 'escape' }],
-            },
-            {
                 code: "import value from '../../s';",
                 filename: '/repo/src/app/main.ts',
                 options: [
@@ -110,21 +88,12 @@ buildRuleTester().run<'alias' | 'escape', [Partial<ImportBoundariesOptions[0]>]>
                 ],
                 output: null,
             },
+            {
+                code: "const a = require('../../other/a.js');",
+                filename: '/repo/apps/api/src/b.ts',
+                options: [{ folders: ['apps/api'] }],
+                errors: [{ messageId: 'escape' }],
+            },
         ],
     },
 );
-
-buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run<
-    'alias' | 'escape',
-    [Partial<ImportBoundariesOptions[0]>]
->('import-boundaries require calls', importBoundaries, {
-    valid: [],
-    invalid: [
-        {
-            code: "const a = require('../../other/a.js');",
-            filename: '/repo/apps/api/src/b.cjs',
-            options: [{ folders: ['apps/api'] }],
-            errors: [{ messageId: 'escape' }],
-        },
-    ],
-});

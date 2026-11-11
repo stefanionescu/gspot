@@ -17,12 +17,10 @@ import { measureSpan } from '#cli/engine/results.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckResult } from '#cli/types/engine/run.ts';
+import type { CheckFinding, CheckResult, Finding } from '#cli/types/engine/run.ts';
 import type {
-    CheckFinding,
     CommandLineOutput,
     CommandRun,
-    Finding,
     OutputCheck,
     OutputPaths,
     ParsedFindings,
@@ -121,14 +119,21 @@ export function clearOutsideLinkExit(check: Pick<Check, 'output'>, result: Spawn
     return isCleared ? { ...result, code: 0 } : result;
 }
 
+/**
+Build the result of a command from the findings of its runs. After a run that exits 0, a finding with neither a file
+nor a line is dropped, because it is a line of the tool's report and not a defect. A shipped check whose format names
+no file keeps such findings, because its tool prints warnings and still exits 0. A command check from gspot.toml
+does not, because its exit code says whether the command found something.
+*/
 export function buildCheckResult(
-    check: Check,
+    { check, configuration }: Pick<PlannedCheck, 'check' | 'configuration'>,
     completion: { base: CheckResult; state: CommandRun; commandArguments: string[]; start: number | undefined },
 ): CheckResult {
     const { base, state, commandArguments, start } = completion;
     const output = check.output;
     const descriptor = OUTPUT_FORMATS[output.format];
-    const isEveryFindingKept = state.failed || (check.runs !== 'history' && !descriptor.namesFiles(output));
+    const isEveryFindingKept =
+        state.failed || (configuration !== undefined && check.runs !== 'history' && !descriptor.namesFiles(output));
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);

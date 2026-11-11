@@ -7,15 +7,28 @@ import { createFileTree } from 'testdirs';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { GENERATOR_CASES, PROJECT_NOTES, UNTRACKED_NOTES } from '#tests/config/configurations/general.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+const GENERATOR_CASES = [
+    { configuration: 'drizzle', check: 'drizzle/stale-migrations', output: 'migrations/0000_initial.sql', tables: '' },
+    {
+        configuration: 'supabase',
+        check: 'supabase/stale-types',
+        output: 'database.ts',
+        tables: '[supabase]\ntypes_file = "database.ts"\n',
+    },
+] as const;
+
+const PROJECT_NOTES = 'Keep project notes\n';
+
+const UNTRACKED_NOTES = 'Keep untracked notes\n';
 
 async function prepareGeneratorCheck(root: string, scenario: (typeof GENERATOR_CASES)[number]) {
     await createFileTree(root, {
@@ -46,12 +59,7 @@ test.each([...GENERATOR_CASES])(
         await using sandbox = await createGitSandbox({});
         const { session, planned } = await prepareGeneratorCheck(sandbox.path, row);
         const error = await captureRejection(
-            runCheckCode(
-                buildCheckSession(session, CHECK_GENERATION),
-                planned,
-                { check: checkGeneratorOutputs },
-                CHECK_RUN_OPTIONS,
-            ),
+            runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, { check: checkGeneratorOutputs }, {}),
         );
         expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
         expect(error.message).toContain('Generation failed\nfailure');
@@ -60,7 +68,7 @@ test.each([...GENERATOR_CASES])(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             { check: checkGeneratorOutputs },
-            CHECK_RUN_OPTIONS,
+            {},
         );
         expect(stale.findings.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
             { check: row.check, file: row.output, rule: 'stale' },
@@ -70,7 +78,7 @@ test.each([...GENERATOR_CASES])(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
             { check: checkGeneratorOutputs },
-            CHECK_RUN_OPTIONS,
+            {},
         );
         expect(fresh.findings).toStrictEqual([]);
         expect(await readFile(join(sandbox.path, row.output), 'utf8')).toBe('dirty');

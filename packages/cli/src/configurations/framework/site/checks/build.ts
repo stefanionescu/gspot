@@ -5,6 +5,7 @@ import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/framew
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
@@ -14,16 +15,23 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareText, quoteCommand } from '#cli/system/text.ts';
 import type { SiteBuild } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
 const SITE_BUILDS = Symbol('site builds');
+
+const BUILD_SCRIPT = ['run', 'build'] as const;
+
+// The build script runs with the package manager of the repository when the settings name no command.
+function detectBuildCommand(repository: CheckSession['repository']): string[] {
+    const sources = repository.files.filter((file) => file.kind === 'source').map((file) => file.path);
+    return [detectPackageManager(repository.root, sources).name, ...BUILD_SCRIPT];
+}
 
 async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRoot: string): Promise<SiteBuild> {
     const site = getTable(planned.scope.settings, 'site');
     const folderPath = site['build_folder'];
     const cwd = join(copyRoot, planned.scope.path);
-    const command = site['build_command'];
+    const command = site['build_command'] ?? detectBuildCommand(session.repository);
     const result = await runCheckTool(session, planned, command, { cwd });
     const folder = join(copyRoot, folderPath);
     const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;

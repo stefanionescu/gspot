@@ -7,8 +7,7 @@ import {
 import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
 import { splitWords } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 async function checkPlaceholderDocstrings(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {

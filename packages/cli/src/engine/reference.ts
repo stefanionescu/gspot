@@ -2,8 +2,9 @@ import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
 import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { findCommandTool } from '#cli/engine/plan.ts';
+import { findToolName } from '#cli/manifests/read.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
@@ -32,7 +33,7 @@ export function describeCheck(
     explanations: CheckCode['explanations'],
 ): CheckDescription {
     const toolName = findToolName(check);
-    const tool = toolName === undefined ? undefined : getTool(configurations, toolName);
+    const tool = toolName === undefined ? undefined : findCommandTool(configurations, toolName);
     const tools = [toolName, ...(check.secondary_tools ?? [])].filter((name): name is string => name !== undefined);
     return {
         toolName,
@@ -45,7 +46,7 @@ export function describeCheck(
         needs: check.needs ?? [],
         minVersions: Object.fromEntries(
             tools
-                .map((name) => getTool(configurations, name))
+                .map((name) => findCommandTool(configurations, name))
                 .flatMap((pin) => (pin.min_version === undefined ? [] : [[pin.name, pin.min_version]])),
         ),
         turnOff: {

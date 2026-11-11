@@ -17,7 +17,7 @@ buildRuleTester().run('require-reduce-initial-value', requireReduceInitialValue,
 });
 
 buildTypedRuleTester().run('require-reduce-initial-value with types', requireReduceInitialValue, {
-    valid: [],
+    valid: ['declare const totals: { reduce(callback: (a: number) => number): number }; totals.reduce((sum) => sum);'],
     invalid: [
         {
             code: 'declare const prices: number[]; prices.reduce((sum, price) => sum + price);',

@@ -88,8 +88,6 @@ export const PRIVATE_TOOL_PACKAGES = {
     'outside/python': 'The interpreter belongs outside the repository.\n',
 } as const;
 
-export const LINKED_HOOK_FILES = [{ path: '.lefthook.yml', kind: 'lefthook' }] as const;
-
 export const SIMPLE_GIT_HOOKS_PACKAGES = [
     {
         text: '{"simple-git-hooks":{"pre-commit":"echo authored"}}',

@@ -1,7 +1,7 @@
 import { basename, dirname, join, relative } from 'node:path/posix';
 
-import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/blocks.ts';
-import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint.ts';
+import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/eslint/blocks.ts';
+import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint/rules.ts';
 import {
     BOUNDARIES_PLUGIN_PACKAGE,
     CONFIGURATION_BLOCKS_SUFFIX,
@@ -18,8 +18,8 @@ import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ign
 import { buildBlockLists, buildImportName } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
 import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';
+import { listConfigurationBlocks } from '#cli/configurations/language/javascript/eslint/blocks/configurations.ts';
 import { listLocalPlugins } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
-import { listConfigurationBlocks } from '#cli/configurations/language/javascript/eslint/configuration-blocks.ts';
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
 import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -35,16 +35,23 @@ import type {
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { GeneratedFile } from '#cli/types/tools.ts';
 
+const UNICORN_PLUGIN_PACKAGE = 'eslint-plugin-unicorn';
+
+const ESLINT_FIXES_FILE = 'fixes.mjs';
+
 function serializeImports(
     { functions, packages, modules, constants }: EslintFileWriter,
-    functionsPath: string,
+    shippedFolder: string,
 ): string {
-    const lines =
-        functions.size === 0 ? [] : [`import { ${[...functions].join(', ')} } from ${JSON.stringify(functionsPath)};`];
+    const functionsPath = JSON.stringify(`${shippedFolder}/${ESLINT_FUNCTIONS_FILE}`);
+    const fixesPath = JSON.stringify(`${shippedFolder}/${ESLINT_FIXES_FILE}`);
+    const lines = functions.size === 0 ? [] : [`import { ${[...functions].join(', ')} } from ${functionsPath};`];
     for (const name of packages) {
         const named = ESLINT_NAMED_IMPORTS[name];
         const importName = named === undefined ? buildImportName(name) : `{ ${named} }`;
-        lines.push(`import ${importName} from ${JSON.stringify(name)};`);
+        if (name === UNICORN_PLUGIN_PACKAGE)
+            lines.push(`import { limitUnicornFixes } from ${fixesPath};`, `const ${importName} = limitUnicornFixes();`);
+        else lines.push(`import ${importName} from ${JSON.stringify(name)};`);
     }
     for (const [importName, module] of modules) lines.push(`import ${importName} from ${JSON.stringify(module)};`);
     for (const [name, text] of constants) lines.push(`const ${name} = ${text};`);
@@ -73,8 +80,7 @@ function buildConfigurationFiles(
             module: relative(folder, path),
             file: {
                 path,
-                content:
-                    serializeImports(fileWriter, relative(dirname(path), join(folder, ESLINT_FUNCTIONS_FILE))) + body,
+                content: serializeImports(fileWriter, relative(dirname(path), folder)) + body,
             },
         };
     });
@@ -144,7 +150,7 @@ function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const body = serializeExport(blockTexts, blockWriter);
     for (const { importName, module } of configurationFiles) blockWriter.modules.set(importName, module);
     return {
-        content: serializeImports(blockWriter, `./${ESLINT_FUNCTIONS_FILE}`) + body,
+        content: serializeImports(blockWriter, '.') + body,
         companions: configurationFiles.map(({ file }) => file),
     };
 }

@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import {
     ACCESSOR_DECLARATIONS,
-    BASH_TRIVIAL_FUNCTION_CASES,
+    BASH_TRIVIAL_FUNCTION_SAMPLE,
     CALLER_CASES,
     NESTED_PYTHON_FUNCTIONS,
     PYTHON_INTERFACES,
@@ -157,11 +157,8 @@ test.each([...TRIVIAL_FILES])('$name gets the findings $expected', async ({ lang
     expect(findings.map(({ rule }) => rule)).toStrictEqual([...expected]);
 });
 
-test.each([...BASH_TRIVIAL_FUNCTION_CASES])(
-    'structure/trivial-functions reports $expected.rule in $expected.file and passes after the fix',
-    async (row) => {
-        const sample = { check: 'structure/trivial-functions', ...row };
-        await using sandbox = await createSandbox(BASH_SANDBOX);
-        await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
-    },
-);
+test('structure/trivial-functions reports trivial-function in scripts/tiny.sh and passes after the fix', async () => {
+    const sample = { check: 'structure/trivial-functions', ...BASH_TRIVIAL_FUNCTION_SAMPLE };
+    await using sandbox = await createSandbox(BASH_SANDBOX);
+    await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
+});

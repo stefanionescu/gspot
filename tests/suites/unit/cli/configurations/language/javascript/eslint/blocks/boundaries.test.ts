@@ -120,74 +120,68 @@ test('import rules skip your test files in each scope and check other files', as
     );
 });
 
-test.each(['all'] as const)(
-    'a file outside test_files may not import a test file, in root and child scopes, at %s',
-    async (level) => {
-        await using sandbox = await testdir();
-        const settings = buildSandboxSettings(['typescript'], {
-            level,
-            tables: APP_SCOPE_SETTINGS,
-        });
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
-            'package.json': '{"private":true,"type":"module"}',
-            'tsconfig.json': TEST_IMPORT_TSCONFIG,
-            'app/tsconfig.json': TEST_IMPORT_TSCONFIG,
-            ...Object.fromEntries(
-                ['', 'app/'].flatMap((prefix) =>
-                    Object.entries({
-                        'src/value.ts': 'export const value = 1;\nexport type Value = number;\n',
-                        'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
-                        'other/value.test.ts': 'export const value = 1;\n',
-                    } as const).map(([path, source]) => [prefix + path, source]),
-                ),
+test('a file outside test_files may not import a test file, in root and child scopes, at all', async () => {
+    await using sandbox = await testdir();
+    const settings = buildSandboxSettings(['typescript'], {
+        level: 'all',
+        tables: APP_SCOPE_SETTINGS,
+    });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settings,
+        'package.json': '{"private":true,"type":"module"}',
+        'tsconfig.json': TEST_IMPORT_TSCONFIG,
+        'app/tsconfig.json': TEST_IMPORT_TSCONFIG,
+        ...Object.fromEntries(
+            ['', 'app/'].flatMap((prefix) =>
+                Object.entries({
+                    'src/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+                    'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+                    'other/value.test.ts': 'export const value = 1;\n',
+                } as const).map(([path, source]) => [prefix + path, source]),
             ),
-        });
-        const files = ['', 'app/'].flatMap((prefix) =>
-            TEST_IMPORT_CASES.map((row, index) => ({
-                ...row,
-                path: `${prefix}${row.folder}/case${String(index)}.ts`,
-            })),
+        ),
+    });
+    const files = ['', 'app/'].flatMap((prefix) =>
+        TEST_IMPORT_CASES.map((row, index) => ({
+            ...row,
+            path: `${prefix}${row.folder}/case${String(index)}.ts`,
+        })),
+    );
+    for (const row of files) await writeFile(join(sandbox.path, row.path), row.source);
+    const eslint = await buildEslint(sandbox.path);
+    for (const row of files) {
+        expect(await listLintFindings(eslint, sandbox.path, [row.path], ['boundaries/dependencies'])).toStrictEqual(
+            row.rejected ? [{ file: row.path, rule: 'boundaries/dependencies', line: 1 }] : [],
         );
-        for (const row of files) await writeFile(join(sandbox.path, row.path), row.source);
-        const eslint = await buildEslint(sandbox.path);
-        for (const row of files) {
-            expect(await listLintFindings(eslint, sandbox.path, [row.path], ['boundaries/dependencies'])).toStrictEqual(
-                row.rejected ? [{ file: row.path, rule: 'boundaries/dependencies', line: 1 }] : [],
+    }
+});
+
+test('environment reads are allowed only in environment_readers files of each scope at all', async () => {
+    await using sandbox = await testdir();
+    const settings = buildSandboxSettings(['typescript'], { level: 'all', tables: ENVIRONMENT_TABLES });
+    const paths = [...ENVIRONMENT_READER_PATHS];
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settings,
+        'package.json': '{"private":true,"type":"module"}',
+        ...Object.fromEntries(paths.map((path) => [path, ''])),
+        ...Object.fromEntries(
+            ['', 'app/', 'sibling/', 'app/deep/', 'literal/'].map((prefix) => [
+                `${prefix}tsconfig.json`,
+                '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
+            ]),
+        ),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    for (const path of paths) {
+        const isRejected = !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js'].includes(path);
+        for (const { source, rule } of ENVIRONMENT_CASES) {
+            await createFileTree(sandbox.path, { [path]: source });
+            expect(await listLintFindings(eslint, sandbox.path, [path], [rule])).toStrictEqual(
+                isRejected ? [{ file: path, rule, line: 1 }] : [],
             );
         }
-    },
-);
-
-test.each(['all'] as const)(
-    'environment reads are allowed only in environment_readers files of each scope at %s',
-    async (level) => {
-        await using sandbox = await testdir();
-        const settings = buildSandboxSettings(['typescript'], { level, tables: ENVIRONMENT_TABLES });
-        const paths = [...ENVIRONMENT_READER_PATHS];
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
-            'package.json': '{"private":true,"type":"module"}',
-            ...Object.fromEntries(paths.map((path) => [path, ''])),
-            ...Object.fromEntries(
-                ['', 'app/', 'sibling/', 'app/deep/', 'literal/'].map((prefix) => [
-                    `${prefix}tsconfig.json`,
-                    '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
-                ]),
-            ),
-        });
-        const eslint = await buildEslint(sandbox.path);
-        for (const path of paths) {
-            const isRejected = !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js'].includes(path);
-            for (const { source, rule } of ENVIRONMENT_CASES) {
-                await createFileTree(sandbox.path, { [path]: source });
-                expect(await listLintFindings(eslint, sandbox.path, [path], [rule])).toStrictEqual(
-                    isRejected ? [{ file: path, rule, line: 1 }] : [],
-                );
-            }
-        }
-    },
-);
+    }
+});
 
 test('without environment_readers, environment reads are allowed at level all', async () => {
     await using sandbox = await testdir({
@@ -221,5 +215,21 @@ test('each file holds one import rule, the tRPC category comes first, and a refu
         result?.messages.filter(({ ruleId }) => ruleId === 'boundaries/dependencies').map(({ message }) => message),
     ).toStrictEqual([
         'Import rule "app" may import only its own files, not ../storage/value.js from rule "storage". Move the code, move that rule above this one, or list the rules it may import in can_import.',
+    ]);
+});
+
+test('an import of a javascript.externals specifier that resolves to a file passes its import rule, and other specifiers of that file are reported', async () => {
+    const tables = `${IMPORT_RULE_TABLES.root}\n[javascript]\nexternals = { value = ["#host/*"], reason = "The host supplies this module." }\n`;
+    await using sandbox = await testdir({
+        ...IMPORT_RULE_FILES,
+        'package.json':
+            '{"private":true,"type":"module","imports":{"#host/value":"./storage/value.ts","#own/value":"./storage/value.ts"}}\n',
+        'gspot.toml': buildSandboxSettings(['typescript'], { tables }),
+        'app/source.ts':
+            "import { value } from '#host/value';\nimport { value as own } from '#own/value';\nexport const result = value + own;\n",
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['app/source.ts'], ['boundaries/dependencies'])).toStrictEqual([
+        { file: 'app/source.ts', rule: 'boundaries/dependencies', line: 2 },
     ]);
 });

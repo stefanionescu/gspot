@@ -142,6 +142,20 @@ async function inspectProjectExecutable(inspected: InspectedTool): Promise<ToolI
     return undefined;
 }
 
+/**
+Pick what the search for a program says. A refused mise lookup is why a program that mise installs is absent, so its
+note stays unless the system search path holds a program that the pin accepts.
+*/
+function selectSearchInspection(
+    inspected: InspectedTool,
+    found: ToolInspection | undefined,
+    failure: string | undefined,
+): ToolInspection {
+    const isRefused = inspected.tool.system !== true && inspected.missing.note !== undefined;
+    if (found !== undefined) return isRefused && !AVAILABLE_TOOL_STATES.has(found.state) ? inspected.missing : found;
+    return failure === undefined || isRefused ? inspected.missing : { ...inspected.missing, note: failure };
+}
+
 async function inspectExecutable(inspected: InspectedTool): Promise<ToolInspection> {
     const { root, cwd, tool, timeoutSeconds, miseBinPaths } = inspected;
     const project = await inspectProjectExecutable(inspected);
@@ -156,8 +170,8 @@ async function inspectExecutable(inspected: InspectedTool): Promise<ToolInspecti
           };
     const { paths, failure } = await listExecutablePaths(root, tool.name, { timeoutSeconds, ...search });
     const [path] = paths;
-    if (path !== undefined) return inspectExecutablePath(inspected, path);
-    return failure === undefined ? inspected.missing : { ...inspected.missing, note: failure };
+    const found = path === undefined ? undefined : await inspectExecutablePath(inspected, path);
+    return selectSearchInspection(inspected, found, failure);
 }
 
 function formatMissingProgram(tool: Tool, inspection: ToolInspection): string {

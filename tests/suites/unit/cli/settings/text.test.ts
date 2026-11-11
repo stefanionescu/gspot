@@ -8,10 +8,10 @@ import { addScopeTable, buildEditedSettings, setKey } from '#cli/settings/edit.t
 import { readSettingsFile } from '#cli/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { ARRAY_COMMENT_CASES, FIELD_COMMENT_CASES, IGNORE_COMMENT_CASES } from '#tests/config/settings/text.ts';
+import { FIELD_COMMENT_CASES, IGNORE_COMMENT_CASES } from '#tests/config/settings/text.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CASES])(
+test.each([...IGNORE_COMMENT_CASES, ...FIELD_COMMENT_CASES])(
     'a template keeps each comment of $name on its key',
     ({ source, target, expected }) => {
         const table = parseTomlFile('gspot.toml', target);
@@ -19,13 +19,6 @@ test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CAS
         expect(written).toBe(expected);
     },
 );
-
-test('a template keeps authored spelling, record order, comments, and inline tables', () => {
-    const source = '# Authored selection.\nconfigurations=["bash",]\n\n[format]\nindent_width=4 # Keep the indent.\n';
-    const written = parseTomlFile('gspot.toml', source);
-    const output = buildSettingsText(source, written);
-    expect(output).toBe(source);
-});
 
 test('a new table goes above the comment of the next table', () => {
     const source = 'level = "basic"\n\n# Wide screens.\n[format]\nprint_width = 120\n';

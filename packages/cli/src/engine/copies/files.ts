@@ -7,6 +7,7 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
+import { listUnreadFiles } from '#cli/engine/files.ts';
 import { listWorkspaceSources } from '#cli/repository/javascript/workspaces.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
@@ -53,6 +54,10 @@ async function writeCopyFiles(plan: CopyPlan): Promise<void> {
     }
 }
 
+/**
+Copy the files of a planned check, with the tracked files of its folder that no tool reads, such as a large video that
+a build imports.
+*/
 export async function createCheckCopy(
     session: Session,
     planned: PlannedCheck,
@@ -62,6 +67,7 @@ export async function createCheckCopy(
         session.root,
         [
             ...planned.files.map((file) => file.path),
+            ...listUnreadFiles(session, planned).map((file) => file.path),
             ...listWorkspaceSources(session.cache, planned.scope.path, session.repository.files),
             ...includedPaths,
         ],

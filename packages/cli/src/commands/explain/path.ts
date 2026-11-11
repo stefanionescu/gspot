@@ -9,9 +9,10 @@ import {
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
-import { buildArgumentPath, selectScope } from '#cli/repository/scopes.ts';
+import { selectScope } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildArgumentPath } from '#cli/system/paths.ts';
 import { formatScope } from '#cli/system/text.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';

@@ -15,6 +15,7 @@ export const CHECK_OUTPUTS = [
     { format: 'semgrep' },
     { format: 'typos' },
     { format: 'vale' },
+    { format: 'osv-scanner' },
 ] as const;
 
 export const OUTPUT_PARSE_RESULTS = {
@@ -50,6 +51,10 @@ export const OUTPUT_PARSE_RESULTS = {
         empty: { error: 'Vale printed output that gspot cannot read.' },
         foreign: { error: 'Vale printed output that gspot cannot read.' },
     },
+    'osv-scanner': {
+        empty: { error: 'OSV-Scanner printed output that gspot cannot read.' },
+        foreign: { error: 'OSV-Scanner printed output that gspot cannot read.' },
+    },
 } as const;
 
 export const EDITORCONFIG_REPORT = `source.js:
@@ -69,10 +74,6 @@ export const WINDOWS_ROOT_CASES = [
         column: 3,
     },
     { root: '/repository', stdout: '', stderr: '  ┌─ settings.toml:2:1\n', line: 2, column: 1 },
-] as const;
-
-export const FIXABLE_FORMAT_CASES = [
-    ['python/ruff-format', 'source.py:1:1: unformatted: different spacing', 'source.py'],
 ] as const;
 
 export const ESLINT_PATH_CASES: Array<[root: string, path: string, expected: string]> = [
@@ -119,6 +120,8 @@ export const FIX_FIELD_CASES = [
     ['absent', {}, false],
     ['object', { fix: { range: [0, 1], text: '' } }, true],
     ['null', { fix: null }, false],
+    ['empty list', { fix: [] }, false],
+    ['list of one edit', { fix: [{ edit: 'replace' }] }, true],
 ] as const;
 
 export const NESTED_LIST_FORMAT = {
@@ -199,13 +202,6 @@ export const TYPO_REPORT = {
     typo: TYPO.the,
     corrections: ['the'],
 } as const;
-
-export const TYPOS_REPORT_ERRORS = [
-    {
-        name: 'missing source',
-        output: { ...TYPO_REPORT, path: 'missing.txt' },
-    },
-] as const;
 
 export const TYPOS_FINDING_CASES = [
     {

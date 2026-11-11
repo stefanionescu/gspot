@@ -5,9 +5,8 @@ import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
-import { getTool } from '#cli/tools/pins.ts';
 import { INVALID_SITEMAP_URLS, PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -200,7 +200,6 @@ export const DROPPED_LINE_SETTINGS_NOTE =
     'drops its crlf or missing final newline: gspot always writes lf and a final newline';
 
 export const DETECTED_SETTINGS = [
-    'site.build_command',
     'swift.xcode_destination',
     'cloudflare.types_file',
     'cloudflare.types_interface',

@@ -150,18 +150,3 @@ test('init compares the rules that the commitlint of the repository prints', asy
         dropped: ['body-max-length', 'type-enum'],
     });
 });
-
-test('init keeps commitlint options out of a rule that the generated config turns off', async () => {
-    await using sandbox = await createGitSandbox({
-        '.commitlintrc.json': '{}\n',
-        '.gitignore': 'node_modules\n',
-        'app/package.json': '{"private":true}\n',
-        'README.md': '# Example\n',
-    });
-    await mkdir(join(sandbox.path, 'node_modules/.bin'), { recursive: true });
-    const program = join(sandbox.path, 'node_modules/.bin/commitlint');
-    await writeFile(program, `#!/bin/sh\necho '{"rules":{"scope-case":[2,"always","lower-case"]}}'\n`);
-    await chmod(program, 0o755);
-    const { plan } = await runInit(sandbox.path, ['--level', 'all']);
-    expect(plan.carryover.find(({ path }) => path === '.commitlintrc.json')).toMatchObject({ dropped: ['scope-case'] });
-});

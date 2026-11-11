@@ -1,4 +1,4 @@
-import { realpath, writeFile } from 'node:fs/promises';
+import { readFile, realpath, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -21,12 +21,13 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 async function runLicenseCheck(
     root: string,
     packages: ReadonlyArray<Record<'name' | 'version' | 'ecosystem', string> & { licenses: readonly string[] }>,
+    lockfile = 'package-lock.json',
 ) {
     using resources = new DisposableStack();
     const stdout = JSON.stringify({
         results: [
             {
-                source: { path: join(await realpath(root), 'package-lock.json'), type: 'lockfile' },
+                source: { path: join(await realpath(root), lockfile), type: 'lockfile' },
                 packages: packages.map(({ name, version, ecosystem, licenses }) => ({
                     package: { name, version, ecosystem },
                     license_violations: licenses,
@@ -52,6 +53,38 @@ test('licenses/allowed reports a disallowed license of a locked package, on its 
             line: 1,
             rule: 'disallowed-license',
             message: expect.stringMatching(/strict@1\.0\.0.*GPL-3\.0-only/u) as string,
+        },
+    ]);
+});
+
+test('licenses/allowed reports a Python package on the line of its entry in uv.lock', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: LICENSE_TABLES }),
+        'uv.lock':
+            'version = 1\n\n[[package]]\nname = "app"\ndependencies = [{ name = "strict" }]\n\n[[package]]\nname = "strict"\nversion = "1.0.0"\n',
+    });
+    const { findings } = await runLicenseCheck(sandbox.path, [{ ...GPL_PACKAGE, ecosystem: 'PyPI' }], 'uv.lock');
+    expect(findings).toMatchObject([{ file: 'uv.lock', line: 8, rule: 'disallowed-license' }]);
+});
+
+test('licenses/allowed reports an ignore whose paths cover no lockfile, and accepts one that names a lockfile', async () => {
+    const ignores = ['pyproject.toml', 'tools/uv.lock']
+        .map((path) => `[[ignore]]\ncheck = "licenses/allowed"\npaths = ["${path}"]\nreason = "Reviewed by legal."\n`)
+        .join('');
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: `${LICENSE_TABLES}${ignores}` }),
+        'package-lock.json': '{}\n',
+        'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\n',
+        'tools/uv.lock': 'version = 1\n',
+    });
+    const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+    const { findings } = await runLicenseCheck(sandbox.path, [MIT_PACKAGE]);
+    expect(findings).toMatchObject([
+        {
+            file: 'gspot.toml',
+            line: settings.split('\n').indexOf('paths = ["pyproject.toml"]') - 1,
+            rule: 'unmatched-ignore',
+            message: expect.stringContaining('pyproject.toml') as string,
         },
     ]);
 });

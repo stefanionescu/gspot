@@ -1,5 +1,5 @@
 import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
-import { RULES as GENERATOR_OUTPUT_RULES } from '#cli/config/configurations/registry.ts';
+import { RULES as GENERATOR_OUTPUT_RULES } from '#cli/config/configurations/shared.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const SYNTAX_EXPLANATIONS = {

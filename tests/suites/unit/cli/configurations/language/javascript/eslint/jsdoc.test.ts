@@ -17,28 +17,25 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 
-test.each(['all'] as const)(
-    'JSDoc types are allowed in JavaScript and duplicate TypeScript type tags are reported at %s',
-    async (level) => {
-        await using sandbox = await testdir();
-        const description =
-            '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
-        const typescript = 'export function measure(value: string): number { return value.length; }\n';
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings(['typescript'], { level }),
-            'package.json': '{"private":true,"type":"module"}\n',
-            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
-            'client.ts': description + typescript,
-            'client.js': description + 'export function measure(value) { return value.length; }\n',
-        });
-        const eslint = await buildEslint(sandbox.path);
-        expect(await listLintFindings(eslint, sandbox.path, ['client.js'], ['jsdoc/no-types'])).toStrictEqual([]);
-        expect(await listLintFindings(eslint, sandbox.path, ['client.ts'], ['jsdoc/no-types'])).toStrictEqual([
-            { file: 'client.ts', rule: 'jsdoc/no-types', line: 3 },
-            { file: 'client.ts', rule: 'jsdoc/no-types', line: 4 },
-        ]);
-    },
-);
+test('JSDoc types are allowed in JavaScript and duplicate TypeScript type tags are reported at all', async () => {
+    await using sandbox = await testdir();
+    const description =
+        '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
+    const typescript = 'export function measure(value: string): number { return value.length; }\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
+        'client.ts': description + typescript,
+        'client.js': description + 'export function measure(value) { return value.length; }\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['client.js'], ['jsdoc/no-types'])).toStrictEqual([]);
+    expect(await listLintFindings(eslint, sandbox.path, ['client.ts'], ['jsdoc/no-types'])).toStrictEqual([
+        { file: 'client.ts', rule: 'jsdoc/no-types', line: 3 },
+        { file: 'client.ts', rule: 'jsdoc/no-types', line: 4 },
+    ]);
+});
 
 test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig', async () => {
     await using sandbox = await testdir({

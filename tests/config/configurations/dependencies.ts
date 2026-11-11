@@ -65,8 +65,6 @@ export const REGISTRY_SCOPE_RESULTS = [
     },
 ];
 
-export const MISE_PIN_FILES = [{ file: 'mise.toml' }] as const;
-
 export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["github.com", "codeload.github.com"], reason = ${JSON.stringify(SETTING_REASON)} }\n`;
 
 export const LOCKFILE_DOWNLOAD_CASES = [

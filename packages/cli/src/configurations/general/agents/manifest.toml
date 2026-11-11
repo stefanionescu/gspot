@@ -1,0 +1,22 @@
+allowed_words = ["Bun", "Node", "npm", "pnpm", "mise", "CI", "macOS", "Linux", "Windows"]
+
+[configuration]
+always_selected = true
+description = "Working and writing code: rules for coding agents, and one AGENTS.md at the repository root."
+title = "Agents"
+
+[rules]
+"ACCESSIBILITY.md" = { filenames = ["*.html", "*.tsx", "*.jsx", "*.vue", "*.svelte", "*.astro", "*.swift"] }
+
+"HTTP.md" = { dependencies = ["express", "fastify", "hono", "koa", "@nestjs/core", "next", "@sveltejs/kit", "fastapi", "flask", "django", "starlette", "aiohttp", "vapor"] }
+"LOGGING.md" = { dependencies = ["pino", "winston", "bunyan", "structlog", "loguru", "express", "fastify", "hono", "koa", "@nestjs/core", "fastapi", "flask", "django", "vapor"] }
+
+[[check]]
+example = "A tracked `packages/cli/AGENTS.md` reports `nested-agents-file`. Move its rules into the root `AGENTS.md`, then delete it."
+files = { filenames = ["AGENTS.md"] }
+help = "Move the rules into the AGENTS.md at the root of the repository, and delete this file."
+name = "nested-files"
+runs = "files"
+stage = "commit"
+summary = "Reports each tracked `AGENTS.md` outside the repository root."
+why = "An agent reads the root file, and a second file splits the rules so that one drifts from the other."

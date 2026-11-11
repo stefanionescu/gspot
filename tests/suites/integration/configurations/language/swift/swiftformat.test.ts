@@ -3,17 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import {
-    BLOCK_COMMENT_FINDINGS,
-    FORMATTED_DOCS_SOURCE,
-    FORMATTED_INLINE_DOCS,
-    INLINE_COMMENT_FINDINGS,
-    SOURCE_HEADER,
-    SPACED_COMMENT_FINDINGS,
-    SWIFT_DOCS_SOURCE,
-    SWIFT_INLINE_DOCS,
-    SWIFT_SANDBOX,
-} from '#tests/config/integration/swift.ts';
+import { SWIFT_SANDBOX } from '#tests/config/integration/swift.ts';
 import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -21,6 +11,88 @@ import { applyGeneratedFiles, changeSandbox } from '#tests/setup/sandboxes/chang
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+
+const INLINE_COMMENT_FINDINGS = [
+    [4, 'blockComments'],
+    [4, 'docComments'],
+    [5, 'blankLinesBetweenScopes'],
+    [7, 'blockComments'],
+    [7, 'docComments'],
+    [8, 'blockComments'],
+    [8, 'docComments'],
+    [11, 'blockComments'],
+] as const;
+
+const FORMATTED_INLINE_DOCS = `/// A choice.
+public enum Choice {
+    /// The first choice.
+    case one // Inline documentation.
+}
+
+/// A literal.
+public let example = "/** literal */" // After a string.
+/** Ordinary comment. */ // After a comment.
+/// An inline /** example */ remains documentation.
+public let value = "safe"
+// Ordinary* nested comment.
+// swiftformat:disable:next blockComments - An external declaration retains its layout.
+/** A retained declaration. */
+public let preserved = "fixed"
+`;
+
+const SWIFT_DOCS_SOURCE = `/** Parses a sample value. */
+public func parsed(_ value: String) -> Int {
+    Int(value) ?? 0
+}
+
+/// The literal /** example */ is documentation syntax.
+public let example = "/** not documentation */"
+
+/* Ordinary comment with a nested /** comment */ inside. */
+`;
+
+const SWIFT_INLINE_DOCS = `/// A choice.
+public enum Choice {
+    /// The first choice.
+    case one /** Inline documentation. */
+}
+/// A literal.
+public let example = "/** literal */" /** After a string. */
+/* Ordinary comment. */ /** After a comment. */
+/// An inline /** example */ remains documentation.
+public let value = "safe"
+/* Ordinary /** nested */ comment. */
+// swiftformat:disable:next blockComments - An external declaration retains its layout.
+/** A retained declaration. */
+public let preserved = "fixed"
+`;
+
+const SOURCE_HEADER = `// Greeting.swift
+// Created by Alex Garcia.
+// Copyright 2026 Example Contributors.
+
+`;
+
+const FORMATTED_DOCS_SOURCE = `/// Parses a sample value.
+public func parsed(_ value: String) -> Int {
+    Int(value) ?? 0
+}
+
+/// The literal /** example */ is documentation syntax.
+public let example = "/** not documentation */"
+
+// Ordinary comment with a nested* comment inside.
+`;
+
+const BLOCK_COMMENT_FINDINGS = [
+    [1, 1, 'blockComments'],
+    [9, 1, 'blockComments'],
+] as const;
+
+const SPACED_COMMENT_FINDINGS = [
+    [9, 1, 'docComments'],
+    [9, 1, 'spaceInsideComments'],
+] as const;
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 
@@ -83,7 +155,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
 );
 
 test.skipIf(!hasToolBuild('swiftformat'))(
-    'SwiftFormat reports inline block comments at their positions and keeps the file mode and swiftformat:disable comments',
+    'SwiftFormat reports inline block comments at their positions and keeps the swiftformat:disable comments',
     async () => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),

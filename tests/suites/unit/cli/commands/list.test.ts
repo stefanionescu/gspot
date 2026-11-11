@@ -2,14 +2,14 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { configurationsListOutputSchema, settingsListOutputSchema } from '#cli/schemas/commands.ts';
 import { compareText } from '#cli/system/text.ts';
 import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/reports.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { configurationsListOutputSchema, settingsListOutputSchema } from '#tests/setup/schemas.ts';
 
-test('list shows selected settings and available configurations', async () => {
+test('list shows selected and available configurations', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash', 'nextjs'], SHFMT_IGNORE_SETTINGS);
     await createFileTree(sandbox.path, {
@@ -33,8 +33,6 @@ test('list shows selected settings and available configurations', async () => {
     const defaults = await runGspot(sandbox.path, ['list', '--json']);
     expect(defaults.code, defaults.stdout + defaults.stderr).toBe(0);
     expect(JSON.parse(defaults.stdout)).toStrictEqual(result);
-    const listedSettings = await runGspot(sandbox.path, ['list', 'settings', '--json']);
-    expect(listedSettings.code, listedSettings.stdout + listedSettings.stderr).toBe(0);
 });
 
 test('checks that run at the root appear once when selected in two child scopes', async () => {
@@ -102,19 +100,18 @@ test('the settings list leaves out a naming category that gspot set refuses', as
     expect(stdout).not.toContain('naming.typescript.classes.cases');
 });
 
-test.each([{ reasonFor: 'raising', condition: 'you raise it' }])(
-    'the settings list says that a setting for $reasonFor needs a reason when $condition',
-    async (row) => {
-        await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
-        const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
-        const { settings } = settingsListOutputSchema.parse(JSON.parse(listed.stdout));
-        const { setting } = settings.find(({ reasonFor }) => reasonFor === row.reasonFor)!;
-        const printed = await runGspot(sandbox.path, ['list', 'settings']);
-        const lines = printed.stdout.split('\n');
-        expect(lines[0]).toContain('needs a reason when');
-        expect(lines.find((line) => line.startsWith(`${setting} `))).toContain(` ${row.condition} `);
-    },
-);
+test.each([
+    { reasonFor: 'adding', condition: 'you add items' },
+    { reasonFor: 'lowering', condition: 'you lower it' },
+    { reasonFor: 'raising', condition: 'you raise it' },
+])('the settings list says that a setting for $reasonFor needs a reason when $condition', async (row) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
+    const { settings } = settingsListOutputSchema.parse(JSON.parse(listed.stdout));
+    const { setting } = settings.find(({ reasonFor }) => reasonFor === row.reasonFor)!;
+    const printed = await runGspot(sandbox.path, ['list', 'settings']);
+    expect(printed.stdout.split('\n').find((line) => line.startsWith(`${setting} `))).toContain(` ${row.condition} `);
+});
 
 test('the text lists group equal scope states on one line', async () => {
     await using sandbox = await createGitSandbox({
@@ -163,4 +160,27 @@ test('list shows each removed configuration with its scope and reason', async ()
         { name: 'markdown', scope: '', reason: 'The project keeps no Markdown files.' },
         { name: 'bash', scope: 'api', reason: 'The API keeps its scripts elsewhere.' },
     ]);
+});
+
+test('the settings list prints a long value below its row and each record of a record list on its own line', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: [
+                '[[tools.eslint.override]]\npaths = ["site/**"]\nruntime = "browser"\n',
+                '[[tools.eslint.override]]\npaths = ["worker/**"]\nruntime = "worker"\n',
+            ].join('\n'),
+        }),
+    });
+    const { stdout } = await runGspot(sandbox.path, ['list', 'settings']);
+    const lines = stdout.split('\n');
+    const column = lines[0]!.indexOf('value');
+    const records = lines.indexOf(lines.find((line) => line.startsWith('tools.eslint.override '))!);
+    expect(lines[records]!.slice(column)).toMatch(/^ +gspot\.toml$/u);
+    expect(lines.slice(records + 1, records + 3)).toStrictEqual([
+        `${' '.repeat(column)}{"paths":["site/**"],"runtime":"browser"}`,
+        `${' '.repeat(column)}{"paths":["worker/**"],"runtime":"worker"}`,
+    ]);
+    const long = lines.indexOf(lines.find((line) => line.startsWith('test_files '))!);
+    expect(lines[long]!.slice(column)).toMatch(/^ +gspot default$/u);
+    expect(lines[long + 1]).toMatch(new RegExp(String.raw`^ {${column}}\[".*"\]$`, 'u'));
 });

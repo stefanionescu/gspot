@@ -14,7 +14,7 @@ import {
     TRPC_SERVER_CATEGORY,
     TRPC_SERVER_VALUE_POLICY,
     UNKNOWN_IMPORT_POLICIES,
-} from '#cli/config/configurations/blocks.ts';
+} from '#cli/config/configurations/eslint/blocks.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
 import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -33,6 +33,7 @@ function buildDependencyPolicies({
     hasFixedPolicies,
     tests,
     trpcPaths,
+    externals,
 }: ScopeBoundaries): EslintBoundaryPolicy[] {
     const policies: EslintBoundaryPolicy[] = importRules.flatMap((rule, index) => {
         const from = { file: { categories: `${IMPORT_RULE_CATEGORY}${rule.name}` } };
@@ -52,6 +53,9 @@ function buildDependencyPolicies({
             },
         ];
     });
+    // The last policy that matches an import decides. A specifier of javascript.externals passes the import rules
+    // above, and the test file and tRPC policies below still apply to it.
+    if (externals.length > 0) policies.push({ allow: { dependency: { source: externals } } });
     if (hasFixedPolicies)
         policies.push(
             ...UNKNOWN_IMPORT_POLICIES,
@@ -132,7 +136,20 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
         ...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files)),
     ]);
     const hasFixedPolicies = trpcPaths.length > 0 || isEnforceTests;
-    const boundaries = { importRules, tests, enforceTests: isEnforceTests, hasFixedPolicies, trpcPaths, serverFiles };
+    const externals = [
+        ...new Set(
+            javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.tables.javascript?.externals ?? []),
+        ),
+    ];
+    const boundaries = {
+        importRules,
+        tests,
+        enforceTests: isEnforceTests,
+        hasFixedPolicies,
+        trpcPaths,
+        serverFiles,
+        externals,
+    };
     return [
         {
             files: eslintFiles.code,

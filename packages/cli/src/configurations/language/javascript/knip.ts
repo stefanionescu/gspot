@@ -1,20 +1,21 @@
 import { posix } from 'node:path';
 
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/blocks.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/eslint/blocks.ts';
 import {
-    COMMAND_WORD_SEPARATORS,
     HIDDEN_FILE_GLOB,
     KNIP_CHECK,
     KNIP_ESLINT_CONFIG,
     KNIP_IGNORED_DEPENDENCIES,
     KNIP_JAVASCRIPT_ENTRY_FILES,
-    MISE_FILE_TASK_GLOBS,
     PACKAGE_RUNNERS,
     UNQUOTED_COMMENT,
 } from '#cli/config/configurations/javascript.ts';
+import { COMMAND_SEPARATORS } from '#cli/config/repository/setup.ts';
+import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listDistinctTools } from '#cli/manifests/read.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -24,7 +25,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { compareText } from '#cli/system/text.ts';
-import { listDistinctTools } from '#cli/tools/pins.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
@@ -88,7 +88,7 @@ function findRunPackage(words: string[], index: number): string | undefined {
 }
 
 function listRunPackages(text: string): string[] {
-    const words = text.replaceAll(UNQUOTED_COMMENT, '$1').split(COMMAND_WORD_SEPARATORS);
+    const words = text.replaceAll(UNQUOTED_COMMENT, '$1').split(COMMAND_SEPARATORS);
     return words.flatMap((_word, index) => {
         const target = findRunPackage(words, index);
         return target === undefined ? [] : (splitIdentity(target)?.[0] ?? target);
@@ -97,7 +97,7 @@ function listRunPackages(text: string): string[] {
 
 function listFileTaskPackages(planned: PlannedConfig, dependencyNames: Set<string>): string[] {
     const { files } = planned.session.repository;
-    const isFileTask = buildPathMatcher([...MISE_FILE_TASK_GLOBS]);
+    const isFileTask = buildPathMatcher(MISE_TASK_FOLDERS.map((folder) => `**/${folder}/**`));
     const names = files
         .filter((file) => file.kind === 'source' && isFileTask(file.path))
         .flatMap((file) => listRunPackages(readText(planned.session.cache, file.path)));
@@ -119,9 +119,7 @@ function buildKnipFile(planned: PlannedConfig): string {
     const { dependencyFiles } = planned.session.repository;
     const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
     const scriptWords = new Set(
-        dependencyFiles
-            .flatMap((file) => file.scripts ?? [])
-            .flatMap((script) => script.split(COMMAND_WORD_SEPARATORS)),
+        dependencyFiles.flatMap((file) => file.scripts ?? []).flatMap((script) => script.split(COMMAND_SEPARATORS)),
     );
     const tools = listDistinctTools(configurations);
     const toolBinaries = [

@@ -19,7 +19,17 @@ test('a shared function coverage limit enables Jest coverage without enabling py
         only: ['pytest/tests', 'jest/tests'],
     });
     const jestPlan = plans.find(({ check }) => check.id === 'jest/tests')!;
+    const pytestPlan = plans.find(({ check }) => check.id === 'pytest/tests')!;
     expect(stripCoverageArguments(jestPlan, {})).toContain('--coverage');
+    expect(stripCoverageArguments(pytestPlan, {})).toStrictEqual([
+        'pytest',
+        '-q',
+        '--strict-markers',
+        '--strict-config',
+        '--no-header',
+        '-p',
+        'no:cacheprovider',
+    ]);
 });
 
 test('stage all leaves out message checks even when only names one', async () => {
@@ -145,9 +155,9 @@ test('v8r keeps unowned schema files and excludes files validated by other tools
         ...Object.fromEntries(
             [...otherToolFiles, ...schemaFiles].map((path) => [path, path.endsWith('.toml') ? '' : '{}']),
         ),
-        'gspot.toml': buildSandboxSettings(['data-files']),
+        'gspot.toml': buildSandboxSettings(['json']),
     });
-    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['data-files/v8r'] });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['json/v8r'] });
     expect(planned.flatMap(({ files }) => files.map(({ path }) => path)).toSorted(compareText)).toStrictEqual(
         schemaFiles.toSorted(compareText),
     );

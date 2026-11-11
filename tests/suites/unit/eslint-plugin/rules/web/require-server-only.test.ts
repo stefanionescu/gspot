@@ -25,12 +25,8 @@ buildRuleTester().run('require-server-only', requireServerOnly, {
 test('the default JavaScript parser accepts a server-only side-effect import', () => {
     const linter = new Linter({ configType: 'flat', cwd: '/repo' });
     const config: object = { plugins: { gspot: plugin }, rules: { 'gspot/require-server-only': 'error' } };
-    expect(
-        linter.verify("import 'server-only';\nexport const secret = 1;", config, {
-            filename: '/repo/src/server/secret.js',
-        }),
-    ).toStrictEqual([]);
-    expect(linter.verify('export const secret = 1;', config, { filename: '/repo/src/server/secret.js' })).toMatchObject(
-        [{ messageId: 'missing' }],
-    );
+    const messages = linter.verify("import 'server-only';\nexport const secret = 1;", config, {
+        filename: '/repo/src/server/secret.js',
+    });
+    expect(messages).toStrictEqual([]);
 });

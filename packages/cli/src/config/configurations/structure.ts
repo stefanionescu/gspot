@@ -3,6 +3,7 @@ import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE, SHEBANG_TAG } from '#cli/config/repository/files.ts';
 import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
+import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 
 const INSTALL_HELP = 'Run gspot install.';
 
@@ -55,13 +56,6 @@ export const WEAKENING_FIXES = {
 
 export const WEAKENING_IGNORE_HELP =
     'Undo the change, or run `gspot ignore gspot/weakenings --rule {rule} --reason "<why>"`.';
-
-export const WEAKENINGS_UNREAD_BASE = {
-    rule: 'base',
-    file: SETTINGS_FILE,
-    change: 'gspot/weakenings compared no settings',
-    reason: 'gspot.toml at the base revision does not fit this version of gspot',
-} as const;
 
 export const REPOSITORY_RULES = {
     pathEncoding: 'path-encoding',
@@ -247,7 +241,7 @@ export const TOOL_LOCKFILES = new Set([
     GSPOT_PATHS.miseLockfile,
 ]);
 
-export const MISE_TASKS_GLOB = '{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**';
+export const MISE_TASKS_GLOB = `{${MISE_TASK_FOLDERS.join(',')}}/**`;
 
 export const SWIFT_CONFIGURATION = 'swift';
 

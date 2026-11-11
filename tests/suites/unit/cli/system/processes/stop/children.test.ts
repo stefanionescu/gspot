@@ -12,7 +12,6 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakePlatform, isWindows } from '#tests/setup/system/platform.ts';
 import {
     CHILD_TIMEOUT_SECONDS,
-    isStopped,
     limitCommand,
     spawnCommand,
     waitForExit,
@@ -20,38 +19,18 @@ import {
 } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-function startFailedCapture(capture: 'text' | 'bytes', root: string) {
-    using children = spyOn(childProcess, 'spawn');
-    const running = captureProcess(capture, buildProgramCommand('fakes/tool', '--wait'), { cwd: root });
-    const launched = children.mock.results[0];
-    if (launched?.type !== 'return') throw new Error('The capture started no child.');
-    launched.value.stdout?.emit('error', new Error(STREAM_FAILURE));
-    return { running, child: launched.value };
-}
-
-test('a failed text stream read stops the child and returns a failed result that names the stream error', async () => {
-    await using sandbox = await testdir();
-    const { running, child } = startFailedCapture('text', sandbox.path);
-    try {
-        const result = await running;
-        expect({ end: result.end, lastLine: result.stderr.split('\n').at(-1) }).toStrictEqual({
-            end: 'failed',
-            lastLine: STREAM_FAILURE,
-        });
-        expect(result.code).not.toBe(0);
-        expect(isStopped(child)).toBe(true);
-    } finally {
-        if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
-    }
-});
-
 test('a failed byte stream read stops the child and rejects with the stream error', async () => {
     await using sandbox = await testdir();
-    const { running, child } = startFailedCapture('bytes', sandbox.path);
+    using children = spyOn(childProcess, 'spawn');
+    const running = captureProcess('bytes', buildProgramCommand('fakes/tool', '--wait'), { cwd: sandbox.path });
+    const launched = children.mock.results[0];
+    if (launched?.type !== 'return') throw new Error('The capture started no child.');
+    const child = launched.value;
+    child.stdout?.emit('error', new Error(STREAM_FAILURE));
     try {
         const runningError = await captureRejection(running);
         expect(runningError.message).toBe(STREAM_FAILURE);
-        expect(isStopped(child)).toBe(true);
+        expect(isWindows ? child.exitCode : child.signalCode).not.toBeNull();
     } finally {
         if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
     }

@@ -13,7 +13,6 @@ import {
     FAILED_BUILD_FINDINGS,
     PRIVATE_MAIN_FINDING,
     PRIVATE_OTHER_FINDING,
-    SWIFT_REPLACEMENT_CASES,
 } from '#tests/config/configurations/swift.ts';
 import { SWIFT_LANGUAGE_PACKAGE, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
@@ -32,7 +31,7 @@ import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
-test('compiler: a failed Swift build without source errors exits 2, and the next build passes', async () => {
+test('compiler: a failed Swift build without source errors exits 2', async () => {
     using resources = new DisposableStack();
 
     await using sandbox = await createGitSandbox({});
@@ -155,29 +154,57 @@ test('compiler: Swift compiler messages drop the macOS /private prefix from sour
     ]);
 });
 
-test.each([...SWIFT_REPLACEMENT_CASES])(
-    '$checkId preserves replacement tokens in checkout paths when reporting copied source files',
-    async ({ checkId, rule }) => {
-        await using parent = await testdir();
-        await using sandbox = await testdir({}, { dirname: join(parent.path, 'literal-$&') });
-        runGitStep(sandbox.path, ['init', '--quiet']);
-        await using resources = new AsyncDisposableStack();
-        resources.use(await prepareSwiftCheck(sandbox, checkId, { 'Main.swift': SWIFT_VALUE_SOURCE }));
-        resources.use(
-            fakeCommands().mockImplementation((_command, options) =>
-                Promise.resolve(buildProcessResult({ stderr: `${options.cwd}/Main.swift:4:2: error: Missing value` })),
-            ),
-        );
-        const findings = await runSandboxCheck(sandbox.path, checkId);
-        expect(findings).toStrictEqual([
-            matchFields({
-                check: checkId,
-                file: 'Main.swift',
-                line: 4,
-                column: 2,
-                rule,
-                message: 'Missing value',
-            }),
-        ]);
-    },
-);
+test('swift/build preserves replacement tokens in checkout paths when reporting copied source files', async () => {
+    await using parent = await testdir();
+    await using sandbox = await testdir({}, { dirname: join(parent.path, 'literal-$&') });
+    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using resources = new AsyncDisposableStack();
+    resources.use(await prepareSwiftCheck(sandbox, 'swift/build', { 'Main.swift': SWIFT_VALUE_SOURCE }));
+    resources.use(
+        fakeCommands().mockImplementation((_command, options) =>
+            Promise.resolve(buildProcessResult({ stderr: `${options.cwd}/Main.swift:4:2: error: Missing value` })),
+        ),
+    );
+    const findings = await runSandboxCheck(sandbox.path, 'swift/build');
+    expect(findings).toStrictEqual([
+        matchFields({
+            check: 'swift/build',
+            file: 'Main.swift',
+            line: 4,
+            column: 2,
+            rule: 'compiler',
+            message: 'Missing value',
+        }),
+    ]);
+});
+
+test('compiler: an Xcode build reports the warnings of repository files, leaves package warnings out, and builds from clean after a run with warnings', async () => {
+    using resources = new DisposableStack();
+
+    await using sandbox = await createGitSandbox({});
+
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
+        'Main.swift': SWIFT_VALUE_SOURCE,
+        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
+            tables: '[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n',
+        }),
+    });
+
+    const warned = [
+        `${sandbox.path}/Main.swift:2:5: warning: variable 'count' was never used`,
+        '/DerivedData/SourcePackages/checkouts/library/Sources/Library.swift:9:1: warning: unused result',
+    ].join('\n');
+    const run = resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ stdout: warned })));
+
+    expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual([
+        matchFields({ file: 'Main.swift', line: 2, column: 5, rule: 'compiler' }),
+    ]);
+    expect(run.mock.calls.at(-1)?.[0]).not.toContain('clean');
+
+    run.mockResolvedValue(buildProcessResult());
+    expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual([]);
+    expect(run.mock.calls.at(-1)?.[0]).toContain('clean');
+
+    expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual([]);
+    expect(run.mock.calls.at(-1)?.[0]).not.toContain('clean');
+});

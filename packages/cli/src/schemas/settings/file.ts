@@ -124,7 +124,7 @@ export const commandCheckSchema = z.strictObject({
     }),
 });
 
-const { structure: rootStructure, data_files: rootSchemas, ...scopeTables } = configurationTableSchemas;
+const { structure: rootStructure, json: rootJson, ...scopeTables } = configurationTableSchemas;
 
 const rootBody = {
     ...scopeTables,
@@ -239,7 +239,7 @@ export const settingsSchema = z
             format: formatSchema.prefault({}),
             limits: limitsSchema.prefault({}),
             naming: namingSchema.prefault({}),
-            data_files: rootSchemas,
+            json: rootJson,
             structure: rootStructure.unwrap().prefault({}),
             hooks: hooksSchema.prefault({}),
             ci: ciSchema.optional(),

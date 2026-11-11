@@ -1,60 +1,5 @@
 import { RUNNER_NAMES } from '#cli/config/repository/setup.ts';
 
-export const YAML_REQUIRED_NAMES = new Set([
-    'action.yaml',
-    'analysis_options.yaml',
-    'Chart.yaml',
-    'compose.yaml',
-    'compose.override.yaml',
-    'docker-compose.yaml',
-    'docker-compose.override.yaml',
-    'kustomization.yaml',
-    'pnpm-lock.yaml',
-    'pnpm-workspace.yaml',
-    '.pre-commit-config.yaml',
-    '.pre-commit-hooks.yaml',
-    'pubspec.yaml',
-    'values.yaml',
-]);
-
-export const YAML_TRUTHY = /^(?:[Yy][Ee][Ss]|[Nn][Oo]|[Oo][Nn]|[Oo][Ff][Ff]|True|TRUE|False|FALSE)$/u;
-
-export const YAML_LEADING_ZERO = /^[+-]?(?:0\d+|0o[0-7]+)$/u;
-
-export const YAML_TRAILING_ZERO = /^[+-]?\d+\.\d*0$/u;
-
-export const YAML_GENERATED_ANCHOR = /^[a-z]?\d+$/iu;
-
-export const YAML_COMMIT_USE = /^\s*(?:-\s+)?uses:\s*['"]?[^'"#\s]+@[\da-f]{40}['"]?\s*$/iu;
-
-export const YAML_VERSION_COMMENT = /^#\s*v?\d+(?:\.\d+)*(?:[-+][\w.-]+)?\s*$/u;
-
-export const YAML_RULES = {
-    syntax: 'syntax',
-    duplicate: 'key-duplicates',
-    anchors: 'anchors',
-    truthy: 'truthy',
-    octal: 'octal-values',
-    documents: 'documents',
-    merge: 'merge-keys',
-    anchorNames: 'anchor-names',
-    version: 'version-numbers',
-    comments: 'comments',
-    extension: 'file-extension',
-} as const;
-
-export const YAML_MESSAGES = {
-    extension: 'Use the .yml extension unless the consumer requires this .yaml file name.',
-    documents:
-        'Keep one YAML document per file. Accept this rule with a reason only when the consumer requires a stream.',
-    merge: 'Do not use the << merge key. Write the mapping keys explicitly.',
-    truthy: 'Quote this string, or write a boolean as true or false.',
-    octal: 'Quote a value with a leading zero, or write the number in decimal without leading zeros.',
-    version: 'Quote this value to preserve its trailing zero.',
-    comments:
-        'Move this comment above the key. Only a version comment after a uses value pinned to a full commit is allowed.',
-};
-
 export const GIT_COMMIT_MESSAGE_ARGUMENTS = [
     'log',
     '--stdin',
@@ -230,17 +175,17 @@ export const ANY_VERSION = '*';
 export const EMPTY_SCAN_MESSAGE =
     'The license scan found no packages. Install the selected project dependencies before scanning.';
 
-export const LICENSE_RULES = { unusedRecord: 'unused-record', disallowedLicense: 'disallowed-license' } as const;
+export const LICENSE_RULES = {
+    unusedRecord: 'unused-record',
+    disallowedLicense: 'disallowed-license',
+    unmatchedIgnore: 'unmatched-ignore',
+} as const;
 
 export const GITLEAKS_LOG_OPTIONS = '--diff-merges=separate';
 
 export const SECRET_KEY_NAME = /(?:TOKEN|SECRET|KEY|PASSWORD)/u;
 
 export const ENVIRONMENT_DEFAULT_RULE = 'environment-default';
-
-export const NESTED_AGENTS_RULE = 'nested-agents-file';
-
-export const NESTED_AGENTS_MESSAGE = 'Move these rules into the AGENTS.md at the root of the repository.';
 
 export const ENV_KEY_LINE = /^(?:#\s*)?(?:export )?(?<key>[A-Z][A-Z0-9_]*)=/u;
 
@@ -263,13 +208,6 @@ export const COMMITLINT_PARSER_PRESET = {
         headerCorrespondence: ['type', 'scope', 'subject'],
     },
 } as const;
-
-export const TAPLO_FORMATTING = {
-    array_auto_expand: false,
-    array_auto_collapse: false,
-} as const;
-
-export const V8R_NOTES = ['# The other selected tools check files without a known schema.'];
 
 export const OSV_SCANNER_NOTES = [
     '# This file stops OSV-Scanner from reading an osv-scanner.toml next to a lockfile.',
@@ -325,14 +263,6 @@ export const DEFAULT_QUOTES = { prettier: 'single', ruff: 'double' } as const;
 export const EDITORCONFIG_ROOT_LINE = 'root = true\n\n';
 
 export const PRETTIER_CHECK = 'format/prettier';
-
-export const MISE_TASK_FOLDERS = [
-    'mise-tasks',
-    '.mise-tasks',
-    'mise/tasks',
-    '.mise/tasks',
-    '.config/mise/tasks',
-] as const;
 
 export const UNBUNDLED_PACKAGE_MANAGERS: readonly string[] = ['pnpm', 'yarn', 'bun'];
 

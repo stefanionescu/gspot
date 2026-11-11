@@ -1,4 +1,3 @@
-import type { ChildProcess } from 'node:child_process';
 import { stat } from 'node:fs/promises';
 
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
@@ -7,9 +6,10 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
-import { CHILD_WAIT_MILLISECONDS, TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { CHILD_WAIT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 import type { ChildCapture, ProcessCapture } from '#tests/types/setup.ts';
+
+const TEST_TIMEOUT_MILLISECONDS = 360_000;
 
 function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
     if (result.end !== 'timed-out') return result;
@@ -142,8 +142,3 @@ export function captureChild(child: ProcessCapture): ChildCapture {
 }
 
 export const CHILD_TIMEOUT_SECONDS = (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND;
-
-export function isStopped(child: ChildProcess | undefined): boolean {
-    if (child === undefined) return false;
-    return (isWindows ? child.exitCode : child.signalCode) !== null;
-}

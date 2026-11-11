@@ -15,6 +15,7 @@ import type {
     ManifestSource,
     ParsedManifest,
     ShippedRule,
+    Tool,
 } from '#cli/types/manifests.ts';
 
 const shipped: { configurations?: Map<string, Configuration> } = {};
@@ -119,6 +120,41 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
         }
     }
     return checks;
+}
+
+export function listDistinctTools(configurations: Configuration[]): Tool[] {
+    const tools = new Map<string, Tool>();
+    for (const configuration of configurations)
+        for (const tool of configuration.tools) {
+            if (!tools.has(tool.name)) tools.set(tool.name, tool);
+        }
+    return tools
+        .values()
+        .toArray()
+        .toSorted((first, second) => compareText(first.name, second.name));
+}
+
+export function findTool(configurations: Iterable<Configuration>, name: string): Tool | undefined {
+    for (const configuration of configurations) {
+        const tool = configuration.tools.find((declaration) => declaration.name === name);
+        if (tool !== undefined) return tool;
+    }
+    return undefined;
+}
+
+/**
+Get a tool that gspot ships by its name.
+
+@throws Error when no configuration declares it.
+*/
+export function getTool(configurations: Iterable<Configuration>, name: string): Tool {
+    const tool = findTool(configurations, name);
+    if (tool === undefined) throw new Error(`No configuration declares the tool ${name}.`);
+    return tool;
+}
+
+export function findToolName(check: Check): string | undefined {
+    return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
 
 export function assertCheckExists(checkId: string, commandChecks: ReadonlyArray<Pick<Check, 'id'>>): void {

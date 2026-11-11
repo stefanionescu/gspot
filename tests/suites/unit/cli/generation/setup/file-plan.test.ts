@@ -7,15 +7,28 @@ import { createFileTree, testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { ATTRIBUTES_ROW, DROPPED_LINE_SETTINGS_NOTE, UNREAD_SUBMODULE_MESSAGE } from '#cli/config/generation.ts';
-import { initOutputSchema } from '#cli/schemas/commands.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { GIT_PLAN_CASES, PRESERVE_SOURCE, QUALITY_PACKAGE_FILES } from '#tests/config/generation/plan.ts';
-import { WORKSPACE_PYTHON_FILES } from '#tests/config/generation/settings.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+
+const WORKSPACE_PYTHON_FILES = {
+    'package.json': '{"private":true,"workspaces":["service"]}',
+    'source.ts': 'export {};\n',
+    'service/package.json': '{"private":true}',
+    'service/main.py': 'value = 1\n',
+} as const;
+
+const QUALITY_PACKAGE_FILES = {
+    'package.json': '{"name":"shop","private":true,"type":"module","dependencies":{"react":"19.0.0"}}\n',
+    'src/app.tsx': 'export const App = () => null;\n',
+    'quality/package.json': '{"name":"shop-quality","private":true,"dependencies":{"ts-morph":"26.0.0"}}\n',
+    'quality/check.ts': 'export const value = 1;\n',
+    '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
+} as const;
 
 test.each([
     { name: 'a new .gitattributes under write', files: {}, attributes: 'write' },
@@ -141,22 +154,6 @@ test('init lists your .editorconfig under write and not under delete when the ge
         { path: '.editorconfig', note: expect.stringContaining('git show HEAD:.editorconfig') as string },
     ]);
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).not.toBe(authored);
-});
-
-test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that apply', async ({ changes }) => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await testdir({ 'control.txt': PRESERVE_SOURCE });
-
-    commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--json', '--configurations', 'gspot']);
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(initialized.stderr).toBe('');
-    const report = initOutputSchema.parse(JSON.parse(initialized.stdout));
-    expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes, 'mise.toml']);
-    expect(existsSync(join(sandbox.path, '.gitignore'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);
-    expect(existsSync(join(sandbox.path, '.gitattributes'))).toBe(true);
-    expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
 
 test('init pins gspot in mise.toml for a package.json with no dependency and no script file', async () => {

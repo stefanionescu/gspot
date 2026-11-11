@@ -6,7 +6,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckGeneration, CheckRunOptions, RunOptions } from '#cli/types/engine/run.ts';
+import type { CheckGeneration, RunOptions } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
@@ -38,8 +38,6 @@ paths = ${JSON.stringify(paths)}
 stage = "commit"
 `;
 }
-
-export const CHECK_RUN_OPTIONS: CheckRunOptions = {};
 
 export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,

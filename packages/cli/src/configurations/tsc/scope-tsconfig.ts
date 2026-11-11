@@ -8,7 +8,7 @@ import {
     NESTJS_CONFIGURATION,
     TYPESCRIPT_DEFAULTS,
     TYPESCRIPT_TSCONFIG_CHECK,
-} from '#cli/config/configurations/registry.ts';
+} from '#cli/config/configurations/shared.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';

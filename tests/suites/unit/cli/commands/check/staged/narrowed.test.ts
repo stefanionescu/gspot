@@ -37,15 +37,15 @@ test('a commit reports an old finding only in a file that it stages or a change 
     expect(await listStagedFindings(sandbox.path, ['README.md'])).toStrictEqual(['README.md']);
 });
 
-test.each(['.mise/tasks/lint'])('a staged deletion of %s reports the document that names its task', async (path) => {
+test('a staged deletion of .mise/tasks/lint reports the document that names its task', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs', 'bash'], { level: 'basic' }),
         'README.md': '# Example\n\nRun `mise run lint`.\n',
         'mise.toml': '[tasks.test]\nrun = "true"\n',
-        [path]: '#!/usr/bin/env bash\n',
+        '.mise/tasks/lint': '#!/usr/bin/env bash\n',
     });
     await applyGeneratedFiles(sandbox.path);
     commitAll(sandbox.path);
-    await rm(join(sandbox.path, path));
-    expect(await listStagedFindings(sandbox.path, [path])).toStrictEqual(['README.md']);
+    await rm(join(sandbox.path, '.mise/tasks/lint'));
+    expect(await listStagedFindings(sandbox.path, ['.mise/tasks/lint'])).toStrictEqual(['README.md']);
 });

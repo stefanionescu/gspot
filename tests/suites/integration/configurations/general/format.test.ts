@@ -5,18 +5,71 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import {
-    EDITORCONFIG_SAMPLES,
-    STAGED_FORMAT_CHECK_ARGUMENTS,
-    STAGED_FORMAT_PATHS,
-    STAGED_FORMAT_SOURCE,
-} from '#tests/config/integration/general.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+
+const EDITORCONFIG_SAMPLES = [
+    {
+        file: 'line-endings.txt',
+        broken: 'content\r\n',
+        corrected: 'content\n',
+        lines: [undefined, undefined],
+    },
+    {
+        file: 'trailing-whitespace.txt',
+        broken: 'content \n',
+        corrected: 'content\n',
+        lines: [1],
+    },
+] as const;
+
+const STAGED_FORMAT_SOURCE = {
+    staged: 'export const value = {\n  value: {\n    active: false,\n  },\n};\n',
+    working: 'export const value = {\n    value: {\n        active: false,\n    },\n};\n',
+} as const;
+
+const STAGED_FORMAT_PATHS = {
+    source: 'app/value.js',
+    scopeConfig: `${GSPOT_PATHS.configurations}/format/scopes/app/prettier.json`,
+} as const;
+
+const STAGED_FORMAT_CHECK_ARGUMENTS = [
+    'check',
+    '--staged',
+    '--only',
+    'format/prettier',
+    '--json',
+    '--',
+    'app/value.js',
+] as const;
+
+const YAML_SCOPE_TABLES = `[format]
+indent_width = 4
+[[format.override]]
+paths = ["**/*.yml"]
+indent_width = 2
+[[scope]]
+path = "app"
+configurations = []
+`;
+
+const YAML_SCOPE_FILES = {
+    'settings/project.yml': `parent:
+  enabled: true
+on:
+  enabled: true
+`,
+    'app/settings/project.yml': `parent:
+  enabled: false
+on:
+  enabled: false
+`,
+} as const;
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['format'],
@@ -92,4 +145,20 @@ test('check --staged formats with the staged Prettier config file after a later 
     ]);
     for (const [path, content] of files) expect(await readFile(join(root, path), 'utf8')).toBe(content);
     expect(runGitStep(root, ['write-tree'])).toBe(index);
+});
+
+test('Prettier keeps two-space YAML under a format override', async () => {
+    const { root } = installedSandbox();
+    await using _change = await writeSandboxChanges(installedSandbox(), {
+        removed: ['package.json'],
+        files: {
+            'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_TABLES }),
+            ...YAML_SCOPE_FILES,
+        },
+    });
+    const formatted = parseCheckReport(await spawnGspot(root, ['check', '--only', 'format/prettier', '--json']));
+    expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
+    expect(formatted.report.checks).toMatchObject([
+        { check: 'format/prettier', scope: '', status: 'passed', findings: [] },
+    ]);
 });

@@ -5,6 +5,7 @@ import {
     CLONE_RULE,
     JSCPD_ARGUMENTS,
     JSCPD_CONFIG_FILE,
+    JSCPD_IMPORT_PATTERNS,
     JSCPD_REPORT_FILE,
     JSCPD_TOOL,
     OUTPUT_FLAG,
@@ -17,14 +18,42 @@ import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { jscpdOutputSchema } from '#cli/schemas/configurations.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { readBytes } from '#cli/system/files/reads.ts';
+import { readBytes, readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+
+/**
+Count the lines of a clone that the import patterns cover. jscpd drops the tokens of an import and still counts
+its lines, so a few shared lines on both sides of two import blocks look like one long clone. A blank line between two
+imports belongs to the imports.
+*/
+function countImportLines(source: string, clone: { start: number; lines: number }): number {
+    const matches = JSCPD_IMPORT_PATTERNS.flatMap((pattern) => source.matchAll(new RegExp(pattern, 'gu')).toArray());
+    const imported = new Set(
+        matches.flatMap(({ 0: text, index }) => {
+            const opening = index + text.length - text.trimStart().length;
+            const first = source.slice(0, opening).split('\n').length - 1;
+            return text
+                .trim()
+                .split('\n')
+                .map((_line, offset) => first + offset);
+        }),
+    );
+    const lines = source.split('\n');
+    const written = lines.flatMap((text, index) => (text.trim() === '' ? [] : [index]));
+    return lines.slice(clone.start - 1, clone.start - 1 + clone.lines).filter((text, offset) => {
+        const index = clone.start - 1 + offset;
+        if (text.trim() !== '') return imported.has(index);
+        const before = written.findLast((other) => other < index);
+        const after = written.find((other) => other > index);
+        return before !== undefined && after !== undefined && imported.has(before) && imported.has(after);
+    }).length;
+}
 
 async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using workFolder = createTemporaryFolder();
@@ -56,6 +85,7 @@ async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise
     }
     const report = parseToolOutput(JSCPD_TOOL, bytes.toString('utf8'), jscpdOutputSchema);
 
+    const minimum = getTable(planned.scope.settings, 'structure').min_duplicate_lines;
     return report.duplicates.flatMap((clone): CheckFinding[] => {
         const [file, first] = [clone.secondFile.name, clone.firstFile.name].map((name) =>
             convertToPosixPath(
@@ -64,12 +94,15 @@ async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise
         ) as [string, string];
         if (!owned.has(file)) return [];
         const other = `${first}:${String(clone.firstFile.start)}`;
+        const source = readText(session.cache, file);
+        const repeated = clone.lines - countImportLines(source, { start: clone.secondFile.start, lines: clone.lines });
+        if (repeated < minimum) return [];
         return [
             {
                 file,
                 line: clone.secondFile.start,
                 rule: CLONE_RULE,
-                message: `${String(clone.lines)} lines repeat ${other}.`,
+                message: `${String(repeated)} lines repeat ${other}.`,
             },
         ];
     });

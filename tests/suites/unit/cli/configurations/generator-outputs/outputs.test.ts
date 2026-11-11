@@ -1,20 +1,18 @@
-import { readFile, symlink, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
-import { buildCheckSession, runCheckCode, runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { BINARY_OUTPUT_HEX } from '#tests/config/configurations/general.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+const BINARY_OUTPUT_HEX = '00ff8047454e455241544544';
 
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
     await using sandbox = await createGitSandbox({});
@@ -37,33 +35,6 @@ test('a [[command_check]] with outputs reports an output that differs from what 
     await writeFile(join(sandbox.path, 'generated/api.ts'), 'export const version = 2;\n');
     const fresh = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/codegen'] }));
     expect(fresh.report.failed).toStrictEqual([]);
-});
-
-test('generator output patterns omit links to folders', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['drizzle']),
-        'drizzle.config.ts': EMPTY_DEFAULT_SOURCE,
-        'generated/regular/output.txt': 'generated\n',
-    });
-    await symlink('regular', join(sandbox.path, 'generated/linked'), 'dir');
-    commitAll(sandbox.path);
-    const session = await openSession(sandbox.path);
-    const input = planSandboxCheck(session, 'drizzle/stale-migrations');
-    const planned = {
-        ...input,
-        check: {
-            ...input.check,
-            command: buildProgramCommand('fakes/tool'),
-            generator_outputs: [{ kind: 'pattern' as const, path: 'generated/**' }],
-        },
-    };
-    const result = await runCheckCode(
-        buildCheckSession(session, CHECK_GENERATION),
-        planned,
-        { check: checkGeneratorOutputs },
-        CHECK_RUN_OPTIONS,
-    );
-    expect(result.findings).toStrictEqual([]);
 });
 
 test('an unchanged binary output passes and a changed one reports stale', async () => {

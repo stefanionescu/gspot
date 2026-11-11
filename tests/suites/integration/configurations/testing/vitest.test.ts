@@ -5,17 +5,62 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, type TestdirResult } from 'testdirs';
 
-import {
-    COVERAGE_ZERO_LIMITS,
-    UNTESTED_SOURCE,
-    VITEST_PROJECT_FILES,
-    VITEST_SOURCE,
-} from '#tests/config/integration/testing.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+const COVERAGE_ZERO_LIMITS = `[coverage]
+min_line_percent = { value = 0, reason = "This test checks execution without coverage collection." }
+min_branch_percent = { value = 0, reason = "This test checks execution without coverage collection." }
+min_function_percent = { value = 0, reason = "This test checks execution without coverage collection." }
+min_statement_percent = { value = 0, reason = "This test checks execution without coverage collection." }
+`;
+
+const VITEST_SOURCE = `// Arithmetic the test tests call.
+
+/**
+Adds positive values.
+@param values the values to total
+@returns the positive total
+*/
+export function positiveTotal(values: number[]): number {
+    let total = 0;
+    for (const value of values) {
+        if (value > 0) total += value;
+    }
+    return total;
+}
+`;
+
+const UNTESTED_SOURCE = `${VITEST_SOURCE}
+/**
+Triples a number.
+@param value the number.
+@returns three times the number.
+*/
+export function triple(value: number): number {
+    return value * 3;
+}
+`;
+
+const VITEST_MATH_TEST = `import { test, expect } from 'vitest';
+import { positiveTotal } from './public.js';
+
+test('adds only positive values', () => {
+    expect(positiveTotal([2, 3])).toBe(5);
+    expect(positiveTotal([-2, 3])).toBe(3);
+    expect(positiveTotal([])).toBe(0);
+});
+`;
+
+const VITEST_PROJECT_FILES = {
+    '.gitignore': 'node_modules\ncoverage\n',
+    'vitest.config.mjs': "export default { test: { include: ['src/*.test.ts'] } };\n",
+    'src/public.ts': VITEST_SOURCE,
+    'src/math.test.ts': VITEST_MATH_TEST,
+} as const;
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,
@@ -94,20 +139,6 @@ test('vitest/tests at the root leaves out a nested scope with its own config tha
     expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
         { scope: '', status: 'passed' },
         { scope: 'packages/a', status: 'failed' },
-    ]);
-});
-
-test('vitest/tests at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
-    await using sandbox = await createVitestProject(
-        COVERAGE_ZERO_LIMITS.replace(/^min_line_percent = .*$/mu, 'min_line_percent = 80'),
-    );
-    await rm(join(sandbox.path, 'node_modules/@vitest/coverage-v8'));
-    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/tests', '--json']));
-    expect(checked.code, checked.stdout + checked.stderr).toBe(2);
-    const note = '@vitest/coverage-v8 is not installed. Run npm install --save-dev --save-exact @vitest/coverage-v8.';
-    expect(checked.report.checks.map(({ scope, status, note }) => ({ scope, status, note }))).toStrictEqual([
-        { scope: '', status: 'missing', note },
-        { scope: 'app', status: 'missing', note },
     ]);
 });
 

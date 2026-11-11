@@ -28,10 +28,6 @@ export const TOOL_PROJECT_PACKAGES = [
     },
 ] as const;
 
-export const PACKAGE_METADATA_FAILURES = [
-    { field: 'version', packageJson: { name: 'teller', version: false } },
-] as const;
-
 export const SYSTEM_PLUGIN_REPORTS = [
     {
         name: 'installed',

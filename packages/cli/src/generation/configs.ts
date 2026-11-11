@@ -5,7 +5,6 @@ import { CONFIG_SCOPES_FOLDER, TS_EXTENSION } from '#cli/config/generation.ts';
 import { POSTGRES_CONFIG_BUILDERS } from '#cli/configurations/database/postgres/generate.ts';
 import { SITE_CONFIG_BUILDERS } from '#cli/configurations/framework/site/generate.ts';
 import { COMMITS_CONFIG_BUILDERS } from '#cli/configurations/general/commits/generate.ts';
-import { DATA_FILES_CONFIG_BUILDERS } from '#cli/configurations/general/data-files/generate.ts';
 import { DEPENDENCIES_CONFIG_BUILDERS } from '#cli/configurations/general/dependencies/generate.ts';
 import { DOCS_CONFIG_BUILDERS } from '#cli/configurations/general/docs/generate.ts';
 import { FORMAT_CONFIG_BUILDERS } from '#cli/configurations/general/format/generate.ts';
@@ -23,12 +22,14 @@ import { BIOME_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/b
 import { ESLINT_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/eslint/config.ts';
 import { JSCONFIG_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/jsconfig.ts';
 import { KNIP_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/knip.ts';
+import { JSON_CONFIG_BUILDERS } from '#cli/configurations/language/json/generate.ts';
 import { MARKDOWN_CONFIG_BUILDERS } from '#cli/configurations/language/markdown/generate.ts';
 import { PYTHON_CONFIG_BUILDERS } from '#cli/configurations/language/python/generate.ts';
 import { SQL_CONFIG_BUILDERS } from '#cli/configurations/language/sql/generate.ts';
 import { PERIPHERY_CONFIG_BUILDERS } from '#cli/configurations/language/swift/periphery.ts';
 import { SWIFTFORMAT_CONFIG_BUILDERS } from '#cli/configurations/language/swift/swiftformat.ts';
 import { SWIFTLINT_CONFIG_BUILDERS } from '#cli/configurations/language/swift/swiftlint.ts';
+import { TOML_CONFIG_BUILDERS } from '#cli/configurations/language/toml/generate.ts';
 import { PYTEST_CONFIG_BUILDERS } from '#cli/configurations/testing/pytest/generate.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { formatHeader } from '#cli/generation/header.ts';
@@ -52,7 +53,6 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     ...BIOME_CONFIG_BUILDERS,
     ...COMMITS_CONFIG_BUILDERS,
     ...CSS_CONFIG_BUILDERS,
-    ...DATA_FILES_CONFIG_BUILDERS,
     ...DEPENDENCIES_CONFIG_BUILDERS,
     ...DOCKER_CONFIG_BUILDERS,
     ...DOCS_CONFIG_BUILDERS,
@@ -60,6 +60,7 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     ...FORMAT_CONFIG_BUILDERS,
     ...HTML_CONFIG_BUILDERS,
     ...JSCONFIG_CONFIG_BUILDERS,
+    ...JSON_CONFIG_BUILDERS,
     ...KNIP_CONFIG_BUILDERS,
     ...MARKDOWN_CONFIG_BUILDERS,
     ...NGINX_CONFIG_BUILDERS,
@@ -75,6 +76,7 @@ const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     ...STRUCTURE_CONFIG_BUILDERS,
     ...SWIFTFORMAT_CONFIG_BUILDERS,
     ...SWIFTLINT_CONFIG_BUILDERS,
+    ...TOML_CONFIG_BUILDERS,
 };
 
 const CONFIGS = Symbol('config files');

@@ -55,12 +55,20 @@ export function formatFileValueError(schema: z.ZodType | undefined, issue: z.cor
     });
 }
 
+/**
+Format each error with the line of the key it names. An error that names a table with no header of its own, such as
+the path of a record list, takes the first line inside that table.
+*/
 export function formatSettingsErrors(errors: readonly SettingsError[], syntax: TomlSyntax, file: string): string {
     const lines = errors.map((error) => {
         const source = syntax.pathNodes
             .filter((node) => node.path.every((key, index) => key === error.path[index]))
             .toSorted((left, right) => right.path.length - left.path.length)[0];
-        const line = source?.node.loc.start.line ?? 1;
+        const [inside] = syntax.pathNodes
+            .filter((node) => error.path.every((key, index) => key === node.path[index]))
+            .map(({ node }) => node.loc.start.line)
+            .toSorted((left, right) => left - right);
+        const line = source?.node.loc.start.line ?? inside ?? 1;
         return `${file}:${String(line)}: ${error.path.map(String).join('.')}: ${error.message}`;
     });
     return [...lines, SETTINGS_PAGE_SENTENCE].join('\n');

@@ -2,11 +2,27 @@ import type { LimitFunction } from 'p-limit';
 import type { z } from 'zod';
 
 import type { CHECK_STATUSES } from '#cli/config/engine.ts';
-import type { fixReportSchema, fixResultSchema, reportedCheckSchema, runReportSchema } from '#cli/schemas/engine.ts';
-import type { PlannedCheck, PlanOptions, RunSelection, StageFilter } from '#cli/types/engine/plan.ts';
-import type { CheckFinding, CommandLine, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import type {
+    findingSchema,
+    fixReportSchema,
+    fixResultSchema,
+    reportedCheckSchema,
+    runReportSchema,
+} from '#cli/schemas/engine.ts';
+import type {
+    PlannedCheck,
+    PlanOptions,
+    RunSelection,
+    ShippedPlannedCheck,
+    StageFilter,
+} from '#cli/types/engine/plan.ts';
+import type { CommandLine, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { RuleExplanations, Session } from '#cli/types/tools.ts';
+
+export type Finding = z.infer<typeof findingSchema>;
+
+export type CheckFinding = Omit<Finding, 'check' | 'fixable'>;
 
 export type FinishedRun = {
     session: Session;
@@ -72,7 +88,7 @@ export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun
 
 type CheckRun = (
     session: CheckSession,
-    planned: PlannedCheck,
+    planned: ShippedPlannedCheck,
     options?: CheckRunOptions,
 ) => CheckResult | Promise<CheckResult>;
 

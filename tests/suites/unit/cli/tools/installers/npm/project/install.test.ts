@@ -12,18 +12,21 @@ import { LOCKFILE_CREDENTIAL_MESSAGE, NPM_LOCKFILE_CREDENTIAL_MESSAGE } from '#c
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installNpmTools, installUnlockedNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
-import {
-    CREDENTIAL_LOCKFILE,
-    CREDENTIAL_PACKAGE_JSON,
-    CREDENTIAL_TOKEN,
-    FAILED_INSTALL_CASES,
-} from '#tests/config/tools/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';
+
+const CREDENTIAL_PACKAGE_JSON = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
+
+const CREDENTIAL_LOCKFILE = JSON.stringify({
+    workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
+    packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${CREDENTIAL_TOKEN}`, {}, 'integrity'] },
+});
 
 async function captureLockfileRefusal(root: string, packageJson: string, lockfile: string) {
     await createFileTree(root, {
@@ -41,7 +44,7 @@ async function captureLockfileRefusal(root: string, packageJson: string, lockfil
     );
 }
 
-test.each([...FAILED_INSTALL_CASES])('a failed $operation hides credentials', async () => {
+test('a failed installation hides credentials', async () => {
     const refusal = 'HTTP 403 Forbidden';
     await using sandbox = await createGitSandbox({});
     const token = 'synthetic-registry-failure-token';

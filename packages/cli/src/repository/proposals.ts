@@ -23,25 +23,32 @@ type ConfigurationRequest = {
     };
 };
 
-function selectRootConfigurations(
-    request: ConfigurationRequest,
-    detected: Array<Pick<ConfigurationEvidence, 'configuration'>>,
-): string[] {
+function selectRootConfigurations(request: ConfigurationRequest, detected: ConfigurationEvidence[]): string[] {
     const named = request.options.configurations;
     if (named !== undefined) return [...new Set(named)];
     const hasScopes = request.repository.scopeFolders.length > 1;
     const root = selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []);
     const detectedConfigurations = detected
-        .filter((evidence) => {
-            const configuration = readConfigurations().get(evidence.configuration);
-            if (!configuration) return false;
-            const { group } = configuration;
-            return !hasScopes || group === 'general' || group === 'language' || root.includes(configuration.name);
-        })
-        .map((evidence) => evidence.configuration);
+        .map((evidence) => evidence.configuration)
+        .filter(({ name, group }) => !hasScopes || group === 'general' || group === 'language' || root.includes(name))
+        .map(({ name }) => name);
     return [...new Set([...(request.options.template?.configurations ?? []), ...detectedConfigurations])].filter(
         (name) => request.options.template?.removed.includes(name) !== true,
     );
+}
+
+/**
+Detect the configurations of one scope from its own files. The root owns the files outside every scope folder.
+*/
+function detectScopeConfigurations(repository: Repository, scopePath: string): ConfigurationEvidence[] {
+    if (scopePath !== '') return detectConfigurations(repository, scopePath);
+    return detectConfigurations({
+        ...repository,
+        files: repository.files.filter((file) => selectScopePath(file.path, repository.scopeFolders) === ''),
+        dependencyFiles: repository.dependencyFiles.filter(
+            (file) => selectScopePath(file.path, repository.scopeFolders) === '',
+        ),
+    });
 }
 
 function selectScopeConfigurations(
@@ -49,30 +56,17 @@ function selectScopeConfigurations(
     scopeFolder: ScopeFolder,
     rootNames: string[],
 ): string[] {
-    const repository =
-        scopeFolder.path === ''
-            ? {
-                  ...request.repository,
-                  files: request.repository.files.filter(
-                      (file) => selectScopePath(file.path, request.repository.scopeFolders) === '',
-                  ),
-                  dependencyFiles: request.repository.dependencyFiles.filter(
-                      (file) => selectScopePath(file.path, request.repository.scopeFolders) === '',
-                  ),
-              }
-            : request.repository;
-    const names = detectConfigurations(repository, scopeFolder.path)
-        .filter((evidence) => {
-            const configuration = readConfigurations().get(evidence.configuration);
-            return configuration !== undefined && configuration.group !== 'general';
-        })
-        .map((evidence) => evidence.configuration);
     const atRoot = new Set(rootNames);
-    return names.filter(
-        (name) =>
-            (!atRoot.has(name) || readConfigurations().get(name)?.group !== 'language') &&
-            request.options.template?.removed.includes(name) !== true,
-    );
+    return detectScopeConfigurations(request.repository, scopeFolder.path)
+        .map((evidence) => evidence.configuration)
+        .filter(
+            ({ name, group, always_selected }) =>
+                group !== 'general' &&
+                !always_selected &&
+                (!atRoot.has(name) || group !== 'language') &&
+                request.options.template?.removed.includes(name) !== true,
+        )
+        .map(({ name }) => name);
 }
 
 function hasSourceOutsideScopes(
@@ -101,6 +95,7 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
     const scopes = repository.scopeFolders;
     const hasScopes = scopes.length > 1;
     const detected = detectConfigurations(repository);
+    const detectedNames = new Set(detected.map((evidence) => evidence.configuration.name));
     const proposedRoot = selectRootConfigurations(request, detected);
     const scopeConfigurations = new Map<string, string[]>();
     const rootDetected = new Set(
@@ -122,36 +117,30 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
     const named = new Set(options.configurations);
     const template = new Set(options.template?.configurations);
     const automatic = new Set(listAutomaticConfigurations(repository));
-    const rootNames = expandSuggestions(
-        [...proposedRoot, ...inScopes],
-        new Set(detected.map((evidence) => evidence.configuration)),
-    ).filter(
+    const rootNames = expandSuggestions([...proposedRoot, ...inScopes], detectedNames).filter(
         (name) =>
             (!inScopes.has(name) || heldAtRoot.includes(name)) &&
             (!automatic.has(name) || named.has(name) || template.has(name)),
     );
-    const selectedNames = new Set(
-        selectConfigurations([...rootNames, ...proposedRoot, ...inScopes, ...automatic]).map(
-            (configuration) => configuration.name,
-        ),
-    );
-    const sources = {
-        named,
-        template,
-        detected: new Set(detected.map((evidence) => evidence.configuration)),
-        written: new Set([...rootNames, ...inScopes]),
-    };
+    const sources = { named, template, detected: detectedNames, written: new Set([...rootNames, ...inScopes]) };
     const origins = new Map(
-        [...selectedNames].map((name) => [
-            name,
-            readConfigurations().get(name)?.always_selected === true && !named.has(name) && !template.has(name)
-                ? ('always' as const)
-                : getConfigurationOrigin(name, sources),
-        ]),
+        selectConfigurations([...rootNames, ...proposedRoot, ...inScopes, ...automatic]).map(
+            ({ name, always_selected }) => [
+                name,
+                always_selected && !named.has(name) && !template.has(name)
+                    ? ('always' as const)
+                    : getConfigurationOrigin(name, sources),
+            ],
+        ),
     );
     return { scopes, rootNames, scopeConfigurations, detected, origins };
 }
 
+/**
+List the configurations that the files suggest and that no scope selects or removes. Each one carries the evidence
+of the scope that it belongs to. A configuration that the root holds for a file inside a scope folder keeps the
+evidence of the whole repository.
+*/
 export function listDetectedAdditions(
     session: ConfigurationSelection,
 ): Array<{ scopePath: string; configurations: string[]; evidence: ConfigurationEvidence[] }> {
@@ -170,14 +159,11 @@ export function listDetectedAdditions(
         const configurations = names.filter(
             (name) => !removed.has(name) && selected.every((configuration) => configuration.name !== name),
         );
-        return configurations.length === 0
-            ? []
-            : [
-                  {
-                      scopePath,
-                      configurations,
-                      evidence: proposed.detected.filter((match) => configurations.includes(match.configuration)),
-                  },
-              ];
+        if (configurations.length === 0) return [];
+        const own = detectScopeConfigurations(session.repository, scopePath);
+        const evidence = proposed.detected
+            .filter((match) => configurations.includes(match.configuration.name))
+            .map((match) => own.find((found) => found.configuration.name === match.configuration.name) ?? match);
+        return [{ scopePath, configurations, evidence }];
     });
 }

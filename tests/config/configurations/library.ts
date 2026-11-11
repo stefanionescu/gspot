@@ -11,19 +11,17 @@ export const TRANSLATION_SANDBOX = {
     files: NEXT_MESSAGES,
 } as const;
 
-export const TRANSLATION_CASES = [
-    {
-        check: 'translations/messages',
-        files: {
-            'messages/de.json': `{
+export const TRANSLATION_SAMPLE = {
+    check: 'translations/messages',
+    files: {
+        'messages/de.json': `{
     "home": { "title": "Start", "greeting": "Hallo {name" }
 }
 `,
-        },
-        settings: TRANSLATION_TABLES,
-        expected: { file: 'messages/de.json', rule: 'message', line: 2 },
     },
-] as const;
+    settings: TRANSLATION_TABLES,
+    expected: { file: 'messages/de.json', rule: 'message', line: 2 },
+} as const;
 
 export const MESSAGE_LAYOUTS: Array<{
     layout: string;

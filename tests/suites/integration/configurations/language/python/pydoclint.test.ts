@@ -3,18 +3,57 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import {
-    ARITHMETIC_MODULE,
-    ARITHMETIC_MODULE_PATH,
-    DOCSTRING_MODULES,
-    PYDOCLINT_CHECK_ARGUMENTS,
-    PYTHON_SANDBOX,
-} from '#tests/config/integration/python.ts';
+import { ARITHMETIC_MODULE } from '#tests/config/integration/python.ts';
 import { GOOGLE_PYPROJECT, PYPROJECT } from '#tests/config/setup/languages.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+
+const PYDOCLINT_CHECK_ARGUMENTS = ['check', '--only', 'python/pydoclint', '--json'] as const;
+
+const DOCSTRING_MODULES = {
+    'google.py': `def double(value: int) -> int:
+    """Double a number.
+
+    Args:
+        amount: The number.
+
+    Returns:
+        Twice the number.
+    """
+    return value * 2
+`,
+    'numpy.py': `EXAMPLE = """
+Args:
+"""
+
+def double(value: int) -> int:
+    """Double a number.
+
+    Parameters
+    ----------
+    amount
+        The number.
+
+    Returns
+    -------
+    The doubled number.
+    """
+    return value * 2
+`,
+} as const;
+
+const ARITHMETIC_MODULE_PATH = 'example/math.py';
+
+const PYTHON_SANDBOX = {
+    configurations: ['python'],
+    files: {
+        'pyproject.toml': GOOGLE_PYPROJECT,
+        'example/__init__.py': '"""The test package."""\n',
+        [ARITHMETIC_MODULE_PATH]: ARITHMETIC_MODULE,
+    },
+} as const;
 
 const installedSandbox = shareInstalledSandbox(PYTHON_SANDBOX);
 

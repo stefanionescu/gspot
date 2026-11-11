@@ -1,11 +1,9 @@
 import { dirname } from 'node:path';
 
-import { BUNFIG_FILE, SCANNER_KEY } from '#cli/config/configurations/general.ts';
 import {
     CHANGE_LABEL_WIDTH,
     GENERATED_FILE_NOUN,
     HOOKS_CHANGED_NOTE,
-    MANAGED_KEYS_NOTE,
     STALE_LOCKFILE_NOTE,
     TOOL_PROJECT_FILES,
     TOOLS_CHANGED_NOTE,
@@ -17,9 +15,7 @@ import { INSTALLED_TOOL_FOLDERS, OWNER_WRITABLE_FILE, TEMPORARY_FILE_NAME } from
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import { listExpectedPaths } from '#cli/generation/stale.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import {
     listStrayPaths,
@@ -29,9 +25,7 @@ import {
     planReplacements,
     writePlans,
 } from '#cli/repository/writer.ts';
-import { getTable } from '#cli/settings/scopes.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
-import { findValueAt } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
@@ -47,20 +41,6 @@ function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): voi
     ] as const) {
         if (!keep) writer.deleteTree(path);
     }
-}
-
-function hasUnmanagedScanner(session: Session, writer: Files): boolean {
-    for (const scope of session.scopes) {
-        if (getTable(scope.settings, 'dependencies').bun_scanner !== undefined) continue;
-        const path = joinScope(scope.path, BUNFIG_FILE);
-        const previous = writer.read(path);
-        if (
-            previous !== undefined &&
-            findValueAt(parseTomlFile(path, previous.bytes.toString('utf8')), SCANNER_KEY) !== undefined
-        )
-            return true;
-    }
-    return false;
 }
 
 export function listGeneratedChangeLines(report: ApplyReport): string[] {
@@ -133,7 +113,6 @@ export async function writeGeneratedFiles(
         const { note } = await installHooks(session, []);
         report.notes.push(note);
     }
-    if (hasUnmanagedScanner(session, writer)) report.notes.push(MANAGED_KEYS_NOTE);
     return report;
 }
 

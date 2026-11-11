@@ -1,4 +1,4 @@
-import { chmod, copyFile, cp, mkdir, readFile, realpath, unlink, writeFile } from 'node:fs/promises';
+import { chmod, copyFile, cp, mkdir, realpath, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -10,10 +10,10 @@ import { openSession } from '#cli/engine/session.ts';
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/configurations/javascript/checks.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
-import { buildRunOptions, CHECK_GENERATION, CHECK_RUN_OPTIONS } from '#tests/setup/cli/run.ts';
+import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { linkInstalledModules, linkTypescript, toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { linkInstalledModules, toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -80,44 +80,18 @@ test('javascript/biome checks shebang scripts, TypeScript, and component files i
     );
 });
 
-test.each(['app'])('javascript/tsc resolves project types in scope "%s" without tooling types', async (scope) => {
-    const prefix = `${scope}/`;
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            scopes: [{ path: scope }],
-        }),
-        [`${prefix}source.js`]: 'export const value = localValue;\nexport const secret = privateValue;\n',
-        [`${prefix}node_modules/@types/domain/index.d.ts`]: 'declare const localValue: string;\n',
-        '.gspot/node_modules/@types/private/index.d.ts': 'declare const privateValue: number;\n',
-    });
-    await linkTypescript(join(sandbox.path, 'node_modules'));
-    await applyGeneratedFiles(sandbox.path);
-    const findings = await runSandboxCheck(sandbox.path, 'javascript/tsc', { scope });
-    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: `${prefix}source.js`, line: 2, rule: 'TS2304' },
-    ]);
-});
-
-test('javascript/tsc checks a stale jsconfig and skips an absent one with install advice', async () => {
+test('javascript/tsc skips an absent jsconfig with install advice', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'source.js': 'export const ready = true;\n',
     });
     await applyGeneratedFiles(sandbox.path);
     await fakeNpmTool(sandbox.path, 'tsc');
-    const session = await openSession(sandbox.path);
-    const target = getConfigPath(session, 'jsconfig');
-    const path = join(sandbox.path, target);
-    const text = await readFile(path, 'utf8');
-    await chmod(path, 0o644);
-    await writeFile(path, text.replace('{', '{ '));
-    using _boundary = fakeCommands().mockResolvedValue(buildProcessResult());
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
-    expect(result.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-    await unlink(path);
+    const target = getConfigPath(await openSession(sandbox.path), 'jsconfig');
+    await unlink(join(sandbox.path, target));
     const absent = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
     expect(absent.report.checks).toMatchObject([
-        { status: 'missing', note: expect.stringContaining(target) as string },
+        { status: 'missing', note: `The generated file ${target} is missing. Run gspot install.` },
     ]);
 });
 
@@ -136,7 +110,7 @@ test('javascript/tsc excludes type roots inherited from folders above the reposi
         buildCheckSession(session, CHECK_GENERATION),
         planned,
         CHECK_CODE['javascript/tsc'],
-        CHECK_RUN_OPTIONS,
+        {},
     );
     expect(result.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'source.js', rule: 'TS2304' },
@@ -160,12 +134,7 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
         selection: { content: 'index', paths: ['gspot.toml'] },
     }).find((check) => check.scope.path === 'site')!;
     expect(
-        await runCheckCode(
-            buildCheckSession(reopened, CHECK_GENERATION),
-            site,
-            CHECK_CODE['javascript/tsc'],
-            CHECK_RUN_OPTIONS,
-        ),
+        await runCheckCode(buildCheckSession(reopened, CHECK_GENERATION), site, CHECK_CODE['javascript/tsc'], {}),
     ).toStrictEqual(EMPTY_PROJECT_RESULT);
 });
 

@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { BASH_SAFETY_CASES, COMMAND_SAFETY_CASES, PASSED_BASH_RESULTS } from '#tests/config/configurations/bash.ts';
+import { BASH_SAFETY_SAMPLE, COMMAND_SAFETY_CASES, PASSED_BASH_RESULTS } from '#tests/config/configurations/bash.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -59,13 +59,10 @@ trap 'rm -rf -- "$tmp"' EXIT
     expect(corrected.report.checks).toMatchObject([...PASSED_BASH_RESULTS]);
 });
 
-test.each([...BASH_SAFETY_CASES])(
-    '$check reports $expected.rule in $expected.file and passes after the fix',
-    async (sample) => {
-        await using sandbox = await createSandbox(BASH_SANDBOX);
-        await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
-    },
-);
+test('bash/safety reports ignored-failure in scripts/unsafe.sh and passes after the fix', async () => {
+    await using sandbox = await createSandbox(BASH_SANDBOX);
+    await assertCheckSample(sandbox, BASH_SAFETY_SAMPLE, BASH_SANDBOX.cleanSource);
+});
 
 test.each(COMMAND_SAFETY_CASES)('Bash safety parses the command $source', async ({ source, rule }) => {
     await using sandbox = await createGitSandbox({

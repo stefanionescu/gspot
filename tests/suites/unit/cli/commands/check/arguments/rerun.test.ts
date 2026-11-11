@@ -41,9 +41,10 @@ test('a rerun line quotes a check name and protects a path beginning with a dash
         '-entry.txt': 'input',
     });
     const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', './-entry.txt', '--only', 'project/check$literal', '--json']),
+        await runGspot(sandbox.path, ['check', '--only', 'project/check$literal', '--json', '--', '-entry.txt']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.report.checks[0]?.rerun).toBe("gspot check ./-entry.txt --only 'project/check$literal'");
 });
 
 test('a fixable finding prints the fix command of its check, and that command changes only the reported file', async () => {

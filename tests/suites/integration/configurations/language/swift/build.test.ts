@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 
 import { readCacheFolder } from '#cli/system/environment.ts';
-import { SWIFT_PACKAGE_CASES, SWIFT_PACKAGE_SANDBOX, XCODE_TOOL_PROJECT } from '#tests/config/integration/swift.ts';
 import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/setup/languages.ts';
 import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
@@ -13,6 +12,77 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { hasToolBuild, isMacos } from '#tests/setup/system/platform.ts';
+
+const SWIFT_PACKAGE_SANDBOX = {
+    install: false,
+    configurations: ['swift', 'naming'],
+    files: {
+        '.gitignore': '.build\nnode_modules/\n',
+        'Package.swift': `// swift-tools-version:5.9
+import PackageDescription
+
+let package = Package(
+    name: "App",
+    products: [.library(name: "App", targets: ["App"])],
+    targets: [.target(name: "App")]
+)
+`,
+        'Sources/App/Greeting.swift': String.raw`/// Builds the greeting for a person.
+public func greeting(for name: String) -> String {
+    "hello \(name)"
+}
+`,
+    },
+} as const;
+
+const PAIR_SIZE_SOURCE = `/// The size of a pair.
+public func pairSize(of count: Int) -> Int {
+    count * 2
+}
+`;
+
+const SWIFT_PACKAGE_CASES = [
+    {
+        check: 'swift/swiftlint-analyze',
+        tool: 'swiftlint',
+        files: { 'Sources/App/Pair.swift': `import Foundation\n\n${PAIR_SIZE_SOURCE}` },
+        expected: { file: 'Sources/App/Pair.swift', rule: 'unused_import', line: 1 },
+        corrected: { files: { 'Sources/App/Pair.swift': PAIR_SIZE_SOURCE } },
+    },
+    {
+        check: 'swift/periphery',
+        tool: 'periphery',
+        files: {
+            'Sources/App/Pair.swift': `${PAIR_SIZE_SOURCE}
+private func neverCalled() -> Int {
+    3
+}
+`,
+        },
+        expected: { file: 'Sources/App/Pair.swift', rule: 'unused', line: 6 },
+        corrected: { files: { 'Sources/App/Pair.swift': PAIR_SIZE_SOURCE } },
+    },
+] as const;
+
+const XCODE_TOOL_PROJECT = `// !$*UTF8*$!
+{
+ archiveVersion = 1; objectVersion = 56; rootObject = P1;
+ objects = {
+ P1 = { isa = PBXProject; buildConfigurationList = C1; compatibilityVersion = "Xcode 14.0"; mainGroup = G1; productRefGroup = G2; targets = (T1,); };
+ G1 = { isa = PBXGroup; children = (F1, G2,); sourceTree = "<group>"; };
+ G2 = { isa = PBXGroup; name = Products; children = (F2,); sourceTree = "<group>"; };
+ F1 = { isa = PBXFileReference; path = main.swift; lastKnownFileType = sourcecode.swift; sourceTree = "<group>"; };
+ F2 = { isa = PBXFileReference; path = Example; explicitFileType = "compiled.mach-o.executable"; sourceTree = BUILT_PRODUCTS_DIR; };
+ B1 = { isa = PBXBuildFile; fileRef = F1; };
+ S1 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (B1,); runOnlyForDeploymentPostprocessing = 0; };
+ T1 = { isa = PBXNativeTarget; name = Example; productName = Example; productReference = F2; productType = "com.apple.product-type.tool"; buildConfigurationList = C2; buildPhases = (S1,); buildRules = (); dependencies = (); };
+ C1 = { isa = XCConfigurationList; buildConfigurations = (D1,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
+ C2 = { isa = XCConfigurationList; buildConfigurations = (D2,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
+ D1 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 14.0; }; };
+ D2 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { PRODUCT_NAME = Example; SWIFT_VERSION = 6.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; };
+ };
+}
+`;
 
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
     await using sandbox = await createGitSandbox({

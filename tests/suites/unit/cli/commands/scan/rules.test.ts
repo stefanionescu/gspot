@@ -3,9 +3,10 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { compareInstalledRules } from '#cli/commands/scan/rules.ts';
-import { PRINTED_RULE_TOOLS } from '#cli/config/repository/setup.ts';
-import { convertRule } from '#cli/generation/setup/lint-rules.ts';
+import { compareInstalledRules, readUserRules } from '#cli/commands/scan/rules.ts';
+import { NOT_COMPARED_MESSAGE, PRINTED_RULE_TOOLS } from '#cli/config/repository/setup.ts';
+import { convertRule } from '#cli/generation/setup/carryover/lint-rules.ts';
+import { planInit } from '#cli/generation/setup/planner.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function writePrinter(root: string, rules: unknown): Promise<void> {
@@ -37,7 +38,7 @@ test('scan sorts the ESLint rules of the repository by what gspot runs', async (
     const [definition] = PRINTED_RULE_TOOLS;
     const text = `export default [{ rules: ${JSON.stringify(Object.fromEntries(user))} }];\n`;
     const rows = await compareInstalledRules(sandbox.path, [
-        { definition, path: 'eslint.config.js', text, sample: 'a.js', user },
+        { definition, path: 'eslint.config.js', others: [], text, sample: 'a.js', user },
     ]);
     expect(rows).toStrictEqual([
         {
@@ -66,20 +67,24 @@ test('scan offers no plugin record for a rule of a plugin that gspot loads', asy
     const [definition] = PRINTED_RULE_TOOLS;
     const text = `export default [{ rules: ${JSON.stringify(Object.fromEntries(user))} }];\n`;
     const rows = await compareInstalledRules(sandbox.path, [
-        { definition, path: 'eslint.config.js', text, sample: 'a.js', user },
+        { definition, path: 'eslint.config.js', others: [], text, sample: 'a.js', user },
     ]);
     expect(rows).toMatchObject([
         { plugins: ['acme/no-legacy []', 'curl/no-legacy []'], commandChecks: ['unicorn/no-array-reduce'] },
     ]);
 });
 
-test('scan says so when a tool cannot print its rules', async () => {
+test.each([
+    { name: 'the config of the repository', printed: { semi: [2] }, user: undefined },
+    { name: 'the tool of gspot', printed: undefined, user: new Map([['semi', convertRule([2], true)]]) },
+])('scan says so when $name cannot print its rules', async ({ printed, user }) => {
     await using sandbox = await createGitSandbox({ 'a.js': 'export const a = 1;\n' });
+    if (printed !== undefined) await writePrinter(sandbox.path, printed);
     const [definition] = PRINTED_RULE_TOOLS;
     const rows = await compareInstalledRules(sandbox.path, [
-        { definition, path: 'eslint.config.js', text: '', sample: 'a.js', user: undefined },
+        { definition, path: 'eslint.config.js', others: [], text: '', sample: 'a.js', user },
     ]);
-    expect(rows).toMatchObject([{ path: 'eslint.config.js', covered: 0, dropped: [expect.stringContaining('print')] }]);
+    expect(rows).toMatchObject([{ path: 'eslint.config.js', covered: 0, dropped: [NOT_COMPARED_MESSAGE] }]);
 });
 
 test('scan compares only the rules that the config file names, not the rules of its shared configs', async () => {
@@ -95,7 +100,7 @@ test('scan compares only the rules that the config file names, not the rules of 
     const [definition] = PRINTED_RULE_TOOLS;
     const text = "import shared from 'shared-config';\nexport default [...shared, { rules: { semi: 'off' } }];\n";
     const rows = await compareInstalledRules(sandbox.path, [
-        { definition, path: 'eslint.config.js', text, sample: 'a.js', user },
+        { definition, path: 'eslint.config.js', others: [], text, sample: 'a.js', user },
     ]);
     expect(rows).toMatchObject([
         {
@@ -103,5 +108,26 @@ test('scan compares only the rules that the config file names, not the rules of 
             differing: [],
             reasons: ['gspot ignore javascript/eslint --rule semi --reason "<why>"'],
         },
+    ]);
+});
+
+test('scan names each other config of a tool, which the tool does not read beside the first one', async () => {
+    await using sandbox = await createGitSandbox({
+        '.eslintignore': 'dist/\n',
+        '.eslintrc.yml': 'rules:\n  semi: off\n',
+        '.eslintrc.json': '{"rules":{"semi":"off"}}\n',
+        'eslint.config.mjs': 'export default [];\n',
+        'package.json': '{"private":true,"type":"module"}\n',
+        'src/a.js': 'export const a = 1;\n',
+    });
+    const reads = await readUserRules(await planInit(sandbox.path, { cwd: sandbox.path }));
+    expect(reads).toMatchObject([
+        { path: 'eslint.config.mjs', others: ['.eslintrc.yml', '.eslintrc.json'], user: undefined },
+    ]);
+    const rows = await compareInstalledRules(sandbox.path, reads);
+    expect(rows.map(({ path, dropped }) => [path, dropped])).toStrictEqual([
+        ['eslint.config.mjs', [expect.stringContaining('print')]],
+        ['.eslintrc.yml', [expect.stringContaining('eslint reads eslint.config.mjs instead')]],
+        ['.eslintrc.json', [expect.stringContaining('eslint reads eslint.config.mjs instead')]],
     ]);
 });

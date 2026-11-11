@@ -21,7 +21,7 @@ allowed_names = ["checkDenoCheck"]
 reason = "Check functions start with check and spell the check name of supabase/deno-check."
 
 [[naming.exception]]
-paths = ["packages/cli/src/configurations/general/data-files/generate.ts", "packages/cli/src/config/configurations/general.ts"]
+paths = ["packages/cli/src/configurations/language/json/generate.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
 
@@ -73,6 +73,7 @@ entry_files = [
     "tests/setup/runner/integration.ts",
     "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts",
     "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts",
+    "packages/cli/src/configurations/language/javascript/files/eslint-fixes.ts",
     "packages/cli/src/bin.ts",
     "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
     "packages/cli/src/configurations/framework/site/files/purgecss.ts",
@@ -281,7 +282,10 @@ reason = "Each group folder keeps the code of a configuration at <group>/<config
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["packages/cli/src/configurations/framework/site/files/purgecss.ts", "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
+paths = [
+    "packages/cli/src/configurations/framework/site/files/purgecss.ts",
+    "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
+]
 reason = "The manifest loader discovers config files in files/ and names each of these modules as the source of its config file target."
 
 [[ignore]]

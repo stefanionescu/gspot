@@ -5,7 +5,6 @@ import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/engine/outputs.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { CAFE_SCRIPT_PATH } from '#tests/config/setup/programs.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
@@ -26,7 +25,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
     ).toStrictEqual([
         {
             check: 'security/semgrep',
-            file: CAFE_SCRIPT_PATH,
+            file: 'scripts/café build.sh',
             line: 2,
             column: 1,
             rule: 'gspot.bash.eval',
@@ -36,7 +35,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
         },
         {
             check: 'security/semgrep',
-            file: CAFE_SCRIPT_PATH,
+            file: 'scripts/café build.sh',
             line: 1,
             column: 1,
             rule: 'parse-error',
@@ -45,6 +44,23 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
             fixable: false,
         },
     ]);
+});
+
+test('a nosemgrep comment that names another rule than the one that matched keeps the finding and is no scan error', async () => {
+    await using sandbox = await testdir({ 'scripts/café build.sh': 'eval input # nosemgrep: gspot.bash.other\n' });
+    const check = readConfigurations()
+        .get('security')!
+        .checks.find((check) => check.id === 'security/semgrep')!;
+    const warning = {
+        code: 2,
+        level: 'warn',
+        type: 'SemgrepWarning',
+        message: `SemgrepWarning at line ${SEMGREP_MATCH.path}:2:\n found 'nosem' comment with id 'gspot.bash.other', but no corresponding rule trying '${SEMGREP_MATCH.check_id}'`,
+    };
+    const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [warning] });
+    const paths = { cwd: sandbox.path, root: sandbox.path };
+    const { findings } = parseCommandFindings({ check }, buildProcessResult({ code: 1, stdout }), paths, {});
+    expect(findings?.map(({ rule }) => rule)).toStrictEqual([SEMGREP_MATCH.check_id]);
 });
 
 test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', async (_name, stdout) => {

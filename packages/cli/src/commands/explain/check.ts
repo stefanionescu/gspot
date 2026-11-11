@@ -9,17 +9,17 @@ import { SETTING_RULES, WEAKENINGS_CHECK } from '#cli/config/settings/validation
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { findCommandTool } from '#cli/engine/plan.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
-import { listChecksById, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, listChecksById, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatArgumentSelector } from '#cli/settings/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
-import { findToolName, getTool } from '#cli/tools/pins.ts';
 import type {
     CheckExplanation,
     CheckFacts,
@@ -72,7 +72,7 @@ function buildCheckFacts(
                   .filter((file) => installedRules.has(file.path))
                   .map((file) => file.path);
     const crashPattern =
-        toolName === undefined ? undefined : getTool(readConfigurations().values(), toolName).crash_pattern;
+        toolName === undefined ? undefined : findCommandTool(readConfigurations().values(), toolName).crash_pattern;
     return {
         settings,
         ruleFiles,

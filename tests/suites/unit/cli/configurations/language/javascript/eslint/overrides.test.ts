@@ -79,24 +79,21 @@ test.each(IGNORE_CASES)(
     },
 );
 
-test.each(['all'] as const)(
-    "a scope's javascript.banned_imports ban reports the import only in that scope (%s)",
-    async (level) => {
-        await using sandbox = await createGitSandbox({
-            ...SCOPE_IMPORT_FILES,
-            'gspot.toml': buildSandboxSettings(['javascript'], { level, tables: SCOPE_IMPORT_TABLES }),
-        });
-        const eslint = await buildEslint(sandbox.path);
-        expect(
-            await listLintFindings(
-                eslint,
-                sandbox.path,
-                ['source.js', 'sibling', 'app', 'state'],
-                ['no-restricted-imports'],
-            ),
-        ).toStrictEqual([...RESTRICTED_IMPORT_FINDINGS]);
-    },
-);
+test("a scope's javascript.banned_imports ban reports the import only in that scope", async () => {
+    await using sandbox = await createGitSandbox({
+        ...SCOPE_IMPORT_FILES,
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: SCOPE_IMPORT_TABLES }),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            ['source.js', 'sibling', 'app', 'state'],
+            ['no-restricted-imports'],
+        ),
+    ).toStrictEqual([...RESTRICTED_IMPORT_FINDINGS]);
+});
 
 test('a JavaScript child applies its import restrictions under a Python root', async () => {
     await using sandbox = await createGitSandbox({

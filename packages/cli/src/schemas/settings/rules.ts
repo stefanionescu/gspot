@@ -169,10 +169,30 @@ const stylelintTupleSchema = z.tuple([
     stylelintOptionsSchema.optional(),
 ]);
 
+const VENDOR_PREFIX_RULE = 'property-no-vendor-prefix';
+
+const MATCHING_PROPERTY_NAME = /^[-/]/u;
+
+/**
+Stylelint compares each `ignoreProperties` name with the property as the stylesheet writes it, prefix included. A
+name with no prefix matches no property that the rule reports, and the fixer then deletes the prefix.
+*/
 export const stylelintRulesSchema = buildRuleTableSchema(
     z.record(nonemptyStringSchema, z.union([stylelintValueSchema, stylelintTupleSchema])),
     'css/stylelint',
-);
+).superRefine((rules, context) => {
+    const value = rules[VENDOR_PREFIX_RULE];
+    const options = Array.isArray(value) ? value[1] : undefined;
+    const ignored = isTable(options) ? options['ignoreProperties'] : undefined;
+    for (const [index, name] of [ignored ?? []].flat().entries()) {
+        if (typeof name !== 'string' || MATCHING_PROPERTY_NAME.test(name)) continue;
+        context.addIssue({
+            code: 'custom',
+            path: [VENDOR_PREFIX_RULE, 1, 'ignoreProperties', index],
+            message: `Stylelint matches ${name} against the property as written, so it ignores nothing. Write the prefixed name, such as -webkit-${name}.`,
+        });
+    }
+});
 
 export const stylelintPluginsSchema = pluginSourceSchema
     .safeExtend({

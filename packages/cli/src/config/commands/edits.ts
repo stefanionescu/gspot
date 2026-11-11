@@ -20,6 +20,8 @@ export const TOOLS_MISSING_MESSAGE = 'Some tools are still missing.';
 
 export const INSTALLATION_STOPPED_MESSAGE = 'Installation stopped before every tool was installed.';
 
+export const INIT_STOPPED_MESSAGE = `${INSTALLATION_STOPPED_MESSAGE} Init wrote gspot.toml and the generated files, and deleted the configs that they replace. The tools and the Git hooks are not installed. Run gspot install to finish the setup. To go back instead, restore the files that git status lists as changed or deleted, and delete the new ones.`;
+
 export const GSPOT_REMOVE = 'gspot remove';
 
 export const NUMBER_TEXT = /^-?\d+(?:\.\d+)?$/u;

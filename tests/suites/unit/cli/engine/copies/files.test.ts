@@ -115,6 +115,37 @@ test("a check's copy holds its files and dependencies, plus an extra file when a
     expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
 });
 
+test('the copy of a check that runs once per scope holds the tracked files over the size limit and outside UTF-8', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['site'], { tables: '[repository]\nmax_file_kilobytes = 1\n' }),
+        'page.md': '# Page\n',
+        'assets/demo.txt': 'a'.repeat(2048),
+    });
+    await writeFile(join(sandbox.path, 'assets/legacy.txt'), Buffer.from([0x63, 0x61, 0x66, 0xe9]));
+
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'site/build');
+    expect(planned.files.map((file) => file.path)).not.toContain('assets/demo.txt');
+    using copy = await createCheckCopy(session, planned);
+    const large = await lstat(join(copy.path, 'assets/demo.txt'));
+    expect(large.size).toBe(2048);
+    expect(await readFile(join(copy.path, 'assets/legacy.txt'))).toStrictEqual(Buffer.from([0x63, 0x61, 0x66, 0xe9]));
+});
+
+test('the copy of a check that runs per file leaves out a tracked file over the size limit', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { tables: '[repository]\nmax_file_kilobytes = 1\n' }),
+        'selected.js': 'export const selected = 1;',
+        'large.js': `export const large = '${'a'.repeat(2048)}';`,
+    });
+
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'format/prettier');
+    using copy = await createCheckCopy(session, planned);
+    expect(existsSync(join(copy.path, 'selected.js'))).toBe(true);
+    expect(existsSync(join(copy.path, 'large.js'))).toBe(false);
+});
+
 test('workspace dependency copies of a revision keep exactly the sources the check imports', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {

@@ -4,6 +4,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('aws-sqs-unencrypted-queue', awsSqsUnencryptedQueue, {
     valid: [
         "import * as sqs from 'aws-cdk-lib/aws-sqs';\nnew sqs.Queue(this, 'Jobs', { encryption: sqs.QueueEncryption.KMS_MANAGED });",
+        "import * as sqs from 'aws-cdk-lib/aws-sqs';\nnew sqs.CfnQueue(this, 'd', { kmsMasterKeyId: key });",
     ],
     invalid: [
         {

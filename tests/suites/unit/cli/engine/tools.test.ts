@@ -7,9 +7,9 @@ import { createFileTree } from 'testdirs';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text.ts';
-import { buildMiseInstall, getTool, listPackagePins } from '#cli/tools/pins.ts';
+import { buildMiseInstall, listPackagePins } from '#cli/tools/pins.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { COVERAGE_PROVIDERS, NODE_REQUIREMENTS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
@@ -54,14 +54,11 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
             checks = planChecks(session, { stage: 'push', only: [configuration + '/tests'] });
         });
         afterAll(() => resources.disposeAsync());
-        test.each([''])(
-            'scope %p needs the coverage provider only above a zero limit and always lists it among the secondary tools',
-            (scope) => {
-                const check = checks.find((planned) => planned.scope.path === scope)!;
-                expect(listCheckTools(check)).toStrictEqual([configuration, ...(lines === 0 ? [] : [provider])]);
-                expect(listSecondaryTools(check.scope, check.check, check.check.command)).toStrictEqual([provider]);
-            },
-        );
+        test('the root scope needs the coverage provider only above a zero limit and always lists it among the secondary tools', () => {
+            const check = checks.find((planned) => planned.scope.path === '')!;
+            expect(listCheckTools(check)).toStrictEqual([configuration, ...(lines === 0 ? [] : [provider])]);
+            expect(listSecondaryTools(check.scope, check.check, check.check.command)).toStrictEqual([provider]);
+        });
     },
 );
 

@@ -14,7 +14,8 @@ To check their licenses too, see [Licenses](/topics/licenses/).
 ## Vulnerabilities
 
 Before each push that changes a lockfile, `dependencies/osv-scanner` reads your lockfiles and reports each package with a
-known vulnerability. Each run sends the names and versions of the locked packages to the Open Source Vulnerabilities (OSV)
+known vulnerability. A finding points at the line of the package in its lockfile, and names the versions that fix the
+vulnerability when the advisory lists them. Each run sends the names and versions of the locked packages to the Open Source Vulnerabilities (OSV)
 service. To keep a package that has an advisory, [ignore the advisory](/use/ignore/#ignore-a-dependency-advisory) with a
 reason.
 

@@ -38,6 +38,16 @@ async function writeKnipProject(root: string, settings: string, files: Record<st
     await linkInstalledModules(join(root, GSPOT_PATHS.nodeModules));
 }
 
+async function listUnusedFiles(root: string) {
+    const result = await runCommand([...knipArguments, 'files'], { cwd: root });
+    const findings = parseOutput(check, result.stdout, result.stderr, { root, cwd: root });
+    return {
+        code: result.code,
+        output: result.stdout + result.stderr,
+        findings: findings.map(({ file, rule }) => ({ file, rule })),
+    };
+}
+
 test('Knip finds unused framework component files and uses the entry points of each scope', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], {
@@ -112,18 +122,9 @@ test('Knip treats script configuration files as entries and ignores pointer file
     );
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
     await writeFile(join(sandbox.path, 'unused.js'), 'export const unused = 1;\n');
-    const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(
-        parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path }).map(
-            ({ file, rule }) => ({ file, rule }),
-        ),
-    ).toStrictEqual([
-        {
-            file: 'unused.js',
-            rule: 'files',
-        },
-    ]);
+    const { code, output, findings } = await listUnusedFiles(sandbox.path);
+    expect(code, output).toBe(1);
+    expect(findings).toStrictEqual([{ file: 'unused.js', rule: 'files' }]);
 });
 
 test("Knip gets each scope's test_files as entry points without sibling leaks", async () => {
@@ -178,8 +179,12 @@ test('Knip workspaces come from package workspaces, your entries and the configu
 
 test('Knip writes only the ignores of code files and the tool binaries that a script calls', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript']),
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: '[[ignore]]\ncheck = "javascript/knip"\npaths = ["vendor/**/*.js", "vendor/**/*.md"]\nreason = "The vendored files keep their upstream layout."\n',
+        }),
         'package.json': '{"private":true,"type":"module","scripts":{"lint":"eslint . && echo done"}}',
+        'vendor/lib/index.js': 'export const value = 1;\n',
+        'vendor/lib/README.md': '# Library\n',
     });
     const session = await openSession(sandbox.path);
     const knip = JSON.parse(
@@ -189,6 +194,7 @@ test('Knip writes only the ignores of code files and the tool binaries that a sc
     expect(knip.ignoreBinaries).toStrictEqual(['eslint']);
     expect(knip.ignore).toContain('**/node_modules/**');
     expect(knip.ignore).not.toContain('**/.env');
+    expect(knip.ignore.filter((glob) => glob.startsWith('vendor/'))).toStrictEqual(['vendor/**/*.js']);
 });
 
 test('Knip keeps a declared package that a mise file task runs through a package runner', async () => {
@@ -209,19 +215,21 @@ test('Knip keeps a declared package that a mise file task runs through a package
     expect(knip.ignoreDependencies).not.toContain('undeclared-tool');
 });
 
-test('Knip treats script patterns and the ESLint import chain as used entries', async () => {
+test('Knip treats script patterns and the ESLint import chain as used entries, and reports an unused module', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"private":true,"type":"module"}',
         'scripts/check-notes.mjs': 'console.log("checked");\n',
         'tools/lint/plugin.mjs': EMPTY_DEFAULT_SOURCE,
         'eslint.config.mjs': 'import plugin from "./tools/lint/plugin.mjs"; export default [plugin];\n',
+        'unused.mjs': 'export const unused = 1;\n',
     });
     const content = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
         ({ path }) => path === getManifestTarget('javascript', 'knip.json'),
     )!;
     await createFileTree(sandbox.path, { [content.path]: content.content });
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
-    const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
-    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { code, output, findings } = await listUnusedFiles(sandbox.path);
+    expect(code, output).toBe(1);
+    expect(findings).toStrictEqual([{ file: 'unused.mjs', rule: 'files' }]);
 });

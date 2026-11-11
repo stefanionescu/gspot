@@ -96,7 +96,7 @@ function listHookTools(root: string): RepositorySetup['hooks'] {
         ),
         PRE_COMMIT_FILE,
     ];
-    const present = hookNames.filter((name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
+    const present = hookNames.filter((name) => statSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
@@ -132,8 +132,8 @@ async function listGitFolderHooks(root: string): Promise<RepositorySetup['hooks'
 
 /**
 Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings. A
-`.husky` folder runs only while core.hooksPath points into it, as Husky sets it, and a hook manager runs only after its
-own install wrote a hook for Git, so a clone that never installed one gets the gspot hooks.
+`.husky`, `.githooks`, or `.git-hooks` folder runs only while core.hooksPath points into it, and a hook manager runs
+only after its own install wrote a hook for Git, so a clone that never installed one gets the gspot hooks.
 */
 export async function readHooks(repository: Pick<Repository, 'root'>): Promise<RepositoryHooks> {
     const { root } = repository;
@@ -144,7 +144,9 @@ export async function readHooks(repository: Pick<Repository, 'root'>): Promise<R
     const folders = await listHookFolders(root, isOwn ? '' : hooksPath);
     const gitHooks = await listGitFolderHooks(root);
     const hooks = [
-        ...folders.filter((hook) => isHusky || hook.kind !== 'husky'),
+        ...folders.filter(
+            (hook) => hook.kind === 'hooksPath' || hooksPath === hook.path || hooksPath.startsWith(`${hook.path}/`),
+        ),
         ...(gitHooks.length === 0 ? [] : listHookTools(root)),
         ...(written === undefined ? gitHooks : []),
     ];

@@ -108,19 +108,16 @@ test.each([...HOOK_REPOSITORIES])(
     },
 );
 
-test.each([['.pre-commit-config.yaml', 'repos: []\n']])(
-    'a %s with no hook for Git runs nothing, so install turns the gspot hooks on',
-    async (path, content) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-            [path]: content,
-        });
-        const steps: Array<readonly string[]> = [];
-        const session = await openSession(sandbox.path);
-        await installHooks(session, steps);
-        expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
-    },
-);
+test('a .pre-commit-config.yaml with no hook for Git runs nothing, so install turns the gspot hooks on', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+        '.pre-commit-config.yaml': 'repos: []\n',
+    });
+    const steps: Array<readonly string[]> = [];
+    const session = await openSession(sandbox.path);
+    await installHooks(session, steps);
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
+});
 
 test('simple-git-hooks counts each hook only after its command and its hook for Git are both there', async () => {
     await using sandbox = await createGitSandbox({
@@ -184,6 +181,7 @@ test('hook status ignores commented commands and commands in the wrong hook file
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
         '.githooks/pre-commit': '# .gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n',
     });
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
     const session = await openSession(sandbox.path);
     expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: false });
     await writeFile(join(sandbox.path, '.githooks/pre-commit'), '.gspot/hooks/pre-commit\n.gspot/hooks/pre-push\n');

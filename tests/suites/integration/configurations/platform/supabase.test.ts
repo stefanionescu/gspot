@@ -1,10 +1,53 @@
 import { describe, test } from 'bun:test';
 
-import { SUPABASE_SANDBOX } from '#tests/config/integration/commands.ts';
-import { SUPABASE_CASES } from '#tests/config/integration/infrastructure.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+
+const SUPABASE_CASES = [
+    {
+        check: 'supabase/deno-lint',
+        files: {
+            'supabase/functions/greet/index.ts': 'var greeting = "hello";\nDeno.serve(() => new Response(greeting));\n',
+        },
+        expected: { file: 'supabase/functions/greet/index.ts', rule: 'no-var', line: 1 },
+        corrected: {
+            files: {
+                'supabase/functions/greet/index.ts':
+                    'const greeting = "hello";\nDeno.serve(() => new Response(greeting));\n',
+            },
+        },
+    },
+    {
+        check: 'supabase/deno-check',
+        files: {
+            'supabase/functions/greet/index.ts':
+                'const count: number = "one";\nDeno.serve(() => new Response(String(count)));\n',
+        },
+        expected: { file: 'supabase/functions/greet/index.ts', rule: 'type-error', line: 1 },
+        corrected: {
+            files: {
+                'supabase/functions/greet/index.ts':
+                    'const count: number = 1;\nDeno.serve(() => new Response(String(count)));\n',
+            },
+        },
+    },
+] as const;
+
+const SUPABASE_SANDBOX = {
+    install: false,
+    configurations: ['supabase'],
+
+    without: ['typescript'],
+    files: {
+        'supabase/config.toml': `project_id = "example"
+
+[functions.greet]
+verify_jwt = true
+`,
+        'supabase/functions/greet/index.ts': 'Deno.serve(() => new Response("hello"));\n',
+    },
+} as const;
 
 describe.skipIf(!hasToolBuild('deno'))('Supabase samples', () => {
     const installedSandbox = shareInstalledSandbox(SUPABASE_SANDBOX);

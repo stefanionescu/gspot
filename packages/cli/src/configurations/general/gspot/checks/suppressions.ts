@@ -1,21 +1,24 @@
 import { MESSAGE_REFERENCES } from '#cli/config/configurations/general.ts';
 import { REASON_ABOVE, SETTINGS_REASON, SUPPRESSION_KIND_MESSAGES } from '#cli/config/configurations/structure.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { findToolName } from '#cli/manifests/read.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
-import { findToolName } from '#cli/tools/pins.ts';
 import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { SourceComment } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+// The help of the check tells the user to add a reason, which a tool with no accepted suppression never takes.
+const FORBIDDEN_SUPPRESSION_HELP =
+    'Remove the suppression and fix the finding. gspot accepts no suppression comment of this tool, with or without a reason.';
 
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
     if (
@@ -101,6 +104,7 @@ function validateSuppressionComment(
                 ...at,
                 rule: syntax.tool,
                 message: `${syntax.tool} suppression is not allowed; fix the finding or configure an explicit ignore.`,
+                help: FORBIDDEN_SUPPRESSION_HELP,
             },
         ];
     const kind = classifySuppression(syntax, text, preceding);

@@ -11,14 +11,13 @@ import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', async () => {
-    const settings = buildSandboxSettings(['bash']);
-    await using sandbox = await createGitSandbox({ 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
-    const result = await runGspot(sandbox.path, UNKNOWN_IGNORE_ARGUMENTS);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stdout + result.stderr).toBe(
-        'There is no check called bash/shelcheck. Did you mean bash/shellcheck?\n',
-    );
+test('ignore of an unknown check exits 2, names the close check, and leaves gspot.toml byte for byte', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'entry.sh': 'echo example\n',
+    });
+    const failure = await assertRefusalWithoutWrites(sandbox.path, UNKNOWN_IGNORE_ARGUMENTS, 'arguments');
+    expect(failure.message).toBe('There is no check called bash/shelcheck. Did you mean bash/shellcheck?');
 });
 
 test('ignore merges matching paths, keeps different reasons apart, and a record without paths covers the scope', async () => {
@@ -69,33 +68,31 @@ test('ignore gives a weakening its reason through a rule, and refuses the whole 
     expect(written['ignore']).toMatchObject([{ check: 'gspot/weakenings', rule: 'level' }]);
 });
 
-test('ignore rejects unknown rules and checks without rule output before writing settings', async () => {
-    const settings = buildSandboxSettings(['javascript', 'bash']);
+test.each([
+    {
+        check: 'javascript/eslint',
+        rule: 'no-consolee',
+        message: 'gspot does not know rule no-consolee of javascript/eslint.',
+    },
+    {
+        check: 'bash/shfmt',
+        rule: 'indent',
+        message:
+            'gspot cannot ignore one lint rule of bash/shfmt. Leave out --rule, and give --paths to ignore the check for those files.',
+    },
+])('ignore refuses rule $rule of $check and writes nothing', async ({ check, rule, message }) => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': settings,
+        'gspot.toml': buildSandboxSettings(['javascript', 'bash']),
         'source.js': 'export const count = 1;\n',
         '.gspot/node_modules/eslint/package.json': '{"exports":{"./use-at-your-own-risk":"./rules.cjs"}}',
         '.gspot/node_modules/eslint/rules.cjs': 'exports.builtinRules = new Map();',
     });
-    for (const [check, rule] of [
-        ['javascript/eslint', 'no-consolee'],
-        ['bash/shfmt', 'indent'],
-    ] as const) {
-        const result = await runGspot(sandbox.path, [
-            'ignore',
-            check,
-            '--rule',
-            rule,
-            '--reason',
-            'The generated source needs this exception.',
-            '--json',
-        ]);
-        expect(result.code).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({
-            error: 'arguments',
-            message: expect.stringContaining(check) as string,
-        });
-    }
+    const failure = await assertRefusalWithoutWrites(
+        sandbox.path,
+        ['ignore', check, '--rule', rule, '--reason', 'The generated source needs this exception.'],
+        'arguments',
+    );
+    expect(failure.message).toBe(message);
 });
 
 test('ignore refuses a one-letter reason without writing', async () => {

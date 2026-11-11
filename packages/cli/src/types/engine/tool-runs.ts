@@ -1,18 +1,14 @@
 import type { z } from 'zod';
 
 import type { CHECK_RUNS } from '#cli/config/manifests.ts';
-import type { findingSchema, reportedTypoSchema } from '#cli/schemas/engine.ts';
+import type { osvPackageSchema, reportedTypoSchema } from '#cli/schemas/engine.ts';
 import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckResult, CheckRunOptions, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
+import type { CheckResult, CheckRunOptions, CheckSession, CommandLaunch, Finding } from '#cli/types/engine/run.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { SpawnOptions, SpawnResult, TemporaryFolder } from '#cli/types/system.ts';
 import type { GeneratedFile, ProcessFailure } from '#cli/types/tools.ts';
-
-export type Finding = z.infer<typeof findingSchema>;
-
-export type CheckFinding = Omit<Finding, 'check' | 'fixable'>;
 
 export type CopyPlan = {
     root: string;
@@ -62,6 +58,8 @@ export type OutputParser = {
 };
 
 export type ReportedTypo = z.infer<typeof reportedTypoSchema>;
+
+export type OsvPackage = z.infer<typeof osvPackageSchema>;
 
 export type ToolProcessResult = { result: SpawnResult; failure: ProcessFailure | undefined };
 

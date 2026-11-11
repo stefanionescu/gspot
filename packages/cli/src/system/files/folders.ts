@@ -62,11 +62,11 @@ export function deleteStaleTemporaryPaths(files: Files, folder: string, pattern:
 }
 
 /**
-Makes an empty folder in a parent folder that removes itself, with everything in it, when disposed.
+Makes an empty folder in the system temporary folder that removes itself, with everything in it, when disposed.
 Use the real system path, which on Windows expands short folder names, as the paths tools report do.
 */
-export function createTemporaryFolder(parent = tmpdir()): TemporaryFolder {
-    const folder = mkdtempSync(join(parent, TEMPORARY_FILE_PREFIX));
+export function createTemporaryFolder(): TemporaryFolder {
+    const folder = mkdtempSync(join(tmpdir(), TEMPORARY_FILE_PREFIX));
     const path = realpathSync.native(folder);
     return {
         path,

@@ -49,8 +49,7 @@ import { readBytes, readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
 function listPossiblePages(pathname: string): [string, ...string[]] {
     const path = decodeURIComponent(pathname).replace(LEADING_SLASH, '');

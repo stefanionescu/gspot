@@ -10,23 +10,30 @@ function addFunctions(found: FileIdentifiers, syntaxRoot: Node): void {
     }
 }
 
-function addAssignments(found: FileIdentifiers, syntaxRoot: Node): void {
-    for (const node of syntaxRoot.descendantsOfType('variable_assignment')) {
-        const name = node.childForFieldName('name');
-        if (name?.type === 'variable_name') addIdentifier(found, name, 'variables');
-    }
+function addAssignments(found: FileIdentifiers, syntaxRoot: Node): Node[] {
+    const names = syntaxRoot
+        .descendantsOfType('variable_assignment')
+        .flatMap((node) => node.childForFieldName('name') ?? [])
+        .filter((name) => name.type === 'variable_name');
+    for (const name of names) addIdentifier(found, name, 'variables');
+    return names;
 }
 
-function addDeclarations(found: FileIdentifiers, syntaxRoot: Node): void {
+// A bare name after `readonly`, `export`, or `local` declares a variable only when no earlier line assigns it.
+function addDeclarations(found: FileIdentifiers, syntaxRoot: Node, assigned: Node[]): void {
     for (const node of syntaxRoot.descendantsOfType('declaration_command'))
-        for (const child of node.namedChildren)
-            if (child.type === 'variable_name') addIdentifier(found, child, 'variables');
+        for (const child of node.namedChildren) {
+            if (child.type !== 'variable_name') continue;
+            const isAssignedEarlier = assigned.some(
+                (name) => name.text === child.text && name.startIndex < child.startIndex,
+            );
+            if (!isAssignedEarlier) addIdentifier(found, child, 'variables');
+        }
 }
 
 export function extractBashIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const found: FileIdentifiers = { file, language: 'bash', identifiers: [] };
     addFunctions(found, syntaxRoot);
-    addAssignments(found, syntaxRoot);
-    addDeclarations(found, syntaxRoot);
+    addDeclarations(found, syntaxRoot, addAssignments(found, syntaxRoot));
     return found.identifiers;
 }

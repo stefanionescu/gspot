@@ -6,8 +6,8 @@ import { expect, test } from 'bun:test';
 import {
     MESSAGE_ARGUMENTS,
     MESSAGE_LAYOUTS,
-    TRANSLATION_CASES,
     TRANSLATION_FINDINGS,
+    TRANSLATION_SAMPLE,
     TRANSLATION_SANDBOX,
     TRANSLATION_TABLES,
 } from '#tests/config/configurations/library.ts';
@@ -33,13 +33,10 @@ test('a missing base locale is reported and restoring it enables key comparisons
     expect(compared).toMatchObject([{ file: 'messages/de.json', rule: 'missing-key' }]);
 });
 
-test.each([...TRANSLATION_CASES])(
-    '$check reports $expected.rule in $expected.file and passes after the fix',
-    async (sample) => {
-        await using repository = await createSandbox(TRANSLATION_SANDBOX);
-        await assertCheckSample(repository, sample);
-    },
-);
+test('translations/messages reports message in messages/de.json and passes after the fix', async () => {
+    await using repository = await createSandbox(TRANSLATION_SANDBOX);
+    await assertCheckSample(repository, TRANSLATION_SAMPLE);
+});
 
 test.each([...MESSAGE_LAYOUTS])(
     'each message file compares with its own base locale file: $layout',

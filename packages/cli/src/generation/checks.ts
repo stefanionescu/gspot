@@ -17,12 +17,11 @@ export const CHECK_GENERATION: CheckGeneration = {
         convertToGlobs(buildIgnoreSections(session, buildConfigs(session)).filter(({ key }) => key === 'gspot')),
 };
 
-export async function runEveryCheck(session: Session, only?: string[], skip?: string[]): Promise<RunResult> {
+export async function runEveryCheck(session: Session, skip: string[]): Promise<RunResult> {
     try {
         return await runChecks(session, {
             selectCheckCode,
             generation: CHECK_GENERATION,
-            only,
             skip,
             stage: 'all',
             fix: false,

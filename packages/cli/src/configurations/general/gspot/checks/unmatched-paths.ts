@@ -8,16 +8,28 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+/**
+Name the scope-relative form of a pattern that starts at the repository root. The pattern qualifies only when it
+matches a tracked path from the root, so a pattern with a plain typo keeps the short message.
+*/
+function formatScopeHelp(pattern: string, scopePath: string, repositoryPaths: readonly string[]): string {
+    const fromRoot = pattern.replace(NEGATED_PATTERN, '');
+    if (scopePath === '' || !fromRoot.startsWith(`${scopePath}/`)) return '';
+    const isMatched = buildPathMatcher([fromRoot]);
+    if (!repositoryPaths.some((repositoryPath) => isMatched(repositoryPath))) return '';
+    const written = pattern.replace(`${scopePath}/`, '');
+    return ` A path in a [[scope]] table is relative to that scope, so write ${JSON.stringify(written)}.`;
+}
 
 function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
     const { text } = readSettingsText(session.root);
-    return listSettingsTables(session.settings).flatMap(({ table, scopePath = '', path }) => {
+    return listSettingsTables(session.settings).flatMap(({ table, scopePath, path }) => {
         const sources: Array<{ pattern: string; selector: string; location: SettingLocation }> = [];
         const visit: PathVisitor = (pattern, location, role) => {
             const selector = location.keys[0] === 'path' ? pattern : joinScopeSelector(pattern, scopePath);
@@ -46,7 +58,9 @@ function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFin
                     file: SETTINGS_FILE,
                     line: findSettingLine(text, session.settings.written, [...path, ...keys]),
                     rule: GSPOT_RULES.unmatchedPath,
-                    message: `${selector} under ${where} matches no tracked file or folder.${UNESCAPED_BRACKET.test(pattern) ? BRACKET_HELP : ''}`,
+                    message: `${selector} under ${where} matches no tracked file or folder.${
+                        keys[0] === 'path' ? '' : formatScopeHelp(pattern, scopePath, repositoryPaths)
+                    }${UNESCAPED_BRACKET.test(pattern) ? BRACKET_HELP : ''}`,
                 };
             });
     });

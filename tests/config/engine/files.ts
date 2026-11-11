@@ -174,7 +174,7 @@ export const PROJECT_PATH_IGNORES = [
         name: 'another check\u{2019}s path ignore',
         changed: ['api/ignored.ts'],
         present: true,
-        check: 'data-files/v8r',
+        check: 'json/v8r',
         rule: undefined,
         files: ['api/ignored.ts', 'api/kept.ts'],
     },
@@ -184,26 +184,6 @@ export const TYPESCRIPT_SCOPES_SETTINGS = TWO_SCOPES_SETTINGS.replace(
     'configurations = []',
     'configurations = ["typescript"]',
 );
-
-export const LAYERED_SCOPE_SETTINGS = `level = "all"
-configurations = ["format"]
-[limits]
-max_file_lines = 250
-[format]
-indent_width = 4
-[rule_files]
-enabled = false
-[[scope]]
-path = "api"
-configurations = ["bash"]
-limits.max_file_lines = 200
-format.indent_width = 2
-[[scope]]
-path = "api/worker"
-configurations = ["sql"]
-limits.sql.max_file_lines = 30
-sql.dialect = "postgres"
-`;
 
 export const PROJECT_FINDING_MESSAGE = 'Project finding';
 

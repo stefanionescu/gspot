@@ -6,14 +6,19 @@ import semver from 'semver';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_JSON } from '#cli/config/parsers.ts';
 import {
+    FROZEN_INSTALLS,
     LOCKFILES,
+    MISE_NODE_PIN_COMMAND,
     NPM_TOOL,
     PACKAGE_MANAGER_HASH_SUFFIX,
+    PACKAGE_MANAGER_LABELS,
     PACKAGE_MANAGERS,
     PNPM_WORKSPACE_FILE,
     PNPM_WORKSPACE_INSTALL,
     START_RUNNERS,
     VERSION_FLAG,
+    YARN_BERRY_INSTALL,
+    YARN_BERRY_MAJOR,
 } from '#cli/config/repository/javascript.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
@@ -28,6 +33,7 @@ import type {
     PackageManagerCommand,
     PackageManagerField,
     PackageManagerPin,
+    SetupReference,
     StartRunner,
 } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
@@ -181,4 +187,45 @@ export function buildPackageManagerCommand(
     return packageManager.version === undefined
         ? command
         : ['mise', 'exec', node, `${packageManager.name}@${packageManager.version}`, '--', ...command];
+}
+
+export function buildFrozenInstallArguments(
+    lockfile: keyof typeof FROZEN_INSTALLS,
+    version: string | undefined,
+): readonly string[] {
+    const command = FROZEN_INSTALLS[lockfile];
+    const isYarnBerry = command[0] === 'yarn' && version !== undefined && semver.major(version) >= YARN_BERRY_MAJOR;
+    return (isYarnBerry ? YARN_BERRY_INSTALL : command).slice(1);
+}
+
+export function buildSetupReference(): SetupReference[] {
+    return Object.entries(PACKAGE_MANAGER_LABELS).map(([name, label]) => {
+        const runner = START_RUNNERS[name as keyof typeof START_RUNNERS];
+        const lockfile = LOCKFILES.find((file) => file.packageManager === name && 'copied' in file)?.file;
+        const prerequisites = name === 'mise' ? [MISE_NODE_PIN_COMMAND] : [];
+        const add = runner.installCommand.replace('<package>@<version>', () => cliPackage.name);
+        const frozen =
+            lockfile === undefined
+                ? []
+                : [
+                      name,
+                      ...buildFrozenInstallArguments(
+                          lockfile as keyof typeof FROZEN_INSTALLS,
+                          String(YARN_BERRY_MAJOR) + '.0.0',
+                      ),
+                  ];
+        return {
+            name,
+            label,
+            start: runner.command,
+            add,
+            prerequisites,
+            lines: [...prerequisites, add, `${runner.command} init`],
+            clone: [
+                ...(frozen.length === 0 ? [] : [frozen.join(' ')]),
+                `${runner.command} install`,
+                `${runner.command} check`,
+            ],
+        };
+    });
 }

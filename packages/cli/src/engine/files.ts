@@ -10,11 +10,11 @@ import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { isInScope } from '#cli/system/paths.ts';
-import type { PlanInventory, PlannedCheck, PlannedScope } from '#cli/types/engine/plan.ts';
+import type { PlanInventory, PlannedCheck, PlannedScope, RunSelection } from '#cli/types/engine/plan.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Scope } from '#cli/types/settings.ts';
-import type { ScopeCheck } from '#cli/types/tools.ts';
+import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const { inventory, session, children } = planned;
@@ -78,23 +78,6 @@ function listRunFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: 
     return testedFiles.filter((file) => isMatch(file.path));
 }
 
-function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
-    files: File[],
-    check: Check,
-    scope: Scope,
-): { files: File[]; skip?: PlannedCheck['skip'] } {
-    const paths = listIgnores(scope.settings, check.id).flatMap((ignore) =>
-        ignore.rule === undefined ? (ignore.paths ?? []) : [],
-    );
-    const isIgnored = buildPathMatcher(paths);
-    const selected = files.filter((file) => !isIgnored(file.path));
-    return {
-        files: selected,
-        ...(files.length > 0 &&
-            selected.length === 0 && { skip: { cause: 'ignore' as const, note: IGNORED_PATHS_MESSAGE } }),
-    };
-}
-
 function listNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
     const { narrowedPaths, inventory } = planned;
     if (narrowedPaths === undefined || inventory.narrowedFiles === undefined) return files;
@@ -125,20 +108,18 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
     ).files.map((file) => file.path);
 }
 
-function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
-    if (check.binary_files === true) return files;
-    return files.filter((file) => {
-        if (
-            check.large_files !== true &&
-            file.size >
-                getTable(selectScope(file.path, planned.session.scopes).settings, 'repository').max_file_kilobytes *
-                    BYTES_PER_KILOBYTE
-        )
-            return false;
-        if (!file.tags.includes('text') || file.tags.includes('symlink')) return true;
-        file.isUtf8 ??= isUtf8(readBytes(planned.session.cache, file.path));
-        return file.isUtf8;
-    });
+function isReadableFile(session: Pick<SessionBase, 'scopes' | 'cache'>, check: Check, file: TrackedFile): boolean {
+    if (check.binary_files === true) return true;
+    if (
+        check.large_files !== true &&
+        file.size >
+            getTable(selectScope(file.path, session.scopes).settings, 'repository').max_file_kilobytes *
+                BYTES_PER_KILOBYTE
+    )
+        return false;
+    if (!file.tags.includes('text') || file.tags.includes('symlink')) return true;
+    file.isUtf8 ??= isUtf8(readBytes(session.cache, file.path));
+    return file.isUtf8;
 }
 
 function listToolFiles(
@@ -151,7 +132,7 @@ function listToolFiles(
     let selected = files;
     if (check.runs === 'files') selected = listNarrowedFiles(planned, scopeCheck, files);
     else if (hasFileList) selected = listProjectMatches(planned.scope, scopeCheck, { scopeFiles: files, scopePath });
-    const readable = listReadableFiles(planned, check, selected);
+    const readable = selected.filter((file) => isReadableFile(planned.session, check, file));
     return check.command === undefined ? readable : readable.filter((file) => !file.tags.includes('symlink'));
 }
 
@@ -168,6 +149,26 @@ function addNarrowedLinks(
 }
 
 /**
+Drop the files that an ignore with paths and no rule covers for this check.
+*/
+export function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
+    files: File[],
+    check: Check,
+    scope: Scope,
+): { files: File[]; skip?: PlannedCheck['skip'] } {
+    const paths = listIgnores(scope.settings, check.id).flatMap((ignore) =>
+        ignore.rule === undefined ? (ignore.paths ?? []) : [],
+    );
+    const isIgnored = buildPathMatcher(paths);
+    const selected = files.filter((file) => !isIgnored(file.path));
+    return {
+        files: selected,
+        ...(files.length > 0 &&
+            selected.length === 0 && { skip: { cause: 'ignore' as const, note: IGNORED_PATHS_MESSAGE } }),
+    };
+}
+
+/**
 Index the tracked files once per plan: their paths, the tracked files among the narrowed paths, and the files under
 each scope folder. A change to gspot.toml or to a gspot file leaves the narrowed files out, so every check plans its
 whole scope, because such a change can change what every check reads.
@@ -175,11 +176,12 @@ whole scope, because such a change can change what every check reads.
 export function buildPlanInventory(
     files: TrackedFile[],
     narrowedPaths: ReadonlySet<string> | undefined,
-    isStaged = false,
+    selection: RunSelection | undefined,
 ): PlanInventory {
     const isNarrowed =
         narrowedPaths !== undefined &&
-        (isStaged || (!narrowedPaths.has(SETTINGS_FILE) && narrowedPaths.values().every((path) => !isGspotPath(path))));
+        (selection?.content === 'index' ||
+            (!narrowedPaths.has(SETTINGS_FILE) && narrowedPaths.values().every((path) => !isGspotPath(path))));
     return {
         trackedPaths: new Set(files.map(({ path }) => path)),
         narrowedFiles: isNarrowed ? files.filter((file) => narrowedPaths.has(file.path)) : undefined,
@@ -212,16 +214,44 @@ export function listCheckedFiles(scopes: Scope[], planned: PlannedCheck): Tracke
         : listCoveredFiles(owners, files, planned.scope);
 }
 
+/**
+List the tracked files that a check plans for its folder and gives to no tool: a file over
+`repository.max_file_kilobytes`, and a text file that is not UTF-8. A build that runs in a copy imports such files, so
+the copy holds them. A check that runs per file plans only the files that its tool reads.
+*/
+export function listUnreadFiles(
+    session: Pick<SessionBase, 'scopes' | 'cache' | 'repository'>,
+    { check, scope }: Pick<PlannedCheck, 'check' | 'scope'>,
+): TrackedFile[] {
+    if (check.runs === 'files') return [];
+    const scopePath = isRepositoryRun(check) ? '' : scope.path;
+    const children =
+        check.runs === 'scope'
+            ? listNestedScopes(
+                  session.scopes.map(({ path }) => path),
+                  scopePath,
+              )
+            : [];
+    return session.repository.files.filter(
+        (file) =>
+            isInScope(file.path, scopePath) &&
+            isOutsideChildScopes(file.path, children) &&
+            !isReadableFile(session, check, file),
+    );
+}
+
 export function isRepositoryRun(check: Pick<Check, 'runs'>): boolean {
     return (ROOT_RUNS as readonly string[]).includes(check.runs);
 }
 
 /**
-Check whether a general per-file check runs once at the root. A check that reads a scope config file does not.
+Check whether a per-file check of a general or always-selected configuration runs once at the root. A check that reads
+a scope config file does not.
 */
 export function isRootOnlyCheck(configuration: Configuration | undefined, check: Check): boolean {
     if (configuration === undefined) return true;
-    if (configuration.group !== 'general' || configuration.files.languages || check.runs === 'scope') return false;
+    const isEveryScope = configuration.group === 'general' || configuration.always_selected;
+    if (!isEveryScope || configuration.files.languages || check.runs === 'scope') return false;
     const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
     return configuration.configs.every(
         (config) =>

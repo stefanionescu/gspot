@@ -3,15 +3,30 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import {
-    SQUAWK_CHILD_MIGRATION_PATH,
-    SQUAWK_ROOT_MIGRATION_PATH,
-    SQUAWK_SCOPE_SETTINGS,
-    UNWRAPPED_MIGRATION_SQL,
-} from '#tests/config/integration/infrastructure.ts';
 import { listFindingRows, parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+const UNWRAPPED_MIGRATION_SQL = `SET lock_timeout = '5s';
+SET statement_timeout = '30s';
+ALTER TABLE public.teams ADD COLUMN size BIGINT;
+`;
+
+const SQUAWK_ROOT_MIGRATION_PATH = 'supabase/migrations/0001_initial.sql';
+
+const SQUAWK_CHILD_MIGRATION_PATH = 'transactional/child/supabase/migrations/0001_initial.sql';
+
+const SQUAWK_SCOPE_SETTINGS = `[postgres]
+assume_in_transaction = false
+[[scope]]
+path = "transactional"
+
+[scope.postgres]
+assume_in_transaction = true
+[[scope]]
+path = "transactional/child"
+
+`;
 
 test("Squawk uses each scope's assume_in_transaction setting", async () => {
     await using sandbox = await createGitSandbox({

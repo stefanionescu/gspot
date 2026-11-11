@@ -6,7 +6,7 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { SitemapUrls } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
 
 function parseSitemapUrl(value: string): URL | undefined {
     const url = URL.parse(value);

@@ -26,6 +26,8 @@ export const uvProjectSettingsSchema = z.object({
         .default({ uv: {} }),
 });
 
+export const miseToolSourcesSchema = z.object({ source: z.object({ path: z.string() }).optional() }).array();
+
 export const bunPackageSchema = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
 
 export const npmToolLockSchemas = { npm: npmLockfileSchema, bun: bunLockfileSchema, pnpm: pnpmLockfileSchema } as const;

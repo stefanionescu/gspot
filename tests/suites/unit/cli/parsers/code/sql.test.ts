@@ -1,15 +1,9 @@
 import { expect, test } from 'bun:test';
 
-import { parseSqlFile, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { getPosition } from '#cli/system/text.ts';
-import {
-    FROZEN_MIGRATION_CASES,
-    FROZEN_MIGRATION_PATHS,
-    NESTED_COMMENT_SQL,
-    QUOTED_PSQL_SOURCES,
-    SELECT_SQL,
-} from '#tests/config/parsers/comments.ts';
+import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES, SELECT_SQL } from '#tests/config/parsers/comments.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 
 test('empty SQL has no statements', async () => {
@@ -85,10 +79,3 @@ test.each(["'", "E'", '"'])('an unterminated SQL %s value gives the parser error
         column: 8,
     });
 });
-
-test.each([...FROZEN_MIGRATION_CASES])(
-    'freeze version $through selects the frozen migrations',
-    ({ through, frozen }) => {
-        expect([...selectFrozenMigrations([...FROZEN_MIGRATION_PATHS], through)]).toStrictEqual([...frozen]);
-    },
-);

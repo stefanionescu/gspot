@@ -4,8 +4,7 @@ import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/javascript.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
-import type { CheckResult } from '#cli/types/engine/run.ts';
-import type { Finding } from '#cli/types/engine/tool-runs.ts';
+import type { CheckResult, Finding } from '#cli/types/engine/run.ts';
 import { SCAN_RUN_REPORT } from '#tests/config/commands/check.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -122,6 +121,38 @@ test('scan names the largest rules, takes examples from the largest, and groups 
     expect(formatScanText(report)).toContain(
         'To leave a rule out: gspot ignore python/ruff --rule E2 --reason "<why>"',
     );
+});
+
+test('scan counts the findings of a check that names no rule, and takes its examples when it is the largest', async () => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const base = { scope: '', status: 'failed' as const, fileCount: 1, duration: 1 };
+    const typo = { check: 'spelling/typos', file: 'README.md', message: 'A typo.', fixable: true };
+    const heading = { check: 'markdown/markdownlint', file: 'README.md', line: 9, rule: 'MD001', message: 'A jump.' };
+    const report = buildScanReport({
+        planning,
+        session: planning.session,
+        report: {
+            ...SCAN_RUN_REPORT,
+            checks: [
+                { ...base, check: heading.check, findings: [{ ...heading, fixable: false }] },
+                { ...base, check: typo.check, findings: [1, 2].map((line) => ({ ...typo, line })) },
+            ],
+        },
+        toolBytes: 0,
+        ruleRows: [],
+        leftOut: [],
+    });
+    expect(report.categories[0]).toMatchObject({
+        rules: [
+            { check: 'spelling/typos', rule: '', count: 2 },
+            { check: 'markdown/markdownlint', rule: 'MD001', count: 1 },
+        ],
+    });
+    expect(report.categories[0]?.examples.map(({ line }) => line)).toStrictEqual([1, 2]);
+    const text = formatScanText(report);
+    expect(text).toContain('  spelling/typos  2 findings\n');
+    expect(text).toContain('To leave files out: gspot ignore spelling/typos --paths <path> --reason "<why>"');
 });
 
 test('scan names paths in the ignore line of a check whose one rule gspot ignore refuses', async () => {
