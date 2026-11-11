@@ -38,6 +38,8 @@
         "packages/*/dist/**",
         "docs/dist/**",
         "docs/.astro/**",
-        "docs/.wrangler/**"
+        "docs/.wrangler/**",
+        "PLAN.md",
+        "plan/**"
     ]
 }

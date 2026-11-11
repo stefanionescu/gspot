@@ -42,6 +42,8 @@
         "../../../docs/dist/**",
         "../../../docs/.astro/**",
         "../../../docs/.wrangler/**",
+        "../../../PLAN.md",
+        "../../../plan/**",
         "../../../**/eslint.config.mjs",
         "../../../**/eslint.config.js",
         "../../../**/eslint.config.cjs"

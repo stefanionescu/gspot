@@ -36,8 +36,10 @@ bun.lock
 *.log
 .env
 .env.*
+/PLAN.md
 /docs/.astro/
 /docs/.wrangler/
 /docs/dist/
 /packages/*/dist/
+/plan/
 node_modules/

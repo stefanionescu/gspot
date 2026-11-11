@@ -9,3 +9,6 @@ node_modules/
 /docs/dist/
 /docs/.astro/
 /docs/.wrangler/
+
+/PLAN.md
+/plan/

@@ -377,7 +377,9 @@ export default setRuleOptions(defineConfig([
         "packages/*/dist/**",
         "docs/dist/**",
         "docs/.astro/**",
-        "docs/.wrangler/**"
+        "docs/.wrangler/**",
+        "PLAN.md",
+        "plan/**"
     ]
 },
     setLevelRules({"extends": [eslintJs["configs"]["recommended"]],
@@ -401,7 +403,8 @@ export default setRuleOptions(defineConfig([
             "[/\\\\]\\.wrangler[/\\\\]",
             "[/\\\\]docs[/\\\\]dist[/\\\\]",
             "[/\\\\]docs[/\\\\]\\.astro[/\\\\]",
-            "[/\\\\]docs[/\\\\]\\.wrangler[/\\\\]"
+            "[/\\\\]docs[/\\\\]\\.wrangler[/\\\\]",
+            "[/\\\\]plan[/\\\\]"
         ]
     },
     "rules": {

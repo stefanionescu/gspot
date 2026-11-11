@@ -14,7 +14,8 @@
         "packages/*/dist/**",
         "docs/dist/**",
         "docs/.astro/**",
-        "docs/.wrangler/**"
+        "docs/.wrangler/**",
+        "plan/**"
     ],
     "ignoreDependencies": [
         "@gspothq/cli",
