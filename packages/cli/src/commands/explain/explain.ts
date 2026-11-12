@@ -11,8 +11,7 @@ import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
-import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import type { Explanation } from '#cli/types/commands/reports.ts';
+import type { CommandDefinition, Explanation } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 

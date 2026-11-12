@@ -21,8 +21,7 @@ import {
 import { getTable } from '#cli/settings/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
-import { type ConfigBuilder, type IgnoreSection } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 const ENGLISH_LOCALE_GLOBS = ['en', 'en[-_]*'] as const;
 

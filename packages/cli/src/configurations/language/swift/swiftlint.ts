@@ -10,8 +10,7 @@ import {
 } from '#cli/config/configurations/swift.ts';
 import { listDisabledRules, readToolDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getLimit, getTable, selectFormat } from '#cli/settings/scopes.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildSeverityLimit(planned: PlannedConfig, name: string): { warning: number; error: number } {
     const limit = getLimit(planned.scope.settings, name, 'swift');

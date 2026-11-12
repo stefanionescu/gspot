@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { NEVER_TYPE, SMALL_SWITCH_CASES } from '../../config/logic.ts';
+import { NEVER_TYPE, SMALL_SWITCH_CASES } from '../../config/control-flow.ts';
 import { getTypes } from '../../language/checker.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';

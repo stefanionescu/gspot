@@ -8,7 +8,7 @@ import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { selectStartRunner } from '#cli/repository/version-pin.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readSettingsText } from '#cli/settings/file.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { buildScopeSettings, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { downloadSwiftGrammar } from '#cli/tools/installers/grammars.ts';
@@ -102,7 +102,7 @@ export async function openSession(
         toolCache = createRunCache(toolsRoot),
         listing,
         untracked,
-        settings = readSettings(readSettingsText(root).text, root),
+        settings = parseSettings(readSettingsText(root).text, root),
         unreadablePaths,
         resources = [],
         cancelSignal,

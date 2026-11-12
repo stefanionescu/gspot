@@ -18,16 +18,10 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { findSchemaAt, RECORD_FIELDS, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-import { formatUnknownSetting, validateKeys } from '#cli/settings/validation/keys.ts';
+import { validateRuleExcludes, validateRuleFilePaths, validateScopePaths } from '#cli/settings/validation/files.ts';
+import { formatUnknownSetting, validateKeys, validateSettingRules } from '#cli/settings/validation/keys.ts';
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
-import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
-import {
-    validateRuleExcludes,
-    validateRuleFilePaths,
-    validateScopePaths,
-    validateSettingRules,
-    validateSwiftTargets,
-} from '#cli/settings/validation/references.ts';
+import { validateSettingReasons, validateSwiftTargets } from '#cli/settings/validation/reasons.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { WrittenConfiguration } from '#cli/types/manifests.ts';

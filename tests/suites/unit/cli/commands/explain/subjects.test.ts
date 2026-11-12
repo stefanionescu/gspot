@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { parseBashScript } from '#cli/parsers/code/bash.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import {
     EXPLAIN_SETTINGS,
     PATH_IGNORES,

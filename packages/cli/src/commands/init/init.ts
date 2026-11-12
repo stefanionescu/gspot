@@ -1,5 +1,4 @@
 import { formatDetection } from '#cli/commands/init/report.ts';
-import { readTemplate } from '#cli/commands/init/template.ts';
 import {
     CONFIGURATIONS_OPTION,
     FROM_CONFLICT_MESSAGE,
@@ -19,11 +18,12 @@ import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
 import { formatInitPlan } from '#cli/generation/setup/file-plan.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import { readTemplate } from '#cli/generation/setup/settings.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { print, runCancelableCommand } from '#cli/system/terminal.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
-import type { CommandDefinition, CommandLocation, InitFlags, InitJson } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition, CommandLocation, InitFlags, InitJson } from '#cli/types/commands.ts';
 import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
 import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
 

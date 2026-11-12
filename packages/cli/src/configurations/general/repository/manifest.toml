@@ -1,3 +1,5 @@
+ignored_paths = ["**/coverage/**"]
+
 [configuration]
 always_selected = true
 description = "Tracked files: large files outside Git LFS, merge-conflict markers, and paths that a configuration keeps out of Git."

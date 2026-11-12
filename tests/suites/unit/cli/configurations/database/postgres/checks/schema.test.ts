@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
 import { parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { DATABASE_SCHEMA_CASES } from '#tests/config/configurations/database.ts';

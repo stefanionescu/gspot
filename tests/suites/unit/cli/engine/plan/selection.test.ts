@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.ts';
+import { isActive, planChecks, selectCheckCommand } from '#cli/engine/plan.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listAlwaysSelected } from '#cli/manifests/select.ts';
@@ -34,12 +34,8 @@ test('coverage stripping leaves your own checks and given arguments unchanged', 
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'push', only: ['project/tests'] })[0]!;
-    expect(stripCoverageArguments(planned, {})).toStrictEqual(command);
-    expect(stripCoverageArguments(planned, { command: ['echo', '', TWO_WORDS] })).toStrictEqual([
-        'echo',
-        '',
-        TWO_WORDS,
-    ]);
+    expect(selectCheckCommand(planned, {})).toStrictEqual(command);
+    expect(selectCheckCommand(planned, { command: ['echo', '', TWO_WORDS] })).toStrictEqual(['echo', '', TWO_WORDS]);
 });
 
 test('a project check with no matching files is skipped even when its scope holds another language', async () => {

@@ -1,7 +1,9 @@
+import { isDeepStrictEqual } from 'node:util';
+
 import { SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSetting, listWrittenKeys } from '#cli/settings/inherit.ts';
-import { parseSettings } from '#cli/settings/read.ts';
+import { isReasonedValue } from '#cli/settings/lookup.ts';
+import { safeParseSettings } from '#cli/settings/parse.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -11,7 +13,7 @@ import type {
     AvailableSettings,
     EditedSettings,
     SettingKey,
-    SettingsEdit,
+    SettingsFile,
     SettingsTable,
     TomlTable,
 } from '#cli/types/settings.ts';
@@ -21,12 +23,12 @@ function splitKey(key: string): SettingKey {
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };
 }
 
-export function buildEditedSettings(root: string, edit: SettingsEdit): EditedSettings {
+export function buildEditedSettings(root: string, edit: SettingsFile): EditedSettings {
     const { text, table } = edit;
     const opening = SETTINGS_PREFACE.exec(text)?.[0] ?? '';
     const body = text.slice(opening.length);
     const next = opening + buildSettingsText(body, table);
-    const settings = parseSettings(next, root);
+    const settings = safeParseSettings(next, root);
     if ('errors' in settings)
         throw new GspotError(
             'arguments',
@@ -128,4 +130,25 @@ export function overlayTable(target: TomlTable, source: TomlTable): TomlTable {
     for (const [key, value] of Object.entries(source))
         target[key] = isTable(value) && isTable(target[key]) ? overlayTable(target[key], value) : value;
     return target;
+}
+
+/**
+Add an ignore to the list, or merge its paths into the record with the same check, rule, and reason.
+When either record has no paths, the merged record has none. Changes ignores in place.
+*/
+export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
+    const { paths: writtenPaths, ...identity } = ignore;
+    const matching = ignores.find(({ paths: _previousPaths, ...previous }) => isDeepStrictEqual(previous, identity));
+    if (matching === undefined) {
+        const saved = { ...ignore };
+        ignores.push(saved);
+        return saved;
+    }
+    const previous: unknown = matching['paths'];
+    if (Array.isArray(writtenPaths) && Array.isArray(previous)) {
+        const paths: readonly unknown[] = writtenPaths;
+        const previousPaths: readonly unknown[] = previous;
+        matching['paths'] = [...new Set([...previousPaths, ...paths])];
+    } else delete matching['paths'];
+    return matching;
 }

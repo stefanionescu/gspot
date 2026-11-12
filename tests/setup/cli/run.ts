@@ -1,6 +1,6 @@
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
-import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { RunOptions } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

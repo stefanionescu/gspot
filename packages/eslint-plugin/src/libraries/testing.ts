@@ -16,11 +16,12 @@ import {
     TEST_KINDS,
 } from '../config/testing.ts';
 import { findEnclosingFunction, findFunction } from '../language/functions.ts';
+import { getRequiredModule } from '../language/modules.ts';
+import { isModuleUsed } from '../language/packages.ts';
 import type { FileContext } from '../types/plugin.ts';
 import type { TableCall, TestCall, TestCallee, TestOrigin } from '../types/testing.ts';
-import { getRequiredModule, isModuleUsed } from './packages.ts';
 
-function getImportedName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
+function getImportedOrigin(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, parent } = definition;
     const module = parent?.type === AST_NODE_TYPES.ImportDeclaration ? parent.source.value : '';
     if (!TEST_FRAMEWORK_MODULES.has(module)) return undefined;
@@ -30,7 +31,7 @@ function getImportedName(definition: TSESLint.Scope.Definition): TestOrigin | un
     return { name: imported.type === AST_NODE_TYPES.Identifier ? imported.name : imported.value, module };
 }
 
-function getRequiredName(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
+function getRequiredOrigin(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, name } = definition;
     if (node.type !== AST_NODE_TYPES.VariableDeclarator || node.init === null) return undefined;
     const module = getRequiredModule(node.init) ?? '';
@@ -45,7 +46,7 @@ function getOrigin(base: TSESTree.Identifier, source: TSESLint.SourceCode): Test
     const [definition] = variable?.defs ?? [];
     return definition === undefined
         ? { name: base.name, module: undefined }
-        : (getImportedName(definition) ?? getRequiredName(definition));
+        : (getImportedOrigin(definition) ?? getRequiredOrigin(definition));
 }
 
 function listCalleeSteps(callee: TSESTree.Node): { steps: string[]; base: TSESTree.Node } {

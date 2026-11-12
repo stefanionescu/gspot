@@ -8,8 +8,9 @@ import {
     SIMILAR_TEST_NAMES,
     SIMILAR_TEST_ORIGINS,
 } from '../../config/testing.ts';
+import { listImportedModules } from '../../language/modules.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { listChildren } from '../../language/syntax.ts';
-import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
 import { getTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { SimilarTest, TestCall } from '../../types/testing.ts';

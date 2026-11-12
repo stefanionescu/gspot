@@ -105,7 +105,7 @@ function parseDocumentRows(place: LintCommandPlace, search: CommandSearch): Lint
     );
 }
 
-function readPreCommitRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
+function parsePreCommitRows(place: LintCommandPlace, search: CommandSearch): LintCommand[] {
     const config = tryParseFile(() => parseYamlFile(place.file, place.text, preCommitConfigSchema));
     const lines = place.text.split(LINE_BREAK);
     let start = 0;
@@ -298,7 +298,7 @@ export function listLintCommands(input: LintCommandSearch): LintCommand[] {
     ];
     const preCommit = places
         .filter(({ source }) => source === 'pre-commit')
-        .flatMap((place) => readPreCommitRows(place, search));
+        .flatMap((place) => parsePreCommitRows(place, search));
     const wide = {
         ...search,
         tools: new Set([

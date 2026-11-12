@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { SKIP_CAUSES, STAGE_FILTERS } from '#cli/config/engine.ts';
+import type { COMPARED_CONTENTS, SKIP_CAUSES, STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { checkStateSchema } from '#cli/schemas/engine.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { RepositoryListing, StartRunner, TrackedFile, UntrackedFiles } from '#cli/types/repository.ts';
@@ -13,7 +13,7 @@ type SkipCause = (typeof SKIP_CAUSES)[number];
 export type Skip = { cause: SkipCause; note: string };
 
 export type RunSelection = {
-    content: 'working-tree' | 'index' | 'commit' | 'message';
+    content: (typeof COMPARED_CONTENTS)[number] | 'message';
     reference?: string | undefined;
     base?: string | undefined;
     paths?: string[] | undefined;

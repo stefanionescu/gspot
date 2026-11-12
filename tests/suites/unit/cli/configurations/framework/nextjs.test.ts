@@ -9,7 +9,7 @@ import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import * as processes from '#cli/system/processes.ts';

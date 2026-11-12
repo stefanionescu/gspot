@@ -9,7 +9,7 @@ import {
 } from '../../config/react.ts';
 import { getTypes } from '../../language/checker.ts';
 import { listReturnedValues } from '../../language/functions.ts';
-import { getAssignedValue } from '../../language/modules.ts';
+import { getAssignedValue } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import type { CheckedType, TypeReader } from '../../types/plugin.ts';
 

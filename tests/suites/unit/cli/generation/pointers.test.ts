@@ -10,7 +10,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildPointerFiles } from '#cli/generation/pointers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import type { SourcedConfig } from '#cli/types/configurations/general.ts';
+import type { SourcedConfig } from '#cli/types/configurations/shared.ts';
 import {
     DEFAULT_EXPORT,
     MARKDOWNLINT_SCOPE_TABLES,

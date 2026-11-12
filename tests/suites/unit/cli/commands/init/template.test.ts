@@ -5,7 +5,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { compareText } from '#cli/system/text.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
@@ -252,7 +252,7 @@ test('in a monorepo, a framework of the file goes to the scope that detects it',
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const written = parseTomlFile('gspot.toml', await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
     expect(written['configurations']).not.toContain('react');
-    const settings = readSettings(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'), sandbox.path);
+    const settings = parseSettings(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'), sandbox.path);
     expect(settings.scopes.get('apps/web')?.configurations).toContain('react');
 });
 

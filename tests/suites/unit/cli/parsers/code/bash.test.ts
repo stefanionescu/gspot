@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { listCodeLines, parseBashScript } from '#cli/parsers/code/bash.ts';
+import { listCodeLines, parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import {
     BASH_FUNCTIONS,
     FORWARDING_CALL_CASES,

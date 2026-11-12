@@ -13,7 +13,7 @@ import {
 } from '#cli/config/settings/schema.ts';
 import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import { namingExceptionSchema, nonemptyStringSchema, operatingSystemSchema } from '#cli/schemas/manifests/tools.ts';
+import { namingExceptionSchema, nonemptyStringSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';
 import {
     allowReasonedValue,
     namingCategorySchema,

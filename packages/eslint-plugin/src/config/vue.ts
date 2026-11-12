@@ -1,3 +1,7 @@
+export const VUE_PACKAGE = 'vue';
+
+export const VUE_THREE = [3, 0, 0];
+
 export const VUE_CLASS_BASE = 'vue-class-component.Vue';
 
 export const VUE_CLASS_DECORATORS = new Set([
@@ -36,13 +40,6 @@ export const GUARD_TESTS = new Map([
     ['IfStatement', 'test'],
     ['ConditionalExpression', 'test'],
     ['LogicalExpression', 'left'],
-]);
-
-export const TERMINATING_STATEMENTS = new Set<string | undefined>([
-    'ReturnStatement',
-    'ThrowStatement',
-    'BreakStatement',
-    'ContinueStatement',
 ]);
 
 export const VOLATILE_CALLS = new Set(['Date.now', 'Math.random', 'performance.now']);

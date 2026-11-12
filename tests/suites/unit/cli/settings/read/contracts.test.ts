@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { parseSettings, readSettings } from '#cli/settings/read.ts';
+import { parseSettings, safeParseSettings } from '#cli/settings/parse.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import { CONFIGURATION_CONFLICTS, UNKNOWN_TABLE_FIELDS } from '#tests/config/settings/read.ts';
@@ -9,7 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 function captureSettingsError(text: string, root: string): string {
     try {
-        readSettings(text, root);
+        parseSettings(text, root);
     } catch (error) {
         return (error as Error).message;
     }
@@ -35,7 +35,7 @@ test('a generator command must declare at least one output', () => {
     const text = buildSandboxSettings([], {
         tables: '[[command_check]]\nid = "project/generated"\ncommand = ["bun", "generate.ts"]\noutputs = []\npaths = ["**/*.ts"]\nstage = "commit"\n',
     });
-    expect(parseSettings(text, sandbox.path)).toStrictEqual({
+    expect(safeParseSettings(text, sandbox.path)).toStrictEqual({
         syntax: expect.anything() as TomlSyntax,
         errors: [
             {
@@ -50,7 +50,7 @@ test('a generator command must declare at least one output', () => {
 test('pytest refuses a function coverage limit because it supports line coverage only', () => {
     using sandbox = createTemporaryFolder();
     const text = buildSandboxSettings(['python', 'pytest'], { tables: '[coverage]\nmin_function_percent = 100\n' });
-    expect(parseSettings(text, sandbox.path)).toStrictEqual({
+    expect(safeParseSettings(text, sandbox.path)).toStrictEqual({
         syntax: expect.anything() as TomlSyntax,
         errors: [
             {
@@ -70,14 +70,14 @@ test('a numeric scope keeps its authored position after a nonnumeric scope', asy
             { path: '2024', configurations: [] },
         ],
     });
-    const settings = readSettings(text, sandbox.path);
+    const settings = parseSettings(text, sandbox.path);
     expect(settings.scopes.keys().toArray()).toStrictEqual(['app', '2024']);
 });
 
 test('adding an external Python module needs a reason and accepts a recorded reason', () => {
     using sandbox = createTemporaryFolder();
     const text = buildSandboxSettings(['python'], { tables: '[python]\nexternals = ["private_sdk"]\n' });
-    expect(parseSettings(text, sandbox.path)).toStrictEqual({
+    expect(safeParseSettings(text, sandbox.path)).toStrictEqual({
         syntax: expect.anything() as TomlSyntax,
         errors: [
             {
@@ -91,7 +91,7 @@ test('adding an external Python module needs a reason and accepts a recorded rea
         '["private_sdk"]',
         '{ value = ["private_sdk"], reason = "The deployment provides this private package." }',
     );
-    const settings = readSettings(reasoned, sandbox.path);
+    const settings = parseSettings(reasoned, sandbox.path);
     expect(settings.python?.externals).toStrictEqual(['private_sdk']);
 });
 
@@ -99,7 +99,7 @@ test.each(UNKNOWN_TABLE_FIELDS)('an unknown field identifies its actual table: $
     using sandbox = createTemporaryFolder();
     const escaped = setting.replaceAll('.', String.raw`\.`);
     const named = new RegExp(String.raw`(?:^|\s)${escaped}\b`, 'u');
-    expect(parseSettings(text, sandbox.path)).toStrictEqual({
+    expect(safeParseSettings(text, sandbox.path)).toStrictEqual({
         syntax: expect.anything() as TomlSyntax,
         errors: [{ path, message: expect.stringMatching(named) as string }],
     });
@@ -109,7 +109,7 @@ test.each(CONFIGURATION_CONFLICTS)(
     'a selected and removed configuration is refused at $path',
     async ({ text, path }) => {
         await using sandbox = await testdir({ 'app/.keep': '' });
-        expect(parseSettings(text, sandbox.path)).toStrictEqual({
+        expect(safeParseSettings(text, sandbox.path)).toStrictEqual({
             syntax: expect.anything() as TomlSyntax,
             errors: [{ path, message: 'bash is both selected and removed. Keep it in only one list.' }],
         });
@@ -119,7 +119,7 @@ test.each(CONFIGURATION_CONFLICTS)(
 test('an empty ignore path list is refused while an omitted list means every path', () => {
     using sandbox = createTemporaryFolder();
     const text = '[[ignore]]\ncheck = "bash/shellcheck"\npaths = []\nreason = "External tooling checks Bash."\n';
-    expect(parseSettings(text, sandbox.path)).toStrictEqual({
+    expect(safeParseSettings(text, sandbox.path)).toStrictEqual({
         syntax: expect.anything() as TomlSyntax,
         errors: [
             {
@@ -129,13 +129,13 @@ test('an empty ignore path list is refused while an omitted list means every pat
             },
         ],
     });
-    expect(readSettings(text.replace('paths = []\n', ''), sandbox.path).ignore[0]?.paths).toBeUndefined();
+    expect(parseSettings(text.replace('paths = []\n', ''), sandbox.path).ignore[0]?.paths).toBeUndefined();
 });
 
 test.each(['bad id', 'bad,id', 'commit', 'push'])('a command check cannot take the ID %s', (id) => {
     using sandbox = createTemporaryFolder();
     const text = `[[command_check]]\nid = "${id}"\ncommand = ["echo"]\npaths = ["**"]\nstage = "commit"\n`;
-    expect(parseSettings(text, sandbox.path)).toStrictEqual({
+    expect(safeParseSettings(text, sandbox.path)).toStrictEqual({
         syntax: expect.anything() as TomlSyntax,
         errors: [
             {
@@ -148,23 +148,23 @@ test.each(['bad id', 'bad,id', 'commit', 'push'])('a command check cannot take t
 
 test('removed_configurations refuses a configuration that is always selected', () => {
     using sandbox = createTemporaryFolder();
-    const result = parseSettings('removed_configurations = { json = "Not needed here." }\n', sandbox.path);
+    const result = safeParseSettings('removed_configurations = { json = "Not needed here." }\n', sandbox.path);
     expect(result).toMatchObject({ errors: [{ path: ['removed_configurations', 'json'] }] });
 });
 
 test('removed_configurations refuses a configuration that a selected one requires, at the root and in a scope', async () => {
     await using sandbox = await testdir({ 'app/a.ts': '' });
     const selection = 'configurations = ["typescript"]\nremoved_configurations = { javascript = "Not needed here." }\n';
-    expect(parseSettings(selection, sandbox.path)).toMatchObject({
+    expect(safeParseSettings(selection, sandbox.path)).toMatchObject({
         errors: [{ path: ['removed_configurations', 'javascript'] }],
     });
-    expect(parseSettings(`[[scope]]\npath = "app"\n${selection}`, sandbox.path)).toMatchObject({
+    expect(safeParseSettings(`[[scope]]\npath = "app"\n${selection}`, sandbox.path)).toMatchObject({
         errors: [{ path: ['scope', 0, 'removed_configurations', 'javascript'] }],
     });
 });
 
 test('settings for a configuration that a selected one requires are accepted while it is being added', () => {
     using sandbox = createTemporaryFolder();
-    const result = parseSettings('[javascript]\nentry_files = ["src/a.ts"]\n', sandbox.path, ['typescript']);
+    const result = safeParseSettings('[javascript]\nentry_files = ["src/a.ts"]\n', sandbox.path, ['typescript']);
     expect(result).not.toHaveProperty('errors');
 });

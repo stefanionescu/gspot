@@ -14,7 +14,7 @@ import {
 import { listNodeFields, listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Identifier, IdentifierRead, SqlName } from '#cli/types/configurations/general.ts';
-import type { SqlStatementVisitors } from '#cli/types/configurations/infrastructure.ts';
+import type { SqlStatementVisitors } from '#cli/types/configurations/shared.ts';
 import type { SqlFile, SqlStatement } from '#cli/types/parsers.ts';
 import type { RunCache } from '#cli/types/system.ts';
 

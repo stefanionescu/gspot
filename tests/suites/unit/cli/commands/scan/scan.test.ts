@@ -6,7 +6,7 @@ import { expect, spyOn, test } from 'bun:test';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { SCAN_SETTINGS_MESSAGE } from '#cli/config/commands/reports.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import type { ScanReport } from '#cli/types/commands/reports.ts';
+import type { ScanReport } from '#cli/types/commands.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { scanOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';

@@ -4,21 +4,18 @@ import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from 
 import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
-import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
-import { buildUnknownRuleError } from '#cli/engine/results.ts';
+import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { setKey } from '#cli/settings/edit.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/inherit.ts';
-import { findNamingParent, findSettingSchema } from '#cli/settings/lookup.ts';
+import { findNamingParent, findSettingSchema, isReasonedValue } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import { canReadRuleExplanations } from '#cli/tools/rule-explanations.ts';
 import type {
     CommandDefinition,
     ParsedSettingValue,
@@ -26,7 +23,7 @@ import type {
     SetOptions,
     SettingReasonContext,
     SettingsEditContext,
-} from '#cli/types/commands/edits.ts';
+} from '#cli/types/commands.ts';
 import type { Check, Setting } from '#cli/types/manifests.ts';
 import type { InheritedSetting, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
@@ -194,14 +191,10 @@ function findRulesCheck(edit: SettingsEditContext, key: string, change: ParsedSe
 
 async function assertLintRules(edit: SettingsEditContext, key: string, change: ParsedSettingValue): Promise<void> {
     const check = findRulesCheck(edit, key, change);
-    const tool = check === undefined ? undefined : findToolName(check);
-    if (check === undefined || tool === undefined) return;
+    if (check === undefined) return;
     const { session } = edit;
-    for (const rule of Object.keys(change.value as TomlTable)) {
-        if (!canReadRuleExplanations(tool, rule)) continue;
-        const docs = await readCheckRuleExplanation(session.root, check, rule, session);
-        if (docs === undefined) throw buildUnknownRuleError(rule, check.id);
-    }
+    for (const rule of Object.keys(change.value as TomlTable))
+        await readListedRuleExplanation(session.root, check, rule, session);
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {

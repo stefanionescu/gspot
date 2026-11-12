@@ -33,14 +33,19 @@ import { buildEmptyRunReport } from '#cli/engine/report.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readGitPaths, readGitText } from '#cli/repository/git/run.ts';
 import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
-import { readIndexTree } from '#cli/repository/revisions/files.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { writeIndexTree } from '#cli/repository/revisions/files.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import { formatNameList, formatNameState } from '#cli/system/text.ts';
-import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
-import type { CheckCommandJson, CheckFlags, CheckOptions } from '#cli/types/commands/reports.ts';
+import type {
+    CheckCommandJson,
+    CheckFlags,
+    CheckOptions,
+    CommandDefinition,
+    CommandLocation,
+} from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
 const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';
@@ -122,7 +127,7 @@ function assertReadableMessageFile({ cwd, messageArgument }: CheckOptions): void
     }
 }
 
-function readOnlyStage({ only, hook }: CheckFlags): CheckOptions['stage'] {
+function selectOnlyStage({ only, hook }: CheckFlags): CheckOptions['stage'] {
     const stage = CHECK_STAGES.find((name) => only?.includes(name) === true);
     if (stage === undefined) return undefined;
     if (only?.length !== 1)
@@ -174,7 +179,7 @@ async function runStagedCheck(
         return await runTreeCheck(root, options, cancelSignal, {
             session: { toolsRoot: root, untracked: { paths: [], unreadablePaths: untracked.unreadablePaths } },
             started,
-            selection: { ...selection, reference: await readIndexTree(root, cancelSignal) },
+            selection: { ...selection, reference: await writeIndexTree(root, cancelSignal) },
         });
     using copy = await copyRevision(root, { kind: 'index', paths: stagedPaths }, cancelSignal);
     // The tools on disk follow the tool files on disk, and the copy asks for the tools of the staged settings.
@@ -202,7 +207,7 @@ async function runCheckSelection(
     if (options.hook === 'commit-msg') {
         const text = await readGitText(root, GIT_STAGED_SETTINGS_ARGUMENTS, { cancelSignal });
         const listing = { root, index: [], attributes: new Map(), files: [], unreadablePaths: [] };
-        const session = { settings: readSettings(text, root), listing };
+        const session = { settings: parseSettings(text, root), listing };
         return await runTreeCheck(root, { ...options, session }, cancelSignal);
     }
     return await (options.staged
@@ -239,7 +244,7 @@ export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags, CheckOptio
     parse: ({ arguments: commandArguments, flags, cwd }) => {
         const [paths] = commandArguments;
         const { hook } = flags;
-        const onlyStage = readOnlyStage(flags);
+        const onlyStage = selectOnlyStage(flags);
         const messagePath = hook === 'commit-msg' ? paths[0] : undefined;
         const options: CheckOptions = {
             cwd,

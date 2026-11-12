@@ -71,5 +71,5 @@ export type Setting = {
     reason_values?: boolean;
     reasoned?: boolean;
     description: string;
-    languages?: string[];
+    languages?: readonly string[];
 };

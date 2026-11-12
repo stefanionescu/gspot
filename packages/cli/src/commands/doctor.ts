@@ -39,8 +39,7 @@ import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
 import { findMissingEnvironment } from '#cli/tools/python-environment.ts';
-import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
-import type { CiState, DoctorReport, DoctorTool } from '#cli/types/commands/reports.ts';
+import type { CiState, CommandDefinition, CommandLocation, DoctorReport, DoctorTool } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
 

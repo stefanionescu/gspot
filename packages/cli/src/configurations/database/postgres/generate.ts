@@ -6,8 +6,7 @@ import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildSquawkFile(planned: PlannedConfig): string {
     const { files } = planned.session.repository;

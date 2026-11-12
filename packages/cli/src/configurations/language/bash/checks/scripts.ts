@@ -1,6 +1,6 @@
 import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/bash.ts';
 import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
-import { parseBashScript } from '#cli/parsers/code/bash.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { remember } from '#cli/system/cache.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { ScriptFile } from '#cli/types/configurations/language.ts';

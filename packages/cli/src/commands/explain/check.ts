@@ -6,8 +6,8 @@ import {
     SELECTED_YES_MESSAGE,
 } from '#cli/config/commands/reports.ts';
 import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
+import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { buildUnknownRuleError, canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
@@ -15,10 +15,10 @@ import { findCheck, listRuleFiles, readConfigurations } from '#cli/manifests/rea
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatArgumentSelector } from '#cli/settings/paths.ts';
-import { findRuleSetting } from '#cli/settings/validation/references.ts';
+import { findRuleSetting } from '#cli/settings/validation/keys.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
-import type { CheckExplanation, CheckIgnore, Explanation, LintRuleExplanation } from '#cli/types/commands/reports.ts';
+import type { CheckExplanation, CheckIgnore, Explanation, LintRuleExplanation } from '#cli/types/commands.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { RuleExplanation, ScopeCheck, Session } from '#cli/types/tools.ts';
 
@@ -121,16 +121,6 @@ function formatLintRuleLines(facts: LintRuleExplanation): string[] {
         ...(facts.turnOff.paths === null ? [] : [`Ignore it for some paths: ${facts.turnOff.paths}`]),
         ...(facts.changeOptions === null ? [] : [`Change its options: ${facts.changeOptions}`]),
     ];
-}
-
-async function readRuleDocs(
-    root: string,
-    check: Check,
-    identifier: string,
-    session: Session | undefined,
-): Promise<Awaited<ReturnType<typeof readCheckRuleExplanation>>> {
-    if (!hasRuleExplanations(check, selectCheckCode(check), identifier)) return { fix: check.help };
-    return await readCheckRuleExplanation(root, check, identifier, session);
 }
 
 function buildRuleDocFacts(
@@ -246,8 +236,7 @@ export async function explainLintRule(
     const found = findRuleCheck(checkId, session);
     if (found === undefined) throw buildUnknownRuleError(identifier, checkId);
     const tool = findRuleTool(found.check);
-    const docs = await readRuleDocs(root, found.check, identifier, session);
-    if (docs === undefined) throw buildUnknownRuleError(identifier, checkId);
+    const docs = (await readListedRuleExplanation(root, found.check, identifier, session)) ?? { fix: found.check.help };
     const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;
     const facts: LintRuleExplanation = {
         tool: tool ?? null,

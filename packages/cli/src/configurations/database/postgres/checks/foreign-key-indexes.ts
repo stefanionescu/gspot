@@ -1,6 +1,6 @@
 import { FOREIGN_KEY_INDEX_RULE } from '#cli/config/configurations/postgres.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

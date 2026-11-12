@@ -21,9 +21,8 @@ import { listLocalPlugins } from '#cli/configurations/language/javascript/eslint
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
 import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { BlockWriter, EslintFileWriter, PlannedEslintBlock } from '#cli/types/configurations/javascript.ts';
-import type { ConfigOutput, PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, ConfigOutput, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { GeneratedFile } from '#cli/types/tools.ts';
 

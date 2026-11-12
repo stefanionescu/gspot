@@ -99,7 +99,7 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
         ],
         javascript: [javascript, ...node],
         tests: scopes.flatMap(({ scopePath, tests }) =>
-            buildTestFiles(listCodeTestFiles(tests), code).map(([test, pattern]) => [
+            buildTestFiles(listCodePatterns(tests), code).map(([test, pattern]) => [
                 test,
                 joinScopeGlob(scopePath, '**/*'),
                 pattern,
@@ -111,9 +111,9 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     };
 }
 
-export function listCodeTestFiles(testFiles: string[]): string[] {
+export function listCodePatterns(patterns: string[]): string[] {
     const extensions = listTaggedExtensions(...CODE_LANGUAGES, ...COMPONENT_CONFIGURATIONS, 'astro');
-    return testFiles.filter((pattern) => {
+    return patterns.filter((pattern) => {
         const extension = extractExtension(pattern);
         return extension === '' || !EXTENSION_PATTERN.test(extension) || extensions.includes(extension);
     });

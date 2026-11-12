@@ -2,6 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import {
     ASSERTION_TEXT,
+    CHAI_TERMINALS,
     CHECKED_TEST_CALLEE,
     DONE_CALLBACKS,
     EVIDENCE_DEPENDENCIES,
@@ -12,29 +13,12 @@ import {
     TEST_FRAMEWORK_IMPORTS,
 } from '../../config/assertions/evidence.ts';
 import { getTypes } from '../../language/checker.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { listChildren } from '../../language/syntax.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
 import { createRule } from '../../rule.ts';
 import type { AssertionSearch } from '../../types/assertions.ts';
 import type { TypeReader } from '../../types/plugin.ts';
-
-const CHAI_TERMINALS: ReadonlySet<string | null> = new Set([
-    'Arguments',
-    'NaN',
-    'arguments',
-    'empty',
-    'exist',
-    'extensible',
-    'false',
-    'finite',
-    'frozen',
-    'null',
-    'ok',
-    'sealed',
-    'true',
-    'undefined',
-]);
 
 function getTestCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const callback = node.arguments.at(1);

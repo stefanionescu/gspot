@@ -8,14 +8,14 @@ import {
     SEARCH_METHODS,
     SHORTHAND_ITERATEES,
     STRING_INCLUDES,
-} from '../../config/libraries.ts';
+} from '../../config/utilities.ts';
 import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { isCallOf, unwrapExpression } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-import type { LibraryCall, NativeMessageId, NativeReplacement } from '../../types/libraries.ts';
 import type { TypeReader } from '../../types/plugin.ts';
+import type { LibraryCall, NativeMessageId, NativeReplacement } from '../../types/utilities.ts';
 
 const methodNames = new Map(NATIVE_REPLACEMENTS.keys().map((method) => [method.toLowerCase(), method]));
 

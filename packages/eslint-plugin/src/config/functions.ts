@@ -302,3 +302,5 @@ export const IDENTICAL_FUNCTIONS_OPTIONS_SCHEMA = {
     },
     additionalProperties: false,
 } satisfies JSONSchema4;
+
+export const EXPORT_REFERENCE_PARENTS: ReadonlySet<string> = new Set(['ExportSpecifier', 'ExportDefaultDeclaration']);

@@ -1,13 +1,9 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { FORMIDABLE_MODULE, MULTER_MODULE, UPLOAD_MESSAGES } from '../../config/servers.ts';
-import {
-    findAssignedVariable,
-    findMemberAssignment,
-    getExpressionValue,
-    getOptionProperties,
-} from '../../language/expressions.ts';
+import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
+import { findAssignedVariable, findMemberAssignment } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import type { UploadForm } from '../../types/security.ts';
 

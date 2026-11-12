@@ -3,11 +3,17 @@ import { join, relative } from 'node:path';
 
 import { z } from 'zod';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GLOB_BRACKETS, REASONED_VALUE_KEY, RECORD_PATHS_KEY } from '#cli/config/settings/validation.ts';
 import { GLOB_EXCLUDE } from '#cli/config/system.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
-import { findSettingSchema } from '#cli/settings/lookup.ts';
-import { buildArgumentPath, convertToPosixPath, escapeGlob } from '#cli/system/paths.ts';
+import { findSettingSchema, isReasonedValue } from '#cli/settings/lookup.ts';
+import {
+    buildArgumentPath,
+    convertToPosixPath,
+    escapeGlob,
+    isInScope,
+    stripTrailingSlashes,
+} from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
 
@@ -104,4 +110,8 @@ export function formatArgumentSelector(root: string, cwd: string, selector: stri
     const absolute = join(root, isNegative ? selector.slice(1) : selector);
     const path = convertToPosixPath(relative(cwd, absolute)) || '.';
     return isNegative ? `${GLOB_EXCLUDE}${path}` : path;
+}
+
+export function isRuleFileExcluded(path: string, excluded: string): boolean {
+    return isInScope(`${GSPOT_PATHS.rules}/${path}`, stripTrailingSlashes(excluded));
 }

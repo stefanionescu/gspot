@@ -1,6 +1,5 @@
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 const SHELLCHECK_OPTIONS = [
     ['source-path', 'SCRIPTDIR'],

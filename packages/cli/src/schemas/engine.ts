@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { CHECK_STATUSES, COMPARED_CONTENTS, SKIP_CAUSES } from '#cli/config/engine.ts';
-import { STAGES } from '#cli/config/manifests.ts';
+import { CHECK_STATUSES, COMPARED_CONTENTS, REPORTED_SKIP_CAUSES } from '#cli/config/engine.ts';
+import { checkStageSchema } from '#cli/schemas/manifests/checks.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 
 const knipSymbolSchema = z.object({
@@ -120,7 +120,7 @@ export const reportedTypoSchema = z.object({
     corrections: z.string().array().nullable(),
 });
 
-const skipCauseSchema = z.enum([...SKIP_CAUSES, 'no-files']);
+const skipCauseSchema = z.enum(REPORTED_SKIP_CAUSES);
 
 export const checkStateSchema = z.discriminatedUnion('status', [
     z.strictObject({ status: z.literal('on') }),
@@ -177,7 +177,7 @@ export const runReportSchema = z.strictObject({
     comparison: z.strictObject({ content: z.enum(COMPARED_CONTENTS), reference: z.string() }).nullable(),
     fixes: fixReportSchema.nullable(),
     version: z.string(),
-    stages: z.enum(STAGES).array().readonly(),
+    stages: checkStageSchema.array().readonly(),
     started: z.string(),
     duration: z.number(),
     checks: reportedCheckSchema.array().readonly(),

@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listCodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
 import {
     NESTED_ESLINT_FILES,
     NESTED_ESLINT_PATHS,
@@ -45,7 +45,7 @@ test('a child scope wildcard exempts its tests and scripts without exempting sib
 
 test('ESLint test patterns omit foreign extensions and retain components and shared globs', () => {
     expect(
-        listCodeTestFiles([
+        listCodePatterns([
             '**/test_*.py',
             '**/*.test.ts',
             '**/*.spec.vue',

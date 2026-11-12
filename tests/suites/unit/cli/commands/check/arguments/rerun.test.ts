@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { parseBashScript } from '#cli/parsers/code/bash.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

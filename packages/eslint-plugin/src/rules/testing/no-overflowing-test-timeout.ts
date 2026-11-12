@@ -2,7 +2,7 @@ import { type TSESTree } from '@typescript-eslint/utils';
 
 import { MAXIMUM_TIMER_DELAY, MOCHA_CONSTRUCTS } from '../../config/testing.ts';
 import { getLiteralValue } from '../../language/expressions.ts';
-import { listImportedModules } from '../../libraries/packages.ts';
+import { listImportedModules } from '../../language/modules.ts';
 import { listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 

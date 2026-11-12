@@ -8,11 +8,14 @@ import {
     NO_PYPROJECT_NOTE,
     PYTHON_NAME_SEPARATORS,
     PYTHON_SOURCE_FOLDER,
+    UV_RUN_ARGUMENTS,
 } from '#cli/config/configurations/python.ts';
 import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/structure.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { UV_FLAGS, UV_TOOL } from '#cli/config/tools/installers.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { getTool } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { deptrySchema } from '#cli/schemas/configurations.ts';
@@ -20,10 +23,11 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
-import { buildUvRunCommand } from '#cli/tools/python-environment.ts';
 import { type DeptryProject } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { VersionedInstaller } from '#cli/types/manifests.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function listFirstPartyPackages(session: Session, planned: PlannedCheck, project: DeptryProject): string[] {
@@ -43,6 +47,25 @@ function listFirstPartyPackages(session: Session, planned: PlannedCheck, project
             ...getTable(planned.scope.settings, 'python').externals,
         ]),
     ].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
+}
+
+/**
+Build the command that runs a pinned Python check with the installed project dependencies of the scope.
+
+@returns the uv command, which syncs neither the project nor its lockfile.
+*/
+function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [string, ...string[]]): string[] {
+    const tool = getTool(scope.configurations, command[0]);
+    const packagePin = tool.installers['pypi'] as VersionedInstaller;
+    return [
+        UV_TOOL,
+        ...UV_RUN_ARGUMENTS,
+        UV_FLAGS.project,
+        scopeRoot,
+        UV_FLAGS.with,
+        `${packagePin.name}==${packagePin.version}`,
+        ...command,
+    ];
 }
 
 /**

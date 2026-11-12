@@ -36,7 +36,7 @@ import {
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
-import { miseToolsSchema } from '#cli/schemas/parsers.ts';
+import { miseToolsSchema } from '#cli/schemas/repository.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';

@@ -1,8 +1,7 @@
 import { stringify } from 'yaml';
 
 import { getTable } from '#cli/settings/scopes.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 const V8R_NOTES = ['# The other selected tools check files without a known schema.'];
 

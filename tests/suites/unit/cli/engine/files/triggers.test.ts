@@ -9,7 +9,7 @@ import { runFixers } from '#cli/engine/fixes.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { compareText } from '#cli/system/text.ts';

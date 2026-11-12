@@ -38,7 +38,7 @@ import {
 } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import {
     buildScopeFiles,
-    listCodeTestFiles,
+    listCodePatterns,
     listJavascriptScopes,
     listNestedScopeGlobs,
     listScriptFiles,
@@ -86,7 +86,7 @@ function buildRootBlock(
     ignoredGlobs: string[],
 ): ConfigurationBlocks[number] {
     const { eslintFiles, session, blockWriter } = planned;
-    const rules = planned.levelRules;
+    const rules = planned.languageRules;
     const pluginOptions = Object.fromEntries(
         blockWriter.ruleOptions.flatMap(({ rules }) =>
             Object.keys(rules)
@@ -178,7 +178,7 @@ function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslint
                 scopes.map(({ path }) => path),
                 scope.path,
             ),
-            ...listCodeTestFiles(scope.settings.test_files),
+            ...listCodePatterns(scope.settings.test_files),
             ...listScriptFiles(scope),
         ],
         rules: CONSOLE_RULES,
@@ -217,7 +217,7 @@ export function buildOpeningBlocks(
 export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlocks {
     const { eslintFiles, session } = planned;
     const { level, runtimes, allLevelRules } = planned.blockWriter;
-    const rules = planned.levelRules;
+    const rules = planned.languageRules;
     const privatePackages = session.repository.files
         .filter(
             (file) =>

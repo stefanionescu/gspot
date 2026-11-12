@@ -156,3 +156,20 @@ export const SAFE_OPERANDS = new Map([
     ['ObjectExpression', ['record', 'properties']],
     ['Property', ['value', 'value']],
 ]);
+
+export const CHAI_TERMINALS: ReadonlySet<string | null> = new Set([
+    'Arguments',
+    'NaN',
+    'arguments',
+    'empty',
+    'exist',
+    'extensible',
+    'false',
+    'finite',
+    'frozen',
+    'null',
+    'ok',
+    'sealed',
+    'true',
+    'undefined',
+]);

@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { EXPLANATION_LETTER, NODE_TEST_MODULES, SKIP_FRAMEWORKS, SKIPPED_TEST_CALLS } from '../../config/testing.ts';
 import { getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
-import { readPackageFacts } from '../../libraries/packages.ts';
+import { readPackageFacts } from '../../language/packages.ts';
 import { getTestCall, isPlaywrightSuite } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FileContext, FunctionNode } from '../../types/plugin.ts';

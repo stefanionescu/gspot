@@ -11,8 +11,7 @@ import {
 import { SITE_CONFIGURATION } from '#cli/config/configurations/site.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildLycheeFile(planned: PlannedConfig): string {
     const { configurations, settings } = planned.scope;

@@ -15,7 +15,7 @@ import {
 } from '#cli/config/configurations/bash.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import { SCRIPT_LAYOUT_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
-import { listCodeLines } from '#cli/parsers/code/bash.ts';
+import { listCodeLines } from '#cli/parsers/code/bash/script.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { LayoutFinding, ScriptFile } from '#cli/types/configurations/language.ts';

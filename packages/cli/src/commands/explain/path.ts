@@ -15,7 +15,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { buildArgumentPath } from '#cli/system/paths.ts';
 import { formatScope } from '#cli/system/text.ts';
-import type { Explanation, PathExplanation } from '#cli/types/commands/reports.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Session } from '#cli/types/tools.ts';
 

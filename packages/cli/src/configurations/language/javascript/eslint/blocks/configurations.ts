@@ -1,7 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { FILE_EXTENSION_RULE, IMPORT_EXTENSIONS } from '#cli/config/configurations/eslint/blocks.ts';
-import { PLUGIN_RULE_BLOCKS, SUPABASE_RULES } from '#cli/config/configurations/javascript.ts';
+import { PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
 import { ASTRO_BLOCK_BUILDERS } from '#cli/configurations/framework/astro/generate.ts';
 import { NESTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nestjs/generate.ts';
 import { NEXTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nextjs/generate.ts';
@@ -10,22 +9,22 @@ import { SVELTE_BLOCK_BUILDERS } from '#cli/configurations/framework/svelte/gene
 import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
 import {
     buildTestFiles,
-    listCodeTestFiles,
+    listCodePatterns,
     listNestedScopeGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
 import { DRIZZLE_BLOCK_BUILDERS } from '#cli/configurations/library/drizzle/generate.ts';
 import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';
 import { ZUSTAND_BLOCK_BUILDERS } from '#cli/configurations/library/zustand/generate.ts';
+import { SUPABASE_BLOCK_BUILDERS } from '#cli/configurations/platform/supabase/generate.ts';
 import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { findParentScope, getTable } from '#cli/settings/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { findParentScope } from '#cli/settings/scopes.ts';
 import { joinTables } from '#cli/system/tables.ts';
 import type {
     ConfigurationBlocks,
-    ConfigurationBuilder,
     ConfigurationScopeBlocks,
+    EslintBlockBuilder,
     EslintScope,
     PlannedEslintBlock,
     PlannedEslintFile,
@@ -34,7 +33,7 @@ import type {
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
-const CONFIGURATION_BUILDERS = joinTables<ConfigurationBuilder>([
+const CONFIGURATION_BUILDERS = joinTables<EslintBlockBuilder>([
     Object.fromEntries(
         Object.entries(PLUGIN_RULE_BLOCKS).map(([name, declaration]) => [
             name,
@@ -46,23 +45,23 @@ const CONFIGURATION_BUILDERS = joinTables<ConfigurationBuilder>([
     NESTJS_BLOCK_BUILDERS,
     NEXTJS_BLOCK_BUILDERS,
     REACT_DOM_BLOCK_BUILDERS,
+    SUPABASE_BLOCK_BUILDERS,
     SVELTE_BLOCK_BUILDERS,
     TESTING_LIBRARY_BLOCK_BUILDERS,
     TYPESCRIPT_BLOCK_BUILDERS,
     VITEST_BLOCK_BUILDERS,
     VUE_BLOCK_BUILDERS,
     ZUSTAND_BLOCK_BUILDERS,
-    { supabase: buildSupabaseBlocks },
 ]);
 
 function buildConfigurationBlocks(
-    builder: ConfigurationBuilder,
+    builder: EslintBlockBuilder,
     scope: Scope,
     planned: PlannedEslintFile,
 ): ConfigurationBlocks {
     const { session } = planned;
     const scopePath = scope.path;
-    const testFiles = listCodeTestFiles(scope.settings.test_files).map((pattern) =>
+    const testFiles = listCodePatterns(scope.settings.test_files).map((pattern) =>
         scopePath !== '' && pattern.startsWith(`${scopePath}/**/`) ? pattern.slice(scopePath.length + 1) : pattern,
     );
     return builder({
@@ -97,7 +96,7 @@ function listMatchingScopes(
 }
 
 function buildScopeConfigurationBlocks(
-    configurations: Array<{ configuration: Configuration; builder: ConfigurationBuilder }>,
+    configurations: Array<{ configuration: Configuration; builder: EslintBlockBuilder }>,
     planned: PlannedEslintFile,
 ): ConfigurationScopeBlocks[] {
     const result: ConfigurationScopeBlocks[] = [];
@@ -143,13 +142,6 @@ function buildPluginRuleBlocks(scope: EslintScope, declaration: PluginRuleBlock)
             presets: declaration.presets ?? [],
         },
     ];
-}
-
-function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
-    const folder = escapeGlob(getTable(scope.settings, 'supabase').functions_folder);
-    const files = scope.eslintFiles.code.map((pattern) => [`${folder}/**`, pattern]);
-    const settings = { n: { tryExtensions: IMPORT_EXTENSIONS, typescriptExtensionMap: [] } };
-    return [{ fields: { files, settings, rules: { ...SUPABASE_RULES, [FILE_EXTENSION_RULE]: ['error', 'always'] } } }];
 }
 
 export function listConfigurationBlocks(planned: PlannedEslintFile): Map<Configuration, PlannedEslintBlock[]> {

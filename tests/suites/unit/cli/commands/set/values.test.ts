@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { STOPPED_APPLY_FILES, STRING_SETTING_VALUES } from '#tests/config/commands/edits.ts';
@@ -137,7 +137,7 @@ test('set level all writes the level in a fresh clone', async () => {
     runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     const changed = await runGspot(checkout, ['set', 'level', 'all']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const settings = readSettings(readFileSync(join(checkout, SETTINGS_FILE), 'utf8'), checkout).level;
+    const settings = parseSettings(readFileSync(join(checkout, SETTINGS_FILE), 'utf8'), checkout).level;
     expect(settings).toBe('all');
 });
 

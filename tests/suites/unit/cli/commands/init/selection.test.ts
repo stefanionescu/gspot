@@ -7,7 +7,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listAlwaysSelected } from '#cli/manifests/select.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
@@ -65,7 +65,7 @@ test('init combines repeated and comma-separated configuration names', async () 
         '--json',
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const saved = readSettings(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'), sandbox.path);
+    const saved = parseSettings(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'), sandbox.path);
     for (const name of ['bash', 'markdown', 'sql']) expect(saved.configurations).toContain(name);
 });
 
@@ -132,7 +132,7 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const proposed = await runGspot(sandbox.path, command);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = initOutputSchema.parse(JSON.parse(proposed.stdout));
-    const settings = readSettings(plan.settingsText, sandbox.path);
+    const settings = parseSettings(plan.settingsText, sandbox.path);
     expect(settings.scopes.keys().toArray()).toStrictEqual(['packages/api']);
     const refused = await runGspot(broken.path, command);
     expect(refused.code).toBe(2);
@@ -151,7 +151,7 @@ test('init keeps root Docker and GitHub configurations beside an app scope', asy
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code, result.stderr).toBe(0);
     const { settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
-    const parsed = readSettings(settingsText, sandbox.path);
+    const parsed = parseSettings(settingsText, sandbox.path);
     expect(parsed.configurations).toContain('docker');
     expect(parsed.configurations).toContain('github-actions');
     expect(parsed.scopes.keys().toArray()).toContain('app');

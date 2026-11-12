@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
 import { LEAKING_TYPES, NATIVE_LEAKING_TYPES } from '../../config/react.ts';
 import { getTypes } from '../../language/checker.ts';
-import { listImportedModules } from '../../libraries/packages.ts';
+import { listImportedModules } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 
 function listOperands(node: TSESTree.Expression): TSESTree.Expression[] {

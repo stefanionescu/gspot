@@ -2,7 +2,10 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { DRIVE_LETTER, MODULE_SEPARATOR, NODE_PREFIX, PLUGIN_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
 import type { CallText, RuleContext } from '../types/plugin.ts';
-import { isCallOf, unwrapExpression } from './syntax.ts';
+import { getMemberRoot, isCallOf, unwrapExpression } from './syntax.ts';
+import { getAssignedValue } from './variables.ts';
+
+const importCache = new WeakMap<TSESLint.SourceCode, ReadonlySet<string>>();
 
 function getImportSpecifier(node: TSESTree.ImportSpecifier, module: string): string | undefined {
     if (node.importKind === 'type') return undefined;
@@ -108,18 +111,21 @@ export function findPathInFolder(folder: string, path: string): string | undefin
 }
 
 /**
+Get the root folder that the `gspot` setting names. A root that is not a string counts as unset.
+*/
+export function getRootFolder(context: Pick<RuleContext, 'settings'>): string | undefined {
+    const setting = context.settings[PLUGIN_PREFIX];
+    const root = setting !== null && typeof setting === 'object' && 'root' in setting ? setting.root : undefined;
+    return typeof root === 'string' ? root : undefined;
+}
+
+/**
 Find where the linted file sits inside the root that the `gspot` setting names, or inside the working folder.
 */
 export function findPathInRoot(
     context: Pick<RuleContext, 'cwd' | 'physicalFilename' | 'settings'>,
 ): string | undefined {
-    const root = (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd;
-    return findPathInFolder(root, context.physicalFilename);
-}
-
-export function getAssignedValue(variable: TSESLint.Scope.Variable): TSESTree.Node | undefined {
-    const writes = variable.references.filter((reference) => reference.isWrite());
-    return writes.length === 1 ? (writes[0]?.writeExpr ?? undefined) : undefined;
+    return findPathInFolder(getRootFolder(context) ?? context.cwd, context.physicalFilename);
 }
 
 export function getModuleName(
@@ -167,4 +173,29 @@ export function getCallText(
     if (argument === undefined || getQualifiedName(node, source) !== name) return undefined;
     const value = ASTUtils.getStaticValue(argument, source.getScope(argument))?.value;
     return typeof value === 'string' ? { argument, text: value } : undefined;
+}
+
+export function getRequiredModule(node: TSESTree.Node): string | undefined {
+    const call = getMemberRoot(node);
+    if (!isCallOf(call, 'require')) return undefined;
+    const [module] = call.arguments.map((argument) => ASTUtils.getStringIfConstant(argument));
+    return module ?? undefined;
+}
+
+export function listImportedModules(source: TSESLint.SourceCode): ReadonlySet<string> {
+    const cached = importCache.get(source);
+    if (cached !== undefined) return cached;
+    const globalScope = source.getScope(source.ast);
+    const references = [...globalScope.through, ...(globalScope.set.get('require')?.references ?? [])];
+    const statements = source.ast.body.flatMap((statement): TSESTree.Node[] =>
+        'body' in statement && Array.isArray(statement.body) ? statement.body : [statement],
+    );
+    const modules = new Set([
+        ...statements.flatMap((statement) =>
+            statement.type === AST_NODE_TYPES.ImportDeclaration ? [statement.source.value] : [],
+        ),
+        ...references.flatMap((reference) => getRequiredModule(reference.identifier.parent) ?? []),
+    ]);
+    importCache.set(source, modules);
+    return modules;
 }

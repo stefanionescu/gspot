@@ -1,8 +1,7 @@
 import { findToolName, getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { RuleOptionsRun } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { PlannedConfig, RuleOptionsRun } from '#cli/types/configurations/shared.ts';
 
 export function assertRunningRuleOptions({ configured, running, allLevelRules, level }: RuleOptionsRun): void {
     const refused = configured.filter((rule) => !running.has(rule));

@@ -1,6 +1,5 @@
 import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/framework.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildCoverageFile(planned: PlannedConfig): string {
     const patterns = planned.scope.settings.test_files

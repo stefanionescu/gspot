@@ -1,13 +1,10 @@
 import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
-import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
+import { ACCEPTED_RESULTS, TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
 import { getOptionProperties, listOptionLiterals } from '../../language/expressions.ts';
 import { findFunction, listReturnedValues } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
-
-// The falsy values, which Node reads as a hostname that matches.
-const ACCEPTED_RESULTS: ReadonlySet<unknown> = new Set([undefined, null, false, 0, '']);
 
 export const unverifiedHostname = createRule<[], 'unverified'>({
     name: 'unverified-hostname',

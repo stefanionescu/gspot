@@ -13,8 +13,7 @@ import {
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildModuleSpecifier, isInScope } from '#cli/system/paths.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildFunctionValueRule(functions: readonly string[]): unknown {
     return [true, { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } }];

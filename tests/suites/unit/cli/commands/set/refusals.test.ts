@@ -72,6 +72,24 @@ test('set of a rule whose catalog is not installed names the install, and writes
     expect(failure.message).toBe('Markdownlint is not installed. Run gspot install.');
 });
 
+test('set refuses an ESLint rule that does not exist and accepts one that does', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'source.js': 'export const value = 1;\n',
+        '.gspot/node_modules/eslint/package.json': '{"exports":{"./use-at-your-own-risk":"./index.cjs"}}',
+        '.gspot/node_modules/eslint/index.cjs':
+            'exports.builtinRules = new Map([["no-console", { meta: { docs: { description: "Disallow console" } } }]]);',
+    });
+    const failure = await assertRefusalWithoutWrites(
+        sandbox.path,
+        ['set', 'tools.eslint.rules', '{ "no-consoles" = [] }'],
+        'arguments',
+    );
+    expect(failure.message).toBe('gspot does not know rule no-consoles of javascript/eslint.');
+    const accepted = await runGspot(sandbox.path, ['set', 'tools.eslint.rules', '{ "no-console" = [] }']);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+});
+
 test.each([
     {
         name: 'a scope that no record declares',

@@ -31,7 +31,7 @@
         "./package.json": "./package.json"
     },
     "files": [
-        "dist/purgecss-process.js",
+        "dist/selector-process.js",
         "dist/THIRD-PARTY-NOTICES.md",
         "src/configurations/*/*/manifest.toml",
         "src/configurations/*/*/rules/**",

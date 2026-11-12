@@ -5,7 +5,7 @@ import {
 } from '#cli/config/configurations/framework.ts';
 import {
     type ConfigurationBlocks,
-    type ConfigurationBuilder,
+    type EslintBlockBuilder,
     type EslintScope,
 } from '#cli/types/configurations/javascript.ts';
 
@@ -24,6 +24,6 @@ function buildReactDomBlocks(scope: Pick<EslintScope, 'settings'>): Configuratio
     return blocks;
 }
 
-export const REACT_DOM_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const REACT_DOM_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     'react-dom': buildReactDomBlocks,
 };

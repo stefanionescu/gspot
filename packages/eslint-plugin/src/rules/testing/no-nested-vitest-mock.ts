@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
 import { VITEST_GLOBAL_ORIGINS, VITEST_IMPORT_ORIGINS, VITEST_MOCK_RECEIVERS } from '../../config/testing.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { getCalleeName } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 

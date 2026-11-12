@@ -51,7 +51,7 @@
                 "tests/setup/runner/prepare.ts",
                 "tests/setup/sandboxes/test-tools.ts",
                 "tests/setup/runner/integration.ts",
-                "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts",
+                "packages/cli/src/configurations/framework/site/checks/selector-process.ts",
                 "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts",
                 "packages/cli/src/configurations/language/javascript/files/eslint-fixes.ts",
                 "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts",
@@ -91,7 +91,7 @@
         },
         "packages/cli": {
             "entry": [
-                "src/configurations/framework/site/checks/purgecss-process.ts",
+                "src/configurations/framework/site/checks/selector-process.ts",
                 "src/configurations/language/javascript/files/eslint-functions.ts",
                 "src/configurations/language/javascript/files/eslint-fixes.ts",
                 "src/configurations/language/javascript/files/eslint-import-cycles.ts",

@@ -183,3 +183,5 @@ export const BARREL_DECLARATIONS = new Set<string>([
 ]);
 
 export const DECLARING_DEFAULT_EXPORTS = new Set<string>(['FunctionDeclaration', 'CallExpression']);
+
+export const PUBLISHED_PATH_FIELDS = ['exports', 'main', 'bin'] as const;

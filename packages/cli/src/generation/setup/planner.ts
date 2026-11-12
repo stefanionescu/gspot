@@ -22,7 +22,7 @@ import { readRepositorySetup } from '#cli/repository/setup.ts';
 import { buildStartRunner, readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/version-pin.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { writeSettings } from '#cli/settings/file.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
@@ -69,7 +69,7 @@ function choosePin(
 
 async function planSettings(plan: SettingsPlan): Promise<PlannedSettings & Pick<SettingsDraft, 'template'>> {
     const { root, draft, repository, conflictingConfigs, sessionOptions, startRunner } = plan;
-    const first = readSettings(buildInitSettings(draft, repository), root);
+    const first = parseSettings(buildInitSettings(draft, repository), root);
     const session = await openSession(root, { settings: first, ...sessionOptions });
     const carryover = await readCarryover({
         repository,
@@ -81,7 +81,7 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings & Pick<
         templateIgnore: (draft.template?.table['ignore'] ?? []) as TomlTable[],
     });
     const settingsText = buildInitSettings({ ...draft, carried: carryover.settings }, repository);
-    const settings = readSettings(settingsText, root);
+    const settings = parseSettings(settingsText, root);
     return {
         carryover,
         settingsText,

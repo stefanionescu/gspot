@@ -2,7 +2,7 @@ import { join, relative } from 'node:path';
 
 import { FILES_PLACEHOLDER, MISSING_GENERATED_FILE_MESSAGE, RAN_STATUSES } from '#cli/config/engine.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
-import { stripCoverageArguments } from '#cli/engine/plan.ts';
+import { selectCheckCommand } from '#cli/engine/plan.ts';
 import { buildBaseResult, measureSpan, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
 import {
@@ -219,7 +219,7 @@ export async function runCommandCheck(
     options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
 ): Promise<CheckResult> {
     const { tool } = planned;
-    const authored = stripCoverageArguments(planned, options);
+    const authored = selectCheckCommand(planned, options);
     // The plan gives a tool to each check with a command, and a check without one passes the command it builds.
     if (tool === undefined || authored === undefined)
         throw new Error(`${planned.check.id} runs a command, but it has no command or no tool.`);
@@ -254,7 +254,7 @@ export async function lookUpCommandTools(
         checks.flatMap((planned) => {
             if (planned.tool === undefined || codes.get(planned)?.check !== undefined) return [];
             const cwd = selectCommandFolder(session.root, planned);
-            const names = listSecondaryTools(planned.scope, planned.check, stripCoverageArguments(planned, {}));
+            const names = listSecondaryTools(planned.scope, planned.check, selectCheckCommand(planned, {}));
             const tools = [planned.tool, ...names.map((name) => getTool(readConfigurations().values(), name))];
             return tools.map((tool) => lookUpTool(session, tool, cwd));
         }),

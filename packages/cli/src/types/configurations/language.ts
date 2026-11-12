@@ -5,14 +5,9 @@ import type { z } from 'zod';
 import type { DOCSTRING_STYLES } from '#cli/config/configurations/shared.ts';
 import type { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
 import type { deptrySchema, xccovSchema } from '#cli/schemas/configurations.ts';
-import type { settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { IgnoreSection, SourcedConfig } from '#cli/types/configurations/general.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { Config, Configuration } from '#cli/types/manifests.ts';
 import type { ScriptSyntax } from '#cli/types/parsers.ts';
-import type { Defined, Level, ParsedSettings, Scope } from '#cli/types/settings.ts';
 import type { Files } from '#cli/types/system.ts';
-import type { GeneratedFile, Session } from '#cli/types/tools.ts';
 
 export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
 
@@ -89,17 +84,6 @@ export type BashCommandForm = {
     allLevel?: true;
 };
 
-export type ConfigOwner = { session: Session; scope: Scope; configuration: Configuration };
-
-export type PlannedConfig = ConfigOwner & {
-    ignoreSections: IgnoreSection[];
-    targetPath: string;
-    level: Level;
-    config: SourcedConfig;
-};
-
-export type ConfigOutput = { content: string; companions: GeneratedFile[] };
-
 export type StylelintComponent = {
     files: readonly string[];
     customSyntax: string;
@@ -107,11 +91,4 @@ export type StylelintComponent = {
     functions?: readonly string[];
 };
 
-export type OwnedConfig = { config: Config; owner: ConfigOwner };
-
-export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['format']>, 'override' | 'quotes'>>> &
-    Pick<NonNullable<ParsedSettings['format']>, 'quotes'>;
-
 export type MarkdownlintFormatterInput = { results: unknown; logMessage: (message: string) => void };
-
-export type WrittenSettings = z.input<typeof settingsSchema>;

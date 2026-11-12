@@ -233,6 +233,8 @@ export const EVERY_CHECK = 'every check';
 
 export const SKIP_CAUSES = ['level', 'system', 'replaced', 'setting', 'condition', 'ignore'] as const;
 
+export const REPORTED_SKIP_CAUSES = [...SKIP_CAUSES, 'no-files'] as const;
+
 export const CHECK_STATUSES = ['passed', 'failed', 'missing', 'skipped', 'error', 'canceled'] as const;
 
 export const COMPARED_CONTENTS = ['working-tree', 'index', 'commit'] as const;

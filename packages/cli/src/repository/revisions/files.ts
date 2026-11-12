@@ -96,7 +96,7 @@ export async function readCommittedTexts(
 Write the tree of the index through a private copy of the index file. `git write-tree` locks the index it writes,
 so a copy keeps `.git/index.lock` free for the user's `git add` or `git commit` beside the check.
 */
-export async function readIndexTree(root: string, cancelSignal?: AbortSignal): Promise<string> {
+export async function writeIndexTree(root: string, cancelSignal?: AbortSignal): Promise<string> {
     const indexPath = await readGitPath(root, 'index', cancelSignal);
     using folder = createTemporaryFolder();
     const privateIndex = join(folder.path, PRIVATE_INDEX_FILE);

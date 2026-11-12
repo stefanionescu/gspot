@@ -22,7 +22,7 @@ export const TEMPORARY_FILE_COMMAND = 'mktemp';
 
 export const END_OF_OPTIONS = '--';
 
-export const REMOVE_COMMAND = 'rm';
+export const REMOVE_FILE_COMMAND = 'rm';
 
 export const BASH_BRANCH_NODES: readonly string[] = [
     'if_statement',
@@ -84,6 +84,8 @@ export const ASTRO_FRONT_MATTER = /^\u{FEFF}?---[\t ]*\r?\n((?:[^\n]*\n)*?)---[\
 export const ASTRO_EXTENSION = '.astro';
 
 export const TSX_LANGUAGES: readonly string[] = ['jsx', 'tsx', 'mtsx'];
+
+export const SCRIPT_LANGUAGE_ATTRIBUTE = /\blang\s*=\s*["'](?<language>[^"']+)["']/u;
 
 export const MDX_ESM = /^(?:import|export) [\s\S]*?(?=\n[ \t]*\n|$)/gmu;
 

@@ -25,7 +25,7 @@ import { remember } from '#cli/system/cache.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import type { TypeScriptReferenceCopy } from '#cli/types/configurations/general.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/configurations/shared.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';

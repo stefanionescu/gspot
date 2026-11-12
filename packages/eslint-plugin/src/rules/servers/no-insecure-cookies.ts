@@ -1,6 +1,12 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { COOKIE_SECURITY_FLAGS, COOKIE_SET_OPTIONS_POSITION } from '../../config/servers.ts';
+import {
+    COOKIE_SECURITY_FLAGS,
+    COOKIE_SESSION_MODULE,
+    COOKIE_SET_OPTIONS_POSITION,
+    CSRF_MODULE,
+    SESSION_MIDDLEWARES,
+} from '../../config/servers.ts';
 import { getExpressionValue, getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
@@ -16,8 +22,8 @@ function getCookiesOptions(call: TSESTree.CallExpression, source: TSESLint.Sourc
 
 function getCookieOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const name = getModuleName(call.callee, source);
-    if (name === 'cookie-session') return call.arguments[0];
-    return name === 'express-session' || name === 'csurf'
+    if (name === COOKIE_SESSION_MODULE) return call.arguments[0];
+    return SESSION_MIDDLEWARES.has(name) || name === CSRF_MODULE
         ? getOptionProperties(call.arguments[0], source).get('cookie')?.value
         : getCookiesOptions(call, source);
 }
@@ -43,7 +49,7 @@ export const noInsecureCookies = createRule<[], 'flag'>({
             CallExpression(node) {
                 const options = getCookieOptions(node, context.sourceCode);
                 const isImplicit =
-                    getModuleName(node.callee, context.sourceCode) === 'csurf' &&
+                    getModuleName(node.callee, context.sourceCode) === CSRF_MODULE &&
                     getLiteralValue(options, context.sourceCode) === true;
                 const properties = getOptionProperties(options, context.sourceCode);
                 for (const flag of COOKIE_SECURITY_FLAGS) {

@@ -12,14 +12,14 @@ import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { addScopeTable, removeUnknownKeys } from '#cli/settings/edit.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { buildSettingsFromTable } from '#cli/settings/read.ts';
+import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { formatNameState } from '#cli/system/text.ts';
-import type { CommandDefinition, RemoveOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition, RemoveOptions, ScopeFlags } from '#cli/types/commands.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
@@ -47,7 +47,7 @@ function removeUnusedSettings(table: TomlTable, scopePath: string): string {
 
 async function runRemoveCommand(options: RemoveOptions): Promise<CommandResult> {
     const context = await readConfigurationEditContext(options);
-    const { edit: input, scopePath, scopeTable, scopeSettings, selected: selectedNames } = context;
+    const { file, scopePath, scopeTable, scopeSettings, selected: selectedNames } = context;
     const detected = listDetectedAdditions(context.session)
         .filter((addition) => addition.scopePath === scopePath)
         .flatMap((addition) => addition.configurations);
@@ -70,7 +70,7 @@ async function runRemoveCommand(options: RemoveOptions): Promise<CommandResult> 
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
         formatConfigurationChange({ action: 'Removed', changed: removed, where, unchanged, state: 'not selected' }) +
-        removeUnusedSettings(input.table, scopePath);
+        removeUnusedSettings(file.table, scopePath);
     return writeSettingsEdit(context, { summary });
 }
 

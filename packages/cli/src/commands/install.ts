@@ -12,7 +12,7 @@ import { listGeneratedChangeLines, writeEveryGeneratedFile } from '#cli/generati
 import { openFiles } from '#cli/system/files/open.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
-import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
 async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {

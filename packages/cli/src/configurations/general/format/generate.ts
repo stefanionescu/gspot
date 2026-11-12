@@ -18,13 +18,8 @@ import { includeFolderContents } from '#cli/system/matchers.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
-import {
-    type ConfigBuilder,
-    type FormatOverride,
-    type ScopeFormat,
-    type WrittenFormat,
-} from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import { type FormatOverride, type ScopeFormat, type WrittenFormat } from '#cli/types/configurations/general.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import type { Settings } from '#cli/types/settings.ts';
 

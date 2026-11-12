@@ -1,7 +1,7 @@
 import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
 import { TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { getTestCall, isRunningTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 

@@ -7,7 +7,7 @@ import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { FIRST_READ } from '#cli/config/settings/validation.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import {
@@ -134,7 +134,7 @@ test('a rule_files.exclude path that matches no rule file names the near match',
     using sandbox = createTemporaryFolder();
     const misspelled = getRuleFilePath('agents', 'ACCESSIBILITY.md').replace(/\.md$/u, '.txt');
     const near = getRuleFilePath('agents', 'ACCESSIBILITY.md');
-    expect(() => readSettings(stringify({ rule_files: { exclude: [misspelled] } }), sandbox.path)).toThrow(
+    expect(() => parseSettings(stringify({ rule_files: { exclude: [misspelled] } }), sandbox.path)).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'settings',
@@ -207,14 +207,14 @@ test.each(['\n', '\r\n'])(
     (newline: string) => {
         const invalid = ['# private sample marker', 'configurations = ?', ''].join(newline);
         using sandbox = createTemporaryFolder();
-        expect(() => readSettings(invalid, sandbox.path)).toThrow(
+        expect(() => parseSettings(invalid, sandbox.path)).toThrow(
             matchFields<GspotError>({
                 name: 'GspotError',
                 code: 'parse',
                 message: expect.stringContaining('gspot.toml:2:18') as string,
             }),
         );
-        expect(() => readSettings(invalid, sandbox.path)).not.toThrow('private sample marker');
+        expect(() => parseSettings(invalid, sandbox.path)).not.toThrow('private sample marker');
         expect(validateSettingsText(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);
     },
 );

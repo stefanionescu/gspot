@@ -30,7 +30,7 @@ import {
 } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { ConfigOwner } from '#cli/types/configurations/language.ts';
+import type { ConfigOwner } from '#cli/types/configurations/shared.ts';
 import type { PlannedPointerField } from '#cli/types/generation.ts';
 import type { Config } from '#cli/types/manifests.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';

@@ -20,7 +20,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
 import type { HookName, HookPlan, HookStatus, ScopeCheck, Session } from '#cli/types/tools.ts';
 
-function describePreCommitLines(names: HookName[]): string {
+function formatPreCommitLines(names: HookName[]): string {
     const entries = names.filter((name) => name !== 'pre-push');
     const hookTypes = entries.map((name) => `--hook-type ${name}`).join(' ');
     const pushLines = names.includes('pre-push')
@@ -57,8 +57,8 @@ function formatLefthookEntry(name: HookName): string[] {
     return [`  ${name}:`, '    commands:', '      gspot:', ...runLines.map((line) => `  ${line}`)];
 }
 
-function describeHookLines(hooks: RepositorySetup['hooks'], names: HookName[]): string {
-    if (hooks.some((hook) => hook.kind === 'pre-commit')) return describePreCommitLines(names);
+function formatHookLines(hooks: RepositorySetup['hooks'], names: HookName[]): string {
+    if (hooks.some((hook) => hook.kind === 'pre-commit')) return formatPreCommitLines(names);
     const lefthook = hooks.find((hook) => hook.kind === 'lefthook');
     if (lefthook !== undefined)
         return [`add this to ${lefthook.path}:`, ...names.flatMap((name) => formatLefthookEntry(name))].join('\n');
@@ -66,11 +66,11 @@ function describeHookLines(hooks: RepositorySetup['hooks'], names: HookName[]): 
     return ['add these gspot lines to them:', ...lines].join('\n');
 }
 
-function describeForeignHooks(
+function formatForeignHooks(
     hooks: RepositorySetup['hooks'],
     session: Session,
 ): Required<Pick<HookStatus, 'lines' | 'text'>> {
-    const instructions = describeHookLines(hooks, listHookNames(session.configuredChecks));
+    const instructions = formatHookLines(hooks, listHookNames(session.configuredChecks));
     const text = `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; ${instructions}`;
     return { lines: [text], text };
 }
@@ -82,7 +82,7 @@ async function planHooks(session: Session): Promise<HookPlan> {
     if (!settings.hooks.enabled)
         return hooksPath === GSPOT_PATHS.hooks ? { command: UNSET_HOOKS_PATH, note: UNSET_HOOKS_NOTE } : { note: '' };
     if (hooksPath === GSPOT_PATHS.hooks) return { note: '' };
-    if (hooks.length > 0) return { note: describeForeignHooks(hooks, session).text };
+    if (hooks.length > 0) return { note: formatForeignHooks(hooks, session).text };
     return {
         command: [...SET_HOOKS_PATH, GSPOT_PATHS.hooks],
         note: `set core.hooksPath to ${GSPOT_PATHS.hooks}`,
@@ -145,7 +145,7 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
         );
         const tool = foreign.map((hook) => hook.kind).join(', ');
         if (isReady) return { ready: isReady, tool, text: `run from ${foreign.map((hook) => hook.path).join(', ')}` };
-        const { lines, text } = describeForeignHooks(foreign, session);
+        const { lines, text } = formatForeignHooks(foreign, session);
         return { ready: isReady, tool, lines, text: `not installed; ${text}` };
     }
     return { ready: false, text: NOT_INSTALLED_STATUS };

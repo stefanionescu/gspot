@@ -9,7 +9,7 @@ import { createFileTree } from 'testdirs';
 import { MANAGED_KEYS_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -71,7 +71,7 @@ test('remove names only removed configurations in a mixed request', async () => 
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Removed bash. python is not selected.');
-    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    const settings = parseSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(settings.configurations).toStrictEqual([]);
     expect(settings.removed_configurations).toStrictEqual(['bash']);
 });

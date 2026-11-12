@@ -12,13 +12,13 @@ import {
     listUnfrozenMigrations,
     readParsedMigrations,
 } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
 import { ROW_SECURITY_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text.ts';
-import type { Migration } from '#cli/types/configurations/infrastructure.ts';
+import type { Migration } from '#cli/types/configurations/database.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { SqlNodeFields, SqlStatement } from '#cli/types/parsers.ts';

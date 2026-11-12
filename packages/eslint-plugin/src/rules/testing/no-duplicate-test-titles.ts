@@ -3,8 +3,8 @@ import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/util
 import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
 import { getLocalFunction } from '../../language/functions.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { listChildren } from '../../language/syntax.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
 import { getTestCall, isRunningTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';

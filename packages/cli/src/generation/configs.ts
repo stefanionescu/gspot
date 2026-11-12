@@ -12,10 +12,9 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { OwnedConfig, PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
-import type { BuiltConfig, ConfigBuildState, OwnedSourceFile } from '#cli/types/generation.ts';
+import type { BuiltConfig, ConfigBuildState, OwnedConfig, OwnedSourceFile } from '#cli/types/generation.ts';
 import type { Config } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
 

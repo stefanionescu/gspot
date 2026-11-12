@@ -1,8 +1,8 @@
 import { SVELTE_FILES, SVELTE_RULES } from '#cli/config/configurations/framework.ts';
 import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/typescript.ts';
-import { type ConfigurationBuilder } from '#cli/types/configurations/javascript.ts';
+import { type EslintBlockBuilder } from '#cli/types/configurations/javascript.ts';
 
-export const SVELTE_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const SVELTE_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     svelte: (scope) => {
         const isTyped = scope.settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
         return [

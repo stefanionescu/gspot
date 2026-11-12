@@ -2,7 +2,7 @@ import { realpathSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
 import { EXCLUDE_FLAG } from '#cli/config/configurations/framework.ts';
-import { listOwnTestScopes, stripCoverageArguments } from '#cli/engine/plan.ts';
+import { listOwnTestScopes, selectCheckCommand } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
@@ -27,7 +27,7 @@ async function runVitest(
         EXCLUDE_FLAG,
         `${convertToPosixPath(join(root, path))}/**`,
     ]);
-    const command = [...(stripCoverageArguments(planned, options) as string[]), ...excludes, '--coverage.all=false'];
+    const command = [...(selectCheckCommand(planned, options) as string[]), ...excludes, '--coverage.all=false'];
     return runCommandCheck(session, planned, { ...options, command });
 }
 

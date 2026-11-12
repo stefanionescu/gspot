@@ -19,7 +19,7 @@ import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Config, Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -75,7 +75,7 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
         scope,
         projects,
         defaultProjectFiles: listDefaultProjectFiles(session, projects),
-        levelRules: { code: { ...BASE_RULES, ...limitRules.code }, javascript: limitRules.javascript },
+        languageRules: { code: { ...BASE_RULES, ...limitRules.code }, javascript: limitRules.javascript },
         blockWriter: {
             runtimes: buildRuntimes(scopes, session.repository.dependencyFiles),
             rulePrefixes: new Map(

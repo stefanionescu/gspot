@@ -1,8 +1,7 @@
 import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
-import type { WrittenSettings } from '#cli/types/configurations/language.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
-import type { Level, Scope, ScopeSettings, Settings } from '#cli/types/settings.ts';
+import type { Level, Scope, ScopeSettings, Settings, WrittenSettings } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 export type EslintGlobals = Record<string, boolean | 'readonly' | 'writable' | 'writeable' | 'off'>;
@@ -139,7 +138,7 @@ export type PlannedEslintFile = {
     defaultProjectFiles: string[];
     blockWriter: BlockWriter;
     eslintFiles: EslintFiles;
-    levelRules: EslintLevelRules;
+    languageRules: EslintLanguageRules;
     configurations: Configuration[];
 };
 
@@ -153,7 +152,7 @@ export type EslintCallArgument = EslintReference | ListedPlugins | Pick<ListedPl
 
 type EslintCall = { name: string; args: readonly EslintCallArgument[] };
 
-export type EslintLevelRules = {
+export type EslintLanguageRules = {
     code: Record<string, unknown>;
     javascript: Record<string, unknown>;
 };
@@ -186,7 +185,7 @@ export type EslintScope = {
     defaultProjectFiles: string[];
 };
 
-export type ConfigurationBuilder = (scope: EslintScope) => ConfigurationBlocks;
+export type EslintBlockBuilder = (scope: EslintScope) => ConfigurationBlocks;
 
 export type ConfigurationScopeBlocks = { configuration: Configuration; blocks: PlannedEslintBlock[] };
 

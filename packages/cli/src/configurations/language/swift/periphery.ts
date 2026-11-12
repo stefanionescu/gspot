@@ -2,7 +2,7 @@ import { stringify as stringifyYaml } from 'yaml';
 
 import { PERIPHERY_RETAIN } from '#cli/config/configurations/swift.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/shared.ts';
 
 export const PERIPHERY_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
     'swift/periphery.yml': (planned) => {

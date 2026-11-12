@@ -39,8 +39,6 @@ export type PathBytes = Map<string, Buffer | undefined>;
 
 export type FixRounds = { results: FixResult[]; before: PathBytes; after: PathBytes };
 
-export type PushInput = { stdin: string; remote?: string };
-
 export type FixReport = z.infer<typeof fixReportSchema>;
 
 export type FixResult = z.infer<typeof fixResultSchema>;
@@ -127,7 +125,7 @@ export type StaleFile = {
 export type CheckGeneration = {
     buildConfigs: (session: Session) => ConfigTargets;
     listStaleFiles: (session: Session, options: Pick<CheckRunOptions, 'verbose'>) => StaleFile[];
-    listWrittenPaths: (session: Session) => string[];
+    listWrittenGlobs: (session: Session) => string[];
 };
 
 export type CheckSession = Session & {

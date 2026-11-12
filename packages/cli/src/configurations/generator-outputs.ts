@@ -12,7 +12,7 @@ import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { GeneratorOutput, GeneratorRun } from '#cli/types/configurations/general.ts';
+import type { GeneratorOutput, GeneratorRun } from '#cli/types/configurations/shared.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Substitutions } from '#cli/types/engine/tool-runs.ts';

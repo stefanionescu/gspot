@@ -37,8 +37,7 @@ import {
 } from '#cli/config/tools/vale.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 const TERMS_MESSAGE = "Use '%s' instead of '%s'.";

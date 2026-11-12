@@ -17,8 +17,8 @@ import { FILENAME_TAGS, GIT_FILE_MODES, SYMLINK_MODE } from '#cli/config/reposit
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { UNUSED_ASSET_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
-import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javascript.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';

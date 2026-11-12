@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { RETRY_MODULES } from '../../config/testing.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 

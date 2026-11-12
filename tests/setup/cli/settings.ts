@@ -1,10 +1,9 @@
 import { stringify } from '@decimalturn/toml-patch';
 
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import type { WrittenSettings } from '#cli/types/configurations/language.ts';
-import type { Level } from '#cli/types/settings.ts';
+import type { Level, WrittenSettings } from '#cli/types/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 export function buildSandboxSettings(
@@ -36,7 +35,7 @@ export function buildSandboxSettings(
 export function validateSettingsText(text: string, root?: string): string[] {
     using resources = new DisposableStack();
     try {
-        readSettings(text, root ?? resources.use(createTemporaryFolder()).path);
+        parseSettings(text, root ?? resources.use(createTemporaryFolder()).path);
         return [];
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings') return error.message.split('\n').slice(0, -1);

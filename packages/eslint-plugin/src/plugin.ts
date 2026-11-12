@@ -2,13 +2,14 @@ import type { TSESLint } from '@typescript-eslint/utils';
 
 import pluginPackage from '../package.json' with { type: 'json' };
 import { PLUGIN_PREFIX } from './config/plugin.ts';
-import { LANGUAGE_TOPICS } from './registry/language.ts';
-import { LIBRARY_TOPICS } from './registry/libraries.ts';
+import { TOPICS } from './registry/topics.ts';
 import type { RuleDocs } from './types/plugin.ts';
 
-const RULES = [...Object.values(LANGUAGE_TOPICS), ...Object.values(LIBRARY_TOPICS)].flat();
-
-const rules = Object.fromEntries(RULES.map((rule) => [rule.name, rule]));
+const rules = Object.fromEntries(
+    Object.values(TOPICS)
+        .flat()
+        .map((rule) => [rule.name, rule]),
+);
 
 const selectLevelRules = (levels: ReadonlyArray<RuleDocs['level']>) =>
     Object.fromEntries(

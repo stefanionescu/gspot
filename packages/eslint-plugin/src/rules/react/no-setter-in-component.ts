@@ -5,7 +5,7 @@ import { COMPONENT_NAME } from '../../config/react.ts';
 import { findEnclosingFunction } from '../../language/functions.ts';
 import { getStateHook, isNamedFunction } from '../../libraries/react.ts';
 import { createRule } from '../../rule.ts';
-import type { StateHook } from '../../types/libraries.ts';
+import type { StateHook } from '../../types/utilities.ts';
 
 function isComponentBody(hook: StateHook, node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const ancestors = source.getAncestors(node);

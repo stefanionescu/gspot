@@ -7,7 +7,7 @@ import { createFileTree } from 'testdirs';
 import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

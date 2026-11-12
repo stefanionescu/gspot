@@ -11,6 +11,16 @@ import type { SetupReference } from '#cli/types/repository.ts';
 import type { Level, SettingReference } from '#cli/types/settings.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
+export type CommandHelp = {
+    summary: string;
+    group: string;
+    description: string;
+    arguments: Readonly<Record<string, string>>;
+    options: Readonly<Record<string, string>>;
+    exitCodes: ReadonlyArray<readonly [string, string]>;
+    example: string;
+};
+
 export type CommandReference = {
     name: string;
     summary: string;

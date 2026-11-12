@@ -20,11 +20,10 @@ import {
     TEXT_RECEIVER,
     VALUE_KINDS,
 } from '../../config/assertions/matchers.ts';
-import { VERSION_ALTERNATIVES, VERSION_PATTERN, VERSION_SPACES, VERSION_WILDCARD } from '../../config/libraries.ts';
 import { NUMERIC_SIGNS, NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
 import { PLAYWRIGHT_LOCATOR } from '../../config/testing.ts';
+import { readPackageFacts, requiresVersion } from '../../language/packages.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
-import { compareVersions, readPackageFacts } from '../../libraries/packages.ts';
 import { createRule } from '../../rule.ts';
 import type { ComparisonAssertion, MatcherSuggestion } from '../../types/assertions.ts';
 import type { FileContext } from '../../types/plugin.ts';
@@ -197,21 +196,6 @@ function getLocatorSuggestion(assertion: ComparisonAssertion, source: TSESLint.S
     if (getter === undefined) return undefined;
     const matcher = getLocatorMatcher(ASTUtils.getPropertyName(getter), assertion, source);
     return matcher === undefined ? undefined : `await expect(${source.getText(getter.object)}).${matcher}`;
-}
-
-function requiresVersion(range: string, minimum: readonly number[]): boolean {
-    const alternatives = range
-        .split(VERSION_ALTERNATIVES)
-        .map((alternative) => alternative.trim().split(VERSION_SPACES));
-    const lowerBounds = alternatives.map((comparators) =>
-        comparators.flatMap((comparator) => {
-            const groups = VERSION_PATTERN.exec(comparator)?.groups;
-            const isLowerBound = groups !== undefined && !(groups['operator'] ?? '').startsWith('<');
-            const fields = (groups?.['number'] ?? '').split('.');
-            return isLowerBound ? [fields.map((field) => (VERSION_WILDCARD.test(field) ? 0 : Number(field)))] : [];
-        }),
-    );
-    return lowerBounds.every((versions) => versions.some((version) => compareVersions(version, minimum) >= 0));
 }
 
 function canUseJasmineSize(context: FileContext): boolean {

@@ -292,3 +292,9 @@ export const PRINTED_RULE_TOOLS = [
         gspotArguments: ['--config', '.gspot/configurations/css/stylelint.json'],
     },
 ] as const;
+
+export const SCRIPT_EXTENSIONS: readonly string[] = ['.sh', '.bash'];
+
+export const OTHER_CONFIG_MESSAGE = 'its rules, because <tool> reads <path> instead';
+
+export const LOCAL_RECORDS = { scope: 'path', import_rule: 'name', command_check: 'id' } as const;

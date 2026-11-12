@@ -237,7 +237,7 @@ export function planChecks(session: Session, options: PlanOptions): PlannedCheck
     return checks;
 }
 
-export function stripCoverageArguments(
+export function selectCheckCommand(
     planned: Pick<PlannedCheck, 'check' | 'scope' | 'configuration'>,
     authored: Pick<Check, 'command'>,
 ): string[] | undefined {

@@ -289,3 +289,6 @@ export const OCTAL_OCTET = /^0[0-7]*$/u;
 export const HEXADECIMAL_OCTET = /^0x[\da-f]+$/iu;
 
 export const HEXADECIMAL_RADIX = 16;
+
+// The falsy values, which Node reads as a hostname that matches.
+export const ACCEPTED_RESULTS: ReadonlySet<unknown> = new Set([undefined, null, false, 0, '']);

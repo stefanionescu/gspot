@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { listCommittedPaths, listRevisionFiles, readHead, readIndexTree } from '#cli/repository/revisions/files.ts';
+import { listCommittedPaths, listRevisionFiles, readHead, writeIndexTree } from '#cli/repository/revisions/files.ts';
 import type { GitFile } from '#cli/types/repository.ts';
 import { HASH_FORMATS, INDEX_PATH } from '#tests/config/repository/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -26,7 +26,7 @@ test('the tree of the index is written while the user holds the index lock, and 
     runGitStep(sandbox.path, ['add', 'staged.ts']);
     const index = await readFile(join(sandbox.path, '.git', 'index'));
     await writeFile(join(sandbox.path, '.git', 'index.lock'), 'held by git add');
-    const tree = await readIndexTree(sandbox.path);
+    const tree = await writeIndexTree(sandbox.path);
     expect(runGitStep(sandbox.path, ['ls-tree', '--name-only', tree])).toBe('source.ts\nstaged.ts');
     expect(await readFile(join(sandbox.path, '.git', 'index.lock'), 'utf8')).toBe('held by git add');
     expect(await readFile(join(sandbox.path, '.git', 'index'))).toStrictEqual(index);

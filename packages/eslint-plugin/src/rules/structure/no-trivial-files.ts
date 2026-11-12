@@ -1,24 +1,22 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 
 import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import picomatch from 'picomatch';
 
-import { PACKAGE_MANIFEST } from '../../config/libraries.ts';
 import {
     BARREL_DECLARATIONS,
     DECLARING_DEFAULT_EXPORTS,
     INDEX_BASENAMES,
     INDEX_EXPORTS,
+    PUBLISHED_PATH_FIELDS,
     TRIVIAL_FILE_OPTIONS_SCHEMA,
 } from '../../config/structure.ts';
 import { findPathInRoot } from '../../language/modules.ts';
-import { isAlias, isTypeAlias } from '../../language/syntax.ts';
-import { listManifestFolders } from '../../libraries/packages.ts';
+import { listManifestPaths, readManifest } from '../../language/packages.ts';
+import { isTypeAlias } from '../../language/syntax.ts';
+import { isAlias } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import type { TrivialFilesContext, TrivialFilesOptions } from '../../types/structure.ts';
-
-const PUBLISHED_PATH_FIELDS = ['exports', 'main', 'bin'] as const;
 
 function listPublishedPaths(value: unknown): string[] {
     if (typeof value === 'string') return [value];
@@ -27,19 +25,11 @@ function listPublishedPaths(value: unknown): string[] {
 }
 
 function isPublishedFile(context: TrivialFilesContext): boolean {
-    const manifest = listManifestFolders(context)
-        .map((folder) => join(folder, PACKAGE_MANIFEST))
-        .find((path) => existsSync(path));
-    if (manifest === undefined) return false;
-    let fields: Record<string, unknown> | null;
-    try {
-        fields = JSON.parse(readFileSync(manifest, 'utf8')) as Record<string, unknown> | null;
-    } catch (error) {
-        if (error instanceof SyntaxError) return false;
-        throw error;
-    }
+    const [manifest] = listManifestPaths(context);
+    const fields = manifest === undefined ? undefined : readManifest(manifest);
+    if (manifest === undefined || fields === undefined) return false;
     const file = resolve(context.physicalFilename);
-    return PUBLISHED_PATH_FIELDS.flatMap((field) => listPublishedPaths(fields?.[field])).some(
+    return PUBLISHED_PATH_FIELDS.flatMap((field) => listPublishedPaths(fields[field])).some(
         (published) => resolve(dirname(manifest), published) === file,
     );
 }

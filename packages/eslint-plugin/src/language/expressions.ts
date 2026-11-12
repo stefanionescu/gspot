@@ -1,8 +1,9 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import type { MemberAssignment } from '../types/plugin.ts';
-import { getAssignedValue, getQualifiedName } from './modules.ts';
+import { COLLECTION_TYPE_NAMES } from '../config/collections.ts';
+import { getQualifiedName } from './modules.ts';
 import { unwrapExpression } from './syntax.ts';
+import { getAssignedValue } from './variables.ts';
 
 export function getExpressionValue(
     node: TSESTree.Node | undefined,
@@ -112,21 +113,10 @@ export function isDynamicString(node: TSESTree.Node): boolean {
     return node.left.type === AST_NODE_TYPES.BinaryExpression ? isDynamicString(node.left) : isLeftLiteral !== true;
 }
 
-export function findAssignedVariable(node: TSESTree.Node, source: TSESLint.SourceCode): TSESLint.Scope.Variable | null {
-    const { parent } = node;
-    let target: TSESTree.Node | null = null;
-    if (parent?.type === AST_NODE_TYPES.VariableDeclarator) target = parent.id;
-    else if (parent?.type === AST_NODE_TYPES.AssignmentExpression) target = parent.left;
-    return ASTUtils.isIdentifier(target) ? ASTUtils.findVariable(source.getScope(target), target) : null;
-}
-
-export function findMemberAssignment(
-    node: TSESTree.AssignmentExpression,
-    source: TSESLint.SourceCode,
-): MemberAssignment | undefined {
-    const { left } = node;
-    if (left.type !== AST_NODE_TYPES.MemberExpression || !ASTUtils.isIdentifier(left.object)) return undefined;
-    const variable = ASTUtils.findVariable(source.getScope(left), left.object);
-    const property = ASTUtils.getPropertyName(left);
-    return variable === null || property === null ? undefined : { variable, property };
+export function listInitialElements(node: TSESTree.Node | undefined): readonly unknown[] | undefined {
+    if (node === undefined) return undefined;
+    if (node.type === AST_NODE_TYPES.ArrayExpression) return node.elements;
+    const isCall = node.type === AST_NODE_TYPES.CallExpression || node.type === AST_NODE_TYPES.NewExpression;
+    if (!isCall || !ASTUtils.isIdentifier(node.callee)) return undefined;
+    return COLLECTION_TYPE_NAMES.has(node.callee.name) ? node.arguments : undefined;
 }

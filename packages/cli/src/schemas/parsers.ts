@@ -123,43 +123,6 @@ export const yarnPackageSchema = z.looseObject({
     resolved: z.string().optional(),
 });
 
-const uvSourceSchema = z.looseObject({
-    virtual: z.string().optional(),
-    registry: z.string().optional(),
-});
-
-const uvArchiveSchema = z.looseObject({ url: z.string().optional() });
-
-const uvRequirementSchema = z.object({
-    name: z.string(),
-    specifier: z.string().optional(),
-});
-
-const uvMetadataSchema = z.looseObject({
-    'requires-dist': uvRequirementSchema.array().optional(),
-});
-
-export const uvLockfileSchema = z.looseObject({
-    options: z.object({ 'exclude-newer-span': z.string().optional() }).optional(),
-    version: z.number().optional(),
-    'requires-python': z.string().optional(),
-    package: z
-        .looseObject({
-            name: z.string(),
-            version: z.string().optional(),
-            source: uvSourceSchema.optional(),
-            sdist: uvArchiveSchema.optional(),
-            wheels: uvArchiveSchema.array().optional(),
-            metadata: uvMetadataSchema.optional(),
-        })
-        .array()
-        .default([]),
-});
-
-export const miseToolsSchema = z.looseObject({
-    tools: z.record(z.string(), z.unknown()).default({}),
-});
-
 export const tsconfigSchema = z.looseObject({
     compilerOptions: z.record(z.string(), z.unknown()).optional(),
 });

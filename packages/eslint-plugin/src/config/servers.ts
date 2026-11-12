@@ -48,7 +48,9 @@ export const EXPRESS_ROUTE_METHODS: ReadonlySet<string | undefined> = new Set([
 
 export const RESPONSE_CALL_ARGUMENTS = 2;
 
-export const SESSION_MIDDLEWARES: ReadonlySet<string | undefined> = new Set(['express-session', 'cookie-session']);
+export const COOKIE_SESSION_MODULE = 'cookie-session';
+
+export const SESSION_MIDDLEWARES: ReadonlySet<string | undefined> = new Set(['express-session', COOKIE_SESSION_MODULE]);
 
 export const STATIC_MIDDLEWARE = 'express.static';
 
@@ -113,3 +115,97 @@ export const JSON_BODY_READ =
 export const SCHEMA_PARSERS = new Set(['parse', 'safeParse', 'parseAsync', 'safeParseAsync']);
 
 export const BODY_SCHEMA_PARSERS = new Set(['parse', 'safeParse']);
+
+export const REQUEST_NAMES: ReadonlySet<string> = new Set(['req', 'request']);
+
+export const REQUEST_FIELDS: ReadonlySet<string> = new Set([
+    'query',
+    'body',
+    'params',
+    'headers',
+    'cookies',
+    'signedCookies',
+]);
+
+export const REQUEST_READERS: ReadonlySet<string> = new Set(['get', 'header', 'param']);
+
+export const RESPONSE_NAMES: ReadonlySet<string> = new Set(['res', 'response']);
+
+export const NUMBER_CONVERTERS: ReadonlySet<string> = new Set(['Number', 'parseInt', 'parseFloat', 'Boolean']);
+
+export const RESPONSE_TARGETS: Readonly<Record<string, 'redirect' | 'html' | 'template' | 'path'>> = {
+    redirect: 'redirect',
+    send: 'html',
+    write: 'html',
+    end: 'html',
+    render: 'template',
+    sendFile: 'path',
+    download: 'path',
+};
+
+export const SQL_METHODS: ReadonlySet<string> = new Set([
+    'query',
+    'execute',
+    'raw',
+    '$queryRawUnsafe',
+    '$executeRawUnsafe',
+]);
+
+export const FILE_FUNCTION = /^fs(?:\.promises)?\.(?<method>[A-Za-z]+?)(?:Sync)?$/u;
+
+export const FILE_METHODS: ReadonlySet<string> = new Set([
+    'readFile',
+    'writeFile',
+    'appendFile',
+    'createReadStream',
+    'createWriteStream',
+    'open',
+    'unlink',
+    'rm',
+    'rmdir',
+    'readdir',
+    'stat',
+    'lstat',
+    'access',
+    'copyFile',
+    'rename',
+    'mkdir',
+]);
+
+export const OUTBOUND_FUNCTIONS: ReadonlySet<string> = new Set([
+    'fetch',
+    'node-fetch',
+    'undici.fetch',
+    'undici.request',
+    'axios',
+    'axios.get',
+    'axios.post',
+    'axios.put',
+    'axios.patch',
+    'axios.delete',
+    'axios.head',
+    'axios.request',
+    'got',
+    'got.get',
+    'got.post',
+    'got.put',
+    'got.patch',
+    'got.delete',
+    'got.head',
+    'http.get',
+    'http.request',
+    'https.get',
+    'https.request',
+]);
+
+export const COMMAND_FUNCTION = /^child_process\.(?:spawn|spawnSync|execFile|execFileSync)$/u;
+
+export const COMMAND_INTERPRETERS: ReadonlySet<unknown> = new Set([
+    'sh',
+    'bash',
+    'zsh',
+    '/bin/sh',
+    '/bin/bash',
+    'cmd',
+    'cmd.exe',
+]);

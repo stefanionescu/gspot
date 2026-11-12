@@ -1,21 +1,21 @@
-import { formatIgnoreSubject, readIgnoreEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
+import { formatIgnoreSubject, readEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION, REASON_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
+import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
-import { buildUnknownRuleError, canIgnoreRule, hasRuleExplanations } from '#cli/engine/results.ts';
+import { canIgnoreRule } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { assertCheckExists, findCheck, findToolName, listCheckIds } from '#cli/manifests/read.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
+import { mergeIgnore } from '#cli/settings/edit.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
-import { mergeIgnore } from '#cli/settings/text.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { formatNameList, quoteArgument } from '#cli/system/text.ts';
-import type { CommandDefinition, IgnoreEditContext, IgnoreFlags, IgnoreOptions } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition, EditContext, IgnoreFlags, IgnoreOptions } from '#cli/types/commands.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
@@ -42,13 +42,11 @@ async function assertDocumentedRule(
     { checkId, rule }: { checkId: string; rule: string },
 ): Promise<void> {
     const check = findRuleCheck(session, checkId);
-    if (!hasRuleExplanations(check, selectCheckCode(check), rule)) return;
     if (findToolName(check) === 'ruff' && RUFF_RULE_PREFIX.test(rule)) return;
-    const docs = await readCheckRuleExplanation(session.root, check, rule, session);
-    if (docs === undefined) throw buildUnknownRuleError(rule, checkId);
+    await readListedRuleExplanation(session.root, check, rule, session);
 }
 
-function assertNoCheckPaths(context: IgnoreEditContext, paths: string[]): void {
+function assertNoCheckPaths(context: EditContext, paths: string[]): void {
     const checks = new Set(listCheckIds(Object.values(context.settings.commandChecks)));
     for (const path of paths)
         if (checks.has(path))
@@ -58,7 +56,7 @@ function assertNoCheckPaths(context: IgnoreEditContext, paths: string[]): void {
             );
 }
 
-function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): void {
+function assertSelectorsMatch(context: EditContext, selectors: string[]): void {
     for (const selector of selectors) {
         const path = selector.startsWith('!') ? selector.slice(1) : selector;
         const isMatched = buildPathMatcher([path]);
@@ -74,7 +72,7 @@ function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): 
     }
 }
 
-function buildIgnorePaths(context: IgnoreEditContext, cwd: string, paths: string[] | undefined): string[] | undefined {
+function buildIgnorePaths(context: EditContext, cwd: string, paths: string[] | undefined): string[] | undefined {
     assertNoCheckPaths(context, paths ?? []);
     const selectors = buildArgumentPaths(context.root, cwd, paths);
     assertSelectorsMatch(context, selectors ?? []);
@@ -82,22 +80,22 @@ function buildIgnorePaths(context: IgnoreEditContext, cwd: string, paths: string
 }
 
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
-    const context = await readIgnoreEditContext(options.root);
-    const { root, edit: input, settings, cache, listing } = context;
+    const context = await readEditContext(options.root);
+    const { root, file, settings, cache, listing } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
     if (options.rule !== undefined && options.check !== undefined) {
         const session = await openSession(root, { settings, cache, listing });
         await assertDocumentedRule(session, { checkId: options.check, rule: options.rule });
     }
     const paths = buildIgnorePaths(context, options.cwd, options.paths);
-    const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
+    const list = (file.table['ignore'] as TomlTable[] | undefined) ?? [];
     mergeIgnore(list, {
         ...(options.check !== undefined && { check: options.check }),
         ...(options.rule !== undefined && { rule: options.rule }),
         paths,
         reason: options.reason,
     });
-    input.table['ignore'] = list;
+    file.table['ignore'] = list;
     return await writeSettingsEdit(context, { summary: formatIgnoreSummary(options, paths) });
 }
 

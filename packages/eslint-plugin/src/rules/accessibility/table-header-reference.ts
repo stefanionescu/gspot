@@ -1,4 +1,4 @@
-import { buildTableGrid, getElementName } from '../../libraries/jsx.ts';
+import { buildTableGrid, getElementName } from '../../language/jsx.ts';
 import { createRule } from '../../rule.ts';
 import type { HeaderIssue, TableBlock, TableCell } from '../../types/accessibility.ts';
 

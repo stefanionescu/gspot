@@ -1,8 +1,8 @@
 import { VUE_FILES, VUE_RULES, VUE_SCOPE_RULES } from '#cli/config/configurations/framework.ts';
 import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/typescript.ts';
-import { type ConfigurationBuilder } from '#cli/types/configurations/javascript.ts';
+import { type EslintBlockBuilder } from '#cli/types/configurations/javascript.ts';
 
-export const VUE_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const VUE_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     vue: (scope) => {
         const isTyped = scope.settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
         return [

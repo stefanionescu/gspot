@@ -1,12 +1,24 @@
 import { decodeXML } from 'entities';
 
-import { SITE_RULES, SITEMAP_EXTENSION, SITEMAP_FILE, SITEMAP_LOCATION } from '#cli/config/configurations/site.ts';
-import { convertToBuildPath } from '#cli/configurations/framework/site/checks/build.ts';
+import {
+    HTML_EXTENSION,
+    INDEX_PAGE,
+    SITE_RULES,
+    SITEMAP_EXTENSION,
+    SITEMAP_FILE,
+    SITEMAP_LOCATION,
+    UNLISTED_PAGE_MESSAGE,
+} from '#cli/config/configurations/site.ts';
+import { LEADING_SLASH } from '#cli/config/system.ts';
+import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
+import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { SitemapUrls } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function parseSitemapUrl(value: string): URL | undefined {
     const url = URL.parse(value);
@@ -72,6 +84,46 @@ function readSitemapTree(
     }
 }
 
+function listPossiblePages(pathname: string): [string, ...string[]] {
+    const path = decodeURIComponent(pathname).replace(LEADING_SLASH, '');
+    if (path === '' || path.endsWith('/')) return [`${path}${INDEX_PAGE}`];
+    return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
+}
+
+async function checkSitemap(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const build = await readSuccessfulBuild(session, planned);
+    const files = new Set(build.files);
+    const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
+    if (sitemapFile === undefined) return [];
+    const { urls, findings, base } = readSitemapUrls(build.folder, files, planned);
+    const entries = urls.map((url) => ({
+        url,
+        pages: listPossiblePages(url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname),
+    }));
+    const listed = new Set(entries.flatMap(({ pages }) => pages));
+    const isLeftOut = buildPathMatcher(getTable(planned.scope.settings, 'site').allowed_unlisted_pages);
+    const missing = entries
+        .filter(({ pages }) => pages.every((page) => !files.has(page)))
+        .map(({ url }) => ({
+            file: convertToBuildPath(planned, sitemapFile),
+            line: 1,
+            rule: SITE_RULES.missingPage,
+            message: `The sitemap lists ${url.href}, and the build wrote no such page.`,
+        }));
+    const unlisted = [...files]
+        .filter(
+            (path) =>
+                path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(convertToBuildPath(planned, path)),
+        )
+        .map((path) => ({
+            file: convertToBuildPath(planned, path),
+            line: 1,
+            rule: SITE_RULES.unlistedPage,
+            message: UNLISTED_PAGE_MESSAGE,
+        }));
+    return [...findings, ...missing, ...unlisted];
+}
+
 export function readSitemapUrls(
     folder: string,
     files: ReadonlySet<string>,
@@ -90,3 +142,7 @@ export function readSitemapUrls(
     for (const file of files) if (SITEMAP_FILE.test(file)) readSitemapTree(file, tree);
     return { urls: tree.urls.values().toArray(), findings, base: tree.base };
 }
+
+export const SITE_SITEMAP_CHECKS: Readonly<Record<string, CheckCode>> = {
+    'site/sitemap': { check: checkSitemap, explanations: SITEMAP_EXPLANATIONS },
+};

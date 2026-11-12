@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { SPLICE_METHOD } from '../../config/logic.ts';
+import { SPLICE_METHOD } from '../../config/control-flow.ts';
 import { createRule } from '../../rule.ts';
 
 function listCounters(update: TSESTree.Node): TSESTree.Identifier[] {

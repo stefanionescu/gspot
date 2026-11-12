@@ -2,8 +2,8 @@ import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint
 
 import { EVIDENCE_DEPENDENCIES, EVIDENCE_IMPORTS, STATEMENT_LINKS } from '../../config/assertions/evidence.ts';
 import { findEnclosingFunction } from '../../language/functions.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
-import { isModuleUsed } from '../../libraries/packages.ts';
 import { getEnclosingTestCall, getTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { PlacementState } from '../../types/assertions.ts';

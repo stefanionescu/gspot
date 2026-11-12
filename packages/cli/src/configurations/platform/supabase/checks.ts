@@ -27,7 +27,7 @@ import {
 } from '#cli/config/configurations/supabase.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
 import {
     DENO_CHECK_EXPLANATIONS,
     STORAGE_POLICY_EXPLANATIONS,

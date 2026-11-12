@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
@@ -22,7 +22,7 @@ test('add selects a configuration whose table stops every other command', async 
     expect(refused.stderr).toContain('Run gspot add licenses.');
     const result = await runGspot(sandbox.path, ['add', 'licenses']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    const saved = parseSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.configurations).toContain('licenses');
 });
 
@@ -51,7 +51,10 @@ test('add names only added configurations in a mixed request', async () => {
     const result = await runGspot(sandbox.path, ['add', 'bash', 'markdown']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Added markdown. bash is already selected.');
-    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).configurations;
+    const settings = parseSettings(
+        readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'),
+        sandbox.path,
+    ).configurations;
     expect(settings).toStrictEqual(['bash', 'markdown']);
 });
 
@@ -60,7 +63,7 @@ test('add names a repeated configuration once and saves it once', async () => {
     const result = await runGspot(sandbox.path, ['add', 'pytest', 'pytest']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Added pytest.');
-    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    const saved = parseSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.configurations).toStrictEqual(['python', 'pytest']);
 });
 
@@ -72,7 +75,7 @@ test('add --scope on a project folder writes its scope record', async () => {
     });
     const result = await runGspot(sandbox.path, ['add', 'fastapi', '--scope', 'py']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    const saved = parseSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(saved.scopes.get('py')?.configurations).toStrictEqual(['fastapi']);
 });
 

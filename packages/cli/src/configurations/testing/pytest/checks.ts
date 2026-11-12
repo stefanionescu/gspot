@@ -1,6 +1,6 @@
 import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { stripCoverageArguments } from '#cli/engine/plan.ts';
+import { selectCheckCommand } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -28,7 +28,7 @@ async function checkPytestTests(
 ): Promise<CheckResult> {
     if (options.command !== undefined || !hasProjectCoverage(session, planned.scope.path))
         return runCommandCheck(session, planned, options);
-    const command = (stripCoverageArguments(planned, options) as string[]).filter(
+    const command = (selectCheckCommand(planned, options) as string[]).filter(
         (argument) => !argument.startsWith('--cov-config='),
     );
     return runCommandCheck(session, planned, { ...options, command });

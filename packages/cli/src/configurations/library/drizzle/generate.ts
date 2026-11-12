@@ -2,7 +2,7 @@ import { DRIZZLE_RULES } from '#cli/config/configurations/framework.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import {
     type ConfigurationBlocks,
-    type ConfigurationBuilder,
+    type EslintBlockBuilder,
     type EslintScope,
 } from '#cli/types/configurations/javascript.ts';
 
@@ -20,6 +20,6 @@ function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>
     ];
 }
 
-export const DRIZZLE_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const DRIZZLE_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     drizzle: buildDrizzleBlocks,
 };

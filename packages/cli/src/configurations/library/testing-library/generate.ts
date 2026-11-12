@@ -6,7 +6,7 @@ import {
 } from '#cli/config/configurations/framework.ts';
 import {
     type ConfigurationBlocks,
-    type ConfigurationBuilder,
+    type EslintBlockBuilder,
     type EslintScope,
 } from '#cli/types/configurations/javascript.ts';
 
@@ -27,6 +27,6 @@ function buildTestingLibraryBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'dep
     }));
 }
 
-export const TESTING_LIBRARY_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const TESTING_LIBRARY_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     'testing-library': buildTestingLibraryBlocks,
 };

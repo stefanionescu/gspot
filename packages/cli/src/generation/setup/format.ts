@@ -21,7 +21,7 @@ import {
 } from '#cli/config/generation/setup.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { detectScriptIndent } from '#cli/generation/setup/carryover/script-indent.ts';
+import { detectScriptIndent, SCRIPT_FILES } from '#cli/generation/setup/script-indent.ts';
 import { getTool } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -50,8 +50,6 @@ import type {
 } from '#cli/types/generation.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 import type { ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
-
-const SCRIPT_FILES = ['**/*.sh', '**/*.bash'];
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;

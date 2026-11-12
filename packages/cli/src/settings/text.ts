@@ -15,8 +15,8 @@ import {
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { TomlBlock, TomlValue } from '#cli/types/parsers.ts';
-import type { TaploLayout, TomlTable } from '#cli/types/settings.ts';
+import type { KeyPath, TomlBlock, TomlValue } from '#cli/types/parsers.ts';
+import type { Settings, TaploLayout, TomlTable } from '#cli/types/settings.ts';
 
 function sortTable(table: TomlTable): TomlTable {
     const placed = new Set<string>([...ROOT_KEYS, ...FIRST_TABLES, ...LAST_TABLES]);
@@ -172,27 +172,6 @@ function formatTaploValues(text: string, previous: Record<string, unknown>, layo
         );
 }
 
-/**
-Add an ignore to the list, or merge its paths into the record with the same check, rule, and reason.
-When either record has no paths, the merged record has none. Changes ignores in place.
-*/
-export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
-    const { paths: writtenPaths, ...identity } = ignore;
-    const matching = ignores.find(({ paths: _previousPaths, ...previous }) => isDeepStrictEqual(previous, identity));
-    if (matching === undefined) {
-        const saved = { ...ignore };
-        ignores.push(saved);
-        return saved;
-    }
-    const previous: unknown = matching['paths'];
-    if (Array.isArray(writtenPaths) && Array.isArray(previous)) {
-        const paths: readonly unknown[] = writtenPaths;
-        const previousPaths: readonly unknown[] = previous;
-        matching['paths'] = [...new Set([...previousPaths, ...paths])];
-    } else delete matching['paths'];
-    return matching;
-}
-
 export function buildSettingsText(template: string, written: TomlTable): string {
     const syntax = parseTomlSyntax(template, parseTomlFile(SETTINGS_FILE, template));
     if (isDeepStrictEqual(normalizeTables(written), normalizeTables(syntax.value))) return template;
@@ -203,4 +182,22 @@ export function buildSettingsText(template: string, written: TomlTable): string 
     let text = buildPatchedToml(syntax, kept, TOML_FORMAT);
     for (const key of added) text = insertTopLevelSetting(text, { key, value: sorted[key] }, order);
     return formatTaploValues(text, syntax.value, getTaploLayout(written));
+}
+
+export function findSettingLine(text: string, written: Settings['written'], keys: KeyPath): number {
+    const syntax = parseTomlSyntax(text, written);
+    const record = syntax.pathNodes
+        .filter(
+            (node) =>
+                node.kind === 'header' &&
+                typeof node.path.at(-1) === 'number' &&
+                node.path.every((key, index) => key === keys[index]),
+        )
+        .toSorted((left, right) => right.path.length - left.path.length)[0];
+    const found =
+        record ??
+        syntax.pathNodes.find(
+            (node) => node.path.length === keys.length && node.path.every((key, index) => key === keys[index]),
+        );
+    return found?.node.loc.start.line ?? 1;
 }

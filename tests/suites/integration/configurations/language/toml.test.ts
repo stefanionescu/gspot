@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 import { expect, test } from 'bun:test';
 
-import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
+import { buildJsonSchema } from '#cli/settings/reference.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';

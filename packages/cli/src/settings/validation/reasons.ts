@@ -4,17 +4,20 @@ import type { z } from 'zod';
 
 import {
     ADD_REASON_MESSAGE,
+    COVERAGE_LINES_SETTING,
     EMPTY_REASON,
     REASON_WORDS_MIN,
     REMOVAL_REASON_SUGGESTION,
     REMOVED_CONFIGURATIONS,
+    SWIFT_TARGET_MESSAGE,
 } from '#cli/config/settings/validation.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
+import { getSettingValue } from '#cli/settings/inherit.ts';
 import { findChildSchema } from '#cli/settings/lookup.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { ReasonRequirement, Setting } from '#cli/types/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
-import type { SettingsError } from '#cli/types/settings.ts';
+import type { AvailableSettings, Settings, SettingsError } from '#cli/types/settings.ts';
 
 function isLimitWeakening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;
@@ -48,7 +51,7 @@ function validateFieldReasons({
 }): SettingsError[] {
     if (field === undefined || (key === 'rules' && keys.includes('tools'))) return [];
     if (key === 'reason') return validateReasonValue(child, keys, [...keys, key]);
-    return key === REMOVED_CONFIGURATIONS || field.meta()?.['reason_values'] === true
+    return key === REMOVED_CONFIGURATIONS || field.meta()?.reason_values === true
         ? validateReasonTable(child, [...keys, key])
         : validateSettingReasons(field, child, [...keys, key]);
 }
@@ -99,4 +102,20 @@ export function isWeakening(setting: Setting, value: unknown, shipped: unknown):
         (setting.reason_for === 'raising' || setting.reason_for === 'lowering') &&
         isLimitWeakening(setting.reason_for, value, shipped)
     );
+}
+
+export function validateSwiftTargets(settings: Settings, availableSettings: AvailableSettings): SettingsError[] {
+    const coverageLines = getSettingValue(availableSettings, settings, COVERAGE_LINES_SETTING, '')?.value;
+    return (settings.coverage?.swift_target ?? [])
+        .map((target, index) => ({ target, index }))
+        .filter(
+            ({ target }) =>
+                typeof coverageLines === 'number' &&
+                target.min_line_percent < coverageLines &&
+                target.reason === undefined,
+        )
+        .map(({ index }) => ({
+            path: ['coverage', 'swift_target', index, 'reason'],
+            message: SWIFT_TARGET_MESSAGE,
+        }));
 }

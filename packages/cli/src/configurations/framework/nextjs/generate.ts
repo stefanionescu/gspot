@@ -10,7 +10,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { extractParentFolder, findEnclosingFolder } from '#cli/system/paths.ts';
 import {
     type ConfigurationBlocks,
-    type ConfigurationBuilder,
+    type EslintBlockBuilder,
     type EslintScope,
 } from '#cli/types/configurations/javascript.ts';
 
@@ -54,6 +54,6 @@ function buildNextjsBlocks(
     ];
 }
 
-export const NEXTJS_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const NEXTJS_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     nextjs: buildNextjsBlocks,
 };

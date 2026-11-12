@@ -1,11 +1,8 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
-import type { Node } from 'web-tree-sitter';
 import { CST, Lexer } from 'yaml';
 
 import {
-    ASTRO_EXTENSION,
-    ASTRO_FRONT_MATTER,
     BLOCK_COMMENT_END,
     COMMENT_NODES,
     HTML_ALTERNATE_COMMENT_END,
@@ -13,23 +10,16 @@ import {
     MDX_COMMENT,
     MDX_ESM,
     TAG_GRAMMARS,
-    TSX_LANGUAGES,
     YAML_SCALAR_TOKENS,
 } from '#cli/config/parsers/code.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
+import { parseComponentSources } from '#cli/parsers/code/javascript.ts';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
 import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { blankText, getPosition, replaceRanges } from '#cli/system/text.ts';
-import type {
-    CommentParser,
-    ComponentScript,
-    GrammarName,
-    ParseCache,
-    SourceComment,
-    SourcePosition,
-} from '#cli/types/parsers.ts';
+import type { CommentParser, GrammarName, ParseCache, SourceComment, SourcePosition } from '#cli/types/parsers.ts';
 import type { TextRange } from '#cli/types/system.ts';
 
 function buildComment(text: string, start: number, end: number, line: number): SourceComment {
@@ -96,7 +86,7 @@ function parseTomlComments(text: string, path: string): SourceComment[] {
 }
 
 async function parseComponentComments(text: string, path: string): Promise<SourceComment[]> {
-    const { markup, scripts } = await readComponentSources(text, path);
+    const { markup, scripts } = await parseComponentSources(text, path);
     const comments: SourceComment[] = [];
     for (const { grammar, source } of scripts) comments.push(...(await parseGrammarComments(grammar, source)));
     return [...comments, ...(await parseGrammarComments('html', markup))].toSorted(
@@ -152,43 +142,6 @@ async function parseMdxComments(text: string): Promise<SourceComment[]> {
         .toArray();
     const markup = await parseGrammarComments('html', text, { source: extractMarkdownHtml(text) });
     return [...expressions, ...markup].toSorted((left, right) => left.line - right.line);
-}
-
-function listComponentScripts(element: Node, text: string, masked: string): ComponentScript[] {
-    const language = element.namedChildren
-        .find((node) => node.type === 'start_tag')
-        ?.text.match(/\blang\s*=\s*["'](?<language>[^"']+)["']/u)?.groups?.['language'];
-    const grammar = TSX_LANGUAGES.includes(language ?? '') ? 'tsx' : 'typescript';
-    return element.namedChildren
-        .filter((child) => child.type === 'raw_text')
-        .map((node) => ({
-            grammar,
-            source: replaceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]),
-        }));
-}
-
-/**
-Read the markup and the scripts of a component, each padded so that its lines stay where the file has them.
-*/
-export async function readComponentSources(
-    text: string,
-    path: string,
-): Promise<{ markup: string; scripts: ComponentScript[] }> {
-    const masked = blankText(text);
-    const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
-    const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
-    using tree = await parseSource('html', markup);
-    const scripts = tree.rootNode
-        .descendantsOfType('script_element')
-        .flatMap((element) => listComponentScripts(element, text, masked));
-    if (front !== null) {
-        const start = text.indexOf('\n') + 1;
-        scripts.push({
-            grammar: 'typescript',
-            source: replaceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
-        });
-    }
-    return { markup, scripts };
 }
 
 const COMMENT_PARSERS = new Map<string, CommentParser>([

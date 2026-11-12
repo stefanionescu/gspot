@@ -20,8 +20,8 @@ import {
     TRAILING_COMMAS,
 } from '#cli/config/settings/schema.ts';
 import { GLOB_EXCLUDE } from '#cli/config/system.ts';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
-import type { ReasonedSettingDefinition, ReasonedValue } from '#cli/types/settings.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
+import type { ReasonedValue } from '#cli/types/settings.ts';
 
 export const nonemptyStringsSchema = nonemptyStringSchema.array();
 
@@ -127,7 +127,7 @@ export const nonemptyPathsSchema = relativePathsSchema.min(1);
 
 export function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
-    definition: ReasonedSettingDefinition & { default: z.util.NoUndefined<Output> },
+    definition: z.GlobalMeta & { description: string; default: z.util.NoUndefined<Output> },
 ): z.ZodDefault<z.ZodUnion<readonly [z.ZodType<Output, Input>, z.ZodType<Output, ReasonedValue<Input>>]>> {
     return z
         .union([
@@ -213,7 +213,3 @@ export const formatSchema = formatFieldsSchema.extend({
 export const settingOriginSchema = z.strictObject({ kind: z.enum(SETTING_ORIGIN_KINDS), name: z.string() });
 
 export const removedConfigurationSchema = z.strictObject({ name: z.string(), scope: z.string(), reason: z.string() });
-
-export const reasonRequirementSchema = z.enum(
-    Object.keys(REASON_DESCRIPTIONS) as Array<keyof typeof REASON_DESCRIPTIONS>,
-);

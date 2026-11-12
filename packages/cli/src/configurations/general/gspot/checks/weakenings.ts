@@ -10,7 +10,7 @@ import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
-import { buildSettings, buildSettingsFromTable } from '#cli/settings/read.ts';
+import { buildSettings, buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { isInScope } from '#cli/system/paths.ts';

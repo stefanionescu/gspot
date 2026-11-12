@@ -27,7 +27,8 @@ import {
     NODE_ASSERT_MODULES,
     NODE_ASSERTION,
 } from '../config/assertions/styles.ts';
-import { getModuleName } from '../language/modules.ts';
+import { getModuleName, listImportedModules } from '../language/modules.ts';
+import { isModuleUsed } from '../language/packages.ts';
 import { getMemberRoot, isCallOf } from '../language/syntax.ts';
 import type {
     Assertion,
@@ -40,7 +41,6 @@ import type {
     ExpectCall,
 } from '../types/assertions.ts';
 import type { FileContext } from '../types/plugin.ts';
-import { isModuleUsed, listImportedModules } from './packages.ts';
 import { isCypressChain } from './testing.ts';
 
 const styleCache = new WeakMap<TSESLint.SourceCode, AssertionStyles>();

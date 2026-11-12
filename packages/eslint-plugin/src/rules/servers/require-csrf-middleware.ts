@@ -2,8 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { CSRF_CHANGING_METHODS, CSRF_MODULE, CSRF_SAFE_METHODS, MIDDLEWARE_METHOD } from '../../config/servers.ts';
 import { getOptionProperties, listArgumentValues } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { listImportedModules } from '../../libraries/packages.ts';
+import { getQualifiedName, listImportedModules } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 
 function findIgnoredMethod(

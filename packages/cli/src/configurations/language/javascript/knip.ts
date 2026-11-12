@@ -15,7 +15,7 @@ import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import { listCodeTestFiles, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listCodePatterns, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listDistinctTools } from '#cli/manifests/read.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -26,8 +26,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 
 function buildScopePattern(pattern: string, scopePath: string): string | undefined {
@@ -48,7 +47,7 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string
                 ? KNIP_JAVASCRIPT_ENTRY_FILES
                 : []
             ).map((pattern) => joinScopeSelector(pattern, scopePath)),
-            ...listCodeTestFiles(scopeSettings.test_files),
+            ...listCodePatterns(scopeSettings.test_files),
             ...(scopeSettings.tables.javascript?.script_files ?? []),
             ...(scopePath === '' ? [KNIP_ESLINT_CONFIG] : []),
         ]);
@@ -130,7 +129,7 @@ function buildKnipFile(planned: PlannedConfig): string {
     const externals = listExternals(scopes);
     return JSON.stringify(
         {
-            ignore: listCodeTestFiles(ignoredGlobs).filter(
+            ignore: listCodePatterns(ignoredGlobs).filter(
                 (pattern) => pattern !== KNIP_ESLINT_CONFIG && !HIDDEN_FILE_GLOB.test(posix.basename(pattern)),
             ),
             ignoreDependencies: [

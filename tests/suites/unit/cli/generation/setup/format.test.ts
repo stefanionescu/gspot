@@ -7,10 +7,10 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation/setup.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import type { FormatSettings } from '#cli/types/configurations/language.ts';
+import type { FormatSettings } from '#cli/types/configurations/general.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { initOutputSchema } from '#tests/schemas/setup.ts';
@@ -100,7 +100,7 @@ async function readInitFormatOptions(root: string, commandArguments: string[]): 
     const result = await runGspot(root, [...commandArguments, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = initOutputSchema.parse(JSON.parse(result.stdout)).settingsText;
-    const session = await openSession(root, { settings: readSettings(text, root) });
+    const session = await openSession(root, { settings: parseSettings(text, root) });
     return session.scopes.map(({ settings }) => getTable(settings, 'format'));
 }
 
@@ -121,7 +121,7 @@ test('init reads the format settings of each scope', async () => {
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = initOutputSchema.parse(JSON.parse(result.stdout)).settingsText;
     const session = await openSession(sandbox.path, {
-        settings: readSettings(text, sandbox.path),
+        settings: parseSettings(text, sandbox.path),
     });
     expect(
         session.scopes.map(({ path, settings }) => {

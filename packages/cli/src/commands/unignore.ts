@@ -1,9 +1,4 @@
-import {
-    buildUnchangedResult,
-    formatIgnoreSubject,
-    readIgnoreEditContext,
-    writeSettingsEdit,
-} from '#cli/commands/edits.ts';
+import { buildUnchangedResult, formatIgnoreSubject, readEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
 import {
     BARE_UNIGNORE_MESSAGE,
     ESCAPED_GLOB_CHARACTERS,
@@ -22,7 +17,7 @@ import type {
     IgnoreOptions,
     IgnoreRemoval,
     IgnoreTarget,
-} from '#cli/types/commands/edits.ts';
+} from '#cli/types/commands.ts';
 import type { IgnoreRecord, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
@@ -72,10 +67,10 @@ function listEverywhereNotes(check: string | undefined, everywhere: IgnoreRecord
 }
 
 async function runUnignoreCommand(options: Omit<IgnoreOptions, 'reason'>): Promise<CommandResult> {
-    const context = await readIgnoreEditContext(options.root);
-    const { edit: input, settings } = context;
+    const context = await readEditContext(options.root);
+    const { file, settings } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
-    const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, {
+    const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(file.table, {
         ...options,
         paths: buildArgumentPaths(context.root, options.cwd, options.paths),
     });
@@ -98,8 +93,8 @@ async function runUnignoreCommand(options: Omit<IgnoreOptions, 'reason'>): Promi
         .filter(({ count }) => count !== 0)
         .map(({ message }) => message)
         .join(' ');
-    if (kept.length === 0) delete input.table['ignore'];
-    else input.table['ignore'] = kept;
+    if (kept.length === 0) delete file.table['ignore'];
+    else file.table['ignore'] = kept;
     return await writeSettingsEdit(context, { summary, notes });
 }
 

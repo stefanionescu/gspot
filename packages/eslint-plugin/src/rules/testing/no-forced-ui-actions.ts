@@ -2,8 +2,8 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { CYPRESS_ACTIONS, PLAYWRIGHT_ACTIONS, PLAYWRIGHT_LOCATOR } from '../../config/testing.ts';
 import { getExpressionValue, getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
+import { isModuleUsed, readPackageFacts } from '../../language/packages.ts';
 import { listBodyNodes } from '../../language/syntax.ts';
-import { isModuleUsed, readPackageFacts } from '../../libraries/packages.ts';
 import { isCypressChain } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { MemberCall } from '../../types/plugin.ts';

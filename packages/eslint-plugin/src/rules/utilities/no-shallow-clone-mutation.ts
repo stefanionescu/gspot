@@ -7,12 +7,13 @@ import {
     NESTED_MEMBER_DEPTH,
     SHALLOW_CLONE_NAMES,
     STRUCTURED_CLONE_NAME,
-} from '../../config/libraries.ts';
+} from '../../config/utilities.ts';
 import { listFunctionAncestors } from '../../language/functions.ts';
-import { getAssignedValue, getQualifiedName } from '../../language/modules.ts';
+import { getQualifiedName } from '../../language/modules.ts';
 import { haveSameTokens, listSiblingStatements, unwrapExpression } from '../../language/syntax.ts';
+import { getAssignedValue } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
-import type { Isolation } from '../../types/libraries.ts';
+import type { Isolation } from '../../types/utilities.ts';
 
 function getMemberRoot(node: TSESTree.Node): TSESTree.Identifier | undefined {
     let value = unwrapExpression(node);

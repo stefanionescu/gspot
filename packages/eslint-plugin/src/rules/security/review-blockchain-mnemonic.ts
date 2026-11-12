@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { MNEMONIC_FUNCTIONS, WALLET_MODULES } from '../../config/security.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
-import { listImportedModules } from '../../libraries/packages.ts';
+import { listImportedModules } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 
 function findHardcodedPhrase(

@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { LOOP_BODY_PARENTS } from '../../config/logic.ts';
+import { LOOP_BODY_PARENTS } from '../../config/control-flow.ts';
 import { listFunctionAncestors } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { AssignedValues, AssignmentFrame, PathFrame, SegmentFlow, ValueState } from '../../types/variables.ts';

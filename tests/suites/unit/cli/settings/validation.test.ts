@@ -5,7 +5,7 @@ import { testdir } from 'testdirs';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -49,14 +49,14 @@ test('an import rule refuses a leading ! and accepts an extglob', () => {
     ]);
     const extglobs = ['app/!(procedures).*', '!(procedures)/**'];
     const text = ORDERED_IMPORT_RULES.replace('["app/**"]', () => JSON.stringify(extglobs));
-    const settings = readSettings(text, sandbox.path);
+    const settings = parseSettings(text, sandbox.path);
     expect(settings.import_rule[1]?.paths).toStrictEqual(extglobs);
 });
 
 test('an ignore without check needs paths and takes no rule', () => {
     using sandbox = createTemporaryFolder();
     const reason = 'Product photos and facts are data, not code.';
-    const settings = readSettings(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`, sandbox.path);
+    const settings = parseSettings(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`, sandbox.path);
     expect(settings.ignore).toStrictEqual([{ paths: ['assets/products/**'], reason }]);
     expect(validateSettingsText(`[[ignore]]\nreason = "${reason}"\n`)).toStrictEqual([
         'gspot.toml:1: ignore.0.paths: An ignore without check needs paths.',
@@ -81,7 +81,7 @@ test('relative folders with spaces, percent signs and Unicode are accepted', asy
     const path = 'apps/café 100%';
     await using sandbox = await testdir({ [`${path}/source.ts`]: 'export const count = 1;\n' });
 
-    const settings = readSettings(stringify({ scope: [{ path }] }), sandbox.path)
+    const settings = parseSettings(stringify({ scope: [{ path }] }), sandbox.path)
         .scopes.keys()
         .toArray();
     expect(settings).toStrictEqual([path]);
@@ -168,11 +168,11 @@ test('a Stylelint plugin path that names no file is refused', async () => {
 test('two configurations with different defaults are an error until gspot.toml sets the value', () => {
     using sandbox = createTemporaryFolder();
     const source = buildSandboxSettings(['sql'], { rules: true });
-    const settings = readSettings(source, sandbox.path);
+    const settings = parseSettings(source, sandbox.path);
     expect(validateKeys(conflictingSettings, settings, new Map(), buildAvailableSettings([], 'basic'))).toStrictEqual([
         { path: ['configurations'], message: CONFLICT_MESSAGE },
     ]);
-    const corrected = readSettings(`${source}[sql]\ndialect = "sqlite"\n`, sandbox.path);
+    const corrected = parseSettings(`${source}[sql]\ndialect = "sqlite"\n`, sandbox.path);
     expect(validateKeys(conflictingSettings, corrected, new Map(), buildAvailableSettings([], 'basic'))).toStrictEqual(
         [],
     );
@@ -184,7 +184,7 @@ test('two configurations with different defaults are an error until gspot.toml s
 
 test('the conflict is reported at the scope that selects both configurations', () => {
     using sandbox = createTemporaryFolder();
-    const settings = readSettings(
+    const settings = parseSettings(
         buildSandboxSettings([], { rules: true, scopes: [{ path: 'db', configurations: ['sql'] }] }),
         sandbox.path,
     );
@@ -196,7 +196,7 @@ test('the conflict is reported at the scope that selects both configurations', (
 
 test('a scope value settles the scopes below it, and a sibling scope still reports the conflict', () => {
     using sandbox = createTemporaryFolder();
-    const settings = readSettings(
+    const settings = parseSettings(
         buildSandboxSettings([], {
             rules: true,
             tables: '\n[[scope]]\npath = "app"\nconfigurations = ["sql"]\nsql.dialect = "sqlite"\n[[scope]]\npath = "app/db"\nconfigurations = ["sql"]\n[[scope]]\npath = "other"\nconfigurations = ["sql"]\n',

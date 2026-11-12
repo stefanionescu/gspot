@@ -18,8 +18,9 @@ import {
     WINDOW_TOKEN,
 } from '../../config/web.ts';
 import { getTypes } from '../../language/checker.ts';
-import { findAssignedVariable, getExpressionValue } from '../../language/expressions.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
 import { findFunction } from '../../language/functions.ts';
+import { findAssignedVariable } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode, MemberCall, TypeReader } from '../../types/plugin.ts';
 

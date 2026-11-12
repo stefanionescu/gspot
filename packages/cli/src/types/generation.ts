@@ -11,10 +11,9 @@ import type {
     prettierSettingsSchema,
     ruffOptionsSchema,
 } from '#cli/schemas/generation.ts';
-import type { IgnoreSection, SourcedConfig } from '#cli/types/configurations/general.ts';
-import type { OwnedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigOwner, IgnoreSection, SourcedConfig } from '#cli/types/configurations/shared.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { Configuration, Tool } from '#cli/types/manifests.ts';
+import type { Config, Configuration, Tool } from '#cli/types/manifests.ts';
 import type {
     ConfigurationEvidence,
     ConflictingConfig,
@@ -31,6 +30,8 @@ import type {
 import type { AvailableSettings, Level, Scope, Settings, TomlTable } from '#cli/types/settings.ts';
 import type { FileContents, TextRange } from '#cli/types/system.ts';
 import type { ExecutableSearch, GeneratedFile, Generation, Session } from '#cli/types/tools.ts';
+
+export type OwnedConfig = { config: Config; owner: ConfigOwner };
 
 export type PlannedPointerField = {
     scope: Scope;

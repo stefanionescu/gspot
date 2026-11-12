@@ -1,7 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 
 import {
-    COMPONENT_EXTENSION,
     EXPANSION_NODES,
     JAVASCRIPT_DEFAULT_OPERATORS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
@@ -21,10 +20,9 @@ import {
     VARIABLE_NAME,
 } from '#cli/config/parsers/code.ts';
 import { HEXADECIMAL_RADIX, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
-import { readComponentSources } from '#cli/parsers/code/comments.ts';
-import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javascript.ts';
 import type {
-    ComponentScript,
     EnvironmentKind,
     EnvironmentNames,
     EnvironmentRead,
@@ -246,20 +244,6 @@ export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
         .descendantsOfType('navigation_expression')
         .filter((node) => node.text.replaceAll(WHITESPACE_RUN, '') === SWIFT_ENVIRONMENT)
         .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
-}
-
-export function getStringLiteral(node: Node | null | undefined): string | undefined {
-    if (node?.type === 'string') return node.text.slice(1, -1);
-    const isStaticTemplate =
-        node?.type === 'template_string' && node.namedChildren.every(({ type }) => type !== 'template_substitution');
-    return isStaticTemplate ? node.text.slice(1, -1) : undefined;
-}
-
-export async function listJavascriptSources(path: string, text: string): Promise<ComponentScript[]> {
-    if (!COMPONENT_EXTENSION.test(path))
-        return [{ grammar: findGrammarByExtension(path) ?? 'typescript', source: text }];
-    const { scripts } = await readComponentSources(text, path);
-    return scripts;
 }
 
 export async function listJavascriptEnvironmentReads(

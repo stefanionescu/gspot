@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
+import { listImportedModules } from '../../language/modules.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
-import { listImportedModules } from '../../libraries/packages.ts';
 import { createRule } from '../../rule.ts';
 import type { AssertionChain } from '../../types/assertions.ts';
 

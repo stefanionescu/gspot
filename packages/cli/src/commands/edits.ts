@@ -21,7 +21,7 @@ import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { createRunCache } from '#cli/system/cache.ts';
@@ -33,11 +33,11 @@ import type {
     CommandLocation,
     ConfigurationChange,
     ConfigurationsOptions,
-    IgnoreEditContext,
+    EditContext,
     SettingsEditContext,
     SettingsEditOptions,
     SettingsEditReport,
-} from '#cli/types/commands/edits.ts';
+} from '#cli/types/commands.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
 import type { AvailableSettings, Scope, SettingMatch, Settings } from '#cli/types/settings.ts';
 import type { CommandResult, Files } from '#cli/types/system.ts';
@@ -122,13 +122,13 @@ async function writeEditedFiles(
     }
 }
 
-export async function readIgnoreEditContext(root: string, selecting?: readonly string[]): Promise<IgnoreEditContext> {
-    const edit = readSettingsFile(root);
+export async function readEditContext(root: string, selecting?: readonly string[]): Promise<EditContext> {
+    const file = readSettingsFile(root);
     const cache = createRunCache(root);
-    cache.sources.set(SETTINGS_FILE, Buffer.from(edit.text));
-    const settings = readSettings(edit.text, root, selecting);
+    cache.sources.set(SETTINGS_FILE, Buffer.from(file.text));
+    const settings = parseSettings(file.text, root, selecting);
     const listing = await listRepositoryFiles(cache);
-    return { root, edit, settings, cache, listing };
+    return { root, file, settings, cache, listing };
 }
 
 export async function readSettingsEditContext(
@@ -137,8 +137,8 @@ export async function readSettingsEditContext(
 ): Promise<SettingsEditContext> {
     if (scopePath?.startsWith('.') === true && relative(root, cwd) !== '')
         throw new GspotError('arguments', '--scope takes the path from the repository root, such as services/b.');
-    const context = await readIgnoreEditContext(root, selecting);
-    const { edit: input, settings, cache, listing } = context;
+    const context = await readEditContext(root, selecting);
+    const { file, settings, cache, listing } = context;
     const session = await openSession(root, { settings, cache, listing });
     const path = scopePath === undefined ? '' : buildArgumentPath(root, root, scopePath);
     if (session.scopes.every((scope) => scope.path !== path))
@@ -146,7 +146,7 @@ export async function readSettingsEditContext(
             'arguments',
             `There is no scope called ${path}. Name a folder that has a [[scope]] record or holds a project file.`,
         );
-    return { ...context, session, scopePath: path, scopeTable: addScopeTable(input.table, path) };
+    return { ...context, session, scopePath: path, scopeTable: addScopeTable(file.table, path) };
 }
 
 export async function readConfigurationEditContext(
@@ -216,17 +216,17 @@ export function buildUnchangedResult(summary: string, notes: string[] = []): Com
 Edit settings, check them, and write them and their generated files. Installs nothing.
 */
 export async function writeSettingsEdit(
-    context: IgnoreEditContext & { session?: Session },
+    context: EditContext & { session?: Session },
     options: SettingsEditOptions,
 ): Promise<CommandResult<SettingsEditReport>> {
-    const { root, edit, cache, listing } = context;
+    const { root, file, cache, listing } = context;
     const { summary } = options;
     const writer = openFiles(root);
-    const result = buildEditedSettings(root, edit);
+    const result = buildEditedSettings(root, file);
     cache.sources.set(SETTINGS_FILE, Buffer.from(result.text));
     const session = await openSession(root, { cache, listing, settings: result.settings });
     const generated = buildGeneratedFiles(session);
-    writeSettings(writer, result.text, edit.previous);
+    writeSettings(writer, result.text, file.previous);
     const report = await writeEditedFiles(session, generated, { writer, summary });
     report.notes.push(
         ...(await listInstallNotes(session, generated, report)),

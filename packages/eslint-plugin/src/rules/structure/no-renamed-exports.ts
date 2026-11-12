@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { isAlias } from '../../language/syntax.ts';
+import { isAlias } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import { type RenamedValue } from '../../types/structure.ts';
 

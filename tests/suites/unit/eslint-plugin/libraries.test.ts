@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
 
-import { readPackageFacts } from '#eslint-plugin/libraries/packages.ts';
+import { readPackageFacts } from '#eslint-plugin/language/packages.ts';
 import type { FileContext } from '#eslint-plugin/types/plugin.ts';
 import { writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

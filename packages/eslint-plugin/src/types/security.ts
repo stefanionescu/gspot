@@ -26,3 +26,8 @@ export type ClientEnvironmentOptions = [
 export type ScriptSettings = { sources: number; isVersioned: boolean; hasIntegrity: boolean; isAnonymous: boolean };
 
 export type IntegrityMessage = 'missingBoth' | 'missingIntegrity' | 'missingCrossOrigin';
+
+export type RequestDataTarget =
+    'redirect' | 'html' | 'template' | 'path' | 'outbound' | 'sql' | 'regexp' | 'shell' | 'prototype';
+
+export type RequestDataCall = { target: RequestDataTarget; argument: TSESTree.Node };

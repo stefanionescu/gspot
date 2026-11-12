@@ -116,13 +116,6 @@ export const ASYNC_SUITE_ORIGINS = new Set([undefined, 'jest', '@jest/globals', 
 
 export const ASYNC_SUITE_MODIFIERS = new Set(['only', 'each']);
 
-export const DONE_STOP_STATEMENTS = new Set([
-    'ReturnStatement',
-    'ThrowStatement',
-    'BreakStatement',
-    'ContinueStatement',
-]);
-
 export const MOCHA_CONSTRUCTS = new Set([
     'describe',
     'context',

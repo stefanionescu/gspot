@@ -1,7 +1,7 @@
 import { COUNT_LIMITS } from '#cli/config/configurations/bash.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import { FUNCTION_SIZE_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
-import { listCodeLines } from '#cli/parsers/code/bash.ts';
+import { listCodeLines } from '#cli/parsers/code/bash/script.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

@@ -7,7 +7,8 @@ import {
     EARLY_RETURN_MODIFIERS,
     PLAYWRIGHT_MODULE,
 } from '../../config/testing.ts';
-import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
+import { listImportedModules } from '../../language/modules.ts';
+import { isModuleUsed } from '../../language/packages.ts';
 import { getTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FileContext } from '../../types/plugin.ts';

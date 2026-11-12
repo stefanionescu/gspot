@@ -22,7 +22,7 @@ import {
 } from '#cli/config/settings/validation.ts';
 import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
 import { commandCheckFields } from '#cli/schemas/manifests/checks.ts';
-import { levelSchema } from '#cli/schemas/manifests/tools.ts';
+import { levelSchema } from '#cli/schemas/manifests/fields.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
 import {
     configurationNameSchema,

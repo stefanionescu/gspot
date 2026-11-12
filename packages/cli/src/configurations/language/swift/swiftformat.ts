@@ -13,8 +13,7 @@ import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { getTable, selectFormat } from '#cli/settings/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { RunCache } from '#cli/types/system.ts';
 
 function readSwiftVersion(cache: RunCache, scopePath: string, projectPath: string): string | undefined {

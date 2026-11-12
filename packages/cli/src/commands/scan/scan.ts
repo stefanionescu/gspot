@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
-import { compareInstalledRules, readUserRules } from '#cli/commands/scan/rules.ts';
 import {
     GIT_UNBORN_HEAD_ARGUMENTS,
     SCAN_LOCKFILE_MESSAGE,
@@ -20,7 +19,8 @@ import { printProgress } from '#cli/engine/report.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { compareInstalledRules, readUserRules } from '#cli/generation/setup/carryover/lint-rules.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
 import { readGitText } from '#cli/repository/git/run.ts';
 import { detectPackageManager } from '#cli/repository/package-manager.ts';
@@ -29,8 +29,7 @@ import { findText, measureFolder } from '#cli/system/files/reads.ts';
 import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
-import type { CommandDefinition } from '#cli/types/commands/edits.ts';
-import type { ScanReport } from '#cli/types/commands/reports.ts';
+import type { CommandDefinition, ScanReport } from '#cli/types/commands.ts';
 import type { RunResult } from '#cli/types/engine/run.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';

@@ -33,8 +33,7 @@ import { getLimit, getTable, listIgnoredRules, listIgnores, selectFormat } from 
 import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Pyproject } from '#cli/types/parsers.ts';
 
 const MINIMUM_PYTHON = /(?:>=|~=|==)\s*(?<version>\d+\.\d+)/u;

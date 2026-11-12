@@ -2,6 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import {
     EXECUTABLE_DECLARATIONS,
+    EXPORT_REFERENCE_PARENTS,
     FUNCTION_SELECTOR,
     INLINE_VALUE_PARENTS,
     NON_EXECUTABLE_STATEMENTS,
@@ -15,8 +16,6 @@ import { listChildren } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import { type TrivialFunctionsOptions } from '../../types/functions.ts';
 import { type FunctionNode } from '../../types/plugin.ts';
-
-const EXPORT_REFERENCE_PARENTS: ReadonlySet<string> = new Set(['ExportSpecifier', 'ExportDefaultDeclaration']);
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 

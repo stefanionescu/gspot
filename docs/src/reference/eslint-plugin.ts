@@ -21,11 +21,9 @@ import type { ReferencePage } from '#docs/types/pages.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import plugin from '#eslint-plugin/plugin.ts';
-import { LANGUAGE_TOPICS } from '#eslint-plugin/registry/language.ts';
-import { LIBRARY_TOPICS } from '#eslint-plugin/registry/libraries.ts';
+import { TOPICS } from '#eslint-plugin/registry/topics.ts';
 
 const PLUGIN_PATH = `${REFERENCE_PATH}${REFERENCE_FOLDERS.eslintPlugin}/`;
-const TOPICS = { ...LANGUAGE_TOPICS, ...LIBRARY_TOPICS };
 const TOPIC_LABELS: Readonly<Record<keyof typeof TOPICS, string>> = {
     accessibility: 'Accessibility',
     assertions: 'Assertions',

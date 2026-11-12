@@ -1,14 +1,14 @@
 import type { z } from 'zod';
 
 import type { LEVELS, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
-import type { IMPORT_EXTENSION_STYLES, LEFT_OUT_NOTES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import type { IMPORT_EXTENSION_STYLES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import type { removedConfigurationSchema, settingOriginSchema } from '#cli/schemas/settings/fields.ts';
 import type { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { limitFields } from '#cli/schemas/settings/limits.ts';
 import type { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import type { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import type { Check, Configuration, ReasonRequirement, Setting } from '#cli/types/manifests.ts';
+import type { Check, Configuration, Setting } from '#cli/types/manifests.ts';
 import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
 import type { Repository, ScopeFolder } from '#cli/types/repository.ts';
 import type { FileContents } from '#cli/types/system.ts';
@@ -45,21 +45,7 @@ export type SettingReference = {
     children: SettingReference[];
 };
 
-export type ReasonedSettingDefinition = SettingDefinition & Required<Pick<SettingDefinition, 'description'>>;
-
-export type SettingDefinition = {
-    leftOut?: keyof typeof LEFT_OUT_NOTES;
-    description?: string;
-    configurations?: readonly string[];
-    reason_for?: ReasonRequirement;
-    reason_values?: boolean;
-    languages?: readonly string[];
-    language_defaults?: Readonly<Record<string, unknown>>;
-    default_all?: unknown;
-    default?: unknown;
-};
-
-export type SettingsEdit = { text: string; table: TomlTable; previous: FileContents };
+export type SettingsFile = { text: string; table: TomlTable; previous: FileContents };
 
 export type EditedSettings = { text: string; settings: Settings; changed: boolean };
 
@@ -156,6 +142,8 @@ type CommandCheck = Check & {
 export type SettingsTable = Settings | NonNullable<ReturnType<Settings['scopes']['get']>>;
 
 export type ParsedSettings = z.output<typeof settingsSchema>;
+
+export type WrittenSettings = z.input<typeof settingsSchema>;
 
 export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 

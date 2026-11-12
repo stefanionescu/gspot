@@ -2,8 +2,7 @@ import { HTML_VALIDATE_EXTENDS, HTML_VALIDATE_RULES } from '#cli/config/configur
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 const GENERATED_MARKUP_PACKAGES: ReadonlySet<string> = new Set([
     '@astrojs/starlight',

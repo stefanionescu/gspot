@@ -18,9 +18,9 @@ import { FIRST_READ } from '#cli/config/settings/validation.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
+import { isRuleFileExcluded } from '#cli/settings/paths.ts';
 import { getRootScope } from '#cli/settings/scopes.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
-import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import { compareText, formatNameList } from '#cli/system/text.ts';
 import type { AgentsBlockContent, RuleFile, RuleSection } from '#cli/types/generation.ts';
 import type { Configuration, ShippedRule } from '#cli/types/manifests.ts';
@@ -130,9 +130,7 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
     }));
     const selected: RuleFile[] = [];
     const shipped = listConfigurationRules(configurations, repository).filter(({ path }) =>
-        ruleFiles.exclude.every(
-            (excluded) => !isInScope(`${GSPOT_PATHS.rules}/${path}`, stripTrailingSlashes(excluded)),
-        ),
+        ruleFiles.exclude.every((excluded) => !isRuleFileExcluded(path, excluded)),
     );
     for (const { source, path } of shipped) {
         const text = readFileSync(buildAssetPath(source), 'utf8');

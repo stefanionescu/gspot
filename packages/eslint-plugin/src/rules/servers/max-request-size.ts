@@ -10,13 +10,9 @@ import {
     SIZE_TEXT,
     SIZE_UNITS,
 } from '../../config/servers.ts';
-import {
-    findAssignedVariable,
-    findMemberAssignment,
-    getExpressionValue,
-    getOptionProperties,
-} from '../../language/expressions.ts';
+import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
+import { findAssignedVariable, findMemberAssignment } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import type { CallNode } from '../../types/plugin.ts';
 import type { SizedForm } from '../../types/security.ts';

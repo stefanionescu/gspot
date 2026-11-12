@@ -1,8 +1,7 @@
 import { SQL_FILE_EXTENSIONS, SQL_FILES, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/python.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable, selectFormat } from '#cli/settings/scopes.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildSqlfluffFile(planned: PlannedConfig): string {
     const format = selectFormat(planned.scope.settings, SQL_FILES);

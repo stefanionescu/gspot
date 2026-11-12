@@ -8,7 +8,7 @@ import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { CheckOptions, PushReport, RevisionCheckResult } from '#cli/types/commands/reports.ts';
+import type { CheckOptions, PushReport, RevisionCheckResult } from '#cli/types/commands.ts';
 import type { PushedRevisions, PushRevision, UntrackedFiles } from '#cli/types/repository.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 

@@ -1,0 +1,66 @@
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { buildUnknownRuleError, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
+import { readShippedChecks } from '#cli/manifests/read.ts';
+import { isConfigurationSelected } from '#cli/manifests/select.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { readToolBinPaths } from '#cli/tools/locate.ts';
+import { readLintRuleExplanation } from '#cli/tools/rule-explanations.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import type { RuleExplanation, RuleExplanationOptions, Session } from '#cli/types/tools.ts';
+
+function rethrowForUnselectedCheck(error: unknown, check: Check, session: Session | undefined): never {
+    const name = readShippedChecks().get(check.id)?.configuration.name;
+    if (
+        !(error instanceof GspotError) ||
+        error.code !== 'tool' ||
+        session === undefined ||
+        name === undefined ||
+        isConfigurationSelected(session.scopes, name)
+    )
+        throw error;
+    throw new GspotError('tool', `${name} is not selected. Run gspot add ${name}, then gspot install.`, {
+        cause: error,
+    });
+}
+
+async function readCheckRuleExplanation(
+    root: string,
+    check: Check,
+    identifier: string,
+    session?: Session,
+): Promise<RuleExplanation | undefined> {
+    const explanations = selectCheckCode(check)?.explanations;
+    if (explanations !== undefined)
+        return Object.hasOwn(explanations, identifier) ? explanations[identifier] : undefined;
+    const tool = findRuleTool(check);
+    if (tool === undefined) return undefined;
+    const options: RuleExplanationOptions = { help: check.help };
+    if (session !== undefined) {
+        options.timeoutSeconds = session.settings.tool_timeout_seconds;
+        options.readMiseBinPaths = async () => {
+            const { folders } = await readToolBinPaths(session);
+            return folders;
+        };
+    }
+    return await readLintRuleExplanation(root, tool, identifier, options).catch((error: unknown) =>
+        rethrowForUnselectedCheck(error, check, session),
+    );
+}
+
+/**
+Read the explanation of a rule from the rule catalog of its check.
+
+@returns `undefined` when the check has no rule catalog that covers the rule.
+@throws GspotError when the catalog does not hold the rule.
+*/
+export async function readListedRuleExplanation(
+    root: string,
+    check: Check,
+    rule: string,
+    session?: Session,
+): Promise<RuleExplanation | undefined> {
+    if (!hasRuleExplanations(check, selectCheckCode(check), rule)) return undefined;
+    const docs = await readCheckRuleExplanation(root, check, rule, session);
+    if (docs === undefined) throw buildUnknownRuleError(rule, check.id);
+    return docs;
+}

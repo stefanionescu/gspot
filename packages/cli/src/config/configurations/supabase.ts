@@ -44,3 +44,5 @@ export const VERIFY_JWT_MESSAGE =
     'This function skips the JWT check. Say why on this line, such as a signed webhook or a public endpoint.';
 
 export const DENO_IMPORT_MAP_FLAG = '--import-map';
+
+export const SUPABASE_RULES = { 'gspot/no-unvalidated-json-body': 'error' } as const;

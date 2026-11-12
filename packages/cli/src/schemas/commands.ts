@@ -1,16 +1,12 @@
 import { z } from 'zod';
 
-import { FILE_KINDS, GROUPS, SETTING_TYPES, TOOL_KINDS } from '#cli/config/manifests.ts';
+import { GROUPS, REASON_DESCRIPTIONS, SETTING_TYPES, TOOL_KINDS } from '#cli/config/manifests.ts';
 import { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
 import { checkStateSchema, findingSchema, reportedCheckSchema, runReportSchema } from '#cli/schemas/engine.ts';
 import { generatedFilesSchema, initPlanSchema } from '#cli/schemas/generation.ts';
-import { checkFieldsSchema } from '#cli/schemas/manifests/manifest.ts';
+import { checkFieldsSchema, fileKindSchema } from '#cli/schemas/manifests/manifest.ts';
 import { pushSkipSchema } from '#cli/schemas/repository.ts';
-import {
-    reasonRequirementSchema,
-    removedConfigurationSchema,
-    settingOriginSchema,
-} from '#cli/schemas/settings/fields.ts';
+import { removedConfigurationSchema, settingOriginSchema } from '#cli/schemas/settings/fields.ts';
 import { installResultSchema, toolInspectionSchema } from '#cli/schemas/tools.ts';
 
 export const installReportSchema = generatedFilesSchema.extend({
@@ -50,6 +46,8 @@ export const configurationsListSchema = z.strictObject({
     removed: removedConfigurationSchema.array(),
     available: z.strictObject({ name: z.string(), description: z.string() }).array(),
 });
+
+const reasonRequirementSchema = z.enum(Object.keys(REASON_DESCRIPTIONS) as Array<keyof typeof REASON_DESCRIPTIONS>);
 
 export const settingsListSchema = z.strictObject({
     settings: z
@@ -194,7 +192,7 @@ export const configurationExplanationSchema = z.strictObject({
 export const pathExplanationSchema = z.strictObject({
     path: z.string(),
     scope: z.string(),
-    fileKind: z.enum(FILE_KINDS),
+    fileKind: fileKindSchema,
     fileKindOrigin: z.string(),
     tags: z.string().array(),
     configurations: z.string().array(),

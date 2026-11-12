@@ -30,8 +30,6 @@ export const MISE_PROJECT_FILES = new Set([MISE_CONFIG_FILE, MISE_LOCKFILE]);
 
 export const TOOL_ENVIRONMENT = { NO_COLOR: '1', FORCE_COLOR: '0', PYTHONUTF8: '1' } as const;
 
-export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
-
 export const PROJECT_ENVIRONMENT_MESSAGE =
     'The project has no .venv folder, and VIRTUAL_ENV names no environment. Create the environment with the package manager of the project, such as uv sync, or activate it, then check again.';
 

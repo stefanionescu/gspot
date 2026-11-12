@@ -2,13 +2,13 @@ import type { z } from 'zod';
 
 import type { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
-import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import type {
     bunPackageSchema,
     installResultSchema,
     miseLockfileSchema,
     ruleExplanationSchema,
     toolInspectionSchema,
+    uvLockfileSchema,
     uvProjectSettingsSchema,
 } from '#cli/schemas/tools.ts';
 import type { Check, Configuration, Tool, ToolInstallers } from '#cli/types/manifests.ts';

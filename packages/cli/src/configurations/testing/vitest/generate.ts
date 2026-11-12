@@ -1,7 +1,7 @@
 import { VAGUE_TEST_TITLE_WORDS } from '#cli/config/configurations/javascript.ts';
-import { type ConfigurationBuilder } from '#cli/types/configurations/javascript.ts';
+import { type EslintBlockBuilder } from '#cli/types/configurations/javascript.ts';
 
-export const VITEST_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const VITEST_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     vitest: (scope) => {
         const { eslintFiles } = scope;
         return [

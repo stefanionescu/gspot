@@ -1,5 +1,4 @@
 allowed_words = ["gspot"]
-ignored_paths = ["**/coverage/**"]
 
 [configuration]
 always_selected = true

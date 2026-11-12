@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 import { BASEDPYRIGHT_CHECK } from '#cli/config/configurations/python.ts';
 import { NEGATED_PATTERN } from '#cli/config/configurations/structure.ts';
 import { CARRYOVER_ROW_START, EMPTY_CARRYOVER, IGNORE_REASON_START } from '#cli/config/generation/setup.ts';
@@ -7,6 +5,7 @@ import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { pyrightProjectSchema, pyrightScopeSchema } from '#cli/schemas/generation.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -15,18 +14,6 @@ import type { CarryoverInput, CarryoverSection } from '#cli/types/generation.ts'
 const PYRIGHT_CONFIG_FILE = 'pyrightconfig.json';
 
 const PYRIGHT_TABLES = ['basedpyright', 'pyright'] as const;
-
-const pyrightScopeSchema = z.looseObject({
-    include: z.string().array().default([]),
-    exclude: z.string().array().default([]),
-    typeCheckingMode: z.string().optional(),
-});
-
-const pyrightProjectSchema = z.looseObject({
-    tool: z
-        .looseObject({ basedpyright: pyrightScopeSchema.optional(), pyright: pyrightScopeSchema.optional() })
-        .optional(),
-});
 
 function readPyrightOptions(
     root: string,

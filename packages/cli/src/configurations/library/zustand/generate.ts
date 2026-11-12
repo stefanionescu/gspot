@@ -2,7 +2,7 @@ import { CREATE_STORE_MESSAGE, ZUSTAND_STORE_IMPORTS } from '#cli/config/configu
 import { getTable } from '#cli/settings/scopes.ts';
 import {
     type ConfigurationBlocks,
-    type ConfigurationBuilder,
+    type EslintBlockBuilder,
     type EslintScope,
 } from '#cli/types/configurations/javascript.ts';
 
@@ -29,6 +29,6 @@ function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>
     ];
 }
 
-export const ZUSTAND_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const ZUSTAND_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     zustand: buildZustandBlocks,
 };

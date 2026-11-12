@@ -54,8 +54,8 @@ import { assertGspotPin } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { print, printError, printResult, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import type { AnyCommandDefinition, CommandArgument, CommandHelp, CommandOption } from '#cli/types/commands/edits.ts';
-import type { InvalidValue } from '#cli/types/main.ts';
+import type { AnyCommandDefinition, ArgumentDefinition, OptionDefinition } from '#cli/types/commands.ts';
+import type { CommandHelp, InvalidValue } from '#cli/types/main.ts';
 
 function formatInvalidValue(message: string, command: string | undefined): string | undefined {
     const groups = INVALID_VALUE.exec(message)?.groups as InvalidValue | undefined;
@@ -76,7 +76,7 @@ function formatCommanderSentence(error: CommanderError, command: string | undefi
     return error.code === UNKNOWN_OPTION_ERROR_CODE ? `${sentence} ${DASH_VALUE_HELP}` : sentence;
 }
 
-function readCorrection(message: string): string {
+function formatCorrection(message: string): string {
     const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
     return suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
 }
@@ -86,11 +86,11 @@ function formatArgumentError(error: CommanderError, program: Command, command: s
     if (error.code === HELP_ERROR_CODE) return formatProgramHelp(program);
     if (error.code === UNKNOWN_COMMAND_ERROR_CODE) {
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
-        return `There is no command called ${name}.${readCorrection(message)} ${COMMANDS_HELP_MESSAGE}`;
+        return `There is no command called ${name}.${formatCorrection(message)} ${COMMANDS_HELP_MESSAGE}`;
     }
     const helpLine =
         command === undefined ? COMMANDS_HELP_MESSAGE : `Run gspot ${command} --help to see its arguments and options.`;
-    return `${formatCommanderSentence(error, command)}${readCorrection(message)} ${helpLine}`;
+    return `${formatCommanderSentence(error, command)}${formatCorrection(message)} ${helpLine}`;
 }
 
 function printFailure(error: unknown, program: Command, options: string[]): number {
@@ -147,7 +147,7 @@ function formatProgramHelp(program: Command): string {
     ].join('\n\n');
 }
 
-function buildArgument({ term, choices, defaultValue }: CommandArgument, description: string | undefined): Argument {
+function buildArgument({ term, choices, defaultValue }: ArgumentDefinition, description: string | undefined): Argument {
     const argument = new Argument(term, description);
     if (choices !== undefined) argument.choices(choices);
     if (defaultValue !== undefined) argument.default(defaultValue);
@@ -155,7 +155,7 @@ function buildArgument({ term, choices, defaultValue }: CommandArgument, descrip
 }
 
 function buildOption(
-    { flags, choices, required, hidden, list, repeats }: CommandOption,
+    { flags, choices, required, hidden, list, repeats }: OptionDefinition,
     description: string | undefined,
 ): Option {
     const option = new Option(flags, description);

@@ -4,7 +4,7 @@ import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/configurati
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import {
     type ConfigurationBlocks,
-    type ConfigurationBuilder,
+    type EslintBlockBuilder,
     type EslintScope,
 } from '#cli/types/configurations/javascript.ts';
 
@@ -71,6 +71,6 @@ function buildTypescriptBlocks(
     return blocks;
 }
 
-export const TYPESCRIPT_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const TYPESCRIPT_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     typescript: buildTypescriptBlocks,
 };

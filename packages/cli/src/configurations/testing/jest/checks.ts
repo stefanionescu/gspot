@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 
-import { listOwnTestScopes, stripCoverageArguments } from '#cli/engine/plan.ts';
+import { listOwnTestScopes, selectCheckCommand } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
@@ -21,7 +21,7 @@ async function runJest(
     if (nested.length === 0) return runCommandCheck(session, planned, options);
     const paths = nested.map((path) => escapeRegExp(posix.relative(planned.scope.path, path)));
     const command = [
-        ...(stripCoverageArguments(planned, options) as string[]),
+        ...(selectCheckCommand(planned, options) as string[]),
         '--passWithNoTests',
         `^(?!(?:.*/)?(?:${paths.join('|')})/)`,
     ];

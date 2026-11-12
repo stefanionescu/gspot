@@ -1,93 +1,23 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
+import {
+    COMMAND_FUNCTION,
+    COMMAND_INTERPRETERS,
+    FILE_FUNCTION,
+    FILE_METHODS,
+    NUMBER_CONVERTERS,
+    OUTBOUND_FUNCTIONS,
+    REQUEST_FIELDS,
+    REQUEST_NAMES,
+    REQUEST_READERS,
+    RESPONSE_NAMES,
+    RESPONSE_TARGETS,
+    SQL_METHODS,
+} from '../../config/servers.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { unwrapExpression } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-
-type Target = 'redirect' | 'html' | 'template' | 'path' | 'outbound' | 'sql' | 'regexp' | 'shell' | 'prototype';
-
-type CallTarget = { target: Target; argument: TSESTree.Node };
-
-const REQUEST_NAMES: ReadonlySet<string> = new Set(['req', 'request']);
-
-const REQUEST_FIELDS: ReadonlySet<string> = new Set(['query', 'body', 'params', 'headers', 'cookies', 'signedCookies']);
-
-const REQUEST_READERS: ReadonlySet<string> = new Set(['get', 'header', 'param']);
-
-const RESPONSE_NAMES: ReadonlySet<string> = new Set(['res', 'response']);
-
-const NUMBER_CONVERTERS: ReadonlySet<string> = new Set(['Number', 'parseInt', 'parseFloat', 'Boolean']);
-
-const RESPONSE_TARGETS: Readonly<Record<string, Target>> = {
-    redirect: 'redirect',
-    send: 'html',
-    write: 'html',
-    end: 'html',
-    render: 'template',
-    sendFile: 'path',
-    download: 'path',
-};
-
-const SQL_METHODS: ReadonlySet<string> = new Set(['query', 'execute', 'raw', '$queryRawUnsafe', '$executeRawUnsafe']);
-
-const FILE_FUNCTION = /^fs(?:\.promises)?\.(?<method>[A-Za-z]+?)(?:Sync)?$/u;
-
-const FILE_METHODS: ReadonlySet<string> = new Set([
-    'readFile',
-    'writeFile',
-    'appendFile',
-    'createReadStream',
-    'createWriteStream',
-    'open',
-    'unlink',
-    'rm',
-    'rmdir',
-    'readdir',
-    'stat',
-    'lstat',
-    'access',
-    'copyFile',
-    'rename',
-    'mkdir',
-]);
-
-const OUTBOUND_FUNCTIONS: ReadonlySet<string> = new Set([
-    'fetch',
-    'node-fetch',
-    'undici.fetch',
-    'undici.request',
-    'axios',
-    'axios.get',
-    'axios.post',
-    'axios.put',
-    'axios.patch',
-    'axios.delete',
-    'axios.head',
-    'axios.request',
-    'got',
-    'got.get',
-    'got.post',
-    'got.put',
-    'got.patch',
-    'got.delete',
-    'got.head',
-    'http.get',
-    'http.request',
-    'https.get',
-    'https.request',
-]);
-
-const COMMAND_FUNCTION = /^child_process\.(?:spawn|spawnSync|execFile|execFileSync)$/u;
-
-const COMMAND_INTERPRETERS: ReadonlySet<unknown> = new Set([
-    'sh',
-    'bash',
-    'zsh',
-    '/bin/sh',
-    '/bin/bash',
-    'cmd',
-    'cmd.exe',
-]);
+import type { RequestDataCall, RequestDataTarget } from '../../types/security.ts';
 
 function isRequestName(node: TSESTree.Node): boolean {
     return node.type === AST_NODE_TYPES.Identifier && REQUEST_NAMES.has(node.name);
@@ -177,7 +107,7 @@ function hasRootOption(node: TSESTree.CallExpression): boolean {
     );
 }
 
-function findResponseTarget(node: TSESTree.CallExpression): Target | undefined {
+function findResponseTarget(node: TSESTree.CallExpression): RequestDataTarget | undefined {
     const { callee } = node;
     if (callee.type !== AST_NODE_TYPES.MemberExpression || callee.object.type !== AST_NODE_TYPES.Identifier)
         return undefined;
@@ -205,7 +135,7 @@ function findModuleTarget(
     node: TSESTree.CallExpression,
     first: TSESTree.Node,
     source: TSESLint.SourceCode,
-): CallTarget | undefined {
+): RequestDataCall | undefined {
     const name = getCalledName(node, source);
     if (FILE_METHODS.has(FILE_FUNCTION.exec(name)?.groups?.['method'] ?? ''))
         return { target: 'path', argument: first };
@@ -215,7 +145,7 @@ function findModuleTarget(
         : undefined;
 }
 
-function findMethodTarget(node: TSESTree.CallExpression, first: TSESTree.Node): CallTarget | undefined {
+function findMethodTarget(node: TSESTree.CallExpression, first: TSESTree.Node): RequestDataCall | undefined {
     const method =
         node.callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(node.callee) : undefined;
     // An inline template is gspot/no-dynamic-sql-queries territory, so this rule follows a query built in a variable.
@@ -230,7 +160,7 @@ function findMethodTarget(node: TSESTree.CallExpression, first: TSESTree.Node): 
 Name the place that a call passes request data to, and the argument that carries it. `res.redirect` takes the URL as
 its last argument; the other calls take it first.
 */
-function findCallTarget(node: TSESTree.CallExpression, source: TSESLint.SourceCode): CallTarget | undefined {
+function findCallTarget(node: TSESTree.CallExpression, source: TSESLint.SourceCode): RequestDataCall | undefined {
     const [first] = node.arguments;
     const response = findResponseTarget(node);
     if (response !== undefined) {
@@ -241,7 +171,7 @@ function findCallTarget(node: TSESTree.CallExpression, source: TSESLint.SourceCo
     return findModuleTarget(node, first, source) ?? findMethodTarget(node, first);
 }
 
-export const noUncheckedRequestData = createRule<[], Target>({
+export const noUncheckedRequestData = createRule<[], RequestDataTarget>({
     name: 'no-unchecked-request-data',
     meta: {
         defaultOptions: [],

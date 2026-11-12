@@ -71,7 +71,7 @@ entry_files = [
     "tests/setup/runner/prepare.ts",
     "tests/setup/sandboxes/test-tools.ts",
     "tests/setup/runner/integration.ts",
-    "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts",
+    "packages/cli/src/configurations/framework/site/checks/selector-process.ts",
     "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts",
     "packages/cli/src/configurations/language/javascript/files/eslint-fixes.ts",
     "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts",
@@ -148,7 +148,7 @@ paths = ["packages/cli/src/generation/**", "packages/cli/src/config/generation/*
 
 [[import_rule]]
 name = "commands"
-paths = ["packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands/**", "packages/cli/src/schemas/commands.ts"]
+paths = ["packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands.ts", "packages/cli/src/schemas/commands.ts"]
 
 [[import_rule]]
 name = "main"

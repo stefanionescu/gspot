@@ -14,23 +14,6 @@ const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map(
 
 const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
 
-function getOutermostMember(node: TSESTree.Node): TSESTree.Node {
-    let outer = node;
-    while (outer.parent?.type === AST_NODE_TYPES.MemberExpression && outer.parent.object === outer)
-        outer = outer.parent;
-    return outer;
-}
-
-function isMemberWrite(member: TSESTree.Node): boolean {
-    const { parent } = member;
-    if (parent === undefined || member.type !== AST_NODE_TYPES.MemberExpression) return false;
-    return (
-        (parent.type === AST_NODE_TYPES.AssignmentExpression && parent.left === member) ||
-        parent.type === AST_NODE_TYPES.UpdateExpression ||
-        (parent.type === AST_NODE_TYPES.UnaryExpression && parent.operator === 'delete')
-    );
-}
-
 export function listSiblingStatements(statement: TSESTree.Node): readonly TSESTree.Node[] {
     const { parent } = statement;
     if (parent?.type === AST_NODE_TYPES.Program || parent?.type === AST_NODE_TYPES.BlockStatement) return parent.body;
@@ -52,23 +35,6 @@ export function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
     let value = node;
     while (isUnwrappable(value)) value = value.expression;
     return value;
-}
-
-export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope): boolean {
-    if (node === null) return false;
-    let value = unwrapExpression(node);
-    while (value.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrapExpression(value.object);
-    if (value.type !== AST_NODE_TYPES.Identifier) return false;
-    const variable = ASTUtils.findVariable(scope, value);
-    return (
-        variable !== null &&
-        variable.defs.length > 0 &&
-        variable.references.every(
-            (reference) =>
-                (!reference.isWrite() || reference.init === true) &&
-                !isMemberWrite(getOutermostMember(reference.identifier)),
-        )
-    );
 }
 
 export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void): TSESLint.RuleListener {

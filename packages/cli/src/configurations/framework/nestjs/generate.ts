@@ -5,9 +5,9 @@ import {
     TS_PATTERN,
 } from '#cli/config/configurations/framework.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
-import { type ConfigurationBuilder } from '#cli/types/configurations/javascript.ts';
+import { type EslintBlockBuilder } from '#cli/types/configurations/javascript.ts';
 
-export const NESTJS_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const NESTJS_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     nestjs: (scope) => {
         const { eslintFiles, path: scopePath, dependencies: scopeDependencies } = scope;
         return [

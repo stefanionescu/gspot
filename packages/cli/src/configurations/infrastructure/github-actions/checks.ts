@@ -32,7 +32,7 @@ import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { parseBashScript } from '#cli/parsers/code/bash.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

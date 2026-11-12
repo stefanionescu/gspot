@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { REACT_STATE_HOOK } from '../config/react.ts';
 import { getModuleName } from '../language/modules.ts';
-import type { StateHook } from '../types/libraries.ts';
+import type { StateHook } from '../types/utilities.ts';
 
 function getOwnerName(node: TSESTree.Node): TSESTree.Node | null | undefined {
     let owner = node;

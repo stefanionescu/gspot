@@ -6,10 +6,10 @@ import { scopeSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/inherit.ts';
 import { findNamingParent, findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { buildSettingsFromTable } from '#cli/settings/read.ts';
+import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { formatNameList, formatScope, quoteArgument } from '#cli/system/text.ts';
-import type { ExplainedSetting, Explanation, SettingScope } from '#cli/types/commands/reports.ts';
+import type { ExplainedSetting, Explanation, SettingScope } from '#cli/types/commands.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -64,7 +64,7 @@ function readShippedSetting(key: string): ExplainedSetting | undefined {
     if (match === undefined) return undefined;
     const shipped = findSettingDefault(available, settings, match, '')?.value;
     const scopeSetting = { scopePath: '', shipped, inherited: undefined, readBy: [] };
-    const owners = findSettingSchema(key)?.meta()?.['configurations'] as string[] | undefined;
+    const owners = findSettingSchema(key)?.meta()?.configurations;
     const ownership = owners === undefined ? [] : [`Configurations: ${formatNameList(owners)}`];
     return {
         setting: match.setting,

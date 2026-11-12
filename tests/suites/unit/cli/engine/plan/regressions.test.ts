@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.ts';
+import { isActive, planChecks, selectCheckCommand } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -20,8 +20,8 @@ test('a shared function coverage limit enables Jest coverage without enabling py
     });
     const jestPlan = plans.find(({ check }) => check.id === 'jest/tests')!;
     const pytestPlan = plans.find(({ check }) => check.id === 'pytest/tests')!;
-    expect(stripCoverageArguments(jestPlan, {})).toContain('--coverage');
-    expect(stripCoverageArguments(pytestPlan, {})).not.toContain('--cov');
+    expect(selectCheckCommand(jestPlan, {})).toContain('--coverage');
+    expect(selectCheckCommand(pytestPlan, {})).not.toContain('--cov');
 });
 
 test('stage all leaves out message checks even when only names one', async () => {

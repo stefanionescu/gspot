@@ -121,17 +121,17 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
     }
 }
 
-function findWrittenFile(run: Run, result: CheckResult): (path: string) => boolean {
+function buildWrittenPathMatcher(run: Run, result: CheckResult): (path: string) => boolean {
     const { session } = run;
     if (result.findings.length === 0 || result.check.startsWith(GSPOT_CHECK_PREFIX)) return () => false;
     return remember(session.cache, WRITTEN_FILES, session.root, () =>
-        buildPathMatcher(session.generation.listWrittenPaths(session)),
+        buildPathMatcher(session.generation.listWrittenGlobs(session)),
     );
 }
 
 function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
     const { ignore } = run.session.settings;
-    const isWritten = findWrittenFile(run, result);
+    const isWritten = buildWrittenPathMatcher(run, result);
     const kept = result.findings.filter(
         (finding) =>
             !isWritten(finding.file) &&

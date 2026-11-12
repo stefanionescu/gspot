@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/version-pin.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
-import type { ScanReport } from '#cli/types/commands/reports.ts';
+import type { ScanReport } from '#cli/types/commands.ts';
 import type { CheckResult, Finding } from '#cli/types/engine/run.ts';
 import { SCAN_RUN_REPORT } from '#tests/config/commands/check.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

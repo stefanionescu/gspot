@@ -18,9 +18,9 @@ import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { IgnoreSection } from '#cli/types/configurations/general.ts';
-import type { OwnedConfig } from '#cli/types/configurations/language.ts';
+import type { IgnoreSection } from '#cli/types/configurations/shared.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import type { OwnedConfig } from '#cli/types/generation.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 export function isPointerInherited(owned: OwnedConfig, generated: Pick<ConfigTargets, 'targets'>): boolean {

@@ -30,6 +30,10 @@ export const packageManagerSchema = packageManagerPinSchema.extend({
     version: exactVersionSchema,
 });
 
+export const miseToolsSchema = z.looseObject({
+    tools: z.record(z.string(), z.unknown()).default({}),
+});
+
 const stringListSchema = configTableSchema.transform((table) =>
     Object.values(table)
         .flat()

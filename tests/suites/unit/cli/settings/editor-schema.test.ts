@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import type { z } from 'zod';
 
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
+import { buildJsonSchema } from '#cli/settings/reference.ts';
 import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/validation.ts';
 import { validateSettingsText } from '#tests/setup/cli/settings.ts';
 

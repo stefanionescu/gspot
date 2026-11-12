@@ -1,7 +1,7 @@
 import { stringify } from '@decimalturn/toml-patch';
 
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/shared.ts';
 
 const TAPLO_FORMATTING = {
     array_auto_expand: false,

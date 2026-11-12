@@ -8,7 +8,7 @@ import {
 import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/typescript.ts';
 import {
     type ConfigurationBlocks,
-    type ConfigurationBuilder,
+    type EslintBlockBuilder,
     type EslintScope,
 } from '#cli/types/configurations/javascript.ts';
 
@@ -52,6 +52,6 @@ function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBl
     return blocks;
 }
 
-export const ASTRO_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
+export const ASTRO_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     astro: buildAstroBlocks,
 };

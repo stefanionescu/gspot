@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-import { LABEL_OWNERS } from '../../config/logic.ts';
+import { LABEL_OWNERS } from '../../config/control-flow.ts';
 import { createRule } from '../../rule.ts';
 
 export const noSwitchCaseLabels = createRule<[], 'label'>({

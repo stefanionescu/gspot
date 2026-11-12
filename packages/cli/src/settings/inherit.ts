@@ -10,8 +10,7 @@ import {
 import { CATEGORY_KEY_SEGMENTS, CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { findSettingSchema, isReasonedValue, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';

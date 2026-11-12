@@ -81,8 +81,6 @@ export const CONFIGURATIONS_OPTION = '--configurations <names>';
 
 export const LEVEL_OPTION = '--level <level>';
 
-export const LOCAL_RECORDS = { scope: 'path', import_rule: 'name', command_check: 'id' } as const;
-
 export const FROM_CONFLICT_MESSAGE =
     '--from takes the configurations of its file. Leave out --configurations, or edit a copy of the file.';
 

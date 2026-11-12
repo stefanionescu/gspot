@@ -3,15 +3,13 @@ import { join } from 'node:path';
 
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { PYTHON_ENVIRONMENT_FOLDER, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
-import { UV_FLAGS, UV_PROJECT_ENVIRONMENT, UV_TOOL } from '#cli/config/tools/installers.ts';
-import { PROJECT_ENVIRONMENT_MESSAGE, UV_RUN_ARGUMENTS } from '#cli/config/tools/programs.ts';
-import { getTool } from '#cli/manifests/read.ts';
+import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
+import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { executableLayout } from '#cli/system/paths.ts';
-import type { Tool, VersionedInstaller } from '#cli/types/manifests.ts';
-import type { Scope } from '#cli/types/settings.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import type { ProcessFailure, ScopeCheck, Session } from '#cli/types/tools.ts';
 
 const ACTIVE_ENVIRONMENT_VARIABLE = 'VIRTUAL_ENV';
@@ -44,25 +42,6 @@ export function listCopyPythonArguments(tool: Tool, environment: Record<string, 
             executableLayout.environmentFolder,
             PYTHON_EXECUTABLE + executableLayout.environmentSuffix,
         ),
-    ];
-}
-
-/**
-Build the command that runs a pinned Python check with the installed project dependencies of the scope.
-
-@returns the uv command, which syncs neither the project nor its lockfile.
-*/
-export function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [string, ...string[]]): string[] {
-    const tool = getTool(scope.configurations, command[0]);
-    const packagePin = tool.installers['pypi'] as VersionedInstaller;
-    return [
-        UV_TOOL,
-        ...UV_RUN_ARGUMENTS,
-        UV_FLAGS.project,
-        scopeRoot,
-        UV_FLAGS.with,
-        `${packagePin.name}==${packagePin.version}`,
-        ...command,
     ];
 }
 

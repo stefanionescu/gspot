@@ -17,7 +17,7 @@ import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
+import type { Migration, MigrationRead } from '#cli/types/configurations/database.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

@@ -10,7 +10,10 @@ import { EXPO_CHECKS } from '#cli/configurations/framework/expo/checks.ts';
 import { NEXTJS_CHECKS } from '#cli/configurations/framework/nextjs/checks.ts';
 import { REACT_DOM_CHECKS } from '#cli/configurations/framework/react-dom/checks.ts';
 import { SITE_BUILD_CHECKS } from '#cli/configurations/framework/site/checks/build.ts';
-import { SITE_PAGES_CHECKS } from '#cli/configurations/framework/site/checks/pages.ts';
+import { SITE_HTML_VALIDATE_CHECKS } from '#cli/configurations/framework/site/checks/html-validate.ts';
+import { SITE_LYCHEE_CHECKS } from '#cli/configurations/framework/site/checks/lychee.ts';
+import { SITE_PURGECSS_CHECKS } from '#cli/configurations/framework/site/checks/purgecss.ts';
+import { SITE_SITEMAP_CHECKS } from '#cli/configurations/framework/site/checks/sitemap.ts';
 import { SITE_UNUSED_ASSETS_CHECKS } from '#cli/configurations/framework/site/checks/unused-assets.ts';
 import { SITE_CONFIG_BUILDERS } from '#cli/configurations/framework/site/generate.ts';
 import { SVELTE_CHECKS } from '#cli/configurations/framework/svelte/checks.ts';
@@ -95,11 +98,11 @@ import { PYTHON_VULTURE_CHECKS } from '#cli/configurations/language/python/check
 import { PYTHON_CONFIG_BUILDERS } from '#cli/configurations/language/python/generate.ts';
 import { SQL_CONFIG_BUILDERS } from '#cli/configurations/language/sql/generate.ts';
 import { SWIFT_BUILD_CHECKS } from '#cli/configurations/language/swift/checks/build.ts';
-import { SWIFT_COVERAGE_CHECKS } from '#cli/configurations/language/swift/checks/coverage.ts';
 import { SWIFT_PERIPHERY_CHECKS } from '#cli/configurations/language/swift/checks/periphery.ts';
 import { SWIFT_SECURITY_CHECKS } from '#cli/configurations/language/swift/checks/security.ts';
 import { SWIFT_SKIP_REASONS_CHECKS } from '#cli/configurations/language/swift/checks/skip-reasons.ts';
-import { SWIFT_SWIFTLINT_CHECKS } from '#cli/configurations/language/swift/checks/swiftlint.ts';
+import { SWIFT_SWIFTLINT_ANALYZE_CHECKS } from '#cli/configurations/language/swift/checks/swiftlint-analyze.ts';
+import { SWIFT_TESTS_CHECKS } from '#cli/configurations/language/swift/checks/tests.ts';
 import { PERIPHERY_CONFIG_BUILDERS } from '#cli/configurations/language/swift/periphery.ts';
 import { SWIFTFORMAT_CONFIG_BUILDERS } from '#cli/configurations/language/swift/swiftformat.ts';
 import { SWIFTLINT_CONFIG_BUILDERS } from '#cli/configurations/language/swift/swiftlint.ts';
@@ -115,7 +118,7 @@ import { PYTEST_CONFIG_BUILDERS } from '#cli/configurations/testing/pytest/gener
 import { VITEST_CHECKS } from '#cli/configurations/testing/vitest/checks.ts';
 import { TSC_CHECKS } from '#cli/configurations/tsc/check.ts';
 import { joinTables } from '#cli/system/tables.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/shared.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { Check } from '#cli/types/manifests.ts';
 
@@ -177,7 +180,10 @@ export const CHECK_CODE = joinTables<CheckCode>([
     SECRETS_CHECKS,
     SECURITY_CHECKS,
     SITE_BUILD_CHECKS,
-    SITE_PAGES_CHECKS,
+    SITE_HTML_VALIDATE_CHECKS,
+    SITE_LYCHEE_CHECKS,
+    SITE_PURGECSS_CHECKS,
+    SITE_SITEMAP_CHECKS,
     SITE_UNUSED_ASSETS_CHECKS,
     STRUCTURE_BARE_BLOCKS_CHECKS,
     ENVIRONMENT_READERS_CHECKS,
@@ -194,11 +200,11 @@ export const CHECK_CODE = joinTables<CheckCode>([
     SUPABASE_CHECKS,
     SVELTE_CHECKS,
     SWIFT_BUILD_CHECKS,
-    SWIFT_COVERAGE_CHECKS,
     SWIFT_PERIPHERY_CHECKS,
     SWIFT_SECURITY_CHECKS,
     SWIFT_SKIP_REASONS_CHECKS,
-    SWIFT_SWIFTLINT_CHECKS,
+    SWIFT_SWIFTLINT_ANALYZE_CHECKS,
+    SWIFT_TESTS_CHECKS,
     TRANSLATIONS_CHECKS,
     TSC_CHECKS,
     TYPESCRIPT_CHECKS,

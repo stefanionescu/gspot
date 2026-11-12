@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import {
     API_LANGUAGE_REASON,
     EXCLUDED_CONFIGURATION_SETTINGS,
@@ -31,7 +31,7 @@ test.each([...SCOPE_REMOVALS])('remove bash --scope $scope: $name', async ({ set
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stderr).toBe('');
     expect(JSON.parse(result.stdout)).toMatchObject({ changed: true });
-    const written = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    const written = parseSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect({ ...written, scopes: Object.fromEntries(written.scopes) }).toMatchObject(expected);
 });
 

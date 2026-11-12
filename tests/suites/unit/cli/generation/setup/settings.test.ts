@@ -1,7 +1,7 @@
 import { parse } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
@@ -54,7 +54,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
     const result = await runGspot(sandbox.path, ['init', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { settingsText: text } = initOutputSchema.parse(JSON.parse(result.stdout));
-    const settings = readSettings(text, sandbox.path);
+    const settings = parseSettings(text, sandbox.path);
     expect({ root: settings.configurations, site: settings.scopes.get('apps/site')?.configurations }).toStrictEqual({
         root: ['typescript'],
         site: ['python'],

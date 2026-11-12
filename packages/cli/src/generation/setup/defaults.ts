@@ -7,7 +7,7 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
-import { buildSettingsFromTable } from '#cli/settings/read.ts';
+import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, getRequired, isTable } from '#cli/system/tables.ts';

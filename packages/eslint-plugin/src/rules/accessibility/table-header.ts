@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
-import { buildTableGrid, getAttribute, getElementName, isLayoutTable } from '../../libraries/jsx.ts';
+import { buildTableGrid, getAttribute, getElementName, isLayoutTable } from '../../language/jsx.ts';
 import { createRule } from '../../rule.ts';
 import type { TableCell } from '../../types/accessibility.ts';
 

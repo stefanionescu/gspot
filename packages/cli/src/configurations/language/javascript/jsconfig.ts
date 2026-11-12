@@ -18,8 +18,7 @@ import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 
 function buildExtendedExclude(

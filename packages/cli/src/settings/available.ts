@@ -75,7 +75,7 @@ function addConfigurationSettings(
 }
 
 function getBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_for'> | undefined {
-    if (definition?.['reasoned'] !== true) return undefined;
+    if (definition?.reasoned !== true) return undefined;
     const field = name.slice(name.lastIndexOf('.') + 1);
     const direction = Object.entries(BOUND_PREFIXES).find(([prefix]) => field.startsWith(prefix))?.[1];
     return direction === undefined ? undefined : { reason_for: direction };
@@ -99,7 +99,7 @@ export const ROOT_SETTINGS: Setting[] = Object.entries<z.ZodType>({
 }).map(([name, schema]) => buildSetting(name, schema));
 
 function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
-    const owners = schema.meta()?.['configurations'] as readonly string[] | undefined;
+    const owners = schema.meta()?.configurations;
     if (owners === undefined) return;
     const setting = buildSetting(name, schema);
     for (const owner of owners) {

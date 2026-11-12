@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -19,7 +19,7 @@ test('settings commands resolve scope packages/api from the repository root in a
     const added = await runGspot(cwd, ['add', 'bash', '--scope', 'packages/api']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
     expect(
-        readSettings(readFileSync(settingsPath, 'utf8'), sandbox.path).scopes.get('packages/api')?.configurations,
+        parseSettings(readFileSync(settingsPath, 'utf8'), sandbox.path).scopes.get('packages/api')?.configurations,
     ).toStrictEqual(['bash']);
 });
 
@@ -42,6 +42,6 @@ test('--scope . at the repository root names the root', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['set', 'limits.max_function_lines', '31', '--scope', '.']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    const settings = parseSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(settings.limits.max_function_lines).toBe(31);
 });

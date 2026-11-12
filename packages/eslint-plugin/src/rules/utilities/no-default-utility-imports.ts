@@ -1,7 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 
-import { UTILITY_LIBRARIES } from '../../config/libraries.ts';
-import { allowsVersion, readPackageFacts } from '../../libraries/packages.ts';
+import { UTILITY_LIBRARIES } from '../../config/utilities.ts';
+import { allowsVersion, readPackageFacts } from '../../language/packages.ts';
 import { createRule } from '../../rule.ts';
 
 export const noDefaultUtilityImports = createRule<[], 'named' | 'method'>({

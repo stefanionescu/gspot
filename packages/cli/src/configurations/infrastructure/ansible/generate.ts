@@ -1,7 +1,7 @@
 import { stringify } from 'yaml';
 
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
+import type { ConfigBuilder } from '#cli/types/configurations/shared.ts';
 import type { Level } from '#cli/types/settings.ts';
 
 const LEVEL_PROFILES: Readonly<Record<Level, string>> = { basic: 'moderate', all: 'production' };

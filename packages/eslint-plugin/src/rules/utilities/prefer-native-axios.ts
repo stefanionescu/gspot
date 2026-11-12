@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
-import { AXIOS_CANCEL_TOKEN, AXIOS_CONFIG_POSITIONS, AXIOS_DEPRECATIONS } from '../../config/libraries.ts';
+import { AXIOS_CANCEL_TOKEN, AXIOS_CONFIG_POSITIONS, AXIOS_DEPRECATIONS } from '../../config/utilities.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 

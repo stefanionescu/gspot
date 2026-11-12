@@ -127,7 +127,7 @@ function readMarkdownlintFile(root: string): MarkdownlintConfig | undefined {
     return undefined;
 }
 
-function readGeneratedFile(session: CarryoverInput['session'], target: string): Record<string, unknown> {
+function parseGeneratedConfig(session: CarryoverInput['session'], target: string): Record<string, unknown> {
     const generated = buildConfigs(session).files.find(({ path }) => path === target);
     return parseJsonFile(target, generated?.content ?? '{}');
 }
@@ -161,7 +161,7 @@ function readMarkdownlintCarryover({ repository, session, tools }: CarryoverInpu
     if (found === undefined) return EMPTY_CARRYOVER;
     const document = {
         ...Object.fromEntries(MARKDOWNLINT_PRETTIER_DISABLED.map((rule) => [rule, false])),
-        ...readGeneratedFile(session, MARKDOWNLINT_TARGET),
+        ...parseGeneratedConfig(session, MARKDOWNLINT_TARGET),
     };
     const rules = Object.entries(found.rules).map(
         ([rule, value]) => [MARKDOWNLINT_ALIASES[rule] ?? rule, value] as const,
@@ -199,7 +199,7 @@ async function readCommitlintCarryover({ repository, session, tools }: Carryover
         hasSeverity: true,
     });
     if (user === undefined) return EMPTY_CARRYOVER;
-    const shipped = readGeneratedFile(session, COMMITLINT_TARGET)['rules'] as Record<string, readonly unknown[]>;
+    const shipped = parseGeneratedConfig(session, COMMITLINT_TARGET)['rules'] as Record<string, readonly unknown[]>;
     const compared = compareRules({
         check: COMMITLINT_CHECK_ID,
         user,

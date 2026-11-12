@@ -10,7 +10,7 @@ import { runFixers } from '#cli/engine/fixes.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import * as manifests from '#cli/manifests/read.ts';
 import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
 import { buildFixerSettings, buildRunOptions, planFixer } from '#tests/setup/cli/run.ts';

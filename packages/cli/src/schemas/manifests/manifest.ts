@@ -12,7 +12,6 @@ import {
     GSPOT_PATHS,
     IGNORE_COMMAND,
     NAME_PATTERN,
-    NAMED_CATEGORIES,
     RULE_FILE_PATTERN,
     SETTING_LANGUAGES,
     SHIPPED_FILES_FOLDER,
@@ -21,18 +20,19 @@ import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
 import { commandCheckFields, outputSchema } from '#cli/schemas/manifests/checks.ts';
 import {
     conditionSchema,
+    identifierCategorySchema,
     levelSchema,
-    manifestToolSchema,
     nonemptyStringSchema,
     operatingSystemSchema,
     regexSchema,
     writtenNamingExceptionSchema,
-} from '#cli/schemas/manifests/tools.ts';
+} from '#cli/schemas/manifests/fields.ts';
+import { manifestToolSchema } from '#cli/schemas/manifests/tools.ts';
 
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),
     close: z.string(),
-    category: z.enum(NAMED_CATEGORIES),
+    category: identifierCategorySchema,
 });
 
 const wordListSchema = z.strictObject({
@@ -45,7 +45,7 @@ const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() }
 
 const languageSchema = z.strictObject({ categories: z.record(z.string(), categoryCasesSchema) });
 
-const fileKindSchema = z.enum(FILE_KINDS);
+export const fileKindSchema = z.enum(FILE_KINDS);
 
 const stringsSchema = z.string().array().default([]);
 

@@ -7,7 +7,7 @@ import { testdir } from 'testdirs';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { addScopeTable, buildEditedSettings, removeKey, removeUnknownKeys, setKey } from '#cli/settings/edit.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
-import { buildSettingsFromTable } from '#cli/settings/read.ts';
+import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { INITIAL_SETTINGS, SCOPE_SETTING_WRITES, SEMGREP_IGNORE } from '#tests/config/settings/text.ts';

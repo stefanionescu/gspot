@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { ATTRIBUTES_ROW, DROPPED_LINE_SETTINGS_NOTE, UNREAD_SUBMODULE_MESSAGE } from '#cli/config/generation/setup.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { initOutputSchema } from '#tests/schemas/setup.ts';
@@ -103,7 +103,7 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan, settingsText } = initOutputSchema.parse(JSON.parse(result.stdout));
     expect(plan.level).toBe('all');
-    expect(readSettings(settingsText, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
+    expect(parseSettings(settingsText, sandbox.path)).toMatchObject({ level: 'all', scopes: {} });
     expect(plan.lintFolders.map(({ path }) => path)).toStrictEqual(['quality/']);
     expect(plan.deleted).toStrictEqual([
         { path: '.commitlintrc.json', note: expect.stringContaining('commitlint') as string },

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { CONFIGURATION_ORIGINS, LEVELS } from '#cli/config/manifests.ts';
+import { CONFIGURATION_ORIGINS } from '#cli/config/manifests.ts';
+import { levelSchema } from '#cli/schemas/manifests/fields.ts';
 import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { lintCommandSchema } from '#cli/schemas/repository.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
@@ -75,6 +76,18 @@ export const ruffProjectSchema = z.looseObject({
     tool: z.looseObject({ ruff: ruffOptionsSchema.optional() }).optional(),
 });
 
+export const pyrightScopeSchema = z.looseObject({
+    include: z.string().array().default([]),
+    exclude: z.string().array().default([]),
+    typeCheckingMode: z.string().optional(),
+});
+
+export const pyrightProjectSchema = z.looseObject({
+    tool: z
+        .looseObject({ basedpyright: pyrightScopeSchema.optional(), pyright: pyrightScopeSchema.optional() })
+        .optional(),
+});
+
 export const generatedFilesSchema = z.strictObject({
     written: z.string().array(),
     unchanged: z.string().array(),
@@ -101,7 +114,7 @@ export const leftOutSettingSchema = z.strictObject({ key: z.string(), note: z.st
 
 export const initPlanSchema = z.strictObject({
     from: z.strictObject({ file: z.string(), leftOutSettings: leftOutSettingSchema.array() }).optional(),
-    level: z.enum(LEVELS),
+    level: levelSchema,
     configurations: z
         .strictObject({
             configuration: z.string(),

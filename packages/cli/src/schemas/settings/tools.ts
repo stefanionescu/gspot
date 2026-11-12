@@ -9,7 +9,7 @@ import {
     SQLFLUFF_DIALECTS,
     TRIVY_SEVERITIES,
 } from '#cli/config/settings/schema.ts';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { allowReasonedValue, nonemptyPathsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';
 import {
     buildRuleTableSchema,

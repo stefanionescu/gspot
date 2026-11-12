@@ -8,7 +8,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -70,12 +70,12 @@ test('a root list replaces configuration defaults, and a scope list adds to the 
         });
     }
     const defaults = buildAvailableSettings(configurations, 'basic');
-    const unwritten = readSettings(buildSandboxSettings(['naming']), sandbox.path);
+    const unwritten = parseSettings(buildSandboxSettings(['naming']), sandbox.path);
     expect(getSettingValue(defaults, unwritten, 'naming.banned_words', '')?.value).toStrictEqual([
         'dispatcher',
         'orchestrator',
     ]);
-    const settings = readSettings(
+    const settings = parseSettings(
         buildSandboxSettings(['naming'], {
             rules: true,
             tables: '[naming]\nbanned_words = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["handler"]\n',

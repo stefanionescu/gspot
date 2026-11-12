@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { DONE_STOP_STATEMENTS } from '../../config/testing.ts';
+import { TERMINATING_STATEMENTS } from '../../config/control-flow.ts';
 import { listFunctionAncestors } from '../../language/functions.ts';
 import { listBodyNodes, listSiblingStatements } from '../../language/syntax.ts';
 import { getMarkedTestCall } from '../../libraries/testing.ts';
@@ -16,7 +16,7 @@ function findCodeAfter(call: TSESTree.Node, source: TSESLint.SourceCode): TSESTr
         return siblings.slice(siblings.indexOf(statement) + 1);
     });
     for (const next of following) {
-        if (DONE_STOP_STATEMENTS.has(next.type)) return undefined;
+        if (TERMINATING_STATEMENTS.has(next.type)) return undefined;
         const found = listBodyNodes(next, source).find((node) => node.type === AST_NODE_TYPES.ExpressionStatement);
         if (found !== undefined) return found;
     }
