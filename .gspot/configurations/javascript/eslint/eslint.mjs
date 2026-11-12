@@ -161,7 +161,7 @@ const noneOfList = [
     "rule \"docs-config",
     "rule \"docs-types",
     "rule \"docs",
-    "rule \"tests-data",
+    "rule \"tests-config",
     "rule \"tests-types",
     "rule \"tests-setup",
     "rule \"tests",
@@ -899,7 +899,7 @@ export default setRuleOptions(defineConfig([
                 "stopMatching": true
             },
             {
-                "category": "rule \"tests-data",
+                "category": "rule \"tests-config",
                 "pattern": [
                     "tests/config/**",
                     "tests/schemas/**"
@@ -1740,7 +1740,7 @@ export default setRuleOptions(defineConfig([
                     {
                         "from": {
                             "file": {
-                                "categories": "rule \"tests-data"
+                                "categories": "rule \"tests-config"
                             }
                         },
                         "disallow": {
@@ -1750,12 +1750,12 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"tests-data\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"tests-config\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
                             "file": {
-                                "categories": "rule \"tests-data"
+                                "categories": "rule \"tests-config"
                             }
                         },
                         "allow": {
@@ -1763,7 +1763,7 @@ export default setRuleOptions(defineConfig([
                                 "file": {
                                     "categories": {
                                         "anyOf": [
-                                            "rule \"tests-data",
+                                            "rule \"tests-config",
                                             "rule \"system",
                                             "rule \"parsers",
                                             "rule \"manifests",
@@ -1796,7 +1796,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"tests-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"plugin-types\", \"tests-data\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"tests-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"plugin-types\", \"tests-config\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1823,7 +1823,7 @@ export default setRuleOptions(defineConfig([
                                             "rule \"main",
                                             "rule \"cli-types",
                                             "rule \"plugin-types",
-                                            "rule \"tests-data"
+                                            "rule \"tests-config"
                                         ]
                                     }
                                 }
@@ -1843,7 +1843,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"tests-setup\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"tests-setup\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-config\", \"tests-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1876,7 +1876,7 @@ export default setRuleOptions(defineConfig([
                                             "rule \"docs-config",
                                             "rule \"docs-types",
                                             "rule \"docs",
-                                            "rule \"tests-data",
+                                            "rule \"tests-config",
                                             "rule \"tests-types"
                                         ]
                                     }
@@ -1897,7 +1897,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"tests\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"tests\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-config\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1930,7 +1930,7 @@ export default setRuleOptions(defineConfig([
                                             "rule \"docs-config",
                                             "rule \"docs-types",
                                             "rule \"docs",
-                                            "rule \"tests-data",
+                                            "rule \"tests-config",
                                             "rule \"tests-types",
                                             "rule \"tests-setup"
                                         ]

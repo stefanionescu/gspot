@@ -189,14 +189,14 @@ name = "docs"
 paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
 
 [[import_rule]]
-name = "tests-data"
+name = "tests-config"
 paths = ["tests/config/**", "tests/schemas/**"]
 can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "tests-setup"]
 
 [[import_rule]]
 name = "tests-types"
 paths = ["tests/types/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "plugin-types", "tests-data"]
+can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "plugin-types", "tests-config"]
 
 [[import_rule]]
 name = "tests-setup"

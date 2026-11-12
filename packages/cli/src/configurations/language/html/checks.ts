@@ -12,7 +12,7 @@ import {
     SCRIPT_SCHEMES,
     SURROUNDING_QUOTES,
     URL_ATTRIBUTES,
-} from '#cli/config/configurations/language.ts';
+} from '#cli/config/configurations/html.ts';
 import { HTML_EXPLANATIONS } from '#cli/configurations/language/html/explanations.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { MarkupAttribute } from '#cli/types/configurations/language.ts';

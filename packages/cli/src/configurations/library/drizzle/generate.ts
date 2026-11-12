@@ -4,7 +4,7 @@ import {
     type ConfigurationBlocks,
     type ConfigurationBuilder,
     type EslintScope,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;

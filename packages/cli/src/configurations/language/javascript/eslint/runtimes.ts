@@ -14,7 +14,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { compareScopeDepth, joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';
-import type { EslintRuntime } from '#cli/types/configurations/language.ts';
+import type { EslintRuntime } from '#cli/types/configurations/javascript.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Scope } from '#cli/types/settings.ts';
 

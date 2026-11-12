@@ -6,7 +6,7 @@ import {
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
-import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/language.ts';
+import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/javascript.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 

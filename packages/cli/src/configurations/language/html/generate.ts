@@ -2,7 +2,7 @@ import {
     HTML_VALIDATE_EXTENDS,
     HTML_VALIDATE_OVERRIDES,
     HTML_VALIDATE_RULES,
-} from '#cli/config/configurations/language.ts';
+} from '#cli/config/configurations/html.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';

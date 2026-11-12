@@ -1,6 +1,6 @@
 import { VUE_FILES, VUE_RULES, VUE_SCOPE_RULES } from '#cli/config/configurations/framework.ts';
-import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/language.ts';
-import { type ConfigurationBuilder } from '#cli/types/configurations/language.ts';
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/typescript.ts';
+import { type ConfigurationBuilder } from '#cli/types/configurations/javascript.ts';
 
 export const VUE_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
     vue: (scope) => {

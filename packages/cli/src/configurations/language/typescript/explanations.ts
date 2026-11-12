@@ -1,9 +1,9 @@
+import type { COMPILER_OPTIONS, NESTJS_COMPILER_OPTIONS } from '#cli/config/configurations/shared.ts';
 import {
     MISSING_TSCONFIG_RULE,
     type STRICT_FAMILY_OPTIONS,
     UNREADABLE_TSCONFIG_RULE,
-} from '#cli/config/configurations/language.ts';
-import type { COMPILER_OPTIONS, NESTJS_COMPILER_OPTIONS } from '#cli/config/configurations/shared.ts';
+} from '#cli/config/configurations/typescript.ts';
 import type { RuleExplanation } from '#cli/types/tools.ts';
 
 export const TSCONFIG_EXPLANATIONS = {

@@ -21,7 +21,7 @@ import type {
     EslintFileWriter,
     EslintReference,
     PlannedEslintBlock,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 const IDENTIFIER_SEPARATOR = /[^\w$]/gu;
 

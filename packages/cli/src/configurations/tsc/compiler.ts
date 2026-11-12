@@ -5,7 +5,6 @@ import type ts from 'typescript';
 
 import { TSCONFIG_COPY_FOLDER } from '#cli/config/configurations/framework.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
-import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/language.ts';
 import {
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
@@ -17,6 +16,7 @@ import {
     TSCONFIG_TSBUILDINFO,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/shared.ts';
+import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/typescript.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, PRIVATE_FILE } from '#cli/config/system.ts';
 import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';

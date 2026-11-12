@@ -25,7 +25,7 @@ import type {
     EslintScope,
     PlannedEslintBlock,
     PlannedEslintFile,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 

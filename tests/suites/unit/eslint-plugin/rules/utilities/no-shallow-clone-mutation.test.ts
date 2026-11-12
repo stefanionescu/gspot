@@ -1,4 +1,4 @@
-import { noShallowCloneMutation } from '#eslint-plugin/rules/libraries/no-shallow-clone-mutation.ts';
+import { noShallowCloneMutation } from '#eslint-plugin/rules/utilities/no-shallow-clone-mutation.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-shallow-clone-mutation', noShallowCloneMutation, {

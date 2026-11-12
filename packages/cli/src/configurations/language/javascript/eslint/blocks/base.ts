@@ -51,7 +51,7 @@ import type {
     EslintRuntime,
     ListedPlugins,
     PlannedEslintFile,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks {
     const { session, projects } = planned;

@@ -1,6 +1,6 @@
 import { InvalidArgumentError } from '@commander-js/extra-typings';
 
-import { formatDetection } from '#cli/commands/init/detection.ts';
+import { formatDetection } from '#cli/commands/init/report.ts';
 import { readTemplate } from '#cli/commands/init/template.ts';
 import {
     CONFIGURATION_LIST_SEPARATOR,

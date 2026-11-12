@@ -8,7 +8,7 @@ import {
     type ConfigurationBlocks,
     type ConfigurationBuilder,
     type EslintScope,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 function buildTestingLibraryBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'dependencies'>): ConfigurationBlocks {
     const { eslintFiles, dependencies: scopeDependencies } = scope;

@@ -25,13 +25,8 @@ import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
-import type {
-    BlockWriter,
-    ConfigOutput,
-    EslintFileWriter,
-    PlannedConfig,
-    PlannedEslintBlock,
-} from '#cli/types/configurations/language.ts';
+import type { BlockWriter, EslintFileWriter, PlannedEslintBlock } from '#cli/types/configurations/javascript.ts';
+import type { ConfigOutput, PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { GeneratedFile } from '#cli/types/tools.ts';
 

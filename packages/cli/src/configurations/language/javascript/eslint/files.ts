@@ -14,7 +14,7 @@ import type {
     EslintFiles,
     PathExpressions,
     ScopeOverride,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
 /**

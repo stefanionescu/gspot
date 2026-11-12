@@ -3,7 +3,7 @@ import {
     MARKDOWNLINT_PRETTIER_DISABLED,
     MARKDOWNLINT_RULES,
     PRETTIER_STYLE,
-} from '#cli/config/configurations/language.ts';
+} from '#cli/config/configurations/markdown.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { assertRunningRuleOptions, listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/scopes.ts';

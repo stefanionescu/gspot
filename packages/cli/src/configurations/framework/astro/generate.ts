@@ -5,12 +5,12 @@ import {
     ASTRO_SCRIPT_FILES,
     ASTRO_TYPED_RULES,
 } from '#cli/config/configurations/framework.ts';
-import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/language.ts';
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/typescript.ts';
 import {
     type ConfigurationBlocks,
     type ConfigurationBuilder,
     type EslintScope,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
     const blocks: ConfigurationBlocks = [

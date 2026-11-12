@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 
-import type { JavascriptBlock } from '#cli/types/configurations/language.ts';
+import type { JavascriptBlock } from '#cli/types/configurations/javascript.ts';
 
 type RuleReport = {
     data?: Record<string, unknown>;

@@ -25,7 +25,7 @@ import type {
     EslintBoundaryPolicy,
     PlannedEslintFile,
     ScopeBoundaries,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 function buildDependencyPolicies({
     importRules,

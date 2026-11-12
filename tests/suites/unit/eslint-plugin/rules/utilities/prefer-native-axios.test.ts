@@ -1,4 +1,4 @@
-import { preferNativeAxios } from '#eslint-plugin/rules/libraries/prefer-native-axios.ts';
+import { preferNativeAxios } from '#eslint-plugin/rules/utilities/prefer-native-axios.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-native-axios', preferNativeAxios, {

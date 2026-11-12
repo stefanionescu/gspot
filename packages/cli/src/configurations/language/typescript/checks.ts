@@ -10,7 +10,7 @@ import {
     STRICT_FAMILY_OPTIONS,
     TSCONFIG_NAME,
     UNREADABLE_TSCONFIG_RULE,
-} from '#cli/config/configurations/language.ts';
+} from '#cli/config/configurations/typescript.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { TSCONFIG_EXPLANATIONS } from '#cli/configurations/language/typescript/explanations.ts';
 import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';

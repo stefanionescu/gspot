@@ -12,7 +12,7 @@ import {
     type ConfigurationBlocks,
     type ConfigurationBuilder,
     type EslintScope,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 function buildNextjsBlocks(
     scope: Pick<EslintScope, 'path' | 'eslintFiles' | 'dependencyFiles' | 'sourceFiles'>,

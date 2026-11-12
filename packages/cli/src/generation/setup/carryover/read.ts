@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 
-import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
+import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/markdown.ts';
 import { RUFF_CHECK } from '#cli/config/configurations/python.ts';
 import {
     CARRIED_TOOLS,

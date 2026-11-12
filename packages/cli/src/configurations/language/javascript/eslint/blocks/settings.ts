@@ -35,7 +35,7 @@ import type {
     EslintRuleOptions,
     PlannedEslintFile,
     ScopeEslintSettings,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 

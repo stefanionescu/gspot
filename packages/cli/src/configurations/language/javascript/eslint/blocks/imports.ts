@@ -23,7 +23,7 @@ import {
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
-import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/language.ts';
+import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], denoFolders: Set<string>): EslintBlock[] {

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { noDefaultUtilityImports } from '#eslint-plugin/rules/libraries/no-default-utility-imports.ts';
+import { noDefaultUtilityImports } from '#eslint-plugin/rules/utilities/no-default-utility-imports.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({

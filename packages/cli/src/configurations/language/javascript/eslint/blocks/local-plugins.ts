@@ -7,7 +7,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildModuleSpecifier, escapeGlob } from '#cli/system/paths.ts';
-import type { EslintBlockFields, EslintPlugins } from '#cli/types/configurations/language.ts';
+import type { EslintBlockFields, EslintPlugins } from '#cli/types/configurations/javascript.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
 function listPluginRecords(scopes: Scope[]) {

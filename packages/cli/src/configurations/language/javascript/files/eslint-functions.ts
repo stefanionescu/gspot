@@ -9,7 +9,7 @@ import type {
     EslintRuleOptionBlock,
     EslintRuntime,
     JavascriptBlock,
-} from '#cli/types/configurations/language.ts';
+} from '#cli/types/configurations/javascript.ts';
 
 export const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 

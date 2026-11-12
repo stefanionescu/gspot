@@ -11,7 +11,7 @@ import {
     JSON_FENCE_OPTIONS,
     PLACEHOLDER_VALUE,
     SYNTAX_ERROR_MESSAGE,
-} from '#cli/config/configurations/language.ts';
+} from '#cli/config/configurations/markdown.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';

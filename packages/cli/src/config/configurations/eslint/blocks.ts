@@ -1,5 +1,5 @@
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import type { SelectorPaths } from '#cli/types/configurations/language.ts';
+import type { SelectorPaths } from '#cli/types/configurations/javascript.ts';
 
 export const GSPOT_PRESET_LEVELS = { basic: 'recommended', all: 'all' } as const;
 

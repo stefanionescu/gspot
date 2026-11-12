@@ -31,12 +31,6 @@ import { awsSqsUnencryptedQueue } from '../rules/aws/aws-sqs-unencrypted-queue.t
 import { awsUnblockedPublicBuckets } from '../rules/aws/aws-unblocked-public-buckets.ts';
 import { awsUnencryptedNotebooks } from '../rules/aws/aws-unencrypted-notebooks.ts';
 import { awsUnencryptedVolumes } from '../rules/aws/aws-unencrypted-volumes.ts';
-import { noDefaultUtilityImports } from '../rules/libraries/no-default-utility-imports.ts';
-import { noShallowCloneMutation } from '../rules/libraries/no-shallow-clone-mutation.ts';
-import { preferNativeAxios } from '../rules/libraries/prefer-native-axios.ts';
-import { preferNativeJquery } from '../rules/libraries/prefer-native-jquery.ts';
-import { preferNativeLodash } from '../rules/libraries/prefer-native-lodash.ts';
-import { requireMemoizeKey } from '../rules/libraries/require-memoize-key.ts';
 import { noClearTextProtocols } from '../rules/networks/no-clear-text-protocols.ts';
 import { noHardcodedIp } from '../rules/networks/no-hardcoded-ip.ts';
 import { unverifiedCertificate } from '../rules/networks/unverified-certificate.ts';
@@ -96,6 +90,12 @@ import { noUnexplainedTestSkips } from '../rules/testing/no-unexplained-test-ski
 import { preferTestTable } from '../rules/testing/prefer-test-table.ts';
 import { testHooksFirst } from '../rules/testing/test-hooks-first.ts';
 import { testingLibraryQueries } from '../rules/testing/testing-library-queries.ts';
+import { noDefaultUtilityImports } from '../rules/utilities/no-default-utility-imports.ts';
+import { noShallowCloneMutation } from '../rules/utilities/no-shallow-clone-mutation.ts';
+import { preferNativeAxios } from '../rules/utilities/prefer-native-axios.ts';
+import { preferNativeJquery } from '../rules/utilities/prefer-native-jquery.ts';
+import { preferNativeLodash } from '../rules/utilities/prefer-native-lodash.ts';
+import { requireMemoizeKey } from '../rules/utilities/require-memoize-key.ts';
 import { noVueClassComponents } from '../rules/vue/no-vue-class-components.ts';
 import { noVueMixins } from '../rules/vue/no-vue-mixins.ts';
 import { noVueUpdatedWrites } from '../rules/vue/no-vue-updated-writes.ts';
@@ -145,7 +145,7 @@ export const LIBRARY_TOPICS = {
         awsUnencryptedNotebooks,
         awsUnencryptedVolumes,
     ],
-    libraries: [
+    utilities: [
         noDefaultUtilityImports,
         noShallowCloneMutation,
         preferNativeAxios,
