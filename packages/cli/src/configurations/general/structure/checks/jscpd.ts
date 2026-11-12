@@ -11,7 +11,7 @@ import {
     OUTPUT_FLAG,
 } from '#cli/config/configurations/general.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
-import { buildMissingFileStop } from '#cli/configurations/syntax.ts';
+import { buildMissingFileStop } from '#cli/engine/tool-runs/check.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';

@@ -195,6 +195,32 @@ test('a path ignore covers its own paths, not the scopes below or beside it', as
     ]);
 });
 
+test.each([
+    { name: 'no file', pattern: '^(?<message>.+)$', line: 'oops' },
+    { name: 'a folder', pattern: '^(?<file>[^:]+):(?<message>.+)$', line: 'sub:oops' },
+])(
+    'a fixable finding without a file gives no fix command and does not abort the run: $name',
+    async ({ pattern, line }) => {
+        const check = {
+            id: 'project/quality',
+            command: buildProgramCommand('fakes/tool', '--line', line, '--exit', '1'),
+            fix: buildProgramCommand('fakes/tool'),
+            paths: ['sub/**'],
+            runs: 'once',
+            exit_codes: [1],
+            output: { format: 'regex', pattern, fixable: '.' },
+            stage: 'commit',
+        };
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [check] }) }),
+            'sub/source.txt': 'text\n',
+        });
+        const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/quality'] }));
+        expect(result.report.checks).toMatchObject([{ check: 'project/quality', status: 'failed' }]);
+        expect(result.report.checks[0]).not.toHaveProperty('fixCommand');
+    },
+);
+
 test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
     const reporter = buildProgramCommand('fakes/tool', '--stdout', 'source.txt\n', '--exit', '1');
     const checks = ['broken', 'kept'].map((name) => ({

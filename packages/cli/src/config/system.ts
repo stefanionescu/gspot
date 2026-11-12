@@ -111,7 +111,7 @@ export const MISE_TASK_FOLDERS = [
     '.config/mise/tasks',
 ] as const;
 
-export const OUTSIDE_PROGRAMS: ReadonlySet<string> = new Set(['git', 'mise', 'node', 'npm']);
+export const OUTSIDE_PROGRAMS: ReadonlySet<string> = new Set(['git', 'mise', 'node', 'npm', 'uv']);
 
 export const GIT_METADATA_NAME = '.git';
 

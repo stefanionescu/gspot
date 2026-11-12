@@ -72,6 +72,11 @@ test.each([
         flags: ['--hook', 'pre-push', '--base', 'HEAD'],
         message: '--base cannot run with --hook pre-push: it checks the pushed commits. Leave out --base.',
     },
+    {
+        flags: ['--hook', 'commit-msg', '--staged', '--base', 'HEAD', '--fix'],
+        message:
+            '--staged, --base, --fix cannot run with --hook commit-msg: it checks the commit message. Leave out --staged, --base, --fix.',
+    },
 ])('check $flags exits 2, names the conflict, and leaves the working tree as it was', async ({ flags, message }) => {
     await using sandbox = await createFixableSandbox();
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);

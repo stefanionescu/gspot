@@ -89,3 +89,8 @@ test('continued trap commands and cleanup retain their original source rows', as
     ]);
     expect(parsed.swallowedLines).toStrictEqual([4]);
 });
+
+test('a quoted arithmetic expansion is not a literal argument', async () => {
+    const parsed = await parseBashScript('echo "$((1 + 2))"\n');
+    expect(parsed.commands[0]?.arguments).toStrictEqual([undefined]);
+});

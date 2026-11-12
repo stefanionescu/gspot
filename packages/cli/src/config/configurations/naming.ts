@@ -132,8 +132,6 @@ export const UNUSED_RECORD_RULE = 'unused-record';
 
 export const REST_SEGMENT = /^\.\.\./u;
 
-export const MIGRATION_DIGITS = 14;
-
 export const LOWER_WORD = /^\d*[a-z][a-z\d]*$/u;
 
 export const CAMEL_WORD = /^\d*[a-z][a-z\d]*(?:[A-Z][a-z\d]+)*[A-Z]?$/u;

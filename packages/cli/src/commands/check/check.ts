@@ -15,6 +15,7 @@ import {
     GIT_SETUP_FILES_ARGUMENTS,
     GIT_STAGED_SETTINGS_ARGUMENTS,
     HOOK_OPTION,
+    HOOK_REFUSAL_REASONS,
     NOTHING_STAGED_MESSAGE,
     ONLY_OPTION,
     PUSH_INPUT_MESSAGE,
@@ -60,18 +61,20 @@ async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     }
 }
 
-function assertPushFlags(flags: CheckFlags): void {
-    const conflicts = [
+function assertHookFlags(flags: CheckFlags, hook: NonNullable<CheckFlags['hook']>): void {
+    const list = [
         flags.staged === true ? STAGED_FLAG : undefined,
         flags.base === undefined ? undefined : BASE_FLAG,
         flags.fix === true ? FIX_FLAG : undefined,
-    ].filter((value) => value !== undefined);
-    if (conflicts.length > 0)
+    ]
+        .filter((value) => value !== undefined)
+        .join(', ');
+    if (list !== '')
         throw new GspotError(
             'arguments',
-            `${conflicts.join(', ')} cannot run with --hook pre-push: it checks the pushed commits. Leave out ${conflicts.join(', ')}.`,
+            `${list} cannot run with --hook ${hook}: ${HOOK_REFUSAL_REASONS[hook]}. Leave out ${list}.`,
         );
-    if (process.stdin.isTTY) throw new GspotError('arguments', PUSH_STDIN_MESSAGE);
+    if (hook === 'pre-push' && process.stdin.isTTY) throw new GspotError('arguments', PUSH_STDIN_MESSAGE);
 }
 
 function assertStagedFlags(options: CheckOptions, flags: CheckFlags): void {
@@ -87,7 +90,7 @@ function assertStagedFlags(options: CheckOptions, flags: CheckFlags): void {
 
 function assertCheckSelection(options: CheckOptions, flags: CheckFlags): void {
     const { only, skip } = options;
-    if (flags.hook === 'pre-push') assertPushFlags(flags);
+    if (flags.hook !== undefined) assertHookFlags(flags, flags.hook);
     assertStagedFlags(options, flags);
     if (only?.every((id) => skip?.includes(id) === true) === true)
         throw new GspotError(

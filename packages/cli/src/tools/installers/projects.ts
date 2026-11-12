@@ -1,7 +1,5 @@
 import { join } from 'node:path';
 
-import which from 'which';
-
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL, UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG, UV_TOOL } from '#cli/config/tools/installers.ts';
@@ -81,7 +79,7 @@ function findStalePythonLockfile(
 
 async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise<string | undefined> {
     const { session, misePath } = install;
-    if (misePath === undefined && which.sync(UV_TOOL, { nothrow: true }) === null) return undefined;
+    if (misePath === undefined && findProgram(UV_TOOL) === undefined) return undefined;
     const search = { folders: [], miseBinPaths, timeoutSeconds: session.settings.tool_timeout_seconds };
     const { paths } = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
     return paths[0] ?? UV_TOOL;
@@ -136,6 +134,27 @@ export function listStaleLockfiles(
         lockfiles.push(findStaleNpmLockfile(files, toolPackageManager, session));
     if (projects.has(GSPOT_PATHS.pythonProject)) lockfiles.push(findStalePythonLockfile(files, toolConfigurations));
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
+}
+
+/**
+Tell whether install can keep every tool lockfile. It reads what a lock run reads and `listStaleLockfiles` does not:
+the npm registry settings, the uv indexes, and the release age.
+*/
+export async function isEveryLockfileFresh(install: ToolInstall): Promise<boolean> {
+    const { session, writer, packageManager } = install;
+    const configurations = session.toolConfigurations;
+    if (install.misePath !== undefined && findStaleMiseLockfile(writer, configurations) !== undefined) return false;
+    if (packageManager !== undefined) {
+        const registryEnvironment = await readRegistryEnvironment(session.root);
+        if (!isNpmLockfileFresh({ ...install, packageManager, registryEnvironment })) return false;
+    }
+    if (install.generated.files.every((file) => file.path !== GSPOT_PATHS.pythonProject)) return true;
+    return isPythonLockfileFresh(
+        buildPythonProjectTable(configurations),
+        writer.read(GSPOT_PATHS.uvLockfile)?.bytes.toString('utf8'),
+        install.pythonSettings.settings,
+        install.releaseAgeDays,
+    );
 }
 
 /**

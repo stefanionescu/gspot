@@ -22,6 +22,8 @@ export const DOCKER_MISSING_MESSAGE = 'Docker is not installed. Install Docker t
 
 export const CANCELED_CHECK_NOTE = 'The check was canceled.';
 
+export const MISSING_GENERATED_FILE_MESSAGE = 'The generated file <path> is missing. Run gspot install.';
+
 export const FAILED_STATUSES = new Set<CheckStatus>(['failed', 'error']);
 
 export const CHECK_COMMAND = 'gspot check';

@@ -8,6 +8,7 @@ const root = writePackageFolders({
     old: { dependencies: { lodash: '^3.10.0', rxjs: '~7.1.0', validator: 'github:validatorjs/validator.js' } },
     capped: { dependencies: { lodash: '<=4.0.0' } },
     major: { dependencies: { lodash: '4.x' } },
+    zero: { dependencies: { rambda: '^0.0' } },
 });
 const filename = join(root, 'modern/cart.ts');
 
@@ -18,6 +19,7 @@ buildRuleTester({ root }).run('no-default-utility-imports', noDefaultUtilityImpo
         { code: 'import validator from "validator";', filename: join(root, 'old/cart.ts') },
         { code: 'import { map } from "lodash";', filename },
         { code: 'import dayjs from "dayjs";', filename },
+        { code: 'import R from "rambda";', filename: join(root, 'zero/cart.ts') },
     ],
     invalid: [
         {

@@ -43,6 +43,7 @@ import {
     readPrettierOptions,
     readRuffOptions,
 } from '#cli/generation/setup/format.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
@@ -249,16 +250,12 @@ function useEditorconfigWords(row: CarryoverRow): CarryoverRow {
     };
 }
 
-function listPrettierRows({
-    repository,
-    session,
-    prettierScripts,
-    trackedPaths,
-    tools,
-}: CarryoverInput): CarryoverRow[] {
+function listPrettierRows(input: CarryoverInput): CarryoverRow[] {
+    const { repository, session, prettierScripts, trackedPaths, tools } = input;
     if (!tools.has('prettier')) return [];
+    const prettierFiles = getTool(readConfigurations().values(), 'prettier').replace as string[];
     return session.scopes.flatMap(({ path: scopePath }) => {
-        const sources = readPrettierOptions(repository.root, scopePath, prettierScripts);
+        const sources = readPrettierOptions(repository.root, scopePath, prettierScripts, prettierFiles);
         const readPath = sources[0]?.path;
         const readKeys = new Set(sources.slice(0, 1).flatMap(({ options }) => Object.keys(options)));
         return sources.map(({ path, options }) => {

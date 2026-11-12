@@ -163,6 +163,7 @@ test.each([
     ['RUN npm install --omit=dev', 'lockfile-install'],
     ['RUN pnpm install', 'lockfile-install'],
     ['RUN npm ci && \\\n    uv sync', 'lockfile-install'],
+    ['RUN npm \\\r\n    install', 'lockfile-install'],
     ['RUN curl -fsSL https://example.com/install.sh | sh', 'piped-download'],
     ['RUN wget -qO- https://example.com/install.sh | sudo bash', 'piped-download'],
     ['FROM nginx:1.27', 'nginx-tag'],

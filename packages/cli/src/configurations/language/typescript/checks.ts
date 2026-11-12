@@ -68,7 +68,8 @@ function claimOwnedProjects(
         });
         if (isOwned) owned.push(project);
     }
-    if (projects.length > 0 && owned.length === 0) throw new CheckStop('skipped', PARENT_TSCONFIG_SKIP);
+    if (projects.length > 0 && owned.length === 0)
+        throw new CheckStop('skipped', PARENT_TSCONFIG_SKIP, { skipCause: 'replaced' });
     return owned;
 }
 

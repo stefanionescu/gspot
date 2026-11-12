@@ -8,6 +8,7 @@ import { GSPOT_REMOVE } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { REMOVAL_REASON_SUGGESTION } from '#cli/config/settings/validation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { findRequirementChain, formatRequiredRemoval } from '#cli/manifests/select.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { addScopeTable, removeKey } from '#cli/settings/edit.ts';
@@ -28,11 +29,7 @@ function assertRemovable(names: string[], kept: string[]): void {
         const chain = kept
             .map((name) => findRequirementChain(configuration, name, new Set()))
             .find((found) => found !== undefined);
-        if (chain)
-            throw new GspotError(
-                'arguments',
-                `Cannot remove ${configuration}: ${chain.join(' requires ')}. Remove ${chain[0] as string} first, or keep ${configuration}.`,
-            );
+        if (chain) throw new GspotError('arguments', formatRequiredRemoval(configuration, chain));
     }
 }
 
@@ -84,18 +81,6 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         formatConfigurationChange({ action: 'Removed', changed: removed, where, unchanged, state: 'not selected' }) +
         removeUnusedSettings(input.table, scopePath);
     return writeSettingsEdit(context, { summary });
-}
-
-function findRequirementChain(required: string, from: string, seen: Set<string>): string[] | undefined {
-    if (from === required) return [from];
-    if (seen.has(from)) return undefined;
-    seen.add(from);
-    const requirements = readConfigurations().get(from)?.requires ?? [];
-    for (const next of requirements) {
-        const rest = findRequirementChain(required, next, seen);
-        if (rest !== undefined) return [from, ...rest];
-    }
-    return undefined;
 }
 
 export const REMOVE_COMMAND: CommandDefinition<[string[]], ScopeFlags & { reason: string }> = {

@@ -15,7 +15,7 @@ import {
     installNpmToolProject,
     installPythonToolProjects,
     isEveryEnvironmentReady,
-    listStaleLockfiles,
+    isEveryLockfileFresh,
     repairToolProjects,
 } from '#cli/tools/installers/projects.ts';
 import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
@@ -79,7 +79,7 @@ async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
         ({ path, content }) => writer.read(path)?.bytes.toString('utf8') === content,
     );
     const hooks = await readHookStatus(session, session.repository);
-    if (!isWritten || !hooks.ready || listStaleLockfiles(session, generated.files).length > 0) return false;
+    if (!isWritten || !hooks.ready || !(await isEveryLockfileFresh(install))) return false;
     const host = readHost();
     const search = { ...session, runsVersionCommand: true };
     const availabilities = await Promise.all(

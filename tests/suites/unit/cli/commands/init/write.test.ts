@@ -102,3 +102,20 @@ test('init stopped by SIGINT while it installs tools names what it wrote and the
     expect(failure.message).toContain('Run gspot install to finish the setup.');
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
 });
+
+test('init stopped by SIGTERM while it writes finishes the write and names gspot install', async () => {
+    await using sandbox = await createGitSandbox({ 'entry.sh': 'echo example\n' });
+    using _commands = fakeCommands(undefined, () => Promise.resolve(buildProcessResult({ stdout: '11.19.0\n' })));
+    const rename = fs.renameSync;
+    using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
+        if (String(target) === join(sandbox.path, 'gspot.toml')) process.emit('SIGTERM');
+        rename(source, target);
+    });
+    const stopped = await runGspot(sandbox.path, ['init', '--configurations', 'bash', '--json']);
+    expect(stopped.code, stopped.stdout + stopped.stderr).toBe(143);
+    expect(JSON.parse(stopped.stdout)).toMatchObject({
+        error: 'canceled',
+        message: expect.stringContaining('Run gspot install to finish the setup.') as string,
+    });
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
+});

@@ -8,7 +8,6 @@ import {
     DIGITS_ONLY,
     LAST_EXTENSION,
     LOWER_WORD,
-    MIGRATION_DIGITS,
     PASCAL_ACRONYM_WORD,
     PASCAL_WORD,
     RUFF_CATEGORIES,
@@ -39,11 +38,9 @@ import type {
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 
 function isSnakeMigration(name: string): boolean {
-    const stamp = name.slice(0, MIGRATION_DIGITS);
-    const rest = name.slice(MIGRATION_DIGITS);
-    if (!DIGITS_ONLY.test(stamp) || !rest.startsWith('_') || !rest.endsWith(SQL_EXTENSION)) return false;
-    const stem = rest.slice(1, -SQL_EXTENSION.length);
-    return stem !== '' && stem.split('_').every((word) => LOWER_WORD.test(word));
+    if (!name.endsWith(SQL_EXTENSION)) return false;
+    const [sequence = '', ...words] = name.slice(0, -SQL_EXTENSION.length).split('_');
+    return DIGITS_ONLY.test(sequence) && words.length > 0 && words.every((word) => LOWER_WORD.test(word));
 }
 
 const CASE_TESTS = {
@@ -232,7 +229,7 @@ function buildIdentifierLimits(
     const caseException = exceptions.findLast((exception) => exception.cases !== undefined);
     return identifier.language === 'swift' && SWIFTLINT_CATEGORIES.has(identifier.category)
         ? { ...base, cases: [], maxCharacters: 0 }
-        : { ...base, cases: [...(caseException?.cases ?? base.cases), ...(identifier.addedCases ?? [])] };
+        : { ...base, cases: [...new Set([...(caseException?.cases ?? base.cases), ...(identifier.addedCases ?? [])])] };
 }
 
 function validateIdentifier(identifier: Identifier, naming: FileNaming): CheckFinding[] {

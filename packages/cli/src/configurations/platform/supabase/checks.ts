@@ -17,10 +17,8 @@ import {
     DENO_LOCATION,
     FILE_URL_PREFIX,
     FUNCTION_ENTRYPOINT,
-    SERVICE_ROLE_KEY_EXTENSIONS,
     SERVICE_ROLE_KEY_MESSAGE,
     SERVICE_ROLE_KEY_NAMES,
-    SERVICE_ROLE_KEY_TAGS,
     SHARED_PREFIX,
     STORAGE_POLICY_TABLE,
     SUPABASE_CHECK_RULES,
@@ -40,7 +38,6 @@ import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { getTable } from '#cli/settings/scopes.ts';
@@ -266,13 +263,7 @@ function checkServiceRoleKey(session: Session, planned: PlannedCheck): CheckFind
     const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
     const tests = planned.scope.settings.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
-    const extensions = [...listTaggedExtensions(...SERVICE_ROLE_KEY_TAGS), ...SERVICE_ROLE_KEY_EXTENSIONS];
-    const files = planned.files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            !isAllowed(file.path) &&
-            extensions.some((extension) => file.path.endsWith(extension)),
-    );
+    const files = planned.files.filter((file) => !isAllowed(file.path));
     return files.flatMap((file) =>
         listMatchingLines(readText(session.cache, file.path), (text) =>
             SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name)),

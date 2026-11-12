@@ -11,6 +11,7 @@ buildRuleTester().run('no-misplaced-loop-counter', noMisplacedLoopCounter, {
         'for (; delta > 455; k += 36) { delta = Math.floor(delta / 35); }',
         'for (let i = 1; true; ++i) { if (done(i)) break; }',
         'for (let round = 0; queue.length > 0; round++) { queue.shift(); }',
+        'for (let round = 0; this.queue.length > 0; round++) { this.queue.shift(); }',
     ],
     invalid: [
         {

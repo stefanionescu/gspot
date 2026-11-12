@@ -16,10 +16,17 @@ export class GspotError extends Error {
 export class CheckStop extends Error {
     readonly status: 'skipped' | 'missing' | 'error';
 
-    constructor(status: CheckStop['status'], note: string, options?: ErrorOptions) {
+    readonly skipCause: 'condition' | 'replaced' | undefined;
+
+    constructor(
+        status: CheckStop['status'],
+        note: string,
+        options?: ErrorOptions & { skipCause?: 'condition' | 'replaced' },
+    ) {
         super(note, options);
         this.name = 'CheckStop';
         this.status = status;
+        this.skipCause = options?.skipCause;
     }
 }
 

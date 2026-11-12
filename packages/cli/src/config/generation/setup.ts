@@ -120,22 +120,6 @@ export const FORMAT_CONFIGURATION = 'format';
 
 export const FOREIGN_HOOK_NOTE = 'keeps running your hooks; add the lines of gspot install to call .gspot/hooks';
 
-export const PRETTIER_ROOT_FILES = [
-    '.prettierrc',
-    '.prettierrc.json',
-    '.prettierrc.yml',
-    '.prettierrc.yaml',
-    '.prettierrc.js',
-    '.prettierrc.cjs',
-    '.prettierrc.mjs',
-    '.prettierrc.ts',
-    'prettier.config.js',
-    'prettier.config.cjs',
-    'prettier.config.mjs',
-    'prettier.config.ts',
-    '.prettierrc.toml',
-] as const;
-
 export const IGNORE_FILES = [
     { file: '.prettierignore', tool: 'prettier', check: 'format/prettier' },
     { file: '.eslintignore', tool: 'eslint', check: 'javascript/eslint' },

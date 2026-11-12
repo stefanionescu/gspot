@@ -11,7 +11,7 @@ import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { listRuleFiles, readConfigurations, readShippedChecks } from '#cli/manifests/read.ts';
+import { findCheck, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatArgumentSelector } from '#cli/settings/paths.ts';
@@ -19,7 +19,7 @@ import { findRuleSetting } from '#cli/settings/validation/references.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
 import type { CheckExplanation, CheckIgnore, Explanation, LintRuleExplanation } from '#cli/types/commands/reports.ts';
-import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { RuleExplanation, ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string, cwd: string): CheckIgnore[] {
@@ -90,11 +90,12 @@ function formatCheckExplanation(facts: CheckExplanation): string {
 }
 
 function formatRuleOptions(
-    { check, configuration }: ConfigurationCheck,
+    { check, configuration }: { check: Check; configuration: Configuration | undefined },
     tool: string | undefined,
     identifier: string,
 ): string | undefined {
-    if (tool === undefined || !hasRuleExplanations(check, selectCheckCode(check), identifier)) return undefined;
+    if (tool === undefined || configuration === undefined) return undefined;
+    if (!hasRuleExplanations(check, selectCheckCode(check), identifier)) return undefined;
     const owner = findRuleSetting(tool, identifier);
     if (owner !== undefined) return `gspot set ${owner} <value>`;
     const key = `tools.${tool}.rules`;
@@ -148,8 +149,11 @@ function buildRuleDocFacts(
     };
 }
 
-function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
-    const found = readShippedChecks().get(checkId);
+function findRuleCheck(
+    checkId: string,
+    session: Session | undefined,
+): { check: Check; configuration: Configuration | undefined } | undefined {
+    const found = findCheck(checkId, session?.settings.commandChecks);
     if (found !== undefined && !canIgnoreRule(found.check, selectCheckCode(found.check)))
         throw new GspotError(
             'arguments',
@@ -218,10 +222,7 @@ function buildCheckExplanation(
 }
 
 export function explainCheck(session: Session | undefined, checkId: string, cwd: string): Explanation | undefined {
-    const commandCheck = session?.settings.commandChecks[checkId];
-    const found: Pick<ScopeCheck, 'check' | 'configuration'> | undefined =
-        readShippedChecks().get(checkId) ??
-        (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
+    const found = findCheck(checkId, session?.settings.commandChecks);
     if (found === undefined) return undefined;
     const facts = buildCheckExplanation(found, session, cwd);
     return { kind: 'check', subject: checkId, text: formatCheckExplanation(facts), facts };
@@ -229,11 +230,11 @@ export function explainCheck(session: Session | undefined, checkId: string, cwd:
 
 /**
 Explain one lint rule: its page, its description from the installed tool, and how to ignore it or change its
-options.
+options. A rule of a command check gets the help of its check and the command that ignores it.
 
 @param options.session the repository settings and tool project, when available.
-@returns undefined when gspot ships no check with this name, or when the check lists its rules and this is not one. A
-name outside the rules that gspot reads gets the help of its check.
+@returns undefined when no shipped check and no command check has this name, or when the check lists its rules and
+this is not one. A name outside the rules that gspot reads gets the help of its check.
 @throws GspotError when gspot cannot name one lint rule of the check.
 */
 export async function explainLintRule(
@@ -242,7 +243,7 @@ export async function explainLintRule(
     identifier: string,
     { verbose, session }: { verbose?: boolean; session?: Session },
 ): Promise<Explanation | undefined> {
-    const found = findRuleCheck(checkId);
+    const found = findRuleCheck(checkId, session);
     if (found === undefined) return undefined;
     const tool = findRuleTool(found.check);
     const docs = await readRuleDocs(root, found.check, identifier, session);

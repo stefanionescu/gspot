@@ -7,7 +7,6 @@ import {
     EXEC_FORM_START,
     INSTRUCTION_MESSAGES,
     INSTRUCTION_RULES,
-    LINE_CONTINUATION,
     LOCKED_INSTALLS,
     NGINX_IMAGE,
     NPM_COMMAND,
@@ -15,6 +14,7 @@ import {
     PATCH_LEVEL_VERSION,
 } from '#cli/config/configurations/docker.ts';
 import { DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers/code.ts';
+import { LINE_CONTINUATION } from '#cli/config/parsers/projects.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';

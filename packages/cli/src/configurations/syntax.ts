@@ -1,5 +1,5 @@
 import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
-import { CheckStop, GspotError } from '#cli/system/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { Parsed } from '#cli/types/parsers.ts';
 
@@ -17,8 +17,4 @@ export function parseCheckedFile<Value>(path: string, parse: () => Value): Parse
             },
         };
     }
-}
-
-export function buildMissingFileStop(path: string): CheckStop {
-    return new CheckStop('missing', `The generated file ${path} is missing. Run gspot install.`);
 }

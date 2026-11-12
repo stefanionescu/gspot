@@ -171,3 +171,11 @@ test('main.swift passes the PascalCase file names of Swift', async () => {
     });
     expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toStrictEqual([]);
 });
+
+test('a migration named with a sequence number passes', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['naming', 'sql']),
+        'migrations/0001_create_users.sql': 'SELECT 1;\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toStrictEqual([]);
+});

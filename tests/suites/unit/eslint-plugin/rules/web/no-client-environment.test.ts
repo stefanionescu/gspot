@@ -30,6 +30,10 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
             "'use client';\nconst url = Deno.env.get('NEXT_PUBLIC_URL');",
             "'use client';\nconst { env } = process;\nconst url = env.NEXT_PUBLIC_URL;",
             {
+                code: "'use client';\nconst { env } = process;\nconst url = env.NEXT_PUBLIC_URL;",
+                languageOptions: { globals: ENVIRONMENT_GLOBALS },
+            },
+            {
                 code: "'use client';\nconst url = process.env['VITE_URL'];\nconst mode = process.env.APP_MODE;",
                 options: [{ publicPrefixes: ['VITE_'], allowedNames: ['APP_MODE'] }],
             },
@@ -67,6 +71,11 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
             },
             {
                 code: "'use client';\nconst { env } = process;\nconst key = env.SECRET;",
+                errors: [{ messageId: 'private', line: 3, column: 13 }],
+            },
+            {
+                code: "'use client';\nconst { env } = process;\nconst key = env.SECRET;",
+                languageOptions: { globals: ENVIRONMENT_GLOBALS },
                 errors: [{ messageId: 'private', line: 3, column: 13 }],
             },
             { code: "'use client';\nconst { env } = process;\nsend(env);", errors: [{ messageId: 'private' }] },

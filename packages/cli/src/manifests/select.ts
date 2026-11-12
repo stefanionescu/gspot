@@ -66,13 +66,39 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
         }));
 }
 
+export function formatAlwaysOnMessage(name: string): string {
+    return `${name} is always on, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To ignore one check, run gspot ignore.`;
+}
+
 export function assertConfigurationsEditable(names: string[]): void {
     const name = names.find((each) => readConfigurations().get(each)?.always_selected === true);
-    if (name !== undefined)
-        throw new GspotError(
-            'arguments',
-            `${name} is always on, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To ignore one check, run gspot ignore.`,
-        );
+    if (name !== undefined) throw new GspotError('arguments', formatAlwaysOnMessage(name));
+}
+
+/**
+Find how one configuration requires another.
+
+@returns the names from `from` down to `required`, or undefined when `from` does not require it.
+*/
+export function findRequirementChain(required: string, from: string, seen: Set<string>): string[] | undefined {
+    if (from === required) return [from];
+    if (seen.has(from)) return undefined;
+    seen.add(from);
+    const requirements = readConfigurations().get(from)?.requires ?? [];
+    for (const next of requirements) {
+        const rest = findRequirementChain(required, next, seen);
+        if (rest !== undefined) return [from, ...rest];
+    }
+    return undefined;
+}
+
+/**
+Say why a configuration cannot be removed.
+
+@param chain the names from a kept configuration down to the one that it requires.
+*/
+export function formatRequiredRemoval(configuration: string, chain: string[]): string {
+    return `Cannot remove ${configuration}: ${chain.join(' requires ')}. Remove ${chain[0] as string} first, or keep ${configuration}.`;
 }
 
 export function assertConfigurationsExist(names: string[]): void {

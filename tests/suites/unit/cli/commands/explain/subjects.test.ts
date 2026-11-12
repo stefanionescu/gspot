@@ -235,3 +235,13 @@ test.each([
         expect(result.stdout).toContain('gspot ignore gspot/weakenings --rule');
     },
 );
+
+test('explain of a file without gspot.toml names gspot init', async () => {
+    await using sandbox = await createGitSandbox({ 'a.txt': 'a\n' });
+    const result = await runGspot(sandbox.path, ['explain', './a.txt', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('gspot init') as string,
+    });
+});

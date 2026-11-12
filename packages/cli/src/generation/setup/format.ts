@@ -12,7 +12,6 @@ import {
     PRETTIER_DEFAULTS,
     PRETTIER_FILE_FORMATS,
     PRETTIER_PACKAGE_KEY,
-    PRETTIER_ROOT_FILES,
     PRETTIER_SCRIPT_FILE,
     PRETTIER_SCRIPT_NAME,
     PROSE_TAGS,
@@ -181,27 +180,32 @@ function hasCode(repository: Repository): boolean {
     return repository.files.some((file) => file.kind === 'source' && file.tags.some((tag) => !PROSE_TAGS.has(tag)));
 }
 
+function listParsedPrettierFiles({ root, scopePath, scripts }: FormatSearch, prettierFiles: readonly string[]) {
+    return prettierFiles
+        .filter((name) => name !== '.prettierignore')
+        .flatMap((name) => {
+            const path = joinScope(scopePath, name);
+            const text = findText(root, path);
+            const options = text === undefined ? undefined : parsePrettierFile(path, text, scripts);
+            return options === undefined ? [] : [{ path, options }];
+        });
+}
+
 function readFormatOptions(
-    { root, scopePath, scripts }: FormatSearch,
+    search: FormatSearch,
     dependencies: Record<string, string>,
-    prettierFiles: string[],
+    prettierFiles: readonly string[],
 ): PrettierStyle | null {
-    const folder = posix.join(root, scopePath);
-    const editorconfig = readEditorconfig(folder);
+    const { root, scopePath } = search;
+    const editorconfig = readEditorconfig(posix.join(root, scopePath));
     const packagePath = posix.join(scopePath, PACKAGE_JSON);
     const packageOptions = readPackagePrettier(root, packagePath);
-    const prettierFile = prettierFiles
-        .filter((path) => path !== '.prettierignore')
-        .map((path) => ({ path, text: findText(folder, path) }))
-        .find((read): read is { path: string; text: string } => read.text !== undefined);
+    const prettierFile = listParsedPrettierFiles(search, prettierFiles)[0];
     const hasPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
     if (!hasPrettier) return editorconfig;
     const packageFields = isTable(packageOptions) ? packageOptions : {};
-    const options =
-        prettierFile === undefined
-            ? parseFileFields(packagePath, packageFields, prettierSettingsSchema)
-            : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text, scripts);
+    const options = prettierFile?.options ?? parseFileFields(packagePath, packageFields, prettierSettingsSchema);
     const overrides = [editorconfig, options].flatMap((source) => source?.overrides ?? []);
     return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options, overrides };
 }
@@ -244,16 +248,18 @@ export function readRuffOptions(root: string): { path: string; options: RuffOpti
     return undefined;
 }
 
+/**
+Read every Prettier source of a scope. The first entry is the one whose settings init carries over.
+
+@param prettierFiles the files that the Prettier tool of the format manifest replaces.
+*/
 export function readPrettierOptions(
     root: string,
     scopePath: string,
     scripts: PrettierScripts,
+    prettierFiles: readonly string[],
 ): Array<{ path: string; options: PrettierOptions }> {
-    const files = PRETTIER_ROOT_FILES.map((name) => joinScope(scopePath, name)).flatMap((path) => {
-        const text = findText(root, path);
-        const options = text === undefined ? undefined : parsePrettierFile(path, text, scripts);
-        return options === undefined ? [] : [{ path, options }];
-    });
+    const files = listParsedPrettierFiles({ root, scopePath, scripts }, prettierFiles);
     const packagePath = joinScope(scopePath, PACKAGE_JSON);
     const key = readPackagePrettier(root, packagePath);
     const parsed = prettierSettingsSchema.safeParse(key).data ?? { dropped: [PRETTIER_PACKAGE_KEY] };
@@ -277,12 +283,14 @@ export async function readPrettierScripts(
     using _output = muteOutput();
     const results = await Promise.all(
         scripts.map(async (path): Promise<Array<[string, PrettierOptions]>> => {
+            let options: PrettierOptions | undefined;
             try {
                 const module = (await import(pathToFileURL(join(root, path)).href)) as { default?: unknown };
-                return [[path, parseFileFields(path, module.default ?? module, prettierSettingsSchema)]];
+                options = parseFileFields(path, module.default ?? module, prettierSettingsSchema);
             } catch {
-                return [];
+                // A script that does not load or holds other fields stays out, and the carryover table names it.
             }
+            return options === undefined ? [] : [[path, options]];
         }),
     );
     return new Map(results.flat());

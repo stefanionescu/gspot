@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import {
     ALL_LEVEL_OPTION_FINDINGS,
@@ -14,6 +15,7 @@ import {
 } from '#tests/config/configurations/language.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/setup/languages.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -126,6 +128,23 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
             planSandboxCheck(reopened, 'typescript/tsconfig', { scope: 'app' }),
         ),
     ).toThrow(expect.objectContaining({ name: 'CheckStop', status: 'skipped' }));
+});
+
+test('a nested scope that a root tsconfig covers is skipped as replaced', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'all',
+            scopes: [{ path: 'app', configurations: ['typescript'] }],
+        }),
+        'tsconfig.json': STRICT_TSCONFIG_TEXT,
+        'root.ts': ROOT_PORT_SOURCE,
+        'app/source.ts': CHILD_PORT_SOURCE,
+    });
+    const { report } = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['typescript/tsconfig'] }),
+    );
+    expect(report.checks.find(({ scope }) => scope === 'app')).toMatchObject({ status: 'skipped', cause: 'replaced' });
 });
 
 test('a child excluded from the root project is its own compiler project', async () => {

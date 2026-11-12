@@ -24,9 +24,10 @@ async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promi
         checkTools: listHostCheckTools(session),
     });
     const changes = listGeneratedChangeLines(report);
-    let summary = TOOLS_CHANGED_MESSAGE;
-    if (installed.length === 0 && missing.length > 0) summary = TOOLS_MISSING_MESSAGE;
-    else if (installed.length === 0) summary = changes.length === 0 ? TOOLS_INSTALLED_MESSAGE : FILES_CHANGED_MESSAGE;
+    let summary = TOOLS_INSTALLED_MESSAGE;
+    if (missing.length > 0) summary = TOOLS_MISSING_MESSAGE;
+    else if (installed.length > 0) summary = TOOLS_CHANGED_MESSAGE;
+    else if (changes.length > 0) summary = FILES_CHANGED_MESSAGE;
     const allNotes = [...report.notes, ...notes];
     return {
         text: `${[...changes, ...(installed.length === 0 ? [summary] : installed), ...allNotes, ...missing].join('\n')}\n`,

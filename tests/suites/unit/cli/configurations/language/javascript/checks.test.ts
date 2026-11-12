@@ -83,7 +83,7 @@ test('javascript/biome checks shebang scripts, TypeScript, and component files i
     );
 });
 
-test('javascript/tsc skips an absent jsconfig with install advice', async () => {
+test('javascript/tsc stops with an error when its generated jsconfig is missing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'source.js': 'export const ready = true;\n',
@@ -93,9 +93,7 @@ test('javascript/tsc skips an absent jsconfig with install advice', async () => 
     const target = getConfigPath(await openSession(sandbox.path), 'jsconfig');
     await unlink(join(sandbox.path, target));
     const absent = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
-    expect(absent.report.checks).toMatchObject([
-        { status: 'missing', note: `The generated file ${target} is missing. Run gspot install.` },
-    ]);
+    expect(absent.report.checks).toMatchObject([{ status: 'error', note: expect.stringContaining(target) as string }]);
 });
 
 test('javascript/tsc excludes type roots inherited from folders above the repository', async () => {

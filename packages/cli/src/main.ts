@@ -204,6 +204,7 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
         .exitOverride();
     program.configureOutput({ writeErr: () => {} });
     program.hook('preAction', async (_program, action) => {
+        setOutputOptions({ isJson: action.optsWithGlobals()['json'] === true });
         location.root = await readRepositoryRoot(location.cwd);
         if (await readGitFlag(location.root, 'core.sparseCheckout'))
             throw new GspotError('git', 'gspot does not support sparse checkouts. Run git sparse-checkout disable.');

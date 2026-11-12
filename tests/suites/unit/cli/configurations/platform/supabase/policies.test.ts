@@ -146,3 +146,14 @@ test('supabase/verify-jwt reports verify_jwt = false without a comment on its li
     const findings = await runSandboxCheck(sandbox.path, 'supabase/verify-jwt');
     expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'verify-jwt', line: 2 }]);
 });
+
+test('a node script without an extension that reads the service role key is reported', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['supabase']),
+        'bin/admin': '#!/usr/bin/env node\nconsole.log(process.env.SUPABASE_SERVICE_ROLE_KEY);\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'supabase/service-role-key');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'bin/admin', rule: 'service-role-key' },
+    ]);
+});

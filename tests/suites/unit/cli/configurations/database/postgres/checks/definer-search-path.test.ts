@@ -61,3 +61,14 @@ test.each([...SECURITY_ALTERATIONS])(
         );
     },
 );
+
+test('definer-search-path reports a SECURITY DEFINER function that resets search_path', async () => {
+    const path = 'migrations/1_access.sql';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
+        [path]: 'CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER RESET search_path AS $$ SELECT 1 $$;\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([
+        matchFields({ file: path, line: 1, rule: 'definer-search-path' }),
+    ]);
+});

@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, parse } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
@@ -9,12 +9,18 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { installNpmToolProject, isEveryEnvironmentReady, listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import {
+    installNpmToolProject,
+    installPythonToolProjects,
+    isEveryEnvironmentReady,
+    listStaleLockfiles,
+} from '#cli/tools/installers/projects.ts';
 import { listNpmProjectPins } from '#cli/tools/pins.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeCommands, fakeExecutableLookup, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 function buildNpmLockfile(packageManager: 'bun' | 'npm', pins: Record<string, string>): string {
@@ -152,4 +158,21 @@ test.each([
     expect(uv.mock.calls.map(([command]) => command)).toStrictEqual(
         venv ? [['/tools/uv', 'sync', '--locked', '--inexact', '--check']] : [],
     );
+});
+
+test('a uv inside the repository never runs', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['python']) });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const folder = await writeProgramCommand(sandbox.path, 'bin/uv', 'fakes/tool', '--line', 'committed uv');
+    using _environment = overrideEnvironment({ PATH: folder });
+    const previous = process.cwd();
+    // The program search skips the repository of the current folder, not of the session.
+    process.chdir(sandbox.path);
+    try {
+        const [run] = await Promise.allSettled([installPythonToolProjects(install, [])]);
+        expect(install.steps.map(([program = '']) => parse(program).name)).not.toContain('uv');
+        expect(run.status).toBe('fulfilled');
+    } finally {
+        process.chdir(previous);
+    }
 });

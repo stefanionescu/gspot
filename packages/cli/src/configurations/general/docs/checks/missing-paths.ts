@@ -10,7 +10,6 @@ import {
     COMMAND_FENCES,
     DOCS_RULES,
     FILE_EXTENSION,
-    MARKDOWN_EXTENSIONS,
     MISE_CONFIG_GLOB,
     MISE_RUN,
     PATH_CHARACTERS,
@@ -251,10 +250,7 @@ function isCausedByChange(finding: CheckFinding, narrowed: string[], session: Se
 
 function checkMissingPaths(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     const files = planned.files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            !CHANGELOG_FILE.test(file.path) &&
-            MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
+        (file) => file.kind === 'source' && !CHANGELOG_FILE.test(file.path) && file.tags.includes('markdown'),
     );
     const repositoryPaths = listRepositoryPaths(session, planned);
     const isIgnored = buildGitignoreMatcher(

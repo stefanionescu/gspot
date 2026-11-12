@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
@@ -13,7 +14,7 @@ import plugin from '#eslint-plugin/plugin.ts';
 import { RULE_PAGE_SETTINGS, RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/reports.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
@@ -176,6 +177,20 @@ test('explain prints the check help when Ruff stops before it answers', async ()
     expect(JSON.parse(result.stdout)).toMatchObject({ rule: 'F401', fix: getShippedCheck('python/ruff').help });
 });
 
+test('explain reads a rule of a plugin that exports only an import entry', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'astro']),
+        'source.js': 'export const value = 1;\n',
+        '.gspot/node_modules/eslint-plugin-astro/package.json':
+            '{"type":"module","exports":{".":{"types":"./index.d.mts","import":"./index.mjs"}}}',
+        '.gspot/node_modules/eslint-plugin-astro/index.mjs':
+            'export default { rules: { "no-set-html-directive": { meta: { docs: { description: "Disallow set:html." } } } } };\n',
+    });
+    const result = await runGspot(sandbox.path, ['explain', 'javascript/eslint', 'astro/no-set-html-directive']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('Disallow set:html.');
+});
+
 test('explain refuses ancestor packages for javascript/eslint', async () => {
     await using sandbox = await createGitSandbox({
         'node_modules/eslint/package.json': JSON.stringify({
@@ -227,5 +242,26 @@ test('explain refuses a rule of a check that names no rules', async () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'arguments',
         message: 'gspot cannot explain one lint rule of bash/shfmt. Leave out the rule to explain the whole check.',
+    });
+});
+
+test('explain of a command check rule prints its help and the ignore command', async () => {
+    const check = buildReportingCheck({ id: 'project/lint', paths: ['*'], stage: 'commit' });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': stringify({
+            configurations: [],
+            command_check: [
+                { ...check, output: { format: 'regex', pattern: String.raw`(?<rule>R\d+) (?<message>.+)` } },
+            ],
+        }),
+    });
+    const result = await runGspot(sandbox.path, ['explain', 'project/lint', 'R1', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        kind: 'lint-rule',
+        check: 'project/lint',
+        rule: 'R1',
+        fix: expect.any(String) as string,
+        turnOff: { everywhere: expect.stringContaining('gspot ignore project/lint --rule R1') as string },
     });
 });

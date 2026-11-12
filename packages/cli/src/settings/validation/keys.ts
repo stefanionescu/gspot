@@ -168,10 +168,10 @@ export function validateKeys(
     availableSettings: AvailableSettings,
     settings: Settings,
     scopeAvailable: Map<string, AvailableSettings>,
-    automatic: AvailableSettings,
+    alwaysAccepted: AvailableSettings,
 ): SettingsError[] {
     const errors = listUnsettledConflicts(availableSettings, settings, scopeAvailable);
-    const later = [availableSettings, ...scopeAvailable.values(), automatic].toReversed();
+    const later = [availableSettings, ...scopeAvailable.values(), alwaysAccepted].toReversed();
     const everywhere: AvailableSettings = {
         settings: new Map(later.flatMap((scopeSettings) => scopeSettings.settings.entries().toArray())),
         defaults: new Map(later.flatMap((scopeSettings) => scopeSettings.defaults.entries().toArray())),
@@ -181,8 +181,8 @@ export function validateKeys(
     for (const { table, scopePath, path } of listSettingsTables(settings)) {
         const active = scopePath === '' ? everywhere : getRequired(scopeAvailable, scopePath, 'scope settings');
         const selectedAvailable: AvailableSettings = {
-            settings: new Map([...automatic.settings, ...active.settings]),
-            defaults: new Map([...automatic.defaults, ...active.defaults]),
+            settings: new Map([...alwaysAccepted.settings, ...active.settings]),
+            defaults: new Map([...alwaysAccepted.defaults, ...active.defaults]),
             errors: active.errors,
         };
         const found = listWrittenKeys(table, selectedAvailable).flatMap((key) =>

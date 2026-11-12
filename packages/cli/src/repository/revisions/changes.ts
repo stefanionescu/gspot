@@ -6,9 +6,9 @@ import {
     GIT_CHANGED_COMMITS_ARGUMENTS,
     GIT_DIFF_NAMES_ARGUMENTS,
     GIT_HASH_EXISTS_ARGUMENTS,
-    GIT_HEAD_NAME_ARGUMENTS,
     GIT_LOCAL_BRANCHES_ARGUMENTS,
     GIT_MERGE_BASE_ARGUMENTS,
+    GIT_REF_NAME_ARGUMENTS,
     GIT_REMOTE_HEADS_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
@@ -88,13 +88,20 @@ export function findRemoteDefaultBranch(remoteRefs: ReadonlyMap<string, string>,
     return DEFAULT_BRANCHES.find((branch) => remoteRefs.has(`${prefix}${branch}`));
 }
 
+/**
+Name the ref that `ref` compares with: its upstream, or else the default branch of `origin`. A `ref` that names no
+branch of this clone, such as a commit hash or the local name on a pre-push line that Git did not write, has no
+upstream.
+*/
 export async function readDefaultRef(
     root: string,
+    ref: string,
     cancelSignal?: AbortSignal,
     remoteRefs?: ReadonlyMap<string, string>,
 ): Promise<string> {
-    const head = await readGitText(root, GIT_HEAD_NAME_ARGUMENTS, { cancelSignal });
-    const upstreamText = await readGitText(root, [...GIT_UPSTREAM_ARGUMENTS, head.trim()], {
+    const name = await runGit(root, [...GIT_REF_NAME_ARGUMENTS, ref], { cancelSignal });
+    if (name.code > 1) throw buildGitError(GIT_REF_NAME_ARGUMENTS, name);
+    const upstreamText = await readGitText(root, [...GIT_UPSTREAM_ARGUMENTS, name.stdout.trim()], {
         cancelSignal,
     });
     const upstream = upstreamText.trim();
@@ -103,7 +110,16 @@ export async function readDefaultRef(
     return branch === undefined ? '' : `${REMOTES_PREFIX}${ORIGIN_REMOTE}/${branch}`;
 }
 
-export async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
+/**
+Read the newest commit that `compared` and `head` share. The result holds a note and no hash when the caller must
+check every file, which includes two histories that share no commit.
+*/
+export async function readMergeBase(
+    root: string,
+    compared: string,
+    head: string,
+    cancelSignal?: AbortSignal,
+): Promise<MergeBase> {
     if (EMPTY_BASE_HASH.test(compared))
         return {
             note: `Checked every file: ${compared === '' ? 'the base ref is empty' : 'the base is a new branch'}.`,
@@ -112,10 +128,12 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
         cancelSignal,
     });
     if (commit.code !== 0) return explainInvalidBase(root, compared, cancelSignal);
-    const base = await runGit(root, [...GIT_MERGE_BASE_ARGUMENTS, commit.stdout.trim(), 'HEAD'], {
+    const base = await runGit(root, [...GIT_MERGE_BASE_ARGUMENTS, commit.stdout.trim(), head], {
         cancelSignal,
     });
     if (base.code === 0) return { hash: base.stdout.trim() };
+    if (base.code === 1 && base.stderr.trim() === '')
+        return { note: `Checked every file: ${compared} and ${head} share no commit.` };
     const help = (await isShallowClone(root, cancelSignal)) ? SHALLOW_CLONE_HELP : '';
     throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
 }
@@ -161,7 +179,7 @@ export async function readChangedPaths(
     compared: string,
     cancelSignal?: AbortSignal,
 ): Promise<ChangedPaths> {
-    const base = await readMergeBase(root, compared, cancelSignal);
+    const base = await readMergeBase(root, compared, 'HEAD', cancelSignal);
     if (base.hash === undefined) return { reference: compared, ...(base.note !== undefined && { note: base.note }) };
     const merged = base.hash;
     const committed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, merged, 'HEAD', '--'], { cancelSignal });

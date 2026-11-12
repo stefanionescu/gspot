@@ -3,6 +3,7 @@ import {
     GENERATED_ELIGIBLE_MESSAGE,
     IGNORED_FILE_MESSAGE,
     MARK_GENERATED_MESSAGE,
+    MISSING_SETTINGS_MESSAGE,
     UNCHECKED_REASON,
     VENDORED_ELIGIBLE_MESSAGE,
 } from '#cli/config/commands/reports.ts';
@@ -87,12 +88,15 @@ function formatPathExplanation(explanation: PathExplanation): string {
 }
 
 export function explainPath(session: Session | undefined, subject: string, cwd: string): Explanation | undefined {
-    if (session === undefined) return undefined;
+    const isPath = subject.startsWith('./') || subject.startsWith('../');
+    if (session === undefined) {
+        if (isPath) throw new GspotError('arguments', MISSING_SETTINGS_MESSAGE);
+        return undefined;
+    }
     const path = buildArgumentPath(session.root, cwd, subject);
     const file = session.repository.files.find((each) => each.path === path);
     if (file === undefined) {
-        if (subject.startsWith('./') || subject.startsWith('../'))
-            throw new GspotError('arguments', `${path} is not a file in this repository.`);
+        if (isPath) throw new GspotError('arguments', `${path} is not a file in this repository.`);
         return undefined;
     }
     const report = buildPathExplanation(session, file);

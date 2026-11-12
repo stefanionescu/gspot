@@ -10,6 +10,7 @@ import {
     MISSING_HEADER_RULE,
     PATH_PREFIXES,
     REDIRECT_DESTINATION_MESSAGE,
+    REDIRECT_DESTINATION_PREFIXES,
     REDIRECT_FIELDS,
     REDIRECT_FIELDS_MESSAGE,
     REDIRECT_SOURCE_MESSAGE,
@@ -83,7 +84,8 @@ function validateRedirectLine(text: string): string | undefined {
     if (segments.length < REDIRECT_FIELDS.minimum || segments.length > REDIRECT_FIELDS.maximum)
         return REDIRECT_FIELDS_MESSAGE;
     if (!source.startsWith('/')) return REDIRECT_SOURCE_MESSAGE;
-    if (PATH_PREFIXES.every((prefix) => !destination.startsWith(prefix))) return REDIRECT_DESTINATION_MESSAGE;
+    if (REDIRECT_DESTINATION_PREFIXES.every((prefix) => !destination.startsWith(prefix)))
+        return REDIRECT_DESTINATION_MESSAGE;
     return status === undefined || REDIRECT_STATUS_CODES.has(status)
         ? undefined
         : `Use a supported Cloudflare redirect status instead of ${status}.`;

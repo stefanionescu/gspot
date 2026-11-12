@@ -66,6 +66,7 @@ async function findMissingDocker(
             cancelSignal: session.cancelSignal,
         }),
     );
+    if (result.end === 'canceled') return { status: 'canceled', note: CANCELED_CHECK_NOTE };
     return result.code === 0 ? undefined : { status: 'missing', note: DOCKER_DAEMON_NOTE };
 }
 
@@ -88,7 +89,11 @@ function classifyCheckError(
     isVerbose: boolean,
 ): Pick<CheckResult, 'status' | 'note' | 'cause' | 'stack'> {
     if (error instanceof CheckStop)
-        return { status: error.status, ...(error.status === 'skipped' && { cause: 'condition' }), note: error.message };
+        return {
+            status: error.status,
+            ...(error.status === 'skipped' && { cause: error.skipCause ?? 'condition' }),
+            note: error.message,
+        };
     if (error instanceof GspotError) return { status: 'error', note: error.message };
     return {
         status: 'error',
@@ -154,7 +159,12 @@ function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
 function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCommand'> {
     const { options, session } = run;
     if (options.fix) return {};
-    const fixable = [...new Set(result.findings.filter((finding) => finding.fixable).map(({ file }) => file))];
+    const listed = new Set(session.repository.files.map(({ path }) => path));
+    const fixable = [
+        ...new Set(
+            result.findings.filter((finding) => finding.fixable && listed.has(finding.file)).map(({ file }) => file),
+        ),
+    ];
     const conflicted = new Set(listConflictedPaths(session.root, fixable));
     const files = new Set(fixable.filter((file) => !conflicted.has(file)));
     if (files.size === 0) return {};

@@ -14,8 +14,11 @@ buildTypedRuleTester().run('no-async-constructor', noAsyncConstructor, {
             errors: [{ messageId: 'async' }],
         },
         {
-            code: 'declare function load(): Promise<void>; class Store { constructor() { const pending = load(); } }',
-            errors: [{ messageId: 'async' }],
+            code: 'declare function load(): Promise<void>; class Store { constructor() { const first = load(); const second = load(); } }',
+            errors: [
+                { messageId: 'async', column: 71 },
+                { messageId: 'async', column: 93 },
+            ],
         },
         {
             code: 'declare function load(): Promise<void>; class Store { ready: unknown; constructor() { this.ready = load(); } }',

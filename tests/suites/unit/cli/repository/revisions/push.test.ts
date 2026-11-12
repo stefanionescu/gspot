@@ -116,6 +116,34 @@ test('an unfetched remote tip selects the same outgoing commits and files as a n
     expect(unfetched.revisions[0]).toMatchObject({ commits: [reviewed], paths: ['changed.sh'] });
 });
 
+test('a new branch pushed while another branch is checked out compares with its own merge base', async () => {
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+    const base = commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+    runGitStep(sandbox.path, ['checkout', '-qb', 'side']);
+    runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Side']);
+    const side = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+    runGitStep(sandbox.path, ['checkout', '-q', '-']);
+    runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Ahead']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    const protocol = `refs/heads/side ${side} refs/heads/side ${'0'.repeat(side.length)}\n`;
+    const pushed = await readPushedRevisions(sandbox.path, protocol, 'origin');
+    expect(pushed.revisions[0]?.base).toBe(base);
+});
+
+test('a new orphan branch that is checked out compares with its own root commit', async () => {
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    runGitStep(sandbox.path, ['checkout', '-q', '--orphan', 'pages']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'Pages']);
+    const orphan = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+    const protocol = `refs/heads/pages ${orphan} refs/heads/pages ${'0'.repeat(orphan.length)}\n`;
+    const pushed = await readPushedRevisions(sandbox.path, protocol, 'origin');
+    expect(pushed.revisions[0]?.base).toBe(orphan);
+});
+
 test('a push refuses to rewrite the default branch, and needs its remote tip in the clone', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
     commitAll(sandbox.path);
@@ -142,4 +170,11 @@ test('a push refuses to rewrite the default branch, and needs its remote tip in 
     expect(feature.revisions.map(({ hash }) => hash)).toStrictEqual([local]);
     const forward = await readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${first}\n`);
     expect(forward.revisions.map(({ hash }) => hash)).toStrictEqual([local]);
+    const blob = runGitStep(sandbox.path, ['rev-parse', 'HEAD:source.ts']);
+    const corrupt = await captureRejection(
+        readPushedRevisions(sandbox.path, `refs/heads/main ${local} refs/heads/main ${blob}\n`),
+    );
+    expect(corrupt).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(corrupt.message).toContain('merge-base');
+    expect(corrupt.message).not.toContain('force-push');
 });

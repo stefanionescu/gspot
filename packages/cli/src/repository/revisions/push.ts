@@ -29,7 +29,7 @@ import {
     UNFETCHED_PUSH_MESSAGE,
 } from '#cli/config/repository/git.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
-import { readGitLines, readGitPaths, readGitText, runGit } from '#cli/repository/git/run.ts';
+import { buildGitError, readGitLines, readGitPaths, readGitText, runGit } from '#cli/repository/git/run.ts';
 import {
     findRemoteDefaultBranch,
     listRemoteRefs,
@@ -95,23 +95,28 @@ async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): 
     return new Set(text.trim().split('\n'));
 }
 
-async function readComparison(search: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
+async function readComparison(search: PushSearch, line: PushLine, hash: string): Promise<Comparison> {
     const { root, cancelSignal, remoteRefs } = search;
+    const { localRef, remoteHash } = line;
     if (!ABSENT_HASH.test(remoteHash) && search.commits.has(remoteHash)) {
         const previous = search.commits.get(remoteHash);
         if (previous === undefined)
-            return { base: await readPushBase(root, cancelSignal, remoteRefs), changed: undefined, range: [hash] };
+            return {
+                base: await readPushBase(root, localRef, hash, cancelSignal, remoteRefs),
+                changed: undefined,
+                range: [hash],
+            };
         const changed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, previous, hash, '--'], { cancelSignal });
         return { base: previous, changed, range: [hash, `^${previous}`] };
     }
     const range = [hash, NOT_FLAG, search.remote === undefined ? REMOTES_FLAG : `${REMOTES_FLAG}=${search.remote}`];
     const changed = await readGitPaths(root, [...GIT_LOG_ARGUMENTS, ...range, '--'], { cancelSignal });
-    return { base: await readPushBase(root, cancelSignal, remoteRefs), changed, range };
+    return { base: await readPushBase(root, localRef, hash, cancelSignal, remoteRefs), changed, range };
 }
 
 async function buildRevision(search: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = search;
-    const { base, changed, range } = await readComparison(search, hash, line.remoteHash);
+    const { base, changed, range } = await readComparison(search, line, hash);
     const history = await readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
     const tree = await readGitText(root, [...GIT_TREE_ARGUMENTS, `${hash}${TREE_SUFFIX}`], { cancelSignal });
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => compareText(a, b));
@@ -154,7 +159,8 @@ async function assertFastForward(search: PushSearch, line: PushLine): Promise<vo
     const ancestry = await runGit(search.root, [...GIT_IS_ANCESTOR_ARGUMENTS, line.remoteHash, line.localHash], {
         cancelSignal: search.cancelSignal,
     });
-    if (ancestry.code !== 0) throw new GspotError('git', fill(FORCE_PUSH_MESSAGE));
+    if (ancestry.code === 1) throw new GspotError('git', fill(FORCE_PUSH_MESSAGE));
+    if (ancestry.code !== 0) throw buildGitError(GIT_IS_ANCESTOR_ARGUMENTS, ancestry);
 }
 
 async function addPushLine(search: PushSearch, pushed: PushedRevisions, line: PushLine): Promise<void> {
@@ -174,15 +180,17 @@ async function addPushLine(search: PushSearch, pushed: PushedRevisions, line: Pu
 
 async function readPushBase(
     root: string,
+    ref: string,
+    hash: string,
     cancelSignal?: AbortSignal,
     remoteRefs?: ReadonlyMap<string, string>,
 ): Promise<string> {
-    const compared = await readDefaultRef(root, cancelSignal, remoteRefs);
+    const compared = await readDefaultRef(root, ref, cancelSignal, remoteRefs);
     if (compared !== '') {
-        const base = await readMergeBase(root, compared, cancelSignal);
+        const base = await readMergeBase(root, compared, hash, cancelSignal);
         if (base.hash !== undefined) return base.hash;
     }
-    const roots = await readGitLines(root, GIT_ROOT_COMMITS_ARGUMENTS, { cancelSignal });
+    const roots = await readGitLines(root, [...GIT_ROOT_COMMITS_ARGUMENTS, hash], { cancelSignal });
     return roots.at(-1) as string;
 }
 
@@ -221,6 +229,6 @@ export async function readPushedCommits(root: string, cancelSignal?: AbortSignal
 
 export async function readPushedRange(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
     if ((await readHead(root, cancelSignal)) === undefined) return [];
-    const base = await readPushBase(root, cancelSignal);
+    const base = await readPushBase(root, 'HEAD', 'HEAD', cancelSignal);
     return [`${base}..HEAD`];
 }

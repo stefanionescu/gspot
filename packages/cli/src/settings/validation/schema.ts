@@ -6,7 +6,13 @@ import {
     REMOVED_CONFIGURATIONS,
 } from '#cli/config/settings/validation.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
-import { listUnknownConfigurations } from '#cli/manifests/select.ts';
+import {
+    findRequirementChain,
+    formatAlwaysOnMessage,
+    formatRequiredRemoval,
+    listUnknownConfigurations,
+    selectConfigurations,
+} from '#cli/manifests/select.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
@@ -62,16 +68,30 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
     return formatUnknownSetting(name, { available: schemaKeys, offered: new Set(schemaKeys) });
 }
 
-function listRemovedSelections(settings: Settings): SettingsError[] {
-    const tables = listSettingsTables(settings);
+function validateRemovedConfigurations(settings: Settings): SettingsError[] {
+    const configurations = readConfigurations();
     const errors: SettingsError[] = [];
-    for (const { table, path } of tables)
+    for (const { table, scopePath, path } of listSettingsTables(settings)) {
         for (const name of table.configurations)
             if (table.removed_configurations.includes(name))
                 errors.push({
                     path: [...path, 'configurations'],
                     message: `${name} is both selected and removed. Keep it in only one list.`,
                 });
+        const selected = selectConfigurationsForScope(settings, scopePath).map((configuration) => configuration.name);
+        for (const name of table.removed_configurations) {
+            const removedPath = [...path, REMOVED_CONFIGURATIONS, name];
+            if (configurations.get(name)?.always_selected === true) {
+                errors.push({ path: removedPath, message: formatAlwaysOnMessage(name) });
+                continue;
+            }
+            const chain = selected
+                .filter((kept) => kept !== name)
+                .map((kept) => findRequirementChain(name, kept, new Set()))
+                .find((found) => found !== undefined);
+            if (chain !== undefined) errors.push({ path: removedPath, message: formatRequiredRemoval(name, chain) });
+        }
+    }
     return errors;
 }
 
@@ -150,12 +170,13 @@ export function validateSettings(settings: Settings, root: string, selecting: re
             ]),
     );
     const rootKeys = buildAvailableSettings(selectConfigurationsForScope(settings, ''), settings.level);
-    const automatic = readConfigurations()
-        .values()
-        .filter((configuration) => configuration.always_selected || selecting.includes(configuration.name))
-        .toArray();
+    const configurations = readConfigurations();
+    const alwaysAccepted = new Set([
+        ...configurations.values().filter((configuration) => configuration.always_selected),
+        ...selectConfigurations(selecting.filter((name) => configurations.has(name))),
+    ]);
     const errors: SettingsError[] = [
-        ...listRemovedSelections(settings),
+        ...validateRemovedConfigurations(settings),
         ...validateSettingReasons(settingsSchema, settings.written, []),
         ...validateSettingRules(settings),
         ...validateSwiftTargets(settings, rootKeys),
@@ -163,7 +184,7 @@ export function validateSettings(settings: Settings, root: string, selecting: re
         ...validateRuleExcludes(settings.rule_files.exclude),
         ...validateScopePaths(root, settings),
         ...validateRuleFilePaths(root, settings),
-        ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(automatic, settings.level)),
+        ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings([...alwaysAccepted], settings.level)),
     ];
     return errors;
 }

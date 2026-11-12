@@ -30,6 +30,13 @@ categories = ["variables"]
 paths = ["**/*.tsx", "**/*.jsx"]
 reason = "A variable that holds a component, such as a memo or lazy result, takes the component's capital."
 
+[[naming.exception]]
+categories = ["variables"]
+ignored_prefix = "^set(?=[A-Z])"
+languages = ["typescript", "javascript"]
+paths = ["**/*.{ts,tsx,js,jsx}"]
+reason = "A state setter starts with set and then repeats the name of its state."
+
 [[tool]]
 kind = "package"
 name = "eslint-plugin-react-hooks"

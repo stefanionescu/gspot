@@ -148,6 +148,14 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     expect(await readFile(join(sandbox.path, UV_CONFIGURATION))).toStrictEqual(rootConfiguration);
 });
 
+test('install after a changed release age relocks the Python tools', async () => {
+    await using sandbox = await createGitSandbox({});
+    await using _project = await createIndexedPythonProject(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['set', 'dependencies.min_release_age_days', '14']);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toContain('exclude-newer-span = "P14D"');
+});
+
 async function createPythonIndex(workFolder: string): Promise<Disposable & { url: string }> {
     await using _source = await createPythonProject(workFolder, { indexFile: UV_CONFIGURATION });
     await runGspotStep({ root: workFolder, run: spawnGspot }, ['install']);

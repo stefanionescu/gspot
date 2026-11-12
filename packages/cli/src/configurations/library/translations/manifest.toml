@@ -20,6 +20,11 @@ version = "6.1.5"
 required_tools = ["eslint-plugin-i18next"]
 all_level_rules = ["i18next/no-literal-string"]
 
+[[eslint.rules_off]]
+files = ["**/i18n/request.{js,ts}"]
+reason = "next-intl reads the default export of its request configuration file."
+rules = ["import-x/no-default-export"]
+
 [[check]]
 example = "When the base locale defines `welcome` and another lacks it, the check reports the missing key. Add the translation with the same placeholders."
 help = "Correct the message, or add the missing key to the locale."

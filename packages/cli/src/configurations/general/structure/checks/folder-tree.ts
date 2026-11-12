@@ -1,4 +1,3 @@
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { FolderChild } from '#cli/types/configurations/general.ts';
@@ -6,10 +5,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 
 export function listCodeFiles(planned: PlannedCheck): TrackedFile[] {
-    const documents = listTaggedExtensions('markdown');
-    return planned.files.filter(
-        (file) => file.kind === 'source' && documents.every((extension) => !file.path.endsWith(extension)),
-    );
+    return planned.files.filter((file) => file.kind === 'source' && !file.tags.includes('markdown'));
 }
 
 export function buildFolderTree(files: ReadonlyArray<{ path: string }>): Map<string, FolderChild[]> {

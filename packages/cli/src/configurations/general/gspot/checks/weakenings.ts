@@ -1,3 +1,5 @@
+import type { z } from 'zod';
+
 import { WEAKENING_FIXES, WEAKENING_IGNORE_HELP, WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
@@ -12,9 +14,10 @@ import { buildSettings, buildSettingsFromTable } from '#cli/settings/read.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { isInScope } from '#cli/system/paths.ts';
+import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
 import { type BuiltInCheckResult, type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { IgnoreRecord, Settings } from '#cli/types/settings.ts';
+import type { IgnoreRecord, Settings, TomlTable } from '#cli/types/settings.ts';
 
 function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weakening[] {
     return head.flatMap((record) => {
@@ -101,10 +104,33 @@ function listSettingMoves(base: Settings, head: Settings): Weakening[] {
     });
 }
 
+/**
+Reads a base file that the schema refuses without the paths that the schema issues name, so one unknown or renamed
+key costs that key and the rest still compares. Issues of one list arrive in index order, so the removal runs from
+the last issue to the first and no index moves before its turn.
+*/
+function parseWithoutRefusedPaths(written: TomlTable, issues: readonly z.core.$ZodIssue[]) {
+    const refused = issues.flatMap((issue) =>
+        issue.code === 'unrecognized_keys' ? issue.keys.map((key) => [...issue.path, key]) : [issue.path],
+    );
+    for (const path of refused.toReversed()) {
+        const parent = findValueAt(
+            written,
+            path.slice(0, -1).filter((segment) => typeof segment !== 'symbol'),
+        );
+        const key = path.at(-1);
+        if (Array.isArray(parent) && typeof key === 'number') parent.splice(key, 1);
+        else if (isTable(parent) && typeof key === 'string') Reflect.deleteProperty(parent, key);
+    }
+    return settingsSchema.safeParse(written);
+}
+
 function listSettingsWeakenings(text: string, head: Settings, tracked: string[]): Weakening[] {
     const written = parseTomlFile(SETTINGS_FILE, text);
-    const parsed = settingsSchema.safeParse(written);
-    // A base that gspot refuses compares as the shipped defaults, so each weakening of the current file needs a reason.
+    const strict = settingsSchema.safeParse(written);
+    const parsed = strict.success ? strict : parseWithoutRefusedPaths(written, strict.error.issues);
+    // A base that gspot still refuses compares as the shipped defaults, so each weakening of the current file needs a
+    // reason.
     const base = parsed.success ? buildSettings(parsed.data, written) : buildSettingsFromTable({});
     return [
         ...listIgnoreWeakenings(base.ignore, head.ignore),

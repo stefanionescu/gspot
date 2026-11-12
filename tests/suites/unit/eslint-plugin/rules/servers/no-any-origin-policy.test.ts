@@ -22,6 +22,10 @@ buildRuleTester().run('no-any-origin-policy', noAnyOriginPolicy, {
                 { messageId: 'permissive', line: 12 },
             ],
         },
+        {
+            code: "import http from 'http';\nhttp.createServer((req, res) => { res.writeHead(200, { 'access-control-allow-origin': '*' }); });",
+            errors: [{ messageId: 'permissive' }],
+        },
         ...[
             "app.use('/api', cors());",
             'app.use(cors({ origin: true }));',

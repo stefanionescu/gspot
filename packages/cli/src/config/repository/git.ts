@@ -59,7 +59,7 @@ export const OCTAL_BYTE_WIDTH = 3;
 
 export const GIT_REMOTE_HEADS_ARGUMENTS = ['for-each-ref', '--format=%(refname)%09%(symref)', 'refs/remotes'] as const;
 
-export const GIT_HEAD_NAME_ARGUMENTS = ['rev-parse', '--symbolic-full-name', 'HEAD'] as const;
+export const GIT_REF_NAME_ARGUMENTS = ['rev-parse', '--symbolic-full-name', '--verify', '--quiet'] as const;
 
 export const GIT_UPSTREAM_ARGUMENTS = ['for-each-ref', '--format=%(upstream)', '--'] as const;
 
@@ -129,7 +129,7 @@ export const GIT_TREE_ARGUMENTS = ['rev-parse', '--verify'] as const;
 
 export const TREE_SUFFIX = '^{tree}';
 
-export const GIT_ROOT_COMMITS_ARGUMENTS = ['rev-list', '--max-parents=0', 'HEAD'] as const;
+export const GIT_ROOT_COMMITS_ARGUMENTS = ['rev-list', '--max-parents=0'] as const;
 
 export const GIT_REMOTE_ARGUMENTS = ['remote'] as const;
 

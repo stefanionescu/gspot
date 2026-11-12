@@ -90,7 +90,7 @@ test('a new branch compares with the remote default without losing unpushed comm
     runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
     runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
-    const compared = await readDefaultRef(sandbox.path);
+    const compared = await readDefaultRef(sandbox.path, 'HEAD');
     expect(compared).toBe('refs/remotes/origin/main');
     const { commits } = await readChangedPaths(sandbox.path, compared);
     expect(commits).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
@@ -109,11 +109,11 @@ test('without an upstream or origin/HEAD, the default branch is origin/main, the
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['checkout', '--detach', '--quiet']);
-    expect(await readDefaultRef(sandbox.path)).toBe('');
+    expect(await readDefaultRef(sandbox.path, 'HEAD')).toBe('');
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/master', 'HEAD']);
-    expect(await readDefaultRef(sandbox.path)).toBe('refs/remotes/origin/master');
+    expect(await readDefaultRef(sandbox.path, 'HEAD')).toBe('refs/remotes/origin/master');
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
-    expect(await readDefaultRef(sandbox.path)).toBe('refs/remotes/origin/main');
+    expect(await readDefaultRef(sandbox.path, 'HEAD')).toBe('refs/remotes/origin/main');
 });
 
 test('an unknown base in a shallow clone says that the clone is shallow and how deep to fetch', async () => {

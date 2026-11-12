@@ -16,5 +16,9 @@ buildRuleTester().run('aws-public-bucket-grants', awsPublicBucketGrants, {
                 { messageId: 'accessLevel', line: 7 },
             ],
         },
+        {
+            code: "import * as s3 from 'aws-cdk-lib/aws-s3';\nconst open = { publicReadAccess: true };\nnew s3.Bucket(this, 'a', { ...open });",
+            errors: [{ messageId: 'unrestricted', line: 2 }],
+        },
     ],
 });

@@ -176,3 +176,23 @@ test('a pnpm lockfile with an extra root development dependency is stale', () =>
     });
     expect(isLockfileFresh('pnpm', source, {}, LOCKFILE_REGISTRY)).toBe(false);
 });
+
+test('a tool pnpm lockfile in the two-document form is fresh when its pins match', () => {
+    const packageManagerLock = stringify({
+        lockfileVersion: '9.0',
+        importers: {
+            '.': {
+                configDependencies: {},
+                packageManagerDependencies: { pnpm: { specifier: '12.0.0', version: '12.0.0' } },
+            },
+        },
+        packages: { 'pnpm@12.0.0': { resolution: { integrity: 'sha512-YQ==' } } },
+    });
+    const projectLock = stringify({
+        lockfileVersion: '9.0',
+        importers: { '.': { devDependencies: { 'is-number': { specifier: '7.0.0', version: '7.0.0' } } } },
+        packages: { 'is-number@7.0.0': { resolution: { integrity: 'sha512-YQ==' } } },
+    });
+    const source = `---\n${packageManagerLock}\n---\n${projectLock}`;
+    expect(isLockfileFresh('pnpm', source, { 'is-number': '7.0.0' }, LOCKFILE_REGISTRY)).toBe(true);
+});

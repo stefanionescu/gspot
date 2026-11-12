@@ -34,17 +34,9 @@ export const applyCreateFunction: StatementApplier<'CreateFunctionStmt'> = (stat
     const parameters = listNodeFields(statement.fields.parameters, 'FunctionParameter')
         .filter(({ mode }) => mode !== 'FUNC_PARAM_OUT' && mode !== 'FUNC_PARAM_TABLE')
         .map(({ argType }) => argType);
-    state.functions.set(buildFunctionKey(statement.fields.funcname, parameters), {
-        migration,
-        statement,
-        definer: options.some(
-            (option) => option.defname === 'security' && findNodeFields(option.arg, 'Boolean')?.boolval === true,
-        ),
-        path: options.some(
-            (option) =>
-                option.defname === 'set' && findNodeFields(option.arg, 'VariableSetStmt')?.name === 'search_path',
-        ),
-    });
+    const security: FunctionSecurity = { migration, statement, definer: false, path: false };
+    for (const option of options) setFunctionSecurity(security, option);
+    state.functions.set(buildFunctionKey(statement.fields.funcname, parameters), security);
 };
 
 export const applyAlterFunction: StatementApplier<'AlterFunctionStmt'> = (statement, state, migration) => {

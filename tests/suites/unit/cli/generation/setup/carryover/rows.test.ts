@@ -165,6 +165,12 @@ const CARRYOVER_ROW_CASES = [
         path: 'prettier.config.mjs',
         row: { dropped: ['the whole file, which gspot could not read'] },
     },
+    {
+        name: 'a JSON5 Prettier file',
+        files: { '.prettierrc.json5': '{ printWidth: 100 }\n', 'source.js': 'export const value = 1;\n' },
+        path: '.prettierrc.json5',
+        row: { carried: ['printWidth'], dropped: [] },
+    },
 ] as const;
 
 test('init turns the ignore files into ignore records, and keeps what matches a tracked file', async () => {
@@ -191,6 +197,17 @@ test.each([...CARRYOVER_ROW_CASES])('init goes on past $name, and the table name
     await using sandbox = await createGitSandbox(files);
     const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.find((each) => each.path === path)).toMatchObject(row);
+});
+
+test('a broken first Prettier config leaves the table and format.print_width in agreement', async () => {
+    await using sandbox = await createGitSandbox({
+        '.prettierrc': 'printWidth: [unclosed\n',
+        '.prettierrc.json': '{ "printWidth": 100 }\n',
+        'source.js': 'export const value = 1;\n',
+    });
+    const { plan, settings } = await planSandboxInit(sandbox.path);
+    expect(plan.carryover.find(({ path }) => path === '.prettierrc.json')).toMatchObject({ carried: ['printWidth'] });
+    expect(settings['format']).toMatchObject({ print_width: 100 });
 });
 
 test('init goes on past a nested package.json that does not parse, and it marks no scope', async () => {

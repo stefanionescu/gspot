@@ -23,6 +23,7 @@ test('cloudflare/redirects reports each malformed redirect and each status Cloud
         { file: path, line: 4, message: expect.stringContaining('302!') as string },
         { file: path, line: 5, message: expect.any(String) as string },
         { file: path, line: 6, message: expect.any(String) as string },
+        { file: path, line: 8, message: expect.any(String) as string },
     ]);
 });
 

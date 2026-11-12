@@ -10,7 +10,7 @@ import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 // The SQL parser reads Postgres, so its syntax errors say nothing about a file in another dialect.
-const POSTGRES_PARSER_DIALECTS: ReadonlySet<string> = new Set(['ansi', 'postgres']);
+const POSTGRES_PARSER_DIALECTS: ReadonlySet<string> = new Set(['postgres']);
 
 const SQL_SYNTAX_HELP =
     'Fix the syntax at the reported line. gspot reads this file as Postgres: for a folder in another dialect, run `gspot set sql.dialect <dialect> --scope <folder>`.';

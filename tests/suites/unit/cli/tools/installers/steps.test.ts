@@ -65,6 +65,33 @@ test.each([
     expect(await explainReleaseAgeHold(install, output, [ESLINT_RELEASE])).toBe('');
 });
 
+test.each([
+    { name: 'a proxy page that is not JSON', respond: () => new Response('<html>') },
+    { name: 'a registry body without a time field', respond: () => Response.json({}) },
+])('a release lookup that gets $name adds no explanation', async ({ respond }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    using _registry = spyOn(globalThis, 'fetch').mockImplementation(
+        Object.assign(() => Promise.resolve(respond()), { preconnect: fetch.preconnect }),
+    );
+    const output = 'npm error notarget No matching version found for eslint@10.13.0.';
+    expect(await explainReleaseAgeHold(install, output, [ESLINT_RELEASE])).toBe('');
+});
+
+test('the release lookup turns on the proxy that the environment names', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    using _environment = overrideEnvironment({ HTTPS_PROXY: 'https://proxy.example.com:8080' });
+    // The real call sets a proxy for every test that shares this process.
+    using setProxy = spyOn(http, 'setGlobalProxyFromEnv').mockReturnValue(() => {});
+    using _registry = spyOn(globalThis, 'fetch').mockImplementation(
+        Object.assign(() => Promise.reject(new TypeError('Fetch failed.')), { preconnect: fetch.preconnect }),
+    );
+    const output = 'npm error notarget No matching version found for eslint@10.13.0.';
+    await explainReleaseAgeHold(install, output, [ESLINT_RELEASE]);
+    expect(setProxy).toHaveBeenCalledTimes(1);
+});
+
 test.skipIf(isWindows)('an install step that a signal stops names the signal in place of an exit code', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));

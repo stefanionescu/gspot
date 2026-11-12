@@ -63,9 +63,9 @@ async function runInitCommand(
     await assertFilesCommitted(root, initPlan.replaced);
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(initPlan.plan, initPlan.settingsText));
-    const applied = await writeInitFiles(root, initPlan);
     return await runCancelableCommand(
-        (cancelSignal) => installInitTools(root, { initPlan, applied }, cancelSignal),
+        async (cancelSignal) =>
+            installInitTools(root, { initPlan, applied: await writeInitFiles(root, initPlan) }, cancelSignal),
         INIT_STOPPED_MESSAGE,
     );
 }

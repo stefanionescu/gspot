@@ -6,7 +6,6 @@ buildRuleTester().run('no-ignored-catch', noIgnoredCatch, {
         'try { run(); } catch (error) {}',
         'try { run(); finish(); } catch (error) { report(error); }',
         'try { run(); finish(); } catch (error) { /* The failed optional step can be skipped. */ }',
-        'try { run(); finish(); } catch {}',
     ],
     invalid: [
         'try {} catch (error) {}',
@@ -14,5 +13,7 @@ buildRuleTester().run('no-ignored-catch', noIgnoredCatch, {
         'try { run(); finish(); } catch (error) { /* */ }',
         'try { run(); finish(); } catch (error) { /* Explanation */ fallback(); }',
         'try { retry: { run(); } } catch (error) {}',
+        'try { run(); finish(); } catch {}',
+        'try { first(); second(); } catch { cleanup(); }',
     ].map((code) => ({ code, errors: [{ messageId: 'exception' as const }] })),
 });

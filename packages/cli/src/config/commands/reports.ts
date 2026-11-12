@@ -8,6 +8,11 @@ export const CHECK_STAGES = ['commit', 'push'] as const;
 
 export const CHECK_INPUT_HOOKS = ['pre-push', 'commit-msg'] as const;
 
+export const HOOK_REFUSAL_REASONS = {
+    'pre-push': 'it checks the pushed commits',
+    'commit-msg': 'it checks the commit message',
+} as const;
+
 export const COMMIT_FILE_MESSAGE = '--hook commit-msg needs one commit message file after --.';
 
 export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.';
@@ -132,6 +137,9 @@ export const GENERATED_ELIGIBLE_MESSAGE = 'generated: eligible for secret checks
 export const VENDORED_ELIGIBLE_MESSAGE = 'vendored: eligible for secrets, license, and security checks';
 
 export const UNCHECKED_REASON = 'no selected check reads this file';
+
+export const MISSING_SETTINGS_MESSAGE =
+    'This repository has no gspot.toml, so gspot cannot explain a file. Run gspot init.';
 
 export const IGNORED_FILE_MESSAGE =
     'An ignore in gspot.toml covers this file. To check it, run gspot unignore --paths <path> with the path that the ignore names.';

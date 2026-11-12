@@ -4,6 +4,8 @@ export const CLOUDFLARE_REDIRECTS = `/old /new 200
 /old /new 302!
 /lonely
 old /new 301
+/old http://legacy.example/new 301
+/old new 301
 `;
 
 export const CLOUDFLARE_HEADERS = `  Header-before-path: value

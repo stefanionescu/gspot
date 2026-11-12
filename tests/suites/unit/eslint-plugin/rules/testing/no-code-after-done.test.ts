@@ -9,6 +9,7 @@ buildRuleTester().run('no-code-after-done', noCodeAfterDone, {
         'it("saves", (done) => { done(); const value = 1; });',
         'other("saves", (done) => { done(); check(); });',
         'it("saves", () => { done(); check(); });',
+        'it("saves", (done) => { switch (mode) { case 1: done(); break; case 2: other(); } });',
     ],
     invalid: [
         {
@@ -18,6 +19,10 @@ buildRuleTester().run('no-code-after-done', noCodeAfterDone, {
         {
             code: 'specify.only("saves", function (finish) { if (ready) finish(); check(); });',
             errors: [{ messageId: 'afterDone', column: 64 }],
+        },
+        {
+            code: 'it("saves", (done) => { switch (mode) { case 1: done(); check(); break; } });',
+            errors: [{ messageId: 'afterDone', column: 57 }],
         },
     ],
 });

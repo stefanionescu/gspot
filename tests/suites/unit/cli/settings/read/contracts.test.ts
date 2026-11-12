@@ -145,3 +145,26 @@ test.each(['bad id', 'bad,id', 'commit', 'push'])('a command check cannot take t
         ],
     });
 });
+
+test('removed_configurations refuses a configuration that is always selected', () => {
+    using sandbox = createTemporaryFolder();
+    const result = parseSettings('removed_configurations = { json = "Not needed here." }\n', sandbox.path);
+    expect(result).toMatchObject({ errors: [{ path: ['removed_configurations', 'json'] }] });
+});
+
+test('removed_configurations refuses a configuration that a selected one requires, at the root and in a scope', async () => {
+    await using sandbox = await testdir({ 'app/a.ts': '' });
+    const selection = 'configurations = ["typescript"]\nremoved_configurations = { javascript = "Not needed here." }\n';
+    expect(parseSettings(selection, sandbox.path)).toMatchObject({
+        errors: [{ path: ['removed_configurations', 'javascript'] }],
+    });
+    expect(parseSettings(`[[scope]]\npath = "app"\n${selection}`, sandbox.path)).toMatchObject({
+        errors: [{ path: ['scope', 0, 'removed_configurations', 'javascript'] }],
+    });
+});
+
+test('settings for a configuration that a selected one requires are accepted while it is being added', () => {
+    using sandbox = createTemporaryFolder();
+    const result = parseSettings('[javascript]\nentry_files = ["src/a.ts"]\n', sandbox.path, ['typescript']);
+    expect(result).not.toHaveProperty('errors');
+});

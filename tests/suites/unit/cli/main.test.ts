@@ -151,3 +151,11 @@ test('an option error after a global flag names the help of its command', async 
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toContain('Run gspot list --help');
 });
+
+test('an option value that reads --json leaves the output as text', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['ignore', 'x', '--reason', '--json']);
+    expect(result.code).toBe(2);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).not.toBe('');
+});

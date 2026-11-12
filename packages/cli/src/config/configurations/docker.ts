@@ -92,9 +92,7 @@ export const NGINX_IMAGE = /(?:^|\/)nginx$/u;
 
 export const PATCH_LEVEL_VERSION = /^\d+\.\d+\.\d+/u;
 
-export const DOCKER_INSTRUCTION = /^[ \t]*(?<name>[A-Za-z]+)[ \t](?<text>(?:[^\n\\]|\\[\s\S])*)$/gmu;
-
-export const LINE_CONTINUATION = /\\\n/gu;
+export const DOCKER_INSTRUCTION = /^[ \t]*(?<name>[A-Za-z]+)[ \t](?<text>(?:[^\n\\]|\\\r?\n|\\[\s\S])*)$/gmu;
 
 export const EXEC_FORM_START = /^\[\s*"(?<program>[^"]+)"/u;
 

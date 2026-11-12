@@ -9,9 +9,10 @@ import {
     PROXY_VARIABLES,
     PYTHON_DEFAULT_INDEX_ORIGIN,
 } from '#cli/config/tools/installers.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { GspotError, tryParseFile } from '#cli/system/errors.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
 import { formatSeconds } from '#cli/system/text.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
@@ -44,17 +45,19 @@ async function readReleaseState(install: ToolInstall, release: ToolRelease): Pro
     if (page === undefined) return undefined;
     if (page.status === NOT_FOUND_STATUS) return 'absent';
     if (!page.ok) return undefined;
-    const body: unknown = JSON.parse(page.text);
-    const published =
-        release.kind === 'npm'
-            ? npmReleaseSchema.parse(body).time[release.version]
-            : pypiReleaseSchema.parse(body).urls[0]?.upload_time_iso_8601;
-    if (published === undefined) return 'absent';
+    const lookup = tryParseFile(() => ({
+        published:
+            release.kind === 'npm'
+                ? parseJsonFile(release.url, page.text, npmReleaseSchema).time[release.version]
+                : parseJsonFile(release.url, page.text, pypiReleaseSchema).urls[0]?.upload_time_iso_8601,
+    }));
+    if (lookup === undefined) return undefined;
+    if (lookup.published === undefined) return 'absent';
     const oldest = Date.now() - install.releaseAgeDays * MILLISECONDS_PER_DAY;
-    return new Date(published).getTime() > oldest ? 'held' : undefined;
+    return new Date(lookup.published).getTime() > oldest ? 'held' : undefined;
 }
 
-function selectProxyAdvice(): string {
+function prepareProxy(): string {
     if (PROXY_VARIABLES.every((name) => readEnvironmentVariable(name) === undefined)) return NETWORK_ADVICE;
     if (!('setGlobalProxyFromEnv' in http)) return NODE_PROXY_ADVICE;
     http.setGlobalProxyFromEnv();
@@ -126,7 +129,7 @@ export async function runRequiredInstallStep(
 }
 
 export async function downloadArchive(session: DownloadSession, download: ArchiveDownload): Promise<Buffer> {
-    const advice = selectProxyAdvice();
+    const advice = prepareProxy();
     try {
         const signals = [AbortSignal.timeout(session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND)];
         if (session.cancelSignal !== undefined) signals.push(session.cancelSignal);
@@ -160,8 +163,8 @@ export function listPythonReleases(pins: readonly string[]): ToolRelease[] {
 
 /**
 Say why the registry refused pinned tools that a failed resolution names. A release inside the hold waits for its age,
-and a release that the registry does not have needs another pin. A registry that answers with an error, that gspot
-cannot reach, or that does not answer in time adds nothing.
+and a release that the registry does not have needs another pin. A registry that answers with an error or with a page gspot
+cannot read, that gspot cannot reach, or that does not answer in time adds nothing.
 */
 export async function explainReleaseAgeHold(
     install: ToolInstall,
@@ -170,6 +173,7 @@ export async function explainReleaseAgeHold(
 ): Promise<string> {
     const named = releases.filter((release) => output.includes(release.label));
     if (named.length === 0 || install.releaseAgeDays === 0) return '';
+    prepareProxy();
     const releaseStates = await Promise.all(
         named.map(async (release) => {
             return { label: release.label, state: await readReleaseState(install, release) };

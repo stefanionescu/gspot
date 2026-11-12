@@ -7,8 +7,7 @@ import semver from 'semver';
 import { LOCKFILES, NPM_PACKAGE_FOLDER, PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects.ts';
 import { BUN_LOCKFILE, INTEGRITY, LOCKFILE_WORKSPACE_KEYS, NPM_SETTING_PREFIX } from '#cli/config/tools/installers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
+import { parsePnpmProjectLock, splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { bunLockfileSchema } from '#cli/schemas/parsers.ts';
 import {
     bunPackageSchema,
@@ -16,7 +15,7 @@ import {
     npmToolPackageSchema,
     pnpmToolPackageSchema,
 } from '#cli/schemas/tools.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
+import { parseFileFields, tryParseFile } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { Dependencies } from '#cli/types/parsers.ts';
 import type { ToolPackageManagerName } from '#cli/types/repository.ts';
@@ -65,7 +64,7 @@ function parseToolLockfile(packageManager: ToolPackageManagerName, lockfile: str
     const path = selectLockfileName(packageManager);
     const schema = npmToolLockSchemas[packageManager];
     return packageManager === 'pnpm'
-        ? parseYamlFile<Record<string, unknown>>(path, lockfile, schema)
+        ? parseFileFields<Record<string, unknown>>(path, parsePnpmProjectLock(path, lockfile), schema)
         : parseJsonFile<Record<string, unknown>>(path, lockfile, schema);
 }
 

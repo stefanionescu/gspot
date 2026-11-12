@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { patch } from '@decimalturn/toml-patch';
-import which from 'which';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
@@ -32,6 +31,7 @@ import { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { GspotError, tryParseFile } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { findProgram } from '#cli/system/programs.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
@@ -201,7 +201,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     if (misePath === undefined) {
         const missing = pins.flatMap((pin) => {
             const name = pin.name === UV_TOOL ? UV_TOOL : getRequired(toolNamesByPin, pin.name, 'mise tool');
-            return which.sync(name, { nothrow: true }) === null ? [`${name} ${pin.version}`] : [];
+            return findProgram(name) === undefined ? [`${name} ${pin.version}`] : [];
         });
         const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
         return { installed: '', note, binPaths: [], tools: [] };

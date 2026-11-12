@@ -9,13 +9,12 @@ import {
 import { JSCONFIG_FILE, RAN_STATUSES } from '#cli/config/engine.ts';
 import { DECLARATION_EXTENSIONS, PRIVATE_FILE } from '#cli/config/system.ts';
 import { keepListedFindings } from '#cli/configurations/ignores.ts';
-import { buildMissingFileStop } from '#cli/configurations/syntax.ts';
 import { addTsbuildinfoFlag, listCompilerFiles } from '#cli/configurations/tsc/compiler.ts';
 import { readAuthoredTypes } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { createCheckCopy, createCopy } from '#cli/engine/copies/files.ts';
 import { extractConfigName, listCheckedFiles } from '#cli/engine/files.ts';
 import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { buildMissingFileStop, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';

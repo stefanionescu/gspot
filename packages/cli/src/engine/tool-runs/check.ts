@@ -1,6 +1,6 @@
 import { join, relative } from 'node:path';
 
-import { FILES_PLACEHOLDER, RAN_STATUSES } from '#cli/config/engine.ts';
+import { FILES_PLACEHOLDER, MISSING_GENERATED_FILE_MESSAGE, RAN_STATUSES } from '#cli/config/engine.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { stripCoverageArguments } from '#cli/engine/plan.ts';
 import { buildBaseResult, measureSpan, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
@@ -23,6 +23,7 @@ import { buildSecondaryToolEnvironment, runToolProcess } from '#cli/engine/tool-
 import { listSecondaryTools } from '#cli/engine/tools.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -99,7 +100,7 @@ function findMissingConfig(
     );
     return missing === undefined
         ? undefined
-        : { ...base, status: 'error', note: `The generated file ${missing} is missing. Run gspot install.` };
+        : { ...base, status: 'error', note: MISSING_GENERATED_FILE_MESSAGE.replace('<path>', () => missing) };
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {
@@ -158,6 +159,13 @@ function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: s
             ? buildCopyPythonEnvironment({ root, toolsRoot: session.toolsRoot }, scope.path)
             : {};
     return { root, cwd, files, substitutions, env: { ...env, ...python } };
+}
+
+export function buildMissingFileStop(path: string): CheckStop {
+    return new CheckStop(
+        'error',
+        MISSING_GENERATED_FILE_MESSAGE.replace('<path>', () => path),
+    );
 }
 
 export function selectCommandFolder(root: string, planned: PlannedCheck): string {

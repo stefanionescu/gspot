@@ -59,18 +59,33 @@ function isUnlistedRule(tool: string, rule: string): boolean {
 }
 
 function findInstalledToolPath(root: string, specifier: string, subpath?: string): string | undefined {
-    let path: string;
+    let path: string | undefined;
     try {
         path = createRequire(join(root, GSPOT_PATHS.npmProject)).resolve(specifier);
     } catch (error) {
-        if (!hasErrorCode(error, 'MODULE_NOT_FOUND')) throw error;
-        return undefined;
+        if (!hasErrorCode(error, 'MODULE_NOT_FOUND') && !hasErrorCode(error, 'ERR_PACKAGE_PATH_NOT_EXPORTED'))
+            throw error;
+        path = findImportEntry(root, specifier);
     }
+    if (path === undefined) return undefined;
     assertInstalledPath(root, specifier, path);
     if (subpath === undefined) return path;
     const target = resolve(dirname(path), subpath);
     assertInstalledPath(root, specifier, target);
     return target;
+}
+
+/**
+Find the root entry of an installed package that `require` cannot resolve, because its `exports` name the entry under
+`import` or `default` only.
+*/
+function findImportEntry(root: string, name: string): string | undefined {
+    const manifest = `${GSPOT_PATHS.nodeModules}/${name}/package.json`;
+    const text = findText(root, manifest);
+    if (text === undefined) return undefined;
+    const entry = findValueAt(parseJsonFile(manifest, text), ['exports', '.']);
+    const target = findValueAt(entry, ['import']) ?? findValueAt(entry, ['default']);
+    return typeof target === 'string' ? join(root, GSPOT_PATHS.nodeModules, name, target) : undefined;
 }
 
 function assertInstalledPath(root: string, specifier: string, path: string): void {

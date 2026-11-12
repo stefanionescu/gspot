@@ -237,3 +237,10 @@ test.each(['CHANGELOG.md', 'docs/HISTORY.md'])(
         expect(await runSandboxCheck(sandbox.path, 'docs/missing-paths')).toStrictEqual([]);
     },
 );
+
+test('missing-paths: a stale path in a Markdown file with an upper-case extension is reported', async () => {
+    const found = await runMissingPathsCheck({ 'NOTES.MD': 'See `src/gone.ts`.\n', 'src/here.ts': '' });
+    expect(found.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'NOTES.MD', line: 1, rule: 'missing-path' },
+    ]);
+});

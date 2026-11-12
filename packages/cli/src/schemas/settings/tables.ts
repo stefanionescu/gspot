@@ -178,12 +178,13 @@ const allowedPackageSchema = z.strictObject({
 export const licensesSchema = z.strictObject({
     allowed: nonemptyStringSchema
         .refine((id) => {
+            let expression: unknown;
             try {
-                const expression = parseExpression(id);
-                return isTable(expression) && 'license' in expression;
+                expression = parseExpression(id);
             } catch {
                 return false;
             }
+            return isTable(expression) && 'license' in expression;
         }, 'Use one SPDX license ID, such as MIT or Apache-2.0, not an AND or OR expression.')
         .array()
         .default([])

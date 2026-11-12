@@ -16,8 +16,6 @@ export const SERVICE_ROLE_KEY_NAMES = [
     'sb_secret_',
 ] as const;
 
-export const SERVICE_ROLE_KEY_EXTENSIONS = ['.kt', '.dart'] as const;
-
 export const DENO_CONFIG_FLAG = '--config';
 
 export const FILE_URL_PREFIX = 'file://';
@@ -27,8 +25,6 @@ export const FUNCTION_ENTRYPOINT = /\/index\.tsx?$/u;
 export const DENO_LINT_COMMAND = ['deno', 'lint', '--json'] as const;
 
 export const DENO_CHECK_COMMAND = ['deno', 'check', '--quiet'] as const;
-
-export const SERVICE_ROLE_KEY_TAGS = ['javascript', 'typescript', 'vue', 'svelte', 'astro', 'swift', 'python'] as const;
 
 export const DENO_LINT_NAME = 'deno lint';
 

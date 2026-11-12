@@ -5,10 +5,12 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, type TestdirResult } from 'testdirs';
 
+import { TOOLS_MISSING_MESSAGE } from '#cli/config/commands/edits.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import * as processes from '#cli/system/processes.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { FAILED_NPM_VERSION } from '#tests/config/commands/reports.ts';
 import { installOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -121,4 +123,17 @@ test('install stopped by SIGINT reports cancellation once and exits 130', async 
     expect(result.code).toBe(130);
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'canceled' });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('an install that leaves a tool missing says so in its summary', async () => {
+    await using sandbox = await createMarkdownSandbox();
+    using _install = spyOn(installers, 'installTools').mockResolvedValue({
+        installed: ['taplo'],
+        missing: ['shfmt'],
+        notes: [],
+        steps: [],
+    });
+    const result = await runGspot(sandbox.path, ['install', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({ summary: TOOLS_MISSING_MESSAGE });
 });

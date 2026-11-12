@@ -14,5 +14,9 @@ buildRuleTester().run('aws-unblocked-public-buckets', awsUnblockedPublicBuckets,
                 { messageId: 'public', line: 3 },
             ],
         },
+        {
+            code: "import * as s3 from 'aws-cdk-lib/aws-s3';\nconst block = { blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS_ONLY };\nnew s3.Bucket(this, 'a', { ...block });",
+            errors: [{ messageId: 'aclsOnly', line: 2 }],
+        },
     ],
 });

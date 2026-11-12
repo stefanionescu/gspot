@@ -95,6 +95,23 @@ test.each([
     expect(failure.message).toBe(message);
 });
 
+test('ignore accepts a rule of a plugin that exports only an import entry', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript', 'astro']),
+        'source.js': 'export const count = 1;\n',
+        '.gspot/node_modules/eslint-plugin-astro/package.json':
+            '{"type":"module","exports":{".":{"types":"./index.d.mts","import":"./index.mjs"}}}',
+        '.gspot/node_modules/eslint-plugin-astro/index.mjs':
+            'export default { rules: { "no-set-html-directive": { meta: { docs: { description: "Disallow set:html." } } } } };\n',
+    });
+    const rule = 'astro/no-set-html-directive';
+    const reason = 'The page renders sanitized Markdown.';
+    const result = await runGspot(sandbox.path, ['ignore', 'javascript/eslint', '--rule', rule, '--reason', reason]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toStrictEqual([{ check: 'javascript/eslint', rule, reason }]);
+});
+
 test('ignore refuses a one-letter reason without writing', async () => {
     await using sandbox = await createGitSandbox(REFUSAL_FILES);
     await assertRefusalWithoutWrites(sandbox.path, ['ignore', '--paths', 'vendor/**', '--reason', 'x'], 'arguments');

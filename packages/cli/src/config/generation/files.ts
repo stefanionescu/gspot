@@ -113,8 +113,6 @@ export const DIFF_CONTEXT_LINES = 3;
 
 export const ON_DISK_LABEL = 'on disk';
 
-export const BLOCK_ON_DISK_LABEL = 'managed block on disk';
-
 export const RULES_HEADING = '# Rules';
 
 export const ALL_LEVEL_MARKER = '<!-- level: all -->';

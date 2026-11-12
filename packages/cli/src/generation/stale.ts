@@ -1,13 +1,13 @@
 import { createTwoFilesPatch } from 'diff';
 
-import { BLOCK_ON_DISK_LABEL, DIFF_CONTEXT_LINES, ON_DISK_LABEL } from '#cli/config/generation/files.ts';
+import { DIFF_CONTEXT_LINES, ON_DISK_LABEL } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { GSPOT_FOLDER, OCTAL_RADIX } from '#cli/config/system.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
-import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
-import { hasManagedKeys, listStrayPaths } from '#cli/repository/writer.ts';
+import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
+import { hasManagedKeys, listStrayPaths, planBlock } from '#cli/repository/writer.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -33,10 +33,9 @@ function listStaleBlocks(files: Files, generated: Generation): StaleFile[] {
     const stale: StaleFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
-        const onDisk = findBlockBody(text, { path: block.path });
-        const wanted = block.body.trim();
-        if (onDisk === undefined) stale.push({ path: block.path, kind: 'absent' });
-        else if (onDisk !== wanted) stale.push({ path: block.path, kind: 'changed' });
+        if (findBlockSpan(text, { path: block.path }) === undefined) stale.push({ path: block.path, kind: 'absent' });
+        else if (planBlock(files, block.path, block.body).status !== 'unchanged')
+            stale.push({ path: block.path, kind: 'changed' });
     }
     return stale;
 }
@@ -67,20 +66,21 @@ function buildOutputDiff(file: GeneratedFile, onDisk: FileContents): string {
 }
 
 function buildGeneratedDiff(root: string, generated: Generation, path: string): string | undefined {
-    const onDisk = openFiles(root).read(path);
+    const files = openFiles(root);
+    const onDisk = files.read(path);
     if (onDisk === undefined) return undefined;
     const file = generated.files.find((output) => output.path === path);
     if (file !== undefined) return buildOutputDiff(file, onDisk);
     const block = generated.blocks.find((output) => output.path === path);
     if (block === undefined) return undefined;
-    const text = onDisk.bytes.toString('utf8');
-    const body = findBlockBody(text, { path }) ?? '';
+    const { after } = planBlock(files, path, block.body);
+    if (after === undefined) return undefined;
     return createTwoFilesPatch(
         `a/${convertToPosixPath(path)}`,
         `b/${convertToPosixPath(path)}`,
-        body,
-        block.body.trim(),
-        BLOCK_ON_DISK_LABEL,
+        onDisk.bytes.toString('utf8'),
+        after.bytes.toString('utf8'),
+        ON_DISK_LABEL,
         'generated',
         { context: DIFF_CONTEXT_LINES },
     );

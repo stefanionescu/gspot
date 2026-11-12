@@ -3,7 +3,7 @@ import { chmod, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
+import { createFileTree, testdir } from 'testdirs';
 
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
@@ -23,6 +23,7 @@ import {
     UNRELATED_FILE,
 } from '#tests/config/configurations/framework.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -177,3 +178,31 @@ async function fakeNextjsBuild(
         stdout: isFailed ? 'src/app/page.ts(1,1): error TS2322: Type mismatch\n' : '',
     });
 }
+
+test('the Next.js metadata, middleware, and request files may export a default', async () => {
+    const files = [
+        'app/manifest.ts',
+        'app/sitemap.ts',
+        'app/robots.ts',
+        'app/icon.tsx',
+        'app/apple-icon.tsx',
+        'app/opengraph-image.tsx',
+        'app/twitter-image.tsx',
+        'middleware.ts',
+        'proxy.ts',
+        'i18n/request.ts',
+    ];
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['nextjs', 'translations'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"preserve"},"include":["**/*.ts","**/*.tsx"]}\n',
+        'lib/reader.ts': 'export default function read(): number {\n    return 1;\n}\n',
+        ...Object.fromEntries(
+            files.map((path) => [path, 'export default function read(): number {\n    return 1;\n}\n']),
+        ),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, [...files, 'lib/reader.ts'], ['import-x/no-default-export']),
+    ).toStrictEqual([{ file: 'lib/reader.ts', rule: 'import-x/no-default-export', line: 1 }]);
+});

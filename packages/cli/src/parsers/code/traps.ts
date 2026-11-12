@@ -19,7 +19,7 @@ import {
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ParseCache, ScriptSyntax, TrapScript } from '#cli/types/parsers.ts';
 
-function getTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
+function decodeTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
     const quoted = body.text.slice(1, -1);
     const pattern = body.type === 'string' ? TRAP_STRING_ESCAPES : TRAP_SOURCE_ROWS;
     let text = '';
@@ -43,8 +43,7 @@ function readLiteralArgument(argument: Node): string | undefined {
     if (argument.type === 'word' || argument.type === 'number') return argument.text;
     const isLiteralString =
         argument.type === 'raw_string' ||
-        (argument.type === 'string' &&
-            argument.descendantsOfType(['expansion', 'simple_expansion', 'command_substitution']).length === 0);
+        (argument.type === 'string' && argument.descendantsOfType(TRAP_EXPANSION_NODES).length === 0);
     return isLiteralString ? argument.text.slice(1, -1) : undefined;
 }
 
@@ -130,7 +129,7 @@ export async function parseTrapScripts(
         });
     const scripts: TrapScript[] = [];
     for (const { trap, body } of bodies) {
-        const { text, sourceRows } = getTrapBody(body);
+        const { text, sourceRows } = decodeTrapBody(body);
         const tree = await parseSource('bash', text, cache);
         resources.push(tree);
         scripts.push({ trap, body, syntaxRoot: tree.rootNode, sourceRows });

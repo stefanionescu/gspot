@@ -1,7 +1,5 @@
 import { RUNNER_NAMES } from '#cli/config/repository/setup.ts';
 
-export const MARKDOWN_EXTENSIONS = ['.md', '.mdx'] as const;
-
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
 
 export const TRAILING_PUNCTUATION = '.,;:';

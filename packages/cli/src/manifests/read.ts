@@ -171,6 +171,21 @@ export function assertCheckExists(checkId: string, commandChecks: ReadonlyArray<
         );
 }
 
+/**
+Find a check by its id among the command checks of the user's repository, then among the checks that gspot ships.
+
+@param commandChecks undefined when the user's repository has no settings file.
+@returns the check, with the configuration that ships it when one does.
+*/
+export function findCheck(
+    checkId: string,
+    commandChecks: Readonly<Record<string, Check>> | undefined,
+): { check: Check; configuration: Configuration | undefined } | undefined {
+    const commandCheck = commandChecks?.[checkId];
+    if (commandCheck !== undefined) return { check: commandCheck, configuration: undefined };
+    return readShippedChecks().get(checkId);
+}
+
 export function readNamingDefaults(): NonNullable<Configuration['naming']> {
     const naming = readConfigurations().get('naming')?.naming;
     if (naming === undefined) throw new Error('The naming manifest has no naming table.');

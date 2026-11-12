@@ -72,7 +72,7 @@ test.each([
     },
     {
         name: 'a removed configuration',
-        head: buildSandboxSettings([], { tables: '[removed_configurations]\ndocs = "no guide lives here"\n' }),
+        head: buildSandboxSettings([], { tables: '[removed_configurations]\nbash = "no guide lives here"\n' }),
         reason: 'no guide lives here',
     },
     {
@@ -159,4 +159,14 @@ test('gspot/weakenings compares with the shipped defaults when gspot refuses the
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([]));
     expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: ['hooks', 'rule-files'], notes: [] });
+});
+
+test('a base file with an unknown key still compares its level and switches', async () => {
+    const head = buildSandboxSettings([], { level: 'basic' });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': `unknown_key = true\n${buildSandboxSettings([], { level: 'all' })}`,
+    });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'gspot.toml'), head);
+    expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: ['level'], notes: [] });
 });

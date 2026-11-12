@@ -226,3 +226,29 @@ test('a SQL file that Postgres cannot parse reports syntax, except in a scope th
     ]);
     expect(findings[0]?.help).toContain('gspot set sql.dialect <dialect> --scope <folder>');
 });
+
+test('useMDXComponents passes under nextjs', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'nextjs', 'naming'], { level: 'all' }),
+        'mdx-components.tsx': 'export function useMDXComponents() { return {}; }\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
+});
+
+test('a React state setter does not count its set prefix', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'react', 'naming'], { level: 'all' }),
+        'size-fit.tsx':
+            'const [isSizeFitShown, setIsSizeFitShown] = useState(false);\nconst [, setIsSizeFitPanelShown] = useState(false);\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(findings.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([{ line: 2, rule: 'words' }]);
+});
+
+test('SQL under the default dialect is not read as Postgres', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['sql', 'naming']),
+        'seed.sql': "PRAGMA foreign_keys = ON;\nINSERT OR REPLACE INTO account (id, name) VALUES (1, 'Ada');\n",
+    });
+    expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
+});
