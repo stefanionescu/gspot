@@ -1,6 +1,7 @@
 import {
     constants,
     copyFileSync,
+    type Dirent,
     existsSync,
     mkdirSync,
     readdirSync,
@@ -51,11 +52,20 @@ function linkInstalledDependency(plan: Pick<CopyPlan, 'root' | 'target'>, child:
     else symlinkSync(destination, output, isFolder ? 'junction' : 'file');
 }
 
+/**
+Leave a hidden entry of node_modules out of the copy, such as a cache that a build in the copy writes into, unless
+it holds an install of its own, which a tsconfig path can name.
+*/
+function isLinkedEntry(folder: string, entry: Dirent): boolean {
+    if (entry.name === '.bin' || !entry.name.startsWith('.')) return true;
+    return entry.isDirectory() && existsSync(join(folder, entry.name, NODE_MODULES));
+}
+
 function linkInstalledPackages(plan: Pick<CopyPlan, 'root' | 'target' | 'cancelSignal'>, path: string): void {
     const source = join(plan.root, path);
     mkdirSync(join(plan.target, path), { recursive: true });
-    const dependencies = readdirSync(source, { withFileTypes: true }).filter(
-        (dependency) => dependency.name === '.bin' || !dependency.name.startsWith('.'),
+    const dependencies = readdirSync(source, { withFileTypes: true }).filter((dependency) =>
+        isLinkedEntry(source, dependency),
     );
     for (const dependency of dependencies) {
         plan.cancelSignal?.throwIfAborted();

@@ -27,8 +27,6 @@ This section is not released, and its entries cite no commit yet.
 
 ### Known issues
 
-- When a staged file also has unstaged edits, a commit checks a copy of what you staged, and a test file that imports
-  `eslint` can get false type errors there. Stage the rest of the file, or commit it separately.
 - Node.js 22 ships an npm older than 11.19.0, which `gspot init` and `gspot install` need. On Node.js 22, run
   `npm install --global npm@latest` first.
 - A `.gitattributes` rule above the gspot block still loses to `* text=auto eol=lf`, because `gspot install` keeps the
@@ -68,6 +66,9 @@ This section is not released, and its entries cite no commit yet.
 - `naming/identifiers` reports a Bash variable once when a `readonly` line follows its assignment, and no longer
   reports Postgres syntax errors for a folder whose `sql.dialect` is another dialect.
 - `structure/jscpd` leaves the lines of an import block out of the length of a clone.
+- When a staged file also has unstaged edits, the copy that a commit checks links each hidden folder of
+  `node_modules` that holds its own install. A tsconfig path into such a folder resolved in place but not in the copy,
+  so type-aware ESLint reported false type errors there.
 - A module that `javascript.externals` lists passes the import rules when it resolves to a file. The test file and tRPC
   policies still apply to it.
 - `prose/commit-message` accepts the `--` after `mise exec`. A double hyphen between words is still reported.

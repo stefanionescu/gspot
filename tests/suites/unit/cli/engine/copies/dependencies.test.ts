@@ -56,14 +56,21 @@ test('a workspace bin into untracked build output is left out of the copy', asyn
     expect(copied).toMatchObject({ package: true, bin: { code: 'ENOENT' } });
 });
 
-test('a dot folder of node_modules stays out of the copy', async () => {
+test('a dot folder of node_modules reaches the copy only when it holds an install of its own', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { ...EXTERNAL_DEPENDENCY_FILES, 'node_modules/.hidden/secret.txt': 'hidden' });
+    await createFileTree(sandbox.path, {
+        ...EXTERNAL_DEPENDENCY_FILES,
+        'node_modules/.cache/entry.txt': 'cache',
+        'node_modules/.tools/node_modules/tool/index.d.ts': 'export declare const tool: number;',
+    });
     runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['add', '.']);
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
 
-    expect(existsSync(join(copy.root, 'node_modules/.hidden'))).toBe(false);
+    expect(existsSync(join(copy.root, 'node_modules/.cache'))).toBe(false);
+    expect(await realpath(join(copy.root, 'node_modules/.tools/node_modules/tool'))).toBe(
+        await realpath(join(sandbox.path, 'node_modules/.tools/node_modules/tool')),
+    );
 });
 
 test.skipIf(!isWindows)(
