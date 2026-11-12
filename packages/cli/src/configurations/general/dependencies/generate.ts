@@ -1,18 +1,17 @@
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 
-import {
-    BUNFIG_FILE,
-    OSV_SCANNER_CHECK,
-    OSV_SCANNER_NOTES,
-    SCANNER_KEY,
-} from '#cli/config/configurations/dependencies.ts';
+import { OSV_SCANNER_CHECK, OSV_SCANNER_NOTES, SCANNER_KEY } from '#cli/config/configurations/dependencies.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { BUNFIG_FILE, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import type { Files } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function buildOsvScannerFile(planned: PlannedConfig): string {
@@ -27,6 +26,21 @@ function buildOsvScannerFile(planned: PlannedConfig): string {
         ...OSV_SCANNER_NOTES,
         stringifyToml(ignores.length === 0 ? {} : { IgnoredVulns: vulnerabilities }, CONFIG_TOML_FORMAT),
     ].join('\n');
+}
+
+// A scanner that the repository sets by itself in bunfig.toml is no change of this edit.
+export function hasReleasedScanner(before: Scope, after: Scope, writer: Files): boolean {
+    if (
+        getTable(before.settings, 'dependencies').bun_scanner === undefined ||
+        getTable(after.settings, 'dependencies').bun_scanner !== undefined
+    )
+        return false;
+    const path = joinScope(after.path, BUNFIG_FILE);
+    const bunfig = writer.read(path);
+    return (
+        bunfig !== undefined &&
+        findValueAt(parseTomlFile(path, bunfig.bytes.toString('utf8')), SCANNER_KEY) !== undefined
+    );
 }
 
 export function buildBunScannerEdits(session: Session): ManagedKeys[] {

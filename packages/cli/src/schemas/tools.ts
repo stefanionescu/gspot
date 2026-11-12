@@ -88,10 +88,3 @@ export const toolInspectionSchema = z.strictObject({
     note: z.string().optional(),
     minimumVersion: z.string().optional(),
 });
-
-export const hookStatusSchema = z.strictObject({
-    ready: z.boolean(),
-    text: z.string(),
-    tool: z.string().optional(),
-    lines: z.string().array().optional(),
-});

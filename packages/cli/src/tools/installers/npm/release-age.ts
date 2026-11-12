@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 
 import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
-import { MINUTES_PER_DAY, RELEASE_AGE_FILES, SECONDS_PER_DAY } from '#cli/config/tools/installers.ts';
+import { BUNFIG_FILE, MINUTES_PER_DAY, SECONDS_PER_DAY } from '#cli/config/tools/installers.ts';
 import type { PackageManager } from '#cli/types/repository.ts';
 
 /**
@@ -33,7 +33,7 @@ export function writeBunReleaseAge(folder: string, days: number): string {
         minimumReleaseAge: days * SECONDS_PER_DAY,
         minimumReleaseAgeExcludes: [...GSPOT_PACKAGES],
     };
-    const path = join(folder, RELEASE_AGE_FILES.bun);
+    const path = join(folder, BUNFIG_FILE);
     writeFileSync(path, stringifyToml({ install }));
     return path;
 }

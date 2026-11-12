@@ -1,5 +1,3 @@
-export const COLLECTION_SIZE_MEMBERS = new Set(['length', 'size']);
-
 export const COLLECTION_TYPE_NAMES = new Set(['Array', 'Map', 'Set', 'WeakMap', 'WeakSet']);
 
 export const READING_COLLECTION_METHODS: ReadonlySet<string> = new Set([
@@ -106,26 +104,7 @@ export const REDUCE_METHOD = 'reduce';
 
 export const INDEX_OF_METHOD = 'indexOf';
 
-export const MUTATING_ORDER_METHODS: ReadonlyMap<string, string> = new Map([
-    ['reverse', 'toReversed'],
-    ['sort', 'toSorted'],
-]);
-
-export const GETTER_DECLARATION =
-    /^(?:@\S+\s+)*(?:(?:public|private|protected|static|override|abstract|declare)\s+)*get\s/u;
-
 export const KEY_WRITE_ARGUMENTS: ReadonlyMap<string, number> = new Map([
     ['add', 1],
     ['set', 2],
-]);
-
-export const MUTABLE_TARGETS: ReadonlySet<string> = new Set(['Identifier', 'MemberExpression']);
-
-export const STANDALONE_PARENTS: ReadonlySet<string> = new Set(['ChainExpression', 'LogicalExpression']);
-
-export const RETURNED_PARENTS: ReadonlySet<string> = new Set([
-    'ArrayExpression',
-    'ObjectExpression',
-    'ConditionalExpression',
-    'SpreadElement',
 ]);

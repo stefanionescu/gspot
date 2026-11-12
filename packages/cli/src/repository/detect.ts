@@ -185,27 +185,3 @@ export function detectConditions(
         ),
     );
 }
-
-/**
-List the configurations that gspot selects with no `configurations` entry: each always-selected configuration of any
-group, and each general configuration that the files of the repository match.
-*/
-export function listAutomaticConfigurations(
-    repository?: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
-): string[] {
-    const configurations = readConfigurations();
-    const automatic = new Set(
-        configurations
-            .values()
-            .filter((configuration) => configuration.always_selected)
-            .map((configuration) => configuration.name),
-    );
-    if (repository === undefined) return [...automatic];
-    const detected = new Set(detectConfigurations(repository).map(({ configuration }) => configuration.name));
-    for (const configuration of configurations.values())
-        if (configuration.group === 'general' && detected.has(configuration.name)) automatic.add(configuration.name);
-    return configurations
-        .keys()
-        .filter((name) => automatic.has(name))
-        .toArray();
-}

@@ -37,8 +37,6 @@ export const OSV_SCANNER_NOTES = [
     '# Accept a vulnerability with gspot ignore dependencies/osv-scanner --rule <ID> and a reason.',
 ];
 
-export const BUNFIG_FILE = 'bunfig.toml';
-
 export const SCANNER_KEY = ['install', 'security', 'scanner'] as const;
 
 export const OSV_SCANNER_CHECK = 'dependencies/osv-scanner';

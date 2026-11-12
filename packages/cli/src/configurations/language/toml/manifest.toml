@@ -22,7 +22,6 @@ tool = "taplo"
 [[check]]
 command = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 example = "The TOML line `enabled=true` differs from the taplo output. Run `gspot check --fix` to get `enabled = true`."
-files = { extensions = [".toml"] }
 fix = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "{files}"]
 help = "Run the `fix:` command that the report prints."
 name = "taplo"

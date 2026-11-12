@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { BOUND_PREFIXES, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { LANGUAGE_GROUP_TABLES, SHIPPED_DEFAULT_ORIGIN, TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
 import { OVERRIDING_GROUPS } from '#cli/config/settings/validation.ts';
-import { listToolNames, readNamingDefaults } from '#cli/manifests/read.ts';
+import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { configurationTableSchemas, tableSettingSchemas } from '#cli/schemas/settings/configurations.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { importRulesSchema } from '#cli/schemas/settings/tables.ts';
@@ -97,24 +97,6 @@ const ROOT_SETTINGS: Setting[] = Object.entries<z.ZodType>({ ...rootSettingSchem
     ([name, schema]) => buildSetting(name, schema),
 );
 
-const TOOL_SETTINGS: Map<string, Setting[]> = new Map(
-    Object.entries(toolsSchema.shape).map(([tool, table]) => [
-        tool,
-        Object.entries<z.ZodType>(table.unwrap().shape).map(([field, schema]) =>
-            buildSetting(`tools.${tool}.${field}`, schema),
-        ),
-    ]),
-);
-
-function addToolSettings(availableSettings: AvailableSettings, configurations: Configuration[]): void {
-    const tools = listToolNames(configurations);
-    for (const [tool, settings] of TOOL_SETTINGS) {
-        if (!tools.has(tool)) continue;
-        for (const setting of settings)
-            if (!availableSettings.settings.has(setting.name)) availableSettings.settings.set(setting.name, setting);
-    }
-}
-
 function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
     const owners = schema.meta()?.['configurations'] as readonly string[] | undefined;
     if (owners === undefined) return;
@@ -160,7 +142,6 @@ export function buildAvailableSettings(configurations: Configuration[], level: L
                 configuration: SHIPPED_DEFAULT_ORIGIN,
             });
     for (const configuration of configurations) addConfigurationSettings(availableSettings, configuration, level);
-    addToolSettings(availableSettings, configurations);
     return availableSettings;
 }
 

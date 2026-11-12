@@ -1,6 +1,6 @@
 const HASH_SOURCE = '(?:[a-f0-9]{40}|[a-f0-9]{64})';
 
-export const HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'u');
+export const HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'iu');
 
 export const UNSUPPORTED_GIT_FILE_MESSAGE =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
@@ -149,10 +149,6 @@ export const INVALID_PUSH_INPUT_MESSAGE = 'Invalid Git pre-push input. Supply ev
 export const PEEL_FAILURE_MESSAGE = 'Git did not resolve every pushed object.';
 
 export const NOT_FLAG = '--not';
-
-export const EMPTY_BASE_HASH = /^0*$/u;
-
-export const COMMIT_HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'iu');
 
 export const GIT_VERIFY_COMMIT_ARGUMENTS = ['rev-parse', '--verify', '--quiet', '--end-of-options'] as const;
 

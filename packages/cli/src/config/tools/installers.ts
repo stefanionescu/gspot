@@ -246,7 +246,7 @@ export const NPMRC_SETTINGS_MESSAGE = 'The .npmrc settings are not valid.';
 
 export const SECONDS_PER_DAY = 86_400;
 
-export const RELEASE_AGE_FILES = { bun: 'bunfig.toml' } as const;
+export const BUNFIG_FILE = 'bunfig.toml';
 
 export const MINUTES_PER_DAY = 1440;
 

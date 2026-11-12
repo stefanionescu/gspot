@@ -23,11 +23,10 @@ committed program there can run in place of the installed one.
 */
 export function filterOutsidePaths(paths: readonly string[], keptFolder?: string): string[] {
     const root = findRepositoryRoot();
+    if (root === undefined) return [...paths];
     return paths.filter((path) => {
-        const local = convertToPosixPath(relative(root ?? path, path));
-        return (
-            root === undefined || !isInside(local) || (keptFolder !== undefined && local.startsWith(`${keptFolder}/`))
-        );
+        const local = convertToPosixPath(relative(root, path));
+        return !isInside(local) || (keptFolder !== undefined && local.startsWith(`${keptFolder}/`));
     });
 }
 

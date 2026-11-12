@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 
-import type { TableRow } from 'mdast';
 import { findAndReplace } from 'mdast-util-find-and-replace';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { gfmTableToMarkdown } from 'mdast-util-gfm-table';
@@ -13,14 +12,14 @@ const OPTION_FLAG = /(?<![\w-])--(?:[a-z][a-z-]*)?(?![\w-])/gu;
 const LITERAL_CONSTRUCTS = ['htmlFlow', 'htmlText', 'autolink', 'attention', 'characterReference'];
 const MARKDOWN_OPTIONS: Options = { bullet: '-', fences: true, extensions: [gfmTableToMarkdown()] };
 
-function buildTableRow(cells: readonly string[]): TableRow {
+function buildTableRow(cells: readonly string[]) {
     return {
-        type: 'tableRow',
+        type: 'tableRow' as const,
         children: cells.map((cell) => {
             const [block] = fromMarkdown(formatText(cell.replaceAll('\n', ' '))).children;
             if (block !== undefined && block.type !== 'paragraph')
                 throw new Error(`A table cell holds a ${block.type}: ${cell}`);
-            return { type: 'tableCell', children: block?.children ?? [] };
+            return { type: 'tableCell' as const, children: block?.children ?? [] };
         }),
     };
 }

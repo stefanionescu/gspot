@@ -10,18 +10,17 @@ import {
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION } from '#cli/config/commands/help.ts';
-import { BUNFIG_FILE, SCANNER_KEY } from '#cli/config/configurations/dependencies.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { hasReleasedScanner } from '#cli/configurations/general/dependencies/generate.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findEmptySetting } from '#cli/engine/skips.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatApplyReport, listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listCheckIds } from '#cli/manifests/read.ts';
 import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/manifests/select.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
-import { joinScope, selectScope } from '#cli/repository/scopes.ts';
+import { selectScope } from '#cli/repository/scopes.ts';
 import { scopeSchema } from '#cli/schemas/settings/file.ts';
 import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
@@ -29,7 +28,6 @@ import { findSetting } from '#cli/settings/inherit.ts';
 import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import { getTable } from '#cli/settings/scopes.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { createRunCache } from '#cli/system/cache.ts';
@@ -37,7 +35,6 @@ import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { buildArgumentPath } from '#cli/system/paths.ts';
-import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList, quoteArgument } from '#cli/system/text.ts';
 import type {
     CommandLocation,
@@ -94,21 +91,6 @@ function hasReleasedSharedKeys(before: Scope, after: Scope): boolean {
         (configuration) =>
             !kept.has(configuration.name) &&
             configuration.tools.some((tool) => tool.replace_key?.some(({ pointer }) => pointer === true) === true),
-    );
-}
-
-// A scanner that the repository sets by itself in bunfig.toml is no change of this edit.
-function hasReleasedScanner(before: Scope, after: Scope, writer: Files): boolean {
-    if (
-        getTable(before.settings, 'dependencies').bun_scanner === undefined ||
-        getTable(after.settings, 'dependencies').bun_scanner !== undefined
-    )
-        return false;
-    const path = joinScope(after.path, BUNFIG_FILE);
-    const bunfig = writer.read(path);
-    return (
-        bunfig !== undefined &&
-        findValueAt(parseTomlFile(path, bunfig.bytes.toString('utf8')), SCANNER_KEY) !== undefined
     );
 }
 

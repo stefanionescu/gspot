@@ -3,7 +3,6 @@ import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { buildUnknownRuleError } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
@@ -48,7 +47,6 @@ async function runExplainCommand(
                   verbose: isVerbose,
                   ...(session !== undefined && { session }),
               });
-    if (result === undefined) throw buildUnknownRuleError(rule ?? '', subject);
     return {
         text: result.text,
         json: { ...result.facts, kind: result.kind, subject: result.subject },

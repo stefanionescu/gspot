@@ -267,7 +267,7 @@ export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: 
 
 export type ProjectTokens = { tokens: string[]; index: number };
 
-export type Parsed<Value, Failure = string> = { value: Value } | { error: Failure };
+export type Parsed<Value, Failure> = { value: Value } | { error: Failure };
 
 export type NumberedLine = { text: string; number: number };
 

@@ -34,11 +34,11 @@ export const LEVEL_ADVICE = {
 export const REFERENCE_PATH = new URL(DOCS_PATHS.reference).pathname;
 
 export const REFERENCE_FOLDERS = Object.fromEntries(
-    ['commands', 'settings', 'jsonOutput', 'configurations', 'checks', 'eslintPlugin'].map((name) => [
+    ['commands', 'settings', 'configurations', 'checks', 'eslintPlugin'].map((name) => [
         name,
         new URL(DOCS_PATHS[name as keyof typeof DOCS_PATHS]).pathname.slice(REFERENCE_PATH.length, -1),
     ]),
-) as Record<'commands' | 'settings' | 'jsonOutput' | 'configurations' | 'checks' | 'eslintPlugin', string>;
+) as Record<'commands' | 'settings' | 'configurations' | 'checks' | 'eslintPlugin', string>;
 
 export const CHANGELOG_PATH = 'changelog';
 

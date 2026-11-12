@@ -1,8 +1,7 @@
 import {
-    COMMIT_HASH_PATTERN,
+    ABSENT_HASH,
     COMMIT_SUFFIX,
     DEFAULT_BRANCHES,
-    EMPTY_BASE_HASH,
     GIT_CHANGED_COMMITS_ARGUMENTS,
     GIT_DIFF_NAMES_ARGUMENTS,
     GIT_HASH_EXISTS_ARGUMENTS,
@@ -12,6 +11,7 @@ import {
     GIT_REMOTE_HEADS_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
+    HASH_PATTERN,
     ORIGIN_REMOTE,
     REMOTE_HEAD_FIELD_COUNT,
     REMOTES_PREFIX,
@@ -59,7 +59,7 @@ const REMOTE_HEAD_HELP =
     ' A clone sets origin/HEAD, and git remote add does not, so run git remote set-head origin --auto. Before the first push to an empty remote, that command fails, so run gspot check --only push.';
 
 async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
-    if (COMMIT_HASH_PATTERN.test(compared)) {
+    if (HASH_PATTERN.test(compared)) {
         const presence = await runGit(root, [...GIT_HASH_EXISTS_ARGUMENTS, compared], { cancelSignal });
         if (presence.code !== 0) return { note: `Checked every file: base ${compared} is not present in this clone.` };
     }
@@ -120,10 +120,8 @@ export async function readMergeBase(
     head: string,
     cancelSignal?: AbortSignal,
 ): Promise<MergeBase> {
-    if (EMPTY_BASE_HASH.test(compared))
-        return {
-            note: `Checked every file: ${compared === '' ? 'the base ref is empty' : 'the base is a new branch'}.`,
-        };
+    if (compared === '') return { note: 'Checked every file: the base ref is empty.' };
+    if (ABSENT_HASH.test(compared)) return { note: 'Checked every file: the base is a new branch.' };
     const commit = await runGit(root, [...GIT_VERIFY_COMMIT_ARGUMENTS, `${compared}${COMMIT_SUFFIX}`], {
         cancelSignal,
     });

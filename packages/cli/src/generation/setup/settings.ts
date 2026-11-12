@@ -1,8 +1,7 @@
 import { LEADING_COMMENTS } from '#cli/config/generation/setup.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
-import { selectConfigurations } from '#cli/manifests/select.ts';
-import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { listAlwaysSelected, selectConfigurations } from '#cli/manifests/select.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { overlayTable, removeKey } from '#cli/settings/edit.ts';
@@ -49,7 +48,7 @@ function leaveOutUnreadSettings(template: Template, configurations: ProposedConf
         selectConfigurations([
             ...configurations.rootNames,
             ...configurations.scopeConfigurations.values().toArray().flat(),
-            ...listAutomaticConfigurations(),
+            ...listAlwaysSelected(),
         ]),
         'basic',
     );

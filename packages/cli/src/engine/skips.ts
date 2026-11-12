@@ -9,7 +9,7 @@ import { isInScope } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
-import type { PlannedCheck, PlannedScope, SettingReader, SettingsSkip, Skip } from '#cli/types/engine/plan.ts';
+import type { PlannedCheck, PlannedScope, SettingReader, Skip } from '#cli/types/engine/plan.ts';
 import type { Check, Tool } from '#cli/types/manifests.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
@@ -63,7 +63,7 @@ function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip 
     );
 }
 
-function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
+function findIgnoreSkip(scope: Scope, check: Check): Skip | undefined {
     const ignored = listIgnores(scope.settings, check.id).find(
         (ignore) =>
             ignore.rule === undefined && (ignore.paths === undefined || isScopeCovered(ignore.paths, scope.path)),
@@ -73,7 +73,7 @@ function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
         : { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
 }
 
-function findConfigSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
+function findConfigSkip(settings: Settings, scope: Scope, check: Check): Skip | undefined {
     const tool = check.when?.config_file;
     if (tool === undefined) return undefined;
     const isSelected = scope.configurations.some((configuration) =>
@@ -89,7 +89,7 @@ function findConfigSkip(settings: Settings, scope: Scope, check: Check): Setting
         : { cause: 'setting', note: `No selected configuration or ${LOCAL_RULES_SETTING} supplies local rules.` };
 }
 
-function findConfigurationSkip(scope: Scope, check: Check): SettingsSkip | undefined {
+function findConfigurationSkip(scope: Scope, check: Check): Skip | undefined {
     const configuration = check.when?.configuration;
     if (configuration === undefined || scope.settings.configurations.includes(configuration)) return undefined;
     return { cause: 'condition', note: `Needs the ${configuration} configuration, which this scope does not select.` };
@@ -112,7 +112,7 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
     return missing === undefined ? undefined : { cause: 'system', note: `${tool.name} has no ${missing} build` };
 }
 
-export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
+export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): Skip | undefined {
     if (settings.level !== 'all' && check.level !== 'basic') return { cause: 'level', note: 'off at level basic' };
     const unselected = findConfigurationSkip(scope, check);
     if (unselected !== undefined) return unselected;

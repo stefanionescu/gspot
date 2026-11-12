@@ -1,8 +1,6 @@
 import { noElementOverwrite } from '../rules/collections/no-element-overwrite.ts';
 import { noEmptyCollection } from '../rules/collections/no-empty-collection.ts';
-import { noImpossibleCollectionSize } from '../rules/collections/no-impossible-collection-size.ts';
 import { noInMisuse } from '../rules/collections/no-in-misuse.ts';
-import { noMisleadingArrayReverse } from '../rules/collections/no-misleading-array-reverse.ts';
 import { noPositiveIndexCheck } from '../rules/collections/no-positive-index-check.ts';
 import { noUnusedCollection } from '../rules/collections/no-unused-collection.ts';
 import { noVoidArrayCallback } from '../rules/collections/no-void-array-callback.ts';
@@ -33,7 +31,6 @@ import { noSelectorParameter } from '../rules/functions/no-selector-parameter.ts
 import { noSwappedArguments } from '../rules/functions/no-swapped-arguments.ts';
 import { noTrivialFunctions } from '../rules/functions/no-trivial-functions.ts';
 import { noUndefinedArgument } from '../rules/functions/no-undefined-argument.ts';
-import { preferBooleanReturn } from '../rules/functions/prefer-boolean-return.ts';
 import { noBitwiseInCondition } from '../rules/logic/no-bitwise-in-condition.ts';
 import { noFloatingPointEquality } from '../rules/logic/no-floating-point-equality.ts';
 import { noGratuitousExpressions } from '../rules/logic/no-gratuitous-expressions.ts';
@@ -58,7 +55,6 @@ import { noNestedTemplateLiterals } from '../rules/structure/no-nested-template-
 import { noRenamedExports } from '../rules/structure/no-renamed-exports.ts';
 import { noTrivialFiles } from '../rules/structure/no-trivial-files.ts';
 import { restrictedSyntax } from '../rules/structure/restricted-syntax.ts';
-import { noDuplicateInComposite } from '../rules/types/no-duplicate-in-composite.ts';
 import { noRedundantOptional } from '../rules/types/no-redundant-optional.ts';
 import { noUselessIntersection } from '../rules/types/no-useless-intersection.ts';
 import { preferReadonlyStatic } from '../rules/types/prefer-readonly-static.ts';
@@ -66,14 +62,12 @@ import { preferTypeAlias } from '../rules/types/prefer-type-alias.ts';
 import { preferTypeGuard } from '../rules/types/prefer-type-guard.ts';
 import { redundantTypeAliases } from '../rules/types/redundant-type-aliases.ts';
 import { noDiscardedPostfix } from '../rules/variables/no-discarded-postfix.ts';
-import { noGlobalThis } from '../rules/variables/no-global-this.ts';
 import { noGlobalsShadowing } from '../rules/variables/no-globals-shadowing.ts';
 import { noKeywordDeclarations } from '../rules/variables/no-keyword-declarations.ts';
 import { noMagicNumbers } from '../rules/variables/no-magic-numbers.ts';
 import { noRedundantAssignment } from '../rules/variables/no-redundant-assignment.ts';
 import { noTransposedAssignment } from '../rules/variables/no-transposed-assignment.ts';
 import { preferImmediateReturn } from '../rules/variables/prefer-immediate-return.ts';
-import { preferObjectLiteral } from '../rules/variables/prefer-object-literal.ts';
 
 /**
 The rules about the language itself. Each key names the folder of `rules/` that holds its rules.
@@ -82,9 +76,7 @@ export const LANGUAGE_TOPICS = {
     collections: [
         noElementOverwrite,
         noEmptyCollection,
-        noImpossibleCollectionSize,
         noInMisuse,
-        noMisleadingArrayReverse,
         noPositiveIndexCheck,
         noUnusedCollection,
         noVoidArrayCallback,
@@ -119,7 +111,6 @@ export const LANGUAGE_TOPICS = {
         noSwappedArguments,
         noTrivialFunctions,
         noUndefinedArgument,
-        preferBooleanReturn,
     ],
     logic: [
         noBitwiseInCondition,
@@ -150,7 +141,6 @@ export const LANGUAGE_TOPICS = {
         restrictedSyntax,
     ],
     types: [
-        noDuplicateInComposite,
         noRedundantOptional,
         noUselessIntersection,
         preferReadonlyStatic,
@@ -160,13 +150,11 @@ export const LANGUAGE_TOPICS = {
     ],
     variables: [
         noDiscardedPostfix,
-        noGlobalThis,
         noGlobalsShadowing,
         noKeywordDeclarations,
         noMagicNumbers,
         noRedundantAssignment,
         noTransposedAssignment,
         preferImmediateReturn,
-        preferObjectLiteral,
     ],
 };

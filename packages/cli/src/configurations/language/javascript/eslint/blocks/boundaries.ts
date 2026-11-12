@@ -3,7 +3,6 @@ import {
     BOUNDARY_DEPENDENCY_SELECTORS,
     BOUNDARY_OWNER_TEMPLATE,
     BOUNDARY_SOURCE_TEMPLATE,
-    CODE_LANGUAGES,
     OTHER_BOUNDARY_ELEMENTS,
     OTHER_BOUNDARY_FILE,
     TEMPLATE_OPEN,
@@ -17,7 +16,8 @@ import {
 } from '#cli/config/configurations/eslint/blocks.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
 import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
-import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
+import { listCodeTestFiles, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import type {
@@ -119,10 +119,7 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     const { session, eslintFiles } = planned;
     const { settings, scopes } = session;
     const importRules = settings.import_rule;
-    const codeLanguages: readonly string[] = CODE_LANGUAGES;
-    const javascriptScopes = scopes.filter(({ configurations }) =>
-        configurations.some((configuration) => codeLanguages.includes(configuration.name)),
-    );
+    const javascriptScopes = listJavascriptScopes(scopes);
     const isEnforceTests = settings.level === 'all' && javascriptScopes.length > 0;
     const trpcScopes = scopes.filter(({ configurations }) =>
         configurations.some((configuration) => configuration.name === TRPC_CONFIGURATION),
@@ -136,11 +133,7 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
         ...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files)),
     ]);
     const hasFixedPolicies = trpcPaths.length > 0 || isEnforceTests;
-    const externals = [
-        ...new Set(
-            javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.tables.javascript?.externals ?? []),
-        ),
-    ];
+    const externals = listExternals(javascriptScopes);
     const boundaries = {
         importRules,
         tests,

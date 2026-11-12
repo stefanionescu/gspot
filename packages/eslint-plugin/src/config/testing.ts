@@ -137,17 +137,6 @@ export const MAXIMUM_TIMER_DELAY = 2_147_483_647;
 
 export const RETRY_MODULES = ['jest', '@jest/globals'];
 
-export const INLINE_EXPECT_MODULES = ['jest', '@jest/globals', 'vitest'];
-
-export const INLINE_EXPECT_ORIGINS = new Set([undefined, '@jest/globals', 'vitest']);
-
-export const INLINE_MATCHERS: ReadonlySet<string | null> = new Set([
-    'toMatchInlineSnapshot',
-    'toThrowErrorMatchingInlineSnapshot',
-]);
-
-export const INLINE_EXPECT_MODIFIERS: ReadonlySet<string | null> = new Set(['not', 'resolves', 'rejects']);
-
 export const VITEST_MOCK_RECEIVERS = new Set(['vi', 'vitest']);
 
 export const VITEST_IMPORT_ORIGINS = new Set<string | undefined>(['vitest']);

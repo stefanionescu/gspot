@@ -20,15 +20,13 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
 import type { HookName, HookPlan, HookStatus, ScopeCheck, Session } from '#cli/types/tools.ts';
 
-const PRE_PUSH_HOOK = 'pre-push';
-
 function describePreCommitLines(names: HookName[]): string {
-    const entries = names.filter((name) => name !== PRE_PUSH_HOOK);
+    const entries = names.filter((name) => name !== 'pre-push');
     const hookTypes = entries.map((name) => `--hook-type ${name}`).join(' ');
-    const pushLines = names.includes(PRE_PUSH_HOOK)
+    const pushLines = names.includes('pre-push')
         ? [
               'pre-commit keeps the push input from its hooks, so add this line to .git/hooks/pre-push instead:',
-              `  ${GSPOT_PATHS.hooks}/${PRE_PUSH_HOOK} "$@"`,
+              `  ${GSPOT_PATHS.hooks}/pre-push "$@"`,
           ]
         : [];
     return [
@@ -103,7 +101,7 @@ function listBrokenHooks(root: string, names: HookName[]): string[] {
 }
 
 function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], name: HookName): boolean {
-    if (hook.kind === 'pre-commit' && name === PRE_PUSH_HOOK) return false;
+    if (hook.kind === 'pre-commit' && name === 'pre-push') return false;
     const paths = HOOK_FOLDER_KINDS.has(hook.kind)
         ? hook.files.filter((file) => file === name).map((file) => resolve(root, hook.path, file))
         : [resolve(root, hook.path)];

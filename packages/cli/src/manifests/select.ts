@@ -26,6 +26,17 @@ export function selectConfigurations(names: string[]): Configuration[] {
 }
 
 /**
+List the configurations that gspot selects with no `configurations` entry: each always-selected configuration.
+*/
+export function listAlwaysSelected(): string[] {
+    return readConfigurations()
+        .values()
+        .filter((configuration) => configuration.always_selected)
+        .map((configuration) => configuration.name)
+        .toArray();
+}
+
+/**
 List the configurations whose files hold source code. An always-selected language configuration, such as json or yaml,
 reads data files and stays out.
 */

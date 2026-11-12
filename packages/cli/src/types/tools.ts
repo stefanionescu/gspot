@@ -5,7 +5,6 @@ import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import type {
     bunPackageSchema,
-    hookStatusSchema,
     miseLockfileSchema,
     ruleExplanationSchema,
     toolInspectionSchema,
@@ -141,7 +140,7 @@ export type ArchiveDownload = {
     limit: number;
 };
 
-export type HookStatus = z.infer<typeof hookStatusSchema>;
+export type HookStatus = { ready: boolean; text: string; tool?: string | undefined; lines?: string[] | undefined };
 
 export type HookPlan = { command?: readonly string[]; note: string };
 

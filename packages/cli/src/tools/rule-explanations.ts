@@ -241,9 +241,8 @@ async function readStylelintRule(installed: unknown, identifier: string): Promis
 }
 
 function getRuleMetadata(rule: unknown, page: string | undefined): RuleExplanation {
-    if (typeof rule !== 'object' && typeof rule !== 'function')
+    if (rule === null || (typeof rule !== 'object' && typeof rule !== 'function'))
         throw new TypeError('The installed rule has no implementation.');
-    if (rule === null) throw new Error('The installed rule has no implementation.');
     const metadata = ruleDocumentationSchema.default({}).parse(Reflect.get(rule, 'meta'));
     const docs = { ...metadata.docs };
     const url = metadata.url ?? page;

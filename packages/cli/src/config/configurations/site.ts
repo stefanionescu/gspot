@@ -30,8 +30,6 @@ export const LYCHEE_ARGUMENTS = [
 
 export const HTML_VALIDATE_TOOL = 'html-validate';
 
-export const HTML_VALIDATE_CONFIG_FLAG = '--config';
-
 export const HTML_VALIDATE_FORMATTER_FLAG = '--formatter';
 
 export const HTML_VALIDATE_OUTPUT = 'html-validate.json';

@@ -81,7 +81,6 @@ import { noEmptyTestTitles } from '../rules/testing/no-empty-test-titles.ts';
 import { noExclusiveTests } from '../rules/testing/no-exclusive-tests.ts';
 import { noFixedTestWaits } from '../rules/testing/no-fixed-test-waits.ts';
 import { noForcedUiActions } from '../rules/testing/no-forced-ui-actions.ts';
-import { noInlineInterpolation } from '../rules/testing/no-inline-interpolation.ts';
 import { noNestedVitestMock } from '../rules/testing/no-nested-vitest-mock.ts';
 import { noOverflowingTestTimeout } from '../rules/testing/no-overflowing-test-timeout.ts';
 import { noTestRetries } from '../rules/testing/no-test-retries.ts';
@@ -206,7 +205,6 @@ export const LIBRARY_TOPICS = {
         noExclusiveTests,
         noFixedTestWaits,
         noForcedUiActions,
-        noInlineInterpolation,
         noNestedVitestMock,
         noOverflowingTestTimeout,
         noTestRetries,

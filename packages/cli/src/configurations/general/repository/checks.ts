@@ -149,9 +149,9 @@ function checkConflictMarkers(session: Session, planned: PlannedCheck): CheckFin
     return planned.files
         .filter((file) => file.tags.includes('text') && !file.tags.includes('symlink'))
         .flatMap((file) =>
-            listConflictMarkerLines(readBytes(session.cache, file.path).toString('utf8')).map((index) => ({
+            listConflictMarkerLines(readBytes(session.cache, file.path).toString('utf8')).map((line) => ({
                 file: file.path,
-                line: index + 1,
+                line,
                 rule: REPOSITORY_RULES.conflictMarker,
                 message: 'This line is a merge-conflict marker. Resolve the conflict.',
             })),

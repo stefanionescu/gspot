@@ -6,12 +6,13 @@ import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { detectConditions, detectConfigurations } from '#cli/repository/detect.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/detect.ts';
 import { TRACKED_SOURCE } from '#tests/config/repository/files.ts';
-import { buildConfiguration, listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
+import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

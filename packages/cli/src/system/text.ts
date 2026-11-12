@@ -139,21 +139,21 @@ export function splitWords(name: string): string[] {
 
 /**
 List the merge-conflict marker lines of a text. A `=======` line counts only between a `<<<<<<<` line and a later
-`>>>>>>>` line, because Markdown and reStructuredText underline a seven-letter title with it.
+`>>>>>>>` line, because Markdown and reStructuredText underline a seven-letter title with it. Line numbers start at 1.
 */
 export function listConflictMarkerLines(text: string): number[] {
     const markers: number[] = [];
     let separators: number[] | undefined;
     for (const [index, line] of text.split('\n').entries()) {
         if (CONFLICT_START.test(line)) {
-            markers.push(index);
+            markers.push(index + 1);
             separators = [];
         } else if (CONFLICT_END.test(line)) {
-            markers.push(...(separators ?? []), index);
+            markers.push(...(separators ?? []), index + 1);
             separators = undefined;
-        } else if (CONFLICT_SEPARATOR.test(line)) separators?.push(index);
+        } else if (CONFLICT_SEPARATOR.test(line)) separators?.push(index + 1);
     }
-    return markers.toSorted((left, right) => left - right);
+    return markers;
 }
 
 /**

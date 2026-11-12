@@ -5,7 +5,6 @@ import { EXCLUDE_FLAG } from '#cli/config/configurations/framework.ts';
 import {
     CSS_EXTENSION,
     HTML_EXTENSION,
-    HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
     HTML_VALIDATE_OUTPUT,
     HTML_VALIDATE_TOOL,
@@ -25,6 +24,7 @@ import {
     UNLISTED_PAGE_MESSAGE,
 } from '#cli/config/configurations/site.ts';
 import { LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import {
     convertToBuildPath,
     listBuiltFiles,
@@ -129,7 +129,7 @@ async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): 
     using reports = createTemporaryFolder();
     const command = [
         HTML_VALIDATE_TOOL,
-        HTML_VALIDATE_CONFIG_FLAG,
+        CONFIG_FLAG,
         config,
         HTML_VALIDATE_FORMATTER_FLAG,
         `json=${join(reports.path, HTML_VALIDATE_OUTPUT)}`,

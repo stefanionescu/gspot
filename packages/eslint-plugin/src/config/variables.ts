@@ -83,9 +83,6 @@ export const BUILTIN_GLOBALS: ReadonlySet<string> = new Set([
 export const IMMEDIATE_RETURN_DECLARATION =
     'VariableDeclaration[kind=/^(const|let|var)$/][declarations.length=1] > VariableDeclarator[id.type="Identifier"]:not([id.typeAnnotation])[init]';
 
-export const EMPTY_LITERAL_DECLARATION =
-    'VariableDeclaration > VariableDeclarator[id.type="Identifier"][init.type="ObjectExpression"][init.properties.length=0]';
-
 export const UPSTREAM_RULE = 'no-magic-numbers';
 
 export const TABLE_CONSTRUCTORS: ReadonlySet<string> = new Set(['Map', 'Set']);

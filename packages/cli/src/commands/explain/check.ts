@@ -9,7 +9,7 @@ import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
-import { canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
+import { buildUnknownRuleError, canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { findCheck, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
@@ -233,21 +233,21 @@ Explain one lint rule: its page, its description from the installed tool, and ho
 options. A rule of a command check gets the help of its check and the command that ignores it.
 
 @param options.session the repository settings and tool project, when available.
-@returns undefined when no shipped check and no command check has this name, or when the check lists its rules and
-this is not one. A name outside the rules that gspot reads gets the help of its check.
-@throws GspotError when gspot cannot name one lint rule of the check.
+@returns the explanation. A name outside the rules that gspot reads gets the help of its check.
+@throws GspotError when gspot cannot name one lint rule of the check, when no shipped check and no command check has
+this name, or when the check lists its rules and this is not one.
 */
 export async function explainLintRule(
     root: string,
     checkId: string,
     identifier: string,
     { verbose, session }: { verbose?: boolean; session?: Session },
-): Promise<Explanation | undefined> {
+): Promise<Explanation> {
     const found = findRuleCheck(checkId, session);
-    if (found === undefined) return undefined;
+    if (found === undefined) throw buildUnknownRuleError(identifier, checkId);
     const tool = findRuleTool(found.check);
     const docs = await readRuleDocs(root, found.check, identifier, session);
-    if (docs === undefined) return undefined;
+    if (docs === undefined) throw buildUnknownRuleError(identifier, checkId);
     const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;
     const facts: LintRuleExplanation = {
         tool: tool ?? null,

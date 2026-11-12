@@ -1,7 +1,8 @@
 import { mkdtempSync, readdirSync, realpathSync, rmdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { COPY_FOLDER_NAME, COPY_IGNORE_FILE, COPY_IGNORE_TEXT } from '#cli/config/engine.ts';
+import { COPY_FOLDER_NAME, COPY_IGNORE_TEXT } from '#cli/config/engine.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { TEMPORARY_REMOVAL_OPTIONS } from '#cli/config/system.ts';
@@ -14,7 +15,7 @@ import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 const heldRoots = new Set<string>();
 
 function writeIgnoreFile(files: Files): void {
-    files.write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
+    files.write(`${COPIES_FOLDER}/${GITIGNORE_FILE}`, {
         bytes: Buffer.from(COPY_IGNORE_TEXT),
         mode: OWNER_WRITABLE_FILE,
     });
@@ -23,8 +24,8 @@ function writeIgnoreFile(files: Files): void {
 function removeCopiesFolder(root: string): void {
     const parent = join(root, COPIES_FOLDER);
     try {
-        if (readdirSync(parent).some((name) => name !== COPY_IGNORE_FILE)) return;
-        rmSync(join(parent, COPY_IGNORE_FILE), { force: true });
+        if (readdirSync(parent).some((name) => name !== GITIGNORE_FILE)) return;
+        rmSync(join(parent, GITIGNORE_FILE), { force: true });
         rmdirSync(parent);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return;

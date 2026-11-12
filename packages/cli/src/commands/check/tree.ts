@@ -1,5 +1,6 @@
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { printProgress } from '#cli/engine/report.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
@@ -50,7 +51,7 @@ function buildRunOptions(
         stage: options.stage ?? 'all',
         fix: options.fix,
         verbose: options.verbose,
-        onProgress: options.onProgress,
+        onProgress: printProgress,
         only: options.only,
         skip: options.skip,
         paths: paths.length === 0 ? undefined : paths,

@@ -2537,10 +2537,6 @@ export default setRuleOptions(defineConfig([
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*.d.ts"], ["**/*.astro", "tests/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/plugin.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/plugin.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/plugin.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/plugin.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts/**"]]}, gspothqEslintPlugin, "all"),
     setLevelRules({"rules": {
-        "unicorn/prefer-ternary": "off"
-    },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "**/*"], ["**/*.astro", "**/*", "**/*"]]}, gspothqEslintPlugin, "all"),
-    setLevelRules({"rules": {
         "unicorn/prefer-await": "off"
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"]]}, gspothqEslintPlugin, "all"),
@@ -2578,15 +2574,6 @@ export default setRuleOptions(defineConfig([
                 {
                     "property": "localeCompare",
                     "message": "Use compareText for stable ordering."
-                }
-            ],
-            "unicorn/consistent-boolean-name": [
-                {
-                    "checkFunctions": "never",
-                    "ignore": [
-                        "^_",
-                        "^(?:enabled|active|retryable)$"
-                    ]
                 }
             ]
         }

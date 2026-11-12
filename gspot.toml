@@ -35,11 +35,6 @@ paths = ["packages/cli/src/configurations/language/python/generate.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
 
-[[naming.exception]]
-paths = ["packages/eslint-plugin/src/rules/variables/prefer-object-literal.ts", "tests/suites/unit/eslint-plugin/rules/variables/prefer-object-literal.test.ts"]
-allowed_names = ["prefer-object-literal", "prefer-object-literal.test", "preferObjectLiteral"]
-reason = "The rule file, its test, and its export take the registered rule name prefer-object-literal."
-
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts"]
 
@@ -89,7 +84,6 @@ entry_files = [
 
 [tools.eslint.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
-"unicorn/consistent-boolean-name" = [{ checkFunctions = "never", ignore = ["^_", "^(?:enabled|active|retryable)$"] }]
 
 [[scope]]
 path = "docs"
@@ -313,11 +307,6 @@ reason = "Astro fixes this name beside the content folder."
 check = "structure/shared-prefixes"
 paths = ["packages/eslint-plugin/src/rules/**", "tests/suites/unit/eslint-plugin/rules/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "unicorn/prefer-ternary"
-reason = "It fights gspot/no-trivial-functions: the ternary shrinks a helper to one statement, and that rule then asks to inline the helper."
 
 [[ignore]]
 check = "javascript/eslint"

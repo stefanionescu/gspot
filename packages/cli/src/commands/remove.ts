@@ -7,7 +7,6 @@ import {
 import { GSPOT_REMOVE } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { REMOVAL_REASON_SUGGESTION } from '#cli/config/settings/validation.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { findRequirementChain, formatRequiredRemoval } from '#cli/manifests/select.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
@@ -35,15 +34,11 @@ function assertRemovable(names: string[], kept: string[]): void {
 
 function removeUnusedSettings(table: TomlTable, scopePath: string): string {
     const edited = buildSettingsFromTable(table);
-    const automatic = readConfigurations()
-        .values()
-        .filter((configuration) => configuration.always_selected)
-        .toArray();
     const removed: string[] = [];
     const affected = listSettingsTables(edited).filter((written) => isInScope(written.scopePath, scopePath));
     for (const written of affected) {
         const selected = selectConfigurationsForScope(edited, written.scopePath);
-        const available = buildAvailableSettings([...automatic, ...selected], edited.level);
+        const available = buildAvailableSettings(selected, edited.level);
         const keys = listWrittenKeys(written.table, available).filter(
             (key) => findSetting(available, key) === undefined,
         );

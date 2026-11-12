@@ -7,7 +7,6 @@ import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts'
 import type { namingExceptionSchema } from '#cli/schemas/manifests/tools.ts';
 import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { ConfigOutput, FormatSettings, PlannedConfig } from '#cli/types/configurations/language.ts';
-import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
 import type { Check, Config, Configuration } from '#cli/types/manifests.ts';
@@ -56,7 +55,7 @@ export type SuppressionSyntax = {
     limitRules: RegExp | undefined;
 };
 
-export type AllowedPackage = ConfigurationTables['licenses']['allowed_package'][number];
+export type AllowedPackage = TableSettings<'licenses'>['allowed_package'][number];
 
 export type LockedPackage = {
     file: string;

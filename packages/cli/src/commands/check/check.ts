@@ -30,7 +30,7 @@ import { TOOL_PROJECT_FILES } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { buildEmptyRunReport, printProgress } from '#cli/engine/report.ts';
+import { buildEmptyRunReport } from '#cli/engine/report.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readGitPaths, readGitText } from '#cli/repository/git/run.ts';
 import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
@@ -164,7 +164,6 @@ function parseCheckFlags(
         messageFile: messagePath === undefined ? undefined : resolve(cwd, messagePath),
         messageArgument: messagePath === undefined ? undefined : formatMessageArgument(messagePath, location),
         stage: hook === undefined ? onlyStage : HOOK_CHECKS[hook].stages[0],
-        onProgress: printProgress,
     };
     assertCheckSelection(options, flags);
     assertMessageSelection(options, paths);

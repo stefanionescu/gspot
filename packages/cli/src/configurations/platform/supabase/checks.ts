@@ -10,7 +10,6 @@ import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import {
     DENO_CHECK_COMMAND,
     DENO_CHECK_FAILED_MESSAGE,
-    DENO_CONFIG_FLAG,
     DENO_IMPORT_MAP_FLAG,
     DENO_LINT_COMMAND,
     DENO_LINT_NAME,
@@ -26,6 +25,7 @@ import {
     VERIFY_JWT_MESSAGE,
     VERIFY_JWT_OFF,
 } from '#cli/config/configurations/supabase.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import {
@@ -90,7 +90,7 @@ function buildDenoJsonArguments(root: string, folder: string, importMap: string 
     const path = DENO_CONFIG_FILES.map((name) => join(root, folder, name)).find(
         (configPath) => statSync(configPath, { throwIfNoEntry: false }) !== undefined,
     );
-    if (path !== undefined) return [DENO_CONFIG_FLAG, path];
+    if (path !== undefined) return [CONFIG_FLAG, path];
     return importMap === undefined ? [] : [DENO_IMPORT_MAP_FLAG, join(root, importMap)];
 }
 

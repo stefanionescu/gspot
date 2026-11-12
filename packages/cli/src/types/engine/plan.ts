@@ -4,7 +4,7 @@ import type { SKIP_CAUSES, STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { checkStateSchema } from '#cli/schemas/engine.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { RepositoryListing, StartRunner, TrackedFile, UntrackedFiles } from '#cli/types/repository.ts';
-import type { Defined, Scope, Settings, TableValues } from '#cli/types/settings.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import type { Host, ScopeCheck, Session, SessionBase } from '#cli/types/tools.ts';
 
@@ -53,8 +53,6 @@ export type PlanInventory = {
     ownFiles: Map<string, TrackedFile[]>;
 };
 
-export type SettingsSkip = { cause: 'level' | 'condition' | 'ignore' | 'setting'; note: string };
-
 export type PlannedCheck = ScopeCheck & {
     files: TrackedFile[];
     skip?: Skip | undefined;
@@ -100,7 +98,3 @@ export type SessionOptions = {
     cancelSignal?: AbortSignal | undefined;
     startRunner?: StartRunner | undefined;
 };
-
-export type ConfigurationTables = Defined<
-    Required<Omit<TableValues, 'format' | 'limits' | 'naming' | 'structure' | `tools.${string}`>>
->;

@@ -16,8 +16,6 @@ export const SERVICE_ROLE_KEY_NAMES = [
     'sb_secret_',
 ] as const;
 
-export const DENO_CONFIG_FLAG = '--config';
-
 export const FILE_URL_PREFIX = 'file://';
 
 export const FUNCTION_ENTRYPOINT = /\/index\.tsx?$/u;

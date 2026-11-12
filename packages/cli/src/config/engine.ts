@@ -36,8 +36,6 @@ export const FILES_BETWEEN_PAUSES = 64;
 
 export const COPY_FOLDER_NAME = /^(?<pid>[1-9]\d{0,8})-[a-zA-Z0-9]+$/u;
 
-export const COPY_IGNORE_FILE = '.gitignore';
-
 export const COPY_IGNORE_TEXT = '*\n';
 
 export const COPY_ROOT_FILES = [SETTINGS_FILE, PACKAGE_JSON, TSCONFIG_FILE, PYPROJECT_TOML] as const;

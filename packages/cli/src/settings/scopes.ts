@@ -1,7 +1,6 @@
 import { NAMING_LANGUAGE_CATEGORIES, NAMING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
-import { selectConfigurations } from '#cli/manifests/select.ts';
-import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { listAlwaysSelected, selectConfigurations } from '#cli/manifests/select.ts';
 import { compareScopeDepth, isScopeCovered, selectScopePath } from '#cli/repository/scopes.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
@@ -90,7 +89,7 @@ export function findParentScope(scopes: Scope[], path: string): Scope | undefine
 }
 
 export function selectConfigurationsForScope(selected: SelectedConfigurations, scopePath: string): Configuration[] {
-    const automatic = listAutomaticConfigurations();
+    const automatic = listAlwaysSelected();
     const choices = new Set<string>([...selected.configurations, ...automatic]);
     const tables = [
         selected,

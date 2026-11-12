@@ -1,6 +1,11 @@
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { assertConfigurationsExist, expandSuggestions, selectConfigurations } from '#cli/manifests/select.ts';
-import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import {
+    assertConfigurationsExist,
+    expandSuggestions,
+    listAlwaysSelected,
+    selectConfigurations,
+} from '#cli/manifests/select.ts';
+import { detectConfigurations } from '#cli/repository/detect.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
@@ -121,7 +126,7 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
     const inScopes = new Set(scopeConfigurations.values().toArray().flat());
     const named = new Set(options.configurations);
     const template = new Set(options.template?.configurations);
-    const automatic = new Set(listAutomaticConfigurations(repository));
+    const automatic = new Set(listAlwaysSelected());
     const rootNames = expandSuggestions([...proposedRoot, ...inScopes], detectedNames).filter(
         (name) =>
             (!inScopes.has(name) || heldAtRoot.includes(name)) &&

@@ -10,7 +10,6 @@ extensions = [".yaml", ".yml"]
 
 [[check]]
 example = "Two `enabled` keys in one YAML mapping report a duplicate key. Keep one, and delete the other."
-files = { extensions = [".yaml", ".yml"] }
 help = "Fix the reported YAML value or layout."
 name = "syntax"
 stage = "commit"

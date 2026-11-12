@@ -54,7 +54,7 @@ function parseManifest(text: string, folder: string): ParsedManifest {
     const parsed = parseTomlFile(`${folder}/${MANIFEST_FILE}`, text);
     const result = manifestSchema.safeParse({
         ...parsed,
-        folder: folder,
+        folder,
         configuration: {
             ...(isTable(parsed['configuration']) && parsed['configuration']),
             name: posix.basename(folder),

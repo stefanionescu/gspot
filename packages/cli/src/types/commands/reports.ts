@@ -18,7 +18,7 @@ import type {
     settingsListSchema,
 } from '#cli/schemas/commands.ts';
 import type { RunSelection, SessionOptions, StageFilter } from '#cli/types/engine/plan.ts';
-import type { CheckProgress, PushInput, RunReport } from '#cli/types/engine/run.ts';
+import type { PushInput, RunReport } from '#cli/types/engine/run.ts';
 import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { PushedRevisions } from '#cli/types/repository.ts';
@@ -32,7 +32,6 @@ export type RevisionCheckResult = CommandResult<RunReport> | { skipped: PushedRe
 
 export type CheckOptions = {
     hook?: CheckHook | undefined;
-    onProgress?: ((progress: CheckProgress) => void) | undefined;
     cwd: string;
     only?: string[] | undefined;
     skip?: string[] | undefined;

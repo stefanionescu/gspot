@@ -1,6 +1,6 @@
 import { listEnabledChecks } from '#cli/engine/plan.ts';
 import { pinProjectTypescript, selectToolConfigurations } from '#cli/engine/tools.ts';
-import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { detectPackageManager, selectToolPackageManager } from '#cli/repository/package-manager.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
@@ -21,7 +21,7 @@ import type { DownloadSession, Session, SessionBase } from '#cli/types/tools.ts'
 
 function buildScopes(settings: Settings, repository: Repository): Scope[] {
     const { scopeFolders } = repository;
-    const automatic = listAutomaticConfigurations(repository);
+    const automatic = listAlwaysSelected();
     const active = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
     return scopeFolders.map((scope) => {
         const selected = selectConfigurationsForScope(active, scope.path);

@@ -128,7 +128,7 @@ function parsePipfile(path: string, text: string): DependencyFile {
             (map): map is Record<string, PythonDependency> => map !== undefined,
         ),
     );
-    return { path, kind: 'Pipfile', dependencies, installed: dependencies };
+    return { path, kind: PIPFILE, dependencies, installed: dependencies };
 }
 
 function parsePyproject(path: string, text: string): DependencyFile {
