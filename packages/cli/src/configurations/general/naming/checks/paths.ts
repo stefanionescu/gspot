@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 
 import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
-import { CATEGORY_LABELS, REST_SEGMENT } from '#cli/config/configurations/naming.ts';
+import { REST_SEGMENT } from '#cli/config/configurations/naming.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
@@ -60,7 +60,6 @@ export function buildFileIdentifier(path: string, language: string, containers: 
         line: 1,
         column: 1,
         ...named,
-        label: `${language} ${CATEGORY_LABELS[named.category]}`,
     };
 }
 
@@ -80,7 +79,6 @@ export function buildFolderIdentifiers(path: string, language: string, container
                 column: 1,
                 ...named,
                 folder,
-                label: `${language} ${CATEGORY_LABELS[named.category]}`,
             },
         ];
     });

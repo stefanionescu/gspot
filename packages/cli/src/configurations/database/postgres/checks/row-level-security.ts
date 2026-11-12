@@ -9,8 +9,8 @@ import {
     SQL_COMMENT,
 } from '#cli/config/configurations/postgres.ts';
 import {
+    listUnfrozenMigrations,
     readParsedMigrations,
-    selectFrozenMigrations,
 } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { ROW_SECURITY_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
@@ -66,12 +66,7 @@ function listPolicyFindings(migration: Migration, statement: SqlStatement): Chec
 async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildDatabaseSchema(migrations);
-    const settings = getTable(planned.scope.settings, 'postgres');
-    const schemas = new Set(settings['client_schemas']);
-    const frozen = selectFrozenMigrations(
-        migrations.map(({ path }) => path),
-        settings.frozen_through,
-    );
+    const schemas = new Set(getTable(planned.scope.settings, 'postgres').client_schemas);
     return [
         ...schema.tables
             .entries()
@@ -91,11 +86,9 @@ async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): P
                 rule: POLICY_RULES.view,
                 message: SECURITY_INVOKER_MESSAGE,
             })),
-        ...migrations
-            .filter(({ path }) => !frozen.has(path))
-            .flatMap((migration) =>
-                migration.statements.flatMap((statement) => listPolicyFindings(migration, statement)),
-            ),
+        ...listUnfrozenMigrations(migrations, planned).flatMap((migration) =>
+            migration.statements.flatMap((statement) => listPolicyFindings(migration, statement)),
+        ),
     ];
 }
 

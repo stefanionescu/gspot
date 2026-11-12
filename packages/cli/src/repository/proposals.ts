@@ -23,14 +23,19 @@ type ConfigurationRequest = {
     };
 };
 
-function selectRootConfigurations(request: ConfigurationRequest, detected: ConfigurationEvidence[]): string[] {
+function selectRootConfigurations(
+    request: ConfigurationRequest,
+    detected: ConfigurationEvidence[],
+    rootDetected: ReadonlySet<string>,
+): string[] {
     const named = request.options.configurations;
     if (named !== undefined) return [...new Set(named)];
     const hasScopes = request.repository.scopeFolders.length > 1;
-    const root = selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []);
     const detectedConfigurations = detected
         .map((evidence) => evidence.configuration)
-        .filter(({ name, group }) => !hasScopes || group === 'general' || group === 'language' || root.includes(name))
+        .filter(
+            ({ name, group }) => !hasScopes || group === 'general' || group === 'language' || rootDetected.has(name),
+        )
         .map(({ name }) => name);
     return [...new Set([...(request.options.template?.configurations ?? []), ...detectedConfigurations])].filter(
         (name) => request.options.template?.removed.includes(name) !== true,
@@ -96,11 +101,11 @@ export function selectProposedConfigurations(request: ConfigurationRequest): Pro
     const hasScopes = scopes.length > 1;
     const detected = detectConfigurations(repository);
     const detectedNames = new Set(detected.map((evidence) => evidence.configuration.name));
-    const proposedRoot = selectRootConfigurations(request, detected);
-    const scopeConfigurations = new Map<string, string[]>();
     const rootDetected = new Set(
         selectScopeConfigurations(request, { path: '', origin: 'root', configurations: [] }, []),
     );
+    const proposedRoot = selectRootConfigurations(request, detected, rootDetected);
+    const scopeConfigurations = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((name) => {
         const configuration = getRequired(readConfigurations(), name, 'configuration');
         return (

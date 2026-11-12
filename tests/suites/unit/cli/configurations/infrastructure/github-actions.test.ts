@@ -19,7 +19,7 @@ import {
     WORKFLOW_TEXT_CASES,
 } from '#tests/config/configurations/infrastructure.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -32,10 +32,8 @@ test('actionlint copies root actions and unchanged actions outside .github with 
         'gspot.toml': buildSandboxSettings(['github-actions']),
         ...OUTSIDE_GITHUB_ACTIONS,
     });
-    const session = await openSession(sandbox.path);
-    using _pins = fakeToolExecutables(
-        ['actionlint', 'shellcheck'].map((name) => getTool(readConfigurations().values(), name)),
-    );
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['actionlint', 'shellcheck'], resources);
     using boundary = spyOn(processes, 'runProcess').mockImplementation(async (_command, options) => {
         expect(await readFile(join(options.cwd, 'action.yml'), 'utf8')).toContain('uses: ./actions/setup');
         expect(await readFile(join(options.cwd, 'actions/setup/action.yml'), 'utf8')).toBe(
@@ -63,11 +61,8 @@ test.each([...WORKFLOW_TEXT_CASES])(
                 'on: workflow_dispatch\njobs:\n  caller:\n    uses: ./.github/actions/setup\n',
             [path]: before,
         });
-        const session = await openSession(sandbox.path);
-        using _pins = fakeToolExecutables([
-            getTool(readConfigurations().values(), 'actionlint'),
-            getTool(readConfigurations().values(), 'shellcheck'),
-        ]);
+        using resources = new DisposableStack();
+        const session = await openFakeToolSession(sandbox.path, ['actionlint', 'shellcheck'], resources);
         using run = spyOn(processes, 'runProcess').mockImplementation(async (_command, options) => {
             const written = await readFile(join(options.cwd, path), 'utf8');
             expect(written).toBe(expected);

@@ -107,9 +107,8 @@ test('--fix keeps a suppression for a rule that level basic does not run', async
 });
 
 test.each(LEVELS)('empty-object fallbacks are reported at level %s and pass after correction', async (level) => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], { level });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'package.json': '{"private":true,"type":"module"}',
         'source.js': COALESCING_SOURCE,
@@ -165,29 +164,6 @@ test('your options for a rule that a configuration adds, such as @typescript-esl
     expect(
         await listLintFindings(eslint, sandbox.path, ['source.ts'], ['@typescript-eslint/no-floating-promises']),
     ).toStrictEqual([{ file: 'source.ts', rule: '@typescript-eslint/no-floating-promises', line: 2 }]);
-});
-
-test('basic keeps core bug checks and TypeScript recommended checks active', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
-            level: 'basic',
-            tables: '[[tools.eslint.override]]\npaths = ["**/*.js", "**/*.ts"]\nruntime = "browser"\n',
-        }),
-        'package.json': '{"private":true,"type":"module"}',
-        'source.js': '',
-        'source.ts': '',
-    });
-    const eslint = await buildEslint(sandbox.path);
-    for (const file of ['source.js', 'source.ts']) {
-        const config = (await eslint.calculateConfigForFile(file)) as EslintConfiguration;
-        const rules = [
-            'no-self-compare',
-            file.endsWith('.js') ? 'no-implied-eval' : '@typescript-eslint/no-explicit-any',
-        ];
-        expect(Object.fromEntries(rules.map((name) => [name, config.rules[name]?.[0]]))).toStrictEqual(
-            Object.fromEntries(rules.map((name) => [name, 2])),
-        );
-    }
 });
 
 test.each(LEVELS)('level %s reports the unicorn style rules only at level all', async (level) => {

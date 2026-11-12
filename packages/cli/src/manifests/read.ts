@@ -34,10 +34,7 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
                 ...configuration,
                 checks: checks.map((check) => ({
                     ...check,
-                    output:
-                        check.output ??
-                        toolsByName.get(check.tool ?? check.command?.[0] ?? '')?.output ??
-                        DEFAULT_OUTPUT_FORMAT,
+                    output: check.output ?? toolsByName.get(findToolName(check) ?? '')?.output ?? DEFAULT_OUTPUT_FORMAT,
                 })),
                 tools: tools.map((tool) => {
                     if (typeof tool !== 'string') return tool;
@@ -126,6 +123,10 @@ export function listRuleFiles(configuration: Configuration): ShippedRule[] {
     }));
 }
 
+export function listToolNames(configurations: Configuration[]): Set<string> {
+    return new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
+}
+
 export function listDistinctTools(configurations: Configuration[]): Tool[] {
     const tools = new Map<string, Tool>();
     for (const configuration of configurations)
@@ -157,8 +158,8 @@ export function getTool(configurations: Iterable<Configuration>, name: string): 
     return tool;
 }
 
-export function findToolName(check: Check): string | undefined {
-    return typeof check.tool === 'string' ? check.tool : check.command?.[0];
+export function findToolName(check: Pick<Check, 'tool' | 'command'>): string | undefined {
+    return check.tool ?? check.command?.[0];
 }
 
 export function assertCheckExists(checkId: string, commandChecks: ReadonlyArray<Pick<Check, 'id'>>): void {

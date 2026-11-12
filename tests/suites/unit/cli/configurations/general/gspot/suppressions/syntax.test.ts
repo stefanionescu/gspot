@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import type { Finding } from '#cli/types/engine/run.ts';
 import {
@@ -24,11 +23,9 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
         const resources = new AsyncDisposableStack();
         let comments: readonly Finding[];
         beforeAll(async () => {
-            const sandbox = resources.use(await createGitSandbox({}));
-            await createFileTree(sandbox.path, {
-                'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
-                ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
-            });
+            const files = Object.fromEntries(sources.map(({ path, source }) => [path, source]));
+            const settings = buildSandboxSettings([configuration], { level: 'all' });
+            const sandbox = resources.use(await createGitSandbox({ 'gspot.toml': settings, ...files }));
             comments = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
         });
         afterAll(async () => {
@@ -43,8 +40,7 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
 );
 
 test('eslint comments inside strings and templates are not suppressions', async () => {
-    await using sandbox = await createGitSandbox({});
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
         'source.ts': QUOTED_ESLINT_COMMENTS,
     });

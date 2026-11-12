@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 
 import type { z } from 'zod';
 
+import { SET_STATE, UNSET_STATE } from '#cli/config/repository/files.ts';
 import {
     ANY_FOLDER_PREFIX,
     ATTRIBUTE_ASSIGNMENT_SIDES,
@@ -139,9 +140,9 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
 export function mergeAttributes(tokens: string[]): Record<string, string> {
     const attributes = new Map<string, string>();
     for (const match of tokens) {
-        const [name = '', value = 'set'] = match.split('=', ATTRIBUTE_ASSIGNMENT_SIDES);
+        const [name = '', value = SET_STATE] = match.split('=', ATTRIBUTE_ASSIGNMENT_SIDES);
         if (name.startsWith('!')) attributes.delete(name.slice(1));
-        else if (name.startsWith('-')) attributes.set(name.slice(1), 'unset');
+        else if (name.startsWith('-')) attributes.set(name.slice(1), UNSET_STATE);
         else attributes.set(name, value);
     }
     return Object.fromEntries(attributes);
@@ -158,28 +159,24 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
     return attributes;
 }
 
-export function decodeGitPaths(output: Uint8Array, unreadablePaths: string[]): string {
-    const records: string[] = [];
-    for (const record of Buffer.from(output).toString('latin1').split('\0')) {
-        if (record === '') continue;
-        const bytes = Buffer.from(record, 'latin1');
-        const text = decodeUtf8(bytes);
-        if (text === undefined) {
-            unreadablePaths.push(formatUnreadablePath(record));
-        } else {
-            records.push(text);
-        }
-    }
-    return records.join('\0');
+/**
+Decode the records of a null-separated Git listing. A record with invalid UTF-8 is left out, and `unreadablePaths`
+takes its name when the caller passes that list.
+*/
+export function decodeGitPaths(output: Uint8Array, unreadablePaths?: string[]): string[] {
+    return Buffer.from(output)
+        .toString('latin1')
+        .split('\0')
+        .flatMap((record) => {
+            if (record === '') return [];
+            const text = decodeUtf8(Buffer.from(record, 'latin1'));
+            if (text === undefined) unreadablePaths?.push(formatUnreadablePath(record));
+            return text === undefined ? [] : [text];
+        });
 }
 
 export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[]): GitFile[] {
-    const files: GitFile[] = [];
-    for (const line of decodeGitPaths(output, unreadablePaths).split('\0')) {
-        if (line === '') continue;
-        files.push(parseListingLine(TREE_LINE.exec(line), gitFileSchema));
-    }
-    return files;
+    return decodeGitPaths(output, unreadablePaths).map((line) => parseListingLine(TREE_LINE.exec(line), gitFileSchema));
 }
 
 export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {

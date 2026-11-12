@@ -17,7 +17,7 @@ import type {
     settingExplanationSchema,
     settingsListSchema,
 } from '#cli/schemas/commands.ts';
-import type { CheckDescription, RunSelection, SessionOptions, StageFilter } from '#cli/types/engine/plan.ts';
+import type { RunSelection, SessionOptions, StageFilter } from '#cli/types/engine/plan.ts';
 import type { CheckProgress, PushInput, RunReport } from '#cli/types/engine/run.ts';
 import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { Setting } from '#cli/types/manifests.ts';
@@ -108,15 +108,6 @@ export type SettingScope = {
 };
 
 export type ConfigurationExplanation = z.infer<typeof configurationExplanationSchema>;
-
-export type CheckFacts = {
-    turnOff: CheckDescription['turnOff'];
-    settings: string[];
-    ruleFiles: string[];
-    crashPattern: string | undefined;
-    ignores: CheckIgnore[];
-    minVersions: Record<string, string>;
-};
 
 export type ScanCategory = z.infer<typeof scanCategorySchema>;
 

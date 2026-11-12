@@ -115,10 +115,7 @@ export function listStaleFiles(
         .toSorted((a, b) => compareText(a.path, b.path));
 }
 
-export function listExpectedPaths(
-    session: Pick<Session, 'toolPackageManager' | 'toolsRoot' | 'settings' | 'cache'>,
-    generated: Generation,
-): Set<string> {
+export function listExpectedPaths(session: Pick<Session, 'toolPackageManager'>, generated: Generation): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
     const { toolPackageManager } = session;
     const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);

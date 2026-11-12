@@ -7,6 +7,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { BASH_SIZE_CASES, COUNTED_LOOPS } from '#tests/config/configurations/bash.ts';
 import { BASH_HEADER } from '#tests/config/setup/languages.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -69,7 +70,7 @@ test.each(buildSizeCases())(
         await writeFile(join(sandbox.path, file), fixedSource);
         const corrected = await runChecks(await openSession(sandbox.path), options);
 
-        expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+        expect(listFindingRows(corrected.report)).toStrictEqual([]);
     },
 );
 

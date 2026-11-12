@@ -8,7 +8,7 @@ import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
-import { buildSettings } from '#cli/settings/read.ts';
+import { buildSettings, buildSettingsFromTable } from '#cli/settings/read.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { isInScope } from '#cli/system/paths.ts';
@@ -105,7 +105,7 @@ function listSettingsWeakenings(text: string, head: Settings, tracked: string[])
     const written = parseTomlFile(SETTINGS_FILE, text);
     const parsed = settingsSchema.safeParse(written);
     // A base that gspot refuses compares as the shipped defaults, so each weakening of the current file needs a reason.
-    const base = parsed.success ? buildSettings(parsed.data, written) : buildSettings(settingsSchema.parse({}), {});
+    const base = parsed.success ? buildSettings(parsed.data, written) : buildSettingsFromTable({});
     return [
         ...listIgnoreWeakenings(base.ignore, head.ignore),
         ...listConfigurationWeakenings(base, head, tracked),

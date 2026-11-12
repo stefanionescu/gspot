@@ -6,7 +6,7 @@ import { formatSettingsErrors } from '#cli/settings/validation/messages.ts';
 import { formatSettingsIssue, validateSettings } from '#cli/settings/validation/schema.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import type { ParsedSettings, Settings, SettingsError, TomlTable } from '#cli/types/settings.ts';
+import type { ParsedSettings, Settings, SettingsFailure, TomlTable } from '#cli/types/settings.ts';
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
     return Object.fromEntries(
@@ -32,26 +32,22 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
     );
 }
 
-export function parseSettings(text: string, root: string, selecting?: readonly string[]): Settings | SettingsError[] {
+export function parseSettings(text: string, root: string, selecting?: readonly string[]): Settings | SettingsFailure {
     const written = parseTomlFile(SETTINGS_FILE, text);
     const result = settingsSchema.safeParse(written);
-    let parsed: Settings | SettingsError[];
-    if (result.success) {
-        const settings = buildSettings(result.data, written);
-        const errors = validateSettings(settings, root, selecting);
-        parsed = errors.length === 0 ? settings : errors;
-    } else {
+    if (!result.success) {
         const syntax = parseTomlSyntax(text, written);
-        parsed = result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax));
+        return { errors: result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax)), syntax };
     }
-    return parsed;
+    const settings = buildSettings(result.data, written);
+    const errors = validateSettings(settings, root, selecting);
+    return errors.length === 0 ? settings : { errors, syntax: parseTomlSyntax(text, written) };
 }
 
 export function readSettings(text: string, root: string, selecting?: readonly string[]): Settings {
     const result = parseSettings(text, root, selecting);
-    if (!Array.isArray(result)) return result;
-    const syntax = parseTomlSyntax(text, parseTomlFile(SETTINGS_FILE, text));
-    throw new GspotError('settings', formatSettingsErrors(result, syntax, SETTINGS_FILE));
+    if (!('errors' in result)) return result;
+    throw new GspotError('settings', formatSettingsErrors(result.errors, result.syntax, SETTINGS_FILE));
 }
 
 export function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
@@ -71,4 +67,8 @@ export function buildSettings(parsed: ParsedSettings, written: TomlTable): Setti
             ]),
         ),
     };
+}
+
+export function buildSettingsFromTable(table: TomlTable): Settings {
+    return buildSettings(settingsSchema.parse(table), table);
 }

@@ -10,7 +10,7 @@ import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { findChildSchema, RECORD_FIELDS, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { findSchemaAt, RECORD_FIELDS, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { formatUnknownSetting, validateKeys } from '#cli/settings/validation/keys.ts';
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
@@ -40,10 +40,8 @@ function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: 
 }
 
 function listSchemaKeys(segments: KeyPath): string[] {
-    let schema: z.ZodType | undefined = settingsSchema;
-    for (const segment of segments) schema = findChildSchema(schema, segment);
-    let table = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    while (table instanceof z.ZodPipe) table = unwrapSettingSchema(table.in as z.ZodType);
+    const schema = findSchemaAt(segments);
+    const table = schema === undefined ? undefined : unwrapSchemaPipes(schema);
     const [record, , ...scopeFields] = segments;
     const fields = record === 'scope' ? scopeFields : segments;
     const prefix = fields.filter((segment) => typeof segment === 'string').join('.');
@@ -118,9 +116,7 @@ export function formatSettingsIssue(issue: z.core.$ZodIssue, syntax: TomlSyntax)
     if (emptyPaths !== undefined) return [emptyPaths];
     if (issue.code === 'unrecognized_keys')
         return issue.keys.map((key) => ({ path: [...segments, key], message: formatUnknownKey(segments, key) }));
-    let schema: z.ZodType | undefined = settingsSchema;
-    for (const segment of segments) schema = findChildSchema(schema, segment);
-    const message = formatFileValueError(schema, issue, findValueAt(syntax.value, segments));
+    const message = formatFileValueError(findSchemaAt(segments), issue, findValueAt(syntax.value, segments));
     return [{ path: segments, message }];
 }
 

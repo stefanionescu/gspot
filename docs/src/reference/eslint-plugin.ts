@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 
-import { getRequired } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import {
     CONJUNCTION_FORMAT,
@@ -112,7 +111,8 @@ function formatRuleConfigs(name: string): string {
     return configs.length === 1 ? `On in the ${names} config.` : `On in the ${names} configs.`;
 }
 
-function formatRuleSection(name: string, rule: (typeof plugin.rules)[keyof typeof plugin.rules]): string {
+function formatRuleSection(rule: (typeof plugin.rules)[keyof typeof plugin.rules]): string {
+    const { name } = rule;
     const { docs } = rule.meta;
     if (docs === undefined) throw new Error(`The plugin rule ${name} has no docs.`);
     const facts =
@@ -132,9 +132,9 @@ function formatRuleSection(name: string, rule: (typeof plugin.rules)[keyof typeo
     );
 }
 
-function formatTopicIndex(topic: string, label: string, names: readonly string[]): string {
+function formatTopicIndex(topic: string, label: string, rules: ReadonlyArray<{ name: string }>): string {
     const path = `${PLUGIN_PATH}${topic}/`;
-    const links = names.map((name) => `<li id="${name}"><a href="${path}#${name}"><code>${name}</code></a></li>`);
+    const links = rules.map(({ name }) => `<li id="${name}"><a href="${path}#${name}"><code>${name}</code></a></li>`);
     return formatSection(
         `[${label}](${path})`,
         `<ul class="rule-index">\n${links.join('\n')}\n</ul>`,
@@ -142,13 +142,11 @@ function formatTopicIndex(topic: string, label: string, names: readonly string[]
     );
 }
 
-function buildTopicPage(label: string, names: readonly string[]): ReferencePage {
-    const rules = new Map(Object.entries(plugin.rules));
-    const page = buildReferencePage(
-        `${label} rules`,
-        undefined,
-        names.map((name) => formatRuleSection(name, getRequired(rules, name, 'plugin rule'))).join(''),
-    );
+function buildTopicPage(
+    label: string,
+    rules: ReadonlyArray<(typeof plugin.rules)[keyof typeof plugin.rules]>,
+): ReferencePage {
+    const page = buildReferencePage(`${label} rules`, undefined, rules.map((rule) => formatRuleSection(rule)).join(''));
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };
     return page;
 }
@@ -157,7 +155,7 @@ export function buildPluginPages(): Map<string, ReferencePage> {
     const topics = (Object.keys(TOPICS) as Array<keyof typeof TOPICS>).toSorted(compareText).map((topic) => ({
         topic,
         label: TOPIC_LABELS[topic],
-        names: TOPICS[topic].map(({ name }) => name).toSorted(compareText),
+        rules: TOPICS[topic].toSorted((left, right) => compareText(left.name, right.name)),
     }));
     const readme = readFileSync(new URL('../../../packages/eslint-plugin/README.md', import.meta.url), 'utf8');
     const requirements = `Requires Node.js \`${pluginPackage.engines.node}\` and ESLint \`${pluginPackage.peerDependencies.eslint}\`. The optional magic-numbers rule needs \`@typescript-eslint/eslint-plugin\` \`${pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin']}\`.`;
@@ -174,14 +172,14 @@ export function buildPluginPages(): Map<string, ReferencePage> {
         introduction +
             formatSection(
                 'Rules',
-                topics.map(({ topic, label, names }) => formatTopicIndex(topic, label, names)).join(''),
+                topics.map(({ topic, label, rules }) => formatTopicIndex(topic, label, rules)).join(''),
             ),
     );
     return new Map([
         [`${REFERENCE_FOLDERS.eslintPlugin}/index`, index],
         ...topics.map(
-            ({ topic, label, names }) =>
-                [`${REFERENCE_FOLDERS.eslintPlugin}/${topic}`, buildTopicPage(label, names)] as const,
+            ({ topic, label, rules }) =>
+                [`${REFERENCE_FOLDERS.eslintPlugin}/${topic}`, buildTopicPage(label, rules)] as const,
         ),
     ]);
 }

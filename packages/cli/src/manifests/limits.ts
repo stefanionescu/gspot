@@ -1,4 +1,4 @@
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, readConfigurations } from '#cli/manifests/read.ts';
 import type { LimitCheck } from '#cli/types/manifests.ts';
 
 const checks = readConfigurations()
@@ -26,7 +26,7 @@ export const LIMIT_RULES_BY_CHECK = new Map(
 export const LIMIT_SETTING_RULES: Readonly<Record<string, Readonly<Record<string, string>>>> = Object.fromEntries(
     checks.flatMap((check) => {
         if (check.limits === undefined || Array.isArray(check.limits)) return [];
-        const tool = check.tool ?? check.command?.[0];
+        const tool = findToolName(check);
         if (tool === undefined) return [];
         return [
             [tool, Object.fromEntries(Object.entries(check.limits).map(([rule, limit]) => [rule, `limits.${limit}`]))],

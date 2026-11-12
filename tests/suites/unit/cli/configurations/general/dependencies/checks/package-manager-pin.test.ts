@@ -3,8 +3,6 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { planChecks } from '#cli/engine/plan.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { BUN_PIN_SETTINGS } from '#tests/config/configurations/dependencies.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -28,21 +26,6 @@ test('package-manager-pin reports a packageManager that differs from the bun pin
     ]);
     await writeFile(join(sandbox.path, 'package.json'), packageJson.replace('test.1', 'test.2'));
     expect(await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
-});
-
-test('a staged mise.toml alone plans package-manager-pin', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({ name: 'shop', private: true }),
-        'mise.toml': BUN_PIN_SETTINGS,
-        'gspot.toml': buildSandboxSettings(['javascript']),
-    });
-    const session = await openSession(sandbox.path);
-    const [planned] = planChecks(session, {
-        stage: 'commit',
-        selection: { content: 'index', paths: ['mise.toml'] },
-        only: ['dependencies/package-manager-pin'],
-    });
-    expect(planned?.files.map(({ path }) => path)).toContain('mise.toml');
 });
 
 test('package-manager-pin gives the line to add beside a pnpm lockfile, with the mise version', async () => {

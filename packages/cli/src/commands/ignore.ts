@@ -1,11 +1,17 @@
-import { buildIgnorePaths, pathsOption, readIgnoreEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
+import {
+    buildIgnorePaths,
+    formatIgnoreSubject,
+    pathsOption,
+    readIgnoreEditContext,
+    writeSettingsEdit,
+} from '#cli/commands/edits.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
-import { canIgnoreRule, hasRuleExplanations } from '#cli/engine/results.ts';
+import { buildUnknownRuleError, canIgnoreRule, hasRuleExplanations } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { assertCheckExists, findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
@@ -20,8 +26,7 @@ import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined): string {
-    const check = options.check ?? EVERY_CHECK;
-    const target = options.rule === undefined ? check : `rule ${options.rule} of ${check}`;
+    const target = formatIgnoreSubject(options.check ?? EVERY_CHECK, options.rule);
     const suffix = paths === undefined ? '' : ` for ${formatNameList(paths)}`;
     return `Ignored ${target}${suffix}.`;
 }
@@ -45,7 +50,7 @@ async function assertDocumentedRule(
     if (!hasRuleExplanations(check, selectCheckCode(check), rule)) return;
     if (findToolName(check) === 'ruff' && RUFF_RULE_PREFIX.test(rule)) return;
     const docs = await readCheckRuleExplanation(session.root, check, rule, session);
-    if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);
+    if (docs === undefined) throw buildUnknownRuleError(rule, checkId);
 }
 
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {

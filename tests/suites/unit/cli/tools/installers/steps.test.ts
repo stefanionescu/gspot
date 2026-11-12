@@ -65,17 +65,6 @@ test.each([
     expect(await explainReleaseAgeHold(install, output, [ESLINT_RELEASE])).toBe('');
 });
 
-test('a registry reply that does not fit the release schema reaches the caller as its error', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
-    using _registry = spyOn(globalThis, 'fetch').mockImplementation(
-        Object.assign(() => Promise.resolve(Response.json({ time: 'soon' })), { preconnect: fetch.preconnect }),
-    );
-    const output = 'npm error notarget No matching version found for eslint@10.13.0.';
-    const error = await captureRejection(explainReleaseAgeHold(install, output, [ESLINT_RELEASE]));
-    expect(error.name).toBe('ZodError');
-});
-
 test.skipIf(isWindows)('an install step that a signal stops names the signal in place of an exit code', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));

@@ -1,5 +1,5 @@
 import cliPackage from '#cli-package' with { type: 'json' };
-import { GSPOT_FOLDER, NODE_MODULES, OPERATING_SYSTEMS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 export const MISE_CONFIG_FILE = 'mise.toml';
 
@@ -141,8 +141,6 @@ export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
 export const TOOL_KINDS = ['program', 'package'] as const;
 
 export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
-
-export const TOOL_BUILDS = OPERATING_SYSTEMS.map((system) => system.name);
 
 export const SHIPPED_FILES_FOLDER = 'files';
 

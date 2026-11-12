@@ -1,8 +1,11 @@
 import { relative } from 'node:path';
 
+import { InvalidArgumentError } from '@commander-js/extra-typings';
+
 import {
     ADD_REMOVE_MESSAGE,
     FIX_INSTALL_MESSAGE,
+    NAME_LIST_SEPARATOR,
     REPAIRED_FILES_MESSAGE,
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
@@ -244,8 +247,7 @@ export function selectSettingToEdit(
     key: string,
 ): { availableSettings: AvailableSettings; match: SettingMatch; scope: Scope } {
     assertSettingEditable(key, context.scopePath);
-    const { settings } = context;
-    const session = context.session;
+    const { settings, session } = context;
     const selected = selectScope(context.scopePath, session.scopes);
     const { availableSettings } = selected;
     const match = findSetting(availableSettings, key);
@@ -304,6 +306,26 @@ export async function writeSettingsEdit(
         text: `${shown}\n${formatApplyReport(report)}`,
         json: { ...report, summary: shown, changed: result.changed },
         exitCode: 0,
+    };
+}
+
+export function formatIgnoreSubject(check: string, rule: string | undefined): string {
+    return rule === undefined ? check : `rule ${rule} of ${check}`;
+}
+
+/**
+Build the parser of an option that takes names separated by commas and may repeat.
+
+@param message the error for a value that names nothing.
+*/
+export function parseListOption(message: string): (value: string, previous: string[] | undefined) => string[] {
+    return (value, previous) => {
+        const names = value
+            .split(NAME_LIST_SEPARATOR)
+            .map((name) => name.trim())
+            .filter((name) => name !== '');
+        if (names.length === 0) throw new InvalidArgumentError(message);
+        return [...(previous ?? []), ...names];
     };
 }
 

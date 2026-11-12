@@ -3,6 +3,7 @@ import { Ajv2020 } from 'ajv/dist/2020.js';
 import { expect, test } from 'bun:test';
 import type { z } from 'zod';
 
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildJsonSchema } from '#cli/settings/editor-schema.ts';
 import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/validation.ts';
 import { validateSettingsText } from '#tests/setup/cli/settings.ts';
@@ -19,6 +20,12 @@ test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $
     const errors = validateSettingsText(stringify(input));
     expect(errors.length === 0).toBe(valid);
     expect(isPublishedSettings(input)).toBe(valid);
+});
+
+test('the runtime schema accepts every example of the published schema', () => {
+    const examples = buildJsonSchema().examples ?? [];
+    expect(examples.length).toBeGreaterThan(0);
+    for (const example of examples) expect(settingsSchema.safeParse(example).error?.issues).toBeUndefined();
 });
 
 test('every accepted fixed property has an editor description, including nested tables', () => {

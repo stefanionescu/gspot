@@ -9,7 +9,6 @@ import {
     IMPORT_RULE_CATEGORY,
     IMPORT_RULE_CHECK_RULES,
     IMPORT_RULE_EXTENSIONS,
-    MISE_TASKS_GLOB,
     NODE_SHEBANG_TAG,
     PYTHON_EXTENSIONS,
     PYTHON_FROM_STATEMENT,
@@ -25,13 +24,12 @@ import { listRefusedSwiftTypes } from '#cli/configurations/general/structure/che
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
 import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
+import { listScriptFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
 import type {
     ImportOwners,
     LocatedImport,
@@ -58,7 +56,7 @@ function buildRuleLookup(rules: ImportRule[]): RuleLookup {
 }
 
 function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
-    const { settings, path: scopePath } = planned.scope;
+    const { settings } = planned.scope;
     const isExemptPath = buildPathMatcher([
         ...settings.test_files,
         ...CONFIG_PATTERNS,
@@ -66,8 +64,7 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
             ...(settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? []),
             ...(settings.tables['tools.stylelint']?.plugins ?? []),
         ].flatMap((plugin) => plugin.path ?? []),
-        ...(settings.tables.javascript?.script_files ?? []),
-        joinScope(escapeGlob(scopePath), MISE_TASKS_GLOB),
+        ...listScriptFiles(planned.scope),
     ]);
     return (file) => isExemptPath(file.path) || file.tags.includes(NODE_SHEBANG_TAG);
 }
@@ -101,7 +98,6 @@ function findRefusedOwner(lookup: RuleLookup, from: number, owners: Array<number
 
 async function validateFileImports(
     session: Session,
-
     lookup: RuleLookup,
     source: { path: string; grammar: 'python' | 'swift' },
     listImports: (root: Node) => ImportOwners[],
@@ -119,7 +115,7 @@ async function validateFileImports(
                 line: node.startPosition.row + 1,
                 column: node.startPosition.column + 1,
                 rule: IMPORT_RULE_CHECK_RULES.refusedImport,
-                message: message,
+                message,
             },
         ];
     });

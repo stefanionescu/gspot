@@ -20,7 +20,7 @@ test.each(FILELESS_COVERAGE_CASES)(
             },
             {},
         );
-        expect(parsed.findings).toStrictEqual([{ check: id, file: '', message, help: check.help, fixable: false }]);
+        expect(parsed.findings).toStrictEqual([{ check: id, file: '', message, fixable: false }]);
     },
 );
 

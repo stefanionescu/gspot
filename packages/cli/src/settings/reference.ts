@@ -5,16 +5,10 @@ import { z } from 'zod';
 import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/validation.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { findSettingSchema, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { AcceptedSettingValues, SettingReference, SettingVariant } from '#cli/types/settings.ts';
-
-function unwrapSchemaPipes(schema: z.ZodType): z.ZodType {
-    let inner = unwrapSettingSchema(schema);
-    while (inner instanceof z.ZodPipe) inner = unwrapSettingSchema(inner.in as z.ZodType);
-    return inner;
-}
 
 function buildAcceptedAlternatives(schema: z.ZodUnion): AcceptedSettingValues {
     const alternatives = schema.options.map((option) => buildAcceptedValues(option as z.ZodType));

@@ -3,8 +3,6 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { planChecks } from '#cli/engine/plan.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -28,20 +26,6 @@ test('react-versions reports react and react-dom that lock different versions, a
     for (const [path, text] of Object.entries(BUN_PROJECT_FILES))
         await writeFile(join(sandbox.path, path), text.replaceAll('19.0.0', '19.1.0'));
     expect(await runSandboxCheck(sandbox.path, 'react-dom/react-versions')).toStrictEqual([]);
-});
-
-test('a staged lockfile alone plans react-versions', async () => {
-    await using sandbox = await createGitSandbox({
-        ...BUN_PROJECT_FILES,
-        'gspot.toml': buildSandboxSettings(['react-dom']),
-    });
-    const session = await openSession(sandbox.path);
-    const [planned] = planChecks(session, {
-        stage: 'commit',
-        selection: { content: 'index', paths: ['bun.lock'] },
-        only: ['react-dom/react-versions'],
-    });
-    expect(planned?.files.map(({ path }) => path)).toContain('bun.lock');
 });
 
 test('react-versions ignores an older React installed privately by another dependency', async () => {

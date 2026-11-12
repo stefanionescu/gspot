@@ -62,8 +62,8 @@ async function checkTrivyImage(session: CheckSession, planned: PlannedCheck): Pr
                 ...report.map(({ rule, message }) => ({
                     file: path,
                     line: 1,
-                    rule: rule,
-                    message: message,
+                    rule,
+                    message,
                 })),
             );
         }

@@ -2,7 +2,6 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -132,9 +131,8 @@ test('gspot/detected-configurations says that a configuration with no check chan
 });
 
 test('detection leaves the tool projects in .gspot out, and reads your pyproject.toml', async () => {
-    await using sandbox = await createGitSandbox({});
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         [GSPOT_PATHS.pythonProject]: python,
         [GSPOT_PATHS.npmProject]: '{"dependencies":{"react":"19.1.1"}}',

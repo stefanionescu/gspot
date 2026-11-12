@@ -17,6 +17,7 @@ import {
 } from '#cli/config/configurations/swift.ts';
 import { SWIFT_SECURITY_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -37,10 +38,7 @@ const SQL_INTERPOLATION_FINDING = {
 };
 
 function listCallValues(call: Node): Node[] {
-    const argumentsNode = call.namedChildren
-        .find((node) => node.type === 'call_suffix')
-        ?.namedChildren.find((node) => node.type === 'value_arguments');
-    return (argumentsNode?.namedChildren ?? []).flatMap((node) => node.childForFieldName('value') ?? []);
+    return listSwiftCallArguments(call).flatMap((node) => node.childForFieldName('value') ?? []);
 }
 
 function getMethodCall(call: Node): { receiver: string; name: string } | undefined {

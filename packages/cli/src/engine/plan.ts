@@ -4,7 +4,7 @@ import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { findTool, findToolName, readConfigurations } from '#cli/manifests/read.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
+import { readHost } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type {
@@ -138,7 +138,7 @@ function listKeptScopeChecks(
 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const { settings, scopes } = session;
-    const host = { platform: getOperatingSystem(), arch: process.arch };
+    const host = readHost();
     const narrowedPaths = buildNarrowedPaths(options);
     const inventory = buildPlanInventory(session.repository.files, narrowedPaths, options.selection);
     const scopePaths = scopes.map(({ path }) => path);
@@ -234,7 +234,7 @@ export function stripCoverageArguments(
 ): string[] | undefined {
     if (authored.command !== undefined) return authored.command;
     const { command } = planned.check;
-    const coverageArguments = planned.check.coverage_arguments ?? [];
+    const coverageArguments = planned.check.coverage_arguments;
     if (
         command === undefined ||
         planned.configuration === undefined ||
@@ -272,7 +272,7 @@ export function listEnabledChecks(scopes: Scope[], settings: Settings): ScopeChe
     return listKeptScopeChecks(
         settings,
         scopes,
-        (scope, check) => isWanted(check, { stage: 'any' }) && findSettingsSkip(settings, scope, check) === undefined,
+        (scope, check) => findSettingsSkip(settings, scope, check) === undefined,
     ).map(({ scope, check, configuration }) => {
         const name = findToolName(check);
         const tool = name === undefined ? undefined : findCommandTool(configurations, name);

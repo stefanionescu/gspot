@@ -1,4 +1,10 @@
-import { buildUnchangedResult, pathsOption, readIgnoreEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
+import {
+    buildUnchangedResult,
+    formatIgnoreSubject,
+    pathsOption,
+    readIgnoreEditContext,
+    writeSettingsEdit,
+} from '#cli/commands/edits.ts';
 import {
     BARE_UNIGNORE_MESSAGE,
     ESCAPED_GLOB_CHARACTERS,
@@ -10,7 +16,6 @@ import { assertCheckExists } from '#cli/manifests/read.ts';
 import { removeRecordPaths } from '#cli/settings/edit.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { isTable } from '#cli/system/tables.ts';
 import { formatCount, formatNameList, quoteArgument } from '#cli/system/text.ts';
 import type {
     CommandDefinition,
@@ -24,11 +29,9 @@ import type { CommandResult } from '#cli/types/system.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const { check, rule, paths } = options;
-    const ignores: unknown[] = Array.isArray(table['ignore']) ? table['ignore'] : [];
+    const ignores = (table['ignore'] as IgnoreRecord[] | undefined) ?? [];
     const matching = new Set(
-        ignores.filter(
-            (ignore) => isTable(ignore) && ignore['check'] === check && (rule === undefined || ignore['rule'] === rule),
-        ),
+        ignores.filter((ignore) => ignore.check === check && (rule === undefined || ignore.rule === rule)),
     );
     const kept = ignores.flatMap((ignore) => {
         if (!matching.has(ignore)) return [ignore];
@@ -38,11 +41,11 @@ function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 
             paths,
             (recordPath, path) =>
                 recordPath.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1') === path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1'),
-        );
+        ) as IgnoreRecord[];
     });
-    const changed = kept.filter((ignore) => !ignores.includes(ignore)) as IgnoreRecord[];
-    const narrowed = ignores.filter((ignore) => matching.has(ignore) && !kept.includes(ignore)) as IgnoreRecord[];
-    const everyPath = [...matching].filter((ignore) => (ignore as IgnoreRecord).paths === undefined) as IgnoreRecord[];
+    const changed = kept.filter((ignore) => !ignores.includes(ignore));
+    const narrowed = ignores.filter((ignore) => matching.has(ignore) && !kept.includes(ignore));
+    const everyPath = [...matching].filter((ignore) => ignore.paths === undefined);
     return {
         kept,
         deleted: ignores.length - kept.length,
@@ -52,10 +55,6 @@ function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 
             changed.flatMap((ignore) => ignore.paths ?? []).length,
         everywhere: paths === undefined ? [] : everyPath,
     };
-}
-
-function formatIgnoreSubject(check: string, rule: string | undefined): string {
-    return rule === undefined ? check : `rule ${rule} of ${check}`;
 }
 
 function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreTarget {

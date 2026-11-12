@@ -5,28 +5,20 @@ import {
     RUN_IN_COPY_MESSAGE,
     SELECTED_YES_MESSAGE,
 } from '#cli/config/commands/reports.ts';
-import { SETTING_RULES, WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
+import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { findCommandTool } from '#cli/engine/plan.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
-import { hasRuleExplanations } from '#cli/engine/results.ts';
+import { canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
-import { findToolName, listRuleFiles, readConfigurations, readShippedChecks } from '#cli/manifests/read.ts';
+import { listRuleFiles, readConfigurations, readShippedChecks } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatArgumentSelector } from '#cli/settings/paths.ts';
+import { findRuleSetting } from '#cli/settings/validation/references.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
-import type {
-    CheckExplanation,
-    CheckFacts,
-    CheckIgnore,
-    Explanation,
-    LintRuleExplanation,
-} from '#cli/types/commands/reports.ts';
+import type { CheckExplanation, CheckIgnore, Explanation, LintRuleExplanation } from '#cli/types/commands/reports.ts';
 import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
 import type { RuleExplanation, ScopeCheck, Session } from '#cli/types/tools.ts';
 
@@ -47,40 +39,6 @@ function listCheckIgnores(session: Session | undefined, checkId: string, cwd: st
                 ]),
             ].join(' '),
         }));
-}
-
-function buildCheckFacts(
-    check: Check,
-    configuration: Configuration | undefined,
-    session: Session | undefined,
-    cwd: string,
-): CheckFacts {
-    const reference = describeCheck(
-        check,
-        readConfigurations().values().toArray(),
-        selectCheckCode(check)?.explanations,
-    );
-    const toolName = reference.toolName;
-    const installedRules = new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path));
-    const settings = (configuration === undefined ? [] : (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []))
-        .filter((setting) => toolName !== undefined && setting.name.startsWith(`tools.${toolName}.`))
-        .map((setting) => setting.name);
-    const ruleFiles =
-        configuration === undefined
-            ? []
-            : listRuleFiles(configuration)
-                  .filter((file) => installedRules.has(file.path))
-                  .map((file) => file.path);
-    const crashPattern =
-        toolName === undefined ? undefined : findCommandTool(readConfigurations().values(), toolName).crash_pattern;
-    return {
-        settings,
-        ruleFiles,
-        crashPattern,
-        ignores: listCheckIgnores(session, check.id, cwd),
-        minVersions: reference.minVersions,
-        turnOff: reference.turnOff,
-    };
 }
 
 function formatCheckIgnore(ignore: CheckIgnore): string {
@@ -137,7 +95,7 @@ function formatRuleOptions(
     identifier: string,
 ): string | undefined {
     if (tool === undefined || !hasRuleExplanations(check, selectCheckCode(check), identifier)) return undefined;
-    const owner = { ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] }[identifier];
+    const owner = findRuleSetting(tool, identifier);
     if (owner !== undefined) return `gspot set ${owner} <value>`;
     const key = `tools.${tool}.rules`;
     const setting = SETTINGS_BY_CONFIGURATION.get(configuration.name)?.find(({ name }) => name === key);
@@ -192,11 +150,7 @@ function buildRuleDocFacts(
 
 function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
     const found = readShippedChecks().get(checkId);
-    if (
-        found !== undefined &&
-        !OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output) &&
-        selectCheckCode(found.check)?.explanations === undefined
-    )
+    if (found !== undefined && !canIgnoreRule(found.check, selectCheckCode(found.check)))
         throw new GspotError(
             'arguments',
             `gspot cannot explain one lint rule of ${checkId}. Leave out the rule to explain the whole check.`,
@@ -213,13 +167,32 @@ function buildCheckOrigin(
     return { configuration: null, command: check.command ?? null, paths };
 }
 
+function listToolSettings(configuration: Configuration | undefined, toolName: string | undefined): string[] {
+    if (configuration === undefined || toolName === undefined) return [];
+    return (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? [])
+        .filter((setting) => setting.name.startsWith(`tools.${toolName}.`))
+        .map((setting) => setting.name);
+}
+
+function listInstalledRuleFiles(configuration: Configuration | undefined, session: Session | undefined): string[] {
+    if (configuration === undefined || session === undefined) return [];
+    const installedRules = new Set(selectRuleFiles(session).map((file) => file.path));
+    return listRuleFiles(configuration)
+        .filter((file) => installedRules.has(file.path))
+        .map((file) => file.path);
+}
+
 function buildCheckExplanation(
     found: Pick<ScopeCheck, 'check' | 'configuration'>,
     session: Session | undefined,
     cwd: string,
 ): CheckExplanation {
     const { check, configuration } = found;
-    const described = buildCheckFacts(check, configuration, session, cwd);
+    const { toolName, crashPattern, minVersions, turnOff } = describeCheck(
+        check,
+        readConfigurations().values().toArray(),
+        selectCheckCode(check)?.explanations,
+    );
     const selected =
         session === undefined || configuration === undefined
             ? null
@@ -233,14 +206,14 @@ function buildCheckExplanation(
         why: check.why,
         help: check.help,
         condition: check.when ?? null,
-        crashPattern: described.crashPattern ?? null,
+        crashPattern: crashPattern ?? null,
         runInCopy: check.run_in_copy ?? null,
-        minVersions: described.minVersions,
-        turnOff: { ...described.turnOff, rule: described.turnOff.rule ?? null },
-        settingNames: described.settings,
-        ruleFiles: described.ruleFiles,
+        minVersions,
+        turnOff: { ...turnOff, rule: turnOff.rule ?? null },
+        settingNames: listToolSettings(configuration, toolName),
+        ruleFiles: listInstalledRuleFiles(configuration, session),
         selected,
-        ignores: described.ignores,
+        ignores: listCheckIgnores(session, check.id, cwd),
     };
 }
 
@@ -259,21 +232,19 @@ Explain one lint rule: its page, its description from the installed tool, and ho
 options.
 
 @param options.session the repository settings and tool project, when available.
-@returns undefined when no check runs the tool, or when the tool lists its rules and this is not one. A name outside the
-rules that gspot reads gets the help of its check.
+@returns undefined when gspot ships no check with this name, or when the check lists its rules and this is not one. A
+name outside the rules that gspot reads gets the help of its check.
 @throws GspotError when gspot cannot name one lint rule of the check.
 */
 export async function explainLintRule(
     root: string,
     checkId: string,
     identifier: string,
-    { verbose, session }: { verbose?: boolean; session?: Session } = {},
+    { verbose, session }: { verbose?: boolean; session?: Session },
 ): Promise<Explanation | undefined> {
     const found = findRuleCheck(checkId);
     if (found === undefined) return undefined;
-    const tool = OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output)
-        ? findToolName(found.check)
-        : undefined;
+    const tool = findRuleTool(found.check);
     const docs = await readRuleDocs(root, found.check, identifier, session);
     if (docs === undefined) return undefined;
     const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;

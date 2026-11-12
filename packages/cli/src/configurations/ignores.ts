@@ -47,3 +47,14 @@ export function convertToGlobs(sections: IgnoreSection[]): string[] {
     ]);
     return [...new Set(patterns.map((pattern) => convertToGlob(pattern)))];
 }
+
+/**
+Write the title of an ignore section as comment lines, one for each line of the title.
+*/
+export function commentSectionTitle(title: string, indent: string): string[] {
+    return title
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .split('\n')
+        .map((line) => `${indent}# ${line}`);
+}

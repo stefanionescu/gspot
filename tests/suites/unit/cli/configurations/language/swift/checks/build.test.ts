@@ -3,7 +3,7 @@ import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir } from 'testdirs';
 
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { runChecks } from '#cli/engine/run.ts';
@@ -117,13 +117,12 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
 test('compiler: a Swift build whose source file is missing names the file and runs no compiler', async () => {
     using resources = new DisposableStack();
 
-    await using sandbox = await createGitSandbox({});
-    await using _cache = await redirectCacheFolder();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'Package.swift': SWIFT_PACKAGE,
         'gspot.toml': buildSandboxSettings(['swift']),
         'Main.swift': SWIFT_VALUE_SOURCE,
     });
+    await using _cache = await redirectCacheFolder();
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'swift/build');
     await rm(join(sandbox.path, 'Main.swift'));

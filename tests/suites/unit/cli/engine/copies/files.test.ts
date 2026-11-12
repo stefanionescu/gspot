@@ -19,9 +19,7 @@ import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a copy isolates workspace sources and links external dependencies and executable tools', async () => {
-    await using sandbox = await createGitSandbox({});
-    await using external = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"workspaces":["packages/*"]}',
         'packages/core/package.json': '{"name":"core"}',
@@ -29,6 +27,7 @@ test('a copy isolates workspace sources and links external dependencies and exec
         'node_modules/tool/package.json': '{"name":"tool"}',
         'node_modules/tool/lib/value.txt': 'tool works',
     });
+    await using external = await testdir();
     const [, program = ''] = buildProgramCommand('fakes/package-bin');
     await cp(program, join(sandbox.path, 'node_modules/tool/bin/tool.js'));
     await createFileTree(external.path, { 'value.js': 'external original' });

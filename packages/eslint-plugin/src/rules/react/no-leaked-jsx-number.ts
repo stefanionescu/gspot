@@ -1,6 +1,7 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
 import { LEAKING_TYPES, NATIVE_LEAKING_TYPES } from '../../config/react.ts';
+import { getTypes } from '../../language/checker.ts';
 import { listImportedModules } from '../../libraries/packages.ts';
 import { createRule } from '../../rule.ts';
 
@@ -36,9 +37,8 @@ export const noLeakedJsxNumber = createRule<[], 'leaked' | 'convert'>({
         },
     },
     create(context) {
-        if (!context.sourceCode.parserServices?.program) return {};
-        const services = ESLintUtils.getParserServices(context);
-        const checker = services.program.getTypeChecker();
+        const types = getTypes(context);
+        if (types === undefined) return {};
         const leaking = listImportedModules(context.sourceCode).has('react-native')
             ? NATIVE_LEAKING_TYPES
             : LEAKING_TYPES;
@@ -46,8 +46,8 @@ export const noLeakedJsxNumber = createRule<[], 'leaked' | 'convert'>({
             'JSXExpressionContainer > LogicalExpression[operator="&&"]'(node: TSESTree.LogicalExpression) {
                 const operands = listOperands(node.left);
                 const leaked = operands.filter((operand) => {
-                    const type = checker.getBaseTypeOfLiteralType(services.getTypeAtLocation(operand));
-                    return leaking.has(checker.typeToString(type));
+                    const type = types.checker.getBaseTypeOfLiteralType(types.get(operand));
+                    return leaking.has(types.checker.typeToString(type));
                 });
                 for (const operand of leaked)
                     context.report({

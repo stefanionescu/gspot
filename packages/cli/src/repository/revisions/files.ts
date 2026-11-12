@@ -13,7 +13,6 @@ import {
     TRAILING_NEWLINE,
     UNREADABLE_HISTORY_MESSAGE,
 } from '#cli/config/repository/git.ts';
-import { readGitListing } from '#cli/repository/files/tracked.ts';
 import { parseGitBlobs, parseListingLine, parseTreeFiles, stripIndexStages } from '#cli/repository/git/output.ts';
 import { readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
@@ -30,19 +29,6 @@ const GIT_LINE_ENDINGS_ARGUMENTS = ['ls-files', '--eol', '-z'] as const;
 
 const CRLF_INDEX_LINE = /^i\/(?:crlf|mixed)\s/u;
 
-async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
-    const blobs = new Map<string, Buffer>();
-    await visitGitBlobs(
-        root,
-        requested,
-        async (stream) => {
-            for await (const [hash, bytes] of stream) blobs.set(hash, bytes);
-        },
-        cancelSignal,
-    );
-    return requested.map((hash) => getRequired(blobs, hash, 'blob'));
-}
-
 export async function listRevisionFiles(
     root: string,
     source: Revision,
@@ -50,13 +36,8 @@ export async function listRevisionFiles(
     unreadablePaths: string[] = [],
 ): Promise<GitFile[]> {
     if (source.kind === 'index') {
-        const listed = await readGitListing(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal, unreadablePaths);
-        return stripIndexStages(
-            listed
-                .split('\0')
-                .filter(Boolean)
-                .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
-        );
+        const listed = await readGitPaths(root, GIT_INDEX_FILES_ARGUMENTS, { cancelSignal }, unreadablePaths);
+        return stripIndexStages(listed.map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)));
     }
     const read = await runGitBytes(root, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
@@ -65,29 +46,6 @@ export async function listRevisionFiles(
             `Git could not read the entries of this revision: ${read.stderr.trim()}. Resolve Git errors before checking again.`,
         );
     return parseTreeFiles(read.stdout, unreadablePaths);
-}
-
-async function visitGitBlobs(
-    root: string,
-    requested: string[],
-    visit: (blobs: AsyncIterable<readonly [string, Buffer]>) => Promise<void>,
-    cancelSignal?: AbortSignal,
-): Promise<void> {
-    const blobs = [...new Set(requested)];
-    if (blobs.length === 0) return;
-    const result = await runGit(
-        root,
-        GIT_BLOBS_ARGUMENTS,
-        {
-            stdin: blobs.join('\n') + '\n',
-            cancelSignal,
-        },
-        async (chunks) => {
-            await visit(parseGitBlobs(chunks, blobs));
-        },
-    );
-    if (result.code !== 0)
-        throw new GspotError('git', `Git could not read the objects of this revision: ${result.stderr.trim()}`);
 }
 
 /**
@@ -114,12 +72,20 @@ export async function readCommittedTexts(
     const files = committed.filter(
         (file) => selected.has(file.path) && file.mode !== SYMLINK_MODE && file.mode !== GITLINK_MODE,
     );
-    const blobs = await readBlobs(
+    if (files.length === 0) return new Map();
+    const hashes = [...new Set(files.map((file) => file.hash))];
+    const blobs = new Map<string, Buffer>();
+    const result = await runGit(
         root,
-        files.map((file) => file.hash),
-        cancelSignal,
+        GIT_BLOBS_ARGUMENTS,
+        { stdin: hashes.join('\n') + '\n', cancelSignal },
+        async (chunks) => {
+            for await (const [hash, bytes] of parseGitBlobs(chunks, hashes)) blobs.set(hash, bytes);
+        },
     );
-    return new Map(files.map((file, index) => [file.path, (blobs[index] as Buffer).toString('utf8')]));
+    if (result.code !== 0)
+        throw new GspotError('git', `Git could not read the objects of this revision: ${result.stderr.trim()}`);
+    return new Map(files.map((file) => [file.path, getRequired(blobs, file.hash, 'blob').toString('utf8')]));
 }
 
 /**

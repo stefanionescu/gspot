@@ -2,7 +2,6 @@ import { writeFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -61,7 +60,6 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
 
 test('hook scripts under .husky do not count; other files beside them still do', async () => {
     const folder = '.husky';
-    await using sandbox = await createGitSandbox({});
     const hooks = Object.fromEntries(
         [folder, `${folder}/nested`, `app/${folder}`, `app/${folder}/nested`].flatMap((path) =>
             ['hook-first.ts', 'hook-second.ts'].map((name) => [
@@ -70,7 +68,7 @@ test('hook scripts under .husky do not count; other files beside them still do',
             ]),
         ),
     );
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['typescript'] }],
@@ -103,14 +101,13 @@ test('hook scripts under .husky do not count; other files beside them still do',
 });
 
 test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown kinds still do', async () => {
-    await using sandbox = await createGitSandbox({});
     const sourceFiles: Record<string, string> = {};
     for (const scope of ['', 'app', 'app/deep', 'sibling']) {
         for (const kind of ['controller', 'service']) {
             for (const suffix of ['ts', 'spec.ts']) sourceFiles[posix.join(scope, `feature.${kind}.${suffix}`)] = '';
         }
     }
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         ...sourceFiles,
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',

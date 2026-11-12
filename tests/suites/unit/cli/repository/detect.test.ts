@@ -5,12 +5,12 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { detectConditions, detectConfigurations } from '#cli/repository/detect.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/detect.ts';
+import { TRACKED_SOURCE } from '#tests/config/repository/files.ts';
 import { buildConfiguration, listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -123,16 +123,7 @@ async function detectSandboxConfigurations(root: string): Promise<string[]> {
 test('detection proposes a language from an extension and the always-selected configurations', () => {
     const plans = detectConfigurations({
         root: process.cwd(),
-        files: [
-            {
-                path: 'a.sh',
-                kind: 'source' as const,
-                kindOrigin: SOURCE_KIND.origin,
-                tags: ['text'],
-                executable: false,
-                size: 1,
-            },
-        ],
+        files: [{ path: 'a.sh', ...TRACKED_SOURCE }],
         dependencyFiles: [],
     });
     const names = new Set(plans.map(({ configuration }) => configuration.name));
@@ -280,13 +271,6 @@ test('a package.json with only gspot, its tools, and a hook manager selects no j
     const devDependencies = Object.fromEntries(names.map((name) => [name, '0.0.0-test']));
     await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify({ devDependencies }) });
     expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('javascript');
-});
-
-test('a .vue file proposes vue and css', async () => {
-    await using sandbox = await createGitSandbox({ 'src/Greeting.vue': '<template><p>Hello</p></template>\n' });
-    const proposed = await detectSandboxConfigurations(sandbox.path);
-    expect(proposed).toContain('vue');
-    expect(proposed).toContain('css');
 });
 
 test('site is detected from a sitemap.xml in any folder', async () => {

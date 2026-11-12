@@ -26,13 +26,14 @@ import {
     UV_STALE_LOCKFILE,
     UV_TOOL,
 } from '#cli/config/tools/installers.ts';
+import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import { uvProjectSettingsSchema, uvSettingsSchema } from '#cli/schemas/tools.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { GspotError, tryParseFile } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
@@ -105,14 +106,8 @@ function parseExactRequirements(lockedPackage: UvLockfile['package'][number]): s
 }
 
 function parsePythonToolLockfile(lockfile: string, minimumReleaseAge?: number): UvLockfile | undefined {
-    let parsed;
-    try {
-        parsed = parseTomlFile(GSPOT_PATHS.uvLockfile, lockfile, uvLockfileSchema);
-    } catch (error) {
-        if (!(error instanceof GspotError) || error.code !== 'parse') throw error;
-        return undefined;
-    }
-    if (parsed.version !== 1) return undefined;
+    const parsed = tryParseFile(() => parseTomlFile(GSPOT_PATHS.uvLockfile, lockfile, uvLockfileSchema));
+    if (parsed?.version !== 1) return undefined;
     return minimumReleaseAge === undefined ||
         parsed.options?.['exclude-newer-span'] === `P${String(minimumReleaseAge)}D`
         ? parsed
@@ -220,7 +215,7 @@ export function listLockedPythonProjects(session: Pick<ToolInstall['session'], '
 export async function installPythonProjects(install: ToolInstall, executable: string): Promise<string[]> {
     const { root } = install.session;
     const lines = listLockedPythonProjects(install.session).map((folder) => {
-        const place = folder === '' ? 'the repository root' : folder;
+        const place = folder === '' ? ROOT_FOLDER_NAME : folder;
         return { folder, place };
     });
     for (const { folder, place } of lines) {

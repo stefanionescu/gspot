@@ -151,7 +151,7 @@ export async function readTreeStatus(root: string, cancelSignal?: AbortSignal): 
     return {
         staged: listPaths(0).toSorted((a, b) => compareText(a, b)),
         unstaged: listPaths(1),
-        untracked: { paths: untracked.split('\0').filter((path) => path !== ''), unreadablePaths },
+        untracked: { paths: untracked, unreadablePaths },
         hasStagedChanges: tracked.some((record) => record[0] !== UNCHANGED_STATUS),
     };
 }

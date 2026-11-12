@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { MEMOIZE_FUNCTIONS } from '../../config/libraries.ts';
+import { UNDEFINED_NAME } from '../../config/plugin.ts';
 import { getLocalFunction } from '../../language/functions.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
@@ -10,7 +11,7 @@ function isMissingKey(keyFunction: TSESTree.CallExpressionArgument | undefined):
     if (keyFunction === undefined) return true;
     const isVoid = keyFunction.type === AST_NODE_TYPES.UnaryExpression && keyFunction.operator === 'void';
     const isEmpty =
-        (keyFunction.type === AST_NODE_TYPES.Identifier && keyFunction.name === 'undefined') ||
+        (keyFunction.type === AST_NODE_TYPES.Identifier && keyFunction.name === UNDEFINED_NAME) ||
         (keyFunction.type === AST_NODE_TYPES.Literal && keyFunction.value === null);
     return isVoid || isEmpty;
 }

@@ -11,7 +11,6 @@ import {
     NUMERIC_MINIMUM_MESSAGE,
     RULE_PLACEHOLDER,
     SHIPPED_CHECKSUM_PATTERN,
-    TOOL_BUILDS,
     TOOL_KINDS,
     VALID_UNICODE_MESSAGE,
 } from '#cli/config/manifests.ts';
@@ -132,7 +131,7 @@ const toolSchema = z
         interpreter_flag: z.string().min(1).optional(),
         install_help: z.string().min(1).optional(),
         system: z.boolean().optional(),
-        builds: z.enum(TOOL_BUILDS).array().min(1).optional(),
+        builds: operatingSystemSchema.array().min(1).optional(),
         version_command: commandSchema.optional(),
         version_pattern: z.string().optional(),
         crash_pattern: regexSchema.optional(),

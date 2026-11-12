@@ -86,13 +86,6 @@ test('svelte-check errors and warnings become findings at one-based positions wi
     );
 });
 
-test('file-name separators follow the platform', async () => {
-    const findings = await runSvelteCheck(
-        SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`),
-    );
-    expect(findings[0]?.file).toBe(process.platform === 'win32' ? 'src/Count.svelte' : String.raw`src\Count.svelte`);
-});
-
 test('a svelte-check failure line is an error, not a clean result', async () => {
     const error = await captureRejection(
         runSvelteCheck('1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"'),

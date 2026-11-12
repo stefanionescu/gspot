@@ -197,8 +197,7 @@ export function listSwallowedLines(syntaxRoot: Node, traps: TrapScript[]): numbe
 
 export function findSourceLine(node: Node, sourceRows?: TrapScript['sourceRows']): number {
     if (sourceRows === undefined) return node.startPosition.row + 1;
-    const source = sourceRows.findLast((row) => row.offset <= node.startIndex);
-    return source?.line ?? node.startPosition.row + 1;
+    return Math.max(...sourceRows.filter((row) => row.offset <= node.startIndex).map((row) => row.line));
 }
 
 export function listScriptForms(syntaxRoot: Node): ScriptSyntax['forms'] {

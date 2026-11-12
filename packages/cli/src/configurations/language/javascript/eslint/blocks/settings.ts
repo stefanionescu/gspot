@@ -12,13 +12,13 @@ import {
     TRIVIAL_FUNCTIONS_RULE,
     TYPED_LANGUAGES,
 } from '#cli/config/configurations/eslint/blocks.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import {
     buildExtensionGlob,
     buildNodePatterns,
     buildScopeFiles,
     buildScopeOverrideBlocks,
+    listJavascriptScopes,
     splitGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
@@ -199,7 +199,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
     );
     const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scopePath, table }) => {
         const owner = scopesByPath.get(scopePath);
-        const options = table.tools?.['eslint'];
+        const options = table.tools?.eslint;
         return owner === undefined || options === undefined ? [] : { scope: owner, settings: options };
     });
     const scopeOptions = scopeSettings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
@@ -220,7 +220,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
                 : {
                       scopePath: scope.path,
                       ...splitGlobs(paths.map((path) => joinScopeSelector(path, scope.path))),
-                      rules: rules,
+                      rules,
                   },
         ),
     );
@@ -230,10 +230,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
 export function buildRestrictedImportBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
 ): EslintBlockFields[] {
-    const scopes = planned.session.scopes.filter(({ settings }) =>
-        settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
-    );
-    return buildScopeOverrideBlocks(scopes, {
+    return buildScopeOverrideBlocks(listJavascriptScopes(planned.session.scopes), {
         read: ({ settings }) => getTable(settings, 'javascript').banned_imports,
         build: ({ scope, parent, value, ignores }) =>
             parent === undefined && value.length === 0

@@ -1,9 +1,7 @@
-import { InvalidArgumentError } from '@commander-js/extra-typings';
-
+import { parseListOption } from '#cli/commands/edits.ts';
 import { formatDetection } from '#cli/commands/init/report.ts';
 import { readTemplate } from '#cli/commands/init/template.ts';
 import {
-    CONFIGURATION_LIST_SEPARATOR,
     CONFIGURATIONS_OPTION,
     FROM_CONFLICT_MESSAGE,
     FROM_OPTION,
@@ -72,15 +70,6 @@ async function runInitCommand(
     );
 }
 
-function parseConfigurationNames(value: string, previous: InitFlags['configurations']): string[] {
-    const names = value
-        .split(CONFIGURATION_LIST_SEPARATOR)
-        .map((name) => name.trim())
-        .filter((name) => name !== '');
-    if (names.length === 0) throw new InvalidArgumentError('Name at least one configuration.');
-    return [...(previous ?? []), ...names];
-}
-
 function assertTemplateFlags(from: string | undefined, configurations: InitFlags['configurations']): void {
     if (from === undefined || configurations === undefined) return;
     throw new GspotError('arguments', FROM_CONFLICT_MESSAGE);
@@ -90,12 +79,12 @@ export const INIT_COMMAND: CommandDefinition<[], InitFlags> = {
     name: 'init',
     options: [
         { flags: FROM_OPTION },
-        { flags: CONFIGURATIONS_OPTION, parse: parseConfigurationNames },
+        { flags: CONFIGURATIONS_OPTION, parse: parseListOption('Name at least one configuration.') },
         { flags: LEVEL_OPTION, choices: LEVELS },
     ],
     run: async ({ flags: { from, configurations, level }, root, cwd }) => {
         assertTemplateFlags(from, configurations);
         const template = from === undefined ? undefined : readTemplate(from, cwd);
-        return await runInitCommand(root, { cwd, level, template, configurations });
+        return await runInitCommand(root, { level, template, configurations });
     },
 };

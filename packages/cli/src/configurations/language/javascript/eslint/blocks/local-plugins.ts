@@ -1,8 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/files.ts';
+import {
+    buildScopeOverrideBlocks,
+    listJavascriptScopes,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -11,18 +13,15 @@ import type { EslintBlockFields, EslintPlugins } from '#cli/types/configurations
 import type { Scope } from '#cli/types/settings.ts';
 
 function listPluginRecords(scopes: Scope[]) {
-    return buildScopeOverrideBlocks(
-        scopes.filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION)),
-        {
-            read: ({ settings }) => getTable(settings, ESLINT_SETTINGS_TABLE).plugins,
-            build: ({ scope, parent, value }) => {
-                const inherited = parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
-                return value
-                    .filter((plugin) => inherited.every((record) => !isDeepStrictEqual(record, plugin)))
-                    .map((plugin) => ({ ...plugin, scopePath: scope.path }));
-            },
+    return buildScopeOverrideBlocks(listJavascriptScopes(scopes), {
+        read: ({ settings }) => getTable(settings, ESLINT_SETTINGS_TABLE).plugins,
+        build: ({ scope, parent, value }) => {
+            const inherited = parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
+            return value
+                .filter((plugin) => inherited.every((record) => !isDeepStrictEqual(record, plugin)))
+                .map((plugin) => ({ ...plugin, scopePath: scope.path }));
         },
-    );
+    });
 }
 
 export function listLocalPlugins(
@@ -31,7 +30,8 @@ export function listLocalPlugins(
     shipped: ReadonlySet<string | undefined>,
 ): EslintPlugins {
     const sources = new Map<string, string>();
-    for (const plugin of listPluginRecords(scopes)) {
+    const plugins = listPluginRecords(scopes);
+    for (const plugin of plugins) {
         const source: string = plugin.package ?? (plugin.path as string);
         const previous = sources.get(plugin.name);
         if (previous !== undefined && previous !== source)
@@ -41,7 +41,7 @@ export function listLocalPlugins(
             );
         sources.set(plugin.name, source);
     }
-    const packages = new Set(listPluginRecords(scopes).map((plugin) => plugin.package));
+    const packages = new Set(plugins.map((plugin) => plugin.package));
     return Object.fromEntries(
         [...sources].map(([name, source], index) => {
             if (shipped.has(name))

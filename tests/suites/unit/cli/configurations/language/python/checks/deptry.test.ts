@@ -1,19 +1,18 @@
 import { join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import * as processes from '#cli/system/processes.ts';
 import { DEPTRY_SCOPE_PATHS } from '#tests/config/configurations/python.ts';
+import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildPythonToolFiles, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
@@ -30,9 +29,8 @@ test('deptry skips a scope without pyproject.toml', async () => {
 });
 
 test('deptry excludes nested scopes and keeps your own exclude patterns', async () => {
-    await using sandbox = await createGitSandbox({});
     const scopes = Object.keys(DEPTRY_SCOPE_PATHS) as Array<keyof typeof DEPTRY_SCOPE_PATHS>;
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             scopes: [{ path: 'app' }, { path: 'app/nested' }, { path: 'other' }],
@@ -64,8 +62,8 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
 });
 
 async function runFakeDeptry(root: string) {
-    const session = await openSession(root);
-    using resources = fakeToolExecutables(['uv', 'deptry'].map((name) => getTool(readConfigurations().values(), name)));
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(root, ['uv', 'deptry'], resources);
     const spawn = resources.use(spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })));
     const checked = await runChecks(session, buildRunOptions({ only: ['python/deptry'] }));
     expect(checked.report.failed).toStrictEqual([]);

@@ -13,6 +13,7 @@ import {
     FAILED_STATUSES,
     FIX_FLAG,
     PROGRESS_INTERVAL_MILLISECONDS,
+    RAN_STATUSES,
 } from '#cli/config/engine.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { listConflictedPaths, runFixers } from '#cli/engine/fixes.ts';
@@ -136,7 +137,7 @@ function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
                 return isOtherFinding || (record.paths !== undefined && !buildPathMatcher(record.paths)(finding.file));
             }),
     );
-    if (result.status !== 'passed' && result.status !== 'failed') return { ...result, findings: kept };
+    if (!RAN_STATUSES.has(result.status)) return { ...result, findings: kept };
     return { ...result, findings: kept, status: kept.length > 0 ? 'failed' : 'passed' };
 }
 
@@ -152,10 +153,11 @@ function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
 
 function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCommand'> {
     const { options, session } = run;
+    if (options.fix) return {};
     const fixable = [...new Set(result.findings.filter((finding) => finding.fixable).map(({ file }) => file))];
     const conflicted = new Set(listConflictedPaths(session.root, fixable));
     const files = new Set(fixable.filter((file) => !conflicted.has(file)));
-    if (options.fix || files.size === 0) return {};
+    if (files.size === 0) return {};
     const command = [CHECK_COMMAND, FIX_FLAG, '--only', quoteArgument(result.check)];
     const isEveryFileChecked = options.paths === undefined && options.selection?.paths === undefined;
     if (isEveryFileChecked && result.findings.every(({ file }) => files.has(file)))
@@ -267,7 +269,6 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
         codes,
         progress: { finished: 0, total: active.length, unfinished: new Set(active) },
     };
-    const setup = Date.now() - started.getTime();
     const results = await runEveryActiveCheck(run, active);
     const report = buildRunReport({
         session: checked,
@@ -279,7 +280,7 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
         results,
         fixes,
     });
-    return fixes ? { report, planned, setup, fixes } : { report, planned, setup };
+    return fixes ? { report, fixes } : { report };
 }
 
 export function buildCheckSession(

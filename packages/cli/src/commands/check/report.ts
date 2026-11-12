@@ -17,12 +17,12 @@ import {
     UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/reports.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
-import { LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { formatCheckedContent } from '#cli/engine/report.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { print, printWarning } from '#cli/system/terminal.ts';
-import { formatCount, formatScope, quoteArgument } from '#cli/system/text.ts';
+import { formatCount, formatScopePrefix, formatSeconds, quoteArgument } from '#cli/system/text.ts';
 import type { CheckCommandJson } from '#cli/types/commands/reports.ts';
 import type { CheckResult, CheckStatus, Finding, FixReport, RunReport } from '#cli/types/engine/run.ts';
 
@@ -100,7 +100,7 @@ function formatCheckTail(result: CheckResult): string {
     if (NOTE_STATUSES.has(result.status)) return result.note ?? '';
     return result.status === 'failed'
         ? formatCount(result.findings.length, 'finding')
-        : `${formatCount(result.fileCount, 'file')}  ${(result.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
+        : `${formatCount(result.fileCount, 'file')}  ${formatSeconds(result.duration)}`;
 }
 
 function formatFindings(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
@@ -122,8 +122,7 @@ function formatReportLine(result: CheckResult, tail: string): string {
         result.status === 'skipped' && result.cause !== undefined ? `skipped (${result.cause})` : result.status;
     const status = label.padEnd(STATUS_LABEL_WIDTH);
     const shown = styleText(CHECK_STATUS_COLORS[result.status], status, { stream: process.stdout });
-    const scope = result.scope === '' ? '' : `${formatScope(result.scope)}  `;
-    return `${shown}  ${scope}${result.check}  ${tail}`.trimEnd();
+    return `${shown}  ${formatScopePrefix(result.scope)}${result.check}  ${tail}`.trimEnd();
 }
 
 function formatVerboseLines({ command, stack }: CheckResult): string[] {
@@ -246,9 +245,8 @@ export function formatRunReport(
     {
         verbose,
         canceled = false,
-        setup,
         startCommand,
-    }: { verbose: boolean; canceled?: boolean; setup?: number; startCommand?: string | undefined },
+    }: { verbose: boolean; canceled?: boolean; startCommand?: string | undefined },
 ): string {
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
@@ -266,10 +264,7 @@ export function formatRunReport(
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report),
-        ...(verbose && setup !== undefined
-            ? [`Setup: ${(setup / MILLISECONDS_PER_SECOND).toFixed(1)}s before the first check.`]
-            : []),
-        `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. ${ending}`,
+        `Time: ${formatSeconds(report.duration)}. ${ending}`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
 }

@@ -78,7 +78,7 @@ export type RunOptions = PlanOptions & {
 
 export type RunReport = z.infer<typeof runReportSchema>;
 
-export type RunResult = { report: RunReport; planned: PlannedCheck[]; setup: number; fixes?: FixReport };
+export type RunResult = { report: RunReport; fixes?: FixReport };
 
 export type CheckStatus = (typeof CHECK_STATUSES)[number];
 
@@ -89,7 +89,7 @@ export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun
 type CheckRun = (
     session: CheckSession,
     planned: ShippedPlannedCheck,
-    options?: CheckRunOptions,
+    options: CheckRunOptions,
 ) => CheckResult | Promise<CheckResult>;
 
 export type CheckRunOptions = {

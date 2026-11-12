@@ -29,14 +29,15 @@ import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { MISE_TASK_FOLDERS, TRAILING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
-import { parseMiseTasks } from '#cli/configurations/general/docs/mise.ts';
 import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
+import { miseTasksSchema } from '#cli/schemas/configurations.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { escapeGlob, includeParentFolders, listEnclosingFolders, listExecutableNames } from '#cli/system/paths.ts';
@@ -127,7 +128,7 @@ function validateProseLine(file: string, prose: ProseLine, index: PathIndex): Ch
 function listPackageBinaries(session: Session, folders: string[]): string[] {
     return folders.flatMap((folder) => {
         const manifest = readPackageJson(session.cache, posix.join(folder, PACKAGE_JSON));
-        const bin = manifest?.['bin'];
+        const bin = manifest?.bin;
         if (typeof bin === 'string') {
             const name = manifest?.name?.split('/').at(-1);
             return name === undefined ? [] : [name];
@@ -164,7 +165,12 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
         mise: new Set([
             ...files.flatMap((file) => {
                 const text = findText(session.cache, file);
-                return text === undefined ? [] : parseMiseTasks(text, file);
+                if (text === undefined) return [];
+                const { tasks } = parseTomlFile(file, text, miseTasksSchema);
+                return Object.entries(tasks).flatMap(([name, task]) => {
+                    const alias = isTable(task) ? task.alias : undefined;
+                    return [name, ...[alias ?? []].flat()];
+                });
             }),
             ...ancestors.flatMap(({ path }) =>
                 MISE_TASK_FOLDERS.flatMap((taskFolder) => {

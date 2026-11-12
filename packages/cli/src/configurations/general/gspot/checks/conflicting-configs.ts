@@ -2,7 +2,7 @@ import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
 import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { listToolNames, readConfigurations } from '#cli/manifests/read.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { findLine, listLintCommands } from '#cli/repository/lint-commands.ts';
@@ -12,9 +12,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck): CheckFinding[] {
-    const tools = new Set(
-        session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
-    );
+    const tools = listToolNames(session.toolConfigurations);
     const generated = listGeneratedPaths(session.repository.files);
     const conflicts = listConflictingConfigs(session.root, session.repository.files, readConfigurations().values())
         .filter(({ tool, path, pointer }) => tools.has(tool) && !generated.has(path) && pointer !== true)

@@ -217,7 +217,7 @@ export const CHECK_CODE = joinTables<CheckCode>([
     YAML_CHECKS,
 ]);
 
-export const CONFIG_BUILDERS = joinTables<ConfigBuilder>([
+const CONFIG_BUILDERS = joinTables<ConfigBuilder>([
     ANSIBLE_CONFIG_BUILDERS,
     BASH_CONFIG_BUILDERS,
     BIOME_CONFIG_BUILDERS,

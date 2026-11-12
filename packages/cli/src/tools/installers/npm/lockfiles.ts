@@ -16,7 +16,7 @@ import {
     npmToolPackageSchema,
     pnpmToolPackageSchema,
 } from '#cli/schemas/tools.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { tryParseFile } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { Dependencies } from '#cli/types/parsers.ts';
 import type { ToolPackageManagerName } from '#cli/types/repository.ts';
@@ -161,7 +161,7 @@ export function isLockfileFresh(
     dependencies: Dependencies,
     environment?: Record<string, string>,
 ): boolean {
-    try {
+    const isFresh = tryParseFile(() => {
         const document = parseToolLockfile(packageManager, lockfile);
         if (!isDeepStrictEqual(parseRootDependencies(packageManager, document), dependencies)) return false;
         const validatePackages = {
@@ -173,10 +173,8 @@ export function isLockfileFresh(
             (environment === undefined || validatePackages[packageManager](document, environment)) &&
             Object.entries(dependencies).every((pin) => isPinLocked(packageManager, document, pin))
         );
-    } catch (error) {
-        if (error instanceof GspotError && error.code === 'parse') return false;
-        throw error;
-    }
+    });
+    return isFresh === true;
 }
 
 export function selectLockfileName(packageManager: ToolPackageManagerName): ToolProjectLockfileName {

@@ -39,6 +39,12 @@ export const SUPPRESSION_REASON_CASES = [
         ],
     },
     {
+        name: 'a TypeScript suppression in a string is not a comment',
+        path: 'source.ts',
+        source: 'export const example = "// @ts-ignore";\n',
+        findings: [],
+    },
+    {
         name: 'a refused inline reason takes precedence over the preceding reason',
         path: 'source.ts',
         source: '// reason: The external interface requires this call.\n// eslint-disable-next-line no-console -- N/A\nconsole.log(1);\n',
@@ -54,7 +60,6 @@ export const SUPPRESSION_REASON_CASES = [
 export const SUPPRESSION_REASONS = [
     {
         configuration: 'sql',
-        tool: 'sqlfluff',
         file: 'query.sql',
         bare: '-- noqa: LT01',
         explained: '-- noqa: LT01 -- The query keeps the vendor spacing.',
@@ -62,7 +67,6 @@ export const SUPPRESSION_REASONS = [
     },
     {
         configuration: 'css',
-        tool: 'stylelint',
         file: 'source.css',
         bare: '/* stylelint-disable */',
         explained: '/* stylelint-disable -- The vendor sheet keeps its names. */',
@@ -70,7 +74,6 @@ export const SUPPRESSION_REASONS = [
     },
     {
         configuration: 'html',
-        tool: 'html-validate',
         file: 'page.html',
         bare: '<!-- html-validate-disable -->',
         explained: '<!-- [html-validate-disable-next void-style: The embed owns its markup.] -->',
@@ -78,20 +81,68 @@ export const SUPPRESSION_REASONS = [
     },
     {
         configuration: 'markdown',
-        tool: 'markdownlint-cli2',
         file: 'guide.md',
         bare: '<!-- markdownlint-disable -->',
         explained: '<!-- markdownlint-disable -- The table is generated. -->',
         rule: 'markdownlint-cli2-no-reason',
     },
+    {
+        configuration: 'swift',
+        file: 'Value.swift',
+        bare: '// swiftformat:disable blockComments',
+        explained: '// swiftformat:disable blockComments - The external declaration retains its layout.',
+        rule: 'swiftformat-no-reason',
+    },
+    {
+        configuration: 'swift',
+        file: 'Value.swift',
+        bare: '// periphery:ignore',
+        explained: '// periphery:ignore - The external declaration retains its layout.',
+        rule: 'periphery-no-reason',
+    },
+    {
+        configuration: 'typescript',
+        file: 'source.ts',
+        bare: '// @ts-ignore',
+        explained: '// @ts-ignore: A separate sandbox checks the external declaration.',
+        rule: 'tsc-no-reason',
+    },
+    {
+        configuration: 'typescript',
+        file: 'source.ts',
+        bare: '// @ts-expect-error',
+        explained: '// @ts-expect-error: A separate sandbox checks the external declaration.',
+        rule: 'tsc-no-reason',
+    },
+    {
+        configuration: 'typescript',
+        file: 'source.ts',
+        bare: '// @ts-nocheck',
+        explained: '// @ts-nocheck: A separate sandbox checks the external declaration.',
+        rule: 'tsc-no-reason',
+    },
+    {
+        configuration: 'vitest',
+        file: 'source.js',
+        bare: '/* v8 ignore next */',
+        explained: '/* v8 ignore next -- reason: only a full disk reaches this branch */',
+        rule: 'vitest-no-reason',
+    },
+    {
+        configuration: 'jest',
+        file: 'source.js',
+        bare: '/* istanbul ignore next */',
+        explained: '/* istanbul ignore next: only a full disk reaches this branch */',
+        rule: 'jest-no-reason',
+    },
+    {
+        configuration: 'svelte',
+        file: 'Form.svelte',
+        bare: '<!-- svelte-ignore a11y_autofocus -->',
+        explained: '<!-- svelte-ignore a11y_autofocus - reason: the dialog opens with the search field in focus -->',
+        rule: 'svelte-check-no-reason',
+    },
 ] as const;
-
-export const SWIFT_REASON_CASES = [
-    { tool: 'swiftformat', directive: 'swiftformat:disable blockComments', rule: 'swiftformat-no-reason' },
-    { tool: 'periphery', directive: 'periphery:ignore', rule: 'periphery-no-reason' },
-] as const;
-
-export const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;
 
 const ESLINT_SUPPRESSIONS = [
     ['// Example eslint-disable-next-line no-console', false],

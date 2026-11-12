@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 
-import { CATEGORY_LABELS, NAME_QUOTE } from '#cli/config/configurations/naming.ts';
+import { NAME_QUOTE } from '#cli/config/configurations/naming.ts';
 import type { FileIdentifiers, NamedCategory } from '#cli/types/configurations/general.ts';
 
 export function addIdentifier(
@@ -13,7 +13,6 @@ export function addIdentifier(
     found.identifiers.push({
         file: found.file,
         language: found.language,
-        label: `${found.language} ${CATEGORY_LABELS[category]}`,
         line: node.startPosition.row + 1,
         column: node.startPosition.column + 1,
         category,

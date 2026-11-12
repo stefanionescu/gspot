@@ -160,7 +160,7 @@ export type EslintLevelRules = {
 
 export type EslintPlugins = Record<string, readonly [string, string]>;
 
-export type ConfigurationBlocks = Array<Omit<PlannedEslintBlock, 'scope' | 'label'>>;
+export type ConfigurationBlocks = Array<Omit<PlannedEslintBlock, 'scope'>>;
 
 export type EslintImportBoundaryRule = [
     'error',
@@ -172,7 +172,6 @@ export type PlannedEslintBlock = {
     calls?: readonly EslintCall[];
     presets?: EslintPresetSource[];
     scope?: { path: string; excluded: string[] };
-    label: string;
 };
 
 export type EslintScope = {
@@ -187,7 +186,7 @@ export type EslintScope = {
     defaultProjectFiles: string[];
 };
 
-export type ConfigurationBuilder = (scope: EslintScope, configuration: string) => ConfigurationBlocks;
+export type ConfigurationBuilder = (scope: EslintScope) => ConfigurationBlocks;
 
 export type ConfigurationScopeBlocks = { configuration: Configuration; blocks: PlannedEslintBlock[] };
 

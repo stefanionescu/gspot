@@ -2,7 +2,6 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { formatOutputTail, isReportedCrash, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import {
     ASTRO_CHECK_OUTPUT,
     ASTRO_CHECK_SUMMARY,
@@ -12,6 +11,7 @@ import {
     ESLINT_MANIFEST_TOOL,
     TYPE_ERROR_MESSAGE,
 } from '#tests/config/engine/tool-runs.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('a shortened failure output keeps the last line of stdout and of stderr', () => {
@@ -74,9 +74,7 @@ test.each(CRASH_TAIL_CASES)(
 
 test('astro check reads a TypeScript diagnostic from colored output, and its crash note holds no color codes', async () => {
     await using sandbox = await testdir({ 'src/env.ts': "export const count: number = 'three';\n" });
-    const check = readConfigurations()
-        .get('astro')!
-        .checks.find((each) => each.id === 'astro/astro-check')!;
+    const check = getShippedCheck('astro/astro-check');
     const paths = { cwd: sandbox.path, root: sandbox.path };
     const reported = parseCommandFindings(
         { check },

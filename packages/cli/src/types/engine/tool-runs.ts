@@ -33,7 +33,6 @@ export type RevisionDependencies = { dependencies: string[]; dependencyNote?: st
 
 export type ToolOutput = OutputPaths & {
     check: string;
-    help: string;
     stdout: string;
     text: string;
     output: CheckOutput;
@@ -45,7 +44,6 @@ export type OutputPaths = { cwd: string; root: string };
 
 export type ParsingCheck = {
     id: string;
-    help: string;
     runs: (typeof CHECK_RUNS)[number];
     output: CheckOutput;
     fix?: string[] | undefined;

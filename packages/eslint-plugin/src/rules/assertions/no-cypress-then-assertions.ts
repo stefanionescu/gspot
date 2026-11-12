@@ -174,7 +174,7 @@ export const noCypressThenAssertions = createRule<[], 'retry' | 'should'>({
     },
     create(context) {
         const source = context.sourceCode;
-        if (!isTestRelatedPath(context.filename, context.settings['testFileExtensions'])) return {};
+        if (!isTestRelatedPath(context.filename)) return {};
         return {
             [THEN_CALLBACK](body: TSESTree.BlockStatement) {
                 const then = getThenCall(body);

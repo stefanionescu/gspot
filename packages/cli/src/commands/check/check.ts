@@ -2,11 +2,10 @@ import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 
-import { InvalidArgumentError } from '@commander-js/extra-typings';
-
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { formatAnnotations } from '#cli/commands/check/report.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
+import { parseListOption } from '#cli/commands/edits.ts';
 import {
     BASE_OPTION,
     CHECK_INPUT_HOOKS,
@@ -43,8 +42,6 @@ import { formatNameList } from '#cli/system/text.ts';
 import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
 import type { CheckCommandJson, CheckFlags, CheckOptions } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-
-const CHECK_LIST_SEPARATOR = ',';
 
 const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';
 
@@ -260,21 +257,12 @@ async function runCheckCommand(
     }
 }
 
-function parseCheckNames(value: string, previous: string[] | undefined): string[] {
-    const checks = value
-        .split(CHECK_LIST_SEPARATOR)
-        .map((check) => check.trim())
-        .filter((check) => check !== '');
-    if (checks.length === 0) throw new InvalidArgumentError(EMPTY_CHECKS_MESSAGE);
-    return [...(previous ?? []), ...checks];
-}
-
 export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {
     name: 'check',
     arguments: [{ term: '[paths...]' }],
     options: [
-        { flags: ONLY_OPTION, parse: parseCheckNames },
-        { flags: SKIP_OPTION, parse: parseCheckNames },
+        { flags: ONLY_OPTION, parse: parseListOption(EMPTY_CHECKS_MESSAGE) },
+        { flags: SKIP_OPTION, parse: parseListOption(EMPTY_CHECKS_MESSAGE) },
         { flags: STAGED_FLAG },
         { flags: BASE_OPTION },
         { flags: FIX_FLAG },

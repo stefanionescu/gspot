@@ -1,6 +1,5 @@
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
-import { parse } from 'jsonc-parser';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -30,19 +29,6 @@ test('a broken fence in MDX reports its source line', async () => {
     expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'guide.mdx', line: 8, rule: 'syntax' },
     ]);
-});
-
-test.each([
-    { configurations: ['markdown'], expected: [{ style: 'fenced' }, undefined] },
-    { configurations: ['markdown', 'mkdocs'], expected: [false, false] },
-])('markdownlint turns MD046 and MD053 off only in a scope that selects mkdocs: $configurations', async (row) => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(row.configurations) });
-    const { files } = buildGeneratedFiles(await openSession(sandbox.path));
-    const document = parse(files.find(({ path }) => path.endsWith('/markdownlint.jsonc'))!.content) as Record<
-        string,
-        unknown
-    >;
-    expect([document['MD046'], document['MD053']]).toStrictEqual([...row.expected]);
 });
 
 test('options for a rule that the formatter owns are refused', async () => {

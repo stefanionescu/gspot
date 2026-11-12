@@ -1,6 +1,5 @@
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { UNMATCHED_PATH_CASES } from '#tests/config/configurations/gspot/files.ts';
 import { TERMS_SOURCE } from '#tests/config/setup/languages.ts';
@@ -13,9 +12,8 @@ import { commitAll } from '#tests/setup/system/git.ts';
 test.each([...UNMATCHED_PATH_CASES])(
     'gspot/unmatched-paths reports each setting path without a tracked match: $name',
     async ({ files, settings, messages }) => {
-        await using sandbox = await createGitSandbox({});
         const { configurations, ...tables } = settings;
-        await createFileTree(sandbox.path, {
+        await using sandbox = await createGitSandbox({
             ...files,
             'gspot.toml': buildSandboxSettings(configurations, {
                 level: 'all',

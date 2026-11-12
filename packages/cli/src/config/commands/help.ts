@@ -6,6 +6,8 @@ export const RULE_OPTION = '--rule <rule>';
 
 export const PATHS_OPTION = '--paths <path>';
 
+const SCOPE_HELP = 'Apply to one project folder, by its path from the repository root, such as services/api';
+
 export const COMMAND_HELP = {
     scan: {
         summary: 'Try gspot on a copy of this repository, and change nothing',
@@ -92,7 +94,7 @@ export const COMMAND_HELP = {
             '<configuration...>': 'Configuration names, such as pytest. Run `gspot list` to see them',
         },
         options: {
-            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
+            '--scope <path>': SCOPE_HELP,
         },
         exitCodes: [
             ['0', 'The configurations were added, or they were already selected.'],
@@ -109,7 +111,7 @@ export const COMMAND_HELP = {
             '<configuration...>': 'Names from gspot list',
         },
         options: {
-            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
+            '--scope <path>': SCOPE_HELP,
             '--reason <text>': 'Why you remove them (required)',
         },
         exitCodes: [
@@ -129,7 +131,7 @@ export const COMMAND_HELP = {
         },
         options: {
             '--reason <text>': 'Why you change it. A value weaker than the shipped default needs one',
-            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
+            '--scope <path>': SCOPE_HELP,
         },
         exitCodes: [
             ['0', 'The setting was written, or it already had this value.'],
@@ -147,7 +149,7 @@ export const COMMAND_HELP = {
             '[items...]': 'List items or table keys to remove (default: the whole value)',
         },
         options: {
-            '--scope <path>': 'Apply to one project folder, by its path from the repository root, such as services/api',
+            '--scope <path>': SCOPE_HELP,
         },
         exitCodes: [
             ['0', 'The value was removed, or there was no value to remove.'],

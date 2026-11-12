@@ -2,8 +2,6 @@ import { SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
 
 export const LINGUIST_GENERATED_PATTERN = 'emitted/** linguist-generated\n';
 
-export const CHECK_COMMAND = 'gspot check';
-
 export const ROOT_LABEL = 'the root';
 
 export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
@@ -28,7 +26,6 @@ export const PROGRAM_NAMES = [
     'checks/contents',
     'checks/staged',
     'checks/dependency',
-    'checks/bash',
     'processes/output',
     'processes/descendant',
     'processes/process-group',

@@ -138,25 +138,20 @@ export function validateRuleExcludes(exclude: string[]): SettingsError[] {
     });
 }
 
+export function findRuleSetting(tool: string, rule: string): string | undefined {
+    const owned = { ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] };
+    return Object.hasOwn(owned, rule) ? owned[rule] : undefined;
+}
+
 export function validateSettingRules(settings: Settings): SettingsError[] {
-    const tools = new Set([...Object.keys(SETTING_RULES), ...Object.keys(LIMIT_SETTING_RULES)]);
-    const owned = new Map(
-        [...tools].map((tool) => [
-            tool,
-            new Map(Object.entries({ ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] })),
-        ]),
-    );
     return listSettingsTables(settings)
         .flatMap((written) => listRuleTables(written))
         .flatMap(({ tool, rules, path }) => {
             if (rules === undefined) return [];
             return Object.keys(rules).flatMap((rule) => {
-                const setting = owned.get(tool)?.get(rule);
+                const setting = findRuleSetting(tool, rule);
                 if (setting === undefined) return [];
-                const message =
-                    setting === '[[import_rule]]'
-                        ? `gspot writes the options of ${rule} from the [[import_rule]] records. Change those records instead.`
-                        : `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`;
+                const message = `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`;
                 return [{ path: [...path, rule], message }];
             });
         });

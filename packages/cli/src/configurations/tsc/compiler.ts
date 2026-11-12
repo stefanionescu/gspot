@@ -1,10 +1,9 @@
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { chmodSync, writeFileSync } from 'node:fs';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 
 import type ts from 'typescript';
 
-import { TSCONFIG_COPY_FOLDER } from '#cli/config/configurations/framework.ts';
-import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
+import { PATHS_BASE_OPTION, TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
 import {
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
@@ -14,16 +13,14 @@ import {
     TSC_REFERENCE_BUNDLE,
     TSC_REFERENCE_OUTPUT_FOLDER,
     TSCONFIG_TSBUILDINFO,
-    TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/shared.ts';
 import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/typescript.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, PRIVATE_FILE } from '#cli/config/system.ts';
-import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { listEnforcedTsconfigOptions, writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { listSourceFiles, readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -50,7 +47,7 @@ function buildReferenceTsconfig(
     const ts = requireTypescript();
     const { root, copyRoot, path, config } = copy;
     const output = join(copyRoot, GSPOT_FOLDER, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
-    const base = (config.options.baseUrl ?? config.options['pathsBasePath']) as string;
+    const base = (config.options.baseUrl ?? config.options[PATHS_BASE_OPTION]) as string;
     const paths =
         config.options.paths === undefined
             ? undefined
@@ -114,11 +111,7 @@ export async function runTsc(
     tsbuildinfoFolder: string,
     project: TypeScriptProject | undefined,
 ): Promise<CheckResult> {
-    const required = Object.fromEntries(
-        Object.entries(selectRequiredTsconfigOptions(session.settings.level, planned.scope.configurations)).filter(
-            ([name]) => !listIgnoredRules(planned.scope, TYPESCRIPT_TSCONFIG_CHECK).includes(name),
-        ),
-    );
+    const required = listEnforcedTsconfigOptions(session.settings.level, planned.scope);
     const target = project === undefined ? join(session.root, planned.scope.path, TSCONFIG_FILE) : project.path;
     if (
         !claimProjectCheck(session.cache, {
@@ -138,10 +131,7 @@ export async function runTsc(
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
-        const generatedPath = join(tsbuildinfoFolder, TSCONFIG_COPY_FOLDER, planned.scope.path, TSCONFIG_FILE);
-        mkdirSync(dirname(generatedPath), { recursive: true });
-        writeFileSync(generatedPath, JSON.stringify(buildTsconfig(session, planned.scope, generatedPath)));
-        command.push(...TSC_PROJECT_COMMAND, generatedPath);
+        command.push(...TSC_PROJECT_COMMAND, writeScopeTsconfig(session, planned.scope, tsbuildinfoFolder));
         addTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
     }
     command.push(...TSC_UNFORMATTED_OUTPUT);

@@ -14,7 +14,7 @@ function buildRuffFinding(rule: string, line: number): Finding {
 
 async function buildSampleReport(): Promise<ScanReport> {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n', 'src/a.js': 'export const a = 1;\n' });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const { session } = planning;
     return buildScanReport({
         planning,
@@ -32,7 +32,7 @@ test('scan prints the commands that would break and what init carries once, befo
         'package.json': '{"private":true,"scripts":{"lint":"eslint ."}}\n',
         'src/a.js': 'export const a = 1;\n',
     });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const { session } = planning;
     const report = buildScanReport({
         planning,
@@ -67,7 +67,7 @@ test('scan lists real problems first, keeps three examples, and counts formattin
 
 test('scan counts a check once, however many scopes ran it', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const [check] = SCAN_RUN_REPORT.checks as [CheckResult];
     const report = buildScanReport({
         planning,
@@ -85,7 +85,7 @@ test('scan counts a check once, however many scopes ran it', async () => {
 
 test('scan names the largest rules, takes examples from the largest, and groups what did not run by cause', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const base = { scope: '', fileCount: 1, duration: 1 };
     const checks = [
         {
@@ -125,7 +125,7 @@ test('scan names the largest rules, takes examples from the largest, and groups 
 
 test('scan quotes a rule that a shell would split in the ignore line', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const report = buildScanReport({
         planning,
         session: planning.session,
@@ -153,7 +153,7 @@ test('scan quotes a rule that a shell would split in the ignore line', async () 
 
 test('scan counts the findings of a check that names no rule, and takes its examples when it is the largest', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const base = { scope: '', status: 'failed' as const, fileCount: 1, duration: 1 };
     const typo = { check: 'spelling/typos', file: 'README.md', message: 'A typo.', fixable: true };
     const heading = { check: 'markdown/markdownlint', file: 'README.md', line: 9, rule: 'MD001', message: 'A jump.' };
@@ -185,7 +185,7 @@ test('scan counts the findings of a check that names no rule, and takes its exam
 
 test('scan names paths in the ignore line of a check whose one rule gspot ignore refuses', async () => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const finding = {
         check: 'gspot/suppressions',
         file: 'a.py',
@@ -225,7 +225,7 @@ test.each([
     { name: 'leaves a Node.js pin alone', files: { 'mise.toml': '[tools]\nnode = "22"\n' }, pinsNode: false },
 ])('the next steps of a mise repository $name', async ({ files, pinsNode }) => {
     await using sandbox = await createGitSandbox({ 'README.md': '# Example\n', ...files });
-    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const planning = await planInit(sandbox.path, {});
     const { nextSteps } = buildScanReport({
         planning,
         session: planning.session,
@@ -248,19 +248,4 @@ test('scan sums the seconds of each tool, slowest tool first', async () => {
         { name: 'prettier', seconds: 0.5 },
         { name: 'typos', seconds: 0.5 },
     ]);
-});
-
-test('the text report prints each section with its rows', async () => {
-    const report = await buildSampleReport();
-    const text = formatScanText(report);
-    expect(formatScanText({ ...report, filesToFormat: 1 })).toContain(
-        '  1 file differs from the format that gspot uses.\n',
-    );
-    expect(text).toStartWith('Checked 2 files with 5 checks in 4.2s: 8 findings in 4 files.\n\nSecrets: 1 finding\n');
-    expect(text).toContain('  src/key.ts:2  secrets/gitleaks-staged generic-api-key  Detected a key.\n');
-    expect(text).toContain('Formatting\n  2 files differ from the format that gspot uses.\n');
-    expect(text).toContain('Could not run\n  python/ruff: ruff is not installed.\n');
-    expect(text).toContain('  eslint  2.0s\n');
-    expect(text).toContain('What gspot init would do\n  configurations\n');
-    expect(text).toEndWith('  mise exec -- gspot init\n  Commit the setup files.\n  Fix each file as you touch it.\n');
 });

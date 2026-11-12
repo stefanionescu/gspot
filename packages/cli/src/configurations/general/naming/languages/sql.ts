@@ -1,7 +1,6 @@
 import type { Node } from '@pgsql/types';
 
 import {
-    CATEGORY_LABELS,
     CREATE_KIND,
     CREATE_MODIFIER,
     CREATE_PREFIX,
@@ -173,7 +172,6 @@ function buildSqlIdentifier(sqlName: SqlName, location: { file: string; source: 
     return {
         file,
         language: 'sql',
-        label: `sql ${CATEGORY_LABELS[sqlName.category]}`,
         ...getPosition(source, start + quoteWidth),
         category: sqlName.category,
         name: sqlName.name,

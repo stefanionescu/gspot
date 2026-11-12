@@ -152,7 +152,7 @@ export const NOT_FLAG = '--not';
 
 export const EMPTY_BASE_HASH = /^0*$/u;
 
-export const COMMIT_HASH_PATTERN = /^(?:[a-fA-F0-9]{40}|[a-fA-F0-9]{64})$/u;
+export const COMMIT_HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'iu');
 
 export const GIT_VERIFY_COMMIT_ARGUMENTS = ['rev-parse', '--verify', '--quiet', '--end-of-options'] as const;
 
@@ -205,6 +205,8 @@ export const GIT_VARIABLE_PREFIX = 'GIT_';
 export const NOT_REPOSITORY_MESSAGE = 'fatal: not a git repository (or any ';
 
 export const GIT_SETTING_ARGUMENTS = ['config', '--null', '--get'] as const;
+
+export const GIT_FLAG_ARGUMENTS = ['config', '--bool', '--get'] as const;
 
 export const GIT_HOOKS_ARGUMENTS = ['rev-parse', '--git-path', 'hooks'] as const;
 

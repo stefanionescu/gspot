@@ -22,6 +22,9 @@ This section is not released, and its entries cite no commit yet.
 | `data-files/yaml`                 | `yaml/syntax`         |
 | `engineering/nested-agents-files` | `agents/nested-files` |
 
+- The ESLint plugin no longer reads the undocumented `testFileExtensions` setting. Its test rules find test files by
+  the extensions they ship with.
+
 ### Known issues
 
 - When a staged file also has unstaged edits, a commit checks a copy of what you staged, and a test file that imports
@@ -113,6 +116,7 @@ This section is not released, and its entries cite no commit yet.
 - A `.githooks/` folder that Git does not use no longer counts as a hook manager.
 - `gspot init` lists `typos.toml` in the table of what it carries over.
 - A typo in `removed_configurations` is refused.
+- The example in the JSON schema of `gspot.toml` writes `[[naming.exception]]`, which the schema accepts.
 
 #### Messages and crashes
 
@@ -124,6 +128,7 @@ This section is not released, and its entries cite no commit yet.
 - The help of `commits/commitlint`, `python/pydoclint` DOC503, `postgres/edited-migrations`, and the refusal of a
   `nosemgrep` comment now say what to write.
 - The scan refusal in a repository that has a `gspot.toml` says how to try an upgrade.
+- An Xcode project that gspot cannot parse is named once in the error, with its fix once.
 
 ## 0.4.2
 

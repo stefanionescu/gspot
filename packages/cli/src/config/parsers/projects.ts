@@ -14,7 +14,7 @@ export const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
 
 export const JAVASCRIPT_RUNTIMES = ['node', 'bun', 'deno'] as const;
 
-export const RUNTIME_COMMAND = /^\s*(node|bun|deno)(?:\s|$)/u;
+export const RUNTIME_COMMAND = new RegExp(String.raw`^\s*(${JAVASCRIPT_RUNTIMES.join('|')})(?:\s|$)`, 'u');
 
 export const PACKAGE_JSON = 'package.json';
 

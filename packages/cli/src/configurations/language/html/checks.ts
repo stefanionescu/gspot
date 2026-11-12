@@ -50,6 +50,12 @@ function findScriptScheme(attribute: MarkupAttribute, scriptType: string): strin
     return url.protocol === 'data:' && isActiveResource(attribute, url, scriptType) ? url.protocol : undefined;
 }
 
+function readScriptType(attributes: MarkupAttribute[]): string {
+    return decodeHTMLAttribute(attributes.find((attribute) => attribute.name === 'type')?.value ?? '')
+        .trim()
+        .toLowerCase();
+}
+
 function validateInlineScripts(source: SourceTree): CheckFinding[] {
     return source.rootNode
         .descendantsOfType('script_element')
@@ -59,11 +65,7 @@ function validateInlineScripts(source: SourceTree): CheckFinding[] {
         .flatMap((element) => {
             const attributes = listElementAttributes(element);
             if (
-                !EXECUTABLE_SCRIPT_TYPES.has(
-                    decodeHTMLAttribute(attributes.find((attribute) => attribute.name === 'type')?.value ?? '')
-                        .trim()
-                        .toLowerCase(),
-                ) ||
+                !EXECUTABLE_SCRIPT_TYPES.has(readScriptType(attributes)) ||
                 attributes.some((each) => each.name === 'src')
             )
                 return [];
@@ -82,9 +84,7 @@ function validateInlineScripts(source: SourceTree): CheckFinding[] {
 function validateScriptAttributes(source: SourceTree): CheckFinding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
         const attributes = listElementAttributes(element);
-        const scriptType = decodeHTMLAttribute(attributes.find((attribute) => attribute.name === 'type')?.value ?? '')
-            .trim()
-            .toLowerCase();
+        const scriptType = readScriptType(attributes);
         return attributes.flatMap((attribute): CheckFinding[] => {
             const position = {
                 file: source.path,

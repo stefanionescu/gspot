@@ -3,7 +3,7 @@ import { basename, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
-import { GITATTRIBUTES_FILE, GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { GENERATED_ATTRIBUTE, GITATTRIBUTES_FILE, GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import {
     AGENTS_FILE,
     EMPTY_JSON_TEXT,
@@ -27,7 +27,7 @@ import { isSameContents } from '#cli/system/files/bounded.ts';
 import { deleteEmptyFolders, openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { decodeUtf8File } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { isInside } from '#cli/system/paths.ts';
+import { isInScope, isInside } from '#cli/system/paths.ts';
 import { normalizeTables } from '#cli/system/tables.ts';
 import type { EditableFile } from '#cli/types/parsers.ts';
 import type { ManagedKeys, ReplacementRequest, Repository, WritePlan } from '#cli/types/repository.ts';
@@ -69,7 +69,7 @@ function readGeneratedPatterns(files: Files): string[] {
     if (attributesFile === undefined) return [];
     const block = findBlockBody(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE }) ?? '';
     return parseAttributePatterns(block, '.')
-        .filter(({ attributes }) => attributes.includes('linguist-generated'))
+        .filter(({ attributes }) => attributes.includes(GENERATED_ATTRIBUTE))
         .map(({ pattern }) => pattern);
 }
 
@@ -126,20 +126,13 @@ export function listStrayPaths(
     const disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
     const installations = Object.values(INSTALLED_TOOL_FOLDERS);
-    const ownFolder = disk.findStats(GSPOT_FOLDER);
     const ownPaths: string[] = [];
-    if (ownFolder !== undefined) {
-        walkFiles(disk, GSPOT_FOLDER, (path) => {
-            if (
-                isTemporaryPath(path) ||
-                installations.some((folder) => path === folder || path.startsWith(`${folder}/`))
-            )
-                return false;
-            if (lstatSync(join(session.root, path)).isDirectory()) return true;
-            ownPaths.push(path);
-            return false;
-        });
-    }
+    walkFiles(disk, GSPOT_FOLDER, (path) => {
+        if (isTemporaryPath(path) || installations.some((folder) => isInScope(path, folder))) return false;
+        if (lstatSync(join(session.root, path)).isDirectory()) return true;
+        ownPaths.push(path);
+        return false;
+    });
     const generatedPatterns = readGeneratedPatterns(disk);
     const writtenPaths = new Set([
         ...ownPaths,
@@ -147,11 +140,7 @@ export function listStrayPaths(
         ...blockPaths,
     ]);
     return [...writtenPaths].filter((path) => {
-        if (
-            isTemporaryPath(path) ||
-            installations.some((folder) => path === folder || path.startsWith(`${folder}/`)) ||
-            expected.has(path)
-        )
+        if (isTemporaryPath(path) || installations.some((folder) => isInScope(path, folder)) || expected.has(path))
             return false;
         if (isOwned(path, disk, generatedPatterns, ownablePaths)) return true;
         if (!blockPaths.has(path)) return false;

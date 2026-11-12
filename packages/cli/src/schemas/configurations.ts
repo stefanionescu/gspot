@@ -189,3 +189,13 @@ export const denoLintOutputSchema = z.object({
         .array(),
     errors: z.object({ file_path: z.string(), message: z.string() }).array(),
 });
+
+const taskSchema = z.looseObject({
+    alias: z.union([z.string(), z.string().array()]).optional(),
+});
+
+const taskValueSchema = z.union([z.string(), z.string().array(), taskSchema]);
+
+export const miseTasksSchema = z.object({
+    tasks: z.record(z.string(), taskValueSchema).default({}),
+});

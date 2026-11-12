@@ -9,6 +9,8 @@ export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
 export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
 
+export const CI_FILES = { github: GITHUB_WORKFLOW, gitlab: GITLAB_WORKFLOW } as const;
+
 export const CI_TIMEOUT_MINUTES = 60;
 
 export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';

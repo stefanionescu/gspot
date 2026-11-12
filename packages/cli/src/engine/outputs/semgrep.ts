@@ -16,11 +16,10 @@ the warning about a nosemgrep comment that names another rule than the one that 
 match is in the results.
 */
 export function parseSemgrepFindings(output: ToolOutput): Finding[] {
-    const { check, stdout, help } = output;
+    const { check, stdout } = output;
     const report = parseToolOutput('Semgrep', stdout, semgrepOutputSchema);
     const findings: Finding[] = report.results.map((result) => ({
         check,
-        help,
         file: result.path,
         line: result.start.line,
         column: result.start.col,
@@ -36,7 +35,6 @@ export function parseSemgrepFindings(output: ToolOutput): Finding[] {
             throw new CheckStop('error', `Semgrep could not complete the scan: ${error.message}`);
         findings.push({
             check,
-            help,
             file: span.file,
             line: span.start.line,
             column: span.start.col,

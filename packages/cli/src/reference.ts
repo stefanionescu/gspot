@@ -71,7 +71,7 @@ function buildConfigurationsReference(shipped: Configuration[]): ConfigurationRe
 /**
 Read the public facts that the documentation shows. This opens no repository and starts no tool.
 */
-export function readCliReference(): CliReference {
+function readCliReference(): CliReference {
     const shipped = readConfigurations()
         .values()
         .toArray()

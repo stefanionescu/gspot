@@ -2,7 +2,9 @@ import { isDeepStrictEqual } from 'node:util';
 
 import { CODE_LANGUAGES } from '#cli/config/configurations/eslint/blocks.ts';
 import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
+import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { compareScopeDepth, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
@@ -56,6 +58,17 @@ export function buildScopeOverrideBlocks<Value, Block>(
     );
 }
 
+export function listJavascriptScopes(scopes: Scope[]): Scope[] {
+    return scopes.filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION));
+}
+
+export function listScriptFiles(scope: Pick<Scope, 'path' | 'settings'>): string[] {
+    return [
+        ...(scope.settings.tables.javascript?.script_files ?? []),
+        joinScope(escapeGlob(scope.path), MISE_TASKS_GLOB),
+    ];
+}
+
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     const { scopes, nodeFiles } = groups;
     const source = buildExtensionGlob(...CODE_LANGUAGES);
@@ -68,10 +81,7 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     );
     const components = selected.map(({ pattern }) => pattern);
     const isCovered = buildPathMatcher([source, ...components]);
-    const node = buildNodePatterns(
-        nodeFiles.filter((path) => !isCovered(path)),
-        '',
-    );
+    const node = nodeFiles.filter((path) => !isCovered(path)).map((path) => escapeGlob(path));
     const code = [source, ...components, ...node];
     const typescript = buildExtensionGlob('typescript');
     const javascript = buildExtensionGlob('javascript');

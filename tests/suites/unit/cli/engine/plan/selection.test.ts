@@ -3,7 +3,6 @@ import { join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { isActive, planChecks, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { runChecks } from '#cli/engine/run.ts';
@@ -23,9 +22,8 @@ import { commitAll } from '#tests/setup/system/git.ts';
 const TWO_WORDS = 'two words';
 
 test('coverage stripping leaves your own checks and given arguments unchanged', async () => {
-    await using sandbox = await createGitSandbox({});
     const command = [process.execPath, '--coverage', '', TWO_WORDS];
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: stringify({

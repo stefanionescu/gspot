@@ -5,10 +5,10 @@ import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { hasFilesToCheck } from '#cli/engine/files.ts';
 import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan.ts';
 import { findSystemSkip, isSettingEmpty } from '#cli/engine/skips.ts';
-import { findTool, getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { findTool, getTool, listToolNames, readConfigurations } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
+import { readHost } from '#cli/system/environment.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
@@ -108,7 +108,7 @@ export function listHostCheckTools({
     configuredChecks,
     repository,
 }: Pick<SessionBase, 'configuredChecks' | 'repository'>): Set<string> {
-    const host = { platform: getOperatingSystem(), arch: process.arch };
+    const host = readHost();
     const runnable = configuredChecks.filter(
         (planned) =>
             findSystemSkip(planned.check, planned.tool, host) === undefined &&
@@ -126,9 +126,7 @@ export function selectToolConfigurations(session: SessionBase, checks: ScopeChec
     const prettierPlugins = listPrettierPlugins(session.scopes.flatMap(({ configurations }) => configurations));
     for (const { name } of prettierPlugins.keys()) toolNames.add(name);
     const configurations = listSelectedConfigurations(session.scopes);
-    const selectedTools = new Set(
-        configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)),
-    );
+    const selectedTools = listToolNames(configurations);
     const shipped = readConfigurations().values().toArray();
     addPeerPackages(toolNames, shipped);
     const unselected = [...toolNames].flatMap((name) =>

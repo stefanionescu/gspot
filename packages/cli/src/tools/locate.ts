@@ -25,6 +25,7 @@ import {
 } from '#cli/config/tools/programs.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { miseToolSourcesSchema } from '#cli/schemas/tools.ts';
 import { remember } from '#cli/system/cache.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
@@ -50,7 +51,7 @@ function listSearchFolders(root: string, options: ExecutableSearch): string[] {
 }
 
 function isExecutablePresent(files: Files, root: string, path: string): boolean {
-    if (!convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`))
+    if (!isGspotPath(convertToPosixPath(relative(root, path))))
         return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.readCanonicalPath(convertToPosixPath(relative(root, path)));

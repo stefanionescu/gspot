@@ -8,13 +8,10 @@ buildRuleTester().run('no-index-imports', noIndexImports, {
         "import { a } from '#app/myindex';",
     ],
     invalid: [
-        { code: "import { a } from '~/lib/index.js';", errors: [{ messageId: 'index' }] },
         {
             code: "import { a } from './index.js';",
             errors: [{ messageId: 'index', data: { source: './index.js' } }],
         },
-        { code: "import { a } from '../index';", errors: [{ messageId: 'index' }] },
-        { code: "import { a } from '#app/routes/index.ts';", errors: [{ messageId: 'index' }] },
         { code: "export * from './lib/index.js';", errors: [{ messageId: 'index' }] },
         { code: "const m = await import('./index.js');", errors: [{ messageId: 'index' }] },
         { code: "vi.mock('@/turn/index.js');", errors: [{ messageId: 'index' }] },

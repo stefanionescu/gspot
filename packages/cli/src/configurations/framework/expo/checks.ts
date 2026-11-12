@@ -49,7 +49,7 @@ async function checkExpoDoctor(session: CheckSession, planned: PlannedCheck): Pr
         file: path,
         line: 1,
         rule: FAILED_CHECK_RULE,
-        message: message,
+        message,
     }));
     return assertToolFindings(result, findings, 'expo-doctor');
 }

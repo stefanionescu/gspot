@@ -111,8 +111,8 @@ async function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): P
                 !CONVENTIONAL_ASSETS.test(file.path),
         )
         .filter((file) => {
-            const folder = ASSET_FOLDER.exec(file.path);
-            const belowAssets = file.path.slice((folder?.index ?? 0) + (folder?.[0].length ?? 0));
+            const folder = ASSET_FOLDER.exec(file.path) as RegExpExecArray;
+            const belowAssets = file.path.slice(folder.index + folder[0].length);
             const names = [`${ASSET_REFERENCE_PREFIX}/?${escapeRegExp(belowAssets)}`];
             for (const specifier of listAliasSpecifiers(file.path, aliases)) names.push(escapeRegExp(specifier));
             const reference = new RegExp(`(?:${names.join('|')})${ASSET_REFERENCE_SUFFIX}`, 'u');

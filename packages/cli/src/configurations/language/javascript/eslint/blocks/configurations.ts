@@ -25,12 +25,18 @@ import type {
     EslintScope,
     PlannedEslintBlock,
     PlannedEslintFile,
+    PluginRuleBlock,
 } from '#cli/types/configurations/javascript.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
 const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
-    ...Object.fromEntries(Object.keys(PLUGIN_RULE_BLOCKS).map((name) => [name, buildPluginRuleBlocks])),
+    ...Object.fromEntries(
+        Object.entries(PLUGIN_RULE_BLOCKS).map(([name, declaration]) => [
+            name,
+            (scope: EslintScope) => buildPluginRuleBlocks(scope, declaration),
+        ]),
+    ),
     ...ASTRO_BLOCK_BUILDERS,
     ...DRIZZLE_BLOCK_BUILDERS,
     ...NESTJS_BLOCK_BUILDERS,
@@ -46,7 +52,6 @@ const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | und
 };
 
 function buildConfigurationBlocks(
-    configuration: Configuration,
     builder: ConfigurationBuilder,
     scope: Scope,
     planned: PlannedEslintFile,
@@ -56,23 +61,20 @@ function buildConfigurationBlocks(
     const testFiles = listCodeTestFiles(scope.settings.test_files).map((pattern) =>
         scopePath !== '' && pattern.startsWith(`${scopePath}/**/`) ? pattern.slice(scopePath.length + 1) : pattern,
     );
-    return builder(
-        {
-            level: planned.blockWriter.level,
-            settings: scope.settings,
-            projects: planned.projects,
-            defaultProjectFiles: planned.defaultProjectFiles,
-            path: scopePath,
-            dependencyFiles: session.repository.dependencyFiles,
-            dependencies: listProjectDependencyNames(session.repository.dependencyFiles, scopePath),
-            eslintFiles: {
-                ...planned.eslintFiles,
-                tests: buildTestFiles(testFiles, planned.eslintFiles.code),
-            },
-            sourceFiles: session.repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
+    return builder({
+        level: planned.blockWriter.level,
+        settings: scope.settings,
+        projects: planned.projects,
+        defaultProjectFiles: planned.defaultProjectFiles,
+        path: scopePath,
+        dependencyFiles: session.repository.dependencyFiles,
+        dependencies: listProjectDependencyNames(session.repository.dependencyFiles, scopePath),
+        eslintFiles: {
+            ...planned.eslintFiles,
+            tests: buildTestFiles(testFiles, planned.eslintFiles.code),
         },
-        configuration.name,
-    );
+        sourceFiles: session.repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
+    });
 }
 
 function listMatchingScopes(
@@ -100,7 +102,7 @@ function buildScopeConfigurationBlocks(
             .filter((each) => each.configurations.includes(configuration))
             .map((scope) => ({
                 path: scope.path,
-                blocks: buildConfigurationBlocks(configuration, builder, scope, planned),
+                blocks: buildConfigurationBlocks(builder, scope, planned),
             }));
         const matching = listMatchingScopes(scopeBlocks, planned.session.scopes);
         for (const { path, blocks } of scopeBlocks) {
@@ -113,19 +115,14 @@ function buildScopeConfigurationBlocks(
                 .map((child) => joinScope(escapeGlob(child), '**'));
             result.push({
                 configuration,
-                blocks: blocks.map((block) => ({
-                    ...block,
-                    scope: { path, excluded },
-                    label: configuration.name,
-                })),
+                blocks: blocks.map((block) => ({ ...block, scope: { path, excluded } })),
             });
         }
     }
     return result;
 }
 
-function buildPluginRuleBlocks(scope: EslintScope, configuration: string): ConfigurationBlocks {
-    const declaration = PLUGIN_RULE_BLOCKS[configuration] as (typeof PLUGIN_RULE_BLOCKS)[string];
+function buildPluginRuleBlocks(scope: EslintScope, declaration: PluginRuleBlock): ConfigurationBlocks {
     const selectors = { code: scope.eslintFiles.code, tests: scope.eslintFiles.tests };
     const files = typeof declaration.files === 'string' ? selectors[declaration.files] : declaration.files;
     return [

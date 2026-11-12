@@ -53,7 +53,7 @@ export const noUiTestDebugging = createRule<[], 'debug'>({
         messages: { debug: 'Remove this debug command from the test.' },
     },
     create(context) {
-        if (!isTestRelatedPath(context.filename, context.settings['testFileExtensions'])) return {};
+        if (!isTestRelatedPath(context.filename)) return {};
         return {
             CallExpression(node) {
                 if (!isDebugCommand(node.callee, context.sourceCode)) return;

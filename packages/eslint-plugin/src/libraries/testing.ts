@@ -145,14 +145,10 @@ export function readTestTable(node: TableCall, context: FileContext): TSESTree.N
     return isTable && callback !== undefined && table?.type !== AST_NODE_TYPES.SpreadElement ? table : undefined;
 }
 
-export function isTestRelatedPath(path: string, configured: unknown): boolean {
+export function isTestRelatedPath(path: string): boolean {
     if (path.split(/[\\/]/u).some((folder) => TEST_FOLDERS.has(folder))) return true;
-    const extensions: unknown[] =
-        Array.isArray(configured) && configured.length > 0 ? configured : TEST_FILE_EXTENSIONS;
-    return extensions.some(
-        (extension) =>
-            typeof extension === 'string' &&
-            TEST_FILE_MARKERS.some((marker) => path.endsWith(`.${marker}.${extension.replace(/^\./u, '')}`)),
+    return TEST_FILE_EXTENSIONS.some((extension) =>
+        TEST_FILE_MARKERS.some((marker) => path.endsWith(`.${marker}.${extension}`)),
     );
 }
 

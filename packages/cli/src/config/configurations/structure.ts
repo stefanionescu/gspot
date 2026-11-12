@@ -227,8 +227,6 @@ export const SCRIPT_FUNCTION_VALUES: ReadonlySet<string> = new Set([
 
 export const DEFAULT_EXPORT_NAME = 'default';
 
-export const PRIVATE_SWIFT_VISIBILITIES: ReadonlySet<string> = new Set(['private', 'fileprivate']);
-
 // ESLint's message template prints a category whole, so a category opens the quote that formatRefusedImport closes.
 export const IMPORT_RULE_CATEGORY = 'rule "';
 

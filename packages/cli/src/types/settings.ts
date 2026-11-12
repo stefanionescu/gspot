@@ -9,7 +9,7 @@ import type { limitFields } from '#cli/schemas/settings/limits.ts';
 import type { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import type { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import type { Check, Configuration, ReasonRequirement, Setting } from '#cli/types/manifests.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
+import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
 import type { Repository, ScopeFolder } from '#cli/types/repository.ts';
 import type { FileContents } from '#cli/types/system.ts';
 
@@ -50,8 +50,6 @@ export type ReasonedSettingDefinition = SettingDefinition & Required<Pick<Settin
 export type SettingDefinition = {
     leftOut?: keyof typeof LEFT_OUT_NOTES;
     description?: string;
-    minimum?: number;
-    maximum?: number;
     configurations?: readonly string[];
     reason_for?: ReasonRequirement;
     reason_values?: boolean;
@@ -159,6 +157,8 @@ export type ParsedSettings = z.output<typeof settingsSchema>;
 export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 
 export type SettingsError = { path: KeyPath; message: string };
+
+export type SettingsFailure = { errors: SettingsError[]; syntax: TomlSyntax };
 
 export type TomlTable = Record<string, unknown>;
 

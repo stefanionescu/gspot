@@ -19,6 +19,7 @@ import {
     SETTING_ORIGIN_KINDS,
     TRAILING_COMMAS,
 } from '#cli/config/settings/schema.ts';
+import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/tools.ts';
 import type { ReasonedSettingDefinition, ReasonedValue } from '#cli/types/settings.ts';
 
@@ -113,7 +114,7 @@ export const relativePathSchema = z
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     )
     .refine((path) => {
-        const relative = path.startsWith('!') ? path.slice(1) : path;
+        const relative = path.startsWith(GLOB_EXCLUDE) ? path.slice(1) : path;
         return !relative.startsWith('/') && !relative.split('/').includes('..');
     }, 'Use a relative path with forward slashes, without parent traversal or a drive prefix.')
     .meta({ path_role: 'source' });
@@ -175,46 +176,26 @@ export const namingCategorySchema = z
     })
     .register(z.globalRegistry, { id: 'namingCategory' });
 
+type FormatFields = typeof formatFieldsSchema.shape;
+
+const formatOverrideFields = Object.fromEntries(
+    Object.entries(formatFieldsSchema.shape).map(([name, field]) => [
+        name,
+        field
+            .unwrap()
+            .optional()
+            .describe(field.description as string),
+    ]),
+) as { [Name in keyof FormatFields]: z.ZodOptional<ReturnType<FormatFields[Name]['unwrap']>> };
+
 const formatOverrideSchema = z
     .strictObject({
         paths: nonemptyPathsSchema.meta({
             description: 'The files these formatting values apply to.',
         }),
-        indent_style: formatFieldsSchema.shape.indent_style
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.indent_style.description as string),
-        indent_width: formatFieldsSchema.shape.indent_width
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.indent_width.description as string),
-        print_width: formatFieldsSchema.shape.print_width
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.print_width.description as string),
-        quotes: formatFieldsSchema.shape.quotes.describe(formatFieldsSchema.shape.quotes.description as string),
-        trailing_commas: formatFieldsSchema.shape.trailing_commas
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.trailing_commas.description as string),
-        semicolons: formatFieldsSchema.shape.semicolons
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.semicolons.description as string),
-        bracket_spacing: formatFieldsSchema.shape.bracket_spacing
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.bracket_spacing.description as string),
-        arrow_parens: formatFieldsSchema.shape.arrow_parens
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.arrow_parens.description as string),
-        prose_wrap: formatFieldsSchema.shape.prose_wrap
-            .unwrap()
-            .optional()
-            .describe(formatFieldsSchema.shape.prose_wrap.description as string),
+        ...formatOverrideFields,
     })
-    .refine((override) => Object.keys(override).length > 1, {
+    .refine((override) => Object.keys(override).length >= FORMAT_OVERRIDE_MIN_FIELDS, {
         error: 'A format override needs at least one formatting option.',
     })
     .meta({ minProperties: FORMAT_OVERRIDE_MIN_FIELDS });

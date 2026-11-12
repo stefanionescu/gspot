@@ -38,7 +38,7 @@ export function findCanonicalPath(path: string): string | undefined {
 }
 
 export function parseRegexFindings(output: ToolOutput): Finding[] {
-    const { check, output: format, text, help } = output;
+    const { check, output: format, text } = output;
     const pattern = new RegExp(format.pattern as string, 'u');
     const fixable = format.fixable === undefined ? undefined : new RegExp(format.fixable, 'u');
     const findings = text.split(LINE_BREAK).flatMap((line) => {
@@ -48,7 +48,6 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
             check,
             file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
             message: (groups['message'] ?? format.message ?? line).trim(),
-            help,
             fixable: fixable?.test(line) === true,
         };
         return [setMatchedFields(finding, groups)];
@@ -67,7 +66,7 @@ Read findings grouped under output file headings. A file link that leaves the re
 not in a clone, so it reports nothing.
 */
 export function parseGroupedFindings(output: ToolOutput): Finding[] {
-    const { check, output: format, text, help } = output;
+    const { check, output: format, text } = output;
     const filePattern = new RegExp(format.file_pattern as string, 'u');
     const pattern = new RegExp(format.pattern as string, 'u');
     const findings: Finding[] = [];
@@ -81,7 +80,7 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
         const groups = pattern.exec(line)?.groups;
         if (!groups) continue;
         const message = (groups['message'] ?? line).trim();
-        findings.push(setMatchedFields({ check, file, message, help, fixable: false }, groups));
+        findings.push(setMatchedFields({ check, file, message, fixable: false }, groups));
     }
     return findings.filter(({ message }) => isLinkInRoot(message, output.root));
 }

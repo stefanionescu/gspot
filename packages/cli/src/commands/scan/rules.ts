@@ -9,6 +9,7 @@ import {
     RULE_PRINT_FLAG,
 } from '#cli/config/generation/setup.ts';
 import { compareRules, readPrintedRules } from '#cli/generation/setup/carryover/lint-rules.ts';
+import { listToolNames } from '#cli/manifests/read.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp, quoteArgument } from '#cli/system/text.ts';
 import type { CarryoverRow, InitPlanning, RuleRead } from '#cli/types/generation.ts';
@@ -23,7 +24,7 @@ one. The read names the other configs of the tool, whose rules it does not hold.
 export async function readUserRules(planning: InitPlanning): Promise<RuleRead[]> {
     const { detection, session } = planning;
     const { root, repository, toolConfigurations } = session;
-    const tools = new Set(toolConfigurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)));
+    const tools = listToolNames(toolConfigurations);
     const reads = PRINTED_RULE_TOOLS.flatMap((definition) => {
         const [config, ...others] = detection.repositorySetup.conflictingConfigs.filter(
             ({ tool, shared, path }) =>

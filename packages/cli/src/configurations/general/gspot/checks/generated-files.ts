@@ -7,7 +7,7 @@ import { type CheckCode, type CheckFinding, type CheckRunOptions, type CheckSess
 function checkGeneratedFiles(
     session: CheckSession,
     _planned: PlannedCheck,
-    options: Pick<CheckRunOptions, 'verbose'> = {},
+    options: Pick<CheckRunOptions, 'verbose'>,
 ): CheckFinding[] {
     const stale = session.generation.listStaleFiles(session, options);
     return stale.map((staleFile) => {

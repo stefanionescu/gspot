@@ -34,8 +34,6 @@ export const NOT_INSTALLED_STATUS = 'not installed; run gspot install';
 
 export const UNSET_HOOKS_NOTE = 'disabled hooks: unset core.hooksPath';
 
-export const HOOK_COMMENT_LINE = /^\s*#/u;
-
 export const HOOK_FOLDER_KINDS = new Set(['hooksPath', 'githooks', 'husky']);
 
 export const MISE_TOOL = 'mise';

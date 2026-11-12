@@ -5,6 +5,7 @@ import type { Node } from 'web-tree-sitter';
 import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import { PACKAGE_SWIFT, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
+import { isInTargetFolder } from '#cli/configurations/infrastructure/xcode/checks.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { readText } from '#cli/system/files/reads.ts';
@@ -50,11 +51,7 @@ function listXcodeModules(session: Session, path: string, swiftFiles: string[]):
     const project = parseProjectSources(readText(session.cache, path), path);
     return project.targets.map((target) => ({
         name: target.name.replaceAll(NON_WORD_CHARACTERS, '_'),
-        files: swiftFiles.filter(
-            (file) =>
-                target.sources.includes(file) ||
-                target.folders.some(({ path, excluded }) => file.startsWith(path) && !excluded.has(file)),
-        ),
+        files: swiftFiles.filter((file) => target.sources.includes(file) || isInTargetFolder(file, target.folders)),
     }));
 }
 

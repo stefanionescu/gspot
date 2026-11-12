@@ -10,10 +10,10 @@ test('a fixed regex message needs an explicit fixable pattern to offer a fix', (
     const check = { ...BASE_CHECK, output, fix: ['formatter'] };
     const paths = { root: '/repo', cwd: '/repo' };
     expect(parseOutput(check, 'source.ts', '', paths)).toStrictEqual([
-        { check: check.id, file: 'source.ts', message: 'Needs attention.', help: check.help, fixable: false },
+        { check: check.id, file: 'source.ts', message: 'Needs attention.', fixable: false },
     ]);
     expect(parseOutput({ ...check, output: { ...output, fixable: '^source' } }, 'source.ts', '', paths)).toStrictEqual([
-        { check: check.id, file: 'source.ts', message: 'Needs attention.', help: check.help, fixable: true },
+        { check: check.id, file: 'source.ts', message: 'Needs attention.', fixable: true },
     ]);
 });
 

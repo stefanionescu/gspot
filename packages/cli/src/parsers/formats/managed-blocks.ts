@@ -11,10 +11,13 @@ function addBlock(text: string, body: string, placement: { isFirst: boolean; new
     return text + (text.endsWith('\n') ? newline : newline + newline) + body;
 }
 
+function selectMarkers(path: string): (typeof MARKERS)[keyof typeof MARKERS] {
+    const name = posix.basename(path);
+    return MARKERS[Object.hasOwn(BLOCK_STYLES, name) ? BLOCK_STYLES[name as keyof typeof BLOCK_STYLES] : 'hash'];
+}
+
 export function findBlockSpan(text: string, file: { path: string }): TextRange | undefined {
-    const name = posix.basename(file.path);
-    const markersForStyle =
-        MARKERS[Object.hasOwn(BLOCK_STYLES, name) ? BLOCK_STYLES[name as keyof typeof BLOCK_STYLES] : 'hash'];
+    const markersForStyle = selectMarkers(file.path);
     const start = text.indexOf(markersForStyle.start);
     const closing = text.indexOf(markersForStyle.end);
     if (start === -1 && closing === -1) return undefined;
@@ -41,23 +44,19 @@ Replace a complete block or add it, and keep the text around it. A new block goe
 later line wins there, so the rules that the repository already has keep winning over the catch-all in the block.
 */
 export function replaceBlock(text: string, block: string, file: { path: string }): string {
-    const name = posix.basename(file.path);
-    const { start, end, gap } =
-        MARKERS[Object.hasOwn(BLOCK_STYLES, name) ? BLOCK_STYLES[name as keyof typeof BLOCK_STYLES] : 'hash'];
+    const { start, end, gap } = selectMarkers(file.path);
     const span = findBlockSpan(text, file);
     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
     const newline = authored.includes('\r\n') && !authored.replaceAll('\r\n', '').includes('\n') ? '\r\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`.replaceAll('\r\n', '\n').replaceAll('\n', () => newline);
     if (span !== undefined) return text.slice(0, span.start) + body + text.slice(span.end);
-    return addBlock(text, body, { isFirst: name === FIRST_BLOCK_FILE, newline });
+    return addBlock(text, body, { isFirst: posix.basename(file.path) === FIRST_BLOCK_FILE, newline });
 }
 
 export function findBlockBody(text: string, file: { path: string }): string | undefined {
     const span = findBlockSpan(text, file);
     if (span === undefined) return undefined;
-    const name = posix.basename(file.path);
-    const { start, end } =
-        MARKERS[Object.hasOwn(BLOCK_STYLES, name) ? BLOCK_STYLES[name as keyof typeof BLOCK_STYLES] : 'hash'];
+    const { start, end } = selectMarkers(file.path);
     const block = text.slice(span.start, span.end).trimEnd();
     return block.slice(start.length, -end.length).trim();
 }

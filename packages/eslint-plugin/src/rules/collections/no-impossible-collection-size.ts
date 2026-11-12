@@ -1,6 +1,7 @@
-import { AST_NODE_TYPES, ESLintUtils, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
 import { COLLECTION_SIZE_MEMBERS, COLLECTION_TYPE_NAMES } from '../../config/collections.ts';
+import { getTypes } from '../../language/checker.ts';
 import { createRule } from '../../rule.ts';
 
 function getCollectionSize(node: TSESTree.BinaryExpression): TSESTree.MemberExpression | undefined {
@@ -33,15 +34,13 @@ export const noImpossibleCollectionSize = createRule<[], 'comparison'>({
         messages: { comparison: 'A collection size cannot be negative. Use === 0 for empty or > 0 for nonempty.' },
     },
     create(context) {
-        const services = context.sourceCode.parserServices?.program
-            ? ESLintUtils.getParserServices(context)
-            : undefined;
+        const types = getTypes(context);
         return {
             BinaryExpression(node) {
                 const size = getCollectionSize(node);
                 if (size === undefined) return;
-                if (services !== undefined) {
-                    const symbol = services.getTypeAtLocation(size.object).getSymbol();
+                if (types !== undefined) {
+                    const symbol = types.get(size.object).getSymbol();
                     if (symbol === undefined || !COLLECTION_TYPE_NAMES.has(symbol.name)) return;
                 }
                 context.report({ node, messageId: 'comparison' });

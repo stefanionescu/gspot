@@ -2,15 +2,14 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/engine/outputs.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });
-    const configuration = readConfigurations().get('security')!;
-    const check = configuration.checks.find((check) => check.id === 'security/semgrep')!;
+    const check = getShippedCheck('security/semgrep');
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
         parseCommandFindings(
@@ -30,7 +29,6 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
             column: 1,
             rule: 'gspot.bash.eval',
             message: 'eval runs a string as code.',
-            help: check.help,
             fixable: false,
         },
         {
@@ -40,7 +38,6 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
             column: 1,
             rule: 'parse-error',
             message: 'Syntax error in source.',
-            help: check.help,
             fixable: false,
         },
     ]);
@@ -48,9 +45,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
 
 test('a nosemgrep comment that names another rule than the one that matched keeps the finding and is no scan error', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'eval input # nosemgrep: gspot.bash.other\n' });
-    const check = readConfigurations()
-        .get('security')!
-        .checks.find((check) => check.id === 'security/semgrep')!;
+    const check = getShippedCheck('security/semgrep');
     const warning = {
         code: 2,
         level: 'warn',
@@ -65,9 +60,7 @@ test('a nosemgrep comment that names another rule than the one that matched keep
 
 test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', async (_name, stdout) => {
     await using sandbox = await testdir({ 'scripts/café build.sh': BROKEN_IF_SCRIPT });
-    const check = readConfigurations()
-        .get('security')!
-        .checks.find((check) => check.id === 'security/semgrep')!;
+    const check = getShippedCheck('security/semgrep');
     const paths = { cwd: sandbox.path, root: sandbox.path };
     const { note } = parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths, {});
     expect(note).toContain(SEMGREP_PARSE_ERROR.message);

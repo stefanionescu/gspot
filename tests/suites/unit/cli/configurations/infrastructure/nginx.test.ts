@@ -5,14 +5,13 @@ import { expect, test } from 'bun:test';
 
 import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
 import { runChecks } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import {
     NGINX_FAILURE_CASES,
     NGINX_MOUNT_CASES,
     NGINX_UPSTREAM_CONFIG,
 } from '#tests/config/configurations/infrastructure.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -105,14 +104,8 @@ test('a failed certificate step reports its error text, removes the scratch file
         'nginx.conf': NGINX_UPSTREAM_CONFIG,
     });
 
-    const session = await openSession(sandbox.path);
-
     using resources = new DisposableStack();
-    const fakes = fakeToolExecutables([
-        getTool(readConfigurations().values(), 'openssl'),
-        getTool(readConfigurations().values(), 'docker'),
-    ]);
-    resources.use(fakes);
+    const session = await openFakeToolSession(sandbox.path, ['openssl', 'docker'], resources);
     const folders: string[] = [];
     const message = 'The temporary key could not be written.';
     using _spawn = fakeCommands().mockImplementation((_command, options) => {
@@ -135,10 +128,8 @@ test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, st
         'nginx.conf': 'events {}\nhttp { include /etc/nginx/conf.d/site.conf; }\n',
         'conf.d/site.conf': 'server {}\n',
     });
-    const session = await openSession(sandbox.path);
-    using _pins = fakeToolExecutables(
-        ['openssl', 'docker'].map((name) => getTool(readConfigurations().values(), name)),
-    );
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['openssl', 'docker'], resources);
     using _spawn = fakeCommands().mockImplementation((command) =>
         Promise.resolve(buildProcessResult(command.includes('--rm') ? { code: 1, stderr } : {})),
     );

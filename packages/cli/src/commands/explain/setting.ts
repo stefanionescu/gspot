@@ -1,11 +1,11 @@
 import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/reports.ts';
 import { isSettingUnread, listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { scopeSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
 import { findNamingParent, findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { buildSettings } from '#cli/settings/read.ts';
+import { buildSettingsFromTable } from '#cli/settings/read.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { formatNameList, formatScope, quoteArgument } from '#cli/system/text.ts';
 import type { ExplainedSetting, Explanation, SettingScope } from '#cli/types/commands/reports.ts';
@@ -55,7 +55,7 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
 }
 
 function readShippedSetting(key: string): ExplainedSetting | undefined {
-    const settings = buildSettings(settingsSchema.parse({}), {});
+    const settings = buildSettingsFromTable({});
     const available = buildAvailableSettings(readConfigurations().values().toArray(), settings.level);
     const match = findSetting(available, key);
     if (match === undefined) return undefined;

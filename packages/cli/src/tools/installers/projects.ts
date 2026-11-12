@@ -79,19 +79,6 @@ function findStalePythonLockfile(
     return isFresh ? undefined : { path, kind: 'changed' };
 }
 
-async function planLockfiles(
-    install: ToolInstall,
-    { npm, uvPath }: { npm: NpmToolInstall | undefined; uvPath: string | undefined },
-): Promise<ReplacementRequest[]> {
-    const { files } = install.generated;
-    const packages = files.find((file) => file.path === GSPOT_PATHS.npmProject);
-    const python = files.find((file) => file.path === GSPOT_PATHS.pythonProject);
-    return [
-        ...(packages === undefined || npm === undefined ? [] : [await planNpmLockfile(npm, packages)]),
-        ...(python === undefined || uvPath === undefined ? [] : [await planPythonLockfile(install, python, uvPath)]),
-    ];
-}
-
 async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise<string | undefined> {
     const { session, misePath } = install;
     if (misePath === undefined && which.sync(UV_TOOL, { nothrow: true }) === null) return undefined;
@@ -161,10 +148,10 @@ export async function installNpmToolProject(install: ToolInstall): Promise<ToolP
     if (packageManager === undefined) return { installed: [], tools: [] };
     const npm = { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
     const npmTools = tools.filter((tool) => tool.system !== true && findPackagePin(tool)?.kind === 'npm');
-    const isProject = install.generated.files.some((file) => file.path === GSPOT_PATHS.npmProject);
-    if (isProject && packageManager.name === 'npm' && !isNpmLockfileFresh(npm))
+    const project = install.generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
+    if (project !== undefined && packageManager.name === 'npm' && !isNpmLockfileFresh(npm))
         return { installed: [await installUnlockedNpmTools(npm)], tools: npmTools };
-    const lockfiles = await planLockfiles(install, { npm, uvPath: undefined });
+    const lockfiles = project === undefined ? [] : [await planNpmLockfile(npm, project)];
     writePlans(writer, planReplacements(writer, lockfiles));
     return { installed: [await installNpmProject(npm, lockfiles)], tools: npmTools };
 }
@@ -177,7 +164,8 @@ export async function installPythonToolProjects(
     const uvPath = await findUvPath(install, miseBinPaths);
     if (uvPath === undefined) return { installed: [], tools: [] };
     const installed: string[] = [];
-    const lockfiles = await planLockfiles(install, { npm: undefined, uvPath });
+    const project = install.generated.files.find((file) => file.path === GSPOT_PATHS.pythonProject);
+    const lockfiles = project === undefined ? [] : [await planPythonLockfile(install, project, uvPath)];
     writePlans(writer, planReplacements(writer, lockfiles));
     if (listPackagePins(session.toolConfigurations).python.length > 0)
         installed.push(await installPythonTools(install, uvPath));

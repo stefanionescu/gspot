@@ -2,7 +2,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -15,11 +14,10 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 const BINARY_OUTPUT_HEX = '00ff8047454e455241544544';
 
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
-    await using sandbox = await createGitSandbox({});
     const generator = JSON.stringify(
         buildProgramCommand('fakes/tool', '--text', 'export const version = 2;\n', 'generated/api.ts'),
     );
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: `[[command_check]]\nid = "project/codegen"\ncommand = ${generator}\npaths = ["schema/**"]\noutputs = ["generated/api.ts"]\nstage = "commit"\n`,
         }),

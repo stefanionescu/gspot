@@ -68,7 +68,6 @@ export const HANDLE_ROUTE_IDENTIFIER = {
     column: 1,
     language: 'typescript',
     category: 'functions',
-    label: 'function',
     name: 'handleLogin',
 } as const;
 
@@ -102,21 +101,21 @@ reason = "Event handlers start with handle."
 `;
 
 export const OVERLONG_NAME_FINDINGS = [
-    { rule: 'digits', message: `typescript functions "helperValue2UserUserWithMoreWordsHere": a digit is not a word.` },
+    { rule: 'digits', message: `typescript function "helperValue2UserUserWithMoreWordsHere": a digit is not a word.` },
     {
         rule: 'length',
-        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": 37 characters is over the limit of 35.`,
+        message: `typescript function "helperValue2UserUserWithMoreWordsHere": 37 characters is over the limit of 35.`,
     },
     {
         rule: 'words',
-        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": 8 words is over the limit of 4.`,
+        message: `typescript function "helperValue2UserUserWithMoreWordsHere": 8 words is over the limit of 4.`,
     },
     {
         rule: 'duplicate-words',
-        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": "user" repeats.`,
+        message: `typescript function "helperValue2UserUserWithMoreWordsHere": "user" repeats.`,
     },
     {
         rule: 'banned-word',
-        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": "helper" is banned (roles list).`,
+        message: `typescript function "helperValue2UserUserWithMoreWordsHere": "helper" is banned (roles list).`,
     },
 ] as const;

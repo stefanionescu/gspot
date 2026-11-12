@@ -28,51 +28,36 @@ test.each([...NAMING_LIMIT_CASES])(
             file: 'source',
             language,
             category,
-            label: category,
             name: 'z'.repeat(characters),
             line: 1,
             column: 1,
         });
-        expect(listRuleMessages(declaration, context)).toStrictEqual([]);
-        expect(listRuleMessages({ ...declaration, name: 'z'.repeat(characters + 1) }, context)).toStrictEqual([
-            {
-                rule: 'length',
-                message: `${category} "${'z'.repeat(characters + 1)}": ${String(characters + 1)} characters is over the limit of ${String(characters)}.`,
-            },
-        ]);
+        expect(listRules(declaration, context)).toStrictEqual([]);
+        expect(listRules({ ...declaration, name: 'z'.repeat(characters + 1) }, context)).toStrictEqual(['length']);
         const separator = ['python', 'bash', 'sql'].includes(language) ? '_' : '';
         const casedWords = NAME_WORDS.map((word, index) =>
             separator === '' && index > 0 ? word.slice(0, 1).toUpperCase() + word.slice(1) : word,
         );
+        expect(listRules({ ...declaration, name: casedWords.slice(0, words).join(separator) }, context)).toStrictEqual(
+            [],
+        );
         expect(
-            listRuleMessages({ ...declaration, name: casedWords.slice(0, words).join(separator) }, context),
-        ).toStrictEqual([]);
-        expect(
-            listRuleMessages({ ...declaration, name: casedWords.slice(0, words + 1).join(separator) }, context),
-        ).toStrictEqual([
-            {
-                rule: 'words',
-                message: `${category} "${casedWords.slice(0, words + 1).join(separator)}": ${String(words + 1)} words is over the limit of ${String(words)}.`,
-            },
-        ]);
+            listRules({ ...declaration, name: casedWords.slice(0, words + 1).join(separator) }, context),
+        ).toStrictEqual(['words']);
     },
 );
 
 test('the JavaScript handle override and a repository use override strip their prefixes only in their own files and languages', async () => {
     const naming = await readNaming(HOOK_PREFIX_TABLES);
     const declaration = buildIdentifier(HANDLE_ROUTE_IDENTIFIER);
-    expect(listRuleMessages(declaration, naming)).toStrictEqual([]);
-    expect(listRuleMessages({ ...declaration, file: 'src/hooks/login.ts', name: 'useLogin' }, naming)).toStrictEqual(
-        [],
-    );
-    expect(listRuleMessages({ ...declaration, file: 'src/routes/login.ts', name: 'useLogin' }, naming)).toStrictEqual([
-        { rule: 'banned-word', message: 'function "useLogin": "use" is banned (naming.banned_words).' },
+    expect(listRules(declaration, naming)).toStrictEqual([]);
+    expect(listRules({ ...declaration, file: 'src/hooks/login.ts', name: 'useLogin' }, naming)).toStrictEqual([]);
+    expect(listRules({ ...declaration, file: 'src/routes/login.ts', name: 'useLogin' }, naming)).toStrictEqual([
+        'banned-word',
     ]);
     expect(
-        listRuleMessages({ ...declaration, file: 'src/app.py', language: 'python', name: 'handle_login' }, naming),
-    ).toStrictEqual([
-        { rule: 'banned-word', message: 'function "handle_login": "handle" is banned (naming.banned_words).' },
-    ]);
+        listRules({ ...declaration, file: 'src/app.py', language: 'python', name: 'handle_login' }, naming),
+    ).toStrictEqual(['banned-word']);
 });
 
 test.each([
@@ -83,8 +68,7 @@ test.each([
     ['toPosix', 'functions', 'banned-word'],
     ['isNotReady', 'variables', 'banned-word'],
 ] as const)('%s, a %s, reports %s', async (name, category, rule) => {
-    const findings = listRuleMessages(buildIdentifier({ name, category }), await readNaming(''));
-    expect(findings.map((finding) => finding.rule)).toStrictEqual([rule]);
+    expect(listRules(buildIdentifier({ name, category }), await readNaming(''))).toStrictEqual([rule]);
 });
 
 test.each([
@@ -97,7 +81,7 @@ test.each([
     ['awsS3BucketVersioning', 'variables'],
     ['S3Bucket', 'classes'],
 ] as const)('%s, a %s, passes', async (name, category) => {
-    expect(listRuleMessages(buildIdentifier({ name, category }), await readNaming(''))).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name, category }), await readNaming(''))).toStrictEqual([]);
 });
 
 test('a Swift name keeps its acronym', async () => {
@@ -107,28 +91,28 @@ test('a Swift name keeps its acronym', async () => {
         language: 'swift',
         file: 'a.swift',
     });
-    expect(listRuleMessages(identifier, await readNaming(''))).toStrictEqual([]);
+    expect(listRules(identifier, await readNaming(''))).toStrictEqual([]);
 });
 
 test('a number word such as base64 counts as one word', async () => {
     const naming = await buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
     const context = buildFileNaming({ ...naming, limitLookup: () => ({ cases: [], maxCharacters: 35, maxWords: 4 }) });
     const declaration = buildIdentifier({ name: 'base64User', category: 'variables', file: 'source.ts' });
-    expect(listRuleMessages(declaration, context)).toStrictEqual([]);
+    expect(listRules(declaration, context)).toStrictEqual([]);
 });
 
 test('a name that breaks all five naming limits gets five findings, and the banned-word message names its word list', async () => {
-    expect(
-        listRuleMessages(buildIdentifier({ name: 'helperValue2UserUserWithMoreWordsHere' }), await readNaming('')),
-    ).toStrictEqual([...OVERLONG_NAME_FINDINGS]);
+    const { settings } = await readNaming('');
+    const findings = validateIdentifiers({ scope: { settings: { test_files: [] } } }, settings, [
+        buildIdentifier({ name: 'helperValue2UserUserWithMoreWordsHere' }),
+    ]);
+    expect(findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([...OVERLONG_NAME_FINDINGS]);
 });
 
 test('case follows the category, and each dot-separated piece of a file name is checked alone', async () => {
     const naming = await readNaming('');
-    expect(listRuleMessages(buildIdentifier({ name: 'my_type', category: 'types' }), naming)).toStrictEqual([
-        { rule: 'case', message: 'typescript types "my_type": expected pascal case.' },
-    ]);
-    expect(listRuleMessages(buildIdentifier({ name: 'bash.test', category: 'files' }), naming)).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name: 'my_type', category: 'types' }), naming)).toStrictEqual(['case']);
+    expect(listRules(buildIdentifier({ name: 'bash.test', category: 'files' }), naming)).toStrictEqual([]);
 });
 
 test('the naming check accepts _ as a variable, a digit in a tests/ path, and a Bash name with an ignored prefix', async () => {
@@ -137,15 +121,12 @@ paths = ["tests/acceptance/**"]
 allow_digits = true
 reason = "Acceptance tests number their steps."
 `);
-    expect(listRuleMessages(buildIdentifier({ name: '_', category: 'variables' }), naming)).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name: '_', category: 'variables' }), naming)).toStrictEqual([]);
     expect(
-        listRuleMessages(
-            buildIdentifier({ name: 'user2', category: 'variables', file: 'tests/acceptance/a.ts' }),
-            naming,
-        ),
+        listRules(buildIdentifier({ name: 'user2', category: 'variables', file: 'tests/acceptance/a.ts' }), naming),
     ).toStrictEqual([]);
     expect(
-        listRuleMessages(
+        listRules(
             buildIdentifier({ name: '_private_step', category: 'functions', file: 'scripts/a.sh', language: 'bash' }),
             naming,
         ),
@@ -154,85 +135,44 @@ reason = "Acceptance tests number their steps."
 
 test('allowed names and path overrides skip the naming rules', async () => {
     const naming = await readNaming(ALLOWED_NAME_TABLES);
-    expect(listRuleMessages(buildIdentifier({ name: 'requestAnimationFrame' }), naming)).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name: 'requestAnimationFrame' }), naming)).toStrictEqual([]);
     expect(
-        listRuleMessages(
-            buildIdentifier({ name: 'Content-Type', category: 'properties', file: 'api/route.ts' }),
-            naming,
-        ),
+        listRules(buildIdentifier({ name: 'Content-Type', category: 'properties', file: 'api/route.ts' }), naming),
     ).toStrictEqual([]);
     expect(
-        listRuleMessages(
-            buildIdentifier({ name: 'Content-Type', category: 'properties', file: 'api/internal.ts' }),
-            naming,
-        ),
-    ).toStrictEqual([
-        { rule: 'case', message: 'typescript properties "Content-Type": expected camel or upper-snake case.' },
-    ]);
+        listRules(buildIdentifier({ name: 'Content-Type', category: 'properties', file: 'api/internal.ts' }), naming),
+    ).toStrictEqual(['case']);
 });
 
 test('a word of the shipped tests list passes in a test file, and the same word from banned_words is reported there', async () => {
     const declaration = buildIdentifier({ name: 'actualRoot' });
-    expect(listRuleMessages(declaration, { ...(await readNaming('')), isTestFile: true })).toStrictEqual([]);
-    expect(listRuleMessages(declaration, await readNaming(''))).toStrictEqual([
-        { rule: 'banned-word', message: 'typescript functions "actualRoot": "actual" is banned (tests list).' },
-    ]);
+    expect(listRules(declaration, { ...(await readNaming('')), isTestFile: true })).toStrictEqual([]);
+    expect(listRules(declaration, await readNaming(''))).toStrictEqual(['banned-word']);
     expect(
-        listRuleMessages(declaration, {
+        listRules(declaration, {
             ...(await readNaming('[naming]\nbanned_words = ["actual"]\n')),
             isTestFile: true,
         }),
-    ).toStrictEqual([
-        {
-            rule: 'banned-word',
-            message: 'typescript functions "actualRoot": "actual" is banned (naming.banned_words).',
-        },
-    ]);
+    ).toStrictEqual(['banned-word']);
 });
 
 test('a banned word matches a word or a run of words, never the inside of a word', async () => {
     const naming = await readNaming('[naming]\nbanned_words = ["widget", "paper trail", "cross-cutting"]\n');
-    expect(listRuleMessages(buildIdentifier({ name: 'widgetPrice' }), naming)).toStrictEqual([
-        {
-            rule: 'banned-word',
-            message: 'typescript functions "widgetPrice": "widget" is banned (naming.banned_words).',
-        },
-    ]);
-    expect(listRuleMessages(buildIdentifier({ name: 'subwidget' }), naming)).toStrictEqual([]);
-    expect(listRuleMessages(buildIdentifier({ name: 'aPaperTrail' }), naming)).toStrictEqual([
-        {
-            rule: 'banned-word',
-            message: 'typescript functions "aPaperTrail": "paper trail" is banned (naming.banned_words).',
-        },
-    ]);
-    expect(listRuleMessages(buildIdentifier({ name: 'paperOfTrail' }), naming)).toStrictEqual([]);
-    expect(listRuleMessages(buildIdentifier({ name: 'crossCuttingRule' }), naming)).toStrictEqual([
-        {
-            rule: 'banned-word',
-            message: 'typescript functions "crossCuttingRule": "cross-cutting" is banned (naming.banned_words).',
-        },
-    ]);
+    expect(listRules(buildIdentifier({ name: 'widgetPrice' }), naming)).toStrictEqual(['banned-word']);
+    expect(listRules(buildIdentifier({ name: 'subwidget' }), naming)).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name: 'aPaperTrail' }), naming)).toStrictEqual(['banned-word']);
+    expect(listRules(buildIdentifier({ name: 'paperOfTrail' }), naming)).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name: 'crossCuttingRule' }), naming)).toStrictEqual(['banned-word']);
 });
 
 test('an ignored_prefix override strips handle from function and method names in its files', async () => {
     const naming = await readNaming(HANDLE_PREFIX_TABLES);
-    expect(listRuleMessages(buildIdentifier({ name: 'handleSubmit', category: 'functions' }), naming)).toStrictEqual(
-        [],
-    );
-    expect(listRuleMessages(buildIdentifier({ name: 'handleSubmit', category: 'methods' }), naming)).toStrictEqual([]);
-    expect(listRuleMessages(buildIdentifier({ name: 'handleSubmit', category: 'variables' }), naming)).toStrictEqual([
-        {
-            rule: 'banned-word',
-            message: 'typescript variables "handleSubmit": "handle" is banned (naming.banned_words).',
-        },
+    expect(listRules(buildIdentifier({ name: 'handleSubmit', category: 'functions' }), naming)).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name: 'handleSubmit', category: 'methods' }), naming)).toStrictEqual([]);
+    expect(listRules(buildIdentifier({ name: 'handleSubmit', category: 'variables' }), naming)).toStrictEqual([
+        'banned-word',
     ]);
-    expect(listRuleMessages(buildIdentifier({ name: 'HandleSubmit' }), naming)).toStrictEqual([
-        { rule: 'case', message: 'typescript functions "HandleSubmit": expected camel case.' },
-        {
-            rule: 'banned-word',
-            message: 'typescript functions "HandleSubmit": "handle" is banned (naming.banned_words).',
-        },
-    ]);
+    expect(listRules(buildIdentifier({ name: 'HandleSubmit' }), naming)).toStrictEqual(['case', 'banned-word']);
 });
 
 async function readNaming(tables: string): Promise<FileNaming> {
@@ -243,20 +183,17 @@ async function readNaming(tables: string): Promise<FileNaming> {
     );
 }
 
-function listRuleMessages(
-    identifier: Identifier,
-    naming: FileNaming,
-): Array<{ rule: string | undefined; message: string }> {
+function listRules(identifier: Identifier, naming: FileNaming): Array<string | undefined> {
     return validateIdentifiers(
         { scope: { settings: { test_files: naming.isTestFile ? ['**'] : [] } } },
         naming.settings,
         [identifier],
-    ).map(({ rule, message }) => ({ rule, message }));
+    ).map(({ rule }) => rule);
 }
 function buildFileNaming(settings: NamingSettings): FileNaming {
     return { settings, isTestFile: false };
 }
 function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
     const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
-    return { file, language, category, line, column, label: `${language} ${category}`, ...fields };
+    return { file, language, category, line, column, ...fields };
 }

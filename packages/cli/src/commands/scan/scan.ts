@@ -109,7 +109,7 @@ async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<
     await copyHooks(root, copy.root, cancelSignal);
     // With no commit behind the index, Git counts every tracked file as staged, so the secret scan reads every file.
     await readGitText(copy.root, GIT_UNBORN_HEAD_ARGUMENTS, { cancelSignal });
-    const planning = await planInit(copy.root, { cwd: copy.root });
+    const planning = await planInit(copy.root, {});
     if (planning.detection.files.length === 0) throw new GspotError('arguments', SCAN_NO_FILES_MESSAGE);
     const userRules = await readUserRules(planning);
     await writeInitFiles(copy.root, { ...planning, pinPath: undefined });

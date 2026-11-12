@@ -3,8 +3,6 @@ import { join, posix } from 'node:path';
 
 import { EXECUTABLE_BITS, EXECUTABLE_FILE, GIT_FILE_MODES, GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
-import { decodeGitPaths } from '#cli/repository/git/output.ts';
-import { buildGitError, runGitBytes } from '#cli/repository/git/run.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
 import { extractParentFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
@@ -43,17 +41,6 @@ function readListedFile(
     return { path, size: stat.size, executable: isExecutable, isSymlink: false };
 }
 
-export async function readGitListing(
-    root: string,
-    gitArguments: readonly string[],
-    cancelSignal: AbortSignal | undefined,
-    unreadablePaths: string[],
-): Promise<string> {
-    const listed = await runGitBytes(root, gitArguments, { cancelSignal });
-    if (listed.code !== 0) throw buildGitError(gitArguments, listed);
-    return decodeGitPaths(listed.stdout, unreadablePaths);
-}
-
 export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
     return [
         ...new Set(
@@ -62,9 +49,9 @@ export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
     ].toSorted((left, right) => compareText(left, right));
 }
 
-export function listTrackedFiles(root: string, index: GitIndexFile[], untracked: string): ListedFile[] {
+export function listTrackedFiles(root: string, index: GitIndexFile[], untracked: string[]): ListedFile[] {
     const tracked = new Set(index.map((indexFile) => indexFile.path));
-    const paths = [...tracked, ...untracked.split('\0').filter(Boolean)];
+    const paths = [...tracked, ...untracked];
     const submodules = listSubmodulePaths(index);
     const executables =
         process.platform === 'win32'

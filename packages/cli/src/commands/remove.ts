@@ -9,11 +9,10 @@ import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { REMOVAL_REASON_SUGGESTION } from '#cli/config/settings/validation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { addScopeTable, removeKey } from '#cli/settings/edit.ts';
 import { findSetting, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
-import { buildSettings } from '#cli/settings/read.ts';
+import { buildSettingsFromTable } from '#cli/settings/read.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -38,7 +37,7 @@ function assertRemovable(names: string[], kept: string[]): void {
 }
 
 function removeUnusedSettings(table: TomlTable, scopePath: string): string {
-    const edited = buildSettings(settingsSchema.parse(table), table);
+    const edited = buildSettingsFromTable(table);
     const automatic = readConfigurations()
         .values()
         .filter((configuration) => configuration.always_selected)

@@ -3,15 +3,12 @@ import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 
 import { TYPE_NODES } from '#cli/config/configurations/naming.ts';
-import {
-    IMPORT_RULE_CATEGORY,
-    IMPORT_RULE_CHECK_RULES,
-    PRIVATE_SWIFT_VISIBILITIES,
-} from '#cli/config/configurations/structure.ts';
+import { IMPORT_RULE_CATEGORY, IMPORT_RULE_CHECK_RULES } from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { formatRefusedImport } from '#cli/configurations/general/structure/import-rules.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { RuleLookup } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -56,14 +53,6 @@ function listRuleSwiftFiles(files: TrackedFile[], lookup: RuleLookup): Array<{ p
         .map(({ path }) => ({ path, grammar: 'swift' }));
 }
 
-function isSharedTopLevel(node: Node, rootNode: Node): boolean {
-    if (node.parent?.id !== rootNode.id) return false;
-    const modifiers = node.namedChildren.find((child) => child.type === 'modifiers')?.namedChildren ?? [];
-    return !modifiers.some(
-        (modifier) => modifier.type === 'visibility_modifier' && PRIVATE_SWIFT_VISIBILITIES.has(modifier.text),
-    );
-}
-
 function addToSet(table: Map<string, Set<string>>, key: string, value: string): void {
     table.set(key, (table.get(key) ?? new Set()).add(value));
 }
@@ -78,10 +67,13 @@ async function readDeclarations(
     const isTest = buildPathMatcher(planned.scope.settings.test_files);
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, ({ path, rootNode }) => {
         const { name: rule } = lookup.rules[lookup.findOwner(path) as number] as ImportRule;
+        const sharedTopLevel = new Set(
+            rootNode.namedChildren.filter((child) => !isPrivateSwiftDeclaration(child)).map((child) => child.id),
+        );
         for (const node of rootNode.descendantsOfType(DECLARATION_NODES)) {
             const name = node.type === 'type_parameter' ? node.firstNamedChild : node.childForFieldName('name');
             if (name?.type !== 'type_identifier') continue;
-            if (!isTest(path) && isSharedTopLevel(node, rootNode)) addToSet(declarations.owners, name.text, rule);
+            if (!isTest(path) && sharedTopLevel.has(node.id)) addToSet(declarations.owners, name.text, rule);
             else addToSet(declarations.hidden, rule, name.text);
         }
     });

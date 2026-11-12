@@ -4,15 +4,13 @@ import { join } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { CANCELLATION_REPORT_CASES } from '#tests/config/commands/check.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { CHILD_WAIT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';
 import { CLI_BIN, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { spawnCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { CHILD_TIMEOUT_SECONDS, spawnCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
@@ -39,7 +37,7 @@ test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
             [process.execPath, CLI_BIN, 'check', '--only', 'project/slow', ...(format === 'json' ? ['--json'] : [])],
             {
                 cwd: sandbox.path,
-                timeoutSeconds: (CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+                timeoutSeconds: CHILD_TIMEOUT_SECONDS,
                 env: GSPOT_ENVIRONMENT,
             },
         );

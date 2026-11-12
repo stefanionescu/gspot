@@ -21,14 +21,14 @@ import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
-import { listTrackedFiles, readGitListing } from '#cli/repository/files/tracked.ts';
+import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import {
     mergeAttributes,
     parseAttributePatterns,
     parseListingLine,
     parsePathAttributes,
 } from '#cli/repository/git/output.ts';
-import { isOutsideRepository, runGit } from '#cli/repository/git/run.ts';
+import { isOutsideRepository, readGitPaths, runGit } from '#cli/repository/git/run.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -62,16 +62,11 @@ async function readAttributes(root: string, paths: string[]): Promise<Map<string
 export async function listRepositoryFiles(cache: RunCache, untracked?: UntrackedFiles): Promise<RepositoryListing> {
     const root = cache.root;
     const unreadablePaths = [...(untracked?.unreadablePaths ?? [])];
-    const indexed = await readGitListing(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths);
-    const untrackedListing =
-        untracked === undefined
-            ? await readGitListing(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths)
-            : untracked.paths.join('\0');
-    const index = indexed
-        .split('\0')
-        .filter(Boolean)
-        .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema));
-    const listedFiles = listTrackedFiles(root, index, untrackedListing);
+    const indexed = await readGitPaths(root, GIT_INDEX_FILES_ARGUMENTS, {}, unreadablePaths);
+    const untrackedPaths =
+        untracked?.paths ?? (await readGitPaths(root, GIT_UNTRACKED_FILES_ARGUMENTS, {}, unreadablePaths));
+    const index = indexed.map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema));
+    const listedFiles = listTrackedFiles(root, index, untrackedPaths);
     const attributes = await readAttributes(
         root,
         listedFiles.map((file) => file.path),

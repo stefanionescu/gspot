@@ -89,7 +89,6 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
     const findings = OUTPUT_FORMATS[output.format].parse({
         check: check.id,
-        help: check.help,
         output,
         stdout,
         text,

@@ -101,7 +101,7 @@ function validateScriptFile(file: ScriptFile): CheckFinding[] {
     return issues.map(({ line, rule, message: text }) => ({
         file: file.path,
         line,
-        rule: rule,
+        rule,
         message: text,
     }));
 }

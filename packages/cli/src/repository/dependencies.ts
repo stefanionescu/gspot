@@ -34,10 +34,17 @@ async function readDependencyFile(cache: RunCache, file: TrackedFile): Promise<D
     return await tryParseFile(() => parse(file.path, text));
 }
 
+/**
+Tell whether a file is a source file of the project: not a file of gspot, and not inside an installed dependency folder.
+*/
+export function isProjectSource({ path, kind }: Pick<TrackedFile, 'path' | 'kind'>): boolean {
+    return kind === 'source' && !isGspotPath(path) && !isInInstalledFolder(path);
+}
+
 export async function readDependencyFiles(cache: RunCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
     for (const file of files) {
-        if (file.kind !== 'source' || isGspotPath(file.path) || isInInstalledFolder(file.path)) continue;
+        if (!isProjectSource(file)) continue;
         const dependencyFile = await readDependencyFile(cache, file);
         if (dependencyFile !== undefined) dependencies.push(dependencyFile);
     }
@@ -48,12 +55,10 @@ export function listUnparsedDependencyFiles(files: TrackedFile[], dependencyFile
     const parsed = new Set(dependencyFiles.map(({ path }) => path));
     return files
         .filter(
-            ({ path, kind }) =>
-                kind === 'source' &&
-                DEPENDENCY_FILE_PARSERS.has(posix.basename(path)) &&
-                !parsed.has(path) &&
-                !isGspotPath(path) &&
-                !isInInstalledFolder(path),
+            (file) =>
+                isProjectSource(file) &&
+                DEPENDENCY_FILE_PARSERS.has(posix.basename(file.path)) &&
+                !parsed.has(file.path),
         )
         .map(({ path }) => path);
 }

@@ -28,6 +28,7 @@ import {
     SIMPLE_GIT_HOOKS_KEY,
     YAML_EXTENSIONS,
 } from '#cli/config/repository/setup.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
@@ -47,15 +48,19 @@ function listFolder(root: string, folder: string): string[] {
         .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);
 }
 
+function listFolderFiles(root: string, folder: string): string[] {
+    return listFolder(root, folder).filter(
+        (name) => statSync(join(root, folder, name), { throwIfNoEntry: false })?.isFile() === true,
+    );
+}
+
 function detectHookFolder(
     root: string,
     folder: string,
     hooksPath: string,
 ): RepositorySetup['hooks'][number] | undefined {
     if (hooksPath === folder) return undefined;
-    const files = listFolder(root, folder).filter(
-        (name) => statSync(join(root, folder, name), { throwIfNoEntry: false })?.isFile() === true,
-    );
+    const files = listFolderFiles(root, folder);
     if (files.length === 0) return undefined;
     return { kind: folder === HUSKY_PATH ? 'husky' : 'githooks', path: folder, files };
 }
@@ -67,11 +72,7 @@ async function readHooksPathSetup(root: string, hooksPath: string): Promise<Repo
         {
             kind: 'hooksPath',
             path: hooksPath,
-            files: listFolder(dirname(location), basename(location)).filter(
-                (name) =>
-                    statSync(join(dirname(location), basename(location), name), { throwIfNoEntry: false })?.isFile() ===
-                    true,
-            ),
+            files: listFolderFiles(dirname(location), basename(location)),
         },
     ];
 }
@@ -109,7 +110,7 @@ function listHookTools(root: string): RepositorySetup['hooks'] {
 
 function isLfsHookScript(folder: string, name: string): boolean {
     if (!(LFS_HOOKS as readonly string[]).includes(name)) return false;
-    const lines = readFileSync(join(folder, name), 'utf8').trim().split(/\r?\n/u);
+    const lines = readFileSync(join(folder, name), 'utf8').trim().split(LINE_BREAK);
     const call = lines.at(-1) ?? '';
     const isCall = call === `git lfs ${name} "$@"` || (name === 'pre-push' && LFS_PUSH_CALLS.has(call));
     return lines[0] === HOOK_SHEBANG && isCall && lines.slice(1, -1).every((line) => line.startsWith(LFS_GUARD_PREFIX));

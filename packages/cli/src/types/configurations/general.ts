@@ -121,7 +121,6 @@ export type Identifier = {
     column: number;
     language: string;
     category: NamedCategory;
-    label: string;
     name: string;
     folder?: string;
     addedCases?: NamingCase[];

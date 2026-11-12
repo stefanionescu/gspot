@@ -39,7 +39,7 @@ import {
     VERSION_FLAG,
 } from '#cli/config/main.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
-import { buildGitError, runGit } from '#cli/repository/git/run.ts';
+import { readGitFlag } from '#cli/repository/git/run.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { assertGspotPin } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -205,11 +205,8 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
     program.configureOutput({ writeErr: () => {} });
     program.hook('preAction', async (_program, action) => {
         location.root = await readRepositoryRoot(location.cwd);
-        const command = ['config', '--bool', '--get', 'core.sparseCheckout'];
-        const sparse = await runGit(location.root, command, {});
-        if (sparse.code === 0 && sparse.stdout.trim() === 'true')
+        if (await readGitFlag(location.root, 'core.sparseCheckout'))
             throw new GspotError('git', 'gspot does not support sparse checkouts. Run git sparse-checkout disable.');
-        if (sparse.code !== 0 && sparse.code !== 1) throw buildGitError(command, sparse);
         if (PIN_COMMANDS.has(action.name())) assertGspotPin(location.root);
     });
     const definitions: readonly CommandDefinition[] = [

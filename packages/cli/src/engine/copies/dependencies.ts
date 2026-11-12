@@ -15,9 +15,8 @@ import { GIT_CHECK_IGNORE_ARGUMENTS, JSCONFIG_FILE } from '#cli/config/engine.ts
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import { runGit } from '#cli/repository/git/run.ts';
+import { buildGitError, runGit } from '#cli/repository/git/run.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { convertToPosixPath, extractExtension, isInScope, isInside } from '#cli/system/paths.ts';
 import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
@@ -109,7 +108,7 @@ export async function readIgnoredPaths(root: string, paths: string[], cancelSign
         stdin: paths.join('\0') + '\0',
         cancelSignal,
     });
-    if (result.code !== 0 && result.code !== 1) throw new GspotError('git', result.stderr);
+    if (result.code !== 0 && result.code !== 1) throw buildGitError(GIT_CHECK_IGNORE_ARGUMENTS, result);
     return result.stdout.split('\0').filter((path) => path !== '');
 }
 
@@ -138,9 +137,9 @@ export async function copyDependencies(
 
 /**
 Lists the ignored declaration files that your own tsconfig needs. With checked paths, only the tsconfig files whose
-folder holds one of them count, because the type-aware tools of the run read only those programs.
+folder holds one of them count, because the type-aware tools of the run read only those programs. With no checked
+paths, every tsconfig counts.
 
-@param revision.paths the paths that the run checks, or undefined to read every tsconfig.
 @param cancelSignal stops the Git queries.
 */
 export async function readDeclarationDependencies(

@@ -1,4 +1,4 @@
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { RuleOptionsRun } from '#cli/types/configurations/general.ts';
@@ -36,7 +36,7 @@ export function listDisabledRules(
     const { config, configuration, scope, level } = planned;
     const { always, levelOff } = readToolDisabledRules(planned);
     const checks = configuration.checks.filter((check) => {
-        const tools = new Set([check.tool ?? check.command?.[0] ?? []].flat());
+        const tools = new Set([findToolName(check) ?? []].flat());
         return config.tool.some((name) => tools.has(name));
     });
     return [

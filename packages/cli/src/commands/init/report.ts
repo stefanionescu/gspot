@@ -29,10 +29,7 @@ function formatDetectionRow(label: string, names: string[]): string | undefined 
 function formatDetectedScopes(summary: DetectionSummary): string | undefined {
     const paths = summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.path);
     if (summary.scopes.length <= 1) return formatDetectionRow('scopes', paths);
-    const sources = new Set(summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.origin));
-    let note = 'from gspot.toml';
-    if (sources.has('project')) note = PROJECT_FILE_NOTE;
-    return formatDetectionRow('scopes', [...paths, note]);
+    return formatDetectionRow('scopes', [...paths, PROJECT_FILE_NOTE]);
 }
 
 function formatDetectedTools(summary: DetectionSummary): Array<string | undefined> {

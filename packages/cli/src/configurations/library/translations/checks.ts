@@ -61,7 +61,7 @@ function selectBaseFile(path: string, messageFiles: MessageFiles): string {
 }
 
 function listLocalMessageFindings(
-    planned: PlannedCheck,
+    base: string,
     path: string,
     messages: Map<string, ParsedMessage>,
     baseMessages: Map<string, ParsedMessage>,
@@ -78,7 +78,6 @@ function listLocalMessageFindings(
                   },
               ],
     );
-    const base = getTable(planned.scope.settings, 'translations').base_locale;
     const unexpected = [...messages].flatMap(([key, { line }]) =>
         baseMessages.has(key)
             ? []
@@ -95,13 +94,12 @@ function listLocalMessageFindings(
 }
 
 function compareMessages(
-    planned: PlannedCheck,
+    base: string,
     path: string,
     messages: Map<string, ParsedMessage>,
     baseMessages: Map<string, ParsedMessage>,
 ): CheckFinding[] {
-    const base = getTable(planned.scope.settings, 'translations').base_locale;
-    const { broken, unexpected } = listLocalMessageFindings(planned, path, messages, baseMessages);
+    const { broken, unexpected } = listLocalMessageFindings(base, path, messages, baseMessages);
     const missing = baseMessages
         .keys()
         .filter((key) => !messages.has(key))
@@ -177,7 +175,6 @@ function compareMessageArguments(
 
 function readMessageFiles(
     session: Session,
-
     files: string[],
     messageFiles: MessageFiles,
 ): { messagesByPath: Map<string, Map<string, ParsedMessage>>; findings: CheckFinding[] } {
@@ -209,7 +206,6 @@ function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] 
     const options = getTable(planned.scope.settings, 'translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
-
     const files = planned.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX));
@@ -244,7 +240,7 @@ function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] 
             const baseMessages = messagesByPath.get(basePath);
             return messages === undefined || baseMessages === undefined
                 ? []
-                : compareMessages(planned, path, messages, baseMessages);
+                : compareMessages(base, path, messages, baseMessages);
         }),
     ];
 }

@@ -74,7 +74,7 @@ function validateLockfileHosts(session: Session, path: string, hosts: Set<string
                       file: path,
                       ...getPosition(text, Math.max(0, offset)),
                       rule: DEPENDENCY_RULES.host,
-                      message: message,
+                      message,
                   },
               ];
     });
@@ -114,7 +114,6 @@ function getExactVersion(tools: Record<string, unknown>, tool: string): string |
 
 function findMiseFilePin(
     session: Session,
-
     folder: string,
     tool: string,
 ): { pin: { path: string; version: string } | undefined; findings: CheckFinding[] } {
@@ -184,7 +183,7 @@ function listMissingPins(session: Session, folder: string): CheckFinding[] {
 }
 
 function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
-    const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
+    const hosts = new Set(getTable(planned.scope.settings, 'dependencies').allowed_registries);
     const files = planned.files.filter(({ path }) => !isGspotPath(path));
     return [
         ...listForeignLockfiles(files),

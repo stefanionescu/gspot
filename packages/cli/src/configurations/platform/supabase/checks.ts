@@ -48,6 +48,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
+import { listMatchingLines } from '#cli/system/text.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
@@ -273,31 +274,25 @@ function checkServiceRoleKey(session: Session, planned: PlannedCheck): CheckFind
             extensions.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>
-        readText(session.cache, file.path)
-            .split('\n')
-            .flatMap((text, index): CheckFinding[] => {
-                if (SERVICE_ROLE_KEY_NAMES.every((name) => !text.includes(name))) return [];
-                return [
-                    {
-                        file: file.path,
-                        line: index + 1,
-                        rule: SUPABASE_CHECK_RULES.serviceRoleKey,
-                        message: SERVICE_ROLE_KEY_MESSAGE,
-                    },
-                ];
-            }),
+        listMatchingLines(readText(session.cache, file.path), (text) =>
+            SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name)),
+        ).map((line) => ({
+            file: file.path,
+            line,
+            rule: SUPABASE_CHECK_RULES.serviceRoleKey,
+            message: SERVICE_ROLE_KEY_MESSAGE,
+        })),
     );
 }
 
 function checkVerifyJwt(session: Session, planned: PlannedCheck): CheckFinding[] {
     const file = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
-    return (findText(session.cache, file) ?? '')
-        .split('\n')
-        .flatMap((text, index): CheckFinding[] =>
-            VERIFY_JWT_OFF.test(text)
-                ? [{ file, line: index + 1, rule: SUPABASE_CHECK_RULES.verifyJwt, message: VERIFY_JWT_MESSAGE }]
-                : [],
-        );
+    return listMatchingLines(findText(session.cache, file) ?? '', (text) => VERIFY_JWT_OFF.test(text)).map((line) => ({
+        file,
+        line,
+        rule: SUPABASE_CHECK_RULES.verifyJwt,
+        message: VERIFY_JWT_MESSAGE,
+    }));
 }
 
 export const SUPABASE_CHECKS: Readonly<Record<string, CheckCode>> = {

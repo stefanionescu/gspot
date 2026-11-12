@@ -6,6 +6,7 @@ import semver from 'semver';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { MISE_INSTALL_URL } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { getTool, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
 import { executableLayout } from '#cli/system/paths.ts';
@@ -219,4 +220,14 @@ test('doctor prints the install help of a missing system tool, because gspot ins
         .parse(JSON.parse(report.stdout))
         .tools.filter(({ kind, name }) => kind === 'package' && name !== 'pytest-cov');
     expect(result.stdout).toContain(`missing npm packages: ${String(npmPackages.length)} (run gspot install)`);
+});
+
+test('with no mise on PATH, doctor names mise and the tools that mise installs', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    using _lookup = fakeExecutableLookup(null);
+    const result = await runGspot(sandbox.path, ['doctor']);
+    expect(result.code).toBe(1);
+    const prefix = `mise is not on PATH. Install mise (${MISE_INSTALL_URL}), or install these tools yourself: `;
+    const line = result.stdout.split('\n').find((each) => each.startsWith(prefix));
+    expect(line?.slice(prefix.length, -1).split(', ')).toContain('taplo');
 });

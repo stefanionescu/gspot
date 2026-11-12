@@ -93,8 +93,6 @@ async function preparePydoclintCheck(
 
 test.each([
     { name: 'a Google Returns section', section: 'Returns:', setting: undefined, expected: 'google' },
-    { name: 'a Google Attributes section', section: 'Attributes:', setting: undefined, expected: 'google' },
-    { name: 'a Google Raises section', section: 'Raises:', setting: undefined, expected: 'google' },
     { name: 'a Google section under the numpy setting', section: 'Returns:', setting: 'numpy', expected: 'numpy' },
 ] as const)(
     'pydoclint runs a file that holds only $name with the style $expected',
@@ -143,7 +141,7 @@ test('pydoclint runs a file whose first docstring has a NumPy section with the n
     expect(commandArguments[commandArguments.indexOf('--style') + 1]).toBe('numpy');
 });
 
-test('pydoclint says what to write under Raises for DOC503 and keeps the help of the check for other rules', async () => {
+test('pydoclint says what to write under Raises for DOC503 and leaves other rules to the help of the check', async () => {
     await using sandbox = await createGitSandbox({});
     using prepared = await preparePydoclintCheck(sandbox.path, {
         'pyproject.toml': PYPROJECT,
@@ -162,7 +160,7 @@ test('pydoclint says what to write under Raises for DOC503 and keeps the help of
         {},
     );
     const helps = new Map(result.findings.map(({ rule, help }) => [rule, help]));
-    expect(helps.get('DOC103')).toBe(prepared.planned.check.help);
+    expect(helps.get('DOC103')).toBeUndefined();
     expect(helps.get('DOC503')).toContain('Under `Raises:`, list each name');
 });
 

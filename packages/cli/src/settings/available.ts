@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { BOUND_PREFIXES, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { LANGUAGE_GROUP_TABLES, SHIPPED_DEFAULT_ORIGIN, TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
 import { OVERRIDING_GROUPS } from '#cli/config/settings/validation.ts';
-import { readNamingDefaults } from '#cli/manifests/read.ts';
+import { listToolNames, readNamingDefaults } from '#cli/manifests/read.ts';
 import { configurationTableSchemas, tableSettingSchemas } from '#cli/schemas/settings/configurations.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { importRulesSchema } from '#cli/schemas/settings/tables.ts';
@@ -74,41 +74,6 @@ function addConfigurationSettings(
         addDefault(availableSettings, configuration, { ...setting, default: value });
 }
 
-const ROOT_SETTINGS: Setting[] = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).map<Setting>(
-    ([name, schema]) => {
-        const value = schema.parse(undefined);
-        return {
-            name,
-            ...getSettingType(schema),
-            default: value,
-            ...schema.meta(),
-            description: schema.description ?? '',
-        };
-    },
-);
-
-const TOOL_SETTINGS: Map<string, Setting[]> = new Map(
-    Object.entries(toolsSchema.shape).map(([tool, table]) => [
-        tool,
-        Object.entries<z.ZodType>(table.unwrap().shape).map<Setting>(([field, schema]) => ({
-            name: `tools.${tool}.${field}`,
-            ...getSettingType(schema),
-            default: schema.parse(undefined),
-            ...schema.meta(),
-            description: schema.description ?? '',
-        })),
-    ]),
-);
-
-function addToolSettings(availableSettings: AvailableSettings, configurations: Configuration[]): void {
-    const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
-    for (const [tool, settings] of TOOL_SETTINGS) {
-        if (!tools.has(tool)) continue;
-        for (const setting of settings)
-            if (!availableSettings.settings.has(setting.name)) availableSettings.settings.set(setting.name, setting);
-    }
-}
-
 function getBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_for'> | undefined {
     if (definition?.['reasoned'] !== true) return undefined;
     const field = name.slice(name.lastIndexOf('.') + 1);
@@ -116,11 +81,9 @@ function getBoundReason(name: string, definition: z.GlobalMeta | undefined): Pic
     return direction === undefined ? undefined : { reason_for: direction };
 }
 
-function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
+function buildSetting(name: string, schema: z.ZodType): Setting {
     const definition = schema.meta();
-    const owners = definition?.['configurations'] as readonly string[] | undefined;
-    if (owners === undefined) return;
-    const setting: Setting = {
+    return {
         name,
         ...getSettingType(schema),
         default: schema.parse(undefined),
@@ -128,6 +91,34 @@ function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, sche
         ...definition,
         description: schema.description ?? '',
     };
+}
+
+const ROOT_SETTINGS: Setting[] = Object.entries<z.ZodType>({ ...rootSettingSchemas, ...tableSettingSchemas }).map(
+    ([name, schema]) => buildSetting(name, schema),
+);
+
+const TOOL_SETTINGS: Map<string, Setting[]> = new Map(
+    Object.entries(toolsSchema.shape).map(([tool, table]) => [
+        tool,
+        Object.entries<z.ZodType>(table.unwrap().shape).map(([field, schema]) =>
+            buildSetting(`tools.${tool}.${field}`, schema),
+        ),
+    ]),
+);
+
+function addToolSettings(availableSettings: AvailableSettings, configurations: Configuration[]): void {
+    const tools = listToolNames(configurations);
+    for (const [tool, settings] of TOOL_SETTINGS) {
+        if (!tools.has(tool)) continue;
+        for (const setting of settings)
+            if (!availableSettings.settings.has(setting.name)) availableSettings.settings.set(setting.name, setting);
+    }
+}
+
+function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
+    const owners = schema.meta()?.['configurations'] as readonly string[] | undefined;
+    if (owners === undefined) return;
+    const setting = buildSetting(name, schema);
     for (const owner of owners) {
         const held = settingsByConfiguration.get(owner) ?? [];
         held.push(setting);

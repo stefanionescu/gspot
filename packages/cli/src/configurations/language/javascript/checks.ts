@@ -9,6 +9,7 @@ import {
 import { JSCONFIG_FILE, RAN_STATUSES } from '#cli/config/engine.ts';
 import { DECLARATION_EXTENSIONS, PRIVATE_FILE } from '#cli/config/system.ts';
 import { keepListedFindings } from '#cli/configurations/ignores.ts';
+import { buildMissingFileStop } from '#cli/configurations/syntax.ts';
 import { addTsbuildinfoFlag, listCompilerFiles } from '#cli/configurations/tsc/compiler.ts';
 import { readAuthoredTypes } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { createCheckCopy, createCopy } from '#cli/engine/copies/files.ts';
@@ -18,7 +19,6 @@ import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { CheckStop } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath, extractExtension, isInside } from '#cli/system/paths.ts';
@@ -63,8 +63,7 @@ async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck):
         return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = getConfigPath(session, planned, extractConfigName(JSCONFIG_FILE));
     const generated = readTsconfig(session.root, join(session.root, target), session.cache);
-    if (generated === undefined)
-        throw new CheckStop('missing', `The generated file ${target} is missing. Run gspot install.`);
+    if (generated === undefined) throw buildMissingFileStop(target);
     const project = {
         ...generated,
         ...buildScopeCompilerProject(session, scopePath, generated),

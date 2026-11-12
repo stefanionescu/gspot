@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import { parseBuildSettings, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { FIRST_GROUP_SWIFT_PATH, PROJECT_SYNTAX_CASES } from '#tests/config/parsers/formats.ts';
 import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
@@ -60,16 +60,16 @@ test('each native target keeps its own name, sources, and folders', () => {
     ]);
 });
 
-test('invalid Xcode syntax names the file and uses the parse error code', () => {
-    for (const parse of [parseProjectSources, parseBuildSettings]) {
-        try {
-            parse('{broken', 'App.xcodeproj/project.pbxproj');
-        } catch (error) {
-            expect(error).toBeInstanceOf(GspotError);
-            expect(error).toMatchObject({ code: 'parse' });
-            expect((error as Error).message).toContain('App.xcodeproj/project.pbxproj');
-            continue;
-        }
-        throw new Error('Invalid Xcode syntax was accepted.');
-    }
-});
+test.each([{ parse: parseProjectSources }, { parse: parseBuildSettings }])(
+    'invalid Xcode syntax names the file and its fix once',
+    ({ parse }) => {
+        expect(() => parse('{broken', 'App.xcodeproj/project.pbxproj')).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'parse',
+                message:
+                    'App.xcodeproj/project.pbxproj is not a valid Xcode project: The Xcode project requires =. Fix the file, then run the command again.',
+            }),
+        );
+    },
+);

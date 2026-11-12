@@ -70,19 +70,18 @@ async function createNpmLockfile(
     const lockfileArguments = PACKAGE_MANAGER_ARGUMENTS[packageManager.name].lockfile;
     const run = await runPackageManager(install, {
         runFolder,
-        packageManager,
         commandArguments: prepareReleaseAge(lockfileArguments, packageManager, install.releaseAgeDays),
         failure: LOCKFILE_FAILURE,
-        environment: install.registryEnvironment,
     });
     const content = readFileSync(join(runFolder, lockfileName), 'utf8');
     assertCredentialFreeLockfile(content, run.credentials, LOCKFILE_CREDENTIAL_MESSAGE);
     return packageManager.name === 'bun' ? stripBunRegistryUrls(content, run.environment) : content;
 }
 
-async function runPackageManager(install: ToolInstall, request: PackageManagerRequest): Promise<PackageManagerRun> {
-    const { runFolder, packageManager, commandArguments, failure } = request;
-    const env = { ...request.environment };
+async function runPackageManager(install: NpmToolInstall, request: PackageManagerRequest): Promise<PackageManagerRun> {
+    const { runFolder, commandArguments, failure } = request;
+    const { packageManager } = install;
+    const env = { ...install.registryEnvironment };
     const credentials = extractRegistryCredentials(env);
     using settings = createTemporaryFolder();
     writeNpmrc(settings.path, env);
@@ -115,6 +114,11 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
         throw new GspotError('install', `${explanation}${packageManager.name} ${failure} (${exit}).\n${output}`);
     }
     return { environment: env, credentials };
+}
+
+function formatInstalledTools({ session, packageManager }: NpmToolInstall): string {
+    const count = Object.keys(listPackagePins(session.toolConfigurations).npm).length;
+    return `installed ${formatCount(count, NPM_TOOL_NOUN)} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }
 
 function assertSettingsFree(install: ToolInstall): void {
@@ -196,7 +200,7 @@ writes the lockfile that later installs read. A lockfile that holds credentials 
 */
 export async function installUnlockedNpmTools(install: NpmToolInstall): Promise<string> {
     if (findProgram(NODE_TOOL) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
-    const { root, toolConfigurations } = install.session;
+    const { root } = install.session;
     const { packageManager, writer } = install;
     const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager.name)}`;
     assertSettingsFree(install);
@@ -205,10 +209,8 @@ export async function installUnlockedNpmTools(install: NpmToolInstall): Promise<
     const lockArguments = PACKAGE_MANAGER_ARGUMENTS.npm.lockfile.filter((argument) => argument !== LOCK_ONLY_FLAG);
     const run = await runPackageManager(install, {
         runFolder: join(root, GSPOT_FOLDER),
-        packageManager,
         commandArguments: prepareReleaseAge(lockArguments, packageManager, install.releaseAgeDays),
         failure: INSTALL_FAILURE,
-        environment: install.registryEnvironment,
     });
     try {
         assertCredentialFreeLockfile(readFileSync(join(root, path), 'utf8'), run.credentials, DELETED_LOCKFILE_MESSAGE);
@@ -216,26 +218,22 @@ export async function installUnlockedNpmTools(install: NpmToolInstall): Promise<
         writer.deleteFile(path);
         throw error;
     }
-    const count = Object.keys(listPackagePins(toolConfigurations).npm).length;
-    return `installed ${formatCount(count, NPM_TOOL_NOUN)} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
+    return formatInstalledTools(install);
 }
 
 export async function installNpmTools(install: NpmToolInstall): Promise<string> {
-    const { root, toolConfigurations } = install.session;
+    const { root } = install.session;
     const packageManager = install.packageManager;
     assertSettingsFree(install);
     const installArguments = PACKAGE_MANAGER_ARGUMENTS[packageManager.name].install;
     await runPackageManager(install, {
         runFolder: join(root, GSPOT_FOLDER),
-        packageManager,
         // pnpm holds new releases back by default, so its install needs the hold and the exclusions of the lock step.
         commandArguments:
             packageManager.name === 'pnpm'
                 ? prepareReleaseAge(installArguments, packageManager, install.releaseAgeDays)
                 : [...installArguments],
         failure: INSTALL_FAILURE,
-        environment: install.registryEnvironment,
     });
-    const count = Object.keys(listPackagePins(toolConfigurations).npm).length;
-    return `installed ${formatCount(count, NPM_TOOL_NOUN)} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
+    return formatInstalledTools(install);
 }

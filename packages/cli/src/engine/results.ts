@@ -12,6 +12,7 @@ import {
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { canReadRuleExplanations } from '#cli/tools/rule-explanations.ts';
@@ -42,13 +43,24 @@ export function canIgnoreRule(check: Check, code: CheckCode | undefined): boolea
 }
 
 /**
+Find the tool whose rules gspot reads: the tool of a check whose output names lint rules.
+*/
+export function findRuleTool(check: Check): string | undefined {
+    return OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
+}
+
+/**
 Tell whether a check has a rule catalog that covers a rule: rule explanations in its code, or a tool whose rules gspot
 reads. Only then can gspot explain the rule, or check it against the rules that exist.
 */
 export function hasRuleExplanations(check: Check, code: CheckCode | undefined, rule: string): boolean {
     if (code?.explanations !== undefined) return true;
-    const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
+    const tool = findRuleTool(check);
     return tool !== undefined && canReadRuleExplanations(tool, rule);
+}
+
+export function buildUnknownRuleError(rule: string, checkId: string): GspotError {
+    return new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);
 }
 
 export function formatExplainCommand(
@@ -126,7 +138,6 @@ export async function runBuiltInCheck(
         ...finding,
         check: planned.check.id,
         fixable: false,
-        help: finding.help ?? planned.check.help,
     }));
     const files = Array.isArray(result) ? undefined : [...new Set(result.files)];
     return {

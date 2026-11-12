@@ -57,5 +57,6 @@ export function describeCheck(
             rule: formatRuleIgnore(check, explanations),
         },
         suppression: tool?.suppression,
+        crashPattern: tool?.crash_pattern,
     };
 }

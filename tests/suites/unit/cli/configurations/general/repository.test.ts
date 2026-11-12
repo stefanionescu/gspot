@@ -2,7 +2,7 @@ import { symlink, unlink, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir } from 'testdirs';
 
 import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
@@ -13,6 +13,7 @@ import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -66,10 +67,9 @@ max_file_kilobytes = 1
 `;
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
-    await using sandbox = await createGitSandbox({});
     const { refused, allowed, scopes, indexOnly } = LOCAL_FILE_PATHS;
     const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: scopes });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         ...Object.fromEntries([...refused, ...allowed].map((path) => [path, 'PUBLIC_EXAMPLE=value\n'])),
     });
@@ -108,12 +108,11 @@ test('conflict-markers reports each marker line of a text file at level basic, a
 });
 
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
         tables: LARGE_FILE_TABLES,
     });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         '.gitattributes': `lfs.bin filter=lfs
 data/** linguist-generated
@@ -147,7 +146,7 @@ vendor/** linguist-vendored
         buildRunOptions({ only: ['repository/large-files'] }),
     );
 
-    expect(fixed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    expect(listFindingRows(fixed.report)).toStrictEqual([]);
 });
 
 test('a staged outward link plans local-files, and a run that stages another file leaves the link alone', async () => {

@@ -10,6 +10,7 @@ import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
 import { readPrettierScripts } from '#cli/generation/setup/format.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { listToolNames } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { listLintCommands, listOtherFormatScripts } from '#cli/repository/lint-commands.ts';
@@ -70,14 +71,11 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings & Pick<
     const { root, draft, repository, conflictingConfigs, sessionOptions, startRunner } = plan;
     const first = readSettings(buildInitSettings(draft, repository), root);
     const session = await openSession(root, { settings: first, ...sessionOptions });
-    const configurations = session.toolConfigurations;
     const carryover = await readCarryover({
         repository,
         conflictingConfigs,
         session,
-        configurations,
-        tools: new Set(configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name))),
-        level: first.level,
+        tools: listToolNames(session.toolConfigurations),
         prettierScripts: draft.prettierScripts,
         trackedPaths: draft.trackedPaths,
         templateIgnore: (draft.template?.table['ignore'] ?? []) as TomlTable[],
@@ -115,7 +113,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         startRunner,
     });
     const applicable = session.toolConfigurations;
-    const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
+    const tools = listToolNames(applicable);
     const detected = [...new Set(repositorySetup.conflictingConfigs.map(({ tool }) => tool))].toSorted(compareText);
     const generated = buildGeneratedFiles(session);
     const conflicts = readConflictingConfigs(root, repositorySetup, {

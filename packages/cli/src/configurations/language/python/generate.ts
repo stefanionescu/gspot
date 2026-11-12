@@ -35,6 +35,7 @@ import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
+import type { Pyproject } from '#cli/types/parsers.ts';
 
 const MINIMUM_PYTHON = /(?:>=|~=|==)\s*(?<version>\d+\.\d+)/u;
 
@@ -53,19 +54,21 @@ function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string)
     return [...shared, ...own].map((path) => `${root}/${path}`);
 }
 
-function readMinimumPython(planned: PlannedConfig): string | undefined {
+function readPyproject(planned: PlannedConfig): Pyproject['project'] {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const text = findText(planned.session.cache, pyproject);
     if (text === undefined) return undefined;
-    const project = tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project;
-    return MINIMUM_PYTHON.exec(project?.['requires-python'] ?? '')?.groups?.['version'];
+    return tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project;
+}
+
+function readMinimumPython(planned: PlannedConfig): string | undefined {
+    const requirement = readPyproject(planned)?.['requires-python'];
+    if (requirement === undefined) return undefined;
+    return MINIMUM_PYTHON.exec(requirement)?.groups?.['version'];
 }
 
 function listConsoleModules(planned: PlannedConfig): string[] {
-    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = findText(planned.session.cache, pyproject);
-    if (text === undefined) return [];
-    const scripts = tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project?.scripts;
+    const scripts = readPyproject(planned)?.scripts;
     return scripts === undefined
         ? []
         : Object.values(scripts).map((target) => (target.split(':', 1)[0] as string).replaceAll('.', '/'));
@@ -123,9 +126,6 @@ function buildRuffFile(planned: PlannedConfig): string {
         ...configuration.ruff.basic,
         ...(planned.level === 'all' ? configuration.ruff.all : []),
     ]);
-    const perFile = listIgnores(planned.scope.settings, RUFF_CHECK).filter(
-        (each) => each.rule !== undefined && each.paths !== undefined,
-    );
     const byPath = new Map<string, string[]>([
         ...Object.entries(RUFF_PATH_RULES).map(([path, rules]): [string, string[]] => [`${root}/${path}`, [...rules]]),
         ...listConsoleModules(planned).map((module): [string, string[]] => [
@@ -133,8 +133,8 @@ function buildRuffFile(planned: PlannedConfig): string {
             [...RUFF_CONSOLE_RULES],
         ]),
     ]);
-    const pathRules = perFile.flatMap((ignore) =>
-        (ignore.paths ?? []).map((path) => ({ path, rule: ignore.rule as string })),
+    const pathRules = listIgnores(planned.scope.settings, RUFF_CHECK).flatMap(({ rule, paths }) =>
+        rule === undefined || paths === undefined ? [] : paths.map((path) => ({ path, rule })),
     );
     for (const { path, rule } of pathRules) {
         const target = `${pythonScopePath}/${relative(planned.scope.path, path)}`;

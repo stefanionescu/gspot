@@ -10,6 +10,11 @@ import type { SettingsError } from '#cli/types/settings.ts';
 
 export const SETTINGS_PAGE_SENTENCE = `${cliPackage.homepage}/reference/gspot-toml/ lists every setting.`;
 
+function unwrapFirstOption(schema: z.ZodType): z.ZodType {
+    const inner = unwrapSettingSchema(schema);
+    return inner instanceof z.ZodUnion ? (inner.options[0] as z.ZodType) : inner;
+}
+
 function formatValueAdvice(
     schema: z.ZodType | undefined,
     setting: Pick<Setting, 'type' | 'description'>,
@@ -17,8 +22,7 @@ function formatValueAdvice(
 ): string {
     const issue = error.issues.find((issue) => issue.code === 'invalid_value');
     if (issue !== undefined) return formatNameList(issue.values.map(String), 'disjunction');
-    let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
+    const inner = schema === undefined ? undefined : unwrapFirstOption(schema);
     if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
     if (inner instanceof z.ZodBoolean) return 'true or false';
     const description = setting.description.replace(TRAILING_PERIOD, '');
@@ -42,8 +46,7 @@ export function formatFileValueError(schema: z.ZodType | undefined, issue: z.cor
     if (schema === undefined || issue.message.startsWith('needs ')) return issue.message;
     const validation = schema.safeParse(value);
     if (validation.success) return issue.message;
-    let inner = unwrapSettingSchema(schema);
-    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
+    const inner = unwrapFirstOption(schema);
     const setting = {
         name: issue.path.map(String).join('.'),
         type: getSettingType(schema).type,

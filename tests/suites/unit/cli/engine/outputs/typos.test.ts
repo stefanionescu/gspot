@@ -32,7 +32,6 @@ test('the typos format reads the report of an exit 2 into findings', async () =>
                 line: 1,
                 column: 1,
                 message: `\`${TYPO.the}\` should be \`the\``,
-                help: planned.check.help,
                 fixable: false,
             },
         ],
@@ -57,6 +56,6 @@ test.each(TYPOS_FINDING_CASES)('typos reads $name', async ({ report, source, exp
     await using sandbox = await testdir({ [report.path]: source });
     const check = getShippedCheck('spelling/typos');
     expect(parseOutput(check, JSON.stringify(report), '', { root: sandbox.path, cwd: sandbox.path })).toStrictEqual([
-        { check: check.id, help: check.help, ...expected },
+        { check: check.id, ...expected },
     ]);
 });

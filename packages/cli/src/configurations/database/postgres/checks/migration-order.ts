@@ -37,11 +37,7 @@ async function checkMigrationOrder(session: CheckSession, planned: PlannedCheck)
     const { migrations, findings: syntax } = await readMigrations(session, planned);
     if (syntax.length > 0) return syntax;
     const findings = listVersionFindings(migrations);
-    const texts = await readCommittedMigrations(
-        session,
-        migrations.map((migration) => migration.path),
-        session.selection?.base ?? 'HEAD',
-    );
+    const texts = await readCommittedMigrations(session, migrations);
     const committed = migrations.filter((migration) => texts.has(migration.path));
     const newest = committed.at(-1);
     if (newest === undefined) return findings;

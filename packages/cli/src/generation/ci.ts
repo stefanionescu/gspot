@@ -177,7 +177,7 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     );
     spaceWorkflowGroups(workflow);
     const content = `${formatHeader(GITHUB_WORKFLOW)}${workflow.toString({ lineWidth: 0 })}`;
-    return { path: GITHUB_WORKFLOW, content, kind: 'workflow' };
+    return { path: GITHUB_WORKFLOW, content };
 }
 
 export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
@@ -200,7 +200,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             script: [STRICT_MODE, ...install, ...setup, CI_INSTALL_COMMAND, ...CI_DIFF_LINES.gitlab, check],
         },
     });
-    return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
+    return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}` };
 }
 
 export function listTestChecks(session: Session): string[] {

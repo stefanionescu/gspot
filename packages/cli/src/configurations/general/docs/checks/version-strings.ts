@@ -9,7 +9,7 @@ import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
+import { escapeRegExp, listMatchingLines } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -19,7 +19,7 @@ function listScopeVersions(session: Session, scopePath: string): string[] {
         .filter(({ kind, path }) => kind === 'source' && selectScopePath(path, session.scopes) === scopePath)
         .flatMap(({ path }) => {
             const name = posix.basename(path);
-            if (name === PACKAGE_JSON) return [tryParseFile(() => readPackageJson(session.cache, path))?.['version']];
+            if (name === PACKAGE_JSON) return [tryParseFile(() => readPackageJson(session.cache, path))?.version];
             return name === PYPROJECT_TOML
                 ? [
                       tryParseFile(() => parseTomlFile(path, readText(session.cache, path), pyprojectSchema))?.project
@@ -42,10 +42,12 @@ function checkVersionStrings(session: Session, planned: PlannedCheck): CheckFind
         .filter(({ kind }) => kind === 'source')
         .filter(({ path, tags }) => (tags.includes('markdown') || isTest(path)) && !CHANGELOG_FILE.test(path))
         .flatMap(({ path }) =>
-            readText(session.cache, path)
-                .split('\n')
-                .flatMap((text, index) => (copied.test(text) ? [index + 1] : []))
-                .map((line) => ({ file: path, line, rule: DOCS_RULES.versionString, message: VERSION_STRING_MESSAGE })),
+            listMatchingLines(readText(session.cache, path), (text) => copied.test(text)).map((line) => ({
+                file: path,
+                line,
+                rule: DOCS_RULES.versionString,
+                message: VERSION_STRING_MESSAGE,
+            })),
         );
 }
 

@@ -1,11 +1,8 @@
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
     const words = ['café', "apostrophe'word", 'long-term'];
@@ -18,15 +15,13 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
             ignore: [{ check: 'spelling/typos', paths, reason }],
         }),
     };
-    const files = {
-        'gspot.toml': buildSandboxSettings(['spelling'], settings),
-    };
-    await using sandbox = await createGitSandbox(files);
-
-    const session = await openSession(sandbox.path);
-    const output = buildGeneratedFiles(session);
-    const target = output.files.find((file) => file.path === getManifestTarget('spelling', 'typos.toml'))!;
-    const parsed = parse(target.content) as Record<string, unknown>;
+    const parsed = parse(
+        await buildGeneratedFile(
+            buildSandboxSettings(['spelling'], settings),
+            getManifestTarget('spelling', 'typos.toml'),
+            {},
+        ),
+    ) as Record<string, unknown>;
     expect((parsed['default'] as Record<string, unknown>)['extend-words']).toStrictEqual({
         café: 'café',
         "apostrophe'word": "apostrophe'word",

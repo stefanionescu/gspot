@@ -42,7 +42,7 @@ Read the JSON report of OSV-Scanner. One vulnerability is one finding, whose rul
 group, on the line of the package in its lockfile.
 */
 export function parseOsvScannerFindings(output: ToolOutput): Finding[] {
-    const { check, help, stdout } = output;
+    const { check, stdout } = output;
     const { results } = parseToolOutput('OSV-Scanner', stdout, osvScannerReportSchema);
     return results.flatMap(({ source, packages }) => {
         const text = findText(dirname(source.path), basename(source.path)) ?? '';
@@ -53,7 +53,6 @@ export function parseOsvScannerFindings(output: ToolOutput): Finding[] {
                 line: findLockedPackageLine(text, reported.package.name, reported.package.version),
                 rule: ids[0],
                 message: formatVulnerability(reported, ids),
-                help,
                 fixable: false,
             })),
         );

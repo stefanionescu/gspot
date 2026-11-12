@@ -24,7 +24,7 @@ function hasProjectCoverage(session: Session, scopePath: string): boolean {
 async function checkPytestTests(
     session: CheckSession,
     planned: PlannedCheck,
-    options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
+    options: Pick<CheckRunOptions, 'verbose' | 'command'>,
 ): Promise<CheckResult> {
     if (options.command !== undefined || !hasProjectCoverage(session, planned.scope.path))
         return runCommandCheck(session, planned, options);

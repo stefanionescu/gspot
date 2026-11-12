@@ -13,6 +13,13 @@ import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 
 const heldRoots = new Set<string>();
 
+function writeIgnoreFile(files: Files): void {
+    files.write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
+        bytes: Buffer.from(COPY_IGNORE_TEXT),
+        mode: OWNER_WRITABLE_FILE,
+    });
+}
+
 function removeCopiesFolder(root: string): void {
     const parent = join(root, COPIES_FOLDER);
     try {
@@ -22,10 +29,7 @@ function removeCopiesFolder(root: string): void {
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return;
         if (hasErrorCode(error, 'ENOTEMPTY')) {
-            openFiles(root).write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
-                bytes: Buffer.from(COPY_IGNORE_TEXT),
-                mode: OWNER_WRITABLE_FILE,
-            });
+            writeIgnoreFile(openFiles(root));
             return;
         }
         printWarning(`Could not remove check copy folder ${parent}: ${String(error)}`);
@@ -80,10 +84,7 @@ export function createCopyFolder(root: string): TemporaryFolder {
         },
     };
     try {
-        files.write(`${COPIES_FOLDER}/${COPY_IGNORE_FILE}`, {
-            bytes: Buffer.from(COPY_IGNORE_TEXT),
-            mode: OWNER_WRITABLE_FILE,
-        });
+        writeIgnoreFile(files);
         for (const name of files.list(COPIES_FOLDER)) {
             const pid = COPY_FOLDER_NAME.exec(name)?.groups?.['pid'];
             if (pid !== undefined && !isProcessRunning(Number(pid))) deleteCopyFolder(join(parent, name));

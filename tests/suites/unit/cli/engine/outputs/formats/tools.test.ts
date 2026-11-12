@@ -27,7 +27,6 @@ test.each([...LINE_ENDING_CASES])(
                 column: 6,
                 rule: 'SC2086',
                 message: 'Double quote to prevent globbing and word splitting.',
-                help: check.help,
                 fixable: false,
             },
         ]);
@@ -49,7 +48,6 @@ test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (s
             check: check.id,
             file: 'settings/café.toml',
             message: 'Not formatted the way Taplo formats it.',
-            help: check.help,
             fixable: true,
         },
     ]);
@@ -66,7 +64,6 @@ test.each([...WINDOWS_ROOT_CASES])(
                 line,
                 column,
                 message: 'The file does not parse as TOML.',
-                help: check.help,
                 fixable: false,
             },
         ]);
@@ -93,7 +90,7 @@ test('an ESLint comment for a rule that no plugin holds says to delete the comme
     const stdout = JSON.stringify([
         { file: '/repo/a.ts', rule: 'removed/rule', message: "Definition for rule 'removed/rule' was not found." },
     ]);
-    const check = { runs: 'files' as const, id: 'javascript/eslint', help: 'Fix it.', output };
+    const check = { runs: 'files' as const, id: 'javascript/eslint', output };
     expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([
         { help: expect.stringContaining('Delete the comment.') as string },
     ]);

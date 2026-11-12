@@ -4,7 +4,6 @@ import { join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { formatFixes } from '#cli/commands/check/report.ts';
 import { runFixers } from '#cli/engine/fixes.ts';
@@ -162,7 +161,6 @@ test('a failed version check blocks a check and its fix without changing source 
 });
 
 test('a fixer that breaks a file with an unstaged edit puts the file back and exits 2', async () => {
-    await using sandbox = await createGitSandbox({});
     const tables = stringify({
         command_check: [
             {
@@ -175,7 +173,7 @@ test('a fixer that breaks a file with an unstaged edit puts the file back and ex
             },
         ],
     });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
         'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
         'notes.ts': "export const note = 'kept';\n",

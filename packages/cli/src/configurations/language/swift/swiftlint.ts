@@ -13,39 +13,27 @@ import { getLimit, getTable, selectFormat } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
+function buildSeverityLimit(planned: PlannedConfig, name: string): { warning: number; error: number } {
+    const limit = getLimit(planned.scope.settings, name, 'swift');
+    return { warning: limit, error: limit };
+}
+
 function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     const format = selectFormat(planned.scope.settings, SWIFT_FILES);
     const options = {
         line_length: { warning: format.print_width, error: format.print_width, ignores_urls: true },
-        file_length: {
-            warning: getLimit(planned.scope.settings, 'max_file_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'max_file_lines', 'swift'),
-            ignore_comment_only_lines: true,
-        },
-        type_body_length: {
-            warning: getLimit(planned.scope.settings, 'max_type_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'max_type_lines', 'swift'),
-        },
+        file_length: { ...buildSeverityLimit(planned, 'max_file_lines'), ignore_comment_only_lines: true },
+        type_body_length: buildSeverityLimit(planned, 'max_type_lines'),
         function_parameter_count: {
-            warning: getLimit(planned.scope.settings, 'max_function_parameters', 'swift'),
-            error: getLimit(planned.scope.settings, 'max_function_parameters', 'swift'),
+            ...buildSeverityLimit(planned, 'max_function_parameters'),
             ignores_default_parameters: false,
         },
-        function_body_length: {
-            warning: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'max_function_lines', 'swift'),
-        },
+        function_body_length: buildSeverityLimit(planned, 'max_function_lines'),
         // No limit setting applies at level basic, so the rule keeps SwiftLint's default there.
         ...(planned.level === 'all' && {
-            cyclomatic_complexity: {
-                warning: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
-                error: getLimit(planned.scope.settings, 'max_cyclomatic_complexity', 'swift'),
-            },
+            cyclomatic_complexity: buildSeverityLimit(planned, 'max_cyclomatic_complexity'),
         }),
-        closure_body_length: {
-            warning: getLimit(planned.scope.settings, 'max_closure_lines', 'swift'),
-            error: getLimit(planned.scope.settings, 'max_closure_lines', 'swift'),
-        },
+        closure_body_length: buildSeverityLimit(planned, 'max_closure_lines'),
         identifier_name: {
             min_length: 1,
             max_length: getTable(planned.scope.settings, 'naming').swift?.max_characters,

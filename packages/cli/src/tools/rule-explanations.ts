@@ -32,15 +32,6 @@ import { runTool } from '#cli/tools/run.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { RuleExplanation, RuleExplanationOptions, RuleToolSearch } from '#cli/types/tools.ts';
 
-const RULE_READER_TOOLS: ReadonlySet<string> = new Set([
-    'ruff',
-    'markdownlint-cli2',
-    VALE_TOOL,
-    'swiftlint',
-    ESLINT_MANIFEST_TOOL,
-    STYLELINT_MANIFEST_TOOL,
-]);
-
 // ESLint cannot name the gspot setting that declares the global names of another runtime.
 const UNDEFINED_NAME_FIX =
     'Declare or import the name. For a global name of another runtime, such as `document` in a browser script, write a [[tools.eslint.override]] record in gspot.toml with the paths of the files and runtime = "browser", then run gspot install.';
@@ -76,9 +67,10 @@ function findInstalledToolPath(root: string, specifier: string, subpath?: string
         return undefined;
     }
     assertInstalledPath(root, specifier, path);
-    if (subpath !== undefined) path = resolve(dirname(path), subpath);
-    assertInstalledPath(root, specifier, path);
-    return path;
+    if (subpath === undefined) return path;
+    const target = resolve(dirname(path), subpath);
+    assertInstalledPath(root, specifier, target);
+    return target;
 }
 
 function assertInstalledPath(root: string, specifier: string, path: string): void {
@@ -244,13 +236,36 @@ function getRuleMetadata(rule: unknown, page: string | undefined): RuleExplanati
     return docs;
 }
 
+async function readPackageRule(root: string, tool: string, identifier: string): Promise<RuleExplanation | undefined> {
+    const rule = await readInstalledRule(root, tool, identifier);
+    if (rule === undefined) return undefined;
+    const docs = getRuleMetadata(rule, findRulePage(tool, identifier));
+    return tool === ESLINT_MANIFEST_TOOL && identifier === 'no-undef' ? { fix: UNDEFINED_NAME_FIX, ...docs } : docs;
+}
+
+const RULE_READERS = new Map<
+    string,
+    (
+        root: string,
+        identifier: string,
+        search: RuleToolSearch,
+    ) => RuleExplanation | undefined | Promise<RuleExplanation | undefined>
+>([
+    ['ruff', readRuffRule],
+    ['markdownlint-cli2', readMarkdownlintRule],
+    [VALE_TOOL, readValeRule],
+    ['swiftlint', readSwiftlintRule],
+    [ESLINT_MANIFEST_TOOL, (root, identifier) => readPackageRule(root, ESLINT_MANIFEST_TOOL, identifier)],
+    [STYLELINT_MANIFEST_TOOL, (root, identifier) => readPackageRule(root, STYLELINT_MANIFEST_TOOL, identifier)],
+]);
+
 /**
 Tell whether gspot reads this rule of this tool: through a reader of its own, or through the rule page address in its
 manifest. Without either, gspot has no list of the rules to explain or to check an ignore against.
 */
 export function canReadRuleExplanations(tool: string, rule: string): boolean {
     if (isUnlistedRule(tool, rule)) return false;
-    if (RULE_READER_TOOLS.has(tool)) return true;
+    if (RULE_READERS.has(tool)) return true;
     return findTool(readConfigurations().values(), tool)?.rule_url !== undefined;
 }
 
@@ -264,18 +279,7 @@ export async function readLintRuleExplanation(
         help,
     }: RuleExplanationOptions,
 ): Promise<RuleExplanation | undefined> {
-    const search = { timeoutSeconds, readMiseBinPaths, help };
-    const readRule = new Map<string, () => RuleExplanation | undefined | Promise<RuleExplanation | undefined>>([
-        ['ruff', () => readRuffRule(root, identifier, search)],
-        ['markdownlint-cli2', () => readMarkdownlintRule(root, identifier)],
-        [VALE_TOOL, () => readValeRule(root, identifier)],
-        ['swiftlint', () => readSwiftlintRule(root, identifier, search)],
-    ]).get(tool);
-    if (readRule !== undefined) return readRule();
-    if (![ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL].includes(tool))
-        return readManifestRuleExplanation(tool, identifier);
-    const rule = await readInstalledRule(root, tool, identifier);
-    if (rule === undefined) return undefined;
-    const docs = getRuleMetadata(rule, findRulePage(tool, identifier));
-    return tool === ESLINT_MANIFEST_TOOL && identifier === 'no-undef' ? { fix: UNDEFINED_NAME_FIX, ...docs } : docs;
+    const readRule = RULE_READERS.get(tool);
+    if (readRule === undefined) return readManifestRuleExplanation(tool, identifier);
+    return await readRule(root, identifier, { timeoutSeconds, readMiseBinPaths, help });
 }

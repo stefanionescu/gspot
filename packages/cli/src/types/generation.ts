@@ -5,7 +5,9 @@ import type { FROZEN_INSTALLS } from '#cli/config/repository/package-managers.ts
 import type {
     carryoverRowSchema,
     generatedFilesSchema,
+    initFileRowSchema,
     initPlanSchema,
+    leftOutSettingSchema,
     prettierSettingsSchema,
     ruffOptionsSchema,
 } from '#cli/schemas/generation.ts';
@@ -140,9 +142,7 @@ export type CarryoverInput = {
     repository: Repository;
     conflictingConfigs: ConflictingConfig[];
     session: Session;
-    configurations: Configuration[];
     tools: ReadonlySet<string>;
-    level: Level;
     prettierScripts: PrettierScripts;
     trackedPaths: readonly string[];
     templateIgnore: readonly TomlTable[];
@@ -223,11 +223,10 @@ export type DetectionSummary = {
     unowned: string[];
 };
 
-export type InitFileRow = { path: string; note: string };
+export type InitFileRow = z.infer<typeof initFileRowSchema>;
 
 export type InitOptions = {
     template?: Template | undefined;
-    cwd: string;
     level?: Level | undefined;
     configurations?: string[] | undefined;
 };
@@ -255,4 +254,4 @@ export type Template = {
     leftOut: LeftOutSetting[];
 };
 
-export type LeftOutSetting = { key: string; note: string };
+export type LeftOutSetting = z.infer<typeof leftOutSettingSchema>;

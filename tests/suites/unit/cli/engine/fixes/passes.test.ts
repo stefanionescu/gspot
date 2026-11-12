@@ -3,16 +3,15 @@ import { join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import type { RunOptions } from '#cli/types/engine/run.ts';
 import { FIX_LINTER_CASE } from '#tests/config/engine/run.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/setup/sandboxes.ts';
 import { listFindingRows, runGspot } from '#tests/setup/cli/commands.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
@@ -21,13 +20,10 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('after --fix, the javascript check status matches what the linter still reports', async () => {
     const row = FIX_LINTER_CASE;
-    await using sandbox = await createGitSandbox({});
-    const check = readConfigurations()
-        .get(row.configuration)!
-        .checks.find((check) => check.id === `${row.configuration}/${row.tool}`)!;
+    const check = getShippedCheck(`${row.configuration}/${row.tool}`);
     const executable = join(toolModules, row.tool, 'bin', row.executable);
     const command = [process.execPath, executable, '--config', row.config];
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: stringify({
@@ -63,7 +59,6 @@ test('after --fix, the javascript check status matches what the linter still rep
 });
 
 test('after --fix, the checks read the fixed file', async () => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['sql'], {
         level: 'all',
         tables: `[sql]\ndialect = "postgres"\n${stringify({
@@ -80,7 +75,7 @@ test('after --fix, the checks read the fixed file', async () => {
             ],
         })}`,
     });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'query.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
     });

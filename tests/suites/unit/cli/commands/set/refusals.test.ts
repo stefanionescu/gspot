@@ -112,3 +112,13 @@ test.each([
         expect(failure.message).toBe(`${key} holds no reason. Run the command without --reason${fix}.`);
     },
 );
+
+test('set identifies a table and names its settings without writing', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['set', 'hooks', 'false', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('hooks.enabled') as string,
+    });
+});

@@ -17,6 +17,7 @@ import {
 } from '#cli/config/parsers/projects.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
@@ -148,10 +149,7 @@ async function parseSwiftPackage(path: string, text: string): Promise<Dependency
         .descendantsOfType('call_expression')
         .filter((call) => call.namedChild(0)?.text === '.package');
     for (const call of calls) {
-        const argumentsNode = call.namedChildren
-            .find((node) => node.type === 'call_suffix')
-            ?.namedChildren.find((node) => node.type === 'value_arguments');
-        const value = argumentsNode?.namedChildren
+        const value = listSwiftCallArguments(call)
             .find((argument) => argument.childForFieldName('name')?.text === 'url')
             ?.childForFieldName('value');
         if (value?.type !== 'line_string_literal' || value.namedChildren.some((node) => node.type !== 'line_str_text'))

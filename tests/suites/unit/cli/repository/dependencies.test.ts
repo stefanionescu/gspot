@@ -4,13 +4,13 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listProjectDependencyNames, readDependencyFiles, readPackageJson } from '#cli/repository/dependencies.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/detect.ts';
+import { TRACKED_SOURCE } from '#tests/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
@@ -74,16 +74,7 @@ test('a pytest table counts as a pytest dependency', async () => {
 test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s gives no dependency file', async (path, content) => {
     await using sandbox = await createGitSandbox({ [path]: content, 'source.ts': 'export {};\n' });
 
-    const files = [
-        {
-            path: path,
-            kind: 'source' as const,
-            kindOrigin: SOURCE_KIND.origin,
-            tags: ['text'],
-            executable: false,
-            size: 1,
-        },
-    ];
+    const files = [{ path: path, ...TRACKED_SOURCE }];
     expect(await readDependencyFiles(createRunCache(sandbox.path), files)).toStrictEqual([]);
 });
 
@@ -168,14 +159,7 @@ test('optional runtime dependencies remain installed beside development tools', 
         'package.json': '{"devDependencies":{"eslint":"9.0.0"},"optionalDependencies":{"react":"19.0.0"}}',
     });
     const files = await readDependencyFiles(createRunCache(sandbox.path), [
-        {
-            path: 'package.json',
-            kind: 'source' as const,
-            kindOrigin: SOURCE_KIND.origin,
-            tags: ['text'],
-            executable: false,
-            size: 1,
-        },
+        { path: 'package.json', ...TRACKED_SOURCE },
     ]);
     expect(files[0]?.installed).toStrictEqual({ eslint: '9.0.0', react: '19.0.0' });
 });

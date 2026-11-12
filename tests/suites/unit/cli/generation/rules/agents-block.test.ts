@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { format } from 'prettier';
 
+import { COMMANDS_HEADING } from '#cli/config/generation/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
-import { COMMANDS_HEADING } from '#tests/config/generation/generate.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';

@@ -4,8 +4,6 @@ import {
     ATTRIBUTE_QUOTED_CHARACTERS,
     CI_SYSTEMS_SETTING,
     GIT_ATTRIBUTES_BLOCK,
-    GITHUB_WORKFLOW,
-    GITLAB_WORKFLOW,
 } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { FILTER_ATTRIBUTE, GITATTRIBUTES_FILE, LFS_FILTER } from '#cli/config/repository/files.ts';
@@ -67,12 +65,9 @@ function buildAttributePattern(path: string): string {
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
     const { settings, cache } = session;
-    const outsidePaths = listWrittenPaths(session, buildConfigs(session))
-        .map((path) => path.slice(1))
-        .filter((path) => path !== GITHUB_WORKFLOW && path !== GITLAB_WORKFLOW);
-    const generatedLines = outsidePaths
-        .toSorted((left, right) => compareText(left, right))
-        .map((path) => `${buildAttributePattern(path)} linguist-generated`);
+    const generatedLines = listWrittenPaths(session, buildConfigs(session)).map(
+        (path) => `${buildAttributePattern(path)} linguist-generated`,
+    );
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: [GIT_ATTRIBUTES_BLOCK, ...generatedLines].join('\n') });
     if (!settings.rule_files.enabled) return;
     const agents = findText(cache, AGENTS_FILE) ?? '';

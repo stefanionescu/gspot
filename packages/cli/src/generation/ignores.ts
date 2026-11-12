@@ -4,19 +4,17 @@ import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
 import {
     BUILD_OUTPUT_FOLDERS,
     BUILD_OUTPUT_PATTERNS,
-    GITHUB_WORKFLOW,
-    GITLAB_WORKFLOW,
+    CI_FILES,
     GSPOT_FOLDER_PATTERNS,
 } from '#cli/config/generation/files.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';
 import { listOwnedConfigs } from '#cli/generation/owned.ts';
-import { listPointerPaths } from '#cli/generation/pointers.ts';
+import { listOutsideTargets, listPointerPaths } from '#cli/generation/pointers.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { IgnoreSection } from '#cli/types/configurations/general.ts';
@@ -30,18 +28,28 @@ export function isPointerInherited(owned: OwnedConfig, generated: Pick<ConfigTar
     return config.pointer?.inherit === true && owner.scope.path !== '' && files.every((file) => file === config.target);
 }
 
+/**
+List the configs and pointer files that gspot writes outside its folder, without the CI workflow.
+*/
 export function listWrittenPaths(session: Session, generated: Pick<ConfigTargets, 'targets'>): string[] {
     const paths = listOwnedConfigs(session).flatMap((owned) => {
         const { config, owner } = owned;
-        const sourceTargets =
-            config.source === undefined || isGspotPath(config.target)
-                ? []
-                : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target];
-        return [...sourceTargets, ...(isPointerInherited(owned, generated) ? [] : listPointerPaths(owner, config))];
+        return [
+            ...listOutsideTargets(owner.scope.path, config),
+            ...(isPointerInherited(owned, generated) ? [] : listPointerPaths(owner, config)),
+        ];
     });
-    if (session.settings.ci?.enabled === true)
-        paths.push(session.settings.ci.provider === 'github' ? GITHUB_WORKFLOW : GITLAB_WORKFLOW);
-    return [...new Set(paths)].toSorted(compareText).map((path) => `/${path}`);
+    return [...new Set(paths)].toSorted(compareText);
+}
+
+export function buildGspotSection(session: Session, generated: Pick<ConfigTargets, 'targets'>): IgnoreSection {
+    const { ci } = session.settings;
+    const paths = [...listWrittenPaths(session, generated), ...(ci?.enabled === true ? [CI_FILES[ci.provider]] : [])];
+    return {
+        key: 'gspot',
+        title: IGNORE_SECTION_TITLES.gspot,
+        patterns: [...GSPOT_FOLDER_PATTERNS, ...paths.toSorted(compareText).map((path) => `/${path}`)],
+    };
 }
 
 export function buildIgnoreSections(session: Session, generated: Pick<ConfigTargets, 'targets'>): IgnoreSection[] {
@@ -57,7 +65,6 @@ export function buildIgnoreSections(session: Session, generated: Pick<ConfigTarg
             ),
         ),
     ];
-    const configs = listWrittenPaths(session, generated);
     return [
         {
             key: 'build',
@@ -70,7 +77,7 @@ export function buildIgnoreSections(session: Session, generated: Pick<ConfigTarg
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
             ],
         },
-        { key: 'gspot', title: IGNORE_SECTION_TITLES.gspot, patterns: [...GSPOT_FOLDER_PATTERNS, ...configs] },
+        buildGspotSection(session, generated),
         {
             key: 'generators',
             title: IGNORE_SECTION_TITLES.generators,

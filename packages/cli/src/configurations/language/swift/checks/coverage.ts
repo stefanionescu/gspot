@@ -7,7 +7,6 @@ import {
     COVERAGE_RULE,
     FAILED_BUILD_NOTE,
     FAILED_TEST_RULE,
-    MACOS_PRIVATE_PATH,
     MISSING_COVERAGE_MESSAGE,
     SCRATCH_PATH_FLAG,
     SWIFT_CODECOV_COMMAND,
@@ -25,7 +24,7 @@ import {
 } from '#cli/config/configurations/swift.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
-import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
+import { runSwiftBuild, stripPrivatePrefix } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { SWIFT_TEST_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
@@ -45,11 +44,8 @@ import type { TableSettings } from '#cli/types/settings.ts';
 import type { Files } from '#cli/types/system.ts';
 
 function findFailureFile(planned: PlannedCheck, file: string, cwd: string): string | undefined {
-    const restored = file.replaceAll(
-        MACOS_PRIVATE_PATH,
-        (_match, before: string, folder: string) => `${before}/${folder}/`,
-    );
-    const root = cwd.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`);
+    const restored = stripPrivatePrefix(file);
+    const root = stripPrivatePrefix(cwd);
     if (isAbsolute(restored)) return joinScope(planned.scope.path, convertToPosixPath(relative(root, restored)));
     const isTest = buildPathMatcher(planned.scope.settings.test_files);
     const matches = planned.files.filter((file) => isTest(file.path) && basename(file.path) === restored);
@@ -70,9 +66,20 @@ function parseFailureLine(planned: PlannedCheck, line: string, cwd: string): Che
     };
 }
 
-function parseFailedTests(planned: PlannedCheck, output: string, cwd: string): CheckFinding[] {
-    const lines = new Set(output.split('\n'));
-    return [...lines].flatMap((line) => parseFailureLine(planned, line, cwd) ?? []);
+/**
+Report the failed tests of a test run that exited with an error.
+
+@throws CheckStop with `message` when the output names no failed test.
+*/
+function parseFailedTests(
+    planned: PlannedCheck,
+    tested: { stdout: string; stderr: string },
+    run: { cwd: string; message: string },
+): CoverageRun {
+    const lines = new Set(`${tested.stdout}\n${tested.stderr}`.split('\n'));
+    const failures = [...lines].flatMap((line) => parseFailureLine(planned, line, run.cwd) ?? []);
+    if (failures.length === 0) throw new CheckStop('error', run.message);
+    return { targets: [], failures };
 }
 
 async function measurePackageCoverage(
@@ -83,11 +90,8 @@ async function measurePackageCoverage(
     cwd: string,
 ): Promise<CoverageRun> {
     const tested = await runCheckTool(session, planned, plan.testArguments, { cwd });
-    if (tested.code !== 0) {
-        const failures = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
-        if (failures.length > 0) return { targets: [], failures };
-        throw new CheckStop('error', formatOutputTail(tested, SWIFT_TESTS_MESSAGE));
-    }
+    if (tested.code !== 0)
+        return parseFailedTests(planned, tested, { cwd, message: formatOutputTail(tested, SWIFT_TESTS_MESSAGE) });
     const reported = await runCheckTool(session, planned, [...SWIFT_CODECOV_COMMAND, SCRATCH_PATH_FLAG, plan.scratch], {
         cwd,
         exitCodes: [],
@@ -110,14 +114,11 @@ async function measureXcodeCoverage(
     const tested = await runCheckTool(session, planned, [...plan.testArguments, ...XCODE_COVERAGE_FLAGS, bundle], {
         cwd,
     });
-    if (tested.code !== 0) {
-        const failures = parseFailedTests(planned, `${tested.stdout}\n${tested.stderr}`, cwd);
-        if (failures.length > 0) return { targets: [], failures };
-        throw new CheckStop(
-            'error',
-            `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, TEST_RUNNER_MESSAGE)}`,
-        );
-    }
+    if (tested.code !== 0)
+        return parseFailedTests(planned, tested, {
+            cwd,
+            message: `Cannot measure coverage because the test run exited ${String(tested.code)}: ${formatOutputTail(tested, TEST_RUNNER_MESSAGE)}`,
+        });
     const viewed = await runCheckTool(session, planned, [...XCCOV_COMMAND, bundle], { cwd, exitCodes: [] });
     return { ...parseToolOutput('xccov', viewed.stdout, xccovSchema), failures: [] };
 }
@@ -133,6 +134,10 @@ async function measureCoverage(session: CheckSession, planned: PlannedCheck): Pr
         : await measureXcodeCoverage(session, planned, plan, cwd);
 }
 
+function isLimitedTarget(name: string, limit: string): boolean {
+    return name === limit || name === `${limit}${APP_TARGET_SUFFIX}`;
+}
+
 function listCoverageShortfalls(
     output: CoverageOutput,
     settings: Pick<TableSettings<'coverage'>, 'min_line_percent' | 'swift_target'>,
@@ -140,17 +145,11 @@ function listCoverageShortfalls(
     const limits = [
         ...settings.swift_target,
         ...output.targets
-            .filter((target) =>
-                settings.swift_target.every(
-                    (limit) => !(target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`),
-                ),
-            )
+            .filter((target) => settings.swift_target.every((limit) => !isLimitedTarget(target.name, limit.name)))
             .map((target) => ({ name: target.name, min_line_percent: settings.min_line_percent })),
     ];
     return limits.flatMap((limit) => {
-        const target = output.targets.find(
-            (each) => each.name === limit.name || each.name === `${limit.name}${APP_TARGET_SUFFIX}`,
-        );
+        const target = output.targets.find((each) => isLimitedTarget(each.name, limit.name));
         if (target === undefined) return [`The coverage report has no target named ${limit.name}.`];
         const covered = Math.floor(target.lineCoverage * MAX_PERCENTAGE);
         return covered >= limit.min_line_percent

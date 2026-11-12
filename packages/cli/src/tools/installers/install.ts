@@ -4,7 +4,7 @@ import { listDistinctTools } from '#cli/manifests/read.ts';
 import { readToolPackageManager } from '#cli/repository/package-manager.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
+import { readHost } from '#cli/system/environment.ts';
 import { findProgram } from '#cli/system/programs.ts';
 import { buildToolAvailability, inspectTool, lookUpTool } from '#cli/tools/inspect.ts';
 import { installGrammars } from '#cli/tools/installers/grammars.ts';
@@ -28,13 +28,7 @@ import type { BrokenTool, InstallResult, Session, ToolInstall, ToolPackageManage
 async function readInstallPackageManager(session: Session): Promise<ToolPackageManager | undefined> {
     const pin = session.packageManager;
     if (pin === undefined) return undefined;
-    const packageManager = await readToolPackageManager(
-        session.toolsRoot,
-        pin,
-        session.settings.tool_timeout_seconds,
-        session.cache,
-    );
-    return { ...packageManager, command: pin.name === packageManager.name ? pin : { name: packageManager.name } };
+    return await readToolPackageManager(session.toolsRoot, pin, session.settings.tool_timeout_seconds, session.cache);
 }
 
 function writeToolProjects({ writer, generated }: ToolInstall): void {
@@ -48,7 +42,7 @@ function writeToolProjects({ writer, generated }: ToolInstall): void {
 
 async function listBrokenTools(install: ToolInstall, tools: Tool[], miseBinPaths: string[]): Promise<BrokenTool[]> {
     const { session } = install;
-    const host = { platform: getOperatingSystem(), arch: process.arch };
+    const host = readHost();
     const inspected = await Promise.all(
         tools
             .filter((tool) => findMissingBuild(tool, host) === undefined)
@@ -86,7 +80,7 @@ async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
     );
     const hooks = await readHookStatus(session, session.repository);
     if (!isWritten || !hooks.ready || listStaleLockfiles(session, generated.files).length > 0) return false;
-    const host = { platform: getOperatingSystem(), arch: process.arch };
+    const host = readHost();
     const search = { ...session, runsVersionCommand: true };
     const availabilities = await Promise.all(
         install.tools

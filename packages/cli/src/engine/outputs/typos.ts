@@ -61,7 +61,6 @@ function buildTypoFinding(
     return {
         check: output.check,
         file: path,
-        help: output.help,
         message: isLine ? text : `Filename: ${text}`,
         fixable: false,
         ...position,

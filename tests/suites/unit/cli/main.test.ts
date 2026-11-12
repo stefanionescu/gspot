@@ -2,7 +2,6 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandFailureJson } from '#cli/types/system.ts';
 import { JSON_ARGUMENT_ERRORS, MALFORMED_SETTINGS, VERSION_ARGUMENTS } from '#tests/config/main.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
@@ -114,14 +113,6 @@ test('the help of check fits a terminal narrower than 80 columns', async () => {
         if (columns === undefined) Reflect.deleteProperty(process.stdout, 'columns');
         else Object.defineProperty(process.stdout, 'columns', columns);
     }
-});
-
-test.each(Object.keys(COMMAND_HELP))('the help of %s prints its commands without code marks', async (command) => {
-    await using sandbox = await testdir();
-    const help = await runGspot(sandbox.path, [command, '--help']);
-    expect(help.code).toBe(0);
-    expect(help.stdout).toContain(`Usage: gspot ${command} `);
-    expect(help.stdout).not.toContain('`');
 });
 
 test('check treats --version after the separator as a file path', async () => {

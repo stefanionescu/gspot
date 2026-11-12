@@ -2,10 +2,9 @@ import type { GrantStmt } from '@pgsql/types';
 
 import { GRANT_ALL_MESSAGE, GRANT_ALL_RULE } from '#cli/config/configurations/postgres.ts';
 import {
+    listUnfrozenMigrations,
     readParsedMigrations,
-    selectFrozenMigrations,
 } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
@@ -13,12 +12,7 @@ import type { Session } from '#cli/types/tools.ts';
 
 async function checkGrants(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
-    const frozen = selectFrozenMigrations(
-        migrations.map(({ path }) => path),
-        getTable(planned.scope.settings, 'postgres').frozen_through,
-    );
-    return migrations
-        .filter(({ path }) => !frozen.has(path))
+    return listUnfrozenMigrations(migrations, planned)
         .flatMap((migration) => migration.statements.map((statement) => ({ migration, statement })))
         .filter(({ statement }) => {
             let grant: GrantStmt | undefined;

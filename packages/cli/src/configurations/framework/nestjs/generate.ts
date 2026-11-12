@@ -18,7 +18,6 @@ export const NESTJS_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder
                     rules: NESTJS_RULES,
                 },
             },
-
             {
                 fields: {
                     files: eslintFiles.typescript,

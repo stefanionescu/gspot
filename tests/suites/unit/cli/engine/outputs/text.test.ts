@@ -19,7 +19,7 @@ test('a grouped finding for a file link that leaves the root reports nothing', (
         `[ERROR] ${pathToFileURL(join(root, 'docs/gone.md')).href} | Cannot find file`,
         `[ERROR] ${pathToFileURL(resolve('/v0.1.0/README.md')).href} | Cannot find file`,
     ].join('\n');
-    const check = { runs: 'files' as const, id: 'docs/lychee', help: 'Fix it.', output };
+    const check = { runs: 'files' as const, id: 'docs/lychee', output };
     const findings = parseOutput(check, stdout, '', { root, cwd: root });
     expect(findings.map(({ file }) => file)).toStrictEqual(['docs/a.md']);
 });
@@ -32,7 +32,7 @@ test('a finding in a check copy that names an installed package or a file outsid
         'repository/.gspot-copies/1-copy/src/app.ts': '',
     });
     const output = outputSchema.parse({ format: 'regex', pattern: '^(?<file>(?:[A-Za-z]:)?[^:]+):(?<message>.+)$' });
-    const check = { runs: 'files' as const, id: 'typescript/tsc', help: 'Fix it.', output };
+    const check = { runs: 'files' as const, id: 'typescript/tsc', output };
     const repository = join(sandbox.path, 'repository');
     const root = join(repository, '.gspot-copies/1-copy');
     const installed = join(repository, 'node_modules/vite/index.d.ts');

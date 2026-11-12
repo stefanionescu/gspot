@@ -25,15 +25,12 @@ test('grouped output drops line endings and makes absolute paths relative', asyn
             file: 'settings/café.toml',
             line: 1,
             message: 'Incorrect spacing',
-            help: check.help,
             fixable: false,
         },
     ]);
     expect(
         parseOutput(check, './src/a.ts:\n  2: Incorrect spacing\n', '', { root: sandbox.path, cwd: sandbox.path }),
-    ).toStrictEqual([
-        { check: check.id, file: 'src/a.ts', line: 2, message: 'Incorrect spacing', help: check.help, fixable: false },
-    ]);
+    ).toStrictEqual([{ check: check.id, file: 'src/a.ts', line: 2, message: 'Incorrect spacing', fixable: false }]);
 });
 
 test('a message that names a file by its resolved absolute path names it relative to the root', async () => {

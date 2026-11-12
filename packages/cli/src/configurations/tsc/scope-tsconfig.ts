@@ -1,6 +1,7 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
-import { NESTJS_CONFIGURATION, TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import { NESTJS_CONFIGURATION, TSCONFIG_COPY_FOLDER, TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import {
     COMPILER_OPTIONS,
     DEFAULT_LEVEL_OPTIONS,
@@ -8,6 +9,7 @@ import {
     TYPESCRIPT_DEFAULTS,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/shared.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -40,7 +42,35 @@ export function readAuthoredTypes(
     };
 }
 
-export function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
+export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
+    const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : DEFAULT_LEVEL_OPTIONS) };
+    if (configurations.some((configuration) => configuration.name === NESTJS_CONFIGURATION))
+        Object.assign(options, NESTJS_COMPILER_OPTIONS);
+    return options;
+}
+
+export function listEnforcedTsconfigOptions(level: Level, scope: Scope): Record<string, boolean> {
+    const ignored = listIgnoredRules(scope, TYPESCRIPT_TSCONFIG_CHECK);
+    return Object.fromEntries(
+        Object.entries(selectRequiredTsconfigOptions(level, scope.configurations)).filter(
+            ([name]) => !ignored.includes(name),
+        ),
+    );
+}
+
+/**
+Write the tsconfig of a scope below `folder`.
+
+@returns the path of the written file.
+*/
+export function writeScopeTsconfig(session: Session, scope: Scope, folder: string): string {
+    const path = join(folder, TSCONFIG_COPY_FOLDER, scope.path, TSCONFIG_FILE);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify(buildTsconfig(session, scope, path)));
+    return path;
+}
+
+function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const ts = requireTypescript();
     const { root, toolsRoot, cache } = session;
     const ownFiles =
@@ -83,11 +113,7 @@ export function buildTsconfig(session: Session, scope: Scope, file: string): Rec
     return {
         compilerOptions: {
             ...TYPESCRIPT_DEFAULTS,
-            ...Object.fromEntries(
-                Object.entries(selectRequiredTsconfigOptions(session.settings.level, scope.configurations)).filter(
-                    ([name]) => !listIgnoredRules(scope, TYPESCRIPT_TSCONFIG_CHECK).includes(name),
-                ),
-            ),
+            ...listEnforcedTsconfigOptions(session.settings.level, scope),
             typeRoots,
         },
         files: sources.map((source) => convertToPosixPath(relative(folder, join(root, source.path)))),
@@ -95,11 +121,4 @@ export function buildTsconfig(session: Session, scope: Scope, file: string): Rec
             include: components.map((component) => convertToPosixPath(relative(folder, join(root, component.path)))),
         }),
     };
-}
-
-export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
-    const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : DEFAULT_LEVEL_OPTIONS) };
-    if (configurations.some((configuration) => configuration.name === NESTJS_CONFIGURATION))
-        Object.assign(options, NESTJS_COMPILER_OPTIONS);
-    return options;
 }

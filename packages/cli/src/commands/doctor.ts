@@ -3,8 +3,7 @@ import { styleText } from 'node:util';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
-    CI_FILE_NOTES,
-    CI_FILES,
+    CI_FILE_SUFFIXES,
     CI_OFF_NOTES,
     ORIGIN_URL_SETTING,
     REMOTE_URL_SCHEME,
@@ -13,6 +12,7 @@ import {
     VERSION_GAP,
 } from '#cli/config/commands/reports.ts';
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
+import { CI_FILES } from '#cli/config/generation/files.ts';
 import { VERSION_FLAG } from '#cli/config/repository/package-managers.ts';
 import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
@@ -22,12 +22,12 @@ import { findCommandTool } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { findToolName, listDistinctTools } from '#cli/manifests/read.ts';
+import { findToolName, listDistinctTools, listToolNames } from '#cli/manifests/read.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findGspotPinMismatch, readGspotPin } from '#cli/repository/version-pin.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
+import { readHost } from '#cli/system/environment.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { findProgram } from '#cli/system/programs.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -104,17 +104,15 @@ Inspect the tools that gspot install installs here: every npm and PyPI tool, and
 file to read, as listHostCheckTools selects them.
 */
 async function inspectScopeTools(session: Session): Promise<DoctorTool[]> {
-    const platform = getOperatingSystem();
+    const host = readHost();
     const checkTools = listHostCheckTools(session);
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) =>
-            findMissingBuild(tool, { platform, arch: process.arch }) === undefined &&
+            findMissingBuild(tool, host) === undefined &&
             (findMisePin(tool) === undefined || checkTools.has(tool.name)),
     );
     const lookups = session.scopes.flatMap(({ path: scopePath, configurations }) => {
-        const toolNames = new Set(
-            configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
-        );
+        const toolNames = listToolNames(configurations);
         return pins
             .filter((tool) => toolNames.has(tool.name))
             .map(async (tool): Promise<[string, DoctorTool]> => {
@@ -146,7 +144,7 @@ async function readCiState(session: Session): Promise<CiState & { text: string }
     if (ci?.enabled === true) {
         const { provider } = ci;
         const file = CI_FILES[provider];
-        return { enabled: true, provider, file, text: `${file}${CI_FILE_NOTES[provider]}` };
+        return { enabled: true, provider, file, text: `${file}${CI_FILE_SUFFIXES[provider]}` };
     }
     const provider = await detectCiProvider(
         session.root,

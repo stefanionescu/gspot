@@ -10,11 +10,11 @@ import {
     STAGED_FILES,
     WORKING_TREE,
 } from '#cli/config/engine.ts';
-import { EXIT_ERROR, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { EXIT_ERROR } from '#cli/config/system.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { rewriteProgress, writeProgress } from '#cli/system/terminal.ts';
-import { formatNameList, formatScope } from '#cli/system/text.ts';
+import { formatNameList, formatScopePrefix, formatSeconds } from '#cli/system/text.ts';
 import type {
     CheckProgress,
     CheckResult,
@@ -30,7 +30,7 @@ const RUNNING_CHECKS_SHOWN = 3;
 function formatRunningChecks(running: Array<Pick<CheckResult, 'check' | 'scope'>>): string {
     const names = running
         .slice(0, RUNNING_CHECKS_SHOWN)
-        .map(({ check, scope }) => (scope === '' ? check : `${formatScope(scope)}  ${check}`));
+        .map(({ check, scope }) => `${formatScopePrefix(scope)}${check}`);
     const hidden = running.length - names.length;
     return formatNameList(hidden > 0 ? [...names, `${String(hidden)} more`] : names);
 }
@@ -150,13 +150,10 @@ export function printProgress(progress: CheckProgress): void {
     if (rewriteProgress(`Checking ${subject}: ${String(progress.finished)} of ${String(progress.total)} checks done`))
         return;
     if (progress.kind === 'running') {
-        const seconds = (progress.elapsed / MILLISECONDS_PER_SECOND).toFixed(1);
         if (progress.running.length > 0)
-            writeProgress(`running  ${formatRunningChecks(progress.running)}  ${seconds}s\n`);
+            writeProgress(`running  ${formatRunningChecks(progress.running)}  ${formatSeconds(progress.elapsed)}\n`);
         return;
     }
     if (progress.duration < PROGRESS_INTERVAL_MILLISECONDS) return;
-    const scope = progress.scope === '' ? '' : `${formatScope(progress.scope)}  `;
-    const seconds = (progress.duration / MILLISECONDS_PER_SECOND).toFixed(1);
-    writeProgress(`done  ${scope}${progress.check}  ${seconds}s\n`);
+    writeProgress(`done  ${formatScopePrefix(progress.scope)}${progress.check}  ${formatSeconds(progress.duration)}\n`);
 }

@@ -253,7 +253,7 @@ export const DOCKERFILE_EXTENSION = '.dockerfile';
 
 export const GENERATED_ATTRIBUTE = 'linguist-generated';
 
-export const SET_VALUES: ReadonlySet<string> = new Set(['set', 'true']);
+export const SET_VALUES: ReadonlySet<string> = new Set([SET_STATE, 'true']);
 
 export const RUNTIME_TAG = 'runtime:';
 

@@ -6,13 +6,12 @@ import {
 } from '#cli/config/configurations/postgres.ts';
 import {
     extractForwardText,
+    listUnfrozenMigrations,
     readCommittedMigrations,
     readParsedMigrations,
-    selectFrozenMigrations,
 } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { EDITED_MIGRATION_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
 import { listNodeFields } from '#cli/parsers/code/sql.ts';
-import { getTable } from '#cli/settings/scopes.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
@@ -30,28 +29,18 @@ function hasDriftGuard(statement: SqlStatement): boolean {
 
 async function checkEditedMigrations(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
-    const frozen = selectFrozenMigrations(
-        migrations.map((migration) => migration.path),
-        getTable(planned.scope.settings, 'postgres')['frozen_through'],
+    const guards = listUnfrozenMigrations(migrations, planned).flatMap((migration) =>
+        migration.statements
+            .filter((statement) => hasDriftGuard(statement))
+            .map((statement) => ({
+                file: migration.path,
+                ...getPosition(migration.text, statement.start),
+                rule: DRIFT_GUARD_RULE,
+                message: DRIFT_GUARD_MESSAGE,
+                help: EDITED_MIGRATION_EXPLANATIONS[DRIFT_GUARD_RULE].fix,
+            })),
     );
-    const guards = migrations
-        .filter((migration) => !frozen.has(migration.path))
-        .flatMap((migration) =>
-            migration.statements
-                .filter((statement) => hasDriftGuard(statement))
-                .map((statement) => ({
-                    file: migration.path,
-                    ...getPosition(migration.text, statement.start),
-                    rule: DRIFT_GUARD_RULE,
-                    message: DRIFT_GUARD_MESSAGE,
-                    help: EDITED_MIGRATION_EXPLANATIONS[DRIFT_GUARD_RULE].fix,
-                })),
-        );
-    const texts = await readCommittedMigrations(
-        session,
-        migrations.map((migration) => migration.path),
-        session.selection?.base ?? 'HEAD',
-    );
+    const texts = await readCommittedMigrations(session, migrations);
     const edited = migrations.flatMap((migration): CheckFinding[] => {
         const committed = texts.get(migration.path);
         if (committed === undefined || extractForwardText(committed) === migration.text) return [];

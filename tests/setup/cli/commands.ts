@@ -66,7 +66,6 @@ export async function planSandboxInit(
         options: { configurations: { type: 'string', multiple: true }, level: { type: 'string' } },
     });
     const { plan, settingsText } = await planInit(root, {
-        cwd: root,
         configurations: values.configurations,
         level: values.level as Level | undefined,
     });

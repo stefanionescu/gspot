@@ -29,8 +29,8 @@ import {
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { miseLockfileSchema } from '#cli/schemas/tools.ts';
-import { getOperatingSystem } from '#cli/system/environment.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { readHost } from '#cli/system/environment.ts';
+import { GspotError, tryParseFile } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
@@ -44,7 +44,7 @@ import type { GeneratedFile, MiseInstall, MiseLockfile, MiseToolPin, ToolInstall
 function selectMiseTools(install: ToolInstall) {
     const { session, tools, checkTools } = install;
     const configurations = session.toolConfigurations;
-    const host = { platform: getOperatingSystem(), arch: process.arch };
+    const host = readHost();
     const hookTools = tools.filter(
         (tool) =>
             checkTools.has(tool.name) && findMissingBuild(tool, host) === undefined && findMisePin(tool) !== undefined,
@@ -61,10 +61,14 @@ function isGithubLimit(result: Pick<SpawnResult, 'stdout' | 'stderr'>): boolean 
     return GITHUB_RATE_LIMIT.test(`${result.stdout}\n${result.stderr}`);
 }
 
+function getMiseProject(install: ToolInstall): GeneratedFile {
+    const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
+    return project;
+}
+
 async function runMiseInstall(install: ToolInstall, command: string[]): Promise<void> {
     const { root } = install.session;
-    const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
-    const trust = buildMiseTrust(root, project.content);
+    const trust = buildMiseTrust(root, getMiseProject(install).content);
     if ('refusal' in trust) throw new GspotError('install', trust.refusal);
     await runRequiredInstallStep(install, command, {
         cwd: join(root, GSPOT_FOLDER),
@@ -108,12 +112,7 @@ function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
 }
 
 function parseMiseLockfile(lockfile: string): MiseLockfile | undefined {
-    try {
-        return parseTomlFile(GSPOT_PATHS.miseLockfile, lockfile, miseLockfileSchema);
-    } catch (error) {
-        if (!(error instanceof GspotError) || error.code !== 'parse') throw error;
-        return undefined;
-    }
+    return tryParseFile(() => parseTomlFile(GSPOT_PATHS.miseLockfile, lockfile, miseLockfileSchema));
 }
 
 async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): Promise<void> {
@@ -207,7 +206,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
         const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
         return { installed: '', note, binPaths: [], tools: [] };
     }
-    const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
+    const project = getMiseProject(install);
     if (listMisePins(session.toolConfigurations).length > 0) await writeMiseLockfile(install, project);
     if (pins.length === 0) {
         const { folders, failure = '' } = await readToolBinPaths(session);

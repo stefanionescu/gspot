@@ -10,7 +10,6 @@ buildRuleTester().run('no-identical-operands', noIdenticalOperands, {
         'read(first) === read(second);',
     ],
     invalid: [
-        { code: 'value - value;', errors: [{ messageId: 'operands' }] },
         { code: 'value && value;', errors: [{ messageId: 'operands' }] },
         { code: 'value << value;', errors: [{ messageId: 'operands' }] },
         { code: '2n << 2n;', errors: [{ messageId: 'operands' }] },

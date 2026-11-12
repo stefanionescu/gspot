@@ -8,7 +8,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
+import { copyDependencies, readIgnoredPaths } from '#cli/engine/copies/dependencies.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import {
     BIN_WORKSPACE_FILES,
@@ -242,4 +242,11 @@ test('a copy keeps tracked dependencies as the revision holds them', async () =>
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
     const tracked = await lstat(join(copy.root, 'node_modules/tracked/index.js'));
     expect(tracked.isSymbolicLink()).toBe(false);
+});
+
+test('a Git failure while reading the ignored paths names the Git command and its exit code', async () => {
+    await using sandbox = await testdir();
+    const error = await captureRejection(readIgnoredPaths(sandbox.path, ['dist/index.js']));
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(error.message).toStartWith('Git check-ignore failed (exit 128): ');
 });

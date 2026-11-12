@@ -5,11 +5,11 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
+import { CHECK_COMMAND } from '#cli/config/engine.ts';
 import { hasManagedKeys, planManagedKeys, writePlans } from '#cli/repository/writer.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
-import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 

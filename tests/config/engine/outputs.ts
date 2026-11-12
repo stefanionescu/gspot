@@ -3,59 +3,12 @@ import { win32 } from 'node:path';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 
 export const CHECK_OUTPUTS = [
-    { format: 'regex', pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$` },
-    {
-        format: 'grouped',
-        file_pattern: String.raw`^(?<file>\S.*):$`,
-        pattern: String.raw`^\s+(?<line>\d+): (?<message>.*)$`,
-    },
-    { format: 'none' },
-    { format: 'json', fields: { file: 'file', line: 'line', rule: 'rule', message: 'message' } },
-    { format: 'knip' },
-    { format: 'semgrep' },
-    { format: 'typos' },
-    { format: 'vale' },
-    { format: 'osv-scanner' },
+    { format: 'knip', inputs: ['empty', 'foreign'] },
+    { format: 'semgrep', inputs: ['empty', 'foreign'] },
+    { format: 'typos', inputs: ['foreign'] },
+    { format: 'vale', inputs: ['empty', 'foreign'] },
+    { format: 'osv-scanner', inputs: ['empty', 'foreign'] },
 ] as const;
-
-export const OUTPUT_PARSE_RESULTS = {
-    regex: {
-        empty: { findings: [] },
-        foreign: { findings: [] },
-    },
-    grouped: {
-        empty: { findings: [] },
-        foreign: { findings: [] },
-    },
-    none: {
-        empty: { findings: [] },
-        foreign: { findings: [] },
-    },
-    json: {
-        empty: { error: 'The command printed nothing; it should print a JSON report.' },
-        foreign: { error: 'The output is not JSON. It starts with: not the output of any tool {' },
-    },
-    knip: {
-        empty: { error: 'Knip printed output that gspot cannot read.' },
-        foreign: { error: 'Knip printed output that gspot cannot read.' },
-    },
-    semgrep: {
-        empty: { error: 'Semgrep printed output that gspot cannot read.' },
-        foreign: { error: 'Semgrep printed output that gspot cannot read.' },
-    },
-    typos: {
-        empty: { findings: [] },
-        foreign: { error: 'Typos printed output that gspot cannot read.' },
-    },
-    vale: {
-        empty: { error: 'Vale printed output that gspot cannot read.' },
-        foreign: { error: 'Vale printed output that gspot cannot read.' },
-    },
-    'osv-scanner': {
-        empty: { error: 'OSV-Scanner printed output that gspot cannot read.' },
-        foreign: { error: 'OSV-Scanner printed output that gspot cannot read.' },
-    },
-} as const;
 
 export const EDITORCONFIG_REPORT = `source.js:
 	Wrong line endings or no final newline
@@ -138,7 +91,6 @@ export const FLAT_JSON_FINDINGS = [
         line: 9,
         rule: 'ssrf',
         message: 'Possible SSRF.',
-        help: 'help',
         fixable: false,
     },
 ] as const;
@@ -160,18 +112,6 @@ export const INVALID_FINDING_REPORTS = [
         stdout: '[{"messages":{}}]',
     },
 ] as const;
-
-export const MARKDOWN_REPORT = {
-    fileName: 'sample.md',
-    lineNumber: 1,
-    ruleNames: ['MD033'],
-    ruleDescription: 'Inline HTML',
-    errorDetail: 'Element: span',
-    errorContext: null,
-    errorRange: [1, 6],
-    fixInfo: null,
-    severity: 'error',
-} as const;
 
 export const SEMGREP_MATCH = {
     check_id: 'gspot.bash.eval',

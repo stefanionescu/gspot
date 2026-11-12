@@ -5,7 +5,6 @@ import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-t
 
 const root = writePackageFolders({
     jasmine: { devDependencies: { jasmine: '5.0.0' } },
-    karma: { devDependencies: { 'jasmine-core': '5.0.0', 'karma-jasmine': '5.0.0' } },
     jest: { devDependencies: { jest: '30.0.0' } },
     vitest: { devDependencies: { vitest: '4.0.0' } },
     mocha: { devDependencies: { mocha: '11.0.0' } },
@@ -30,11 +29,11 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', noUnexplainedTestSkip
         { code: 'test("adds", (t) => { run(t); });', filename: join(root, 'node/e.test.ts') },
     ],
     invalid: [
-        ...['jasmine', 'karma'].map((folder) => ({
+        {
             code: 'xit("adds", run);',
-            filename: join(root, `${folder}/a.test.ts`),
-            errors: [{ messageId: 'skipped' as const }],
-        })),
+            filename: join(root, 'jasmine/a.test.ts'),
+            errors: [{ messageId: 'skipped' }],
+        },
         ...['test.skip("a", run);', 'xtest("a", run);'].map((code) => ({
             code,
             filename: join(root, 'jest/a.test.ts'),

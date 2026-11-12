@@ -55,12 +55,16 @@ function findLineStart(text: string, blocks: TomlBlock[], block: TomlBlock): num
     return text.lastIndexOf('\n', start - 1) + 1;
 }
 
+function appendSection(text: string, written: string): string {
+    return text.trim() === '' ? `${written}\n` : `${text.trimEnd()}\n\n${written}\n`;
+}
+
 function insertSection(
     text: string,
     written: string,
     place: { blocks: TomlBlock[]; next: TomlBlock | undefined },
 ): string {
-    if (place.next === undefined) return text.trim() === '' ? `${written}\n` : `${text.trimEnd()}\n\n${written}\n`;
+    if (place.next === undefined) return appendSection(text, written);
     const position = findLineStart(text, place.blocks, place.next);
     const before = text.slice(0, position);
     const separator = position === 0 || before.endsWith('\n\n') ? '' : '\n';
@@ -82,7 +86,7 @@ function insertRootKey(
     const { blocks, next, last } = place;
     if (last !== undefined && (next === undefined || !isTomlKind(next, 'KeyValue')))
         return insertAfterLine(text, written, last);
-    if (next === undefined) return text.trim() === '' ? `${written}\n` : `${text.trimEnd()}\n\n${written}\n`;
+    if (next === undefined) return appendSection(text, written);
     const position = findLineStart(text, blocks, next);
     const gap = isTomlKind(next, 'KeyValue') ? '\n' : '\n\n';
     return `${text.slice(0, position)}${written}${gap}${text.slice(position)}`;

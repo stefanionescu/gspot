@@ -127,7 +127,6 @@ async function selectRevisionDependencies(
         declarations.mismatched ||
         (copied.length + environments.length > 0 && dependencyFiles.some(({ path }) => !unchangedPaths.has(path)));
     const note = hasDependencyDrift ? { dependencyNote: DEPENDENCY_REVISION_NOTE } : {};
-    if (copied.length === 0) return { dependencies: [], ...note };
     const dependencies: string[] = [
         ...declarations.copies,
         ...untrackedArtifacts,
@@ -170,7 +169,7 @@ async function checkOutRawFiles(copyRoot: string, cancelSignal: AbortSignal | un
     rmSync(attributes);
 }
 
-export function copyValePackages(root: string, copyRoot: string): void {
+function copyValePackages(root: string, copyRoot: string): void {
     const source = join(root, GSPOT_PATHS.valePackages);
     if (statSync(source, { throwIfNoEntry: false })?.isDirectory() !== true) return;
     const target = preparePath({ root: realpathSync(resolve(copyRoot)) }, GSPOT_PATHS.valePackages);

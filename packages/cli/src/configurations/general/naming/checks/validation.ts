@@ -3,6 +3,7 @@ import {
     BANNED_WORD_FORMS,
     CAMEL_ACRONYM_WORD,
     CAMEL_WORD,
+    CATEGORY_LABELS,
     DIGIT,
     DIGITS_ONLY,
     LAST_EXTENSION,
@@ -239,7 +240,7 @@ function validateIdentifier(identifier: Identifier, naming: FileNaming): CheckFi
         ...naming,
         identifier,
         place: { file: identifier.file, line: identifier.line, column: identifier.column },
-        prefix: `${identifier.label} "${identifier.name}": `,
+        prefix: `${identifier.language} ${CATEGORY_LABELS[identifier.category]} "${identifier.name}": `,
     };
     const { settings } = naming;
     const exceptions = selectExceptions(settings, identifier);

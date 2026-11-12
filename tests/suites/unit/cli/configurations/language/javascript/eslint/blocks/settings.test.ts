@@ -10,7 +10,7 @@ test.each([...DUPLICATE_RULE_CASES])(
     async ({ file, rules, kept }) => {
         await using sandbox = await testdir({
             ...DUPLICATE_RULE_FILES,
-            'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['typescript', 'jest'], { level: 'all' }),
             ...Object.fromEntries(DUPLICATE_RULE_CASES.map(({ file, source }) => [file, source])),
         });
 

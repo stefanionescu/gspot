@@ -24,8 +24,6 @@ export const PACKAGE_SCOPE_MARK = /^@/u;
 
 export const NAME_SEPARATOR = /[-/.](?<letter>[a-z0-9])/gu;
 
-export const ESLINT_BASE_LABEL = 'javascript';
-
 export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
 
 export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;

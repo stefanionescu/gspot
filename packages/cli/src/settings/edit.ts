@@ -19,12 +19,13 @@ export function buildEditedSettings(root: string, edit: SettingsEdit): EditedSet
     const body = text.slice(opening.length);
     const next = opening + buildSettingsText(body, table);
     const settings = parseSettings(next, root);
-    if (Array.isArray(settings))
+    if ('errors' in settings)
         throw new GspotError(
             'arguments',
-            [...settings.map((error) => `${error.path.join('.')}: ${error.message}`), SETTINGS_PAGE_SENTENCE].join(
-                '\n',
-            ),
+            [
+                ...settings.errors.map((error) => `${error.path.join('.')}: ${error.message}`),
+                SETTINGS_PAGE_SENTENCE,
+            ].join('\n'),
         );
     return { text: next, settings, changed: next !== text };
 }

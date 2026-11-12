@@ -19,6 +19,7 @@ import {
 } from '#cli/config/tools/programs.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runProcess } from '#cli/system/processes.ts';
@@ -30,8 +31,7 @@ import type { InspectedTool, ParsedToolVersion, ToolInspection } from '#cli/type
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const packageJsonPath = join(folder, PACKAGE_JSON);
-        if (files !== undefined && !convertToPosixPath(relative(root, packageJsonPath)).startsWith(`${GSPOT_FOLDER}/`))
-            return undefined;
+        if (files !== undefined && !isGspotPath(convertToPosixPath(relative(root, packageJsonPath)))) return undefined;
         const parsed =
             files === undefined
                 ? readPackageJson(folder, PACKAGE_JSON)
@@ -44,7 +44,7 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 function readPackageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
     const relativePath = convertToPosixPath(relative(root, path));
-    const files = relativePath.startsWith(`${GSPOT_FOLDER}/`) ? openFiles(root) : undefined;
+    const files = isGspotPath(relativePath) ? openFiles(root) : undefined;
     const folder = dirname(files === undefined ? realpathSync(path) : files.readCanonicalPath(relativePath));
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
     return findVersionAbove(files, root, start, name);
@@ -150,8 +150,9 @@ export async function readToolVersion(inspected: InspectedTool, path: string): P
     const { root, cwd, tool, timeoutSeconds, miseBinPaths, runsVersionCommand } = inspected;
     const metadataVersion = readMetadataVersion(inspected, path);
     if (metadataVersion !== undefined && runsVersionCommand !== true) return { version: metadataVersion };
+    const isToolProgram = isGspotPath(convertToPosixPath(relative(root, path)));
     const result = await runProcess([path, ...(tool.version_command ?? [VERSION_FLAG])], {
-        cwd: convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`) ? join(root, GSPOT_FOLDER) : cwd,
+        cwd: isToolProgram ? join(root, GSPOT_FOLDER) : cwd,
         timeoutSeconds,
         env: TOOL_ENVIRONMENT,
     });

@@ -1,8 +1,8 @@
 import { EVERY_FILE_GLOBS, LINT_FOLDERS } from '#cli/config/repository/setup.ts';
-import { FOLDER_CONTENTS, GLOB_EXCLUDE, GSPOT_FOLDER } from '#cli/config/system.ts';
-import { listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
+import { FOLDER_CONTENTS, GLOB_EXCLUDE } from '#cli/config/system.ts';
+import { isProjectSource, listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { escapeGlob, findEnclosingFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
+import { escapeGlob, findEnclosingFolder, isInScope } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
@@ -51,10 +51,9 @@ export function detectScopeFolders(
     const unparsed = new Set(listUnparsedDependencyFiles(files, dependencyFiles));
     const sources = files.filter(
         (file) =>
-            file.kind === 'source' &&
+            isProjectSource(file) &&
             !toolOnlyPackages.has(file.path) &&
             !unparsed.has(file.path) &&
-            !(file.path.startsWith(`${GSPOT_FOLDER}/`) || isInInstalledFolder(file.path)) &&
             LINT_FOLDERS.every((folder) => !file.path.startsWith(`${folder}/`)),
     );
     const folders = listProjectFolders(

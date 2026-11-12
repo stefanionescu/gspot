@@ -16,7 +16,7 @@ import {
     SCAN_PLAN_TITLE,
     SCAN_RULES_SHOWN,
 } from '#cli/config/commands/reports.ts';
-import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
+import { INCOMPLETE_STATUSES, RAN_STATUSES } from '#cli/config/engine.ts';
 import { GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { canIgnoreRule } from '#cli/engine/results.ts';
@@ -176,11 +176,8 @@ export function buildScanReport(input: ScanInput): ScanReport {
     return {
         totals: {
             files: planning.session.repository.files.length,
-            checks: new Set(
-                report.checks
-                    .filter(({ status }) => status === 'passed' || status === 'failed')
-                    .map(({ check }) => check),
-            ).size,
+            checks: new Set(report.checks.filter(({ status }) => RAN_STATUSES.has(status)).map(({ check }) => check))
+                .size,
             findings: findings.length,
             filesFlagged: new Set(findings.map(({ file }) => file).filter((file) => file !== '')).size,
             seconds: report.duration / MILLISECONDS_PER_SECOND,

@@ -85,6 +85,7 @@ export type CheckDescription = {
     minVersions: Record<string, string>;
     turnOff: { paths: string | null; rule: string | undefined };
     suppression: Tool['suppression'];
+    crashPattern: string | undefined;
 };
 
 export type SessionOptions = {

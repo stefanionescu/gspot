@@ -166,11 +166,17 @@ function parseMiseTaskRows(place: LintCommandPlace, search: CommandSearch): Lint
         .flatMap((command) => command.split(LINE_BREAK).flatMap((line) => buildRow(place, line, search)));
 }
 
-function readDependencyRows({ root, pins }: LintCommandSearch): LintCommand[] {
+function readRootPackage(root: string): { text: string; manifest: LintCommandPackage['manifest'] } | undefined {
     const text = findText(root, PACKAGE_JSON);
-    if (text === undefined) return [];
+    if (text === undefined) return undefined;
     const manifest = tryParseFile(() => parseJsonFile(PACKAGE_JSON, text, lintCommandPackageSchema));
-    if (manifest === undefined) return [];
+    return manifest === undefined ? undefined : { text, manifest };
+}
+
+function readDependencyRows({ root, pins }: LintCommandSearch): LintCommand[] {
+    const rootPackage = readRootPackage(root);
+    if (rootPackage === undefined) return [];
+    const { text, manifest } = rootPackage;
     return Object.entries(manifest.devDependencies).flatMap(([name, version]) => {
         const shipped = pins[name];
         if (shipped === undefined) return [];
@@ -232,10 +238,9 @@ because a row there fails a commit, and gspot cannot tell what such a tool forma
 */
 export function listOtherFormatScripts(input: Pick<LintCommandSearch, 'root' | 'files' | 'tools'>): LintCommand[] {
     const { root, tools } = input;
-    const text = findText(root, PACKAGE_JSON);
-    if (text === undefined) return [];
-    const manifest = tryParseFile(() => parseJsonFile(PACKAGE_JSON, text, lintCommandPackageSchema));
-    if (manifest === undefined) return [];
+    const rootPackage = readRootPackage(root);
+    if (rootPackage === undefined) return [];
+    const { text, manifest } = rootPackage;
     const search = {
         tools,
         scripts: new Map(Object.entries(manifest.scripts)),

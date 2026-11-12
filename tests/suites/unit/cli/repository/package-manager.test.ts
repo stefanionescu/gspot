@@ -7,11 +7,7 @@ import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import {
-    detectPackageManager,
-    readPackageManagerVersion,
-    readToolPackageManager,
-} from '#cli/repository/package-manager.ts';
+import { detectPackageManager, readToolPackageManager } from '#cli/repository/package-manager.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -78,16 +74,13 @@ test('without a packageManager field or Bun on PATH, the tool project uses npm a
     const installer = detectPackageManager(sandbox.path, []);
     expect(installer).toStrictEqual({ name: 'npm' });
     expect(
-        await readPackageManagerVersion(
+        await readToolPackageManager(
             sandbox.path,
             installer,
             rootSettingSchemas.tool_timeout_seconds.parse(undefined),
             createRunCache(sandbox.path),
         ),
-    ).toStrictEqual({
-        name: 'npm',
-        version: '10.9.0',
-    });
+    ).toStrictEqual({ name: 'npm', version: '10.9.0', command: { name: 'npm' } });
 });
 
 test.each([...PACKAGE_MANAGER_PIN_CASES])(
@@ -189,6 +182,6 @@ test('Yarn uses npm without querying Yarn', async () => {
             30,
             createRunCache(sandbox.path),
         ),
-    ).toStrictEqual({ name: 'npm', version: '11.19.0' });
+    ).toStrictEqual({ name: 'npm', version: '11.19.0', command: { name: 'npm' } });
     expect(run.mock.calls.map(([command]) => command)).toStrictEqual([['npm', '--version']]);
 });

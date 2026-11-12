@@ -2,12 +2,10 @@ import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/configurations/general.ts';
 import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/setup/configurations.ts';
@@ -16,7 +14,7 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const VALE_ALERT = {
@@ -38,27 +36,6 @@ async function openValeSandbox(resources: AsyncDisposableStack) {
     return await openFakeToolSession(sandbox.path, ['vale'], resources);
 }
 
-test('Vale gets the timeout setting', async () => {
-    await using sandbox = await createGitSandbox({});
-    const path = 'sample.md';
-    await createFileTree(sandbox.path, {
-        ...VALE_INSTALLED_FILES,
-        'gspot.toml': buildSandboxSettings(['prose', 'markdown'], {
-            level: 'all',
-            tables: 'tool_timeout_seconds = 1\n',
-        }),
-        [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
-        [path]: '# Example text\n',
-    });
-    using resources = new DisposableStack();
-    const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
-    const valeResult = buildProcessResult({ stdout: JSON.stringify({ [join(sandbox.path, path)]: [VALE_ALERT] }) });
-    const spawn = fakeCommands().mockResolvedValue(valeResult);
-    const run = resources.use(spawn);
-    await runChecks(session, buildRunOptions({ only: ['prose/vale'] }));
-    expect(run.mock.calls.map(([, options]) => options.timeoutSeconds)).toStrictEqual([1]);
-});
-
 test('prose/vale sends Vale each stdin file as gspot read it at the start of the run, not a later edit', async () => {
     await using sandbox = await createGitSandbox({
         ...VALE_INSTALLED_FILES,
@@ -68,14 +45,11 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
         'second.cts': '// Second explanation.\n',
     });
 
-    const session = await openSession(sandbox.path);
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     const paths = ['first.mts', 'second.cts'];
     const previous = paths.map((path) => readBytes(session.cache, path).toString('utf8'));
     for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
-
-    using resources = new DisposableStack();
-    const fakes = fakeToolExecutables([getTool(readConfigurations().values(), 'vale')]);
-    resources.use(fakes);
     const scanned: string[] = [];
     resources.use(
         fakeCommands().mockImplementation((_command, options) => {
@@ -139,7 +113,8 @@ test('prose/commit-message runs Vale with the config of the gspot style alone, w
 test('prose/dates reports dates in Markdown text and code comments, not in code', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'markdown', 'typescript']),
-        'guide.md': '# Schedule\n\nRelease on `03/04/2026` or\non 03/04/2026.\n\n```text\n05/06/2026\n```\n',
+        'guide.md':
+            '# Schedule\n\nRelease on `03/04/2026` or\non 03/04/2026.\n\n```text\n05/06/2026\n```\n\nOr on 2026-03-04 or March 4, 2026.\n',
         'run.ts': "// Runs since 04.05.2026.\nexport const version = '01/02/2026';\n",
     });
     const findings = await runSandboxCheck(sandbox.path, 'prose/dates');
@@ -166,12 +141,4 @@ test('prose/dates checks a child file once at the root', async () => {
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file, line }) => ({ file, line })))).toStrictEqual([
         { file: path, line: 3 },
     ]);
-});
-
-test('an ISO date and a date with the month name pass prose/dates', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
-        'guide.md': '# Schedule\n\nRelease on 2026-03-04 or March 4, 2026.\n',
-    });
-    expect(await runSandboxCheck(sandbox.path, 'prose/dates')).toStrictEqual([]);
 });

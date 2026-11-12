@@ -12,7 +12,7 @@ import { compareText } from '#cli/system/text.ts';
 import * as locate from '#cli/tools/locate.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import { QUALITY_SEARCH_ARGUMENTS, SCOPE_CHECK_FILES, SCOPE_FINDINGS } from '#tests/config/engine/run.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { listFindingRows, parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -100,7 +100,6 @@ test('a run canceled during its tool lookups reports the check canceled', async 
 });
 
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings([], {
         tables: stringify({
             command_check: [
@@ -129,7 +128,7 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
             ],
         }),
     });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'inputs/regular.txt': 'defect\n',
         'inputs/skip café.txt': 'defect\n',
@@ -160,7 +159,6 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
 });
 
 test('a path ignore covers its own paths, not the scopes below or beside it', async () => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], {
         tables: stringify({
             ignore: [
@@ -181,7 +179,7 @@ test('a path ignore covers its own paths, not the scopes below or beside it', as
         scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],
     });
     const source = '#!/usr/bin/env bash\nrm -rf "$target"\n';
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'root.sh': source,
         'app/cleanup.sh': source,
@@ -191,9 +189,9 @@ test('a path ignore covers its own paths, not the scopes below or beside it', as
     const command = ['check', '--only', 'bash/safety', '--json'];
     const broken = parseCheckReport(await runGspot(sandbox.path, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(broken.report.checks.flatMap((check) => check.findings)).toStrictEqual([
-        matchFields({ file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' }),
-        matchFields({ file: 'sibling/cleanup.sh', line: 2, rule: 'recursive-remove' }),
+    expect(listFindingRows(broken.report)).toStrictEqual([
+        { file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' },
+        { file: 'sibling/cleanup.sh', line: 2, rule: 'recursive-remove' },
     ]);
 });
 

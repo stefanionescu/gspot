@@ -133,8 +133,6 @@ export const BOUNDARY_DEPENDENCY_NODES = ['require', 'dynamic-import'] as const;
 
 export const NODE_SCRIPT_PATTERNS = ['**/*.mjs', '**/*.cjs'] as const;
 
-export const REGEX_SYMBOLS = /[.*+?^${}()|[\]\\]/gu;
-
 export const ANY_DEPTH_PREFIX = /^\*\*\//u;
 
 export const EXTENSIONLESS_CODE = { '.js': 'never', '.jsx': 'never', '.ts': 'never', '.tsx': 'never' } as const;

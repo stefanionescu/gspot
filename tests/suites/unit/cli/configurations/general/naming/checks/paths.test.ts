@@ -2,7 +2,6 @@ import { rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -77,9 +76,8 @@ test.each([
 );
 
 test('a numbered file name needs an ignored_prefix override', async () => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash', 'naming'], { level: 'all' });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         '.mise/tasks/01-build.sh': 'echo example\n',
     });
@@ -96,9 +94,8 @@ test('a numbered file name needs an ignored_prefix override', async () => {
 });
 
 test('a banned folder word such as shared is reported in folder names', async () => {
-    await using sandbox = await createGitSandbox({});
     const paths = ['shared/first.js', 'app/shared/first.js', 'app/worker/shared/entry.js'];
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], {
             level: 'all',
             scopes: [{ path: 'app' }, { path: 'app/worker' }],

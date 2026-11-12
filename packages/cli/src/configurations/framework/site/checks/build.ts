@@ -29,9 +29,9 @@ function detectBuildCommand(repository: CheckSession['repository']): string[] {
 
 async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRoot: string): Promise<SiteBuild> {
     const site = getTable(planned.scope.settings, 'site');
-    const folderPath = site['build_folder'];
+    const folderPath = site.build_folder;
     const cwd = join(copyRoot, planned.scope.path);
-    const command = site['build_command'] ?? detectBuildCommand(session.repository);
+    const command = site.build_command ?? detectBuildCommand(session.repository);
     const result = await runCheckTool(session, planned, command, { cwd });
     const folder = join(copyRoot, folderPath);
     const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;

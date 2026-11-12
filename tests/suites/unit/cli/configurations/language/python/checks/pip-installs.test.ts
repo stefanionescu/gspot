@@ -4,6 +4,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { LOCKED_SCOPE_SETTINGS, REQUIREMENTS_FILE_FINDING } from '#tests/config/configurations/python.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -24,9 +25,7 @@ test('a requirements file is reported only in a scope with a lockfile', async ()
         buildRunOptions({ only: ['python/pip-installs'] }),
     );
 
-    expect(
-        checked.report.checks.flatMap((check) => check.findings.map(({ file, line, rule }) => ({ file, line, rule }))),
-    ).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
+    expect(listFindingRows(checked.report)).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
 });
 
 test('an unmanaged pip install reports its file and rule, and a commented one does not', async () => {

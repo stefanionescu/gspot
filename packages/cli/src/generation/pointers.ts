@@ -12,6 +12,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { listCheckTools } from '#cli/engine/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
+import { selectScopeChecks } from '#cli/generation/owned.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
@@ -92,11 +93,7 @@ function listPointerFieldTargets({
 
 function listPointerFieldTools(session: Session) {
     return session.scopes.flatMap((scope) => {
-        const required = new Set(
-            session.configuredChecks
-                .filter((planned) => planned.scope.path === scope.path || planned.check.runs === 'once')
-                .flatMap((check) => listCheckTools(check)),
-        );
+        const required = new Set(selectScopeChecks(session, scope.path).flatMap((check) => listCheckTools(check)));
         return readConfigurations()
             .values()
             .flatMap((configuration) =>
@@ -104,6 +101,14 @@ function listPointerFieldTools(session: Session) {
             )
             .toArray();
     });
+}
+
+/**
+List the place where gspot writes a config from a source, when that place is outside the gspot folder.
+*/
+export function listOutsideTargets(scopePath: string, config: Config): string[] {
+    if (config.source === undefined || isGspotPath(config.target)) return [];
+    return [config.per_scope ? joinScope(scopePath, config.target) : config.target];
 }
 
 export function listPointerPaths(owner: ConfigOwner, config: Config): string[] {
@@ -145,9 +150,7 @@ export function listOwnablePaths(session: Session): Set<string> {
             .toArray(),
     );
     const paths = configs.flatMap(({ owner, config }) => [
-        ...(config.source === undefined || isGspotPath(config.target)
-            ? []
-            : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target]),
+        ...listOutsideTargets(owner.scope.path, config),
         ...listPointerPaths(owner, config),
     ]);
     return new Set([GITHUB_WORKFLOW, GITLAB_WORKFLOW, ...paths]);

@@ -58,7 +58,6 @@ function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, 
         check: check.id,
         file: file === undefined ? '' : convertToPosixPath(file),
         message: addInstallAdvice(text, result),
-        help: check.help,
         fixable: false,
     };
 }

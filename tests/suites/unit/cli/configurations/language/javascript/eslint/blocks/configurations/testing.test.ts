@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { ASSERTION_RULE_OWNERS } from '#tests/config/configurations/javascript/configuration-blocks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import type { EslintConfiguration } from '#tests/types/setup.ts';
@@ -73,20 +72,6 @@ test('Testing Library rules take the framework package of each scope', async () 
     expect(configuration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'react']);
     const applicationConfiguration = (await eslint.calculateConfigForFile('app/sample.test.js')) as EslintConfiguration;
     expect(applicationConfiguration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'vue']);
-});
-
-test.each(ASSERTION_RULE_OWNERS)('basic assertion ownership with $name', async ({ configuration, assertions }) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript', ...(configuration === undefined ? [] : [configuration])], {
-            level: 'basic',
-        }),
-        'package.json': '{"private":true,"type":"module"}',
-        'source.test.js': '',
-        'source.js': '',
-    });
-    const eslint = await buildEslint(sandbox.path);
-    const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
-    expect(tests.rules['gspot/require-test-assertions']?.[0]).toBe(assertions);
 });
 
 test('Testing Library rules read Testing Library queries and leave a Playwright page alone', async () => {

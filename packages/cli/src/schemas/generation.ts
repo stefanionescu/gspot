@@ -83,7 +83,7 @@ export const generatedFilesSchema = z.strictObject({
     notes: z.string().array(),
 });
 
-const initFileRowSchema = z.strictObject({ path: z.string(), note: z.string() });
+export const initFileRowSchema = z.strictObject({ path: z.string(), note: z.string() });
 
 export const carryoverRowSchema = z.strictObject({
     path: z.string(),
@@ -97,7 +97,7 @@ export const carryoverRowSchema = z.strictObject({
     dropped: z.string().array().readonly(),
 });
 
-const leftOutSettingSchema = z.strictObject({ key: z.string(), note: z.string() });
+export const leftOutSettingSchema = z.strictObject({ key: z.string(), note: z.string() });
 
 const lintCommandSourceSchema = z.enum(Object.keys(LINT_COMMAND_FIXES) as Array<keyof typeof LINT_COMMAND_FIXES>);
 

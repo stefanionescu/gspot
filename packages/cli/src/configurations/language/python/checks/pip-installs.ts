@@ -12,6 +12,7 @@ import { PIP_INSTALL_EXPLANATIONS } from '#cli/configurations/language/python/ex
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { listMatchingLines } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -35,20 +36,15 @@ function checkPipInstalls(session: Session, planned: PlannedCheck): CheckFinding
     const installs = files
         .filter((file) => INSTALL_FILE_SUFFIXES.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            readText(session.cache, file.path)
-                .split('\n')
-                .flatMap((text, index): CheckFinding[] =>
-                    PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
-                        ? [
-                              {
-                                  file: file.path,
-                                  line: index + 1,
-                                  rule: PYTHON_RULES.pipInstall,
-                                  message: PIP_INSTALL_MESSAGE,
-                              },
-                          ]
-                        : [],
-                ),
+            listMatchingLines(
+                readText(session.cache, file.path),
+                (text) => PIP_INSTALL.test(text) && !text.trimStart().startsWith('#'),
+            ).map((line) => ({
+                file: file.path,
+                line,
+                rule: PYTHON_RULES.pipInstall,
+                message: PIP_INSTALL_MESSAGE,
+            })),
         );
     return [...requirements, ...installs];
 }

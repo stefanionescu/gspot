@@ -10,13 +10,13 @@ import {
     GETOPTS_COMMAND,
     GLOBAL_DECLARATION_FLAG,
     LOCAL_DECLARATION_WORDS,
-    NOT_LINE_BREAK,
     POSITIONAL_PARAMETER,
     REMOVE_COMMAND,
     SHIFT_COMMAND,
     TEMPORARY_FILE_COMMAND,
     TEMPORARY_VALUE_NODES,
 } from '#cli/config/parsers/code.ts';
+import { blankText } from '#cli/parsers/code/comments.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import {
     buildCommandCalls,
@@ -254,17 +254,19 @@ function listTemporaryPaths(syntaxRoot: Node, commands: Node[], traps: TrapScrip
     return temporaryPaths.paths;
 }
 
+function listCommandNodes(root: Node): Node[] {
+    return root
+        .descendantsOfType(['command', 'declaration_command'])
+        .filter((node) => node.type === 'command' || node.child(0)?.text === 'export');
+}
+
 export async function parseBashScript(text: string, cache?: ParseCache): Promise<ScriptSyntax> {
     using tree = await parseSource('bash', text, cache);
     const comments = tree.rootNode
         .descendantsOfType('comment')
         .map((comment) => ({ start: comment.startIndex, end: comment.endIndex }));
-    const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
-    const codeText = replaceRanges(text, masked, comments);
-
-    const commands = tree.rootNode
-        .descendantsOfType(['command', 'declaration_command'])
-        .filter((node) => node.type === 'command' || node.child(0)?.text === 'export');
+    const codeText = replaceRanges(text, blankText(text), comments);
+    const commands = listCommandNodes(tree.rootNode);
     const trapTrees: Disposable[] = [];
     try {
         const traps = await parseTrapScripts(commands, cache, trapTrees);
@@ -273,14 +275,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
             const nodeCalls = buildCommandCalls([node]);
             const script = scripts.get(node.id);
             if (script !== undefined)
-                nodeCalls.push(
-                    ...buildCommandCalls(
-                        script.syntaxRoot
-                            .descendantsOfType(['command', 'declaration_command'])
-                            .filter((child) => child.type === 'command' || child.child(0)?.text === 'export'),
-                        script.sourceRows,
-                    ),
-                );
+                nodeCalls.push(...buildCommandCalls(listCommandNodes(script.syntaxRoot), script.sourceRows));
             return nodeCalls;
         });
         return {

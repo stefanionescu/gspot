@@ -41,7 +41,6 @@ export type GeneratedFile = {
     path: string;
     content: string;
     executable?: boolean;
-    kind?: 'workflow';
 };
 
 export type Generation = {
@@ -53,7 +52,7 @@ export type Generation = {
 export type HookName = (typeof CHECK_HOOKS)[number];
 
 export type PackagePin = {
-    kind: Exclude<ToolFolderKind, 'vale'>;
+    kind: ToolFolderKind;
     name: string;
     version: string;
     requires?: readonly string[];
@@ -66,7 +65,7 @@ export type MiseToolPin = {
     checksums: Record<string, string>;
 };
 
-type ToolFolderKind = 'npm' | 'python' | 'vale';
+type ToolFolderKind = 'npm' | 'python';
 
 export type PackagePins = { npm: Record<string, string>; python: string[] };
 
@@ -204,10 +203,8 @@ export type NpmToolInstall = ToolInstall & {
 
 export type PackageManagerRequest = {
     runFolder: string;
-    packageManager: ToolPackageManager;
     commandArguments: string[];
     failure: string;
-    environment: Record<string, string>;
 };
 
 export type PackageManagerRun = {

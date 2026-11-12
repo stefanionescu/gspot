@@ -45,7 +45,7 @@ export const noFixedTestWaits = createRule<[], 'wait'>({
         messages: { wait: 'Wait for an observable condition instead of a fixed delay.' },
     },
     create(context) {
-        if (!isTestRelatedPath(context.filename, context.settings['testFileExtensions'])) return {};
+        if (!isTestRelatedPath(context.filename)) return {};
         return {
             CallExpression(node) {
                 if (!isFixedWait(node, context.sourceCode)) return;

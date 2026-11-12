@@ -44,32 +44,6 @@ test('a format override selector that EditorConfig cannot express is a settings 
     });
 });
 
-test.each([
-    { configurations: ['bash'], shfmt: '\nswitch_case_indent = true\nsimplify = true' },
-    { configurations: [], shfmt: '' },
-])('EditorConfig holds the shfmt layout when $configurations is selected', async ({ configurations, shfmt }) => {
-    const settings = { configurations, format: { indent_style: 'space', indent_width: 4 } };
-    const text = await buildGeneratedFile(stringify(settings), '.editorconfig', { 'run.sh': 'echo ready\n' });
-    expect(text).toContain(`indent_style = space
-indent_size = 4${shfmt}
-
-`);
-});
-
-test('EditorConfig gives the files of a format override their indent', async () => {
-    const settings = {
-        configurations: ['bash'],
-        format: {
-            indent_style: 'space',
-            indent_width: 2,
-            override: [{ paths: ['**/*.sh', '**/*.bash'], indent_width: 4 }],
-        },
-    };
-    const text = await buildGeneratedFile(stringify(settings), '.editorconfig', { 'run.sh': 'echo ready\n' });
-    expect(text).toContain('[/**/*.sh]\nindent_size = 4\n');
-    expect(text).toContain('[/**/*.bash]\nindent_size = 4\n');
-});
-
 test('Prettier loads the selected plugin through the root pointer file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['svelte']),
@@ -124,27 +98,13 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
     expect(configuration?.tabWidth).toBe(2);
 });
 
-test('Prettier reads the bracket, arrow, and prose settings, in the table and in an override', async () => {
-    const format = { bracket_spacing: false, arrow_parens: 'avoid', prose_wrap: 'always' };
-    const override = { paths: ['**/*.ts'], bracket_spacing: true };
-    const settings = { configurations: [], format: { ...format, override: [override] } };
-    const text = await buildGeneratedFile(stringify(settings), getManifestTarget('format', 'prettier.json'), {});
-    expect(JSON.parse(text)).toMatchObject({
-        bracketSpacing: false,
-        arrowParens: 'avoid',
-        proseWrap: 'always',
-        overrides: [{}, { files: ['**/*.ts'], options: { bracketSpacing: true } }],
-    });
-});
-
 test('Prettier overrides agree in the root pointer file and editor lookup', async () => {
-    await using sandbox = await createGitSandbox({});
-    const root = sandbox.path;
-    await createFileTree(root, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': FORMAT_OVERRIDES_SETTINGS,
         'package.json': '{"private":true}\n',
         ...Object.fromEntries(PRETTIER_OPTIONS_BY_FILE.map(({ file }) => [file, GREETING_SOURCE])),
     });
+    const root = sandbox.path;
     await applyGeneratedFiles(root);
     for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {
         const config = await prettier.resolveConfig(join(root, file), {

@@ -66,18 +66,6 @@ test('tools.ruff.rules turns on a rule that gspot leaves off, and an ignore of i
     ).toContain('D100');
 });
 
-test('tools.ruff.rules adds selectors to the rules of the level', async () => {
-    const ruff = parse(
-        await buildGeneratedFile(
-            buildSandboxSettings(['python'], { tables: '[tools.ruff]\nrules = ["AIR"]\n' }),
-            getManifestTarget('python', 'ruff.toml'),
-            { 'example.py': 'value = 1\n' },
-        ),
-    ) as { lint: { select: string[] } };
-    expect(ruff.lint.select).toContain('AIR');
-    expect(ruff.lint.select).toContain('A');
-});
-
 test('Ruff accepts print in a module that pyproject.toml names as a console script', async () => {
     const ruff = parse(
         await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {

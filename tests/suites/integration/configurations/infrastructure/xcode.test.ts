@@ -7,7 +7,7 @@ import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { hasToolBuild, isMacos } from '#tests/setup/system/platform.ts';
+import { isMacos } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 
 const PLUTIL_SAMPLE = {
@@ -31,11 +31,8 @@ describe.skipIf(!isMacos)('Xcode samples', () => {
     test('xcode/plutil reports app/Info.plist and passes after the fix', async () => {
         await assertCheckSample(installedSandbox(), PLUTIL_SAMPLE);
     });
-});
 
-test.skipIf(!hasToolBuild('plutil'))(
-    'xcode/plutil turns a parse error beside a missing file into a note that names both files',
-    async () => {
+    test('xcode/plutil turns a parse error beside a missing file into a note that names both files', async () => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['xcode']),
             'bad.plist': '<plist><dict>',
@@ -50,5 +47,5 @@ test.skipIf(!hasToolBuild('plutil'))(
         expect(findings).toBeUndefined();
         expect(note).toContain('bad.plist: ');
         expect(note).toContain('\nmissing.plist: ');
-    },
-);
+    });
+});

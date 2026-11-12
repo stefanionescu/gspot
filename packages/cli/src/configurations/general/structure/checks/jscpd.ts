@@ -11,6 +11,7 @@ import {
     OUTPUT_FLAG,
 } from '#cli/config/configurations/general.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { buildMissingFileStop } from '#cli/configurations/syntax.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
@@ -67,8 +68,7 @@ async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise
     const files = openFiles(session.root);
     const generatedPath = getConfigPath(session, planned, JSCPD_TOOL);
     const generated = files.read(generatedPath);
-    if (generated === undefined)
-        throw new CheckStop('missing', `The generated file ${generatedPath} is missing. Run gspot install.`);
+    if (generated === undefined) throw buildMissingFileStop(generatedPath);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
     const config = join(workFolder.path, JSCPD_CONFIG_FILE);
     writeFileSync(config, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));

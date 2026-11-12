@@ -120,7 +120,6 @@ function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] 
             file: path,
             rule: option,
             message: `${option} is not on in this tsconfig.`,
-
             help: OPTION_HELP,
         })),
     );

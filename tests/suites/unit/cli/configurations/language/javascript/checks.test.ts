@@ -42,14 +42,15 @@ test('javascript/knip keeps only the findings of the files that Git lists', asyn
     expect(findings.map(({ file }) => file)).toStrictEqual(['source.js']);
 });
 
-test('javascript/biome checks shebang scripts, TypeScript, and component files in each scope', async () => {
+test('javascript/biome checks shebang scripts, TypeScript, and component files in each scope, with the limits of the scope and the language', async () => {
     const nested = 'if (value) { if (value.ready) { if (value.id) return 1; } } return 0;';
     const typed = `function count(value: { ready: boolean; id: number }) { ${nested} }`;
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'vue', 'svelte', 'astro'], {
             level: 'all',
-            tables: '[limits.javascript]\nmax_cognitive_complexity = 2\n[limits.typescript]\nmax_cognitive_complexity = 2\n',
-            scopes: [{ path: 'app' }],
+            tables:
+                '[limits.javascript]\nmax_cognitive_complexity = 2\n[limits.typescript]\nmax_cognitive_complexity = 2\n' +
+                '[[scope]]\npath = "app"\n[scope.limits.javascript]\nmax_cognitive_complexity = 8\n[scope.limits.typescript]\nmax_cognitive_complexity = 2\n',
         }),
         'bin/run': `#!/usr/bin/env node\nfunction count(value) { ${nested} }\n`,
         'source.ts': `export ${typed}\n`,
@@ -57,6 +58,7 @@ test('javascript/biome checks shebang scripts, TypeScript, and component files i
         'Widget.svelte': `<script lang="ts">\n${typed}\n</script>\n`,
         'Page.astro': `---\n${typed}\n---\n<p>Page</p>\n`,
         'app/source.ts': `export ${typed}\n`,
+        'app/source.js': `export function count(value) { ${nested} }\n`,
     });
     const modules = join(sandbox.path, '.gspot/node_modules');
     const biome = await realpath(join(toolModules, '@biomejs/biome'));
@@ -105,17 +107,8 @@ test('javascript/tsc excludes type roots inherited from folders above the reposi
     const root = join(sandbox.path, 'project');
     await linkInstalledModules(join(root, 'node_modules'));
     await applyGeneratedFiles(root);
-    const session = await openSession(root);
-    const planned = planChecks(session, buildRunOptions({ only: ['javascript/tsc'] }))[0]!;
-    const result = await runCheckCode(
-        buildCheckSession(session, CHECK_GENERATION),
-        planned,
-        CHECK_CODE['javascript/tsc'],
-        {},
-    );
-    expect(result.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-        { file: 'source.js', rule: 'TS2304' },
-    ]);
+    const findings = await runSandboxCheck(root, 'javascript/tsc');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([{ file: 'source.js', rule: 'TS2304' }]);
 });
 
 test('a scope whose jsconfig lists no JavaScript file passes with nothing to compile', async () => {

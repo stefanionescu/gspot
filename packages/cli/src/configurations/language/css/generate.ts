@@ -16,6 +16,20 @@ import { buildModuleSpecifier, isInScope } from '#cli/system/paths.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 
+function buildFunctionValueRule(functions: readonly string[]): unknown {
+    return [true, { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } }];
+}
+
+function keepUnsetRules(
+    rules: Record<string, unknown>,
+    picked: Record<string, unknown>,
+    offRules: string[],
+): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(rules).filter(([rule]) => !offRules.includes(rule) && picked[rule] === undefined),
+    );
+}
+
 function buildComponentOverrides(tailwindFunctions: string[], picked: Record<string, unknown>, offRules: string[]) {
     return STYLELINT_COMPONENTS.map((override) => {
         const { files, ignorePseudoClasses } = override;
@@ -24,20 +38,11 @@ function buildComponentOverrides(tailwindFunctions: string[], picked: Record<str
             'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
             ...(functions.length > 0 && {
                 'function-no-unknown': [true, { ignoreFunctions: functions }],
-                'declaration-property-value-no-unknown': [
-                    true,
-                    { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
-                ],
+                'declaration-property-value-no-unknown': buildFunctionValueRule(functions),
                 'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
             }),
         };
-        return {
-            files,
-            customSyntax: override.customSyntax,
-            rules: Object.fromEntries(
-                Object.entries(rules).filter(([rule]) => !offRules.includes(rule) && picked[rule] === undefined),
-            ),
-        };
+        return { files, customSyntax: override.customSyntax, rules: keepUnsetRules(rules, picked, offRules) };
     });
 }
 
@@ -56,14 +61,7 @@ function buildCssModulesOverrides(
         ...CSS_MODULES_OVERRIDE.rules,
         'at-rule-no-unknown': [true, { ignoreAtRules: [...tailwindAtRules, ...CSS_MODULES_OVERRIDE.atRules] }],
     };
-    return [
-        {
-            files: [...CSS_MODULES_OVERRIDE.files],
-            rules: Object.fromEntries(
-                Object.entries(rules).filter(([rule]) => !offRules.includes(rule) && picked[rule] === undefined),
-            ),
-        },
-    ];
+    return [{ files: [...CSS_MODULES_OVERRIDE.files], rules: keepUnsetRules(rules, picked, offRules) }];
 }
 
 function buildStylelintFile(planned: PlannedConfig): string {
@@ -92,12 +90,8 @@ function buildStylelintFile(planned: PlannedConfig): string {
     const syntaxRules = isTailwind
         ? {
               'at-rule-no-unknown': [true, { ignoreAtRules: tailwindAtRules }],
-
               'function-no-unknown': [true, { ignoreFunctions: tailwindFunctions }],
-              'declaration-property-value-no-unknown': [
-                  true,
-                  { ignoreProperties: { '/.*/': tailwindFunctions.map((name) => String.raw`/\b${name}\(/`) } },
-              ],
+              'declaration-property-value-no-unknown': buildFunctionValueRule(tailwindFunctions),
           }
         : {};
     const plugins = options.plugins.map(
@@ -116,7 +110,6 @@ function buildStylelintFile(planned: PlannedConfig): string {
         },
         ...(overrides.length > 0 && { overrides }),
     };
-
     return JSON.stringify(document, null, JSON_INDENT);
 }
 

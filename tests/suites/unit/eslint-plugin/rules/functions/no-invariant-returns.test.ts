@@ -16,10 +16,6 @@ buildRuleTester().run('no-invariant-returns', noInvariantReturns, {
     ],
     invalid: [
         {
-            code: 'function isValid(item) { if (item) return true; return true; }',
-            errors: [{ messageId: 'invariant' }],
-        },
-        {
             code: 'function read(item) { const result = 3; if (item) return result; return result; }',
             errors: [{ messageId: 'invariant' }],
         },

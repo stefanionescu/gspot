@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir } from 'testdirs';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
@@ -33,9 +33,8 @@ test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
 });
 
 test('an ESLint finding whose source text holds a module error word stays a finding, and a real module error becomes a note', async () => {
-    await using sandbox = await createGitSandbox({});
     const path = 'source.ts';
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
     });

@@ -120,12 +120,12 @@ export const reportedTypoSchema = z.object({
     corrections: z.string().array().nullable(),
 });
 
+const skipCauseSchema = z.enum([...SKIP_CAUSES, 'no-files']);
+
 export const checkStateSchema = z.discriminatedUnion('status', [
     z.strictObject({ status: z.literal('on') }),
-    z.strictObject({ status: z.literal('skipped'), cause: z.enum([...SKIP_CAUSES, 'no-files']) }),
+    z.strictObject({ status: z.literal('skipped'), cause: skipCauseSchema }),
 ]);
-
-const skipCauseSchema = z.enum([...SKIP_CAUSES, 'no-files']);
 
 export const findingSchema = z.strictObject({
     check: z.string(),

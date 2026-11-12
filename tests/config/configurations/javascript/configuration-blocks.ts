@@ -157,12 +157,6 @@ configurations = []
 test_files = ["custom/**"]
 `;
 
-export const ASSERTION_RULE_OWNERS = [
-    { name: 'no test framework', configuration: undefined, assertions: 2 },
-    { name: 'jest', configuration: 'jest', assertions: 0 },
-    { name: 'vitest', configuration: 'vitest', assertions: 0 },
-] as const;
-
 const PORT_SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
 

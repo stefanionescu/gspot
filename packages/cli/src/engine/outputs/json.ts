@@ -44,7 +44,7 @@ function setPosition(finding: Finding, base: number, line: string | undefined, c
 }
 
 function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
-    const { check, help, output: format } = output;
+    const { check, output: format } = output;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
         throw new CheckStop('error', INVALID_FINDING_MESSAGE);
     const fields: Record<string, string | string[] | undefined> | undefined = format.fields;
@@ -71,7 +71,6 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
         check,
         file,
         message,
-        help,
         fixable: getFieldValues('fixable').some((values) =>
             values.some(
                 (value) =>

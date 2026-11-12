@@ -3,6 +3,7 @@ import { splitByCase } from 'scule';
 import {
     DIGIT_BOUNDARY,
     LIST_LIMIT,
+    MILLISECONDS_PER_SECOND,
     NUMERIC_WORDS,
     REGEXP_SYNTAX_CHARACTERS,
     ROOT_SCOPE_MARK,
@@ -88,8 +89,19 @@ export function formatCount(count: number, noun: string): string {
     return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
 }
 
+export function formatSeconds(milliseconds: number): string {
+    return `${(milliseconds / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
+}
+
 export function formatScope(path: string): string {
     return path === '' ? ROOT_SCOPE_MARK : path;
+}
+
+/**
+Format the scope that stands before a check name in a report line. The root scope gets no prefix.
+*/
+export function formatScopePrefix(path: string): string {
+    return path === '' ? '' : `${path}  `;
 }
 
 /**
@@ -142,4 +154,13 @@ export function listConflictMarkerLines(text: string): number[] {
         } else if (CONFLICT_SEPARATOR.test(line)) separators?.push(index);
     }
     return markers.toSorted((left, right) => left - right);
+}
+
+/**
+List the lines of a text that pass a test.
+
+@returns the line numbers, from 1.
+*/
+export function listMatchingLines(text: string, isMatch: (line: string) => boolean): number[] {
+    return text.split('\n').flatMap((line, index) => (isMatch(line) ? [index + 1] : []));
 }

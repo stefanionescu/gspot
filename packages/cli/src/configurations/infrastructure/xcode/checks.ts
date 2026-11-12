@@ -40,6 +40,7 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import { escapeRegExp, getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import type { TargetFolder } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function extractAssetSetName(path: string): string {
@@ -59,11 +60,7 @@ function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): Check
         (file) => posix.basename(file) !== PACKAGE_SWIFT,
     );
     return swiftFiles
-        .filter(
-            (file) =>
-                !referenced.has(file) &&
-                folders.every(({ path, excluded }) => !file.startsWith(path) || excluded.has(file)),
-        )
+        .filter((file) => !referenced.has(file) && !isInTargetFolder(file, folders))
         .map((file) => ({
             file,
             line: 1,
@@ -225,6 +222,10 @@ function checkBuildSettings(session: Session, planned: PlannedCheck): CheckFindi
                 .map(({ rule, message }) => ({ file: path, line: 1, rule, message })),
         );
     });
+}
+
+export function isInTargetFolder(file: string, folders: TargetFolder[]): boolean {
+    return folders.some(({ path, excluded }) => file.startsWith(path) && !excluded.has(file));
 }
 
 export const XCODE_CHECKS: Readonly<Record<string, CheckCode>> = {

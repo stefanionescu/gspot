@@ -2,15 +2,10 @@ import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -18,14 +13,6 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildProcessResult, runCommand } from '#tests/setup/system/processes.ts';
-
-const UNTRACKED_CLOUDFLARE_FINDINGS = [
-    {
-        file: 'cloudflare-env.d.ts',
-        rule: 'untracked',
-        message: 'cloudflare-env.d.ts is not tracked. Commit it, so the other checks and this check can read it.',
-    },
-] as const;
 
 const CLOUDFLARE_ENV_SOURCE = 'interface CloudflareEnv {}\n';
 
@@ -45,68 +32,26 @@ function fakeWranglerTypes(source: string) {
     });
 }
 
-test('custom Worker type settings reach wrangler types as --env-interface', async () => {
-    await using sandbox = await createGitSandbox({});
-    const source = CLOUDFLARE_ENV_SOURCE;
-    await createFileTree(sandbox.path, {
+test('an OpenNext scope checks cloudflare-env.d.ts against CloudflareEnv, and reports the file until Git tracks it', async () => {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             scopes: [{ path: 'workers/api', configurations: ['cloudflare'] }],
             tables: '[scope.cloudflare]\ntypes_file = "cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
         }),
-        'workers/api/cloudflare-env.d.ts': source,
+        'workers/api/wrangler.jsonc': '{ "name": "shop" }\n',
     });
     commitAll(sandbox.path);
-    const session = await openSession(sandbox.path);
+    await writeFile(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), CLOUDFLARE_ENV_SOURCE);
     using resources = new DisposableStack();
-    const run = resources.use(fakeWranglerTypes(source));
+    const run = resources.use(fakeWranglerTypes(CLOUDFLARE_ENV_SOURCE));
     resources.use(await fakeWrangler(sandbox.path));
-    const planned = planSandboxCheck(session, 'cloudflare/stale-types', { scope: 'workers/api' });
-    const result = await runCheckCode(
-        buildCheckSession(session, CHECK_GENERATION),
-        planned,
-        selectCheckCode(planned.check),
-        {},
-    );
-    expect(result.findings).toStrictEqual([]);
-    expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
-        ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],
+    const untracked = await runSandboxCheck(sandbox.path, 'cloudflare/stale-types', { scope: 'workers/api' });
+    expect(untracked.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'workers/api/cloudflare-env.d.ts', rule: 'untracked' },
     ]);
-});
-
-test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and reports the file until Git tracks it', async () => {
-    await using sandbox = await createGitSandbox({});
-    const source = CLOUDFLARE_ENV_SOURCE;
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['cloudflare'], {
-            tables: '[cloudflare]\ntypes_file = "cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
-        }),
-        'wrangler.jsonc': '{ "name": "shop" }\n',
-    });
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'cloudflare-env.d.ts'), source);
-    using resources = new DisposableStack();
-    const run = resources.use(fakeWranglerTypes(source));
-    resources.use(await fakeWrangler(sandbox.path));
-    const untracked = await openSession(sandbox.path);
-    const untrackedCheck = planSandboxCheck(untracked, 'cloudflare/stale-types');
-    const untrackedResult = await runCheckCode(
-        buildCheckSession(untracked, CHECK_GENERATION),
-        untrackedCheck,
-        selectCheckCode(untrackedCheck.check),
-        {},
-    );
-    expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
     commitAll(sandbox.path);
-    const tracked = await openSession(sandbox.path);
-    const trackedCheck = planSandboxCheck(tracked, 'cloudflare/stale-types');
-    const trackedResult = await runCheckCode(
-        buildCheckSession(tracked, CHECK_GENERATION),
-        trackedCheck,
-        selectCheckCode(trackedCheck.check),
-        {},
-    );
-    expect(trackedResult.findings).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'cloudflare/stale-types', { scope: 'workers/api' })).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
         ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],
     ]);

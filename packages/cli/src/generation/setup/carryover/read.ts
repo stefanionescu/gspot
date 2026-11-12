@@ -28,7 +28,7 @@ import {
     UNREADABLE_CONFIG_MESSAGE,
 } from '#cli/config/generation/setup.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
 import { convertIgnorePattern, readIgnoreFiles } from '#cli/generation/setup/carryover/ignore-files.ts';
 import {
     compareRuffRules,
@@ -74,11 +74,15 @@ const EDITORCONFIG_WORDS: Readonly<Record<string, string>> = {
 };
 
 function readRuffCarryover(input: CarryoverInput): CarryoverSection {
-    const { repository, tools, configurations, level } = input;
+    const { repository, tools, session } = input;
+    const { level } = session.settings;
     const found = tools.has('ruff') ? readRuffOptions(repository.root) : undefined;
     if (found === undefined) return EMPTY_CARRYOVER;
     const { path, options } = found;
-    const shipped = configurations.flatMap(({ ruff }) => [...ruff.basic, ...(level === 'all' ? ruff.all : [])]);
+    const shipped = session.toolConfigurations.flatMap(({ ruff }) => [
+        ...ruff.basic,
+        ...(level === 'all' ? ruff.all : []),
+    ]);
     const { rules, ignores, row } = compareRuffRules({ path, options, shipped });
     const tracked = repository.files.map((file) => file.path);
     const excludes = [...(options.exclude ?? []), ...(options['extend-exclude'] ?? [])];
@@ -123,7 +127,7 @@ function readMarkdownlintFile(root: string): MarkdownlintConfig | undefined {
 }
 
 function readGeneratedFile(session: CarryoverInput['session'], target: string): Record<string, unknown> {
-    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === target);
+    const generated = buildConfigs(session).files.find(({ path }) => path === target);
     return parseJsonFile(target, generated?.content ?? '{}');
 }
 

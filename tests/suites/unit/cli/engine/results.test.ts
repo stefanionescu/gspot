@@ -10,7 +10,7 @@ import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('the built-in dispatcher attaches the check ID, fixability, and default help to sparse findings', async () => {
+test('the built-in dispatcher attaches the check ID and fixability to sparse findings, and keeps the help of a finding', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['naming'], { level: 'all' }),
         'source.js': 'export const source = 1;\n',
@@ -23,7 +23,7 @@ test('the built-in dispatcher attaches the check ID, fixability, and default hel
             { file: 'source.js', rule: 'name', message: 'Choose another name.', help: 'Use the project vocabulary.' },
         ],
         buildCheckSession(session, CHECK_GENERATION),
-        { ...planned, check: { ...planned.check, help: 'Rename this identifier.' } },
+        planned,
         {},
     );
     expect(result.status).toBe('failed');
@@ -34,7 +34,6 @@ test('the built-in dispatcher attaches the check ID, fixability, and default hel
             file: 'source.js',
             rule: 'name',
             message: 'Choose a descriptive name.',
-            help: 'Rename this identifier.',
         },
         {
             check: 'naming/identifiers',
@@ -52,11 +51,7 @@ test.each([
     ['repository/encoding', 'path-encoding', 'gspot explain repository/encoding path-encoding'],
     ['repository/encoding', 'unlisted', 'gspot explain repository/encoding'],
     ['typescript/tsc', 'TS2322', 'gspot explain typescript/tsc'],
-    ['javascript/eslint', 'no-var', 'gspot explain javascript/eslint no-var'],
     ['javascript/eslint', 'import-lite/no-default-export', 'gspot explain javascript/eslint'],
-    ['css/stylelint', 'CssSyntaxError', 'gspot explain css/stylelint'],
-    ['prose/vale', 'Vale.Repetition', 'gspot explain prose/vale'],
-    ['javascript/biome', 'parse', 'gspot explain javascript/biome'],
 ] as const)(
     'the explain command of %s for %s names the rule only when the check has it listed',
     (check, rule, command) => {

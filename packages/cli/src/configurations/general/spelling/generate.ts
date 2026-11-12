@@ -12,7 +12,12 @@ import {
 } from '#cli/config/configurations/prose.ts';
 import { TRANSLATIONS_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import { convertToGlobs, keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import {
+    commentSectionTitle,
+    convertToGlobs,
+    keepFirstPatterns,
+    listCheckIgnoreSections,
+} from '#cli/configurations/ignores.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -72,14 +77,7 @@ function serializeIgnoredGlobs(sections: IgnoreSection[]): string {
         ...sections.flatMap(({ title, patterns }) =>
             patterns.length === 0
                 ? []
-                : [
-                      ...title
-                          .replaceAll('\r\n', '\n')
-                          .replaceAll('\r', '\n')
-                          .split('\n')
-                          .map((line) => `  # ${line}`),
-                      ...patterns.map((pattern) => `  ${JSON.stringify(pattern)},`),
-                  ],
+                : [...commentSectionTitle(title, '  '), ...patterns.map((pattern) => `  ${JSON.stringify(pattern)},`)],
         ),
         ']',
     ].join('\n');

@@ -2,7 +2,6 @@ import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -97,9 +96,8 @@ test('xcode/assets reports an ignored image that is on disk but not in the repos
 test.each(['Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
     'Xcode asset %s accepts its camel-case symbol and reports an unrelated symbol',
     async (name) => {
-        await using sandbox = await createGitSandbox({});
         const path = `App/Assets.xcassets/${name}.imageset/Contents.json`;
-        await createFileTree(sandbox.path, {
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['xcode'], { level: 'all' }),
             [path]: '{"images":[{"filename":"logo.png"}]}\n',
             [`App/Assets.xcassets/${name}.imageset/logo.png`]: new Uint8Array([0, 1, 2]),
@@ -122,9 +120,8 @@ test.each(['Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
 test.each([...ASSET_SETTING_CASES])(
     '$title counts the asset and rejects an unrelated name',
     async ({ scope, path, text }) => {
-        await using sandbox = await createGitSandbox({});
         const asset = `${scope}Assets.xcassets/AccentColor.colorset/Contents.json`;
-        await createFileTree(sandbox.path, {
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['xcode'], {
                 level: 'all',
                 scopes: [],
@@ -135,13 +132,11 @@ test.each([...ASSET_SETTING_CASES])(
         const options = buildRunOptions({ stage: 'commit', only: ['xcode/unused-assets'] });
         const referenced = await runChecks(await openSession(sandbox.path), options);
 
-        expect(referenced.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+        expect(listFindingRows(referenced.report)).toStrictEqual([]);
         await writeFile(join(sandbox.path, path), text.replaceAll('AccentColor', 'DifferentAccentColor'));
         const orphan = await runChecks(await openSession(sandbox.path), options);
 
-        expect(orphan.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-            { check: 'xcode/unused-assets', file: asset, line: 1, rule: 'unused-asset' },
-        ]);
+        expect(listFindingRows(orphan.report)).toStrictEqual([{ file: asset, line: 1, rule: 'unused-asset' }]);
     },
 );
 
@@ -197,13 +192,12 @@ test('xcode/entitlements checks the deepest scope only', async () => {
     const broken = '<plist><dict><key>unlisted-capability</key><true/></dict></plist>';
     const corrected = '<plist><dict><key>nested-capability</key><true/></dict></plist>';
     const check = 'xcode/entitlements';
-    await using sandbox = await createGitSandbox({});
     const rootContent = corrected.replace('nested-capability', 'root-capability');
     const settings = buildSandboxSettings(['xcode'], {
         tables: '[xcode]\nallowed_entitlements = ["root-capability"]\n[[scope]]\npath = "app"\n[scope.xcode]\nallowed_entitlements = ["nested-capability"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
         level: 'all',
     });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         [path]: rootContent,
         [`app/${path}`]: corrected,
@@ -212,9 +206,7 @@ test('xcode/entitlements checks the deepest scope only', async () => {
     });
     const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
     expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([...ENTITLEMENT_SCOPE_RESULTS]);
-    expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: `app/child/${path}`, line: 1, rule: 'entitlement' },
-    ]);
+    expect(listFindingRows(report)).toStrictEqual([{ file: `app/child/${path}`, line: 1, rule: 'entitlement' }]);
 });
 
 test('xcode/app-transport-security reports arbitrary loads at its line and passes when disabled', async () => {

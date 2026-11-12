@@ -176,8 +176,6 @@ export const RUNTIME_RULE_CASES = [
     { name: 'a Node.js script', runtime: 'node', rules: [] },
 ] as const;
 
-export const COMMANDS_HEADING = '## Commands';
-
 export const SWITCH_CASES = [
     { name: 'hooks', path: '.gspot/hooks/pre-commit' },
     { name: 'rule_files', path: '.gspot/rules/WORKING.md' },

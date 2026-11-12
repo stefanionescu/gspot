@@ -14,13 +14,14 @@ import {
     TEST_PATH_SETTINGS,
 } from '#tests/config/configurations/naming/source-names.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function listIdentifierFindings(root: string) {
     const { report } = await runChecks(await openSession(root), buildRunOptions({ only: ['naming/identifiers'] }));
-    return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
+    return listFindingRows(report);
 }
 
 test("nextjs's allowed function name getServerSideProps passes only inside its scope", async () => {

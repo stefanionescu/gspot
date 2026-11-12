@@ -214,9 +214,9 @@ function isStrictConfiguration(project: ParsedPbxproj, list: string | undefined)
 }
 
 export function parseProjectSources(text: string, path: string): ProjectSources {
+    const parsed = parsePbxproj(text, path);
     try {
         const folder = extractParentFolder(path.slice(0, path.indexOf(PBXPROJ_SUFFIX)));
-        const parsed = parsePbxproj(text, path);
         const root = parsed.root;
         if (root.mainGroup === undefined) throw new Error(MISSING_MAIN_GROUP_MESSAGE);
         const project: XcodeProject = {

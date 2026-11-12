@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildFileMatcher, listCoveredFiles } from '#cli/repository/files/selection.ts';
@@ -66,22 +65,8 @@ test('with bash selected, structure covers the Bash script and not README.md', (
     const owned = listCoveredFiles(
         structure.files,
         [
-            {
-                path: 'a.sh',
-                kind: 'source' as const,
-                kindOrigin: SOURCE_KIND.origin,
-                tags: ['text'],
-                executable: false,
-                size: 1,
-            },
-            {
-                path: 'README.md',
-                kind: 'source' as const,
-                kindOrigin: SOURCE_KIND.origin,
-                tags: ['text'],
-                executable: false,
-                size: 1,
-            },
+            { path: 'a.sh', ...TRACKED_SOURCE },
+            { path: 'README.md', ...TRACKED_SOURCE },
         ],
         {
             configurations: selected,
@@ -98,30 +83,9 @@ test.each([...PRETTIER_PLUGIN_CASES])(
         const configurationsByName = readConfigurations();
 
         const files = [
-            {
-                path: 'src/Page.astro',
-                kind: 'source' as const,
-                kindOrigin: SOURCE_KIND.origin,
-                tags: ['text'],
-                executable: false,
-                size: 1,
-            },
-            {
-                path: 'src/App.svelte',
-                kind: 'source' as const,
-                kindOrigin: SOURCE_KIND.origin,
-                tags: ['text'],
-                executable: false,
-                size: 1,
-            },
-            {
-                path: 'src/index.ts',
-                kind: 'source' as const,
-                kindOrigin: SOURCE_KIND.origin,
-                tags: ['text'],
-                executable: false,
-                size: 1,
-            },
+            { path: 'src/Page.astro', ...TRACKED_SOURCE },
+            { path: 'src/App.svelte', ...TRACKED_SOURCE },
+            { path: 'src/index.ts', ...TRACKED_SOURCE },
         ];
         expect(
             listCoveredFiles(configurationsByName.get('format')!.files, files, {

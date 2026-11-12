@@ -38,6 +38,10 @@ export function getOperatingSystem(): string {
     return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;
 }
 
+export function readHost(): { platform: string; arch: string } {
+    return { platform: getOperatingSystem(), arch: process.arch };
+}
+
 export function foldVariableName(name: string): string {
     return process.platform === 'win32' ? name.toUpperCase() : name;
 }

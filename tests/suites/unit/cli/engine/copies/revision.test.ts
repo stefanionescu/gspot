@@ -6,18 +6,17 @@ import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { copyRevision, copyValePackages } from '#cli/engine/copies/revision.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { listRevisionFiles, readHead } from '#cli/repository/revisions/files.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { GIT_HOOK_REPORT, SELECTED_SOURCE } from '#tests/config/engine/files.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -189,11 +188,15 @@ test('a copy with checked paths clones the ignored declarations of only the tsco
     expect(existsSync(join(every.root, 'tools/types.gen.d.ts'))).toBe(true);
 });
 
-test('a revision copy whose .gspot is a link gets no Vale package link outside the copy', async () => {
-    await using sandbox = await testdir({ 'work/.gspot/vale/styles/.keep': '', 'copy/.keep': '', 'outside/.keep': '' });
-    await symlink(join(sandbox.path, 'outside'), join(sandbox.path, 'copy/.gspot'), 'dir');
-    expect(() => {
-        copyValePackages(join(sandbox.path, 'work'), join(sandbox.path, 'copy'));
-    }).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'filesystem' }));
-    expect(existsSync(join(sandbox.path, 'outside/vale'))).toBe(false);
-});
+test.skipIf(isWindows)(
+    'a revision copy whose .gspot is a link gets no Vale package link outside the copy',
+    async () => {
+        await using sandbox = await testdir({ 'work/source.txt': SELECTED_SOURCE, 'outside/vale/styles/.keep': '' });
+        const work = join(sandbox.path, 'work');
+        await symlink(join(sandbox.path, 'outside'), join(work, '.gspot'), 'dir');
+        commitAll(work);
+        const error = await captureRejection(copyRevision(work, { kind: 'index' }));
+        expect(error).toMatchObject({ name: 'GspotError', code: 'filesystem' });
+        expect(await readdir(join(sandbox.path, 'outside/vale'))).toStrictEqual(['styles']);
+    },
+);

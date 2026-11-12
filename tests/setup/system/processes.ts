@@ -28,6 +28,16 @@ function hasExited(pid: number): boolean {
     }
 }
 
+function buildSpawnOptions(options: CancelableSpawnOptions & { timeoutSeconds: number }) {
+    return {
+        cwd: options.cwd,
+        env: buildSpawnEnvironment(options.env),
+        ...(options.stdin !== undefined && { stdin: Buffer.from(options.stdin) }),
+        timeout: Math.ceil(options.timeoutSeconds * MILLISECONDS_PER_SECOND),
+        killSignal: 'SIGKILL' as const,
+    };
+}
+
 export function limitCommand(
     command: readonly string[],
     options: CancelableSpawnOptions,
@@ -48,13 +58,7 @@ export async function runCommand(command: readonly string[], options: Cancelable
 
 export function runBlockingCommand(command: readonly string[], options: CancelableSpawnOptions): SpawnResult {
     const limited = limitCommand(command, options);
-    const child = Bun.spawnSync([...command], {
-        cwd: limited.options.cwd,
-        env: buildSpawnEnvironment(limited.options.env),
-        ...(limited.options.stdin !== undefined && { stdin: Buffer.from(limited.options.stdin) }),
-        timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
-        killSignal: 'SIGKILL',
-    });
+    const child = Bun.spawnSync([...command], buildSpawnOptions(limited.options));
     const result = buildProcessResult({
         code: child.exitCode,
         stdout: child.stdout.toString(),
@@ -103,15 +107,7 @@ export function spawnCommand(
     options: CancelableSpawnOptions,
 ): ChildCapture & { child: ProcessCapture & Pick<Bun.Subprocess, 'pid'> } {
     const limited = limitCommand(command, options);
-    const child = Bun.spawn([...command], {
-        cwd: limited.options.cwd,
-        env: buildSpawnEnvironment(limited.options.env),
-        ...(limited.options.stdin !== undefined && { stdin: Buffer.from(limited.options.stdin) }),
-        stdout: 'pipe',
-        stderr: 'pipe',
-        timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
-        killSignal: 'SIGKILL',
-    });
+    const child = Bun.spawn([...command], { ...buildSpawnOptions(limited.options), stdout: 'pipe', stderr: 'pipe' });
     return { child, ...captureChild(child) };
 }
 

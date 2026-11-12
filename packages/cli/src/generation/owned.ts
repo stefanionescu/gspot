@@ -1,4 +1,5 @@
 import { listCheckTools } from '#cli/engine/tools.ts';
+import { listToolNames } from '#cli/manifests/read.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
@@ -7,7 +8,7 @@ import type { UsedNames } from '#cli/types/generation.ts';
 import type { Config } from '#cli/types/manifests.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Scope } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { ScopeCheck, Session } from '#cli/types/tools.ts';
 
 const OWNED_CONFIGS = Symbol('owned configs');
 
@@ -25,9 +26,7 @@ function listScopeConfigs(
     scope: Scope,
     { usedNames, ownFiles }: { usedNames: UsedNames; ownFiles: TrackedFile[] },
 ): OwnedConfig[] {
-    const checks = session.configuredChecks.filter(
-        (planned) => planned.scope.path === scope.path || planned.check.runs === 'once',
-    );
+    const checks = selectScopeChecks(session, scope.path);
     const used = {
         tools: new Set(checks.flatMap((planned) => listCheckTools(planned))),
         checks: new Set(checks.map((planned) => planned.check.id)),
@@ -61,12 +60,19 @@ function listScopeConfigs(
     );
 }
 
+/**
+List the checks that run for a scope: its own, and the ones that run once for the whole repository.
+*/
+export function selectScopeChecks(session: Pick<Session, 'configuredChecks'>, scopePath: string): ScopeCheck[] {
+    return session.configuredChecks.filter(
+        (planned) => planned.scope.path === scopePath || planned.check.runs === 'once',
+    );
+}
+
 export function listOwnedConfigs(session: Session): OwnedConfig[] {
     return remember(session.cache, OWNED_CONFIGS, session.scopes, () => {
         const usedNames = {
-            tools: new Set(
-                session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
-            ),
+            tools: listToolNames(session.toolConfigurations),
             checks: new Set(session.configuredChecks.map((planned) => planned.check.id)),
         };
         const filesByScope = Map.groupBy(session.repository.files, (file) =>

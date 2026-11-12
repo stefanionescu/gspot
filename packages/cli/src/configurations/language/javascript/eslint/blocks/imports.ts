@@ -11,7 +11,6 @@ import {
     IMPORT_EXTENSIONS,
     NODE_SCRIPT_PATTERNS,
     PATH_SEPARATOR_PATTERN,
-    REGEX_SYMBOLS,
     TYPESCRIPT_EXTENSION_MAP,
 } from '#cli/config/configurations/eslint/blocks.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
@@ -23,6 +22,7 @@ import {
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
+import { escapeRegExp } from '#cli/system/text.ts';
 import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
@@ -62,8 +62,12 @@ export function listImportBoundaryFolders(scopes: Scope[]): string[] {
     return [...new Set([...IMPORT_BOUNDARY_FOLDERS, ...scopePaths, ...boundaries])];
 }
 
+export function listExternals(scopes: Scope[]): string[] {
+    return [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
+}
+
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
-    const externals = [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
+    const externals = listExternals(scopes);
     return [
         'error',
         {
@@ -136,9 +140,7 @@ export function buildImportIgnores(globs: string[]): string[] {
         if (glob.startsWith('!') || !glob.endsWith(FOLDER_CONTENTS)) continue;
         const folder = glob.slice(0, -FOLDER_CONTENTS.length).replace(ANY_DEPTH_PREFIX, '');
         if (folder === '' || picomatch.scan(folder).isGlob) continue;
-        const escaped = folder
-            .replaceAll(REGEX_SYMBOLS, (symbol) => '\\' + symbol)
-            .replaceAll('/', () => PATH_SEPARATOR_PATTERN);
+        const escaped = escapeRegExp(folder).replaceAll('/', () => PATH_SEPARATOR_PATTERN);
         patterns.push(`${PATH_SEPARATOR_PATTERN}${escaped}${PATH_SEPARATOR_PATTERN}`);
     }
     return patterns;

@@ -120,7 +120,7 @@ test('scan names each other config of a tool, which the tool does not read besid
         'package.json': '{"private":true,"type":"module"}\n',
         'src/a.js': 'export const a = 1;\n',
     });
-    const reads = await readUserRules(await planInit(sandbox.path, { cwd: sandbox.path }));
+    const reads = await readUserRules(await planInit(sandbox.path, {}));
     expect(reads).toMatchObject([
         { path: 'eslint.config.mjs', others: ['.eslintrc.yml', '.eslintrc.json'], user: undefined },
     ]);

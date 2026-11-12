@@ -5,7 +5,7 @@ import type { Finding } from '#cli/types/engine/run.ts';
 import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 export function parseKnipFindings(output: ToolOutput): Finding[] {
-    const { check, stdout, help } = output;
+    const { check, stdout } = output;
     const report = parseToolOutput('Knip', stdout, knipOutputSchema);
     const findings: Finding[] = [];
     for (const row of report.issues) {
@@ -21,7 +21,6 @@ export function parseKnipFindings(output: ToolOutput): Finding[] {
                             file: row.file,
                             rule: category,
                             message: `${KNIP_ISSUE_MESSAGES[category]}: ${names}${namespace}`,
-                            help,
                             fixable: false,
                             ...(symbol.line !== undefined && { line: symbol.line }),
                             ...(symbol.col !== undefined && { column: symbol.col }),

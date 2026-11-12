@@ -112,12 +112,11 @@ async function checkInstructions(session: Session, planned: PlannedCheck): Promi
 }
 
 export function listDockerInstructions(text: string): DockerInstruction[] {
-    const instructions: DockerInstruction[] = Array.from(text.matchAll(DOCKER_INSTRUCTION), (match) => ({
+    return Array.from(text.matchAll(DOCKER_INSTRUCTION), (match) => ({
         name: (match.groups?.['name'] ?? '').toUpperCase(),
         text: (match.groups?.['text'] ?? '').replaceAll(LINE_CONTINUATION, ' ').trim(),
         line: getPosition(text, match.index).line,
     }));
-    return instructions;
 }
 
 export const DOCKER_INSTRUCTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {

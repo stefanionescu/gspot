@@ -12,9 +12,8 @@ import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function parseScopeShape(scopePath: string): Promise<string> {
-    await using sandbox = await createGitSandbox({});
     const child = `${scopePath}/child`;
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(ESCAPED_SCOPE_CONFIGURATIONS, {
             rules: true,
             tables: stringify({

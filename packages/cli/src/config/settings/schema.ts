@@ -131,7 +131,7 @@ export const SETTINGS_EXAMPLES = [
     {
         configurations: ['naming'],
         naming: {
-            override: [
+            exception: [
                 {
                     paths: ['migrations/**'],
                     cases: ['timestamp-snake'],

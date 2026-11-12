@@ -100,20 +100,14 @@ test.each([...REASON_VALUES])(
 );
 
 test.each([
-    { key: 'level', flag: '' },
-    { key: 'limits.max_file_lines', flag: ' [--reason "<why>"]' },
-])('explain offers --reason for $key only when the setting can need one', async ({ key, flag }) => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    { key: 'level', flag: '', configurations: [] },
+    { key: 'limits.max_file_lines', flag: ' [--reason "<why>"]', configurations: [] },
+    { key: 'spelling.allowed_words', flag: ' --reason "<why>"', configurations: ['spelling'] },
+])('explain offers --reason for $key only when the setting can need one', async ({ key, flag, configurations }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(configurations) });
     const result = await runGspot(sandbox.path, ['explain', key]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain(`Change it: gspot set ${key} <value>${flag}\n`);
-});
-
-test('explain prints the required --reason of a setting whose words each take one', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
-    const result = await runGspot(sandbox.path, ['explain', 'spelling.allowed_words']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toContain('Change it: gspot set spelling.allowed_words <value> --reason "<why>"\n');
 });
 
 test('explain shows the default of a path setting joined with the scope, as gspot uses it', async () => {

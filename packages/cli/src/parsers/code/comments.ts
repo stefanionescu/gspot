@@ -80,7 +80,7 @@ function parseSqlComments(text: string): SourceComment[] {
 }
 
 function extractMarkdownHtml(text: string): string {
-    const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+    const masked = blankText(text);
     const ranges: TextRange[] = [];
     visit(fromMarkdown(text), 'html', (node) => {
         const { start, end } = node.position as SourcePosition;
@@ -142,10 +142,7 @@ async function parseMdxComments(text: string): Promise<SourceComment[]> {
         const { start, end } = node.position as SourcePosition;
         ranges.push({ start: start.offset, end: end.offset });
     });
-    const blank = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
-    masked = replaceRanges(masked, blank, ranges).replaceAll(MDX_ESM, (segment) =>
-        segment.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
-    );
+    masked = replaceRanges(masked, blankText(text), ranges).replaceAll(MDX_ESM, (segment) => blankText(segment));
     const expressions = masked
         .matchAll(MDX_COMMENT)
         .map((match) => {
@@ -164,10 +161,7 @@ function maskCommentRanges(text: string, ranges: TextRange[]): string {
     const sorted = ranges.toSorted((left, right) => left.start - right.start);
     for (const { start, end } of sorted) {
         if (start < position) continue;
-        pieces.push(
-            text.slice(position, start),
-            text.slice(start, end).replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
-        );
+        pieces.push(text.slice(position, start), blankText(text.slice(start, end)));
         position = end;
     }
     return pieces.join('') + text.slice(position);
@@ -187,13 +181,20 @@ function listComponentScripts(element: Node, text: string, masked: string): Comp
 }
 
 /**
+Replace every character with a space and keep the line breaks, so offsets and lines stay where the text has them.
+*/
+export function blankText(text: string): string {
+    return text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+}
+
+/**
 Read the markup and the scripts of a component, each padded so that its lines stay where the file has them.
 */
 export async function readComponentSources(
     text: string,
     path: string,
 ): Promise<{ markup: string; scripts: ComponentScript[] }> {
-    const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+    const masked = blankText(text);
     const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
     const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
     using tree = await parseSource('html', markup);

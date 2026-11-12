@@ -58,10 +58,20 @@ export function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
     return inner;
 }
 
-export function findSettingSchema(key: string, root: z.ZodType = settingsSchema): z.ZodType | undefined {
+export function unwrapSchemaPipes(schema: z.ZodType): z.ZodType {
+    let inner = unwrapSettingSchema(schema);
+    while (inner instanceof z.ZodPipe) inner = unwrapSettingSchema(inner.in as z.ZodType);
+    return inner;
+}
+
+export function findSchemaAt(segments: KeyPath, root: z.ZodType = settingsSchema): z.ZodType | undefined {
     let schema: z.ZodType | undefined = root;
-    for (const segment of key.split('.')) schema = findChildSchema(schema, segment);
+    for (const segment of segments) schema = findChildSchema(schema, segment);
     return schema;
+}
+
+export function findSettingSchema(key: string, root?: z.ZodType): z.ZodType | undefined {
+    return findSchemaAt(key.split('.'), root);
 }
 
 export function findNamingParent(key: string): string | undefined {
@@ -72,8 +82,7 @@ export function findNamingParent(key: string): string | undefined {
 }
 
 export function findChildSchema(schema: z.ZodType | undefined, segment: KeyPath[number]): z.ZodType | undefined {
-    let table = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    while (table instanceof z.ZodPipe) table = unwrapSettingSchema(table.in as z.ZodType);
+    const table = schema === undefined ? undefined : unwrapSchemaPipes(schema);
     if (table instanceof z.ZodUnion)
         return table.options
             .map((option) => findChildSchema(option as z.ZodType, segment))

@@ -5,7 +5,6 @@ import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint/rules.ts
 import {
     BOUNDARIES_PLUGIN_PACKAGE,
     CONFIGURATION_BLOCKS_SUFFIX,
-    ESLINT_BASE_LABEL,
     ESLINT_CONFIG_API,
     ESLINT_FUNCTIONS_FILE,
     ESLINT_NAMED_IMPORTS,
@@ -53,6 +52,16 @@ function serializeImports(
     return lines.join('\n') + '\n';
 }
 
+function buildFileWriter(writer: BlockWriter): EslintFileWriter {
+    return {
+        ...writer,
+        functions: new Set<string>(),
+        packages: new Set<string>(),
+        modules: new Map<string, string>(),
+        constants: new Map<string, string>(),
+    };
+}
+
 function buildConfigurationFiles(
     planned: PlannedConfig,
     blocks: Map<Configuration, PlannedEslintBlock[]>,
@@ -61,13 +70,7 @@ function buildConfigurationFiles(
     const folder = dirname(planned.targetPath);
     return [...blocks].map(([configuration, configurationBlocks]) => {
         const path = join(GSPOT_PATHS.configurations, configuration.name, basename(planned.targetPath));
-        const fileWriter = {
-            ...writer,
-            functions: new Set<string>(),
-            packages: new Set<string>(),
-            modules: new Map<string, string>(),
-            constants: new Map<string, string>(),
-        };
+        const fileWriter = buildFileWriter(writer);
         const [blockTexts = []] = buildBlockLists(fileWriter, [configurationBlocks]);
         const body = `export default [\n${blockTexts.join(',\n')},\n];\n`;
         return {
@@ -106,13 +109,7 @@ function serializeExport(blockTexts: string[], blockWriter: EslintFileWriter): s
 function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const { session } = planned;
     const eslintFile = buildPlannedEslintFile(planned);
-    const blockWriter = {
-        ...eslintFile.blockWriter,
-        functions: new Set<string>(),
-        packages: new Set<string>(),
-        modules: new Map<string, string>(),
-        constants: new Map<string, string>(),
-    };
+    const blockWriter = buildFileWriter(eslintFile.blockWriter);
     const boundaryBlocks = buildBoundaryBlocks(eslintFile);
     const ignoredGlobs = convertToGlobs([
         ...planned.ignoreSections,
@@ -129,13 +126,10 @@ function buildEslintFile(planned: PlannedConfig): ConfigOutput {
         planned.targetPath,
         new Set(plugins.map((name) => blockWriter.rulePrefixes.get(name))),
     );
-    const [openingTexts = [], closingTexts = []] = buildBlockLists(
-        blockWriter,
-        [
-            buildOpeningBlocks(eslintFile, { plugins, local: localPlugins }, boundaryBlocks, ignoredGlobs),
-            buildClosingBlocks(eslintFile),
-        ].map((blocks) => blocks.map((block) => ({ ...block, label: ESLINT_BASE_LABEL }))),
-    );
+    const [openingTexts = [], closingTexts = []] = buildBlockLists(blockWriter, [
+        buildOpeningBlocks(eslintFile, { plugins, local: localPlugins }, boundaryBlocks, ignoredGlobs),
+        buildClosingBlocks(eslintFile),
+    ]);
     const blockTexts = [
         `${ESLINT_INDENT}${JSON.stringify({ ignores: ignoredGlobs }, null, JSON_INDENT)}`,
         ...openingTexts,

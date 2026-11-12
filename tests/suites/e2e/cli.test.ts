@@ -4,13 +4,14 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { STARTING_FILES } from '#tests/config/e2e.ts';
+import { STARTING_FILES, SWIFT_CHECK } from '#tests/config/e2e.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
-test('init replaces formatter files, keeps authored notes and CLAUDE.md, and check reports findings', async () => {
+test('init replaces formatter files, keeps authored notes and CLAUDE.md, and check reports findings until each fix', async () => {
     await using sandbox = await createGspotProject();
     const { root } = sandbox;
     await createFileTree(root, STARTING_FILES);
@@ -47,4 +48,13 @@ test('init replaces formatter files, keeps authored notes and CLAUDE.md, and che
     expect(corrected.report.checks).toMatchObject([
         { check: 'bash/shellcheck', status: 'passed', fileCount: 1, findings: [] },
     ]);
+    const level = await sandbox.online.run(root, ['set', 'level', 'all']);
+    expect(level.code, level.stdout + level.stderr).toBe(0);
+    const named = parseCheckReport(await runCheckOnChanges(sandbox.offline, SWIFT_CHECK));
+    expect(named.code, named.stdout + named.stderr).toBe(1);
+    expect(named.report.checks.flatMap(({ findings }) => findings)).toMatchObject([SWIFT_CHECK.expected]);
+    const renamed = parseCheckReport(
+        await runCheckOnChanges(sandbox.offline, { ...SWIFT_CHECK.corrected, check: SWIFT_CHECK.check }),
+    );
+    expect(renamed.code, renamed.stdout + renamed.stderr).toBe(0);
 });

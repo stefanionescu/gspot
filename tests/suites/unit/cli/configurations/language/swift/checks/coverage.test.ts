@@ -74,14 +74,13 @@ async function runXcodeCoverage(
 
 test('swift/tests: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
-    await using sandbox = await createGitSandbox({});
-    await using outside = await testdir();
-    await using _cache = await redirectCacheFolder();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
         'ExampleTests.swift': XCTEST_SOURCE,
         'Example.xcodeproj/project.pbxproj': '',
     });
+    await using outside = await testdir();
+    await using _cache = await redirectCacheFolder();
 
     const files = {
         tables: XCTEST_TABLES,

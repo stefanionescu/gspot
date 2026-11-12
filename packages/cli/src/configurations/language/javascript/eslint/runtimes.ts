@@ -9,9 +9,8 @@ import {
     TYPELESS_JAVASCRIPT_FILES,
 } from '#cli/config/configurations/javascript.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/nextjs.ts';
-import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listScriptFiles, splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { compareScopeDepth, joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { EslintRuntime } from '#cli/types/configurations/javascript.ts';
@@ -42,14 +41,13 @@ function isRuntimeRoot(scopePath: string, scopes: Scope[]): boolean {
 function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | undefined {
     const runtime = selectFrameworkRuntime(scope.settings.configurations);
     if (runtime === undefined) return undefined;
-    const scripts = [...(scope.settings.tables.javascript?.script_files ?? []), joinScope(escaped, MISE_TASKS_GLOB)];
     return {
         scopePath: scope.path,
         runtime,
         ...splitGlobs([
             joinScope(escaped, '**/*'),
             `!${joinScope(escaped, COMMONJS_FILES)}`,
-            ...scripts.map((path) => `!${path}`),
+            ...listScriptFiles(scope).map((path) => `!${path}`),
         ]),
     };
 }

@@ -16,7 +16,7 @@ uncovered unless `coverage.all` is off, and `--coverage.exclude` drops its defau
 async function runVitest(
     session: CheckSession,
     planned: ShippedPlannedCheck,
-    options: CheckRunOptions = {},
+    options: CheckRunOptions,
 ): Promise<CheckResult> {
     const nested = listOwnTestScopes(session, planned);
     if (nested.length === 0) return runCommandCheck(session, planned, options);

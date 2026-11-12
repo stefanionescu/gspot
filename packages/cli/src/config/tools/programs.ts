@@ -55,3 +55,5 @@ export const SWIFTLINT_RULE_ARGUMENTS = ['rules', '--default-config', '--config'
 export const SWIFTLINT_RULE_IDENTIFIER = /^[a-z][a-z0-9_]*$/u;
 
 export const SHELLCHECK_RULE_IDENTIFIER = /^SC\d{4}$/u;
+
+export const ROOT_FOLDER_NAME = 'the repository root';

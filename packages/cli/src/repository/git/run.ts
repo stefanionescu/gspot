@@ -5,6 +5,7 @@ import {
     COPIES_FOLDER,
     GIT_COMMAND_CONFIGURATION,
     GIT_CREATION_COMMANDS,
+    GIT_FLAG_ARGUMENTS,
     GIT_FOLDER_VARIABLE,
     GIT_HOOKS_ARGUMENTS,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
@@ -19,9 +20,9 @@ import {
     NOT_REPOSITORY_MESSAGE,
     TRAILING_NEWLINE,
 } from '#cli/config/repository/git.ts';
+import { decodeGitPaths } from '#cli/repository/git/output.ts';
 import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { isInside } from '#cli/system/paths.ts';
 import { runProcess, streamProcess } from '#cli/system/processes.ts';
 import type { GitEnvironment, GitLookup } from '#cli/types/repository.ts';
@@ -135,6 +136,16 @@ export async function readGitSetting(cwd: string, key: string): Promise<string |
     throw buildGitError(GIT_SETTING_ARGUMENTS, result);
 }
 
+/**
+Read a Git setting that holds true or false. A key with no value reads as false.
+*/
+export async function readGitFlag(cwd: string, key: string): Promise<boolean> {
+    const result = await runGit(cwd, [...GIT_FLAG_ARGUMENTS, key], {});
+    if (result.code === 0) return result.stdout.trim() === 'true';
+    if (result.code === 1) return false;
+    throw buildGitError(GIT_FLAG_ARGUMENTS, result);
+}
+
 export async function readHooksFolder(cwd: string): Promise<string> {
     const result = await runGit(cwd, GIT_HOOKS_ARGUMENTS, {});
     if (result.code !== 0) throw buildGitError(GIT_HOOKS_ARGUMENTS, result);
@@ -161,7 +172,8 @@ export async function readGitLines(
 }
 
 /**
-Read paths from a null-separated Git listing. Exclude paths with invalid UTF-8.
+Read the records of a null-separated Git listing. A record with invalid UTF-8 is left out, and `unreadablePaths` takes
+its name when the caller passes that list.
 
 @param commandArguments the arguments after git, which must include -z.
 */
@@ -169,14 +181,11 @@ export async function readGitPaths(
     cwd: string,
     commandArguments: readonly string[],
     options: Omit<CancelableSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+    unreadablePaths?: string[],
 ): Promise<string[]> {
     const result = await runGitBytes(cwd, commandArguments, options);
     if (result.code !== 0) throw buildGitError(commandArguments, result);
-    return Buffer.from(result.stdout)
-        .toString('latin1')
-        .split('\0')
-        .map((path) => decodeUtf8(Buffer.from(path, 'latin1')))
-        .filter((path): path is string => path !== undefined && path !== '');
+    return decodeGitPaths(result.stdout, unreadablePaths);
 }
 
 export function buildGitError(

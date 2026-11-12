@@ -6,7 +6,8 @@ import {
     IGNORE_FILES,
     IGNORE_REASON_START,
 } from '#cli/config/generation/setup.ts';
-import { GSPOT_FOLDER, LEADING_SLASH, LINE_BREAK, TRAILING_SLASH } from '#cli/config/system.ts';
+import { LEADING_SLASH, LINE_BREAK, TRAILING_SLASH } from '#cli/config/system.ts';
+import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -35,7 +36,7 @@ export function convertIgnorePattern(pattern: string, folder: string, tracked: s
 }
 
 export function readIgnoreFiles({ repository, tools }: CarryoverInput): CarryoverSection {
-    const tracked = repository.files.filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`)).map(({ path }) => path);
+    const tracked = repository.files.filter(({ path }) => !isGspotPath(path)).map(({ path }) => path);
     const owned = IGNORE_FILES.filter(({ tool }) => tools.has(tool)).flatMap(({ file, tool, check }) =>
         tracked
             .filter((path) => posix.basename(path) === file)

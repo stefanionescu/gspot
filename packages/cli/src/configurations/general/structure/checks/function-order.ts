@@ -3,11 +3,11 @@ import type { Node } from 'web-tree-sitter';
 import {
     DEFAULT_EXPORT_NAME,
     FUNCTION_ORDER_RULE,
-    PRIVATE_SWIFT_VISIBILITIES,
     SCRIPT_FUNCTION_DECLARATIONS,
     SCRIPT_FUNCTION_VALUES,
 } from '#cli/config/configurations/structure.ts';
 import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
 import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
@@ -28,11 +28,7 @@ function describePythonFunction(statement: Node): TopLevelFunction | undefined {
 function describeSwiftFunction(statement: Node): TopLevelFunction | undefined {
     const name = statement.type === 'function_declaration' ? statement.childForFieldName('name')?.text : undefined;
     if (name === undefined) return undefined;
-    const modifiers = statement.namedChildren.find((child) => child.type === 'modifiers')?.namedChildren ?? [];
-    const isPrivate = modifiers.some(
-        (modifier) => modifier.type === 'visibility_modifier' && PRIVATE_SWIFT_VISIBILITIES.has(modifier.text),
-    );
-    return { name, isPrivate };
+    return { name, isPrivate: isPrivateSwiftDeclaration(statement) };
 }
 
 function findScriptFunctionName(node: Node): string | undefined {

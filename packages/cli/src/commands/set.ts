@@ -5,6 +5,7 @@ import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#c
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
+import { buildUnknownRuleError } from '#cli/engine/results.ts';
 import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { setKey } from '#cli/settings/edit.ts';
@@ -206,7 +207,7 @@ async function assertLintRules(edit: SettingsEditContext, key: string, change: P
     for (const rule of Object.keys(change.value as TomlTable)) {
         if (!canReadRuleExplanations(tool, rule)) continue;
         const docs = await readCheckRuleExplanation(session.root, check, rule, session);
-        if (docs === undefined) throw new GspotError('arguments', `gspot does not know rule ${rule} of ${check.id}.`);
+        if (docs === undefined) throw buildUnknownRuleError(rule, check.id);
     }
 }
 

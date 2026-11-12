@@ -14,7 +14,8 @@ import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
+import { listCodeTestFiles, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listDistinctTools } from '#cli/manifests/read.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -56,9 +57,7 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string
 }
 
 function buildWorkspaces(root: string, settings: Settings, scopes: Scope[]) {
-    const selected = scopes.filter(({ settings: scopeSettings }) =>
-        scopeSettings.configurations.includes(JAVASCRIPT_CONFIGURATION),
-    );
+    const selected = listJavascriptScopes(scopes);
     const paths = [...new Set(['', ...listWorkspaceFolders(root)])];
     return Object.fromEntries(
         paths.map((path) => {
@@ -131,7 +130,7 @@ function buildKnipFile(planned: PlannedConfig): string {
         .flatMap((tool) => tool.installers['npm']?.name ?? [])
         .filter((name) => !dependencyNames.has(name));
     const workspaces = buildWorkspaces(root, settings, scopes);
-    const externals = [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
+    const externals = listExternals(scopes);
     return JSON.stringify(
         {
             ignore: listCodeTestFiles(ignoredGlobs).filter(

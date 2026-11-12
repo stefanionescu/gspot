@@ -12,12 +12,14 @@ import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { readCommittedTexts, readHead } from '#cli/repository/revisions/files.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Migration, MigrationRead } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 const MIGRATION_VERSION = /^V?(?<version>\d+(?:[._]\d+)*)/u;
@@ -129,6 +131,14 @@ export function selectFrozenMigrations(paths: string[], through: string): Set<st
     );
 }
 
+export function listUnfrozenMigrations(migrations: Migration[], planned: PlannedCheck): Migration[] {
+    const frozen = selectFrozenMigrations(
+        migrations.map(({ path }) => path),
+        getTable(planned.scope.settings, 'postgres').frozen_through,
+    );
+    return migrations.filter(({ path }) => !frozen.has(path));
+}
+
 export function extractForwardText(text: string): string {
     for (const token of listSqlTokens(text)) {
         if (token.kind !== 'line-comment') continue;
@@ -141,10 +151,11 @@ export function extractForwardText(text: string): string {
 const COMMITTED_MIGRATIONS = Symbol('committed migrations');
 
 export async function readCommittedMigrations(
-    session: Session,
-    paths: string[],
-    revision: string,
+    session: CheckSession,
+    migrations: Migration[],
 ): Promise<Map<string, string>> {
+    const paths = migrations.map((migration) => migration.path);
+    const revision = session.selection?.base ?? 'HEAD';
     const commit = revision === 'HEAD' ? await readHead(session.root, session.cancelSignal) : revision;
     if (commit === undefined) return new Map<string, string>();
     return remember(session.cache, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () =>

@@ -10,6 +10,7 @@ import {
     SECRET_KEY_NAME,
 } from '#cli/config/configurations/general.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
+import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { keepListedFindings } from '#cli/configurations/ignores.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
@@ -52,6 +53,13 @@ async function readEnvironmentReferences(
     return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
 }
 
+function listEnvironmentSources(planned: PlannedCheck): PlannedCheck['files'] {
+    const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
+    return planned.files.filter(
+        (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
+    );
+}
+
 function listMissingEnvironmentKeys(
     path: string,
     environmentReads: EnvironmentRead[],
@@ -82,7 +90,7 @@ every file that Git does not ignore, so a secret that an earlier commit added st
 async function checkGitleaksStaged(
     session: CheckSession,
     planned: PlannedCheck,
-    options: Pick<CheckRunOptions, 'verbose' | 'command'> = {},
+    options: Pick<CheckRunOptions, 'verbose' | 'command'>,
 ): Promise<CheckResult> {
     const { selection } = session;
     const isRepositoryWide =
@@ -123,7 +131,7 @@ async function checkEnvironmentExamples(session: Session, planned: PlannedCheck)
     if (examples.length === 0)
         throw new CheckStop(
             'skipped',
-            `No example environment file exists in ${planned.scope.path === '' ? 'the repository root' : planned.scope.path}. List the example environment files in secrets.environment_examples.`,
+            `No example environment file exists in ${planned.scope.path === '' ? ROOT_FOLDER_NAME : planned.scope.path}. List the example environment files in secrets.environment_examples.`,
         );
     const exampleKeys = new Set(
         examples.flatMap((file) => {
@@ -134,12 +142,8 @@ async function checkEnvironmentExamples(session: Session, planned: PlannedCheck)
             });
         }),
     );
-    const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
-    const sourceFiles = planned.files.filter(
-        (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
-    );
     const findings: CheckFinding[] = [];
-    for (const file of sourceFiles) {
+    for (const file of listEnvironmentSources(planned)) {
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
         findings.push(...listMissingEnvironmentKeys(file.path, reads, exampleKeys));
     }
@@ -148,10 +152,8 @@ async function checkEnvironmentExamples(session: Session, planned: PlannedCheck)
 
 async function checkEnvironmentDefaults(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { environment_functions: environmentFunctions } = getTable(planned.scope.settings, 'secrets');
-    const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
     const findings: CheckFinding[] = [];
-    for (const file of planned.files) {
-        if (file.kind !== 'source' || extensions.every((extension) => !file.path.endsWith(extension))) continue;
+    for (const file of listEnvironmentSources(planned)) {
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
         findings.push(
             ...reads

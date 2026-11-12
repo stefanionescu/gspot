@@ -9,7 +9,7 @@ import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { setKey } from '#cli/settings/edit.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { findSettingSchema, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
 import { formatSettingsErrors } from '#cli/settings/validation/messages.ts';
 import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
@@ -18,19 +18,15 @@ import { isTable } from '#cli/system/tables.ts';
 import type { LeftOutSetting, Template } from '#cli/types/generation.ts';
 import type { SettingDefinition, TomlTable } from '#cli/types/settings.ts';
 
-function isSettingsTable(schema: z.ZodType): boolean {
-    let inner = unwrapSettingSchema(schema);
-    while (inner instanceof z.ZodPipe) inner = unwrapSettingSchema(inner.in as z.ZodType);
-    return inner instanceof z.ZodObject && schema.meta()?.['reasoned'] !== true;
-}
-
 function listSettingValues(table: TomlTable, prefix: string): Array<{ key: string; value: unknown }> {
     return Object.entries(table).flatMap(([name, value]) => {
         const key = prefix === '' ? name : `${prefix}.${name}`;
         const schema = findSettingSchema(key);
-        return schema !== undefined && isTable(value) && isSettingsTable(schema)
-            ? listSettingValues(value, key)
-            : [{ key, value }];
+        const isSettingsTable =
+            schema !== undefined &&
+            unwrapSchemaPipes(schema) instanceof z.ZodObject &&
+            schema.meta()?.['reasoned'] !== true;
+        return isTable(value) && isSettingsTable ? listSettingValues(value, key) : [{ key, value }];
     });
 }
 

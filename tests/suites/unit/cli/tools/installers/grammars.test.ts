@@ -24,7 +24,7 @@ function serveGrammar(request: Parameters<typeof fetch>[0]): Promise<Response> {
 
 test.each([
     { command: 'gspot check', read: (path: string) => openSession(path) },
-    { command: 'gspot init', read: (path: string) => planInit(path, { cwd: path }) },
+    { command: 'gspot init', read: (path: string) => planInit(path, {}) },
 ])('$command downloads the Swift grammar before it reads a Swift file', async ({ read }) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),

@@ -1,4 +1,3 @@
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 
@@ -95,9 +94,7 @@ export const TOOL_STATE_COLORS = {
     system: 'dim',
 } as const;
 
-export const CI_FILES = { github: GITHUB_WORKFLOW, gitlab: GITLAB_WORKFLOW } as const;
-
-export const CI_FILE_NOTES = { github: '', gitlab: ' (include from .gitlab-ci.yml)' } as const;
+export const CI_FILE_SUFFIXES = { github: '', gitlab: ' (include from .gitlab-ci.yml)' } as const;
 
 export const ORIGIN_URL_SETTING = 'remote.origin.url';
 

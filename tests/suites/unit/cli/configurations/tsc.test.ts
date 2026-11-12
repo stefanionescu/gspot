@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -44,13 +44,14 @@ test('projects without tsconfig.json get required options and framework options 
         'service/source.ts': 'export const port = 3000;\n',
     });
     const session = await openSession(sandbox.path);
-    const options = session.scopes.map((scope) => {
-        const path = join(sandbox.path, GSPOT_FOLDER, scope.path, 'tsconfig.json');
-        const { strict, experimentalDecorators, emitDecoratorMetadata } = buildTsconfig(session, scope, path)[
-            'compilerOptions'
-        ] as Record<string, unknown>;
-        return { scope: scope.path, strict, experimentalDecorators, emitDecoratorMetadata };
-    });
+    const options = await Promise.all(
+        session.scopes.map(async (scope) => {
+            const text = await readFile(writeScopeTsconfig(session, scope, join(sandbox.path, GSPOT_FOLDER)), 'utf8');
+            const { compilerOptions } = JSON.parse(text) as { compilerOptions: Record<string, unknown> };
+            const { strict, experimentalDecorators, emitDecoratorMetadata } = compilerOptions;
+            return { scope: scope.path, strict, experimentalDecorators, emitDecoratorMetadata };
+        }),
+    );
     expect(options).toStrictEqual([
         { scope: '', strict: true, experimentalDecorators: undefined, emitDecoratorMetadata: undefined },
         { scope: 'service', strict: true, experimentalDecorators: true, emitDecoratorMetadata: true },

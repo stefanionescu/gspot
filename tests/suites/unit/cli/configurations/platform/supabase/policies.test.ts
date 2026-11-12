@@ -2,7 +2,6 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -16,6 +15,7 @@ import {
     STORAGE_POLICIES,
 } from '#tests/config/configurations/platform.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -64,9 +64,8 @@ test("service role keys are allowed in each scope's test files and refused in cl
 });
 
 test('service role keys are refused in component and module clients and allowed in the functions folder', async () => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['supabase'], { tables: '[supabase]\nfunctions_folder = "server"\n' });
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, ...SERVICE_ROLE_CLIENTS });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings, ...SERVICE_ROLE_CLIENTS });
     const findings = await runSandboxCheck(sandbox.path, 'supabase/service-role-key');
     expect(findings.map(({ file }) => file)).toStrictEqual([...SERVICE_ROLE_CLIENT_FILES]);
     for (const [path, text] of Object.entries(SERVICE_ROLE_CLIENTS)) {
@@ -85,7 +84,6 @@ test('service role keys are refused in component and module clients and allowed 
 });
 
 test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in client files', async (read) => {
-    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['supabase'], {
         tables: 'test_files = ["qa/**"]\n[supabase]\nfunctions_folder = "server"\n[[scope]]\npath = "apps/web"\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "server"\n',
     });
@@ -97,7 +95,7 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
         'publishable.ts': 'export const key = "sb_publishable_example";\n',
     };
     const clients = ['client.ts', 'apps/web/client.ts'];
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         ...allowed,
         ...Object.fromEntries(clients.map((path) => [path, source])),
@@ -108,9 +106,9 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
         buildRunOptions({ only: ['supabase/service-role-key'] }),
     );
 
-    expect(
-        failed.report.checks.flatMap((check) => check.findings).map(({ file, line, rule }) => ({ file, line, rule })),
-    ).toStrictEqual(clients.map((file) => ({ file, line: 1, rule: 'service-role-key' })));
+    expect(listFindingRows(failed.report)).toStrictEqual(
+        clients.map((file) => ({ file, line: 1, rule: 'service-role-key' })),
+    );
 });
 
 test('supabase/storage-policies reports invalid bucket settings as a syntax finding', async () => {

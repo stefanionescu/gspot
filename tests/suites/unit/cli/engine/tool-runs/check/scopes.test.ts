@@ -1,33 +1,30 @@
 import { join } from 'node:path';
 
 import { expect, spyOn, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { CHECK_GENERATION } from '#cli/generation/checks.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import * as processes from '#cli/system/processes.ts';
 import { CHILD_SCOPE_SETTINGS } from '#tests/config/engine/tool-runs.ts';
 import { BROKEN_IF_SCRIPT, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
+import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('a command in a scope runs in the scope folder with paths relative to it', async () => {
-    await using sandbox = await createGitSandbox({});
     const scope = 'apps/café [web]';
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: scope }] }),
         '--config=x.swift': SWIFT_VALUE_SOURCE,
         [`${scope}/--config=x.swift`]: 'let value = 2\n',
     });
-    const session = await openSession(sandbox.path);
-    using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'swiftlint')]);
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['swiftlint'], resources);
     const calls: Array<{ cwd: string; files: string[] }> = [];
     using _spawn = spyOn(processes, 'runProcess').mockImplementation((command, options) => {
         calls.push({ cwd: options.cwd, files: command.filter((argument) => argument.endsWith('.swift')) });

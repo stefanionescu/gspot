@@ -4,11 +4,11 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
+import { CHECK_COMMAND } from '#cli/config/engine.ts';
 import { runReportSchema } from '#cli/schemas/engine.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
 import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';

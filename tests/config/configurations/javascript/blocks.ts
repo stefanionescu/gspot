@@ -67,6 +67,12 @@ export const DUPLICATE_RULE_CASES = [
         kept: 'regexp/no-super-linear-backtracking',
         rules: ['regexp/no-super-linear-backtracking', 'security/detect-unsafe-regex'],
     },
+    {
+        file: 'empty.test.js',
+        source: "import { test } from '@jest/globals';\n\ntest('counts the rows', () => {});\n",
+        kept: 'jest/expect-expect',
+        rules: ['gspot/require-test-assertions', 'jest/expect-expect'],
+    },
 ] as const;
 
 export const DUPLICATE_RULE_FILES = {

@@ -21,9 +21,7 @@ import {
 } from '#cli/config/configurations/eslint/blocks.ts';
 import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/eslint/rules.ts';
 import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
-import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import {
     buildImportBoundariesRule,
@@ -38,7 +36,12 @@ import {
     buildRestrictedImportBlocks,
     splitSettingsBlocks,
 } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
-import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import {
+    buildScopeFiles,
+    listCodeTestFiles,
+    listJavascriptScopes,
+    listScriptFiles,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
@@ -167,9 +170,7 @@ function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRunti
 }
 
 function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>): EslintBlockFields[] {
-    const scopes = planned.session.scopes.filter(({ settings }) =>
-        settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
-    );
+    const scopes = listJavascriptScopes(planned.session.scopes);
     return scopes.map((scope) => ({
         files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
         ignores: [
@@ -178,9 +179,7 @@ function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslint
                 scope.path,
             ).map((path) => joinScope(escapeGlob(path), '**')),
             ...listCodeTestFiles(scope.settings.test_files),
-
-            ...(scope.settings.tables.javascript?.script_files ?? []),
-            joinScope(escapeGlob(scope.path), MISE_TASKS_GLOB),
+            ...listScriptFiles(scope),
         ],
         rules: CONSOLE_RULES,
     }));

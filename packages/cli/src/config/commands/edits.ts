@@ -91,7 +91,7 @@ export const FROM_CONFLICT_MESSAGE =
 
 export const FROM_OPTION = '--from <file>';
 
-export const CONFIGURATION_LIST_SEPARATOR = ',';
+export const NAME_LIST_SEPARATOR = ',';
 
 export const ADD_REMOVE_MESSAGE = 'Use gspot add or gspot remove to change configurations.';
 

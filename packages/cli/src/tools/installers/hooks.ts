@@ -3,12 +3,11 @@ import { resolve } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
-import { PRE_COMMIT_FILE } from '#cli/config/repository/setup.ts';
+import { COMMENT_LINE, PRE_COMMIT_FILE } from '#cli/config/repository/setup.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import {
     CHECK_HOOKS,
     HOOK_CHECKS,
-    HOOK_COMMENT_LINE,
     HOOK_FOLDER_KINDS,
     NOT_INSTALLED_STATUS,
     SET_HOOKS_PATH,
@@ -110,7 +109,7 @@ function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], na
         : [resolve(root, hook.path)];
     const lines = paths.flatMap((path) => readFileSync(path, 'utf8').split(LINE_BREAK));
     const command = `${GSPOT_PATHS.hooks}/${name}`;
-    return lines.some((line) => !HOOK_COMMENT_LINE.test(line) && line.includes(command));
+    return lines.some((line) => !COMMENT_LINE.test(line) && line.includes(command));
 }
 
 export async function installHooks(session: Session, steps: Array<readonly string[]>): Promise<HookPlan> {

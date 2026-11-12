@@ -7,6 +7,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { SCAN_SETTINGS_MESSAGE } from '#cli/config/commands/reports.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { scanOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -14,24 +15,14 @@ import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 async function runScan(root: string): Promise<ScanReport> {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue({
-        installed: [],
-        missing: [],
-        notes: [],
-        steps: [],
-    });
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     const result = await runGspot(root, ['scan', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     return scanOutputSchema.parse(JSON.parse(result.stdout));
 }
 
 test('scan refuses a repository that already has a gspot.toml', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue({
-        installed: [],
-        missing: [],
-        notes: [],
-        steps: [],
-    });
+    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'gspot.toml': 'configurations = []\n', 'README.md': '# Example\n' });
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['scan', '--json']);
@@ -40,12 +31,7 @@ test('scan refuses a repository that already has a gspot.toml', async () => {
 });
 
 test('scan refuses a repository that tracks no file, because the copy it checks holds only tracked files', async () => {
-    using install = spyOn(installers, 'installTools').mockResolvedValue({
-        installed: [],
-        missing: [],
-        notes: [],
-        steps: [],
-    });
+    using install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n', 'src/a.js': 'export {};\n' });
     const result = await runGspot(sandbox.path, ['scan', '--json']);
     expect(result.code).toBe(2);

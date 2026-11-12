@@ -1,5 +1,4 @@
 import { expect, test } from 'bun:test';
-import { testdir } from 'testdirs';
 
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
@@ -11,12 +10,10 @@ import {
     FIX_FIELD_CASES,
     FLAT_JSON_FINDINGS,
     INVALID_FINDING_REPORTS,
-    MARKDOWN_REPORT,
     NESTED_LIST_FORMAT,
     NESTED_LIST_OUTPUT,
     TWO_LEVEL_FORMAT,
 } from '#tests/config/engine/outputs.ts';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 
 function parseJsonReport(checkId: string, output: unknown, stdout: string): Finding[] {
@@ -25,7 +22,6 @@ function parseJsonReport(checkId: string, output: unknown, stdout: string): Find
         output: outputSchema.parse(output),
         stdout,
         text: stdout,
-        help: 'help',
         root: process.cwd(),
         cwd: process.cwd(),
     });
@@ -63,7 +59,7 @@ test.each([
         fields: { file: 'filename', message: 'message', fixable: 'fix.applicability' },
     };
     const stdout = JSON.stringify([{ filename: '/repo/a.py', message: 'A message.', fix: { applicability } }]);
-    const check = { runs: 'files' as const, id: 'python/ruff', help: 'Fix it.', output, fix: ['ruff'] };
+    const check = { runs: 'files' as const, id: 'python/ruff', output, fix: ['ruff'] };
     expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([{ fixable: expected }]);
 });
 
@@ -79,14 +75,13 @@ test.each([...FIX_FIELD_CASES])(
         const check = {
             runs: 'files' as const,
             id: 'javascript/eslint',
-            help: 'Correct the defect.',
             output,
             fix: ['formatter'],
         };
         const findings = parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' });
         expect(findings).toMatchObject([{ file: 'a.js', fixable: expected }]);
         expect(
-            parseOutput({ runs: check.runs, id: check.id, help: check.help, output }, stdout, '', {
+            parseOutput({ runs: check.runs, id: check.id, output }, stdout, '', {
                 root: '/repo',
                 cwd: '/repo',
             }),
@@ -129,51 +124,4 @@ test.each([...INVALID_FINDING_REPORTS])('a JSON report with $name is refused', (
     expect(() => parseJsonReport('x/y', output, stdout)).toThrow(
         matchFields<CheckStop>({ name: 'CheckStop', status: 'error' }),
     );
-});
-
-test('a gitleaks finding names its rule ID and keeps its fingerprint in a field of its own', () => {
-    const check = getShippedCheck('secrets/gitleaks-staged');
-    const stdout = JSON.stringify([
-        {
-            RuleID: 'generic-api-key',
-            Description: 'Detected a key.',
-            File: 'src/key.ts',
-            StartLine: 2,
-            StartColumn: 7,
-            Fingerprint: 'src/key.ts:generic-api-key:2',
-        },
-    ]);
-    expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toStrictEqual([
-        {
-            check: check.id,
-            file: 'src/key.ts',
-            line: 2,
-            column: 7,
-            rule: 'generic-api-key',
-            fingerprint: 'src/key.ts:generic-api-key:2',
-            message: 'Detected a key.',
-            help: check.help,
-            fixable: false,
-        },
-    ]);
-});
-
-test('a markdownlint JSON result becomes a finding', async () => {
-    await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });
-
-    const check = getShippedCheck('markdown/markdownlint');
-    expect(
-        parseOutput(check, JSON.stringify([MARKDOWN_REPORT]), '', { root: sandbox.path, cwd: sandbox.path }),
-    ).toStrictEqual([
-        {
-            check: check.id,
-            file: 'sample.md',
-            line: 1,
-            column: 1,
-            rule: 'MD033',
-            message: 'Inline HTML: Element: span',
-            help: check.help,
-            fixable: false,
-        },
-    ]);
 });

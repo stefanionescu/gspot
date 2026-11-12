@@ -22,10 +22,9 @@ import {
     STYLE_COMPONENTS,
     STYLE_EXTENSIONS,
     STYLE_SCOPING,
-    STYLE_WHITESPACE,
     UNLISTED_PAGE_MESSAGE,
 } from '#cli/config/configurations/site.ts';
-import { LEADING_SLASH } from '#cli/config/system.ts';
+import { LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
 import {
     convertToBuildPath,
     listBuiltFiles,
@@ -80,7 +79,7 @@ async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Pr
                 ),
         );
     }
-    return styles.join('\n').replaceAll(STYLE_WHITESPACE, '');
+    return styles.join('\n').replaceAll(WHITESPACE_RUN, '');
 }
 
 async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
@@ -169,7 +168,7 @@ async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Prom
     return report.flatMap((sheet) =>
         sheet.rejected
             .filter((selector) => {
-                const owned = selector.replaceAll(STYLE_SCOPING, '').replaceAll(STYLE_WHITESPACE, '');
+                const owned = selector.replaceAll(STYLE_SCOPING, '').replaceAll(WHITESPACE_RUN, '');
                 return owned !== '' && styles.includes(owned);
             })
             .map((selector) => ({
@@ -190,19 +189,15 @@ async function checkSitemap(session: CheckSession, planned: PlannedCheck): Promi
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
     if (sitemapFile === undefined) return [];
     const { urls, findings, base } = readSitemapUrls(build.folder, files, planned);
-    const listed = new Set(
-        urls.flatMap((url) =>
-            listPossiblePages(url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname),
-        ),
-    );
+    const entries = urls.map((url) => ({
+        url,
+        pages: listPossiblePages(url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname),
+    }));
+    const listed = new Set(entries.flatMap(({ pages }) => pages));
     const isLeftOut = buildPathMatcher(getTable(planned.scope.settings, 'site').allowed_unlisted_pages);
-    const missing = urls
-        .filter((url) =>
-            listPossiblePages(url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname).every(
-                (page) => !files.has(page),
-            ),
-        )
-        .map((url) => ({
+    const missing = entries
+        .filter(({ pages }) => pages.every((page) => !files.has(page)))
+        .map(({ url }) => ({
             file: convertToBuildPath(planned, sitemapFile),
             line: 1,
             rule: SITE_RULES.missingPage,

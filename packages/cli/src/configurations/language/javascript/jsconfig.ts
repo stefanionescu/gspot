@@ -24,7 +24,7 @@ import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 
 function buildExtendedExclude(
     planned: PlannedConfig,
-    paths: { prefix: string; owner: string; ignoredGlobs: string[] },
+    paths: { owner: string; ignoredGlobs: string[] },
     authored: ParsedTsconfig,
 ): string[] {
     const { root, cache } = planned.session;
@@ -102,7 +102,6 @@ function buildJsconfigFile(planned: PlannedConfig): string {
     const jsconfigOwner = readTsconfig(root, join(root, scopePath, JSCONFIG_FILE), cache);
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
     const authored = jsconfigOwner ?? readTsconfig(root, join(root, scopePath, owner), cache);
-    const prefix = convertToPosixPath(relative(dirname(target), scopePath)) + '/';
     const compilerOptions: Record<string, unknown> = {
         ...JAVASCRIPT_OPTIONS,
         jsx: STANDALONE_OPTIONS.jsx,
@@ -112,21 +111,17 @@ function buildJsconfigFile(planned: PlannedConfig): string {
     const isExtensionless = hasExtensionlessSources(planned, importStyle);
     const hasSourceSelection = isAuthoredSelection(authored, jsconfigOwner);
     if (!hasSourceSelection)
-        jsconfig['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${prefix}**/*.${extension}`);
+        jsconfig['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${scopePrefix}**/*.${extension}`);
     if (authored === undefined) {
         Object.assign(compilerOptions, STANDALONE_OPTIONS, isExtensionless ? JAVASCRIPT_BUNDLED_IMPORTS : {});
         jsconfig['exclude'] = excluded;
         return JSON.stringify(jsconfig, null, JSON_INDENT);
     }
-    jsconfig['extends'] = `${prefix}${owner}`;
+    jsconfig['extends'] = `${scopePrefix}${owner}`;
     if (authored.options.jsx !== undefined) delete compilerOptions['jsx'];
     jsconfig['exclude'] = buildExtendedExclude(
         planned,
-        {
-            prefix,
-            owner: join(root, scopePath, owner),
-            ignoredGlobs: excluded,
-        },
+        { owner: join(root, scopePath, owner), ignoredGlobs: excluded },
         authored,
     );
     if (jsconfigOwner === undefined) jsconfig['files'] = listTrackedDeclarationFiles(planned, authored);

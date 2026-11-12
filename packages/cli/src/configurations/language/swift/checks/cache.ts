@@ -109,7 +109,7 @@ function createBuildLock(path: string): Disposable | undefined {
     }
 }
 
-export function readRepositoryCacheFolder(root: string): string {
+function readRepositoryCacheFolder(root: string): string {
     const canonicalRoot = realpathSync(root);
     const digest = createHash('sha256').update(canonicalRoot).digest('hex');
     return join(readCacheFolder(), digest);

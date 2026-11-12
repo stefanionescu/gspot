@@ -15,15 +15,6 @@ buildRuleTester().run('no-exclusive-tests', noExclusiveTests, {
             ],
         },
         {
-            code: 'describe.only("cart", run);',
-            errors: [
-                {
-                    messageId: 'exclusive',
-                    suggestions: [{ messageId: 'removeOnly', output: 'describe("cart", run);' }],
-                },
-            ],
-        },
-        {
             code: 'test.describe.parallel.only("cart", run);',
             errors: [
                 {

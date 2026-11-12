@@ -29,15 +29,16 @@ import type { Session } from '#cli/types/tools.ts';
 
 const SWIFT_BUILD_OUTPUTS = Symbol('swift build outputs');
 
+function restoreSourcePaths(output: string, source: string, root: string): string {
+    return output.replaceAll(stripPrivatePrefix(source), () => stripPrivatePrefix(root));
+}
+
 function parseOutputFindings(
     session: Session,
-
     output: string,
     { levels, defaultRule }: { levels: ReadonlySet<string>; defaultRule: string },
 ): CheckFinding[] {
-    const root = convertToPosixPath(
-        session.root.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`),
-    );
+    const root = convertToPosixPath(stripPrivatePrefix(session.root));
     return [...new Set(output.split('\n'))]
         .flatMap((line) => {
             const groups = MESSAGE_LINE.exec(line)?.groups;
@@ -55,8 +56,8 @@ function parseOutputFindings(
                 file: posixFile.startsWith(`${root}/`) ? posixFile.slice(root.length + 1) : posixFile,
                 line: Number(groups['line']),
                 column: Number(groups['column']),
-                rule: rule,
-                message: message,
+                rule,
+                message,
             };
         });
 }
@@ -64,14 +65,8 @@ function parseOutputFindings(
 function expandResponseFiles(line: string, folder: string, files: Files): string {
     if (!line.includes(SWIFTC_CALL)) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
-        const base = folder.replaceAll(
-            MACOS_PRIVATE_PATH,
-            (_match, before: string, folder: string) => `${before}/${folder}/`,
-        );
-        const source = path.replaceAll(
-            MACOS_PRIVATE_PATH,
-            (_match, before: string, folder: string) => `${before}/${folder}/`,
-        );
+        const base = stripPrivatePrefix(folder);
+        const source = stripPrivatePrefix(path);
         const content = files.read(convertToPosixPath(relative(base, source)));
         return content === undefined ? token : content.bytes.toString('utf8').trim().replaceAll('\n', ' ');
     });
@@ -88,14 +83,7 @@ async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Pr
     const plan = planSwiftBuild(session, planned);
     const hasWarningMarker = plan.kind === 'xcode' && existsSync(join(plan.folder, XCODE_WARNINGS_MARKER));
     const { output, code, source, files } = await runSwiftBuild(session, planned, plan, { clean: hasWarningMarker });
-    const restored = output.replaceAll(
-        source.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`),
-        () =>
-            session.root.replaceAll(
-                MACOS_PRIVATE_PATH,
-                (_match, before: string, folder: string) => `${before}/${folder}/`,
-            ),
-    );
+    const restored = restoreSourcePaths(output, source, session.root);
     const errors = parseOutputFindings(session, restored, { levels: BUILD_LEVELS, defaultRule: COMPILER_RULE });
     const warnings =
         plan.kind === 'xcode'
@@ -106,6 +94,10 @@ async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Pr
     if (warnings.length > 0) files.write(XCODE_WARNINGS_MARKER, { bytes: Buffer.alloc(0), mode: PRIVATE_FILE });
     else if (hasWarningMarker) files.deleteFile(XCODE_WARNINGS_MARKER);
     return assertToolFindings({ code, stdout: restored, stderr: '' }, [...errors, ...warnings], SWIFT_BUILD_NAME);
+}
+
+export function stripPrivatePrefix(text: string): string {
+    return text.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`);
 }
 
 export async function runSwiftBuild(
@@ -130,12 +122,7 @@ export async function runSwiftBuild(
         );
         const output = `${result.stdout}\n${result.stderr}`
             .split('\n')
-            .map((line) =>
-                expandResponseFiles(line, plan.folder, files).replaceAll(
-                    MACOS_PRIVATE_PATH,
-                    (_match, before: string, folder: string) => `${before}/${folder}/`,
-                ),
-            )
+            .map((line) => stripPrivatePrefix(expandResponseFiles(line, plan.folder, files)))
             .join('\n');
         const log = convertToPosixPath(relative(plan.folder, plan.log));
         files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE });
@@ -151,19 +138,11 @@ export async function runCopiedTool(
     const result = await runCheckTool(session, planned, run.commandArguments, {
         cwd: join(run.source, planned.scope.path),
     });
-    const output = `${result.stdout}\n${result.stderr}`
-        .replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`)
-        .replaceAll(
-            run.source.replaceAll(
-                MACOS_PRIVATE_PATH,
-                (_match, before: string, folder: string) => `${before}/${folder}/`,
-            ),
-            () =>
-                session.root.replaceAll(
-                    MACOS_PRIVATE_PATH,
-                    (_match, before: string, folder: string) => `${before}/${folder}/`,
-                ),
-        );
+    const output = restoreSourcePaths(
+        stripPrivatePrefix(`${result.stdout}\n${result.stderr}`),
+        run.source,
+        session.root,
+    );
     const found = parseOutputFindings(session, output, {
         levels: REPORTED_LEVELS,
         defaultRule: run.defaultRule,

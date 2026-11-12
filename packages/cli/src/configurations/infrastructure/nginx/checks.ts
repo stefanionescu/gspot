@@ -92,7 +92,7 @@ function buildSyntaxResult(path: string, copies: Map<string, Mount>, message: st
                 file: copy === undefined ? path : copy.path,
                 line: Number(location?.['line'] ?? '1'),
                 rule: SYNTAX_RULE,
-                message: message,
+                message,
             },
         ],
         files: copy === undefined ? [] : [copy.path],

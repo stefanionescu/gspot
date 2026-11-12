@@ -8,7 +8,7 @@ import {
 } from '#cli/config/configurations/general.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { commentSectionTitle, keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listPrettierPlugins } from '#cli/engine/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
@@ -74,27 +74,27 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
     return [...base, ...overrides];
 }
 
+function buildPrettierOptions(format: ScopeFormat['format']): Record<string, unknown> {
+    return {
+        tabWidth: format.indent_width,
+        useTabs: format.indent_style === undefined ? undefined : format.indent_style === 'tab',
+        printWidth: format.print_width,
+        singleQuote: format.quotes === undefined ? undefined : format.quotes === 'single',
+        trailingComma: format.trailing_commas,
+        semi: format.semicolons,
+        bracketSpacing: format.bracket_spacing,
+        arrowParens: format.arrow_parens,
+        proseWrap: format.prose_wrap,
+    };
+}
+
 function listFormatOverrides(settings: Settings): FormatOverride[] {
     return listScopeFormats(settings).map(({ scopePath, paths, format }) => {
         const included = includeFolderContents(paths);
         const files = included.filter((path) => !path.startsWith('!'));
         const excludeFiles = included.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
         if (scopePath !== '') excludeFiles.push(`!${escapeGlob(scopePath)}/**`);
-        return {
-            files,
-            excludeFiles,
-            options: {
-                tabWidth: format.indent_width,
-                useTabs: format.indent_style === undefined ? undefined : format.indent_style === 'tab',
-                printWidth: format.print_width,
-                singleQuote: format.quotes === undefined ? undefined : format.quotes === 'single',
-                trailingComma: format.trailing_commas,
-                semi: format.semicolons,
-                bracketSpacing: format.bracket_spacing,
-                arrowParens: format.arrow_parens,
-                proseWrap: format.prose_wrap,
-            },
-        };
+        return { files, excludeFiles, options: buildPrettierOptions(format) };
     });
 }
 
@@ -162,15 +162,7 @@ function buildPrettierFile(planned: PlannedConfig): string {
         ...listFormatOverrides(settings),
     ];
     const value = {
-        tabWidth: format.indent_width,
-        useTabs: format.indent_style === 'tab',
-        printWidth: format.print_width,
-        singleQuote: (format.quotes ?? DEFAULT_QUOTES.prettier) === 'single',
-        trailingComma: format.trailing_commas,
-        semi: format.semicolons,
-        bracketSpacing: format.bracket_spacing,
-        arrowParens: format.arrow_parens,
-        proseWrap: format.prose_wrap,
+        ...buildPrettierOptions({ ...format, quotes: format.quotes ?? DEFAULT_QUOTES.prettier }),
         ...buildPluginsOption(plugins),
         overrides,
     };
@@ -188,17 +180,7 @@ function buildPrettierignoreFile(planned: PlannedConfig): string {
         }),
     );
     const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns }) =>
-        patterns.length === 0
-            ? []
-            : [
-                  '',
-                  ...title
-                      .replaceAll('\r\n', '\n')
-                      .replaceAll('\r', '\n')
-                      .split('\n')
-                      .map((line) => `# ${line}`),
-                  ...patterns,
-              ],
+        patterns.length === 0 ? [] : ['', ...commentSectionTitle(title, ''), ...patterns],
     );
     return [...lines, ''].join('\n').trimStart();
 }

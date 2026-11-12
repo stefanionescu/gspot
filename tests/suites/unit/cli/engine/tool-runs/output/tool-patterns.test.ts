@@ -21,6 +21,6 @@ test.each(TOOL_PATTERN_CASES)(
                 },
                 {},
             ),
-        ).toStrictEqual({ findings: expected.map((finding) => ({ ...finding, check: id, help: check.help })) });
+        ).toStrictEqual({ findings: expected.map((finding) => ({ ...finding, check: id })) });
     },
 );

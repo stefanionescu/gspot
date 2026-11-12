@@ -200,7 +200,7 @@ function buildConfigFile(
 }
 
 /**
-Reuse generated settings only while the session keeps the same run cache.
+Reuse the built configs while the session keeps its run cache and its reading of the repository.
 */
 export function buildConfigs(session: Session): ConfigGeneration {
     const repositorySession =

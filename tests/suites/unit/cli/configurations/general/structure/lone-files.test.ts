@@ -1,5 +1,4 @@
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -13,7 +12,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
 test('lone-files and shared-prefixes check build, dist and coverage folders and skip folders marked linguist-generated', async () => {
-    await using sandbox = await createGitSandbox({});
     const authored = Object.fromEntries(
         ['build', 'dist', 'coverage'].flatMap((folder) => [
             [`${folder}/lone/only.ts`, ''],
@@ -21,7 +19,7 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
             [`${folder}/cards/asset-two.ts`, ''],
         ]),
     );
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
         }),
@@ -46,11 +44,10 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
 
 test('a lone astro component is reported once its framework is selected', async () => {
     const { framework, name, folder, content } = FRAMEWORK_COMPONENT_CASE;
-    await using sandbox = await createGitSandbox({});
     const route = `${folder}/users/${name}`;
     const neighbor = `${folder}/teams/${name}`;
     const settings = buildSandboxSettings(['typescript', framework], { level: 'all' });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'package.json': '{"name":"example","private":true,"type":"module"}\n',
         [route]: content,

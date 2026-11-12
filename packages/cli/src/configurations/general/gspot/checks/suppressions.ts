@@ -113,7 +113,7 @@ function validateSuppressionComment(
         kind === 'no-reason'
             ? `This ${syntax.tool} suppression has no reason of two or more words.`
             : SUPPRESSION_KIND_MESSAGES[kind];
-    return [{ ...at, rule: `${syntax.tool}-${kind}`, message: message }];
+    return [{ ...at, rule: `${syntax.tool}-${kind}`, message }];
 }
 
 async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {

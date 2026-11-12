@@ -3,7 +3,6 @@ import { join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { planChecks } from '#cli/engine/plan.ts';
@@ -45,14 +44,13 @@ test("a file named on the command line runs its scope's project check on every f
 test.each([...PROJECT_PATH_IGNORES])(
     '$name, and the TypeScript check plans only the files that the ignore leaves',
     async ({ changed, present, check, rule, files }) => {
-        await using sandbox = await createGitSandbox({});
         const ignore = {
             check,
             ...(rule !== undefined && { rule }),
             paths: ['api/ignored.ts'],
             reason: 'This input is evaluated by its owning pipeline.',
         };
-        await createFileTree(sandbox.path, {
+        await using sandbox = await createGitSandbox({
             'gspot.toml': `${TYPESCRIPT_SCOPES_SETTINGS}\n${stringify({ ignore: [ignore] })}`,
             'api/kept.ts': 'export {};\n',
             ...(present && { 'api/ignored.ts': 'export {};\n' }),

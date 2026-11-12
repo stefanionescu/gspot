@@ -9,6 +9,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { NAME_COLUMN_SQL } from '#tests/config/configurations/database.ts';
 import { TEAMS_MIGRATION_PATH, TEAMS_TABLE_SQL } from '#tests/config/setup/sandboxes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -26,7 +27,7 @@ test('history checks compare committed migration changes with the selected base 
     const session = await openSession(sandbox.path);
     const only = ['postgres/edited-migrations', 'postgres/migration-order'];
     const initial = await runChecks(session, buildRunOptions({ only }));
-    expect(initial.report.checks.flatMap((result) => result.findings)).toStrictEqual([]);
+    expect(listFindingRows(initial.report)).toStrictEqual([]);
     const changed = await runChecks(session, buildRunOptions({ only, selection: { content: 'working-tree', base } }));
     expect(
         changed.report.checks
@@ -44,12 +45,7 @@ test('edited-migrations reports an edited committed migration', async () => {
     await using sandbox = await createMigrationHistory();
     await writeFile(join(sandbox.path, TEAMS_MIGRATION_PATH), TEAMS_TABLE_SQL + NAME_COLUMN_SQL);
     expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([
-        matchFields({
-            file: TEAMS_MIGRATION_PATH,
-            line: 1,
-            rule: 'frozen',
-            help: 'Undo the edit, and put the change in a new migration.',
-        }),
+        matchFields({ file: TEAMS_MIGRATION_PATH, line: 1, rule: 'frozen' }),
     ]);
 });
 
@@ -64,13 +60,7 @@ test.each([
         'migrations/1_tables.sql': `${statement}\n`,
     });
     const findings = await runSandboxCheck(sandbox.path, 'postgres/edited-migrations');
-    expect(findings.map(({ rule, line, help }) => ({ rule, line, help }))).toStrictEqual([
-        {
-            rule: 'drift-guard',
-            line: 1,
-            help: 'Remove `IF NOT EXISTS`, so that the migration fails when the object already exists.',
-        },
-    ]);
+    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'drift-guard', line: 1 }]);
 });
 
 test('edited-migrations accepts IF NOT EXISTS on CREATE INDEX CONCURRENTLY', async () => {

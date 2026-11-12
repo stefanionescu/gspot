@@ -3,18 +3,21 @@ import { basename, relative } from 'node:path/posix';
 import { CODE_LANGUAGES, DEFAULT_PROJECT_FILES } from '#cli/config/configurations/eslint/blocks.ts';
 import { BASE_RULES } from '#cli/config/configurations/eslint/rules.ts';
 import { BOUNDARY_FOLDERS_CONSTANT } from '#cli/config/configurations/javascript.ts';
-import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
+import { NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
-import { buildExtensionGlob, buildFilePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
+import {
+    buildExtensionGlob,
+    buildFilePatterns,
+    listScriptFiles,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { convertToPosixPath, escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
+import { convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { Config, Configuration } from '#cli/types/manifests.ts';
@@ -59,12 +62,10 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
         scopes: scopes.map((each) => ({
             scopePath: each.path,
             tests: each.settings.test_files,
-            scripts: [
-                ...(each.settings.tables.javascript?.script_files ?? []),
-                joinScope(escapeGlob(each.path), MISE_TASKS_GLOB),
-            ],
+            scripts: listScriptFiles(each),
         })),
     });
+    const limitRules = buildScopeLimitRules(settings);
     const projects = session.repository.files
         .filter((file) => basename(file.path) === TSCONFIG_FILE)
         .map((file) => file.path);
@@ -74,13 +75,7 @@ export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFil
         scope,
         projects,
         defaultProjectFiles: listDefaultProjectFiles(session, projects),
-        levelRules: {
-            code: {
-                ...BASE_RULES,
-                ...buildScopeLimitRules(settings).code,
-            },
-            javascript: buildScopeLimitRules(settings).javascript,
-        },
+        levelRules: { code: { ...BASE_RULES, ...limitRules.code }, javascript: limitRules.javascript },
         blockWriter: {
             runtimes: buildRuntimes(scopes, session.repository.dependencyFiles),
             rulePrefixes: new Map(

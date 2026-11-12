@@ -26,7 +26,7 @@ async function checkBashFunctionSize(session: Session, planned: PlannedCheck): P
                           {
                               file: file.path,
                               line: scriptFunction.start,
-                              rule: rule,
+                              rule,
                               message: `${scriptFunction.name} has ${String(count)} ${noun}, over the limit of ${String(maximum)}.`,
                           },
                       ];

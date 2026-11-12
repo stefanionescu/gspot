@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 
 import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
 import { SWIFT_IMPORT_TAG, SWIFT_TEST_TAG, SWIFT_TEST_TARGET_TAG } from '#cli/config/parsers/code.ts';
+import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
@@ -15,14 +16,13 @@ const DETECTION_LABELS = {
     paths: ['a file path', 'file paths'],
     project_files: ['a project file', 'project files'],
 } as const;
-const NEGATED_PATTERN = '!';
 
 function formatListCondition(kind: keyof typeof DETECTION_LABELS, patterns: readonly string[]): string | undefined {
     const names = patterns
-        .filter((name) => !name.startsWith(NEGATED_PATTERN))
+        .filter((name) => !name.startsWith(GLOB_EXCLUDE))
         .map((name) => (name.startsWith(SHEBANG_TAG) ? name.slice(SHEBANG_TAG.length) : name));
     if (names.length === 0) return undefined;
-    const excepted = patterns.filter((name) => name.startsWith(NEGATED_PATTERN)).map((name) => name.slice(1));
+    const excepted = patterns.filter((name) => name.startsWith(GLOB_EXCLUDE)).map((name) => name.slice(1));
     const [one, many] = DETECTION_LABELS[kind];
     const listed = formatNameList(
         names.map((name) => `\`${name}\``),

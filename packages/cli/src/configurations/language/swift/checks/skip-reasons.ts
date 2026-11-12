@@ -10,6 +10,7 @@ import {
     XCTEST_PREFIX,
 } from '#cli/config/configurations/swift.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -24,13 +25,9 @@ function hasReason(reason: Node | undefined): boolean {
 }
 
 function findSkipReason(call: Node, position: number): Node | undefined {
-    const argumentsNode = call.namedChildren
-        .find((node) => node.type === 'call_suffix')
-        ?.namedChildren.find((node) => node.type === 'value_arguments');
-    const positional =
-        argumentsNode?.namedChildren.filter(
-            (node) => node.type === 'value_argument' && node.childForFieldName('name') === null,
-        ) ?? [];
+    const positional = listSwiftCallArguments(call).filter(
+        (node) => node.type === 'value_argument' && node.childForFieldName('name') === null,
+    );
     return positional[position]?.childForFieldName('value') ?? undefined;
 }
 

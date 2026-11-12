@@ -1,6 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
-import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
+import { MISE_TASK_FOLDERS, TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system.ts';
 
 export const INSTALLED_TOOL_FOLDERS = {
     npm: GSPOT_PATHS.nodeModules,
@@ -72,7 +72,14 @@ export const PRE_COMMIT_TOOL = 'pre-commit';
 
 export const LINT_STAGED_KEY = 'lint-staged';
 
-export const HOOK_FOLDER_PATH = /^(?:\.githooks|\.husky|\.git-hooks)\//u;
+export const HUSKY_PATH = '.husky';
+
+export const FOREIGN_HOOK_FOLDERS = ['.githooks', HUSKY_PATH, '.git-hooks'] as const;
+
+export const HOOK_FOLDER_PATH = new RegExp(
+    `^(?:${FOREIGN_HOOK_FOLDERS.map((folder) => folder.replaceAll('.', '[.]')).join('|')})/`,
+    'u',
+);
 
 export const MISE_TASK_FOLDER = new RegExp(
     `^(?:${MISE_TASK_FOLDERS.map((folder) => folder.replaceAll('.', '[.]')).join('|')})/`,
@@ -155,8 +162,6 @@ export const RUN_WORD = 'run';
 
 export const KEPT_DOT_FILE = '.gitkeep';
 
-export const HUSKY_PATH = '.husky';
-
 export const SIMPLE_GIT_HOOKS_KEY = 'simple-git-hooks';
 
 export const LEFTHOOK_NAMES = ['lefthook', 'lefthook-local'] as const;
@@ -166,8 +171,6 @@ export const LEFTHOOK_EXTENSIONS = ['yml', 'yaml', 'toml', 'json', 'jsonc'] as c
 export const LEFTHOOK_PREFIXES = ['', '.', '.config/'] as const;
 
 export const PRE_COMMIT_FILE = '.pre-commit-config.yaml';
-
-export const FOREIGN_HOOK_FOLDERS = ['.githooks', HUSKY_PATH, '.git-hooks'] as const;
 
 export const HOOKS_PATH_SETTING = 'core.hooksPath';
 
@@ -191,7 +194,10 @@ export const TRAILING_BLANK_LINE = /(\r?\n)\r?\n$/u;
 
 export const TOML_BARE_KEY = /^[\w-]+$/u;
 
-export const TEMPORARY_FILE_NAME = /^\.gspot-(?:(?<pid>[1-9]\d{0,8})-)?[\da-f-]{36}\.tmp$/u;
+export const TEMPORARY_FILE_NAME = new RegExp(
+    `^\\${TEMPORARY_FILE_PREFIX}(?:(?<pid>[1-9]\\d{0,8})-)?[\\da-f-]{36}\\${TEMPORARY_FILE_SUFFIX}$`,
+    'u',
+);
 
 export const VALE_TEMPORARY_NAME = /^vale-(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$/u;
 

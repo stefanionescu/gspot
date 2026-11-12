@@ -4,6 +4,7 @@ import { join, relative } from 'node:path';
 import { z } from 'zod';
 
 import { GLOB_BRACKETS, REASONED_VALUE_KEY, RECORD_PATHS_KEY } from '#cli/config/settings/validation.ts';
+import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { buildArgumentPath, convertToPosixPath, escapeGlob } from '#cli/system/paths.ts';
@@ -72,7 +73,7 @@ export function mapSettingPaths(
 
 export function joinScopeSelector(path: string, scopePath: string): string {
     if (scopePath === '' || path === '') return path;
-    return path.startsWith('!') ? `!${scopePath}/${path.slice(1)}` : `${scopePath}/${path}`;
+    return path.startsWith(GLOB_EXCLUDE) ? `${GLOB_EXCLUDE}${scopePath}/${path.slice(1)}` : `${scopePath}/${path}`;
 }
 
 export function joinSettingPaths(key: string, value: unknown, scopePath: string, buildFolder = ''): unknown {
@@ -89,18 +90,18 @@ export function joinSettingPaths(key: string, value: unknown, scopePath: string,
 
 export function buildArgumentPaths(root: string, cwd: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
-        const isNegative = path.startsWith('!');
+        const isNegative = path.startsWith(GLOB_EXCLUDE);
         const selector = escapeLiteralPath(
             root,
             buildArgumentPath(root, cwd, isNegative ? path.slice(1) : path, '--paths'),
         );
-        return isNegative ? `!${selector}` : selector;
+        return isNegative ? `${GLOB_EXCLUDE}${selector}` : selector;
     });
 }
 
 export function formatArgumentSelector(root: string, cwd: string, selector: string): string {
-    const isNegative = selector.startsWith('!');
+    const isNegative = selector.startsWith(GLOB_EXCLUDE);
     const absolute = join(root, isNegative ? selector.slice(1) : selector);
     const path = convertToPosixPath(relative(cwd, absolute)) || '.';
-    return isNegative ? `!${path}` : path;
+    return isNegative ? `${GLOB_EXCLUDE}${path}` : path;
 }

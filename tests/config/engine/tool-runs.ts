@@ -59,8 +59,8 @@ export const REGEX_OUTPUT_CASES = [
         result: { ...FAILED_RUN, stdout: '2026-09-19T02: FATAL\nsource.txt: located defect\n' },
         expected: {
             findings: [
-                { check: LOCATED_CHECK.id, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
-                { check: LOCATED_CHECK.id, file: 'source.txt', message: 'located defect', help: '', fixable: false },
+                { check: LOCATED_CHECK.id, file: '2026-09-19T02', message: 'FATAL', fixable: false },
+                { check: LOCATED_CHECK.id, file: 'source.txt', message: 'located defect', fixable: false },
             ],
         },
     },

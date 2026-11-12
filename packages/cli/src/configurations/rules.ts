@@ -1,6 +1,6 @@
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
+import { findRuleTool } from '#cli/engine/results.ts';
+import { readShippedChecks } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
@@ -32,7 +32,7 @@ export async function readCheckRuleExplanation(
     const explanations = selectCheckCode(check)?.explanations;
     if (explanations !== undefined)
         return Object.hasOwn(explanations, identifier) ? explanations[identifier] : undefined;
-    const tool = OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
+    const tool = findRuleTool(check);
     if (tool === undefined) return undefined;
     const options: RuleExplanationOptions = { help: check.help };
     if (session !== undefined) {

@@ -82,7 +82,7 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
         buildRunOptions({ only: ['structure/environment-readers'] }),
     );
 
-    expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    expect(listFindingRows(corrected.report)).toStrictEqual([]);
 });
 
 test('each scope uses its own environment readers', async () => {

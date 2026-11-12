@@ -7,7 +7,7 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
-import { buildSettings } from '#cli/settings/read.ts';
+import { buildSettingsFromTable } from '#cli/settings/read.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, getRequired, isTable } from '#cli/system/tables.ts';
@@ -92,36 +92,21 @@ function stripTableDefaults(
 }
 
 export function stripDefaults(settings: TomlTable): TomlTable {
-    const allSettings = buildSettings(settingsSchema.parse(settings), settings);
-    const level = settingsSchema.shape.level.parse(settings['level']);
+    const allSettings = buildSettingsFromTable(settings);
+    const { level } = allSettings;
     const scopes = ((settings['scope'] ?? []) as TomlTable[]).map((table) => ({
         path: stripTrailingSlashes(table['path'] as string),
         table,
     }));
-    const selected = {
-        configurations: settingsSchema.shape.configurations.parse(settings['configurations']),
-        removed_configurations: settingsSchema.shape.removed_configurations.parse(settings['removed_configurations']),
-        scopes: new Map(
-            scopes.map(({ path, table }) => [
-                path,
-                {
-                    configurations: settingsSchema.shape.configurations.parse(table['configurations']),
-                    removed_configurations: settingsSchema.shape.removed_configurations.parse(
-                        table['removed_configurations'],
-                    ),
-                },
-            ]),
-        ),
-    };
     const root = {
         scopePath: '',
         table: settings,
-        availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, ''), level),
+        availableSettings: buildAvailableSettings(selectConfigurationsForScope(allSettings, ''), level),
     };
     const scopeTables = scopes.map<WrittenTable>(({ path, table }) => ({
         scopePath: path,
         table,
-        availableSettings: buildAvailableSettings(selectConfigurationsForScope(selected, path), level),
+        availableSettings: buildAvailableSettings(selectConfigurationsForScope(allSettings, path), level),
     }));
     const tables = [root, ...scopeTables].toSorted((left, right) => compareScopeDepth(left.scopePath, right.scopePath));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.availableSettings.defaults.delete(key);

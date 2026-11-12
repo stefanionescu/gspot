@@ -13,6 +13,7 @@ import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
+import { formatSeconds } from '#cli/system/text.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
@@ -94,10 +95,9 @@ export async function runInstallStep(
     const result = await runTool(command, { ...spawn, cancelSignal: install.session.cancelSignal, timeoutSeconds });
     install.session.cancelSignal?.throwIfAborted();
     if (result.end === 'timed-out') {
-        const elapsed = ((performance.now() - started) / MILLISECONDS_PER_SECOND).toFixed(1);
         throw new GspotError(
             'install',
-            `Install stopped ${step} after ${elapsed}s, past tool_timeout_seconds (${String(timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
+            `Install stopped ${step} after ${formatSeconds(performance.now() - started)}, past tool_timeout_seconds (${String(timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
         );
     }
     return result;

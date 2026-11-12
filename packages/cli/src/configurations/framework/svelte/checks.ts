@@ -1,5 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import {
     FAILURE_LINE,
@@ -7,10 +6,8 @@ import {
     SVELTE_CHECK_COMMAND,
     SVELTE_CHECK_RULE,
     SVELTE_TSCONFIG_FLAG,
-    TSCONFIG_COPY_FOLDER,
 } from '#cli/config/configurations/framework.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
@@ -51,9 +48,7 @@ function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckF
 
 async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using runtime = createTemporaryFolder();
-    const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.path, TSCONFIG_FILE);
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, JSON.stringify(buildTsconfig(session, planned.scope, target)));
+    const target = writeScopeTsconfig(session, planned.scope, runtime.path);
     const command = [...SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG, target];
     const result = await runCheckTool(session, planned, command, {
         cwd: join(session.root, planned.scope.path),
