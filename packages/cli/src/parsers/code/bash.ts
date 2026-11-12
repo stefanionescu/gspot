@@ -16,7 +16,7 @@ import {
     SHIFT_COMMAND,
     TEMPORARY_FILE_COMMAND,
     TEMPORARY_VALUE_NODES,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/code.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import {
     buildCommandCalls,

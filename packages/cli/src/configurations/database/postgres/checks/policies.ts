@@ -1,4 +1,4 @@
-import { POLICY_SCHEMA_INDEX, PUBLIC_SCHEMA, SCHEMA_NAME_INDEX } from '#cli/config/configurations/infrastructure.ts';
+import { POLICY_SCHEMA_INDEX, PUBLIC_SCHEMA, SCHEMA_NAME_INDEX } from '#cli/config/configurations/postgres.ts';
 import type { SchemaState, StatementApplier } from '#cli/types/configurations/infrastructure.ts';
 import type { SqlNodeFields } from '#cli/types/parsers.ts';
 

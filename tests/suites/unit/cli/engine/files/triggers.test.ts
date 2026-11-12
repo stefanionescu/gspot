@@ -4,11 +4,12 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { runFixers } from '#cli/engine/fixes.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -22,7 +23,7 @@ import {
 } from '#tests/config/engine/files.ts';
 import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';

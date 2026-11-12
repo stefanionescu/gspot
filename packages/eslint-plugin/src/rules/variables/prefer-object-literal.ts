@@ -16,7 +16,7 @@ function getAssignedProperty(node: TSESTree.VariableDeclaration): TSESTree.Membe
         : undefined;
 }
 
-export const preferLiteral = createRule<[], 'literal'>({
+export const preferObjectLiteral = createRule<[], 'literal'>({
     name: 'prefer-object-literal',
     meta: {
         defaultOptions: [],

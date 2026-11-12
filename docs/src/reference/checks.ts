@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 
 import { CLI_REFERENCE } from '#cli/reference.ts';
+import type { CliReference } from '#cli/types/main.ts';
 import {
     CHECK_FIX_MESSAGE,
     CHECK_NEEDS_LABELS,
@@ -27,7 +28,7 @@ import {
     formatText,
 } from '#docs/reference/markdown.ts';
 import type { ReferencePage } from '#docs/types/pages.ts';
-import type { CliReference, Suppression } from '#docs/types/reference.ts';
+import type { Suppression } from '#docs/types/reference.ts';
 
 const COMMENT_BLIND_ARGUMENTS = new Set(['--no-inline-config', 'format']);
 

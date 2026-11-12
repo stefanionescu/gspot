@@ -19,7 +19,6 @@ import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { buildToolProjects } from '#cli/generation/generate.ts';
 import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
 import { formatInitPlan } from '#cli/generation/setup/file-plan.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
@@ -38,10 +37,9 @@ async function installInitTools(
     cancelSignal: AbortSignal,
 ): Promise<CommandResult<InitJson>> {
     const { plan, settingsText, pinPath } = initPlan;
-    const session = { ...(await openSession(root, { cancelSignal })), startRunner: initPlan.session.startRunner };
+    const session = await openSession(root, { cancelSignal, startRunner: initPlan.session.startRunner });
     const installation = await installTools(session, {
         writer: openFiles(root),
-        generated: { files: buildToolProjects(session) },
         checkTools: listHostCheckTools(session),
     });
     const { installed, missing, steps } = installation;

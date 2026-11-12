@@ -4,14 +4,13 @@ import type { z } from 'zod';
 
 import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
 import type { DOCSTRING_STYLES } from '#cli/config/configurations/shared.ts';
-import type { FENCE_GRAMMARS } from '#cli/config/parsers.ts';
+import type { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
 import { type deptrySchema, type xccovSchema } from '#cli/schemas/configurations.ts';
 import type { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { IgnoreSection, SourcedConfig } from '#cli/types/configurations/general.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
+import type { Config, Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import { type DependencyFile, type ScriptSyntax } from '#cli/types/parsers.ts';
-import type { Config } from '#cli/types/repository.ts';
 import type { Defined, Level, ParsedSettings, Scope, ScopeSettings, Settings } from '#cli/types/settings.ts';
 import type { Files } from '#cli/types/system.ts';
 import type { GeneratedFile, Session } from '#cli/types/tools.ts';

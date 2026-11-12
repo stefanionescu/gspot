@@ -10,29 +10,32 @@ import {
     SCAN_SETTINGS_MESSAGE,
     SCAN_STOPPED_MESSAGE,
 } from '#cli/config/commands/reports.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { HOOKS_PATH_SETTING, SAMPLE_HOOK_SUFFIX } from '#cli/config/repository/setup.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { SET_HOOKS_PATH } from '#cli/config/tools/installers.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { linkEnvironments } from '#cli/engine/copies/dependencies.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { printProgress } from '#cli/engine/report.ts';
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { runEveryCheck } from '#cli/generation/checks.ts';
-import { buildToolProjects } from '#cli/generation/generate.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
 import { readGitSetting, readGitText, readHooksFolder } from '#cli/repository/git/run.ts';
-import { detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
+import { detectPackageManager } from '#cli/repository/package-manager.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText, measureFolder } from '#cli/system/files/reads.ts';
 import { isInside } from '#cli/system/paths.ts';
-import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
+import type { RunResult } from '#cli/types/engine/run.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -83,6 +86,23 @@ function listUnstagedLockfileNotes(root: string, copyRoot: string): string[] {
         .map(({ file }) => SCAN_LOCKFILE_MESSAGE.replace('<lockfile>', () => file));
 }
 
+async function runEveryCheck(session: Session, skip: string[]): Promise<RunResult> {
+    try {
+        return await runChecks(session, {
+            selectCheckCode,
+            generation: CHECK_GENERATION,
+            skip,
+            stage: 'all',
+            fix: false,
+            cwd: session.root,
+            pathArguments: [],
+            onProgress: printProgress,
+        });
+    } finally {
+        rewriteProgress('');
+    }
+}
+
 async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<CommandResult<ScanReport>> {
     if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SCAN_SETTINGS_MESSAGE);
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
@@ -93,10 +113,7 @@ async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<
     if (planning.detection.files.length === 0) throw new GspotError('arguments', SCAN_NO_FILES_MESSAGE);
     const userRules = await readUserRules(planning);
     await writeInitFiles(copy.root, { ...planning, pinPath: undefined });
-    const session = {
-        ...(await openSession(copy.root, { cancelSignal })),
-        startRunner: planning.session.startRunner,
-    };
+    const session = await openSession(copy.root, { cancelSignal, startRunner: planning.session.startRunner });
     linkEnvironments(
         root,
         copy.root,
@@ -104,7 +121,6 @@ async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<
     );
     await installTools(session, {
         writer: openFiles(copy.root),
-        generated: { files: buildToolProjects(session) },
         checkTools: listHostCheckTools(session),
         runsProjectInstall: false,
     });

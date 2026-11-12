@@ -2,8 +2,15 @@ import { stringify } from '@decimalturn/toml-patch';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
+import { NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { CONFIG_TOML_FORMAT, NODE_TOOL, PYTHON_TOOL_PROJECT, UV_TOOL } from '#cli/config/tools/installers.ts';
+import {
+    CONFIG_TOML_FORMAT,
+    JSON_INDENT,
+    NPM_TOOL_PROJECT,
+    PYTHON_TOOL_PROJECT,
+    UV_TOOL,
+} from '#cli/config/tools/installers.ts';
 import { getTool, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -108,6 +115,21 @@ export function listReplacedTools(configurations: Configuration[]): Pick<LintCom
 
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
     return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
+}
+
+export function buildToolProjects(
+    session: Pick<Session, 'packageManager' | 'scopes' | 'toolConfigurations'>,
+): GeneratedFile[] {
+    const { packageManager, toolConfigurations } = session;
+    const project = { ...NPM_TOOL_PROJECT, devDependencies: listNpmProjectPins(session) };
+    const npmProject = { path: GSPOT_PATHS.npmProject, content: `${JSON.stringify(project, null, JSON_INDENT)}\n` };
+    const python = buildPythonProjectTable(toolConfigurations);
+    const pythonContent = stringify({ project: python }, CONFIG_TOML_FORMAT);
+    return [
+        ...(packageManager === undefined ? [] : [npmProject]),
+        ...(python.dependencies.length === 0 ? [] : [{ path: GSPOT_PATHS.pythonProject, content: pythonContent }]),
+        buildMiseInstall(toolConfigurations),
+    ];
 }
 
 export function findPackagePin(tool: Tool): PackagePin | undefined {

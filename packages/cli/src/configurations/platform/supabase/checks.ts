@@ -5,10 +5,11 @@ import { stripVTControlCharacters } from 'node:util';
 
 import type { Node } from '@pgsql/types';
 
+import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import {
     DENO_CHECK_COMMAND,
     DENO_CHECK_FAILED_MESSAGE,
-    DENO_CONFIG_FILES,
     DENO_CONFIG_FLAG,
     DENO_IMPORT_MAP_FLAG,
     DENO_LINT_COMMAND,
@@ -24,10 +25,9 @@ import {
     STORAGE_POLICY_TABLE,
     SUPABASE_CHECK_RULES,
     SUPABASE_PROJECT_FILE,
-    SYNTAX_RULE,
     VERIFY_JWT_MESSAGE,
     VERIFY_JWT_OFF,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/supabase.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import {

@@ -1,4 +1,4 @@
-import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
+import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/postgres.ts';
 import {
     compareMigrationVersions,
     readCommittedMigrations,

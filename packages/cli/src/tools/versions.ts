@@ -5,8 +5,9 @@ import { stripVTControlCharacters } from 'node:util';
 import semver from 'semver';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { VERSION_FLAG } from '#cli/config/repository/package-managers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import {
     DISTRIBUTION_SUFFIX,
     NO_VERSION,

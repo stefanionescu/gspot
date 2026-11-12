@@ -3,12 +3,11 @@ import { dirname, join, posix } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 
 import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/engine.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { listUnreadFiles } from '#cli/engine/files.ts';
-import { listWorkspaceSources } from '#cli/repository/javascript/workspaces.ts';
+import { listWorkspaceSources } from '#cli/repository/workspaces.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';

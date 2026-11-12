@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
 
 import { API_TOKEN } from '#tests/config/integration/general.ts';
+import { scanOutputSchema } from '#tests/schemas/setup.ts';
 import { spawnGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { scanOutputSchema } from '#tests/setup/schemas.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 

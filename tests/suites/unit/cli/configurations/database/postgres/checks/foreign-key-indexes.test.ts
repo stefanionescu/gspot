@@ -48,3 +48,21 @@ test('foreign-key-indexes reports a foreign key column that no index leads with 
     );
     expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([]);
 });
+
+test('foreign-key-indexes reports a foreign key that ALTER TABLE ADD CONSTRAINT adds without an index', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
+        'migrations/1_members.sql':
+            'CREATE TABLE teams (id bigint PRIMARY KEY);\nCREATE TABLE members (id bigint PRIMARY KEY, team_id bigint);\n',
+        'migrations/2_team.sql':
+            'ALTER TABLE members ADD CONSTRAINT members_team_fk FOREIGN KEY (team_id) REFERENCES teams (id);\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([
+        expect.objectContaining({
+            file: 'migrations/2_team.sql',
+            line: 1,
+            rule: 'foreign-key-index',
+            message: expect.stringContaining('public.members (team_id)') as string,
+        }),
+    ]);
+});

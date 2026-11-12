@@ -56,7 +56,7 @@ export async function runGspot(
     }
 }
 
-export async function runInit(
+export async function planSandboxInit(
     root: string,
     commandArguments: readonly string[] = [],
 ): Promise<Pick<InitPlanning, 'plan'> & { settings: TomlTable }> {

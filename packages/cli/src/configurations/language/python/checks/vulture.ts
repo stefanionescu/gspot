@@ -6,7 +6,7 @@ import {
     VULTURE_DEAD_CODE,
     VULTURE_FINDING,
 } from '#cli/config/configurations/python.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { VULTURE_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';

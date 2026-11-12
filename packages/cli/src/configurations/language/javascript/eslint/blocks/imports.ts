@@ -15,12 +15,12 @@ import {
     TYPESCRIPT_EXTENSION_MAP,
 } from '#cli/config/configurations/eslint/blocks.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
+import { readPackageAliases, readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import {
     buildExtensionGlob,
     buildNodePatterns,
     buildScopeOverrideBlocks,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { readPackageAliases, readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/language.ts';

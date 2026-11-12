@@ -2,7 +2,7 @@ import { join, posix } from 'node:path';
 
 import type ts from 'typescript';
 
-import { PBXPROJ_SUFFIX, TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { PBXPROJ_SUFFIX, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import {
     BUNDLER_PACKAGES,
     CLOUDFLARE_CONFIGURATION,

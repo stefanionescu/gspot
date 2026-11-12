@@ -1,6 +1,6 @@
 import { decodeXML } from 'entities';
 
-import { SITE_RULES, SITEMAP_EXTENSION, SITEMAP_FILE, SITEMAP_LOCATION } from '#cli/config/configurations/framework.ts';
+import { SITE_RULES, SITEMAP_EXTENSION, SITEMAP_FILE, SITEMAP_LOCATION } from '#cli/config/configurations/site.ts';
 import { convertToBuildPath } from '#cli/configurations/framework/site/checks/build.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';

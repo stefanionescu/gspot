@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
     ABSENT_HASH,
     BRANCHES_PREFIX,
@@ -16,7 +15,6 @@ import {
     GIT_REMOTE_ARGUMENTS,
     GIT_REV_LIST_ARGUMENTS,
     GIT_ROOT_COMMITS_ARGUMENTS,
-    GIT_SHALLOW_ARGUMENTS,
     GIT_SHALLOW_FILE_ARGUMENTS,
     GIT_TREE_ARGUMENTS,
     HASH_PATTERN,
@@ -30,6 +28,7 @@ import {
     TREE_SUFFIX,
     UNFETCHED_PUSH_MESSAGE,
 } from '#cli/config/repository/git.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { readGitLines, readGitPaths, readGitText, runGit } from '#cli/repository/git/run.ts';
 import {
     findRemoteDefaultBranch,
@@ -37,7 +36,7 @@ import {
     readDefaultRef,
     readMergeBase,
 } from '#cli/repository/revisions/changes.ts';
-import { readHead } from '#cli/repository/revisions/files.ts';
+import { isShallowClone, readHead } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Comparison, PushedRevisions, PushLine, PushRevision, PushSearch } from '#cli/types/repository.ts';
@@ -197,8 +196,7 @@ export async function readPushedRevisions(
         .split('\n')
         .filter((row) => row.trim() !== '')
         .map((line) => parsePushLine(line));
-    const shallowAnswer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
-    const isShallow = shallowAnswer.trim() === 'true';
+    const isShallow = await isShallowClone(root, cancelSignal);
     const remotes = remote === undefined ? [] : await readGitLines(root, GIT_REMOTE_ARGUMENTS, { cancelSignal });
     const remoteName = remotes.find((name) => name === remote);
     const remoteRefs = await listRemoteRefs(root, cancelSignal);

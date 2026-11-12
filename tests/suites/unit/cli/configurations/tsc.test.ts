@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';

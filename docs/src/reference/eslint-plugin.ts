@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { posix } from 'node:path';
 
 import { getRequired } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -23,34 +22,33 @@ import type { ReferencePage } from '#docs/types/pages.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import plugin from '#eslint-plugin/plugin.ts';
+import { LANGUAGE_TOPICS } from '#eslint-plugin/registry/language.ts';
+import { LIBRARY_TOPICS } from '#eslint-plugin/registry/libraries.ts';
 
 const PLUGIN_PATH = `${REFERENCE_PATH}${REFERENCE_FOLDERS.eslintPlugin}/`;
-const RULE_MODULES = import.meta.glob<Readonly<Record<string, unknown>>>(
-    '../../../packages/eslint-plugin/src/rules/*/*.ts',
-    { eager: true },
-);
-const TOPIC_LABELS = new Map([
-    ['accessibility', 'Accessibility'],
-    ['assertions', 'Assertions'],
-    ['aws', 'AWS CDK'],
-    ['collections', 'Collections'],
-    ['control-flow', 'Control flow'],
-    ['functions', 'Functions'],
-    ['libraries', 'Libraries'],
-    ['logic', 'Logic'],
-    ['networks', 'Networks'],
-    ['promises', 'Promises'],
-    ['react', 'React'],
-    ['regex', 'Regular expressions'],
-    ['security', 'Security'],
-    ['servers', 'Servers'],
-    ['structure', 'Code structure'],
-    ['testing', 'Tests'],
-    ['types', 'Types'],
-    ['variables', 'Variables'],
-    ['vue', 'Vue'],
-    ['web', 'Web'],
-]);
+const TOPICS = { ...LANGUAGE_TOPICS, ...LIBRARY_TOPICS };
+const TOPIC_LABELS: Readonly<Record<keyof typeof TOPICS, string>> = {
+    accessibility: 'Accessibility',
+    assertions: 'Assertions',
+    aws: 'AWS CDK',
+    collections: 'Collections',
+    'control-flow': 'Control flow',
+    functions: 'Functions',
+    libraries: 'Libraries',
+    logic: 'Logic',
+    networks: 'Networks',
+    promises: 'Promises',
+    react: 'React',
+    regex: 'Regular expressions',
+    security: 'Security',
+    servers: 'Servers',
+    structure: 'Code structure',
+    testing: 'Tests',
+    types: 'Types',
+    variables: 'Variables',
+    vue: 'Vue',
+    web: 'Web',
+};
 
 function formatPluginPresets(): string {
     const presets = Object.entries(plugin.configs).map(([name, config]) => {
@@ -134,19 +132,6 @@ function formatRuleSection(name: string, rule: (typeof plugin.rules)[keyof typeo
     );
 }
 
-function listTopicRules(): Map<string, string[]> {
-    const modules = Object.entries(RULE_MODULES).toSorted(([left], [right]) => compareText(left, right));
-    const topics = new Map<string, string[]>();
-    for (const name of Object.keys(plugin.rules).toSorted(compareText)) {
-        const rule = plugin.rules[name];
-        const [path] = modules.find(([, exports]) => Object.values(exports).includes(rule)) ?? [];
-        if (path === undefined) throw new Error(`No topic folder holds the plugin rule ${name}.`);
-        const topic = posix.basename(posix.dirname(path));
-        topics.set(topic, [...(topics.get(topic) ?? []), name]);
-    }
-    return new Map([...topics].toSorted(([left], [right]) => compareText(left, right)));
-}
-
 function formatTopicIndex(topic: string, label: string, names: readonly string[]): string {
     const path = `${PLUGIN_PATH}${topic}/`;
     const links = names.map((name) => `<li id="${name}"><a href="${path}#${name}"><code>${name}</code></a></li>`);
@@ -169,11 +154,11 @@ function buildTopicPage(label: string, names: readonly string[]): ReferencePage 
 }
 
 export function buildPluginPages(): Map<string, ReferencePage> {
-    const topics = [...listTopicRules()].map(([topic, names]) => {
-        const label = TOPIC_LABELS.get(topic);
-        if (label === undefined) throw new Error(`The plugin topic ${topic} has no label.`);
-        return { topic, label, names };
-    });
+    const topics = (Object.keys(TOPICS) as Array<keyof typeof TOPICS>).toSorted(compareText).map((topic) => ({
+        topic,
+        label: TOPIC_LABELS[topic],
+        names: TOPICS[topic].map(({ name }) => name).toSorted(compareText),
+    }));
     const readme = readFileSync(new URL('../../../packages/eslint-plugin/README.md', import.meta.url), 'utf8');
     const requirements = `Requires Node.js \`${pluginPackage.engines.node}\` and ESLint \`${pluginPackage.peerDependencies.eslint}\`. The optional magic-numbers rule needs \`@typescript-eslint/eslint-plugin\` \`${pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin']}\`.`;
     for (const heading of ['## Install\n', '## Use\n', '## Rule reference'])

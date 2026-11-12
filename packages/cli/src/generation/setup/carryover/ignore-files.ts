@@ -1,14 +1,12 @@
 import { posix } from 'node:path';
 
-import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
 import {
     CARRYOVER_ROW_START,
     COMMENT_PATTERN,
     IGNORE_FILES,
     IGNORE_REASON_START,
-    LEADING_SLASH,
-} from '#cli/config/repository/setup.ts';
-import { TRAILING_SLASH } from '#cli/config/system.ts';
+} from '#cli/config/generation/setup.ts';
+import { GSPOT_FOLDER, LEADING_SLASH, LINE_BREAK, TRAILING_SLASH } from '#cli/config/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';

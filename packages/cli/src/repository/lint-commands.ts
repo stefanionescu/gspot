@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 
-import { LINE_BREAK, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import {
     BIN_FOLDER_PREFIX,
     COMMAND_FILES,
@@ -25,6 +25,7 @@ import {
     TASK_AFTER_RUN,
     YAML_EXTENSIONS,
 } from '#cli/config/repository/setup.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlDocuments, parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { hasToolSection, parseSharedFile } from '#cli/repository/conflicts.ts';

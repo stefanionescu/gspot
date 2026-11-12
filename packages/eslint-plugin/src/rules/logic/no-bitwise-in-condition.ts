@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
-import { BITWISE_JOINS, BITWISE_OPERATORS, CONDITION_PARENTS, NUMERIC_VALUE_TYPES } from '../../config/logic.ts';
+import { BITWISE_JOINS, BITWISE_OPERATORS, CONDITION_PARENTS } from '../../config/logic.ts';
+import { NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
 import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';

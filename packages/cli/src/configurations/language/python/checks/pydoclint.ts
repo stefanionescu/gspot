@@ -7,7 +7,7 @@ import {
     PYDOCLINT_STYLE_FLAG,
     PYDOCLINT_TYPE_OPTIONS,
 } from '#cli/config/configurations/python.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/code/python.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';

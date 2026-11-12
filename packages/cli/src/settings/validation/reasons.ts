@@ -2,7 +2,6 @@ import { isDeepStrictEqual } from 'node:util';
 
 import type { z } from 'zod';
 
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
     ADD_REASON_MESSAGE,
     EMPTY_REASON,
@@ -10,6 +9,7 @@ import {
     REMOVAL_REASON_SUGGESTION,
     REMOVED_CONFIGURATIONS,
 } from '#cli/config/settings/validation.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { findChildSchema } from '#cli/settings/lookup.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { ReasonRequirement, Setting } from '#cli/types/manifests.ts';

@@ -21,8 +21,9 @@ import {
     XCASSETS_FOLDER,
     XCODE_RULES,
     XCSTRINGS_SUFFIX,
-} from '#cli/config/configurations/infrastructure.ts';
-import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
+} from '#cli/config/configurations/xcode.ts';
+import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+import { PACKAGE_SWIFT, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
 import {
     ASSET_EXPLANATIONS,
     BUILD_SETTING_EXPLANATIONS,

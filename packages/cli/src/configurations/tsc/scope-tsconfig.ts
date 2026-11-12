@@ -1,11 +1,10 @@
 import { dirname, join, relative } from 'node:path';
 
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import { NESTJS_CONFIGURATION, TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import {
     COMPILER_OPTIONS,
     DEFAULT_LEVEL_OPTIONS,
     NESTJS_COMPILER_OPTIONS,
-    NESTJS_CONFIGURATION,
     TYPESCRIPT_DEFAULTS,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/shared.ts';

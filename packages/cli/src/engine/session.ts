@@ -2,8 +2,9 @@ import { listEnabledChecks } from '#cli/engine/plan.ts';
 import { pinProjectTypescript, selectToolConfigurations } from '#cli/engine/tools.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { detectPackageManager, selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
+import { detectPackageManager, selectToolPackageManager } from '#cli/repository/package-manager.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
+import { selectStartRunner } from '#cli/repository/version-pin.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readSettingsText } from '#cli/settings/file.ts';
 import { readSettings } from '#cli/settings/read.ts';
@@ -16,7 +17,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { Repository, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { RunCache } from '#cli/types/system.ts';
-import type { Session, SessionBase } from '#cli/types/tools.ts';
+import type { DownloadSession, Session, SessionBase } from '#cli/types/tools.ts';
 
 function buildScopes(settings: Settings, repository: Repository): Scope[] {
     const { scopeFolders } = repository;
@@ -41,18 +42,17 @@ async function readSessionRepository({
     cache,
     listing,
     untracked,
-    unreadablePaths,
+    unreadablePaths = [],
     cancelSignal,
 }: {
     settings: Settings;
     cache: RunCache;
     listing: RepositoryListing | undefined;
     untracked: UntrackedFiles | undefined;
-    unreadablePaths: string[];
+    unreadablePaths: string[] | undefined;
     cancelSignal: AbortSignal | undefined;
 }): Promise<Repository> {
-    const listed = listing ?? (await listRepositoryFiles(cache, untracked));
-    await downloadSwiftGrammar(listed, { settings, cancelSignal });
+    const listed = listing ?? (await listSessionFiles(cache, { untracked, settings, cancelSignal }));
     const selected = new Map(
         ['', ...settings.scopes.keys()].map((path) => [path, selectConfigurationsForScope(settings, path)]),
     );
@@ -77,7 +77,19 @@ function selectPackageManagers(
         return { packageManager: undefined, toolPackageManager: undefined };
     const sources = base.repository.files.filter((file) => file.kind === 'source').map((file) => file.path);
     const packageManager = detectPackageManager(base.root, sources);
-    return { packageManager, toolPackageManager: packageManager.name === 'yarn' ? 'npm' : packageManager.name };
+    return { packageManager, toolPackageManager: selectToolPackageManager(packageManager.name) };
+}
+
+/**
+List the files of the repository, and download the Swift grammar that a read of them needs.
+*/
+export async function listSessionFiles(
+    cache: RunCache,
+    { untracked, ...session }: Pick<SessionOptions, 'untracked'> & DownloadSession,
+): Promise<RepositoryListing> {
+    const listing = await listRepositoryFiles(cache, untracked);
+    await downloadSwiftGrammar(listing, session);
+    return listing;
 }
 
 export async function openSession(
@@ -89,9 +101,10 @@ export async function openSession(
         listing,
         untracked,
         settings = readSettings(readSettingsText(root).text, root),
-        unreadablePaths = [],
+        unreadablePaths,
         resources = [],
         cancelSignal,
+        startRunner = selectStartRunner(root),
     }: SessionOptions = {},
 ): Promise<Session> {
     const repository = await readSessionRepository({
@@ -110,7 +123,7 @@ export async function openSession(
         cancelSignal,
         root,
         toolsRoot,
-        startRunner: selectStartRunner(root),
+        startRunner,
         settings,
         repository,
         scopes,

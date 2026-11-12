@@ -2,8 +2,6 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const BOOLEAN_NAME = 'Boolean';
 
-export const UNDEFINED_TYPE = 'undefined';
-
 export const LIBRARY_PATH = /[\\/]node_modules[\\/]/u;
 
 export const ABSORBING_TYPES: ReadonlyMap<string, string> = new Map([

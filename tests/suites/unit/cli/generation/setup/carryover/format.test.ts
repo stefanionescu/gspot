@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import type { TomlTable } from '#cli/types/settings.ts';
-import { runInit } from '#tests/setup/cli/commands.ts';
+import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('init keeps the format overrides of a scope', async () => {
@@ -12,7 +12,7 @@ test('init keeps the format overrides of a scope', async () => {
         'app/README.md': '# Example\n',
         'source.js': 'export const value = 1;\n',
     });
-    const { settings } = await runInit(sandbox.path);
+    const { settings } = await planSandboxInit(sandbox.path);
     expect(settings['scope']).toMatchObject([
         { path: 'app', format: { override: [{ paths: ['**/*.md'], indent_width: 4 }] } },
     ]);
@@ -23,7 +23,7 @@ test('init leaves out an EditorConfig indent style of unset', async () => {
         '.editorconfig': '[*]\nindent_style = space\n[vendor/**]\nindent_style = unset\nindent_size = 3\n',
         'vendor/a.js': 'export const a = 1;\n',
     });
-    const { settings } = await runInit(sandbox.path);
+    const { settings } = await planSandboxInit(sandbox.path);
     expect((settings['format'] as TomlTable)['override']).toStrictEqual([{ paths: ['vendor/**'], indent_width: 3 }]);
 });
 
@@ -32,7 +32,7 @@ test('init reads the EditorConfig quote type, as Prettier does', async () => {
         '.editorconfig': '[*]\nquote_type = single\n',
         'source.js': 'export const value = 1;\n',
     });
-    const { plan, settings } = await runInit(sandbox.path);
+    const { plan, settings } = await planSandboxInit(sandbox.path);
     expect((settings['format'] as TomlTable)['quotes']).toBe('single');
     expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.carried).toContain('quote_type');
 });
@@ -43,7 +43,7 @@ test('init names an EditorConfig line width of off, which gspot.toml cannot hold
         'README.md': '# Example\n',
         'source.js': 'export const value = 1;\n',
     });
-    const { plan } = await runInit(sandbox.path);
+    const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['max_line_length']);
 });
 
@@ -52,7 +52,7 @@ test('init names an EditorConfig line setting that differs from what gspot write
         '.editorconfig': '[*]\nend_of_line = lf\n[*.bat]\nend_of_line = crlf\n',
         'run.bat': 'echo done\n',
     });
-    const { plan } = await runInit(sandbox.path);
+    const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.find(({ path }) => path === '.editorconfig')?.dropped).toStrictEqual(['end_of_line']);
 });
 
@@ -63,7 +63,7 @@ test('init keeps the EditorConfig overrides beside the overrides of a Prettier c
         'README.md': '# Example\n',
         'source.js': 'export const value = 1;\n',
     });
-    const { settings } = await runInit(sandbox.path);
+    const { settings } = await planSandboxInit(sandbox.path);
     expect((settings['format'] as TomlTable)['override']).toStrictEqual([
         { paths: ['**/*.md'], print_width: 100 },
         { paths: ['**/*.md'], prose_wrap: 'always' },
@@ -75,6 +75,6 @@ test('init names the excludeFiles of a Prettier override', async () => {
         '.prettierrc': '{"overrides":[{"files":"*.js","excludeFiles":"vendor/**","options":{"semi":false}}]}\n',
         'source.js': 'export const value = 1;\n',
     });
-    const { plan } = await runInit(sandbox.path);
+    const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.find(({ path }) => path === '.prettierrc')?.dropped).toStrictEqual(['excludeFiles']);
 });

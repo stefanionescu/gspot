@@ -1,6 +1,6 @@
 import { isMap, isScalar, isSeq, LineCounter, type Node, parseDocument, type YAMLMap } from 'yaml';
 
-import { SERVICE_SECURITY_MESSAGES, SERVICE_SECURITY_RULES } from '#cli/config/configurations/infrastructure.ts';
+import { SERVICE_SECURITY_MESSAGES, SERVICE_SECURITY_RULES } from '#cli/config/configurations/docker.ts';
 import { SERVICE_SECURITY_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

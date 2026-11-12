@@ -13,6 +13,7 @@ import {
     FASTAPI_CONFIGURATION,
     PYDANTIC_PACKAGE,
     PYTHON_FILES,
+    RUFF_CHECK,
     RUFF_CONSOLE_RULES,
     RUFF_ISORT,
     RUFF_PATH_RULES,
@@ -20,8 +21,7 @@ import {
     RUFF_TIDY_IMPORTS,
 } from '#cli/config/configurations/python.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { RUFF_CHECK } from '#cli/config/repository/setup.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';

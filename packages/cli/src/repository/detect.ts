@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { EVERY_REPOSITORY_EVIDENCE, RUNTIME_TAG } from '#cli/config/repository/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';

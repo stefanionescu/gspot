@@ -16,9 +16,9 @@ import {
     REDIRECT_STATUS_CODES,
     REDIRECTS_FILE,
     REQUIRED_HEADERS,
-    SYNTAX_RULE,
-} from '#cli/config/configurations/infrastructure.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+} from '#cli/config/configurations/cloudflare.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { HEADER_EXPLANATIONS } from '#cli/configurations/platform/cloudflare/explanations.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { readText } from '#cli/system/files/reads.ts';

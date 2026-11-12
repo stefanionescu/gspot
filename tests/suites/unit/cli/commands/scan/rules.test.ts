@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { compareInstalledRules, readUserRules } from '#cli/commands/scan/rules.ts';
-import { NOT_COMPARED_MESSAGE, PRINTED_RULE_TOOLS } from '#cli/config/repository/setup.ts';
+import { NOT_COMPARED_MESSAGE, PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
 import { convertRule } from '#cli/generation/setup/carryover/lint-rules.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

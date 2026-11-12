@@ -12,7 +12,6 @@ import {
     FILE_EXTENSION,
     MARKDOWN_EXTENSIONS,
     MISE_CONFIG_GLOB,
-    MISE_FILES,
     MISE_RUN,
     PATH_CHARACTERS,
     PATH_TOKEN_SKIPS,
@@ -22,11 +21,12 @@ import {
     TITLE_ATTRIBUTE,
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
-} from '#cli/config/configurations/general.ts';
+} from '#cli/config/configurations/docs.ts';
+import { MISE_FILES } from '#cli/config/configurations/general.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
-import { PACKAGE_JSON, WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { MISE_TASK_FOLDERS, TRAILING_SLASH } from '#cli/config/system.ts';
+import { MISE_TASK_FOLDERS, TRAILING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
 import { parseMiseTasks } from '#cli/configurations/general/docs/mise.ts';
@@ -35,8 +35,8 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { escapeGlob, includeParentFolders, listEnclosingFolders, listExecutableNames } from '#cli/system/paths.ts';

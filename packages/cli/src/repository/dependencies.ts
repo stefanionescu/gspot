@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
-import { GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { DEPENDENCY_FILE_PARSERS, parseRequirements } from '#cli/parsers/projects/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';

@@ -1,7 +1,8 @@
 import { realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-import { NPM_TOOL } from '#cli/config/repository/javascript.ts';
+import { NPM_TOOL } from '#cli/config/repository/package-managers.ts';
+import { NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import {
     CERTIFICATE_KEYS,
@@ -9,7 +10,6 @@ import {
     CONNECTION_URL_KEY,
     CREDENTIAL_KEY,
     ENCODED_CREDENTIAL_KEY,
-    NODE_TOOL,
     NPM_SCOPE_REGISTRY_KEY,
     NPM_SETTING_PREFIX,
     NPM_SETTING_VARIABLE_PREFIX,

@@ -5,8 +5,8 @@ import { patch } from '@decimalturn/toml-patch';
 import which from 'which';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import {
     GITHUB_RATE_LIMIT,
     GITHUB_TOKEN_MESSAGE,

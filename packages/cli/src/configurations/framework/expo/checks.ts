@@ -10,7 +10,7 @@ import {
     PASSED_CHECKS_LINE,
     UNINSTALLED_EXPO_MESSAGE,
 } from '#cli/config/configurations/framework.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { joinScope } from '#cli/repository/scopes.ts';

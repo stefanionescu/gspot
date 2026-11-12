@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { DRIVE_LETTER, MODULE_SEPARATOR, NODE_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
-import type { CallText } from '../types/plugin.ts';
+import { DRIVE_LETTER, MODULE_SEPARATOR, NODE_PREFIX, PLUGIN_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
+import type { CallText, RuleContext } from '../types/plugin.ts';
 import { unwrapExpression } from './syntax.ts';
 
 function getImportSpecifier(node: TSESTree.ImportSpecifier, module: string): string | undefined {
@@ -105,6 +105,16 @@ export function findPathInFolder(folder: string, path: string): string | undefin
     if (file === root) return '';
     if (root === '.') return file === '..' || file.startsWith('../') ? undefined : file;
     return file.startsWith(`${root}/`) ? file.slice(root.length + 1) : undefined;
+}
+
+/**
+Find where the linted file sits inside the root that the `gspot` setting names, or inside the working folder.
+*/
+export function findPathInRoot(
+    context: Pick<RuleContext, 'cwd' | 'physicalFilename' | 'settings'>,
+): string | undefined {
+    const root = (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd;
+    return findPathInFolder(root, context.physicalFilename);
 }
 
 export function getAssignedValue(variable: TSESLint.Scope.Variable): TSESTree.Node | undefined {

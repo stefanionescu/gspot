@@ -4,7 +4,7 @@
 
 gspot 0.4.3 fixes the defects that a run of 0.4.2 on 19 repositories found. It changes no rule and loosens none. Three
 of the fixes unblock a push: a site whose pages import a large file, an Xcode project with package dependencies, and a
-model loaded from a local folder. The ESLint plugin stays at 0.2.7.
+model loaded from a local folder.
 
 This section is not released, and its entries cite no commit yet.
 
@@ -95,6 +95,13 @@ This section is not released, and its entries cite no commit yet.
 
 - `gspot install` no longer writes the generated files a second time after an upgrade, and prints the note about keys
   it no longer manages only after `set`, `unset`, and `remove`.
+- `gspot install` no longer locks the npm tools again on every run when `gspot.toml` holds a
+  `[[tools.eslint.plugins]]` or `[[tools.stylelint.plugins]]` record with a `package`. With npm, each run also deleted
+  `.gspot/node_modules`.
+- `gspot init` stops with `Cannot read committed Git history` when Git cannot read HEAD, where it said that Git does
+  not hold the replaced config files unchanged at HEAD. Run `git status` and repair the repository.
+- `gspot scan` quotes the check and the rule in the `gspot ignore` command it prints, so a rule name with a space or a
+  shell character can be pasted.
 - `gspot init` and `gspot add` leave `site.build_command` unset, and the site build runs the `build` script with the
   package manager of the repository.
 - Without a `.venv`, `gspot install` builds the project environment with the Python that the mise config pins.

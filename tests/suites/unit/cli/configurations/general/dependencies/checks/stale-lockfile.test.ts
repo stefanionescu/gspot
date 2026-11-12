@@ -33,3 +33,20 @@ test('stale-lockfile reports a peer dependency and an unrecorded workspace impor
         { file: 'packages/app/package.json', rule: 'stale-lockfile' },
     ]);
 });
+
+test('stale-lockfile reports a dependency that the pnpm-lock.yaml importer lacks, and no peer dependency', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': JSON.stringify({
+            dependencies: { zod: '^4.0.0', react: '^19.0.0' },
+            peerDependencies: { vue: '^3.0.0' },
+        }),
+        'pnpm-lock.yaml':
+            "lockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      zod:\n        specifier: ^4.0.0\n        version: 4.0.5\n",
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'dependencies/stale-lockfile');
+    expect(findings).toMatchObject([{ file: 'package.json', rule: 'stale-lockfile' }]);
+    expect(findings[0]?.message).toStartWith(
+        'package.json declares react ^19.0.0, which pnpm-lock.yaml does not record.',
+    );
+});

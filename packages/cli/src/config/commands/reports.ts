@@ -1,6 +1,6 @@
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 
 export const PUSH_STDIN_MESSAGE =
     '--hook pre-push reads the lines that Git writes to standard input. Run it from the pre-push hook.';

@@ -326,3 +326,5 @@ export const STRICT_FAMILY_OPTIONS = [
     'strictPropertyInitialization',
     'useUnknownInCatchVariables',
 ] as const;
+
+export const TYPESCRIPT_CONFIGURATION = 'typescript';

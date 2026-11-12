@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 
-import { CHANGELOG_FILE, DOCS_RULES, VERSION_STRING_MESSAGE } from '#cli/config/configurations/general.ts';
-import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { CHANGELOG_FILE, DOCS_RULES, VERSION_STRING_MESSAGE } from '#cli/config/configurations/docs.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';

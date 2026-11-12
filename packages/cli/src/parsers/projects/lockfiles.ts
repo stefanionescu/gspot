@@ -14,7 +14,7 @@ import {
     PYTHON_NAME_SEPARATORS,
     YARN_CLASSIC_HEADER,
     YARN_CLASSIC_PROPERTY,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/projects.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';

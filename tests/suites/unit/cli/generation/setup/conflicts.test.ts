@@ -6,9 +6,10 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { LINT_FOLDER_MESSAGE } from '#cli/config/generation.ts';
+import { LINT_FOLDER_MESSAGE } from '#cli/config/generation/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import {
@@ -32,12 +33,13 @@ import {
     SQL_SEARCH_ARGUMENTS,
     SYNCPACK_PACKAGE_FILES,
 } from '#tests/config/setup/sandboxes.ts';
+import { initOutputSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -243,4 +245,12 @@ test('init replaces an authored Syncpack file and keeps syncpack.config.cts and 
     expect(existsSync(join(sandbox.path, SYNCPACK_FILE.file))).toBe(false);
     expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');
     expect(await readFile(join(sandbox.path, 'syncpack.config.mts'), 'utf8')).toBe(EMPTY_DEFAULT_SOURCE);
+});
+
+test('init refuses to replace a config file when Git cannot read the committed history', async () => {
+    await using sandbox = await createGitSandbox({ '.prettierrc.json': '{}\n' });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, '.git', 'HEAD'), 'broken');
+    const historyError = await captureRejection(assertFilesCommitted(sandbox.path, ['.prettierrc.json']));
+    expect(historyError).toMatchObject({ name: 'GspotError', code: 'git' });
 });

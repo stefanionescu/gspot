@@ -10,11 +10,11 @@ import { readSettings } from '#cli/settings/read.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { initOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { ToolPackageJson } from '#tests/types/setup.ts';
 

@@ -17,7 +17,7 @@ import {
     SETTING_LANGUAGES,
     SHIPPED_FILES_FOLDER,
 } from '#cli/config/manifests.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
 import { commandCheckFields, outputSchema } from '#cli/schemas/manifests/checks.ts';
 import {
     conditionSchema,

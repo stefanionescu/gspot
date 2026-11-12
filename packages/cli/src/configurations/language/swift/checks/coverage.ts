@@ -23,7 +23,7 @@ import {
     XCODE_COVERAGE_FLAGS,
     XCTEST_FAILURE_LINE,
 } from '#cli/config/configurations/swift.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
 import { runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';

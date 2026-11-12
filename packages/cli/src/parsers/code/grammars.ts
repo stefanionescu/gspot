@@ -12,7 +12,7 @@ import {
     GRAMMARS_FOLDER,
     PARSES_BETWEEN_TURNS,
     SWIFT_WASM_FLAGS,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/code.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { remember } from '#cli/system/cache.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';

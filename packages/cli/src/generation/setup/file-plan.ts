@@ -5,6 +5,8 @@ import {
     ADDS_BLOCK_NOTE,
     ALWAYS_SELECTED_NOUN,
     ATTRIBUTES_ROW,
+    CARRYOVER_GROUPS,
+    CARRYOVER_HEADING,
     CHANGE_LATER_MESSAGE,
     CI_FILE_NOTE,
     CI_FILE_NOTES,
@@ -26,11 +28,10 @@ import {
     PYTHON_PIN_NOUN,
     TOOL_PIN_NOUN,
     UNREAD_SUBMODULE_MESSAGE,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { CARRYOVER_GROUPS, CARRYOVER_HEADING } from '#cli/config/repository/setup.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { isInScope } from '#cli/system/paths.ts';

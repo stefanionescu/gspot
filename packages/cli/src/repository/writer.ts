@@ -2,7 +2,7 @@ import { lstatSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
-import { GSPOT_FOLDER, LEADING_NEWLINE } from '#cli/config/parsers.ts';
+import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
 import { GITATTRIBUTES_FILE, GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import {
     AGENTS_FILE,
@@ -16,6 +16,7 @@ import {
     TRAILING_BLANK_LINE,
     VALE_TEMPORARY_NAME,
 } from '#cli/config/repository/setup.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { findBlockBody, findBlockSpan, replaceBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml.ts';

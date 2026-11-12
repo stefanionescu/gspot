@@ -3,8 +3,9 @@ import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/util
 import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { RUNNING_TEST_MODIFIERS, TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
 import { getLocalFunction } from '../../language/functions.ts';
+import { listChildren } from '../../language/syntax.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
+import { getTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 import type { TestCall, TitleScan } from '../../types/testing.ts';
@@ -28,7 +29,7 @@ function scanFunctionBody(node: TSESTree.Node, titles: Map<string, TSESTree.Node
         scanCall(node, titles, scan);
         return;
     }
-    const children = listChildNodes(node, scan.source).filter((child) => !FUNCTION_NODES.has(child.type));
+    const children = listChildren(node, scan.source.visitorKeys).filter((child) => !FUNCTION_NODES.has(child.type));
     for (const child of children) scanFunctionBody(child, titles, scan);
 }
 
@@ -39,7 +40,7 @@ function scanCall(node: TSESTree.CallExpression, titles: Map<string, TSESTree.No
     if (call?.kind === 'suite') return;
     checkCall(node, titles, scan);
     if (getRunningCall(call, 'test') !== undefined) return;
-    const children = listChildNodes(node, scan.source).filter((child) => !FUNCTION_NODES.has(child.type));
+    const children = listChildren(node, scan.source.visitorKeys).filter((child) => !FUNCTION_NODES.has(child.type));
     for (const child of children) scanFunctionBody(child, titles, scan);
 }
 

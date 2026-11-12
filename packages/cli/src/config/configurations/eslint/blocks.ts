@@ -276,6 +276,4 @@ export const BASE_SELECTORS: readonly SelectorPaths[] = [
 
 export const PATH_SEPARATOR_PATTERN = String.raw`[/\\]`;
 
-export const JAVASCRIPT_CONFIGURATION = 'javascript';
-
 export const TRPC_CONFIGURATION = 'trpc';

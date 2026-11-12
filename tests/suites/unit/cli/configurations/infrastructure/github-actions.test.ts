@@ -9,6 +9,7 @@ import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -19,7 +20,7 @@ import {
 } from '#tests/config/configurations/infrastructure.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeToolExecutables, writeProgramCommand } from '#tests/setup/system/fakes.ts';

@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { openSession } from '#cli/engine/session.ts';
-import { buildCopyPythonEnvironment, findMissingEnvironment } from '#cli/tools/uv.ts';
+import { buildCopyPythonEnvironment, findMissingEnvironment } from '#cli/tools/python-environment.ts';
 import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

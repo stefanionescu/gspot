@@ -1,9 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import picomatch from 'picomatch';
 
-import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import { RESTRICTED_SYNTAX_OPTIONS_SCHEMA } from '../../config/structure.ts';
-import { findPathInFolder } from '../../language/modules.ts';
+import { findPathInRoot } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 import type { RestrictedSyntaxOptions } from '../../types/structure.ts';
 
@@ -31,10 +30,7 @@ export const restrictedSyntax = createRule<RestrictedSyntaxOptions, 'restricted'
         messages: { restricted: '{{message}}' },
     },
     create(context) {
-        const path = findPathInFolder(
-            (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
-            context.physicalFilename,
-        );
+        const path = findPathInRoot(context);
         const messages = new Map<string, string[]>();
         for (const option of context.options)
             if (isSelected(path, option))

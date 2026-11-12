@@ -1,7 +1,7 @@
 import { dirname, join, relative, resolve } from 'node:path';
 
-import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import { IMPORT_CONDITIONS, LOCAL_PATH_PREFIX, PATHS_BASE_OPTION } from '#cli/config/repository/javascript.ts';
+import { IMPORT_CONDITIONS, LOCAL_PATH_PREFIX, PATHS_BASE_OPTION } from '#cli/config/configurations/javascript.ts';
+import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope } from '#cli/repository/scopes.ts';

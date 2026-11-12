@@ -4,7 +4,7 @@ import {
     MIGRATION_RULES,
     POLICY_RULES,
     ROW_SECURITY_RULE,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/postgres.ts';
 import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 

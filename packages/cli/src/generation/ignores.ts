@@ -7,9 +7,9 @@ import {
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
     GSPOT_FOLDER_PATTERNS,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/files.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { GITLINK_MODE } from '#cli/config/repository/files.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';
 import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { listOwnedConfigs } from '#cli/generation/selection.ts';

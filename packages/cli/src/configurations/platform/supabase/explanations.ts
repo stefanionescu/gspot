@@ -1,4 +1,4 @@
-import { SUPABASE_CHECK_RULES } from '#cli/config/configurations/infrastructure.ts';
+import { SUPABASE_CHECK_RULES } from '#cli/config/configurations/supabase.ts';
 import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 

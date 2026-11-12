@@ -3,14 +3,12 @@ import type { Node } from 'web-tree-sitter';
 import {
     COMPONENT_EXTENSION,
     EXPANSION_NODES,
-    HEXADECIMAL_RADIX,
     JAVASCRIPT_DEFAULT_OPERATORS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
     JAVASCRIPT_ENVIRONMENT_GETTERS,
     JAVASCRIPT_LITERAL_NODES,
     JAVASCRIPT_PROPERTY_NODES,
     MAXIMUM_CODE_POINT,
-    OCTAL_RADIX,
     OS_ENVIRONMENT_MEMBERS,
     OS_MODULE,
     PYTHON_DECLARATION_NODES,
@@ -21,8 +19,8 @@ import {
     PYTHON_STRING_ESCAPES,
     SWIFT_ENVIRONMENT,
     VARIABLE_NAME,
-    WHITESPACE_RUN,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/code.ts';
+import { HEXADECIMAL_RADIX, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { readComponentSources } from '#cli/parsers/code/comments.ts';
 import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
 import type {

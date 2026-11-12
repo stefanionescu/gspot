@@ -1,12 +1,8 @@
-import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildIgnoreSections } from '#cli/generation/ignores.ts';
-import { listStaleFiles } from '#cli/generation/stale.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckGeneration, RunOptions } from '#cli/types/engine/run.ts';
+import type { RunOptions } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
@@ -38,13 +34,6 @@ paths = ${JSON.stringify(paths)}
 stage = "commit"
 `;
 }
-
-export const CHECK_GENERATION: CheckGeneration = {
-    buildConfigs,
-    listStaleFiles: (session, options) => listStaleFiles(session, buildGeneratedFiles(session), options),
-    listWrittenPaths: (session) =>
-        convertToGlobs(buildIgnoreSections(session, buildConfigs(session)).filter(({ key }) => key === 'gspot')),
-};
 
 export function createRunResources(): Disposable[] & Disposable {
     const resources: Disposable[] = [];

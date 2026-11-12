@@ -5,9 +5,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { stringify } from '@decimalturn/toml-patch';
 
 import { GSPOT_PATHS, UV_LOCKFILE } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import { PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, PRIVATE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import {
     INDEX_SETTINGS,
     NETWORK_ADVICE,

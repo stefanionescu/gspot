@@ -3,7 +3,6 @@ import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 
 import {
-    PACKAGE_SWIFT,
     SWIFT_ATTRIBUTE_NODE,
     SWIFT_CALL_NODE,
     SWIFT_IDENTIFIER_NODE,
@@ -16,7 +15,8 @@ import {
     SWIFT_TEST_TARGET_CALLS,
     SWIFT_TEST_TARGET_TAG,
     SWIFT_TYPE_NODE,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/code.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 
 /**

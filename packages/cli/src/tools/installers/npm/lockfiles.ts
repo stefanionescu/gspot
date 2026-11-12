@@ -4,8 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { applyEdits, modify } from 'jsonc-parser/lib/esm/main.js';
 import semver from 'semver';
 
-import { NPM_PACKAGE_FOLDER, PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { LOCKFILES, NPM_PACKAGE_FOLDER, PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects.ts';
 import { BUN_LOCKFILE, INTEGRITY, LOCKFILE_WORKSPACE_KEYS, NPM_SETTING_PREFIX } from '#cli/config/tools/installers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
@@ -20,13 +19,8 @@ import {
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { Dependencies } from '#cli/types/parsers.ts';
-import type {
-    BunPackage,
-    LockedTarball,
-    Lockfile,
-    ToolPackageManagerName,
-    ToolProjectLockfileName,
-} from '#cli/types/tools.ts';
+import type { ToolPackageManagerName } from '#cli/types/repository.ts';
+import type { BunPackage, LockedTarball, Lockfile, ToolProjectLockfileName } from '#cli/types/tools.ts';
 
 function findPackageRegistry(name: string, environment: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;

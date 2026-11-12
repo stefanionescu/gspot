@@ -1,6 +1,6 @@
 import type { GrantStmt } from '@pgsql/types';
 
-import { GRANT_ALL_MESSAGE, GRANT_ALL_RULE } from '#cli/config/configurations/infrastructure.ts';
+import { GRANT_ALL_MESSAGE, GRANT_ALL_RULE } from '#cli/config/configurations/postgres.ts';
 import {
     readParsedMigrations,
     selectFrozenMigrations,

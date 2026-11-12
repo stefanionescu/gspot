@@ -27,8 +27,8 @@ import {
     OPENSSL_CERTIFICATE_FLAG,
     OPENSSL_KEY_FLAG,
     OPENSSL_PROGRAM,
-    SYNTAX_RULE,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/nginx.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { DOCKER_DAEMON_NOTE, DOCKER_TOOL } from '#cli/config/engine.ts';
 import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';

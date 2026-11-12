@@ -9,7 +9,7 @@ import {
     MISSING_KEY_RULE,
     SECRET_KEY_NAME,
 } from '#cli/config/configurations/general.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { keepListedFindings } from '#cli/configurations/ignores.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';

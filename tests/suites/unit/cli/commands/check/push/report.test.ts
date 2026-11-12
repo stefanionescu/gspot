@@ -10,10 +10,10 @@ import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { CHECK_COMMAND } from '#tests/config/setup/programs.ts';
 import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { pushOutputSchema } from '#tests/schemas/setup.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { pushOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 

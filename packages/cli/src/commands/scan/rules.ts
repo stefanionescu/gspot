@@ -7,7 +7,7 @@ import {
     PRINTED_RULE_TOOLS,
     REASON_PLACEHOLDER,
     RULE_PRINT_FLAG,
-} from '#cli/config/repository/setup.ts';
+} from '#cli/config/generation/setup.ts';
 import { compareRules, readPrintedRules } from '#cli/generation/setup/carryover/lint-rules.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp, quoteArgument } from '#cli/system/text.ts';

@@ -8,15 +8,16 @@ import {
     SIMILAR_TEST_NAMES,
     SIMILAR_TEST_ORIGINS,
 } from '../../config/testing.ts';
+import { listChildren } from '../../language/syntax.ts';
 import { isModuleUsed, listImportedModules } from '../../libraries/packages.ts';
-import { getTestCall, listChildNodes } from '../../libraries/testing.ts';
+import { getTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { SimilarTest, TestCall } from '../../types/testing.ts';
 
 function mapLiterals(node: TSESTree.Node, source: TSESLint.SourceCode, literals: Map<number, TSESTree.Literal>): void {
     const isParameter = node.type === AST_NODE_TYPES.Literal && typeof node.value !== 'object';
     if (isParameter) literals.set(node.range[0], node);
-    else for (const child of listChildNodes(node, source)) mapLiterals(child, source, literals);
+    else for (const child of listChildren(node, source.visitorKeys)) mapLiterals(child, source, literals);
 }
 
 function compareBodies(

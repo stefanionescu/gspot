@@ -6,13 +6,13 @@ import {
     ENVIRONMENT_LANGUAGES,
     ENVIRONMENT_RULES,
     ESLINT_CHECK,
-    JAVASCRIPT_CONFIGURATION,
     PACKAGE_JSON_PATTERN,
     PACKAGE_JSON_RULE_PREFIX,
     TRIVIAL_FILES_RULE,
     TRIVIAL_FUNCTIONS_RULE,
     TYPED_LANGUAGES,
 } from '#cli/config/configurations/eslint/blocks.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import {
     buildExtensionGlob,

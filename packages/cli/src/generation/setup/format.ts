@@ -12,14 +12,16 @@ import {
     PRETTIER_DEFAULTS,
     PRETTIER_FILE_FORMATS,
     PRETTIER_PACKAGE_KEY,
+    PRETTIER_ROOT_FILES,
     PRETTIER_SCRIPT_FILE,
     PRETTIER_SCRIPT_NAME,
     PROSE_TAGS,
     PYTHON_TAG,
     RUFF_SETTINGS_FILES,
-} from '#cli/config/generation.ts';
-import { LINE_BREAK, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers.ts';
-import { PRETTIER_ROOT_FILES, UNREADABLE_CONFIG_MESSAGE } from '#cli/config/repository/setup.ts';
+    UNREADABLE_CONFIG_MESSAGE,
+} from '#cli/config/generation/setup.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { detectScriptIndent } from '#cli/generation/setup/carryover/script-indent.ts';
 import { getTool } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -254,13 +256,11 @@ export function readPrettierOptions(
     });
     const packagePath = joinScope(scopePath, PACKAGE_JSON);
     const key = readPackagePrettier(root, packagePath);
-    const parsed = prettierSettingsSchema.safeParse(key);
+    const parsed = prettierSettingsSchema.safeParse(key).data ?? { dropped: [PRETTIER_PACKAGE_KEY] };
     const editorconfig = readEditorconfig(posix.join(root, scopePath));
     return [
         ...files,
-        ...(key === undefined
-            ? []
-            : [{ path: packagePath, options: parsed.data ?? { dropped: [PRETTIER_PACKAGE_KEY] } }]),
+        ...(key === undefined ? [] : [{ path: packagePath, options: parsed }]),
         ...(editorconfig === null ? [] : [{ path: joinScope(scopePath, EDITORCONFIG_FILE), options: editorconfig }]),
     ];
 }

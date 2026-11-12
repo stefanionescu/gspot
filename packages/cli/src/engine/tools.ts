@@ -1,6 +1,6 @@
 import semver from 'semver';
 
-import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import { hasFilesToCheck } from '#cli/engine/files.ts';
 import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan.ts';

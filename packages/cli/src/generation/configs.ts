@@ -1,36 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path/posix';
 
-import { CONFIG_SCOPES_FOLDER, TS_EXTENSION } from '#cli/config/generation.ts';
-import { POSTGRES_CONFIG_BUILDERS } from '#cli/configurations/database/postgres/generate.ts';
-import { SITE_CONFIG_BUILDERS } from '#cli/configurations/framework/site/generate.ts';
-import { COMMITS_CONFIG_BUILDERS } from '#cli/configurations/general/commits/generate.ts';
-import { DEPENDENCIES_CONFIG_BUILDERS } from '#cli/configurations/general/dependencies/generate.ts';
-import { DOCS_CONFIG_BUILDERS } from '#cli/configurations/general/docs/generate.ts';
-import { FORMAT_CONFIG_BUILDERS } from '#cli/configurations/general/format/generate.ts';
-import { PROSE_CONFIG_BUILDERS } from '#cli/configurations/general/prose/generate.ts';
-import { SPELLING_CONFIG_BUILDERS } from '#cli/configurations/general/spelling/generate.ts';
-import { STRUCTURE_CONFIG_BUILDERS } from '#cli/configurations/general/structure/generate.ts';
-import { ANSIBLE_CONFIG_BUILDERS } from '#cli/configurations/infrastructure/ansible/generate.ts';
-import { DOCKER_CONFIG_BUILDERS } from '#cli/configurations/infrastructure/docker/generate.ts';
-import { NGINX_CONFIG_BUILDERS } from '#cli/configurations/infrastructure/nginx/generate.ts';
-import { OPENAPI_CONFIG_BUILDERS } from '#cli/configurations/infrastructure/openapi/generate.ts';
-import { BASH_CONFIG_BUILDERS } from '#cli/configurations/language/bash/generate.ts';
-import { CSS_CONFIG_BUILDERS } from '#cli/configurations/language/css/generate.ts';
-import { HTML_CONFIG_BUILDERS } from '#cli/configurations/language/html/generate.ts';
-import { BIOME_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/biome.ts';
-import { ESLINT_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/eslint/config.ts';
-import { JSCONFIG_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/jsconfig.ts';
-import { KNIP_CONFIG_BUILDERS } from '#cli/configurations/language/javascript/knip.ts';
-import { JSON_CONFIG_BUILDERS } from '#cli/configurations/language/json/generate.ts';
-import { MARKDOWN_CONFIG_BUILDERS } from '#cli/configurations/language/markdown/generate.ts';
-import { PYTHON_CONFIG_BUILDERS } from '#cli/configurations/language/python/generate.ts';
-import { SQL_CONFIG_BUILDERS } from '#cli/configurations/language/sql/generate.ts';
-import { PERIPHERY_CONFIG_BUILDERS } from '#cli/configurations/language/swift/periphery.ts';
-import { SWIFTFORMAT_CONFIG_BUILDERS } from '#cli/configurations/language/swift/swiftformat.ts';
-import { SWIFTLINT_CONFIG_BUILDERS } from '#cli/configurations/language/swift/swiftlint.ts';
-import { TOML_CONFIG_BUILDERS } from '#cli/configurations/language/toml/generate.ts';
-import { PYTEST_CONFIG_BUILDERS } from '#cli/configurations/testing/pytest/generate.ts';
+import { CONFIG_SCOPES_FOLDER, TS_EXTENSION } from '#cli/config/generation/files.ts';
+import { selectConfigBuilder } from '#cli/configurations/registry.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { buildIgnoreSections, isPointerInherited } from '#cli/generation/ignores.ts';
@@ -44,40 +16,8 @@ import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { OwnedConfig, PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
 import type { BuiltConfig, ConfigBuildState, OwnedSourceFile } from '#cli/types/generation.ts';
-import type { Config } from '#cli/types/repository.ts';
+import type { Config } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
-    ...ANSIBLE_CONFIG_BUILDERS,
-    ...BASH_CONFIG_BUILDERS,
-    ...BIOME_CONFIG_BUILDERS,
-    ...COMMITS_CONFIG_BUILDERS,
-    ...CSS_CONFIG_BUILDERS,
-    ...DEPENDENCIES_CONFIG_BUILDERS,
-    ...DOCKER_CONFIG_BUILDERS,
-    ...DOCS_CONFIG_BUILDERS,
-    ...ESLINT_CONFIG_BUILDERS,
-    ...FORMAT_CONFIG_BUILDERS,
-    ...HTML_CONFIG_BUILDERS,
-    ...JSCONFIG_CONFIG_BUILDERS,
-    ...JSON_CONFIG_BUILDERS,
-    ...KNIP_CONFIG_BUILDERS,
-    ...MARKDOWN_CONFIG_BUILDERS,
-    ...NGINX_CONFIG_BUILDERS,
-    ...OPENAPI_CONFIG_BUILDERS,
-    ...PERIPHERY_CONFIG_BUILDERS,
-    ...POSTGRES_CONFIG_BUILDERS,
-    ...PROSE_CONFIG_BUILDERS,
-    ...PYTEST_CONFIG_BUILDERS,
-    ...PYTHON_CONFIG_BUILDERS,
-    ...SITE_CONFIG_BUILDERS,
-    ...SPELLING_CONFIG_BUILDERS,
-    ...SQL_CONFIG_BUILDERS,
-    ...STRUCTURE_CONFIG_BUILDERS,
-    ...SWIFTFORMAT_CONFIG_BUILDERS,
-    ...SWIFTLINT_CONFIG_BUILDERS,
-    ...TOML_CONFIG_BUILDERS,
-};
 
 const CONFIGS = Symbol('config files');
 
@@ -235,7 +175,7 @@ function buildConfigFile(
         ignoreSections: generated.ignoreSections,
         level: owner.session.settings.level,
     };
-    const builder = CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
+    const builder = selectConfigBuilder(planned.configuration, config.file);
     let built: ReturnType<ConfigBuilder>;
     if (builder === undefined) {
         const source = config.source;

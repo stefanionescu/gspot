@@ -6,6 +6,7 @@ import {
     GIT_BLOBS_ARGUMENTS,
     GIT_HEAD_ARGUMENTS,
     GIT_LS_TREE_ARGUMENTS,
+    GIT_SHALLOW_ARGUMENTS,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
     GIT_WRITE_TREE_ARGUMENTS,
     INDEX_LINE,
@@ -146,4 +147,9 @@ export async function readHead(root: string, cancelSignal?: AbortSignal): Promis
     const symbolic = await runGit(root, GIT_SYMBOLIC_HEAD_ARGUMENTS, options);
     if (symbolic.code !== 0) throw failure;
     return undefined;
+}
+
+export async function isShallowClone(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
+    const answer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
+    return answer.trim() === 'true';
 }

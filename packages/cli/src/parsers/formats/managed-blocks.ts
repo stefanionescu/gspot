@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 
-import { BLOCK_STYLES, FIRST_BLOCK_FILE, LEADING_NEWLINE, MARKERS } from '#cli/config/parsers.ts';
+import { BLOCK_STYLES, FIRST_BLOCK_FILE, LEADING_NEWLINE, MARKERS } from '#cli/config/parsers/formats.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { TextRange } from '#cli/types/system.ts';
 

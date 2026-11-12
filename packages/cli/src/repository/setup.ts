@@ -2,7 +2,7 @@ import { lstatSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
 import {
     AGENT_FILES,

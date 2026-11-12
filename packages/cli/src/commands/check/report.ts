@@ -17,8 +17,7 @@ import {
     UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/reports.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
-import { LINE_BREAK } from '#cli/config/parsers.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { formatCheckedContent } from '#cli/engine/report.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';

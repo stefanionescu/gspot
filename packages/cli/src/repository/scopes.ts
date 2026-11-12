@@ -1,6 +1,5 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { EVERY_FILE_GLOBS, LINT_FOLDERS } from '#cli/config/repository/setup.ts';
-import { FOLDER_CONTENTS, GLOB_EXCLUDE } from '#cli/config/system.ts';
+import { FOLDER_CONTENTS, GLOB_EXCLUDE, GSPOT_FOLDER } from '#cli/config/system.ts';
 import { listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { escapeGlob, findEnclosingFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';

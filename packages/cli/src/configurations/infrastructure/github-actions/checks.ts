@@ -17,7 +17,6 @@ import {
     ACTION_FILES,
     ENCODED_DOLLAR_SUFFIX,
     FLOATING_RUNNER,
-    GIT_FOLDER,
     GITHUB_FOLDER,
     PULL_REQUEST_TRIGGERS,
     SECRET_EXPRESSION,
@@ -27,8 +26,8 @@ import {
     WORKFLOW_EXPRESSION,
     WORKFLOW_SHAPE_MESSAGES,
     WORKFLOW_SHAPE_RULES,
-} from '#cli/config/configurations/infrastructure.ts';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
+} from '#cli/config/configurations/github-actions.ts';
+import { GIT_METADATA_NAME, PRIVATE_FILE } from '#cli/config/system.ts';
 import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
@@ -218,7 +217,7 @@ async function checkActionlint(session: CheckSession, planned: PlannedCheck): Pr
             ...actionFiles.keys(),
         ]),
     ]);
-    mkdirSync(join(scratch.path, GIT_FOLDER));
+    mkdirSync(join(scratch.path, GIT_METADATA_NAME));
     for (const [path, source] of replacements) {
         const target = join(scratch.path, path);
         chmodSync(target, PRIVATE_FILE);

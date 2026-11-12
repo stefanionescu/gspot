@@ -3,14 +3,13 @@ import { posix } from 'node:path';
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import picomatch from 'picomatch';
 
-import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import {
     DEFAULT_BOUNDARY_FOLDERS,
     IMPORT_BOUNDARY_OPTIONS_SCHEMA,
     RELATIVE_SPECIFIER,
     RESOURCE_QUERY,
 } from '../../config/structure.ts';
-import { findPathInFolder } from '../../language/modules.ts';
+import { findPathInFolder, findPathInRoot } from '../../language/modules.ts';
 import { buildSourceVisitors } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { ImportBoundariesOptions, RelativeImport } from '../../types/structure.ts';
@@ -85,10 +84,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         },
     },
     create(context, [options]) {
-        const relative = findPathInFolder(
-            (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
-            context.physicalFilename,
-        );
+        const relative = findPathInRoot(context);
         if (relative === undefined) return {};
         const { folders, aliases, externals } = options;
         const isExternal = picomatch([...externals], { dot: true });

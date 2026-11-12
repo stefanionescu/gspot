@@ -3,7 +3,7 @@ import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { LEADING_DOT_SLASH, MISSING_PATH_CODES } from '#cli/config/engine.ts';
-import { LINE_BREAK } from '#cli/config/parsers.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/run.ts';

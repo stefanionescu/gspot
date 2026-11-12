@@ -13,7 +13,7 @@ import {
     VERSION_GAP,
 } from '#cli/config/commands/reports.ts';
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
-import { VERSION_FLAG } from '#cli/config/repository/javascript.ts';
+import { VERSION_FLAG } from '#cli/config/repository/package-managers.ts';
 import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
@@ -34,7 +34,7 @@ import { compareText } from '#cli/system/text.ts';
 import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
-import { findMissingEnvironment } from '#cli/tools/uv.ts';
+import { findMissingEnvironment } from '#cli/tools/python-environment.ts';
 import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { CiState, DoctorReport, DoctorTool } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';

@@ -30,6 +30,10 @@ export const MODULE_SEPARATOR = '.';
 
 export const UNDEFINED_NAME = 'undefined';
 
+export const NUMERIC_SIGNS = new Set(['+', '-']);
+
+export const NUMERIC_VALUE_TYPES: ReadonlySet<string> = new Set(['number', 'bigint']);
+
 export const DRIVE_LETTER = /^[a-z]:/u;
 
 export const TRAILING_SLASH = /\/$/u;

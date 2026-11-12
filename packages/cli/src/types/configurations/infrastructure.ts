@@ -2,7 +2,7 @@ import type { AlterTableCmd } from '@pgsql/types';
 import type { Scalar } from 'yaml';
 import type { z } from 'zod';
 
-import type { WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/infrastructure.ts';
+import type { WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/github-actions.ts';
 import type { composeSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { NumberedLine, SqlFile, SqlNodeFields, SqlStatement } from '#cli/types/parsers.ts';

@@ -11,10 +11,10 @@ import {
 } from '#cli/config/engine.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { findToolName, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { canReadRuleExplanations } from '#cli/tools/rules.ts';
+import { canReadRuleExplanations } from '#cli/tools/rule-explanations.ts';
 import { type PlannedCheck, type RunSelection } from '#cli/types/engine/plan.ts';
 import type {
     BuiltInCheck,
@@ -56,7 +56,7 @@ export function formatExplainCommand(
     selectCheckCode: (check: Check) => CheckCode | undefined,
 ): string {
     const argumentsList = [finding.check];
-    const found = listChecksById(readConfigurations().values()).get(finding.check);
+    const found = readShippedChecks().get(finding.check);
     const code = found === undefined ? undefined : selectCheckCode(found.check);
     if (
         found !== undefined &&

@@ -1,9 +1,9 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+import { type TSESTree } from '@typescript-eslint/utils';
 
-import { MARKED_TEST_MODIFIERS, MAXIMUM_TIMER_DELAY, MOCHA_CONSTRUCTS } from '../../config/testing.ts';
+import { MAXIMUM_TIMER_DELAY, MOCHA_CONSTRUCTS } from '../../config/testing.ts';
 import { getLiteralValue } from '../../language/expressions.ts';
 import { listImportedModules } from '../../libraries/packages.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 
 export const noOverflowingTestTimeout = createRule<[], 'overflow'>({
@@ -31,14 +31,9 @@ export const noOverflowingTestTimeout = createRule<[], 'overflow'>({
                 node: TSESTree.CallExpression,
             ) {
                 const value = getLiteralValue(node.arguments[0], context.sourceCode);
-                const isInsideTest = context.sourceCode.getAncestors(node).some((ancestor) => {
-                    const call =
-                        ancestor.type === AST_NODE_TYPES.CallExpression
-                            ? getTestCall(ancestor, context.sourceCode)
-                            : undefined;
-                    const isMarked = call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
-                    return isMarked && MOCHA_CONSTRUCTS.has(call.name);
-                });
+                const isInsideTest = listEnclosingTestCalls(node, context.sourceCode).some(({ name }) =>
+                    MOCHA_CONSTRUCTS.has(name),
+                );
                 if (isInsideTest && typeof value === 'number' && value > MAXIMUM_TIMER_DELAY)
                     context.report({ node: node.arguments[0] ?? node, messageId: 'overflow' });
             },

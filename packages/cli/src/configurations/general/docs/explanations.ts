@@ -1,4 +1,4 @@
-import { DOCS_RULES } from '#cli/config/configurations/general.ts';
+import { DOCS_RULES } from '#cli/config/configurations/docs.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const MISSING_PATH_EXPLANATIONS = {

@@ -17,8 +17,8 @@ import {
     TSCONFIG_TSBUILDINFO,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/shared.ts';
-import { GSPOT_FOLDER, TSCONFIG_FILE } from '#cli/config/parsers.ts';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { GSPOT_FOLDER, PRIVATE_FILE } from '#cli/config/system.ts';
 import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';

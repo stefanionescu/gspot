@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { MARKED_TEST_MODIFIERS, TEST_AFTER_HOOK_NAMES } from '../../config/testing.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { TEST_AFTER_HOOK_NAMES } from '../../config/testing.ts';
+import { getMarkedTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { SuiteMember } from '../../types/testing.ts';
 
@@ -13,18 +13,16 @@ function listMembers(body: TSESTree.Statement[], source: TSESLint.SourceCode): S
             : [],
     );
     return calls.flatMap(({ call, index }) => {
-        const test = getTestCall(call, source);
-        const isMarked = test?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
-        return test === undefined || !isMarked
+        const test = getMarkedTestCall(call, source);
+        return test === undefined
             ? []
             : [{ call, index, kind: test.kind, isAfter: TEST_AFTER_HOOK_NAMES.has(test.name) }];
     });
 }
 
 function getSuiteBody(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Statement[] {
-    const suite = getTestCall(node, source);
-    const isMarked = suite?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
-    const body = isMarked && suite.kind === 'suite' ? suite.callback?.body : undefined;
+    const suite = getMarkedTestCall(node, source);
+    const body = suite?.kind === 'suite' ? suite.callback?.body : undefined;
     return body?.type === AST_NODE_TYPES.BlockStatement ? body.body : [];
 }
 

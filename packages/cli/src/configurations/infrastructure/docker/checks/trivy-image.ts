@@ -5,7 +5,7 @@ import {
     TRIVY_CONFIG_FILE,
     TRIVY_FINDINGS_EXIT_CODE,
     TRIVY_IMAGE_COMMAND,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/docker.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';

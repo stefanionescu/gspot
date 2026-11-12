@@ -9,6 +9,7 @@ import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -21,7 +22,6 @@ import {
     ROUTE_TYPES_COMMENT,
     UNRELATED_FILE,
 } from '#tests/config/configurations/framework.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';

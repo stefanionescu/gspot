@@ -1,10 +1,10 @@
 import { createTwoFilesPatch } from 'diff';
 
-import { BLOCK_ON_DISK_LABEL, DIFF_CONTEXT_LINES, ON_DISK_LABEL } from '#cli/config/generation.ts';
+import { BLOCK_ON_DISK_LABEL, DIFF_CONTEXT_LINES, ON_DISK_LABEL } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, OCTAL_RADIX } from '#cli/config/parsers.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { GSPOT_FOLDER, OCTAL_RADIX } from '#cli/config/system.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import { hasManagedKeys, listStrayPaths } from '#cli/repository/writer.ts';

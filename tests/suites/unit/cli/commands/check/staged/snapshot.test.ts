@@ -8,7 +8,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, type TestdirResult } from 'testdirs';
 
 import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { SCRIPT_SPACES, STAGED_PACKAGE_JSON, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check.ts';
 import { NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';

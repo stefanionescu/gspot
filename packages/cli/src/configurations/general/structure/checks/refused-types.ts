@@ -8,9 +8,10 @@ import {
     IMPORT_RULE_CHECK_RULES,
     PRIVATE_SWIFT_VISIBILITIES,
 } from '#cli/config/configurations/structure.ts';
-import { PACKAGE_SWIFT, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
+import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
+import { formatRefusedImport } from '#cli/configurations/general/structure/import-rules.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import { formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { RuleLookup } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

@@ -17,13 +17,13 @@ import type {
     settingExplanationSchema,
     settingsListSchema,
 } from '#cli/schemas/commands.ts';
-import type { CheckDescription, RunSelection, StageFilter } from '#cli/types/engine/plan.ts';
+import type { CheckDescription, RunSelection, SessionOptions, StageFilter } from '#cli/types/engine/plan.ts';
 import type { CheckProgress, PushInput, RunReport } from '#cli/types/engine/run.ts';
 import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { Setting } from '#cli/types/manifests.ts';
-import type { PushedRevisions, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
-import type { InheritedSetting, Settings } from '#cli/types/settings.ts';
-import type { CanceledCommandJson, CommandResult, RunCache } from '#cli/types/system.ts';
+import type { PushedRevisions } from '#cli/types/repository.ts';
+import type { InheritedSetting } from '#cli/types/settings.ts';
+import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 export type PushReport = z.infer<typeof pushReportSchema>;
@@ -45,19 +45,15 @@ export type CheckOptions = {
     messageFile?: string | undefined;
     messageArgument?: string | undefined;
     verbose: boolean;
-    toolCache?: RunCache | undefined;
-    settings?: Settings | undefined;
-    listing?: RepositoryListing | undefined;
+    session?: Pick<SessionOptions, 'toolCache' | 'settings' | 'listing'>;
 };
 
 export type RevisionSource = {
-    toolsRoot: string;
+    session: Pick<SessionOptions, 'toolsRoot' | 'untracked' | 'unreadablePaths'>;
     selection: RunSelection & { content: 'index' | 'commit' };
-    untracked?: UntrackedFiles;
     started?: Date;
     dependencyNote?: string;
     missingToolsNote?: string;
-    unreadablePaths?: string[];
 };
 
 type CheckHook = (typeof CHECK_INPUT_HOOKS)[number];

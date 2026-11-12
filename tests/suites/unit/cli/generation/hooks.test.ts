@@ -9,7 +9,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
-import { selectStartRunner } from '#cli/repository/javascript/package-manager.ts';
+import { selectStartRunner } from '#cli/repository/version-pin.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { HOOK_CASES, START_COMMANDS } from '#tests/config/generation/files.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';

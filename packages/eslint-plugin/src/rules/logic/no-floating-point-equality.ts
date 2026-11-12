@@ -9,8 +9,8 @@ import {
     FLOAT_ARITHMETIC_OPERATORS,
     FRACTION_MARKER,
     RANGE_OPERATORS,
-    SIGNS,
 } from '../../config/logic.ts';
+import { NUMERIC_SIGNS } from '../../config/plugin.ts';
 import { haveSameTokens } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 
@@ -73,7 +73,7 @@ function isFloatingPoint(node: TSESTree.Node, source: TSESLint.SourceCode, seen:
             return isFloatingConstant(node, source, seen);
         }
         case AST_NODE_TYPES.UnaryExpression: {
-            return SIGNS.has(node.operator) && isFloatingPoint(node.argument, source, seen);
+            return NUMERIC_SIGNS.has(node.operator) && isFloatingPoint(node.argument, source, seen);
         }
         case AST_NODE_TYPES.BinaryExpression: {
             return isFloatingArithmetic(node, source, seen);

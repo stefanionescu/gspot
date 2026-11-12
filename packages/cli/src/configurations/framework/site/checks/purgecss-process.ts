@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';
 import { pathToFileURL } from 'node:url';
 
-import { PURGECSS_TOOL } from '#cli/config/configurations/framework.ts';
+import { PURGECSS_TOOL } from '#cli/config/configurations/site.ts';
 import type { PurgecssConstructor, PurgecssRequest } from '#cli/types/configurations/language.ts';
 
 const executable = process.argv[2] as string;

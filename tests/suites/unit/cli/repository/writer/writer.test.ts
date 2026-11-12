@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';

@@ -1,7 +1,7 @@
 import { parseDocument, parse as parseToml, patch } from '@decimalturn/toml-patch';
 import type { z } from 'zod';
 
-import { MESSAGE_END, MISSING_RANGE_MESSAGE, PATCH_FORMAT, TABLE_PROPERTY_FLAGS } from '#cli/config/parsers.ts';
+import { MESSAGE_END, MISSING_RANGE_MESSAGE, PATCH_FORMAT, TABLE_PROPERTY_FLAGS } from '#cli/config/parsers/formats.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { findValueAt, isTable, normalizeTables } from '#cli/system/tables.ts';
 import type {

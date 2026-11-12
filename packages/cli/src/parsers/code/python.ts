@@ -1,6 +1,6 @@
 import { type Node } from 'web-tree-sitter';
 
-import { DOCSTRING_PREFIXES, PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers.ts';
+import { DOCSTRING_PREFIXES, PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/code.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { remember } from '#cli/system/cache.ts';
 import { readText } from '#cli/system/files/reads.ts';

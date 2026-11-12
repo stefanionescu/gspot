@@ -1,19 +1,11 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import http from 'node:http';
 import { dirname, join, posix } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import {
-    CONFIG_FLAG,
-    JSON_INDENT,
-    NETWORK_ADVICE,
-    NODE_PROXY_ADVICE,
-    PROXY_VARIABLES,
-} from '#cli/config/tools/installers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { CONFIG_FLAG, JSON_INDENT } from '#cli/config/tools/installers.ts';
 import {
     VALE_ARCHIVE_LIMIT,
     VALE_DOWNLOAD_NAME,
@@ -27,21 +19,13 @@ import {
     VALE_TOOL,
 } from '#cli/config/tools/vale.ts';
 import { getTool } from '#cli/manifests/read.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildToolAvailability, inspectTool } from '#cli/tools/inspect.ts';
-import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import type { ArchiveDownload, DownloadSession, ToolInstall } from '#cli/types/tools.ts';
-
-function selectProxyAdvice(): string {
-    if (PROXY_VARIABLES.every((name) => readEnvironmentVariable(name) === undefined)) return NETWORK_ADVICE;
-    if (!('setGlobalProxyFromEnv' in http)) return NODE_PROXY_ADVICE;
-    http.setGlobalProxyFromEnv();
-    return NETWORK_ADVICE;
-}
+import { downloadArchive, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import type { ToolInstall } from '#cli/types/tools.ts';
 
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
     const packages: string[] = [];
@@ -64,27 +48,6 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
         packages.push(convertToPosixPath(path));
     }
     return packages;
-}
-
-async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
-    const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();
-    if (reader === undefined) throw new GspotError('install', `${url} sent no content for ${name}.`);
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    try {
-        for (;;) {
-            const { done, value } = await reader.read();
-            if (done) return Buffer.concat(chunks);
-            size += value.length;
-            if (size > limit) {
-                await reader.cancel();
-                throw new GspotError('install', `${url} exceeds the size limit for ${name}.`);
-            }
-            chunks.push(value);
-        }
-    } finally {
-        reader.releaseLock();
-    }
 }
 
 export function hasValePackages(root: string): boolean {
@@ -131,26 +94,5 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
         return `installed Vale packages in ${GSPOT_PATHS.valePackages}`;
     } finally {
         rmSync(temporary, { recursive: true, force: true });
-    }
-}
-
-export async function downloadArchive(session: DownloadSession, download: ArchiveDownload): Promise<Buffer> {
-    const advice = selectProxyAdvice();
-    try {
-        const signals = [AbortSignal.timeout(session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND)];
-        if (session.cancelSignal !== undefined) signals.push(session.cancelSignal);
-        const response = await fetch(download.url, { signal: AbortSignal.any(signals) });
-        if (!response.ok)
-            throw new GspotError(
-                'install',
-                `Cannot download ${download.name} ${download.url} (HTTP ${String(response.status)}).`,
-            );
-        return await readBoundedArchive(response, download);
-    } catch (error) {
-        session.cancelSignal?.throwIfAborted();
-        if (error instanceof GspotError) throw error;
-        throw new GspotError('install', `Cannot download ${download.name} ${download.url}. ${advice}`, {
-            cause: error,
-        });
     }
 }

@@ -3,7 +3,8 @@ import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 
 import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/configurations/structure.ts';
-import { PACKAGE_SWIFT, PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/parsers.ts';
+import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+import { PACKAGE_SWIFT, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { readText } from '#cli/system/files/reads.ts';

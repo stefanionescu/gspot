@@ -15,7 +15,7 @@ import {
     TOOL_KINDS,
     VALID_UNICODE_MESSAGE,
 } from '#cli/config/manifests.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { commandSchema, outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { ToolInstallers } from '#cli/types/manifests.ts';

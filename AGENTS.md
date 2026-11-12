@@ -98,19 +98,19 @@ Do not edit the files that gspot writes. `gspot/generated-files` reports an edit
 ## Folders
 
 These rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/`. Here they override
-three shipped rules:
+four shipped rules:
 
 - NAMING.md says "Prefer feature folders to top-level type buckets."
 - ZOD.md says "Put a runtime schema with the feature that owns the contract."
 - TESTING.md says "Put builders, fakes, servers, and database code in one folder beside the tests." Here they sit in
   `tests/setup/`, one subfolder per job.
+- WORKING.md says "Keep one implementation of each concept, and one copy of each table of values, in the module that
+  uses it." Here a fixed value sits in `config/`, also when one module reads it.
 
 ### Values, types, and schemas
 
-- Keep a fixed value, type, or runtime schema at the top of the module that reads it, as WORKING.md says. When two or
-  more modules read it, keep it in `config/`, `types/`, or `schemas/`. A value computed at import time stays with the
-  behavior that uses it.
-- Move a value only when you change the code that reads it. Do not move values in a separate sweep.
+- Keep each fixed value, type, and runtime schema in `config/`, `types/`, or `schemas/`, also when one module reads
+  it. A value computed at import time stays with the behavior that uses it.
 - Each of those folders holds one file per layer, such as `config/<layer>.ts`:
     - The CLI layers follow the folders under "Commands and layers." Layer `main` serves `main.ts`, `bin.ts`, and
       `reference.ts`.
@@ -122,6 +122,9 @@ three shipped rules:
 - A tool's rule table that a settings schema reads sits in the `manifest.toml` of the configuration that owns the tool.
 - A file splits only when it passes the file length limit. It then becomes a folder `<layer>/` with one file per topic,
   such as `packages/cli/src/config/configurations/naming.ts`. A topic is a subfolder of the layer or one subject.
+- In `config/configurations/`, the values of one configuration sit in the file of that configuration, such as
+  `postgres.ts`. A configuration with fewer than about ten values keeps them in the file of its group.
+- A value that several configurations read sits in the group file, such as `framework.ts`, or in `shared.ts`.
 - Merge a small topic into the closest topic file. No file in these folders holds a single export or takes the name of
   its folder.
 - Infer each type that a schema describes from that schema: `z.infer<typeof schema>`, or `z.input` for the value before

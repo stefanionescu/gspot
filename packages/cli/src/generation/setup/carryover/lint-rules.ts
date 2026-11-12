@@ -7,7 +7,7 @@ import {
     PRINT_TIMEOUT_SECONDS,
     RUFF_ALL_SELECTOR,
     RUFF_ANY_PREFIX,
-} from '#cli/config/repository/setup.ts';
+} from '#cli/config/generation/setup.ts';
 import { RUFF_IMPORT_ORDER_SELECTOR, RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { printedRulesSchema } from '#cli/schemas/generation.ts';

@@ -6,7 +6,7 @@ import { testdir } from 'testdirs';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildSecondaryToolEnvironment, runToolProcess } from '#cli/engine/tool-runs/tool.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';

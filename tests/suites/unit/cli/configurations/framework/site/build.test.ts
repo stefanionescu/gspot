@@ -4,15 +4,16 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/configurations/framework.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions, CHECK_GENERATION, createRunResources } from '#tests/setup/cli/run.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

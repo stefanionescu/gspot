@@ -1,4 +1,4 @@
-import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { Parsed } from '#cli/types/parsers.ts';

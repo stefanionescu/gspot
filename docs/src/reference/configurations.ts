@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 
 import { CLI_REFERENCE } from '#cli/reference.ts';
+import type { CliReference } from '#cli/types/main.ts';
 import {
     ALL_FILES_LABEL,
     ALWAYS_SELECTED_MESSAGE,
@@ -33,7 +34,6 @@ import {
 } from '#docs/reference/markdown.ts';
 import { formatSettingLink } from '#docs/reference/settings.ts';
 import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
-import type { CliReference } from '#docs/types/reference.ts';
 
 const LOCAL_FILES_MESSAGE = '`repository/local-files` reports a tracked file at these paths.';
 

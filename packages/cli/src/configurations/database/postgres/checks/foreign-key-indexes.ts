@@ -1,4 +1,4 @@
-import { FOREIGN_KEY_INDEX_RULE } from '#cli/config/configurations/infrastructure.ts';
+import { FOREIGN_KEY_INDEX_RULE } from '#cli/config/configurations/postgres.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { getPosition } from '#cli/system/text.ts';

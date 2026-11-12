@@ -1,12 +1,12 @@
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
     COMMIT_MESSAGE_PATH_LINES,
+    HOOK_PROGRAM_MISSING,
     LFS_MISSING_GUARD,
     PUSH_INPUT_REPLAY,
     PUSH_INPUT_SAVE,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { HOOK_PROGRAM_MISSING } from '#cli/config/repository/javascript.ts';
 import { HOOK_SHEBANG, LFS_HOOKS } from '#cli/config/repository/setup.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { quoteArgument } from '#cli/system/text.ts';

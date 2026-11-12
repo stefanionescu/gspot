@@ -4,14 +4,13 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import type ts from 'typescript';
 
 import {
-    GSPOT_FOLDER,
     MISSING_EXTENDED_CONFIG,
     TS_EMPTY_FILES_CODE,
     TS_NO_FILES_CODE,
     TS_UNKNOWN_VALUE_CODE,
     TSCONFIG_FILE,
-} from '#cli/config/parsers.ts';
-import { NODE_MODULES } from '#cli/config/system.ts';
+} from '#cli/config/parsers/projects.ts';
+import { GSPOT_FOLDER, NODE_MODULES } from '#cli/config/system.ts';
 import { tsconfigSchema } from '#cli/schemas/parsers.ts';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';

@@ -4,7 +4,6 @@ import {
     ASSERT_MESSAGE_INDEX,
     BARE_RECEIVERS,
     BOOLEAN_KINDS,
-    EQUALITY_OPERATORS,
     INVERTED_OPERATORS,
     JASMINE_PACKAGES,
     JASMINE_SIZE_VERSION,
@@ -14,16 +13,16 @@ import {
     MATCHER_FAMILIES,
     MATCHER_TEMPLATES,
     NULLISH_KINDS,
-    NUMBER_TYPES,
     NUMERIC_MATCHERS,
     NUMERIC_NAME,
-    NUMERIC_SIGNS,
     OPERAND_KINDS,
+    STRICT_EQUALITY_OPERATORS,
     TEMPLATE_FIELD,
     TEXT_RECEIVER,
     VALUE_KINDS,
 } from '../../config/assertions/matchers.ts';
 import { VERSION_ALTERNATIVES, VERSION_PATTERN, VERSION_SPACES, VERSION_WILDCARD } from '../../config/libraries.ts';
+import { NUMERIC_SIGNS, NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
 import { compareVersions, readPackageFacts } from '../../libraries/packages.ts';
 import { createRule } from '../../rule.ts';
@@ -40,7 +39,7 @@ function getOperand(node: TSESTree.Node, source: TSESLint.SourceCode): string {
 function isNumeric(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const value =
         node.type === AST_NODE_TYPES.UnaryExpression && NUMERIC_SIGNS.has(node.operator) ? node.argument : node;
-    const isNumber = value.type === AST_NODE_TYPES.Literal && NUMBER_TYPES.has(typeof value.value);
+    const isNumber = value.type === AST_NODE_TYPES.Literal && NUMERIC_VALUE_TYPES.has(typeof value.value);
     return isNumber || NUMERIC_NAME.test(source.getText(value));
 }
 
@@ -69,7 +68,8 @@ function getBinarySuggestion(
     source: TSESLint.SourceCode,
 ): MatcherSuggestion | undefined {
     const isNegated = (node.operator === '===') !== isPositive;
-    if (EQUALITY_OPERATORS.has(node.operator)) return getEqualitySuggestion(node.left, node.right, isNegated, source);
+    if (STRICT_EQUALITY_OPERATORS.has(node.operator))
+        return getEqualitySuggestion(node.left, node.right, isNegated, source);
     if (node.operator === 'instanceof')
         return { kind: 'instance', received: node.left, expected: node.right, negated: !isPositive };
     const kind = NUMERIC_MATCHERS.get(isPositive ? node.operator : INVERTED_OPERATORS.get(node.operator));

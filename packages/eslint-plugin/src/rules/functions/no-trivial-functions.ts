@@ -12,6 +12,7 @@ import {
     TYPE_DECLARATIONS,
 } from '../../config/functions.ts';
 import { FUNCTION_NODES } from '../../config/plugin.ts';
+import { listChildren } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import { type TrivialFunctionsOptions } from '../../types/functions.ts';
 import { type FunctionNode } from '../../types/plugin.ts';
@@ -20,25 +21,14 @@ const EXPORT_REFERENCE_PARENTS: ReadonlySet<string> = new Set(['ExportSpecifier'
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
-function listChildNodes(
-    node: TSESTree.Node,
-    visitorKeys: Readonly<Record<string, readonly string[]>>,
-): TSESTree.Node[] {
-    return (visitorKeys[node.type] ?? []).flatMap((key) => {
-        const child: unknown = node[key as keyof TSESTree.Node];
-        if (Array.isArray(child)) return child.filter((nested: unknown) => nested !== null) as TSESTree.Node[];
-        return child !== null && typeof child === 'object' ? [child as TSESTree.Node] : [];
-    });
-}
-
-function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
+function countStatements(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): number {
     if (TYPE_DECLARATIONS.has(node.type)) return 0;
     if ('declare' in node && node.declare) return 0;
     const isExpressionBody =
         FUNCTION_NODES.has(node.type) && (node as FunctionNode).body.type !== AST_NODE_TYPES.BlockStatement;
     const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
     const own = Number(isExpressionBody || isStatement || EXECUTABLE_DECLARATIONS.has(node.type));
-    return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
+    return listChildren(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
 }
 
 function getOutermostValue(node: TSESTree.Expression): TSESTree.Expression {

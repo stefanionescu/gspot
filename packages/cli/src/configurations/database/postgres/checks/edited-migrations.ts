@@ -3,7 +3,7 @@ import {
     DRIFT_GUARD_RULE,
     FROZEN_EDIT_MESSAGE,
     FROZEN_RULE,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/postgres.ts';
 import {
     extractForwardText,
     readCommittedMigrations,

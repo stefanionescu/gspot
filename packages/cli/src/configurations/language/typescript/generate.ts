@@ -1,7 +1,7 @@
 import { DEFAULT_PROJECT_FILE_LIMIT, DEFAULT_PROJECT_LIMIT_OPTION } from '#cli/config/configurations/eslint/blocks.ts';
 import { ASTRO_FILES, ASTRO_SCRIPT_FILES } from '#cli/config/configurations/framework.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/configurations/language.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import {
     type ConfigurationBlocks,
     type ConfigurationBuilder,

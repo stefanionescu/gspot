@@ -8,7 +8,6 @@ import {
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { buildToolProjects } from '#cli/generation/generate.ts';
 import { listGeneratedChangeLines, writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
@@ -22,7 +21,6 @@ async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promi
     const { report } = await writeEveryGeneratedFile(session, writer);
     const { installed, missing, notes, steps } = await installTools(session, {
         writer,
-        generated: { files: buildToolProjects(session) },
         checkTools: listHostCheckTools(session),
     });
     const changes = listGeneratedChangeLines(report);

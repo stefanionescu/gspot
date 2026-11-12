@@ -21,20 +21,6 @@ export const UNINSTALLED_EXPO_MESSAGE =
 
 export const FAILED_CHECK_RULE = 'failed-check';
 
-export const CAUSE_MARKS = ['Please install', 'FATAL', 'Error:', '⨯'] as const;
-
-export const SHOWN_LINES = 3;
-
-export const MARKED_LINES = 2;
-
-export const NEXT_TYPEGEN_COMMAND = ['next', 'typegen'] as const;
-
-export const ASSET_GLOB_CALL = 'import.meta.glob';
-
-export const NEXT_PACKAGE = 'next';
-
-export const CI_ENVIRONMENT = { CI: '1' } as const;
-
 export const REACT_PACKAGE = 'react';
 
 export const REACT_DOM_PACKAGE = 'react-dom';
@@ -58,122 +44,7 @@ export const SVELTE_TSCONFIG_FLAG = '--tsconfig';
 
 export const SVELTE_CHECK_RULE = 'svelte-check';
 
-export const UNBUILT_SITE_NOTE = 'The site did not build.';
-
-export const BUILD_RULE = 'build';
-
-export const SITEMAP_LOCATION = /<loc>(?:\s*<!\[CDATA\[(?<cdata>[\s\S]*?)\]\]>\s*|(?<url>[^<]*))<\/loc>/gu;
-
-export const SITEMAP_EXTENSION = '.xml';
-
-export const SITEMAP_FILE = /^sitemap.*\.xml$/u;
-
-export const INDEX_PAGE = 'index.html';
-
-export const HTML_EXTENSION = '.html';
-
-export const LYCHEE_TOOL = 'lychee';
-
-export const LYCHEE_ARGUMENTS = [
-    '--offline',
-    '--include-fragments',
-    '--index-files',
-    'index.html',
-    '--fallback-extensions',
-    'html',
-    '--format',
-    'detailed',
-    '--no-progress',
-] as const;
-
-export const HTML_VALIDATE_TOOL = 'html-validate';
-
-export const HTML_VALIDATE_CONFIG_FLAG = '--config';
-
-export const HTML_VALIDATE_FORMATTER_FLAG = '--formatter';
-
-export const HTML_VALIDATE_OUTPUT = 'html-validate.json';
-
-export const CSS_EXTENSION = '.css';
-
-export const PURGECSS_PROCESS = 'purgecss-process';
-
-export const PURGECSS_CONTENT = ['**/*.html', '**/*.js'] as const;
-
-export const STYLE_EXTENSIONS = new Set(['.css', '.scss', '.sass', '.less']);
-
-export const STYLE_COMPONENTS = new Set(['.astro', '.vue', '.svelte']);
-
-export const STYLE_WHITESPACE = /\s+/gu;
-
-export const STYLE_SCOPING = /:where\(\.astro-[a-z\d-]+\)|\[data-(?:astro-cid|v)-[a-z\d-]+\]|\.svelte-[a-z\d-]+/giu;
-
-export const ROOT_FOLDER_FLAG = '--root-dir';
-
-export const REMAP_FLAG = '--remap';
-
 export const EXCLUDE_FLAG = '--exclude';
-
-export const UNLISTED_PAGE_MESSAGE = 'The build wrote this page, and the sitemap does not list it.';
-
-export const SITE_RULES = {
-    unusedSelector: 'unused-selector',
-    missingPage: 'missing-page',
-    unlistedPage: 'unlisted-page',
-    invalidUrl: 'invalid-url',
-} as const;
-
-export const PURGECSS_TOOL = 'purgecss';
-
-export const TEXT_EXTENSIONS = new Set([
-    '.htm',
-    '.html',
-    '.css',
-    '.scss',
-    '.js',
-    '.mjs',
-    '.jsx',
-    '.ts',
-    '.tsx',
-    '.astro',
-    '.vue',
-    '.svelte',
-    '.json',
-    '.webmanifest',
-    '.xml',
-    '.txt',
-    '.md',
-    '.mdx',
-    '.cjs',
-    '.mts',
-    '.cts',
-    '.less',
-    '.sass',
-    '.styl',
-    '.njk',
-    '.liquid',
-    '.hbs',
-    '.ejs',
-    '.pug',
-    '.toml',
-    '.yml',
-    '.yaml',
-]);
-
-export const ASSET_FOLDER = /(?:^|\/)(?:assets|public|static)\//u;
-
-export const UNUSED_ASSET_RULE = 'unused-asset';
-
-export const UNUSED_ASSET_MESSAGE = 'No page, stylesheet or script names this file.';
-
-export const CONVENTIONAL_ASSETS =
-    /(?:^|\/)(?:favicon\.ico|apple-touch-icon[^/]*\.png|CNAME|\.nojekyll|\.well-known\/.*)$/u;
-
-export const ASSET_REFERENCE_PREFIX = String.raw`(?<![\w./-])`;
-
-export const ASSET_REFERENCE_SUFFIX = String.raw`(?=$|[^\w./-])`;
-
-export const ALIAS_WILDCARD_SIDES = 2;
 
 export const REACT_RULES = {
     '@eslint-react/no-missing-component-display-name': 'error',
@@ -220,18 +91,6 @@ export const NESTJS_INJECTABLE_FILTER_PATHS = [
 export const SWAGGER_PACKAGE = '@nestjs/swagger';
 
 export const TS_PATTERN = '**/*.ts';
-
-export const NEXT_PAGES_FOLDERS = ['pages/', 'src/pages/'] as const;
-
-export const NEXT_RULES = {
-    '@next/next/no-html-link-for-pages': 'error',
-    '@next/next/no-async-client-component': 'error',
-    'gspot/require-server-only': 'error',
-} as const;
-
-export const NEXT_RULE_OPTIONS = { 'react-refresh/only-export-components': { extraHOCs: ['catchError'] } };
-
-export const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
 
 export const REACT_FILES = ['**/*.{js,jsx,ts,tsx}'] as const;
 
@@ -312,4 +171,4 @@ export const TRANSLATION_RULES = {
 
 export const REACT_NATIVE_CONFIGURATION = 'react-native';
 
-export const TYPESCRIPT_CONFIGURATION = 'typescript';
+export const NESTJS_CONFIGURATION = 'nestjs';

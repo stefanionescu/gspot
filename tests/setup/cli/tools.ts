@@ -4,9 +4,8 @@ import { join } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { buildToolInstall } from '#cli/tools/installers/install.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
@@ -34,9 +33,7 @@ export async function readToolProjectFiles(
 }
 
 export async function buildSandboxToolInstall(session: Session, writer: Files): Promise<ToolInstall> {
-    const generated = buildGeneratedFiles(session);
-    const checkTools = listHostCheckTools(session);
-    return await buildToolInstall(session, { writer, generated, checkTools, misePath: undefined });
+    return await buildToolInstall(session, { writer, checkTools: listHostCheckTools(session), misePath: undefined });
 }
 
 export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {

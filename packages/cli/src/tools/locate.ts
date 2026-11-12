@@ -4,8 +4,7 @@ import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import which from 'which';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
-import { PYTHON_ENVIRONMENT_FOLDER, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, LINE_BREAK, PYTHON_ENVIRONMENT_FOLDER, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
 import {
     MISE_BIN_PATHS_ARGUMENTS,
     MISE_CEILING_PATHS_VARIABLE,

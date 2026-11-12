@@ -9,7 +9,7 @@ import {
     GRAMMAR_RELEASES,
     SWIFT_EXTENSION,
     TAG_GRAMMARS,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/code.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { GRAMMAR_TOOL_NOUN } from '#cli/config/tools/installers.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
@@ -17,7 +17,7 @@ import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/gram
 import { GspotError } from '#cli/system/errors.ts';
 import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
 import { formatCount } from '#cli/system/text.ts';
-import { downloadArchive } from '#cli/tools/installers/vale.ts';
+import { downloadArchive } from '#cli/tools/installers/steps.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
 import type { RepositoryListing } from '#cli/types/repository.ts';
 import type { DownloadSession, ToolInstall } from '#cli/types/tools.ts';

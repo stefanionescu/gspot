@@ -4,7 +4,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
 import { CHECK_GENERATION } from '#cli/generation/checks.ts';
-import { assertCheckExists, listCheckIds, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { assertCheckExists, listCheckIds, readShippedChecks } from '#cli/manifests/read.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildArgumentPath, isInScope } from '#cli/system/paths.ts';
@@ -70,7 +70,7 @@ function assertNamedChecks(session: Session, options: Pick<CheckOptions, 'only' 
     const selected = session.scopes.flatMap((scope) =>
         scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
     );
-    const shipped = listChecksById(readConfigurations().values());
+    const shipped = readShippedChecks();
     const settings = session.settings;
     const commandChecks = Object.values(settings.commandChecks);
     const { skip = [], only = [] } = options;
@@ -147,10 +147,8 @@ export async function runTreeCheck(
     try {
         const session = await openSession(treeFolder, {
             toolsRoot: treeFolder,
-            ...revision,
-            toolCache: options.toolCache,
-            settings: options.settings,
-            listing: options.listing,
+            ...revision?.session,
+            ...options.session,
             resources,
             cancelSignal,
         });

@@ -14,8 +14,6 @@ export const DECIMAL_FACTOR = 5n;
 
 export const BINARY_FACTOR = 2;
 
-export const SIGNS = new Set(['-', '+']);
-
 export const RANGE_OPERATORS: ReadonlyMap<string, readonly string[]> = new Map([
     ['&&', ['<=', '>=']],
     ['||', ['<', '>']],
@@ -46,8 +44,6 @@ export const CONDITION_PARENTS: ReadonlySet<string> = new Set([
     'DoWhileStatement',
     'ConditionalExpression',
 ]);
-
-export const NUMERIC_VALUE_TYPES: ReadonlySet<string> = new Set(['number', 'bigint']);
 
 export const DEFAULT_SWITCH_CASES = 30;
 

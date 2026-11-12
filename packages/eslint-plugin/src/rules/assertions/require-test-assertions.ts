@@ -12,9 +12,9 @@ import {
     TEST_FRAMEWORK_IMPORTS,
 } from '../../config/assertions/evidence.ts';
 import { getTypes } from '../../language/checker.ts';
+import { listChildren } from '../../language/syntax.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { listChildNodes } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { AssertionSearch } from '../../types/assertions.ts';
 import type { TypeReader } from '../../types/plugin.ts';
@@ -110,7 +110,8 @@ function hasAssertion(node: TSESTree.Node, search: AssertionSearch): boolean {
     if (cached !== undefined) return cached;
     search.visited.set(node, false);
     const isFound =
-        isEvidence(node, search) || listChildNodes(node, search.source).some((child) => hasAssertion(child, search));
+        isEvidence(node, search) ||
+        listChildren(node, search.source.visitorKeys).some((child) => hasAssertion(child, search));
     search.visited.set(node, isFound);
     return isFound;
 }

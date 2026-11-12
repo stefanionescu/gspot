@@ -13,10 +13,10 @@ import {
     UNKNOWN_SUBJECT_CASES,
 } from '#tests/config/commands/reports.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { pathOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { pathOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a path explanation names its scope and kind, and shows the checks that the level turns off', async () => {

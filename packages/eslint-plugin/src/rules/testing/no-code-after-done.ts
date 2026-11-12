@@ -1,8 +1,8 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { FUNCTION_NODES } from '../../config/plugin.ts';
-import { DONE_STOP_STATEMENTS, MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
-import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
+import { DONE_STOP_STATEMENTS } from '../../config/testing.ts';
+import { getMarkedTestCall, listBodyNodes } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { TestCall } from '../../types/testing.ts';
 
@@ -59,9 +59,8 @@ export const noCodeAfterDone = createRule<[], 'afterDone'>({
         const source = context.sourceCode;
         return {
             CallExpression(node) {
-                const call = getTestCall(node, source);
-                const isTest =
-                    call?.kind === 'test' && call.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier));
+                const call = getMarkedTestCall(node, source);
+                const isTest = call?.kind === 'test';
                 const calls = isTest && call.callback === node.arguments[1] ? listDoneCalls(call.callback, source) : [];
                 const after = calls.map((done) => findCodeAfter(done, source)).find((each) => each !== undefined);
                 if (after !== undefined) context.report({ node: after, messageId: 'afterDone' });

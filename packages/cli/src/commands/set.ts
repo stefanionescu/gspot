@@ -6,7 +6,7 @@ import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
-import { findToolName, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
@@ -17,7 +17,7 @@ import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import { canReadRuleExplanations } from '#cli/tools/rules.ts';
+import { canReadRuleExplanations } from '#cli/tools/rule-explanations.ts';
 import type {
     CommandDefinition,
     ParsedSettingValue,
@@ -194,7 +194,7 @@ function findRulesCheck(edit: SettingsEditContext, key: string, change: ParsedSe
     if (tool === undefined || !isTable(change.value)) return undefined;
     const plugins = `tools.${tool}.plugins`;
     if (edit.session.scopes.some(({ settings }) => !isSettingEmpty(settings.valuesByKey[plugins]))) return undefined;
-    const owners = listChecksById(readConfigurations().values()).values();
+    const owners = readShippedChecks().values();
     return owners.find(({ check }) => findToolName(check)?.startsWith(tool))?.check;
 }
 

@@ -8,7 +8,6 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { buildToolProjects } from '#cli/generation/generate.ts';
 import { getTool } from '#cli/manifests/read.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
@@ -33,7 +32,6 @@ async function runBunInstall(root: string, installPackages: () => Promise<void>,
     });
     const result = await installTools(session, {
         writer: openFiles(root),
-        generated: { files: buildToolProjects(session) },
         checkTools: listHostCheckTools(session),
     });
     return { result, installs };
@@ -91,7 +89,6 @@ test('a failed mise install stops the install after the npm tool project, which 
     const error = await captureRejection(
         installTools(session, {
             writer: openFiles(sandbox.path),
-            generated: { files: buildToolProjects(session) },
             checkTools: listHostCheckTools(session),
         }),
     );

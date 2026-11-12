@@ -6,7 +6,7 @@ import {
     COMPOSE_OVERRIDE,
     COMPOSE_SUFFIXES,
     DOCKERIGNORE,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/docker.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';

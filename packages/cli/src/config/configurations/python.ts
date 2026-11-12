@@ -196,3 +196,5 @@ export const PYTHON_RULES = {
 } as const;
 
 export const REQUIREMENTS_FOLDER_FILE = /(?:^|\/)requirements\/[^/]+\.txt$/u;
+
+export const RUFF_CHECK = 'python/ruff';

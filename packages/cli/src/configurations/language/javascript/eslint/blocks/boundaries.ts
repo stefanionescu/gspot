@@ -16,9 +16,9 @@ import {
     UNKNOWN_IMPORT_POLICIES,
 } from '#cli/config/configurations/eslint/blocks.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
+import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
 import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { formatRefusedImport, listAllowedRules } from '#cli/settings/import-rules.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import type {
     EslintBlock,

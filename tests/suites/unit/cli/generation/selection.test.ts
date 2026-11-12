@@ -9,7 +9,7 @@ import ts from 'typescript';
 import { parse as parseYaml } from 'yaml';
 
 import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

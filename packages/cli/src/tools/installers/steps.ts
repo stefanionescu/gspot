@@ -1,17 +1,22 @@
+import http from 'node:http';
+
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import {
     MILLISECONDS_PER_DAY,
     NETWORK_ADVICE,
+    NODE_PROXY_ADVICE,
     NOT_FOUND_STATUS,
+    PROXY_VARIABLES,
     PYTHON_DEFAULT_INDEX_ORIGIN,
 } from '#cli/config/tools/installers.ts';
 import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import type { ToolInstall, ToolRelease } from '#cli/types/tools.ts';
+import type { ArchiveDownload, DownloadSession, ToolInstall, ToolRelease } from '#cli/types/tools.ts';
 
 /**
 Read the registry page of a release. A registry that gspot cannot reach, or that does not answer in time, gives no
@@ -46,6 +51,34 @@ async function readReleaseState(install: ToolInstall, release: ToolRelease): Pro
     if (published === undefined) return 'absent';
     const oldest = Date.now() - install.releaseAgeDays * MILLISECONDS_PER_DAY;
     return new Date(published).getTime() > oldest ? 'held' : undefined;
+}
+
+function selectProxyAdvice(): string {
+    if (PROXY_VARIABLES.every((name) => readEnvironmentVariable(name) === undefined)) return NETWORK_ADVICE;
+    if (!('setGlobalProxyFromEnv' in http)) return NODE_PROXY_ADVICE;
+    http.setGlobalProxyFromEnv();
+    return NETWORK_ADVICE;
+}
+
+async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
+    const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();
+    if (reader === undefined) throw new GspotError('install', `${url} sent no content for ${name}.`);
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    try {
+        for (;;) {
+            const { done, value } = await reader.read();
+            if (done) return Buffer.concat(chunks);
+            size += value.length;
+            if (size > limit) {
+                await reader.cancel();
+                throw new GspotError('install', `${url} exceeds the size limit for ${name}.`);
+            }
+            chunks.push(value);
+        }
+    } finally {
+        reader.releaseLock();
+    }
 }
 
 export async function runInstallStep(
@@ -90,6 +123,27 @@ export async function runRequiredInstallStep(
             `${name} failed (${exit}):\n${redactInstallOutput(result, [])}\n${readAdvice(result)}`,
         );
     return result;
+}
+
+export async function downloadArchive(session: DownloadSession, download: ArchiveDownload): Promise<Buffer> {
+    const advice = selectProxyAdvice();
+    try {
+        const signals = [AbortSignal.timeout(session.settings.tool_timeout_seconds * MILLISECONDS_PER_SECOND)];
+        if (session.cancelSignal !== undefined) signals.push(session.cancelSignal);
+        const response = await fetch(download.url, { signal: AbortSignal.any(signals) });
+        if (!response.ok)
+            throw new GspotError(
+                'install',
+                `Cannot download ${download.name} ${download.url} (HTTP ${String(response.status)}).`,
+            );
+        return await readBoundedArchive(response, download);
+    } catch (error) {
+        session.cancelSignal?.throwIfAborted();
+        if (error instanceof GspotError) throw error;
+        throw new GspotError('install', `Cannot download ${download.name} ${download.url}. ${advice}`, {
+            cause: error,
+        });
+    }
 }
 
 export function listPythonReleases(pins: readonly string[]): ToolRelease[] {

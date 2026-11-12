@@ -1,5 +1,5 @@
 import { STAGES } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON, PYPROJECT_TOML, TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckStatus } from '#cli/types/engine/run.ts';
 import type { CheckOutput } from '#cli/types/engine/tool-runs.ts';
@@ -55,8 +55,6 @@ export const GIT_HASH_FORMAT_ARGUMENTS = ['rev-parse', '--show-object-format'] a
 export const GIT_INIT_ARGUMENTS = ['init', '--quiet'] as const;
 
 export const GIT_PATH_ARGUMENTS = ['rev-parse', '--path-format=absolute', '--git-path'] as const;
-
-export const GIT_VERIFY_HEAD_ARGUMENTS = ['rev-parse', '--verify', 'HEAD'] as const;
 
 export const DEPENDENCY_REVISION_NOTE =
     'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.';

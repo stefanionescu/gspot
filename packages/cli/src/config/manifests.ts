@@ -1,6 +1,5 @@
 import cliPackage from '#cli-package' with { type: 'json' };
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { NODE_MODULES, OPERATING_SYSTEMS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, NODE_MODULES, OPERATING_SYSTEMS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 export const MISE_CONFIG_FILE = 'mise.toml';
 
@@ -173,3 +172,5 @@ export const BOUND_PREFIXES = { max_: 'raising', min_: 'lowering' } as const;
 export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
 
 export const PATH_ROLES = ['source', 'destination', 'build'] as const;
+
+export const SHEBANG_TAG = 'shebang:';

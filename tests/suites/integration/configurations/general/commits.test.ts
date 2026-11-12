@@ -6,12 +6,12 @@ import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 
 import { LICENSE } from '#tests/config/setup/configurations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { pushOutputSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { pushOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const COMMIT_MESSAGES = [

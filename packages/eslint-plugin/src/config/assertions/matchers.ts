@@ -21,7 +21,7 @@ export const VALUE_KINDS = new Set(['null', 'undefined', 'nan']);
 
 export const BOOLEAN_KINDS = new Set(['true', 'false']);
 
-export const EQUALITY_OPERATORS = new Set(['===', '!==']);
+export const STRICT_EQUALITY_OPERATORS = new Set(['===', '!==']);
 
 export const NUMERIC_MATCHERS: ReadonlyMap<string | undefined, string> = new Map([
     ['>', 'above'],
@@ -36,10 +36,6 @@ export const INVERTED_OPERATORS = new Map([
     ['<', '>='],
     ['<=', '>'],
 ]);
-
-export const NUMERIC_SIGNS = new Set(['+', '-']);
-
-export const NUMBER_TYPES = new Set(['number', 'bigint']);
 
 export const NUMERIC_NAME =
     /^[\w$.]*(?:amount|count|delta|depth|diff|duration|elapsed|height|index|length|level|limit|number|price|score|size|total|width)$/iu;

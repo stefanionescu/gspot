@@ -1,15 +1,15 @@
 import { dirname, join, relative } from 'node:path';
 
 import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { listCompilerFiles, runTsc, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';

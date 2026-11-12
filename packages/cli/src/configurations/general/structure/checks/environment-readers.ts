@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 
 import { READ_OUTSIDE_READER_RULE, UNNAMED_VARIABLE_LABEL } from '#cli/config/configurations/structure.ts';
-import { VARIABLE_NAME } from '#cli/config/parsers.ts';
+import { VARIABLE_NAME } from '#cli/config/parsers/code.ts';
 import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 import { findFunctionNode } from '#cli/parsers/code/bash.ts';
 import {

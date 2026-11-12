@@ -3,8 +3,8 @@ import { createRequire } from 'node:module';
 import { dirname, join, relative } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { NODE_TOOL } from '#cli/config/tools/installers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';

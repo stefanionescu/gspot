@@ -11,7 +11,7 @@ import {
     MARKDOWN_HEADING,
     RULE_OPENING_PREFIX,
     RULES_HEADING,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { FIRST_READ } from '#cli/config/settings/validation.ts';

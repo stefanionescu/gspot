@@ -1,4 +1,4 @@
-import { LEADING_COMMENTS } from '#cli/config/generation.ts';
+import { LEADING_COMMENTS } from '#cli/config/generation/setup.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';

@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
-import { LIBRARY_PATH, UNDEFINED_TYPE } from '../../config/types.ts';
+import { UNDEFINED_NAME } from '../../config/plugin.ts';
+import { LIBRARY_PATH } from '../../config/types.ts';
 import { getTypes } from '../../language/checker.ts';
 import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';
@@ -19,7 +20,7 @@ function isLocalDeclaration(node: TSESTree.TypeNode, types: TypeReader): boolean
 function hasAliasedUndefined(node: TSESTree.TypeNode, types: TypeReader): boolean {
     const type = types.checker.getTypeAtLocation(types.map.get(node));
     const members = type.isUnion() ? type.types : [];
-    const undefinedCount = members.filter((member) => types.checker.typeToString(member) === UNDEFINED_TYPE).length;
+    const undefinedCount = members.filter((member) => types.checker.typeToString(member) === UNDEFINED_NAME).length;
     return undefinedCount > 0 && undefinedCount < members.length && isLocalDeclaration(node, types);
 }
 

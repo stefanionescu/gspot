@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/eslint/blocks.ts';
 import {
     HIDDEN_FILE_GLOB,
     KNIP_CHECK,
@@ -11,14 +10,15 @@ import {
     UNQUOTED_COMMENT,
 } from '#cli/config/configurations/javascript.ts';
 import { COMMAND_SEPARATORS } from '#cli/config/repository/setup.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listDistinctTools } from '#cli/manifests/read.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { getTable } from '#cli/settings/scopes.ts';

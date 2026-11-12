@@ -1,7 +1,7 @@
 import { type Node, Query } from 'web-tree-sitter';
 
 import { SOURCE_QUERIES } from '#cli/config/configurations/structure.ts';
-import { SCRIPT_TAG } from '#cli/config/parsers.ts';
+import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
 import { findGrammarByExtension, visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import type { ParsedLanguage, ParsedSource } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

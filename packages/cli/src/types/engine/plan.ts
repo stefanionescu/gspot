@@ -3,7 +3,7 @@ import type { z } from 'zod';
 import type { SKIP_CAUSES, STAGE_FILTERS } from '#cli/config/engine.ts';
 import type { checkStateSchema } from '#cli/schemas/engine.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
-import type { RepositoryListing, TrackedFile, UntrackedFiles } from '#cli/types/repository.ts';
+import type { RepositoryListing, StartRunner, TrackedFile, UntrackedFiles } from '#cli/types/repository.ts';
 import type { Defined, Scope, Settings, TableValues } from '#cli/types/settings.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import type { Host, ScopeCheck, Session, SessionBase } from '#cli/types/tools.ts';
@@ -97,6 +97,7 @@ export type SessionOptions = {
     unreadablePaths?: string[] | undefined;
     resources?: Disposable[];
     cancelSignal?: AbortSignal | undefined;
+    startRunner?: StartRunner | undefined;
 };
 
 export type ConfigurationTables = Defined<

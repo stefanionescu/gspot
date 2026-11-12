@@ -18,7 +18,7 @@ import type {
     Tool,
 } from '#cli/types/manifests.ts';
 
-const shipped: { configurations?: Map<string, Configuration> } = {};
+const shipped: { configurations?: Map<string, Configuration>; checks?: Map<string, ConfigurationCheck> } = {};
 
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
     const toolsByName = new Map(
@@ -96,10 +96,24 @@ export function readConfigurations(): ReadonlyMap<string, Configuration> {
     return configurations;
 }
 
+export function listChecksById(configurations: Iterable<Configuration>): Map<string, ConfigurationCheck> {
+    const checks = new Map<string, ConfigurationCheck>();
+    for (const configuration of configurations) {
+        for (const check of configuration.checks) {
+            checks.set(check.id, { check, configuration });
+        }
+    }
+    return checks;
+}
+
+export function readShippedChecks(): ReadonlyMap<string, ConfigurationCheck> {
+    shipped.checks ??= listChecksById(readConfigurations().values());
+    return shipped.checks;
+}
+
 export function listCheckIds(checks: ReadonlyArray<Pick<Check, 'id'>>): string[] {
-    const shipped = listChecksById(readConfigurations().values()).keys().toArray();
     const authored = checks.map((check) => check.id);
-    return [...shipped, ...authored];
+    return [...readShippedChecks().keys(), ...authored];
 }
 
 export function listRuleFiles(configuration: Configuration): ShippedRule[] {
@@ -110,16 +124,6 @@ export function listRuleFiles(configuration: Configuration): ShippedRule[] {
         group,
         path: posix.basename(source),
     }));
-}
-
-export function listChecksById(configurations: Iterable<Configuration>): Map<string, ConfigurationCheck> {
-    const checks = new Map<string, ConfigurationCheck>();
-    for (const configuration of configurations) {
-        for (const check of configuration.checks) {
-            checks.set(check.id, { check, configuration });
-        }
-    }
-    return checks;
 }
 
 export function listDistinctTools(configurations: Configuration[]): Tool[] {

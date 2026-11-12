@@ -1,4 +1,4 @@
-import { WORKFLOW_SHAPE_MESSAGES, WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/infrastructure.ts';
+import { WORKFLOW_SHAPE_MESSAGES, WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/github-actions.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const WORKFLOW_SHAPE_EXPLANATIONS = {

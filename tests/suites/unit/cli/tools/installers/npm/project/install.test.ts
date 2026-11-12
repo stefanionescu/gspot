@@ -5,10 +5,13 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { NPM_TOOL_PROJECT } from '#cli/config/generation.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { LOCKFILE_CREDENTIAL_MESSAGE, NPM_LOCKFILE_CREDENTIAL_MESSAGE } from '#cli/config/tools/installers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import {
+    LOCKFILE_CREDENTIAL_MESSAGE,
+    NPM_LOCKFILE_CREDENTIAL_MESSAGE,
+    NPM_TOOL_PROJECT,
+} from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installNpmTools, installUnlockedNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';

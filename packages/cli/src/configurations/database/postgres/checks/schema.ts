@@ -5,7 +5,7 @@ import {
     DISABLED_OPTION_VALUES,
     SCHEMA_NAME_INDEX,
     SECURITY_INVOKER_OPTION,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/postgres.ts';
 import {
     applyAlterFunction,
     applyCreateFunction,

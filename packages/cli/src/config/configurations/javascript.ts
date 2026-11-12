@@ -248,4 +248,8 @@ export const JAVASCRIPT_TSC_COMMAND = ['tsc', '-p'] as const;
 
 export const JSCONFIG_TSBUILDINFO = 'jsconfig.check.tsbuildinfo';
 
-export const NEXTJS_CONFIGURATION = 'nextjs';
+export const LOCAL_PATH_PREFIX = './';
+
+export const PATHS_BASE_OPTION = 'pathsBasePath';
+
+export const IMPORT_CONDITIONS = new Set(['node', 'import', 'default']);

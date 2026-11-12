@@ -2,6 +2,8 @@ import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 export const GENERATOR_IGNORED_FOLDERS = [NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER] as const;
 
+export const SYNTAX_RULE = 'syntax';
+
 export const RULES = { stale: 'stale', missing: 'missing', untracked: 'untracked' } as const;
 
 export const TSC_REFERENCE_OUTPUT_FOLDER = 'typescript';
@@ -56,5 +58,3 @@ export const IGNORE_SECTION_TITLES = {
     submodules: 'Git submodules',
     gitignore: 'Paths that the tracked .gitignore files leave out',
 } as const;
-
-export const NESTJS_CONFIGURATION = 'nestjs';

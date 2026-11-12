@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { HOOKS_CHANGED_NOTE, STALE_LOCKFILE_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation.ts';
+import { HOOKS_CHANGED_NOTE, STALE_LOCKFILE_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatHeader } from '#cli/generation/header.ts';

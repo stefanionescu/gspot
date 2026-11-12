@@ -4,7 +4,7 @@ import { CODE_LANGUAGES, DEFAULT_PROJECT_FILES } from '#cli/config/configuration
 import { BASE_RULES } from '#cli/config/configurations/eslint/rules.ts';
 import { BOUNDARY_FOLDERS_CONSTANT } from '#cli/config/configurations/javascript.ts';
 import { MISE_TASKS_GLOB, NODE_SHEBANG_TAG } from '#cli/config/configurations/structure.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import { buildRuleOptions } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -16,8 +16,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath, escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedConfig, PlannedEslintFile } from '#cli/types/configurations/language.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { Config } from '#cli/types/repository.ts';
+import type { Config, Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 

@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 
 import type { z } from 'zod';
 
-import { DETECTED_SETTINGS } from '#cli/config/generation.ts';
+import { DETECTED_SETTINGS } from '#cli/config/generation/setup.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';

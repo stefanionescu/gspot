@@ -7,11 +7,11 @@ import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import { SVELTE_CHECK_FINDINGS, SVELTE_CHECK_OUTPUT, SVELTE_PROJECTS } from '#tests/config/configurations/framework.ts';
+import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { tsconfigSchema } from '#tests/setup/schemas.ts';
 import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 

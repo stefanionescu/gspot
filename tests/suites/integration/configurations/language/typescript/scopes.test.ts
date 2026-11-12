@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { LEVELS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -5,7 +5,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation.ts';
+import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation/setup.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { getTable } from '#cli/settings/scopes.ts';
@@ -13,9 +13,9 @@ import * as installers from '#cli/tools/installers/install.ts';
 import type { FormatSettings } from '#cli/types/configurations/language.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { runGspot, runInit } from '#tests/setup/cli/commands.ts';
+import { initOutputSchema } from '#tests/schemas/setup.ts';
+import { planSandboxInit, runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
 const FORMAT_FILE_CASES = [
@@ -277,7 +277,7 @@ test('init names only the script extension that the repository tracks, because g
         'run.sh': 'main() {\n    echo ready\n}\n',
         'source.ts': 'export {};\n',
     });
-    const { settings } = await runInit(sandbox.path, ['--configurations', 'format']);
+    const { settings } = await planSandboxInit(sandbox.path, ['--configurations', 'format']);
     expect(settings).toHaveProperty('format.override', [{ paths: ['**/*.sh'], indent_width: 4 }]);
 });
 

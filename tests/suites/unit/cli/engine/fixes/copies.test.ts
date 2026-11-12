@@ -7,7 +7,8 @@ import { expect, test } from 'bun:test';
 import { runFixers } from '#cli/engine/fixes.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildFixerSettings, CHECK_GENERATION, planFixer } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
+import { buildFixerSettings, planFixer } from '#tests/setup/cli/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
 

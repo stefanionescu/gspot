@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
 
-import { HADOLINT_FAILURE_THRESHOLD, TRIVY_SKIPPED_FOLDERS } from '#cli/config/configurations/infrastructure.ts';
+import { HADOLINT_FAILURE_THRESHOLD, TRIVY_SKIPPED_FOLDERS } from '#cli/config/configurations/docker.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';

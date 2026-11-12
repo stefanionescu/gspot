@@ -8,9 +8,9 @@ import {
     EDGE_SLASHES,
     EXCLUDE_ALL_LINES,
     IGNORE_PATTERN_FORMS,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/docker.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { listDockerInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 import { DOCKERIGNORE_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';

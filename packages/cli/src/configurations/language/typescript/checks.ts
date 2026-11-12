@@ -11,7 +11,7 @@ import {
     TSCONFIG_NAME,
     UNREADABLE_TSCONFIG_RULE,
 } from '#cli/config/configurations/language.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { TSCONFIG_EXPLANATIONS } from '#cli/configurations/language/typescript/explanations.ts';
 import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
 import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';

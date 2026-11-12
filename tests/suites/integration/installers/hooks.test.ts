@@ -7,16 +7,16 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_MISE_TOOL } from '#cli/config/repository/javascript.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
+import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runtimePinsSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';

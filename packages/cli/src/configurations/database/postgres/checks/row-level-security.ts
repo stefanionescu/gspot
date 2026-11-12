@@ -7,7 +7,7 @@ import {
     ROW_SECURITY_RULE,
     SECURITY_INVOKER_MESSAGE,
     SQL_COMMENT,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/postgres.ts';
 import {
     readParsedMigrations,
     selectFrozenMigrations,

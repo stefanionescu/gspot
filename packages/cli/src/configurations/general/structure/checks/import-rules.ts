@@ -17,17 +17,17 @@ import {
     PYTHON_MODULE_SUFFIXES,
     PYTHON_SOURCE_ROOTS,
     RELATIVE_IMPORT,
-    SWIFT_CONFIGURATION,
     UNCOVERED_FILE_MESSAGE,
 } from '#cli/config/configurations/structure.ts';
-import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers.ts';
+import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers/code.ts';
+import { SWIFT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listRefusedSwiftTypes } from '#cli/configurations/general/structure/checks/refused-types.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
+import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { formatRefusedImport, listAllowedRules } from '#cli/settings/import-rules.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';

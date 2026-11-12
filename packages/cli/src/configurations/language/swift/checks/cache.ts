@@ -32,7 +32,7 @@ import {
     XCODE_WORKSPACE_SUFFIX,
     XCODEBUILD_PROGRAM,
 } from '#cli/config/configurations/swift.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { MODE_BITS, PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';

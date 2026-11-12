@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
 
 import { GENERATOR_IGNORED_FOLDERS, RULES } from '#cli/config/configurations/shared.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
 import { buildFileCommandLines, expandCommand, replacePlaceholders } from '#cli/engine/tool-runs/placeholders.ts';

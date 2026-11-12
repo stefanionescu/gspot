@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { posix, resolve } from 'node:path';
 
-import { SWIFT_EXTENSION } from '#cli/config/parsers.ts';
+import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import {
     FILE_PREFIX_BYTES,
     GENERATED_ATTRIBUTE,

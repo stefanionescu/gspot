@@ -251,8 +251,6 @@ export const DEFAULT_DIALECT = 'bash';
 
 export const DOCKERFILE_EXTENSION = '.dockerfile';
 
-export const SHEBANG_TAG = 'shebang:';
-
 export const GENERATED_ATTRIBUTE = 'linguist-generated';
 
 export const SET_VALUES: ReadonlySet<string> = new Set(['set', 'true']);

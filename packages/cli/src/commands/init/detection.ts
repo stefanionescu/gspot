@@ -14,7 +14,7 @@ import {
     REPLACES_LABEL,
     UNCHECKED_FILES_SHOWN,
 } from '#cli/config/commands/edits.ts';
-import { GROUP_LABELS } from '#cli/config/generation.ts';
+import { GROUP_LABELS } from '#cli/config/generation/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { extractExtension } from '#cli/system/paths.ts';

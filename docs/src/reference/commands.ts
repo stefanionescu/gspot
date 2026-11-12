@@ -1,4 +1,5 @@
 import { CLI_REFERENCE } from '#cli/reference.ts';
+import { type CommandReference } from '#cli/types/main.ts';
 import {
     COMMANDS_OPENING,
     DEFINITION_HEADING,
@@ -12,7 +13,6 @@ import {
 } from '#docs/config/reference.ts';
 import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
 import { type ReferencePage } from '#docs/types/pages.ts';
-import { type CommandReference } from '#docs/types/reference.ts';
 
 function formatChoices(value: Pick<CommandReference['arguments'][number], 'choices' | 'default'>): string {
     const choices =

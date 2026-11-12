@@ -15,7 +15,7 @@ import {
     TRAP_EXPANSION_NODES,
     TRAP_SOURCE_ROWS,
     TRAP_STRING_ESCAPES,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/code.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ParseCache, ScriptSyntax, TrapScript } from '#cli/types/parsers.ts';
 

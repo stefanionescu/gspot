@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
 import { ORDERED_ASSERTIONS, ORDERED_EXPECT_METHODS } from '../../config/assertions/styles.ts';
-import { MARKED_TEST_MODIFIERS } from '../../config/testing.ts';
-import { getTestCall, isCallOf } from '../../libraries/testing.ts';
+import { isCallOf, listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { OrderedArguments } from '../../types/assertions.ts';
 
@@ -29,13 +28,6 @@ function getExpectArguments(node: TSESTree.CallExpression): OrderedArguments | u
     const [second] = node.arguments;
     const isOrdered = ORDERED_EXPECT_METHODS.has(method) && first !== undefined && second !== undefined;
     return isOrdered ? { first, second, format: `expect(actual).to.${method}(expected)` } : undefined;
-}
-
-function isInsideTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    return source.getAncestors(node).some((ancestor) => {
-        const call = ancestor.type === AST_NODE_TYPES.CallExpression ? getTestCall(ancestor, source) : undefined;
-        return call?.kind === 'test' && call.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier));
-    });
 }
 
 export const noInvertedAssertions = createRule<[], 'swap' | 'swapArguments'>({
@@ -65,7 +57,8 @@ export const noInvertedAssertions = createRule<[], 'swap' | 'swapArguments'>({
                 const ordered = getAssertArguments(node) ?? getExpectArguments(node);
                 const isInverted =
                     ordered?.first.type === AST_NODE_TYPES.Literal && ordered.second.type !== AST_NODE_TYPES.Literal;
-                if (!isInverted || !isInsideTest(node, source)) return;
+                const isInsideTest = listEnclosingTestCalls(node, source).some(({ kind }) => kind === 'test');
+                if (!isInverted || !isInsideTest) return;
                 const { first, second, format } = ordered;
                 context.report({
                     node: second,

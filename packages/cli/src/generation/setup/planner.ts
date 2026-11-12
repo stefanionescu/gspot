@@ -1,8 +1,8 @@
 import { CODE_LANGUAGES } from '#cli/config/configurations/eslint/blocks.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { openSession } from '#cli/engine/session.ts';
+import { listSessionFiles, openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readCarryover } from '#cli/generation/setup/carryover/read.ts';
 import { deleteConflictingConfigs, readConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
@@ -12,13 +12,13 @@ import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/set
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { buildStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import { listLintCommands, listOtherFormatScripts } from '#cli/repository/lint-commands.ts';
+import { detectPackageManager } from '#cli/repository/package-manager.ts';
 import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
-import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
+import { readRepository } from '#cli/repository/read.ts';
 import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
-import { readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/version-pin.ts';
+import { buildStartRunner, readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/version-pin.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { readSettings } from '#cli/settings/read.ts';
@@ -26,7 +26,6 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
-import { downloadSwiftGrammar } from '#cli/tools/installers/grammars.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type {
@@ -37,10 +36,8 @@ import type {
     PlannedSettings,
     SettingsDraft,
 } from '#cli/types/generation.ts';
-import type { ConflictingConfig, Repository, RepositoryListing } from '#cli/types/repository.ts';
+import type { ConflictingConfig, Repository, StartRunner } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 type SettingsPlan = {
     root: string;
@@ -48,24 +45,29 @@ type SettingsPlan = {
     repository: Repository;
     conflictingConfigs: ConflictingConfig[];
     sessionOptions: Pick<SessionOptions, 'cache' | 'listing'>;
+    startRunner: StartRunner | undefined;
 };
 
-function choosePin(root: string, planned: Session): Pick<InitPlanning, 'session' | 'pinPath'> {
-    if (readGspotPin(root) !== undefined) return { session: planned, pinPath: undefined };
+/**
+Choose where init pins gspot, and the runner that starts it from that pin. A repository that already pins gspot gets
+no pin, and its session selects the runner.
+*/
+function choosePin(
+    root: string,
+    repository: Repository,
+): Pick<SessionOptions, 'startRunner'> & Pick<InitPlanning, 'pinPath'> {
+    if (readGspotPin(root) !== undefined) return { startRunner: undefined, pinPath: undefined };
     const manifest = readPackageJson(root, PACKAGE_JSON);
     const hasManifest =
         manifest !== undefined &&
         (Object.keys({ ...manifest.dependencies, ...manifest.devDependencies }).length > 0 ||
-            planned.repository.files.some(({ tags }) => CODE_LANGUAGES.some((tag) => tags.includes(tag))));
+            repository.files.some(({ tags }) => CODE_LANGUAGES.some((tag) => tags.includes(tag))));
     const runner = hasManifest ? detectPackageManager(root, []).name : 'mise';
-    return {
-        session: { ...planned, startRunner: buildStartRunner(runner, root) },
-        pinPath: hasManifest ? PACKAGE_JSON : MISE_CONFIG_FILE,
-    };
+    return { startRunner: buildStartRunner(runner, root), pinPath: hasManifest ? PACKAGE_JSON : MISE_CONFIG_FILE };
 }
 
 async function planSettings(plan: SettingsPlan): Promise<PlannedSettings & Pick<SettingsDraft, 'template'>> {
-    const { root, draft, repository, conflictingConfigs, sessionOptions } = plan;
+    const { root, draft, repository, conflictingConfigs, sessionOptions, startRunner } = plan;
     const first = readSettings(buildInitSettings(draft, repository), root);
     const session = await openSession(root, { settings: first, ...sessionOptions });
     const configurations = session.toolConfigurations;
@@ -86,17 +88,9 @@ async function planSettings(plan: SettingsPlan): Promise<PlannedSettings & Pick<
         carryover,
         settingsText,
         settings,
-        planned: await openSession(root, { settings, ...sessionOptions }),
+        session: await openSession(root, { settings, ...sessionOptions, startRunner }),
         template: draft.template,
     };
-}
-
-async function readPlannedRepository(cache: RunCache): Promise<{ listing: RepositoryListing; repository: Repository }> {
-    const listing = await listRepositoryFiles(cache);
-    await downloadSwiftGrammar(listing, {
-        settings: { tool_timeout_seconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined) },
-    });
-    return { listing, repository: await readRepository(cache, listing, { generatedPaths: [], scopes: [] }) };
 }
 
 /**
@@ -104,19 +98,22 @@ Read the repository and work out what init writes, replaces, and leaves. It chan
 */
 export async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const cache = createRunCache(root);
-    const { listing, repository } = await readPlannedRepository(cache);
+    const defaults = { tool_timeout_seconds: rootSettingSchemas.tool_timeout_seconds.parse(undefined) };
+    const listing = await listSessionFiles(cache, { settings: defaults });
+    const repository = await readRepository(cache, listing, { generatedPaths: [], scopes: [] });
     const proposed = selectProposedConfigurations({ repository, options });
     const repositorySetup = await readRepositorySetup(cache, repository);
     const prettierScripts = await readPrettierScripts(root, repository.files, proposed.scopes);
     const trackedPaths = [...includeParentFolders(repository.files.map(({ path }) => path))];
-    const { carryover, settingsText, settings, planned, template } = await planSettings({
+    const { startRunner, pinPath } = choosePin(root, repository);
+    const { carryover, settingsText, settings, session, template } = await planSettings({
         root,
         draft: buildSettingsDraft(proposed, options, { prettierScripts, trackedPaths }),
         repository,
         conflictingConfigs: repositorySetup.conflictingConfigs,
         sessionOptions: { cache, listing },
+        startRunner,
     });
-    const { session, pinPath } = choosePin(root, planned);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const detected = [...new Set(repositorySetup.conflictingConfigs.map(({ tool }) => tool))].toSorted(compareText);
@@ -126,6 +123,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         managedKeys: generated.managedKeys,
         prettierScripts,
     });
+    const lintSearch = { root, files: repository.files, ...listReplacedTools(applicable) };
     const planning: InitScan = {
         repository: session.repository,
         repositorySetup,
@@ -135,10 +133,7 @@ export async function planInit(root: string, options: InitOptions): Promise<Init
         conflicts,
         template,
         pinPath,
-        lintCommands: [
-            ...listLintCommands({ root, files: repository.files, ...listReplacedTools(applicable) }),
-            ...listOtherFormatScripts({ root, files: repository.files, ...listReplacedTools(applicable) }),
-        ],
+        lintCommands: [...listLintCommands(lintSearch), ...listOtherFormatScripts(lintSearch)],
         carryover: carryover.rows,
         crlfPaths: await listCrlfIndexPaths(root),
     };

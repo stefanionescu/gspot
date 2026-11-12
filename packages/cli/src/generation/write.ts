@@ -2,16 +2,16 @@ import { dirname } from 'node:path';
 
 import {
     CHANGE_LABEL_WIDTH,
-    GENERATED_FILE_NOUN,
     HOOKS_CHANGED_NOTE,
     STALE_LOCKFILE_NOTE,
     TOOL_PROJECT_FILES,
     TOOLS_CHANGED_NOTE,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/files.ts';
+import { GENERATED_FILE_NOUN } from '#cli/config/generation/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
 import { INSTALLED_TOOL_FOLDERS, OWNER_WRITABLE_FILE, TEMPORARY_FILE_NAME } from '#cli/config/repository/setup.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import { listExpectedPaths } from '#cli/generation/stale.ts';

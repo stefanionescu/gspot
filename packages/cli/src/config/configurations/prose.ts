@@ -1,4 +1,4 @@
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 
 export const VALE_ARGUMENTS = ['--no-global', '--output', 'JSON', '--no-exit'] as const;
 

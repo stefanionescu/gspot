@@ -3,6 +3,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 import { FUNCTION_NODES } from '../config/plugin.ts';
 import {
     CALL_STEP,
+    MARKED_TEST_MODIFIERS,
     PLAYWRIGHT_SUITE_MODES,
     RUNNING_TEST_MODIFIERS,
     TABLE_DEPENDENCIES,
@@ -16,6 +17,7 @@ import {
     TEST_KINDS,
 } from '../config/testing.ts';
 import { findFunction } from '../language/functions.ts';
+import { listChildren } from '../language/syntax.ts';
 import type { FileContext } from '../types/plugin.ts';
 import type { TableCall, TestCall, TestCallee, TestOrigin } from '../types/testing.ts';
 import { getRequiredModule, isModuleUsed } from './packages.ts';
@@ -111,10 +113,16 @@ export function isPlaywrightSuite(node: TSESTree.Node): boolean {
         : PLAYWRIGHT_SUITE_MODES.has(name) && isPlaywrightSuite(node.object);
 }
 
-export function listChildNodes(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
-    const keys = source.visitorKeys[node.type] ?? [];
-    const values = keys.flatMap((key): unknown => node[key as keyof TSESTree.Node]);
-    return values.filter((value): value is TSESTree.Node => value !== null && typeof value === 'object');
+/**
+Get the test runner call at a node when each of its modifiers marks the call to run alone or to be skipped.
+*/
+export function getMarkedTestCall(node: TSESTree.Node, source: TSESLint.SourceCode): TestCall | undefined {
+    const call = node.type === AST_NODE_TYPES.CallExpression ? getTestCall(node, source) : undefined;
+    return call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true ? call : undefined;
+}
+
+export function listEnclosingTestCalls(node: TSESTree.Node, source: TSESLint.SourceCode): TestCall[] {
+    return source.getAncestors(node).flatMap((ancestor) => getMarkedTestCall(ancestor, source) ?? []);
 }
 
 export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
@@ -123,7 +131,7 @@ export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode):
     let node = pending.pop();
     while (node !== undefined) {
         nodes.push(node);
-        const children = listChildNodes(node, source).filter((child) => !FUNCTION_NODES.has(child.type));
+        const children = listChildren(node, source.visitorKeys).filter((child) => !FUNCTION_NODES.has(child.type));
         pending.push(...children.toReversed());
         node = pending.pop();
     }

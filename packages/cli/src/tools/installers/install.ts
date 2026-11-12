@@ -1,7 +1,7 @@
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { listDistinctTools } from '#cli/manifests/read.ts';
-import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
+import { readToolPackageManager } from '#cli/repository/package-manager.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -21,7 +21,7 @@ import {
 import { readPythonSettings } from '#cli/tools/installers/pypi.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { findMisePin, findMissingBuild, findPackagePin } from '#cli/tools/pins.ts';
+import { buildToolProjects, findMisePin, findMissingBuild, findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { BrokenTool, InstallResult, Session, ToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
 
@@ -105,7 +105,7 @@ async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
 
 export async function buildToolInstall(
     session: Session,
-    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools' | 'misePath' | 'runsProjectInstall'>,
+    input: Pick<ToolInstall, 'writer' | 'checkTools' | 'misePath' | 'runsProjectInstall'>,
 ): Promise<ToolInstall> {
     const configurations = session.toolConfigurations;
     const steps: Array<readonly string[]> = [];
@@ -116,6 +116,7 @@ export async function buildToolInstall(
         pythonSettings: readPythonSettings(session.root),
         releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
         ...input,
+        generated: { files: buildToolProjects(session) },
         tools,
         steps,
     };
@@ -127,7 +128,7 @@ clone. When every tool already passes, install only adds the Vale packages and g
 */
 export async function installTools(
     session: Session,
-    input: Pick<ToolInstall, 'writer' | 'generated' | 'checkTools' | 'runsProjectInstall'>,
+    input: Pick<ToolInstall, 'writer' | 'checkTools' | 'runsProjectInstall'>,
 ): Promise<InstallResult> {
     const context = await buildToolInstall(session, { ...input, misePath: findProgram(MISE_TOOL) });
     const { steps } = context;

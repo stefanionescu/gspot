@@ -200,3 +200,15 @@ export const NUMERIC_WORDS = new Set([
 ]);
 
 export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
+
+export const GSPOT_FOLDER = '.gspot';
+
+export const LEADING_SLASH = /^\//u;
+
+export const WHITESPACE_RUN = /\s+/gu;
+
+export const LINE_BREAK = /\r?\n/u;
+
+export const OCTAL_RADIX = 8;
+
+export const HEXADECIMAL_RADIX = 16;

@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { GRAMMARS_FOLDER } from '#cli/config/parsers.ts';
+import { GRAMMARS_FOLDER } from '#cli/config/parsers/code.ts';
 import { GIT_VARIABLE_PREFIX } from '#cli/config/repository/git.ts';
 import { CACHE_FOLDER_NAME } from '#cli/config/system.ts';
 import { buildSpawnEnvironment, readCacheFolder, readEnvironmentVariable } from '#cli/system/environment.ts';

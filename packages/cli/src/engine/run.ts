@@ -30,7 +30,7 @@ import { runProcess } from '#cli/system/processes.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { findMissingDependencies, findToolPath } from '#cli/tools/inspect.ts';
-import { findMissingEnvironment } from '#cli/tools/uv.ts';
+import { findMissingEnvironment } from '#cli/tools/python-environment.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
 import type {
     CheckCode,

@@ -1,5 +1,3 @@
-import { stringify } from '@decimalturn/toml-patch';
-
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
     ATTRIBUTE_GLOB_CHARACTERS,
@@ -8,13 +6,11 @@ import {
     GIT_ATTRIBUTES_BLOCK,
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
-    NPM_TOOL_PROJECT,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
 import { FILTER_ATTRIBUTE, GITATTRIBUTES_FILE, LFS_FILTER } from '#cli/config/repository/files.ts';
 import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
-import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
 import {
     buildGithubWorkflow,
@@ -36,9 +32,9 @@ import { getSettingValue } from '#cli/settings/inherit.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
-import { buildMiseInstall, buildPythonProjectTable, listNpmProjectPins } from '#cli/tools/pins.ts';
+import { buildToolProjects } from '#cli/tools/pins.ts';
 import type { RuleFile } from '#cli/types/generation.ts';
-import type { GeneratedFile, Generation, Session } from '#cli/types/tools.ts';
+import type { Generation, Session } from '#cli/types/tools.ts';
 
 function addWorkflow(session: Session, generated: Generation): void {
     const { settings, scopes } = session;
@@ -88,21 +84,6 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
         files: rules,
     });
     generated.blocks.push({ path: AGENTS_FILE, body: block });
-}
-
-export function buildToolProjects(
-    session: Pick<Session, 'packageManager' | 'scopes' | 'toolConfigurations'>,
-): GeneratedFile[] {
-    const { packageManager, toolConfigurations } = session;
-    const project = { ...NPM_TOOL_PROJECT, devDependencies: listNpmProjectPins(session) };
-    const npmProject = { path: GSPOT_PATHS.npmProject, content: `${JSON.stringify(project, null, JSON_INDENT)}\n` };
-    const python = buildPythonProjectTable(toolConfigurations);
-    const pythonContent = stringify({ project: python }, CONFIG_TOML_FORMAT);
-    return [
-        ...(packageManager === undefined ? [] : [npmProject]),
-        ...(python.dependencies.length === 0 ? [] : [{ path: GSPOT_PATHS.pythonProject, content: pythonContent }]),
-        buildMiseInstall(toolConfigurations),
-    ];
 }
 
 export function buildGeneratedFiles(session: Session): Generation {

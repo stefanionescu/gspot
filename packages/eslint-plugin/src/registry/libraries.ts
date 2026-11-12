@@ -1,0 +1,229 @@
+import { embedAlternativeText } from '../rules/accessibility/embed-alternative-text.ts';
+import { noTableAsLayout } from '../rules/accessibility/no-table-as-layout.ts';
+import { tableHeaderReference } from '../rules/accessibility/table-header-reference.ts';
+import { tableHeader } from '../rules/accessibility/table-header.ts';
+import { noConstantAssertions } from '../rules/assertions/no-constant-assertions.ts';
+import { noCypressThenAssertions } from '../rules/assertions/no-cypress-then-assertions.ts';
+import { noIncompleteAssertions } from '../rules/assertions/no-incomplete-assertions.ts';
+import { noInvertedAssertions } from '../rules/assertions/no-inverted-assertions.ts';
+import { noMismatchedAssertionTypes } from '../rules/assertions/no-mismatched-assertion-types.ts';
+import { noMisplacedAssertions } from '../rules/assertions/no-misplaced-assertions.ts';
+import { noSelfComparingAssertions } from '../rules/assertions/no-self-comparing-assertions.ts';
+import { noUncertainChaiAssertions } from '../rules/assertions/no-uncertain-chai-assertions.ts';
+import { preferMatcherAssertions } from '../rules/assertions/prefer-matcher-assertions.ts';
+import { requireErrorChecks } from '../rules/assertions/require-error-checks.ts';
+import { requireTestAssertions } from '../rules/assertions/require-test-assertions.ts';
+import { validThrowAssertions } from '../rules/assertions/valid-throw-assertions.ts';
+import { awsApigatewayPublicApi } from '../rules/aws/aws-apigateway-public-api.ts';
+import { awsEfsUnencrypted } from '../rules/aws/aws-efs-unencrypted.ts';
+import { awsIamAllPrivileges } from '../rules/aws/aws-iam-all-privileges.ts';
+import { awsIamPrivilegeEscalation } from '../rules/aws/aws-iam-privilege-escalation.ts';
+import { awsIamPublicAccess } from '../rules/aws/aws-iam-public-access.ts';
+import { awsInsecureBucketTransport } from '../rules/aws/aws-insecure-bucket-transport.ts';
+import { awsOpenAdminPorts } from '../rules/aws/aws-open-admin-ports.ts';
+import { awsOpensearchserviceDomain } from '../rules/aws/aws-opensearchservice-domain.ts';
+import { awsPublicBucketGrants } from '../rules/aws/aws-public-bucket-grants.ts';
+import { awsPublicInstances } from '../rules/aws/aws-public-instances.ts';
+import { awsRdsUnencryptedDatabases } from '../rules/aws/aws-rds-unencrypted-databases.ts';
+import { awsS3BucketVersioning } from '../rules/aws/aws-s3-bucket-versioning.ts';
+import { awsSnsUnencryptedTopics } from '../rules/aws/aws-sns-unencrypted-topics.ts';
+import { awsSqsUnencryptedQueue } from '../rules/aws/aws-sqs-unencrypted-queue.ts';
+import { awsUnblockedPublicBuckets } from '../rules/aws/aws-unblocked-public-buckets.ts';
+import { awsUnencryptedNotebooks } from '../rules/aws/aws-unencrypted-notebooks.ts';
+import { awsUnencryptedVolumes } from '../rules/aws/aws-unencrypted-volumes.ts';
+import { noDefaultUtilityImports } from '../rules/libraries/no-default-utility-imports.ts';
+import { noShallowCloneMutation } from '../rules/libraries/no-shallow-clone-mutation.ts';
+import { preferNativeAxios } from '../rules/libraries/prefer-native-axios.ts';
+import { preferNativeJquery } from '../rules/libraries/prefer-native-jquery.ts';
+import { preferNativeLodash } from '../rules/libraries/prefer-native-lodash.ts';
+import { requireMemoizeKey } from '../rules/libraries/require-memoize-key.ts';
+import { noClearTextProtocols } from '../rules/networks/no-clear-text-protocols.ts';
+import { noHardcodedIp } from '../rules/networks/no-hardcoded-ip.ts';
+import { unverifiedCertificate } from '../rules/networks/unverified-certificate.ts';
+import { unverifiedHostname } from '../rules/networks/unverified-hostname.ts';
+import { weakSsl } from '../rules/networks/weak-ssl.ts';
+import { noComponentDebounce } from '../rules/react/no-component-debounce.ts';
+import { noGeneratedKeys } from '../rules/react/no-generated-keys.ts';
+import { noLeakedJsxNumber } from '../rules/react/no-leaked-jsx-number.ts';
+import { noSelfStateUpdate } from '../rules/react/no-self-state-update.ts';
+import { noSetterInComponent } from '../rules/react/no-setter-in-component.ts';
+import { preferReadonlyProps } from '../rules/react/prefer-readonly-props.ts';
+import { disabledAutoEscaping } from '../rules/security/disabled-auto-escaping.ts';
+import { dynamicTemplates } from '../rules/security/dynamic-templates.ts';
+import { encryptionSecureMode } from '../rules/security/encryption-secure-mode.ts';
+import { hardcodedSecretSignatures } from '../rules/security/hardcoded-secret-signatures.ts';
+import { insecureJwtToken } from '../rules/security/insecure-jwt-token.ts';
+import { noCodeEval } from '../rules/security/no-code-eval.ts';
+import { noDynamicSqlQueries } from '../rules/security/no-dynamic-sql-queries.ts';
+import { noInsecureRandom } from '../rules/security/no-insecure-random.ts';
+import { noPathCommand } from '../rules/security/no-path-command.ts';
+import { noPublicFilePermissions } from '../rules/security/no-public-file-permissions.ts';
+import { noPublicTemporaryPath } from '../rules/security/no-public-temporary-path.ts';
+import { noWeakCipher } from '../rules/security/no-weak-cipher.ts';
+import { noWeakHashing } from '../rules/security/no-weak-hashing.ts';
+import { noWeakKeys } from '../rules/security/no-weak-keys.ts';
+import { reviewBlockchainMnemonic } from '../rules/security/review-blockchain-mnemonic.ts';
+import { xmlParserXxe } from '../rules/security/xml-parser-xxe.ts';
+import { maxRequestSize } from '../rules/servers/max-request-size.ts';
+import { noAnyOriginPolicy } from '../rules/servers/no-any-origin-policy.ts';
+import { noInsecureCookies } from '../rules/servers/no-insecure-cookies.ts';
+import { noPoweredByHeader } from '../rules/servers/no-powered-by-header.ts';
+import { noProductionDebug } from '../rules/servers/no-production-debug.ts';
+import { noUncheckedRequestData } from '../rules/servers/no-unchecked-request-data.ts';
+import { noUnsafeFileUploads } from '../rules/servers/no-unsafe-file-uploads.ts';
+import { noUnsafeSecurityHeaders } from '../rules/servers/no-unsafe-security-headers.ts';
+import { noUnvalidatedJsonBody } from '../rules/servers/no-unvalidated-json-body.ts';
+import { requireCsrfMiddleware } from '../rules/servers/require-csrf-middleware.ts';
+import { requireSessionRegeneration } from '../rules/servers/require-session-regeneration.ts';
+import { staticBeforeSession } from '../rules/servers/static-before-session.ts';
+import { noAsyncSuiteCallbacks } from '../rules/testing/no-async-suite-callbacks.ts';
+import { noCodeAfterDone } from '../rules/testing/no-code-after-done.ts';
+import { noDuplicateTestRows } from '../rules/testing/no-duplicate-test-rows.ts';
+import { noDuplicateTestTitles } from '../rules/testing/no-duplicate-test-titles.ts';
+import { noEarlyTestReturn } from '../rules/testing/no-early-test-return.ts';
+import { noEmptyTestFile } from '../rules/testing/no-empty-test-file.ts';
+import { noEmptyTestTable } from '../rules/testing/no-empty-test-table.ts';
+import { noEmptyTestTitles } from '../rules/testing/no-empty-test-titles.ts';
+import { noExclusiveTests } from '../rules/testing/no-exclusive-tests.ts';
+import { noFixedTestWaits } from '../rules/testing/no-fixed-test-waits.ts';
+import { noForcedUiActions } from '../rules/testing/no-forced-ui-actions.ts';
+import { noInlineInterpolation } from '../rules/testing/no-inline-interpolation.ts';
+import { noNestedVitestMock } from '../rules/testing/no-nested-vitest-mock.ts';
+import { noOverflowingTestTimeout } from '../rules/testing/no-overflowing-test-timeout.ts';
+import { noTestRetries } from '../rules/testing/no-test-retries.ts';
+import { noUiTestDebugging } from '../rules/testing/no-ui-test-debugging.ts';
+import { noUnexplainedTestSkips } from '../rules/testing/no-unexplained-test-skips.ts';
+import { preferTestTable } from '../rules/testing/prefer-test-table.ts';
+import { testHooksFirst } from '../rules/testing/test-hooks-first.ts';
+import { testingLibraryQueries } from '../rules/testing/testing-library-queries.ts';
+import { noVueClassComponents } from '../rules/vue/no-vue-class-components.ts';
+import { noVueMixins } from '../rules/vue/no-vue-mixins.ts';
+import { noVueUpdatedWrites } from '../rules/vue/no-vue-updated-writes.ts';
+import { disabledResourceIntegrity } from '../rules/web/disabled-resource-integrity.ts';
+import { dompurifyUnsafeConfig } from '../rules/web/dompurify-unsafe-config.ts';
+import { noAnyOriginMessages } from '../rules/web/no-any-origin-messages.ts';
+import { noClientEnvironment } from '../rules/web/no-client-environment.ts';
+import { noUnsafeSanitizerBypass } from '../rules/web/no-unsafe-sanitizer-bypass.ts';
+import { requireNoopener } from '../rules/web/require-noopener.ts';
+import { requireServerOnly } from '../rules/web/require-server-only.ts';
+
+/**
+The rules about libraries, frameworks, and platforms. Each key names the folder of `rules/` that holds its rules.
+*/
+export const LIBRARY_TOPICS = {
+    accessibility: [embedAlternativeText, noTableAsLayout, tableHeaderReference, tableHeader],
+    assertions: [
+        noConstantAssertions,
+        noCypressThenAssertions,
+        noIncompleteAssertions,
+        noInvertedAssertions,
+        noMismatchedAssertionTypes,
+        noMisplacedAssertions,
+        noSelfComparingAssertions,
+        noUncertainChaiAssertions,
+        preferMatcherAssertions,
+        requireErrorChecks,
+        requireTestAssertions,
+        validThrowAssertions,
+    ],
+    aws: [
+        awsApigatewayPublicApi,
+        awsEfsUnencrypted,
+        awsIamAllPrivileges,
+        awsIamPrivilegeEscalation,
+        awsIamPublicAccess,
+        awsInsecureBucketTransport,
+        awsOpenAdminPorts,
+        awsOpensearchserviceDomain,
+        awsPublicBucketGrants,
+        awsPublicInstances,
+        awsRdsUnencryptedDatabases,
+        awsS3BucketVersioning,
+        awsSnsUnencryptedTopics,
+        awsSqsUnencryptedQueue,
+        awsUnblockedPublicBuckets,
+        awsUnencryptedNotebooks,
+        awsUnencryptedVolumes,
+    ],
+    libraries: [
+        noDefaultUtilityImports,
+        noShallowCloneMutation,
+        preferNativeAxios,
+        preferNativeJquery,
+        preferNativeLodash,
+        requireMemoizeKey,
+    ],
+    networks: [noClearTextProtocols, noHardcodedIp, unverifiedCertificate, unverifiedHostname, weakSsl],
+    react: [
+        noComponentDebounce,
+        noGeneratedKeys,
+        noLeakedJsxNumber,
+        noSelfStateUpdate,
+        noSetterInComponent,
+        preferReadonlyProps,
+    ],
+    security: [
+        disabledAutoEscaping,
+        dynamicTemplates,
+        encryptionSecureMode,
+        hardcodedSecretSignatures,
+        insecureJwtToken,
+        noCodeEval,
+        noDynamicSqlQueries,
+        noInsecureRandom,
+        noPathCommand,
+        noPublicFilePermissions,
+        noPublicTemporaryPath,
+        noWeakCipher,
+        noWeakHashing,
+        noWeakKeys,
+        reviewBlockchainMnemonic,
+        xmlParserXxe,
+    ],
+    servers: [
+        maxRequestSize,
+        noAnyOriginPolicy,
+        noInsecureCookies,
+        noPoweredByHeader,
+        noProductionDebug,
+        noUncheckedRequestData,
+        noUnsafeFileUploads,
+        noUnsafeSecurityHeaders,
+        noUnvalidatedJsonBody,
+        requireCsrfMiddleware,
+        requireSessionRegeneration,
+        staticBeforeSession,
+    ],
+    testing: [
+        noAsyncSuiteCallbacks,
+        noCodeAfterDone,
+        noDuplicateTestRows,
+        noDuplicateTestTitles,
+        noEarlyTestReturn,
+        noEmptyTestFile,
+        noEmptyTestTable,
+        noEmptyTestTitles,
+        noExclusiveTests,
+        noFixedTestWaits,
+        noForcedUiActions,
+        noInlineInterpolation,
+        noNestedVitestMock,
+        noOverflowingTestTimeout,
+        noTestRetries,
+        noUiTestDebugging,
+        noUnexplainedTestSkips,
+        preferTestTable,
+        testHooksFirst,
+        testingLibraryQueries,
+    ],
+    vue: [noVueClassComponents, noVueMixins, noVueUpdatedWrites],
+    web: [
+        disabledResourceIntegrity,
+        dompurifyUnsafeConfig,
+        noAnyOriginMessages,
+        noClientEnvironment,
+        noUnsafeSanitizerBypass,
+        requireNoopener,
+        requireServerOnly,
+    ],
+};

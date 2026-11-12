@@ -13,8 +13,9 @@ import {
     NPM_COMMAND,
     NPM_INSTALL_VERBS,
     PATCH_LEVEL_VERSION,
-} from '#cli/config/configurations/infrastructure.ts';
-import { DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS, WHITESPACE_RUN } from '#cli/config/parsers.ts';
+} from '#cli/config/configurations/docker.ts';
+import { DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers/code.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readText } from '#cli/system/files/reads.ts';

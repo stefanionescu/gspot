@@ -12,13 +12,13 @@ import {
     TEXT_EXTENSIONS,
     UNUSED_ASSET_MESSAGE,
     UNUSED_ASSET_RULE,
-} from '#cli/config/configurations/framework.ts';
-import { WHITESPACE_RUN } from '#cli/config/parsers.ts';
+} from '#cli/config/configurations/site.ts';
 import { FILENAME_TAGS, GIT_FILE_MODES, SYMLINK_MODE } from '#cli/config/repository/files.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { UNUSED_ASSET_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
+import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';

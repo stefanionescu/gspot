@@ -1,4 +1,5 @@
 import { appendFileSync, existsSync, renameSync, rmSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -87,7 +88,22 @@ const steps: Partial<Record<keyof typeof FAKE_TOOL_OPTIONS, (value: string) => u
     stderr: (text) => process.stderr.write(text),
 };
 
-const stopCode = findStopCode();
+/**
+Wait for each `--until` file, and return the exit code that ends the program early. A test that fails or times out
+deletes its sandbox and never writes the file, so a missing folder ends the wait.
+*/
+async function waitForFiles(): Promise<string | undefined> {
+    for (const path of option.until) {
+        const awaited = resolve(path);
+        while (!existsSync(awaited)) {
+            if (!existsSync(dirname(awaited))) return '1';
+            await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
+        }
+    }
+    return undefined;
+}
+
+let stopCode = findStopCode();
 if (stopCode === undefined) {
     for (const [name, step] of Object.entries(steps)) {
         const optionValues = option[name as keyof typeof FAKE_TOOL_OPTIONS];
@@ -96,8 +112,8 @@ if (stopCode === undefined) {
     if (values['copy-stdin'] === true) process.stdout.write(await Bun.stdin.bytes());
     if (values['print-pid'] === true) process.stdout.write(String(process.pid));
     for (const signal of option.signal) process.kill(process.pid, signal);
-    for (const awaited of option.until) while (!existsSync(awaited)) await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
-    if (values.wait === true)
+    stopCode = await waitForFiles();
+    if (stopCode === undefined && values.wait === true)
         setInterval(() => process.stdout.write(option.repeat.join('')), WAIT_INTERVAL_MILLISECONDS);
 }
 process.exitCode = Number(stopCode ?? option.exit[0] ?? '0');

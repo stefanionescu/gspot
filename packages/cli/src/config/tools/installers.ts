@@ -111,6 +111,8 @@ export const INDEX_SETTINGS = new Set([
 
 export const UV_SETTINGS_FILE = 'uv.toml';
 
+export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;
+
 export const PYTHON_TOOL_PROJECT = {
     name: 'tools',
     version: '0.0.0',
@@ -190,8 +192,6 @@ export const MILLISECONDS_PER_DAY = 86_400_000;
 export const NPMRC_FILE = '.npmrc';
 
 export const NPM_DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
-
-export const NODE_TOOL = 'node';
 
 export const RELEASE_AGE_VERSIONS = {
     npm: '11.19.0',

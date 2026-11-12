@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
 
+import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import {
     DOWN_MIGRATION_SUFFIX,
     MIGRATION_DOWN,
     MIGRATION_SYNTAX_SKIP,
-    SQL_EXTENSION,
     SQUAWK_CHECK,
-    SYNTAX_RULE,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/postgres.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';

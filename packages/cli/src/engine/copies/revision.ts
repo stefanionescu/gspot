@@ -26,19 +26,17 @@ import {
     GIT_SET_HEAD_ARGUMENTS,
     GIT_SHALLOW_PATH,
     GIT_UPDATE_INDEX_ARGUMENTS,
-    GIT_VERIFY_HEAD_ARGUMENTS,
     RAW_BLOB_ATTRIBUTES,
 } from '#cli/config/engine.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { LOCKFILES, PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { copyDependencies, readDeclarationDependencies, readIgnoredPaths } from '#cli/engine/copies/dependencies.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { readGitText, runGit } from '#cli/repository/git/run.ts';
-import { listPackageFiles } from '#cli/repository/javascript/workspaces.ts';
-import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
+import { listRevisionFiles, readHead } from '#cli/repository/revisions/files.ts';
+import { listPackageFiles } from '#cli/repository/workspaces.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { preparePath } from '#cli/system/files/bounded.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -148,7 +146,7 @@ async function initializeRevisionCopy(
         readGitText(toplevel, GIT_HASH_FORMAT_ARGUMENTS, { cancelSignal }),
         readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'objects'], { cancelSignal }),
         readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'shallow'], { cancelSignal }),
-        runGit(toplevel, GIT_VERIFY_HEAD_ARGUMENTS, { cancelSignal }),
+        readHead(toplevel, cancelSignal),
     ]);
     await readGitText(copyRoot, [...GIT_INIT_ARGUMENTS, `--object-format=${formatLine.trim()}`, copyRoot], {
         cancelSignal,
@@ -157,8 +155,8 @@ async function initializeRevisionCopy(
     const shallow = shallowLine.trim();
     if (statSync(shallow, { throwIfNoEntry: false }) !== undefined)
         copyFileSync(shallow, join(copyRoot, GIT_SHALLOW_PATH));
-    if (source.kind === 'index' && head.code === 0)
-        await readGitText(copyRoot, [...GIT_SET_HEAD_ARGUMENTS, head.stdout.trim()], { cancelSignal });
+    if (source.kind === 'index' && head !== undefined)
+        await readGitText(copyRoot, [...GIT_SET_HEAD_ARGUMENTS, head], { cancelSignal });
     if (source.kind === 'commit')
         await readGitText(copyRoot, [...GIT_SET_HEAD_ARGUMENTS, source.hash], { cancelSignal });
 }

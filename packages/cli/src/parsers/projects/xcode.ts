@@ -1,14 +1,13 @@
 import { posix } from 'node:path';
 
+import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import {
     GROUP_CYCLE_MESSAGE,
-    HEXADECIMAL_RADIX,
     INVALID_STRING_MESSAGE,
     MISSING_FILE_REF_MESSAGE,
     MISSING_MAIN_GROUP_MESSAGE,
     MISSING_ROOT_MESSAGE,
     OCTAL_ESCAPE_START,
-    OCTAL_RADIX,
     PBXPROJ_SUFFIX,
     PROJECT_ESCAPE,
     PROJECT_ESCAPES,
@@ -16,10 +15,10 @@ import {
     PROJECT_TOKENS,
     SETTING_REFERENCE,
     STRICT_CONCURRENCY,
-    SWIFT_EXTENSION,
     SWIFT_SIX_PREFIX,
     TRAILING_TEXT_MESSAGE,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/projects.ts';
+import { HEXADECIMAL_RADIX, OCTAL_RADIX } from '#cli/config/system.ts';
 import { pbxprojSchema } from '#cli/schemas/parsers.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';

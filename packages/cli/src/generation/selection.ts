@@ -4,7 +4,8 @@ import { selectScopePath } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import type { OwnedConfig } from '#cli/types/configurations/language.ts';
 import type { UsedNames } from '#cli/types/generation.ts';
-import type { Config, TrackedFile } from '#cli/types/repository.ts';
+import type { Config } from '#cli/types/manifests.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 

@@ -5,7 +5,6 @@ import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint
 import picomatch from 'picomatch';
 
 import { PACKAGE_MANIFEST } from '../../config/libraries.ts';
-import { PLUGIN_PREFIX } from '../../config/plugin.ts';
 import {
     BARREL_DECLARATIONS,
     DECLARING_DEFAULT_EXPORTS,
@@ -13,7 +12,7 @@ import {
     INDEX_EXPORTS,
     TRIVIAL_FILE_OPTIONS_SCHEMA,
 } from '../../config/structure.ts';
-import { findPathInFolder } from '../../language/modules.ts';
+import { findPathInRoot } from '../../language/modules.ts';
 import { isAlias, isTypeAlias } from '../../language/syntax.ts';
 import { listManifestFolders } from '../../libraries/packages.ts';
 import { createRule } from '../../rule.ts';
@@ -125,10 +124,7 @@ function checkForwardingFile(
             (statement.type === AST_NODE_TYPES.ExportNamedDeclaration && statement.source !== null),
     );
     for (const statement of reexports) context.report({ node: statement, messageId: 'reexport' });
-    const path = findPathInFolder(
-        (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
-        context.physicalFilename,
-    );
+    const path = findPathInRoot(context);
     const isForwardingFile = path !== undefined && picomatch([...forwardingFiles], { dot: true })(path);
     if (
         !isForwardingFile &&

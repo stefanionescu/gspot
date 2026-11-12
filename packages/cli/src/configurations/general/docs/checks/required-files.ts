@@ -1,4 +1,4 @@
-import { DOCS_RULES, LICENSE_PATH, MISSING_LICENSE_MESSAGE, README_FILE } from '#cli/config/configurations/general.ts';
+import { DOCS_RULES, LICENSE_PATH, MISSING_LICENSE_MESSAGE, README_FILE } from '#cli/config/configurations/docs.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files.ts';
 import { REQUIRED_FILE_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
 import { joinScope } from '#cli/repository/scopes.ts';

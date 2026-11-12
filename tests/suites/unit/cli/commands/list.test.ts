@@ -4,10 +4,10 @@ import { createFileTree } from 'testdirs';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text.ts';
 import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/reports.ts';
+import { configurationsListOutputSchema, settingsListOutputSchema } from '#tests/schemas/setup.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { configurationsListOutputSchema, settingsListOutputSchema } from '#tests/setup/schemas.ts';
 
 test('list shows selected and available configurations', async () => {
     await using sandbox = await createGitSandbox({});

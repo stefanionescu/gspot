@@ -8,12 +8,12 @@ import { createFileTree, testdir } from 'testdirs';
 import { compareText } from '#cli/system/text.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { API_TOKEN } from '#tests/config/integration/general.ts';
+import { pushOutputSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { pushOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import type { GitleaksHistory } from '#tests/types/integration.ts';
 

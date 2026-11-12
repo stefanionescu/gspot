@@ -28,7 +28,7 @@ import { findText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
 import { readToolCommandPrefix } from '#cli/tools/packages.ts';
-import { buildCopyPythonEnvironment, listCopyPythonArguments } from '#cli/tools/uv.ts';
+import { buildCopyPythonEnvironment, listCopyPythonArguments } from '#cli/tools/python-environment.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckRunOptions, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
 import type { CommandBatch, CommandRun, CommandSetup, FolderRun, Substitutions } from '#cli/types/engine/tool-runs.ts';

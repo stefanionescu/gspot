@@ -1,4 +1,4 @@
-import { DEFINER_SEARCH_PATH_RULE, SECURITY_DEFINER_MESSAGE } from '#cli/config/configurations/infrastructure.ts';
+import { DEFINER_SEARCH_PATH_RULE, SECURITY_DEFINER_MESSAGE } from '#cli/config/configurations/postgres.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema.ts';
 import { getPosition } from '#cli/system/text.ts';

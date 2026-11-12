@@ -2,7 +2,6 @@ import { posix } from 'node:path';
 
 import type { z } from 'zod';
 
-import { LEADING_SLASH, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/parsers.ts';
 import {
     ANY_FOLDER_PREFIX,
     ATTRIBUTE_ASSIGNMENT_SIDES,
@@ -25,6 +24,7 @@ import {
     TREE_LINE,
     UNSUPPORTED_GIT_FILE_MESSAGE,
 } from '#cli/config/repository/git.ts';
+import { LEADING_SLASH, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { gitFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';

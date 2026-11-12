@@ -4,7 +4,8 @@ import type ts from 'typescript';
 import type { Node, Parser, Tree } from 'web-tree-sitter';
 import type { z } from 'zod';
 
-import type { GRAMMAR_NAMES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers.ts';
+import type { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
+import type { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects.ts';
 import type {
     packageJsonSchema,
     pbxprojSchema,

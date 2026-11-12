@@ -1,5 +1,5 @@
 import { PYTHON_RULES } from '#cli/config/configurations/python.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
 import { getLimit } from '#cli/settings/scopes.ts';

@@ -2,10 +2,10 @@ import { basename } from 'node:path';
 
 import type { Node } from 'web-tree-sitter';
 
+import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/bash.ts';
 import {
     BARE_NAME_NODES,
     BASH_COMMAND_NODES,
-    BASH_SOURCE_COMMANDS,
     COUNTED_FUNCTION_NODES,
     DECORATED_PYTHON_NODE,
     FORWARDING_NODES,

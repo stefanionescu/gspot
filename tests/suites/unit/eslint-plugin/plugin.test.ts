@@ -1,8 +1,22 @@
 import * as parser from '@typescript-eslint/parser';
+import { Glob } from 'bun';
 import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
 
 import plugin from '#eslint-plugin/plugin.ts';
+import { LANGUAGE_TOPICS } from '#eslint-plugin/registry/language.ts';
+import { LIBRARY_TOPICS } from '#eslint-plugin/registry/libraries.ts';
+
+test('each rule file of a topic folder is registered under that topic and takes the name of its rule', () => {
+    const registered = Object.entries({ ...LANGUAGE_TOPICS, ...LIBRARY_TOPICS }).flatMap(([topic, rules]) =>
+        rules.map(({ name }) => `${topic}/${name}.ts`),
+    );
+    const folder = new URL('../../../../packages/eslint-plugin/src/rules/', import.meta.url).pathname;
+    const files = [...new Glob('*/*.ts').scanSync(folder)];
+    expect(registered.toSorted()).toStrictEqual(files.toSorted());
+    const names = files.map((path) => path.slice(path.indexOf('/') + 1, -'.ts'.length));
+    expect(Object.keys(plugin.rules).toSorted()).toStrictEqual(names.toSorted());
+});
 
 test('the recommended preset reports the rules of its level, and the all preset adds the others', () => {
     const linter = new Linter({ configType: 'flat', cwd: '/repo' });

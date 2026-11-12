@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
-import type { FROZEN_INSTALLS } from '#cli/config/repository/javascript.ts';
-import type { PRINTED_RULE_TOOLS } from '#cli/config/repository/setup.ts';
+import type { PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
+import type { FROZEN_INSTALLS } from '#cli/config/repository/package-managers.ts';
 import type {
     carryoverRowSchema,
     generatedFilesSchema,
@@ -148,7 +148,7 @@ export type CarryoverInput = {
     templateIgnore: readonly TomlTable[];
 };
 
-export type PlannedSettings = { carryover: Carryover; settingsText: string; settings: Settings; planned: Session };
+export type PlannedSettings = { carryover: Carryover; settingsText: string; settings: Settings; session: Session };
 
 export type RuleState = { on: boolean; options: unknown[] };
 

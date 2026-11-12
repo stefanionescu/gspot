@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { runInit } from '#tests/setup/cli/commands.ts';
+import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const CARRYOVER_ROW_CASES = [
@@ -173,7 +173,7 @@ test('init turns the ignore files into ignore records, and keeps what matches a 
         'dist/bundle.js': 'export const a = 1;\n',
         'src/a.min.js': 'export const b = 1;\n',
     });
-    const { plan, settings } = await runInit(sandbox.path);
+    const { plan, settings } = await planSandboxInit(sandbox.path);
     expect(settings['ignore']).toStrictEqual([
         {
             check: 'format/prettier',
@@ -189,7 +189,7 @@ test('init turns the ignore files into ignore records, and keeps what matches a 
 
 test.each([...CARRYOVER_ROW_CASES])('init goes on past $name, and the table names it', async ({ files, path, row }) => {
     await using sandbox = await createGitSandbox(files);
-    const { plan } = await runInit(sandbox.path);
+    const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.find((each) => each.path === path)).toMatchObject(row);
 });
 
@@ -201,7 +201,7 @@ test('init goes on past a nested package.json that does not parse, and it marks 
         'tests/fixtures/local/pyproject.toml': '[project]\ndependencies = ["./vendor/lib"]\n',
         'tests/fixtures/numbers/package.json': '{"scripts":{"build":1}}',
     });
-    const { settings } = await runInit(sandbox.path);
+    const { settings } = await planSandboxInit(sandbox.path);
     expect(settings['scope']).toMatchObject([{ path: 'tests/fixtures/numbers' }]);
 });
 
@@ -211,7 +211,7 @@ test('init sends the rules of an ESLint config to gspot scan, which can compare 
         'package.json': '{"private":true,"type":"module"}\n',
         'src/a.js': 'export const a = 1;\n',
     });
-    const { plan } = await runInit(sandbox.path);
+    const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.find(({ path }) => path === 'eslint.config.mjs')).toMatchObject({
         tool: 'eslint',
         dropped: ['its rules; gspot scan compares them before init'],
@@ -226,7 +226,7 @@ test('init names each replaced config that it does not read', async () => {
         'sample/.prettierrc': '{"semi":false}\n',
         'sample/source.js': 'export const value = 1;\n',
     });
-    const { plan } = await runInit(sandbox.path);
+    const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.filter(({ path }) => path !== 'ruff.toml')).toMatchObject([
         { path: 'sample/.prettierrc', dropped: [expect.stringContaining('init does not read this config')] },
         { path: 'tools/.ruff.toml', dropped: [expect.stringContaining('init does not read this config')] },
@@ -238,7 +238,7 @@ test('init names the words of a replaced typos config, which it drops', async ()
         'typos.toml': '[default.extend-words]\nNebulix = "Nebulix"\n',
         'README.md': '# Example\n',
     });
-    const { plan } = await runInit(sandbox.path);
+    const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.deleted.map(({ path }) => path)).toContain('typos.toml');
     expect(plan.carryover).toMatchObject([
         { path: 'typos.toml', tool: 'typos', dropped: [expect.stringContaining('spelling.allowed_words')] },

@@ -1,15 +1,11 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { MARKED_TEST_MODIFIERS, MOCHA_CONSTRUCTS } from '../../config/testing.ts';
-import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
+import { MOCHA_CONSTRUCTS } from '../../config/testing.ts';
+import { listBodyNodes, listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 
 function isInsideTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    return source.getAncestors(node).some((ancestor) => {
-        const call = ancestor.type === AST_NODE_TYPES.CallExpression ? getTestCall(ancestor, source) : undefined;
-        const isMarked = call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
-        return isMarked && MOCHA_CONSTRUCTS.has(call.name);
-    });
+    return listEnclosingTestCalls(node, source).some(({ name }) => MOCHA_CONSTRUCTS.has(name));
 }
 
 function isPositiveThrowAssertion(node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression }): boolean {

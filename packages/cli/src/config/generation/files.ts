@@ -1,11 +1,9 @@
-import { PYTHON_FILES, SQL_FILES } from '#cli/config/configurations/python.ts';
-import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { GENERATED_HEADER_MARK, GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
+import { GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
 import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
-import type { Group } from '#cli/types/repository.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import type { Group } from '#cli/types/manifests.ts';
 
 export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
@@ -78,8 +76,6 @@ export const CI_INSTALL_COMMAND = 'gspot install';
 
 export const CI_CHECK_COMMAND = `gspot check --base "\${${CI_BASE_VARIABLE}}"`;
 
-export const GITHUB_EXPRESSION_START = '${{';
-
 export const GITHUB_EXPRESSION_MESSAGE =
     'GitHub expands "${{" in a workflow command before the shell runs it. Remove "${{" from ci.setup_command and from the scope paths.';
 
@@ -90,8 +86,6 @@ export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
 export const GIT_ATTRIBUTES_BLOCK = `* text=auto eol=lf
 ${GSPOT_FOLDER}/** linguist-generated
 ${GSPOT_FOLDER}/hooks/** linguist-generated=false`;
-
-export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;
 
 export const JSON_EXTENSIONS = new Set(['.json']);
 
@@ -146,8 +140,6 @@ export const STALE_LOCKFILE_NOTE =
 
 export const HOOKS_CHANGED_NOTE = 'Git hooks changed. Run gspot install.';
 
-export const GENERATED_FILE_NOUN = 'generated file';
-
 export const CHANGE_LABEL_WIDTH = 9;
 
 export const TOOL_PROJECT_FILES: readonly string[] = [
@@ -183,118 +175,5 @@ export const GROUP_LABELS = {
     general: 'General',
 } as const satisfies Record<Group, string>;
 
-export const VERIFY_FLAG = '--verify';
-
-export const NAME_ONLY_FLAG = '--name-only';
-
-export const READ_COMMITTED_MESSAGE =
-    'Cannot read your committed tool configs. Run git status, then commit or stash the change.';
-
-export const PRETTIER_SCRIPT_NOTE =
-    'gspot could not load this Prettier config, so set format.indent_width and format.print_width by hand';
-
-export const DROPPED_LINE_SETTINGS =
-    /^[ \t]*(?:end_of_line[ \t]*=[ \t]*crlf|insert_final_newline[ \t]*=[ \t]*false)[ \t]*$/imu;
-
-export const DROPPED_LINE_SETTINGS_NOTE =
-    'drops its crlf or missing final newline: gspot always writes lf and a final newline';
-
-export const DETECTED_SETTINGS = [
-    'swift.xcode_destination',
-    'cloudflare.types_file',
-    'cloudflare.types_interface',
-] as const;
-
-export const RUFF_SETTINGS_FILES = ['.ruff.toml', 'ruff.toml', 'pyproject.toml'] as const;
-
-export const EDITORCONFIG_FILE = '.editorconfig';
-
-export const EDITORCONFIG_COMMENT = /^\s*[#;]/u;
-
-export const EDITORCONFIG_SECTION = /^\s*\[(.+)\]\s*$/u;
-
-export const PRETTIER_FILE_FORMATS: Readonly<Record<string, 'yaml' | 'json' | 'toml'>> = {
-    '.prettierrc': 'yaml',
-    '.prettierrc.yml': 'yaml',
-    '.prettierrc.yaml': 'yaml',
-    '.prettierrc.json': 'json',
-    '.prettierrc.json5': 'yaml',
-    '.prettierrc.toml': 'toml',
-};
-
-export const PRETTIER_PACKAGE_KEY = 'prettier';
-
-export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: false, useTabs: false } as const;
-
-export const FORMATTER_DEFAULTS = [
-    {
-        tag: 'python',
-        paths: PYTHON_FILES,
-        format: { indent_style: 'space', indent_width: 4, print_width: 88, quotes: 'double' },
-    },
-    { tag: 'swift', paths: SWIFT_FILES, format: { indent_style: 'space', indent_width: 4, print_width: 120 } },
-    { tag: 'sql', paths: SQL_FILES, format: { indent_style: 'space', indent_width: 4, print_width: 80 } },
-] as const;
-
-export const PROSE_TAGS: ReadonlySet<string> = new Set(['text', 'markdown']);
-
-export const COLUMN_GAP = 2;
-
-export const CONFIGURATION_WIDTH = 16;
-
-export const ORIGIN_WIDTH = 12;
-
-export const ATTRIBUTES_ROW = {
-    path: GITATTRIBUTES_FILE,
-    note: 'marks the generated files and keeps LF line endings',
-} as const;
-
-export const CI_FILE_NOTES = {
-    [GITHUB_WORKFLOW]: 'check workflow',
-    [GITLAB_WORKFLOW]: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml`,
-} as const;
-
-export const GSPOT_FOLDER_NOTE = 'generated files';
-
-export const ADDS_BLOCK_NOTE = 'adds the gspot block';
-
-export const INSTALL_LOCKFILE_NOTE = 'lockfile written by gspot install';
-
-export const ALWAYS_SELECTED_NOUN = 'always-selected configuration';
-
-export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
-
-export const LINT_FOLDER_MESSAGE = 'a folder of lint scripts; check remaining references before deleting it';
-
-export const DELETED_RULES_NOTE = '(read them with git show HEAD:<path>; the table below names what init carries)';
-
-export const LINT_FOLDERS_HEADING = 'lint folders; delete when nothing calls them';
-
-export const LINT_COMMANDS_HEADING =
-    'lint commands; gspot edits none of them, and gspot/conflicting-configs reports each until it goes';
-
-export const CHANGE_LATER_MESSAGE =
-    'Change the hooks and rule files later with gspot set hooks.enabled or rule_files.enabled.';
-
-export const TOOL_PIN_NOUN = 'tool pin';
-
-export const NPM_PIN_NOUN = 'pinned npm tool';
-
-export const PYTHON_PIN_NOUN = 'pinned Python tool';
-
-export const CI_FILE_NOTE = 'existing CI file';
-
-export const CI_OFF_MESSAGE =
-    'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.';
-
-export const PRETTIER_SCRIPT_FILE = /\.[cm]?[jt]s$/u;
-
-export const PRETTIER_SCRIPT_NAME = /^(?:\.prettierrc|prettier\.config)\.[cm]?[jt]s$/u;
-
-export const PYTHON_TAG = 'python';
-
-export const LEADING_COMMENTS = /^(?:#[^\n]*\n|[ \t]*\n)*/u;
-
-export const FORMAT_CONFIGURATION = 'format';
-
-export const FOREIGN_HOOK_NOTE = 'keeps running your hooks; add the lines of gspot install to call .gspot/hooks';
+export const HOOK_PROGRAM_MISSING =
+    "<program> is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add <program>'s folder to its PATH.";

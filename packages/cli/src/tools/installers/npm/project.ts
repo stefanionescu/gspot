@@ -4,16 +4,17 @@ import { join } from 'node:path';
 import semver from 'semver';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { CI_NODE, VERSION_FLAG } from '#cli/config/repository/javascript.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { VERSION_FLAG } from '#cli/config/repository/package-managers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { CI_NODE, NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import {
     INSTALL_FAILURE,
     LOCKFILE_CREDENTIAL_MESSAGE,
     LOCKFILE_FAILURE,
     NODE_MISSING_MESSAGE,
-    NODE_TOOL,
     NPM_CONFIG_FOLDER_VARIABLE,
     NPM_DEFAULT_REGISTRY,
     NPM_LOCKFILE_CREDENTIAL_MESSAGE,
@@ -25,7 +26,7 @@ import {
     PACKAGE_MANAGER_SETTINGS_NAME,
     RELEASE_AGE_VERSIONS,
 } from '#cli/config/tools/installers.ts';
-import { buildPackageManagerCommand } from '#cli/repository/javascript/package-manager.ts';
+import { buildPackageManagerCommand } from '#cli/repository/package-manager.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { findProgram } from '#cli/system/programs.ts';
@@ -35,15 +36,14 @@ import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/
 import { extractRegistryCredentials, writeNpmrc } from '#cli/tools/installers/npm/registry.ts';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
 import { explainReleaseAgeHold, runInstallStep } from '#cli/tools/installers/steps.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import type { ReplacementRequest } from '#cli/types/repository.ts';
+import { listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
+import type { ReplacementRequest, ToolPackageManagerName } from '#cli/types/repository.ts';
 import type {
     GeneratedFile,
     NpmToolInstall,
     PackageManagerRequest,
     PackageManagerRun,
     ToolInstall,
-    ToolPackageManagerName,
     ToolRelease,
 } from '#cli/types/tools.ts';
 
@@ -185,7 +185,7 @@ export function isNpmLockfileFresh(install: NpmToolInstall): boolean {
     const text = saved.bytes.toString('utf8');
     const credentials = extractRegistryCredentials(registryEnvironment);
     assertCredentialFreeLockfile(text, credentials, NPM_LOCKFILE_CREDENTIAL_MESSAGE);
-    const dependencies = listPackagePins(install.session.toolConfigurations).npm;
+    const dependencies = listNpmProjectPins(install.session);
     return isLockfileFresh(packageManager.name, text, dependencies, registryEnvironment);
 }
 

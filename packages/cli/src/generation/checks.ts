@@ -1,14 +1,9 @@
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { printProgress } from '#cli/engine/report.ts';
-import { runChecks } from '#cli/engine/run.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
-import { rewriteProgress } from '#cli/system/terminal.ts';
-import type { CheckGeneration, RunResult } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { CheckGeneration } from '#cli/types/engine/run.ts';
 
 export const CHECK_GENERATION: CheckGeneration = {
     buildConfigs,
@@ -16,20 +11,3 @@ export const CHECK_GENERATION: CheckGeneration = {
     listWrittenPaths: (session) =>
         convertToGlobs(buildIgnoreSections(session, buildConfigs(session)).filter(({ key }) => key === 'gspot')),
 };
-
-export async function runEveryCheck(session: Session, skip: string[]): Promise<RunResult> {
-    try {
-        return await runChecks(session, {
-            selectCheckCode,
-            generation: CHECK_GENERATION,
-            skip,
-            stage: 'all',
-            fix: false,
-            cwd: session.root,
-            pathArguments: [],
-            onProgress: printProgress,
-        });
-    } finally {
-        rewriteProgress('');
-    }
-}

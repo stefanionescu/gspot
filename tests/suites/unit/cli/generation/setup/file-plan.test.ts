@@ -6,13 +6,13 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { ATTRIBUTES_ROW, DROPPED_LINE_SETTINGS_NOTE, UNREAD_SUBMODULE_MESSAGE } from '#cli/config/generation.ts';
+import { ATTRIBUTES_ROW, DROPPED_LINE_SETTINGS_NOTE, UNREAD_SUBMODULE_MESSAGE } from '#cli/config/generation/setup.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { initOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { initOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const WORKSPACE_PYTHON_FILES = {

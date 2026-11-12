@@ -1,9 +1,9 @@
 import { extname, isAbsolute, join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { EXCLUDE_FLAG } from '#cli/config/configurations/framework.ts';
 import {
     CSS_EXTENSION,
-    EXCLUDE_FLAG,
     HTML_EXTENSION,
     HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
@@ -24,8 +24,8 @@ import {
     STYLE_SCOPING,
     STYLE_WHITESPACE,
     UNLISTED_PAGE_MESSAGE,
-} from '#cli/config/configurations/framework.ts';
-import { LEADING_SLASH } from '#cli/config/parsers.ts';
+} from '#cli/config/configurations/site.ts';
+import { LEADING_SLASH } from '#cli/config/system.ts';
 import {
     convertToBuildPath,
     listBuiltFiles,

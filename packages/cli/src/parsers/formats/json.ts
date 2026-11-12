@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { applyEdits, modify, parse, type ParseError, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 import { z } from 'zod';
 
-import { JSONC_OPTIONS } from '#cli/config/parsers.ts';
+import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
 import { CheckStop, GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { findValueAt, isTable, normalizeTables } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text.ts';

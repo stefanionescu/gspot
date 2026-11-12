@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { UV_FLAGS, UV_PROJECT_ENVIRONMENT, UV_TOOL } from '#cli/config/tools/installers.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE, UV_RUN_ARGUMENTS } from '#cli/config/tools/programs.ts';

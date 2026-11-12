@@ -10,7 +10,6 @@ import {
     GIT_LOCAL_BRANCHES_ARGUMENTS,
     GIT_MERGE_BASE_ARGUMENTS,
     GIT_REMOTE_HEADS_ARGUMENTS,
-    GIT_SHALLOW_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
     ORIGIN_REMOTE,
@@ -26,6 +25,7 @@ import {
     runGit,
     runGitBytes,
 } from '#cli/repository/git/run.ts';
+import { isShallowClone } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -64,8 +64,7 @@ async function explainInvalidBase(root: string, compared: string, cancelSignal?:
         if (presence.code !== 0) return { note: `Checked every file: base ${compared} is not present in this clone.` };
     }
     const branches = await readGitLines(root, GIT_LOCAL_BRANCHES_ARGUMENTS, { cancelSignal });
-    const shallow = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
-    const help = shallow.trim() === 'true' ? SHALLOW_CLONE_HELP : '';
+    const help = (await isShallowClone(root, cancelSignal)) ? SHALLOW_CLONE_HELP : '';
     throw new GspotError(
         'arguments',
         `${compared} is not a branch, tag, or commit in this repository. Local branches: ${branches.join(', ') || 'none'}.${compared === REMOTE_HEAD ? REMOTE_HEAD_HELP : ''}${help}`,
@@ -117,8 +116,7 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
         cancelSignal,
     });
     if (base.code === 0) return { hash: base.stdout.trim() };
-    const shallow = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
-    const help = shallow.trim() === 'true' ? SHALLOW_CLONE_HELP : '';
+    const help = (await isShallowClone(root, cancelSignal)) ? SHALLOW_CLONE_HELP : '';
     throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
 }
 

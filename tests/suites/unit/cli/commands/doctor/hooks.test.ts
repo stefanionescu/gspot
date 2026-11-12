@@ -4,11 +4,11 @@ import { expect, test } from 'bun:test';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { doctorOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { doctorOutputSchema } from '#tests/setup/schemas.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';

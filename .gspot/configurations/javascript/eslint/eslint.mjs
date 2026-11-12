@@ -746,7 +746,7 @@ export default setRuleOptions(defineConfig([
                 "category": "rule \"parsers",
                 "pattern": [
                     "packages/cli/src/parsers/**",
-                    "packages/cli/src/config/parsers.ts",
+                    "packages/cli/src/config/parsers/**",
                     "packages/cli/src/types/parsers.ts",
                     "packages/cli/src/schemas/parsers.ts"
                 ],
@@ -823,7 +823,7 @@ export default setRuleOptions(defineConfig([
                 "category": "rule \"generation",
                 "pattern": [
                     "packages/cli/src/generation/**",
-                    "packages/cli/src/config/generation.ts",
+                    "packages/cli/src/config/generation/**",
                     "packages/cli/src/types/generation.ts",
                     "packages/cli/src/schemas/generation.ts"
                 ],
@@ -870,6 +870,7 @@ export default setRuleOptions(defineConfig([
                     "packages/eslint-plugin/src/*.ts",
                     "packages/eslint-plugin/src/language/**",
                     "packages/eslint-plugin/src/libraries/**",
+                    "packages/eslint-plugin/src/registry/**",
                     "packages/eslint-plugin/src/rules/**",
                     "packages/eslint-plugin/plugin.d.ts"
                 ],
@@ -900,7 +901,8 @@ export default setRuleOptions(defineConfig([
             {
                 "category": "rule \"tests-data",
                 "pattern": [
-                    "tests/config/**"
+                    "tests/config/**",
+                    "tests/schemas/**"
                 ],
                 "stopMatching": true
             },

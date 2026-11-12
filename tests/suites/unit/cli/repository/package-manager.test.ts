@@ -6,13 +6,12 @@ import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import {
     detectPackageManager,
     readPackageManagerVersion,
     readToolPackageManager,
-    selectStartRunner,
-} from '#cli/repository/javascript/package-manager.ts';
+} from '#cli/repository/package-manager.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -70,19 +69,6 @@ const UNSUPPORTED_PACKAGE_MANAGERS = [
         packageJson: { devEngines: { packageManager: { name: 'cnpm', version: '9.0.0' } } },
     },
 ] as const;
-
-test('the pnpm install of gspot names the workspace root, because pnpm refuses a plain add there', async () => {
-    await using sandbox = await testdir({
-        'package.json': JSON.stringify({
-            packageManager: 'pnpm@10.16.0',
-            devDependencies: { '@gspothq/cli': '0.0.0-test' },
-        }),
-        'pnpm-workspace.yaml': 'packages:\n  - packages/*\n',
-    });
-    expect(selectStartRunner(sandbox.path).installCommand).toBe(
-        'pnpm add --workspace-root --save-dev --save-exact @gspothq/cli@<version>',
-    );
-});
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
     await using sandbox = await createGitSandbox({});

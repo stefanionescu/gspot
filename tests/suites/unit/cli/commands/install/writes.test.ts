@@ -6,16 +6,16 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/edits.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { installOutputSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { installOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 

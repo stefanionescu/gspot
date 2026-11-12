@@ -1,6 +1,6 @@
 import type { DefElem, Node, TypeName } from '@pgsql/types';
 
-import { PUBLIC_SCHEMA } from '#cli/config/configurations/infrastructure.ts';
+import { PUBLIC_SCHEMA } from '#cli/config/configurations/postgres.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import type { FunctionSecurity, SchemaState, StatementApplier } from '#cli/types/configurations/infrastructure.ts';
 import type { SqlStatement } from '#cli/types/parsers.ts';

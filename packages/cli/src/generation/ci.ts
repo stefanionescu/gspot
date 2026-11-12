@@ -2,6 +2,7 @@ import { Document, type Node, Scalar, stringify, type YAMLMap, type YAMLSeq } fr
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
+import { WORKFLOW_EXPRESSION } from '#cli/config/configurations/github-actions.ts';
 import {
     CHECKOUT_OPTIONS,
     CI_BASE_VARIABLE,
@@ -17,7 +18,6 @@ import {
     GITHUB_CONCURRENCY,
     GITHUB_EVENTS,
     GITHUB_EXPRESSION_MESSAGE,
-    GITHUB_EXPRESSION_START,
     GITHUB_PUSH_CONDITION,
     GITHUB_WORKFLOW,
     GITLAB_BASE_LINE,
@@ -26,9 +26,9 @@ import {
     GITLAB_RULES,
     GITLAB_VARIABLES,
     GITLAB_WORKFLOW,
-} from '#cli/config/generation.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+} from '#cli/config/generation/files.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
 import { CI_PINS } from '#cli/config/settings/schema.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
@@ -36,7 +36,7 @@ import {
     buildFrozenInstallArguments,
     buildPackageManagerCommand,
     findPackageManagerPin,
-} from '#cli/repository/javascript/package-manager.ts';
+} from '#cli/repository/package-manager.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readCiNode } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -155,7 +155,7 @@ it before the shell runs.
 */
 export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     const commands = [...(pipeline.setupCommand ?? []), ...pipeline.projectInstall, buildGspotTools(pipeline)];
-    if (commands.some((command) => command.includes(GITHUB_EXPRESSION_START)))
+    if (commands.some((command) => command.includes(WORKFLOW_EXPRESSION)))
         throw new GspotError('settings', GITHUB_EXPRESSION_MESSAGE);
     const platforms = pipeline.operatingSystems;
     const jobs = Object.entries(buildJobCommands(pipeline)).flatMap(([name, command]) =>

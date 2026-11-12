@@ -1,15 +1,15 @@
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { findToolName, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { readLintRuleExplanation } from '#cli/tools/rules.ts';
+import { readLintRuleExplanation } from '#cli/tools/rule-explanations.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { RuleExplanation, RuleExplanationOptions, Session } from '#cli/types/tools.ts';
 
 function rethrowForUnselectedCheck(error: unknown, check: Check, session: Session | undefined): never {
-    const name = listChecksById(readConfigurations().values()).get(check.id)?.configuration.name;
+    const name = readShippedChecks().get(check.id)?.configuration.name;
     if (
         !(error instanceof GspotError) ||
         error.code !== 'tool' ||

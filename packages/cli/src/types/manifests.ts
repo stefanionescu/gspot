@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { PATH_ROLES, REASON_DESCRIPTIONS, SETTING_TYPES } from '#cli/config/manifests.ts';
+import type { GROUPS, PATH_ROLES, REASON_DESCRIPTIONS, SETTING_TYPES } from '#cli/config/manifests.ts';
 import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
@@ -16,6 +16,10 @@ export type LimitCheck = { check: string; languages: readonly string[]; limits: 
 export type ManifestSource = { folder: string; text: string };
 
 export type ParsedManifest = z.infer<typeof manifestSchema>;
+
+export type Config = ParsedManifest['configs'][number];
+
+export type Group = (typeof GROUPS)[number];
 
 export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name' | 'output'> & {
     id: string;

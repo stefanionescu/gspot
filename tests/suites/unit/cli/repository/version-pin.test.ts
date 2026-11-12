@@ -2,9 +2,16 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { findGspotPinMismatch, readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/version-pin.ts';
+import {
+    findGspotPinMismatch,
+    readGspotPin,
+    selectStartRunner,
+    writeMisePin,
+    writePackagePin,
+} from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -66,4 +73,17 @@ test('a package.json pin and a mise.toml pin that differ are both named, with th
     const mismatch = findGspotPinMismatch(sandbox.path);
     expect(mismatch).toContain('package.json pins gspot 0.0.1 and mise.toml pins gspot 0.0.2');
     expect(mismatch).toContain(`set it to ${cliPackage.version}`);
+});
+
+test('the pnpm install of gspot names the workspace root, because pnpm refuses a plain add there', async () => {
+    await using sandbox = await testdir({
+        'package.json': JSON.stringify({
+            packageManager: 'pnpm@10.16.0',
+            devDependencies: { '@gspothq/cli': '0.0.0-test' },
+        }),
+        'pnpm-workspace.yaml': 'packages:\n  - packages/*\n',
+    });
+    expect(selectStartRunner(sandbox.path).installCommand).toBe(
+        'pnpm add --workspace-root --save-dev --save-exact @gspothq/cli@<version>',
+    );
 });

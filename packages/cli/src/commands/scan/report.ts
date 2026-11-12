@@ -17,14 +17,13 @@ import {
     SCAN_RULES_SHOWN,
 } from '#cli/config/commands/reports.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
-import { GSPOT_FOLDER, LINE_BREAK } from '#cli/config/parsers.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { canIgnoreRule } from '#cli/engine/results.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
-import { findToolName, listChecksById, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, listDistinctTools, readShippedChecks } from '#cli/manifests/read.ts';
 import { listPinPrerequisites } from '#cli/repository/version-pin.ts';
-import { compareText, formatCount } from '#cli/system/text.ts';
+import { compareText, formatCount, quoteArgument } from '#cli/system/text.ts';
 import type { ScanCategory, ScanInput, ScanReport, ScanSection } from '#cli/types/commands/reports.ts';
 import type { Finding, RunReport } from '#cli/types/engine/run.ts';
 
@@ -64,7 +63,7 @@ function buildCategories(findings: Finding[]): ScanCategory[] {
 }
 
 function buildCost({ session, report, toolBytes }: ScanInput): ScanReport['cost'] {
-    const shipped = listChecksById(readConfigurations().values());
+    const shipped = readShippedChecks();
     const ran = report.checks.filter(({ duration }) => duration > 0);
     const tools = Map.groupBy(ran, ({ check }) => {
         const found = shipped.get(check);
@@ -109,12 +108,12 @@ function formatRuleRows(rules: ScanCategory['rules']): string[] {
     const [largest] = rules;
     if (largest === undefined) return [];
     const { check, rule } = largest;
-    const found = listChecksById(readConfigurations().values()).get(check)?.check;
+    const found = readShippedChecks().get(check)?.check;
     return [
         ...rules.map((each) => `${[each.check, each.rule].join(' ').trimEnd()}  ${formatCount(each.count, 'finding')}`),
         rule !== '' && found !== undefined && canIgnoreRule(found, selectCheckCode(found))
-            ? `To leave a rule out: gspot ignore ${check} --rule ${rule} --reason "<why>"`
-            : `To leave files out: gspot ignore ${check} --paths <path> --reason "<why>"`,
+            ? `To leave a rule out: gspot ignore ${quoteArgument(check)} --rule ${quoteArgument(rule)} --reason "<why>"`
+            : `To leave files out: gspot ignore ${quoteArgument(check)} --paths <path> --reason "<why>"`,
     ];
 }
 

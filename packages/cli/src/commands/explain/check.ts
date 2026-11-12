@@ -14,7 +14,7 @@ import { describeCheck } from '#cli/engine/reference.ts';
 import { hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
-import { findToolName, listChecksById, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, listRuleFiles, readConfigurations, readShippedChecks } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatArgumentSelector } from '#cli/settings/paths.ts';
@@ -191,7 +191,7 @@ function buildRuleDocFacts(
 }
 
 function findRuleCheck(checkId: string): ConfigurationCheck | undefined {
-    const found = listChecksById(readConfigurations().values()).get(checkId);
+    const found = readShippedChecks().get(checkId);
     if (
         found !== undefined &&
         !OUTPUT_FORMATS[found.check.output.format].namesRules(found.check.output) &&
@@ -247,7 +247,7 @@ function buildCheckExplanation(
 export function explainCheck(session: Session | undefined, checkId: string, cwd: string): Explanation | undefined {
     const commandCheck = session?.settings.commandChecks[checkId];
     const found: Pick<ScopeCheck, 'check' | 'configuration'> | undefined =
-        listChecksById(readConfigurations().values()).get(checkId) ??
+        readShippedChecks().get(checkId) ??
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;
     const facts = buildCheckExplanation(found, session, cwd);

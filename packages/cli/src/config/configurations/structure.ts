@@ -1,11 +1,9 @@
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { SETTINGS_FILE, SHEBANG_TAG } from '#cli/config/repository/files.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
-import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
-
-const INSTALL_HELP = 'Run gspot install.';
+import { GSPOT_FOLDER, MISE_TASK_FOLDERS } from '#cli/config/system.ts';
+import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 
 export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE]);
 
@@ -164,8 +162,6 @@ export const PYTHON_EXPORT_LIST = '__all__';
 
 export const BARE_NAME_NODES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
 
-export const BASH_SOURCE_COMMANDS: ReadonlySet<string> = new Set(['source', '.']);
-
 export const FORWARDING_NODES: ReadonlySet<string> = new Set(['future_import_statement', 'hash_bang_line']);
 
 export const TYPE_ALIAS_NODES = new Set(['type_alias_statement', 'typealias_declaration']);
@@ -242,7 +238,5 @@ export const TOOL_LOCKFILES = new Set([
 ]);
 
 export const MISE_TASKS_GLOB = `{${MISE_TASK_FOLDERS.join(',')}}/**`;
-
-export const SWIFT_CONFIGURATION = 'swift';
 
 export const NODE_SHEBANG_TAG = `${SHEBANG_TAG}node`;

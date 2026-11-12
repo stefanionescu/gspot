@@ -10,11 +10,31 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { installNpmToolProject, isEveryEnvironmentReady, listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+import { listNpmProjectPins } from '#cli/tools/pins.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+function buildNpmLockfile(packageManager: 'bun' | 'npm', pins: Record<string, string>): string {
+    const entries = Object.entries(pins);
+    if (packageManager === 'bun')
+        return JSON.stringify({
+            workspaces: { '': { devDependencies: pins } },
+            packages: Object.fromEntries(
+                entries.map(([name, version]) => [name, [`${name}@${version}`, '', {}, 'sha512-YQ==']]),
+            ),
+        });
+    return JSON.stringify({
+        packages: {
+            '': { devDependencies: pins },
+            ...Object.fromEntries(
+                entries.map(([name, version]) => [`node_modules/${name}`, { version, integrity: 'sha512-YQ==' }]),
+            ),
+        },
+    });
+}
 
 test('Yarn 1.22.22 plans an npm tool lockfile without Yarn settings', async () => {
     await using sandbox = await createGitSandbox({
@@ -76,6 +96,43 @@ test('a changed npm tool lockfile installs into an empty node_modules, and a cur
     await installNpmToolProject(install);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'kept'))).toBe(true);
 });
+
+test.each([
+    { packageManager: 'bun', lockfileName: 'bun.lock' },
+    { packageManager: 'npm', lockfileName: 'package-lock.json' },
+] as const)(
+    'with an ESLint plugin package record, a second $packageManager install locks no second time and keeps node_modules',
+    async ({ packageManager, lockfileName }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['javascript'], {
+                tables: '[[tools.eslint.plugins]]\nname = "acme"\npackage = "eslint-plugin-acme"\nversion = "1.2.3"\nrules = { no-legacy = [] }\n',
+            }),
+            'package.json': `{"private":true,"type":"module","packageManager":"${packageManager}@0.0.0-test"}`,
+            [GSPOT_PATHS.npmProject]: '{}\n',
+        });
+        const session = await openSession(sandbox.path);
+        const lockfile = buildNpmLockfile(packageManager, listNpmProjectPins(session));
+        let lockRuns = 0;
+        using _packageManager = fakeCommands('mise', async (command, options) => {
+            if (command.at(-1) === '--version') return buildProcessResult({ stdout: '0.0.0-test\n' });
+            const isLockRun =
+                packageManager === 'bun' ? command.includes('--lockfile-only') : !command.includes('--no-save');
+            if (isLockRun) {
+                lockRuns += 1;
+                await writeFile(join(options.cwd, lockfileName), lockfile);
+            }
+            return buildProcessResult();
+        });
+        const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+        await installNpmToolProject(install);
+        await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/kept/package.json`]: '{}\n' });
+        await installNpmToolProject(install);
+        expect({
+            lockRuns,
+            hasKeptModules: existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'kept')),
+        }).toStrictEqual({ lockRuns: 1, hasKeptModules: true });
+    },
+);
 
 test.each([
     { name: 'an environment that uv sync --check accepts', venv: true, code: 0, synced: true },

@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
 
+import { doctorOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { doctorOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const GITHUB_CI = 'off; gspot set ci.enabled true writes the check workflow';

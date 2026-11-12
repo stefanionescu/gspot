@@ -35,6 +35,11 @@ paths = ["packages/cli/src/configurations/language/python/generate.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
 
+[[naming.exception]]
+paths = ["packages/eslint-plugin/src/rules/variables/prefer-object-literal.ts", "tests/suites/unit/eslint-plugin/rules/variables/prefer-object-literal.test.ts"]
+allowed_names = ["prefer-object-literal", "prefer-object-literal.test", "preferObjectLiteral"]
+reason = "The rule file, its test, and its export take the registered rule name prefer-object-literal."
+
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts"]
 
@@ -111,7 +116,7 @@ paths = ["packages/cli/src/system/**", "packages/cli/src/config/system.ts", "pac
 
 [[import_rule]]
 name = "parsers"
-paths = ["packages/cli/src/parsers/**", "packages/cli/src/config/parsers.ts", "packages/cli/src/types/parsers.ts", "packages/cli/src/schemas/parsers.ts"]
+paths = ["packages/cli/src/parsers/**", "packages/cli/src/config/parsers/**", "packages/cli/src/types/parsers.ts", "packages/cli/src/schemas/parsers.ts"]
 
 [[import_rule]]
 name = "manifests"
@@ -144,7 +149,7 @@ paths = ["packages/cli/src/configurations/**", "packages/cli/src/config/configur
 
 [[import_rule]]
 name = "generation"
-paths = ["packages/cli/src/generation/**", "packages/cli/src/config/generation.ts", "packages/cli/src/types/generation.ts", "packages/cli/src/schemas/generation.ts"]
+paths = ["packages/cli/src/generation/**", "packages/cli/src/config/generation/**", "packages/cli/src/types/generation.ts", "packages/cli/src/schemas/generation.ts"]
 
 [[import_rule]]
 name = "commands"
@@ -166,7 +171,7 @@ can_import = []
 
 [[import_rule]]
 name = "plugin"
-paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/language/**", "packages/eslint-plugin/src/libraries/**", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts"]
+paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/language/**", "packages/eslint-plugin/src/libraries/**", "packages/eslint-plugin/src/registry/**", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts"]
 can_import = ["plugin-config", "plugin-types"]
 
 [[import_rule]]
@@ -185,7 +190,7 @@ paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
 
 [[import_rule]]
 name = "tests-data"
-paths = ["tests/config/**"]
+paths = ["tests/config/**", "tests/schemas/**"]
 can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "tests-setup"]
 
 [[import_rule]]
@@ -287,6 +292,12 @@ paths = [
     "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
 ]
 reason = "The manifest loader discovers config files in files/ and names each of these modules as the source of its config file target."
+
+[[ignore]]
+check = "structure/lone-files"
+rule = "lone-file"
+paths = ["tests/schemas/**"]
+reason = "The tests keep their schemas in a folder of their own beside tests/config/ and tests/types/, as the packages do."
 
 [[ignore]]
 check = "structure/pass-through-folders"

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';

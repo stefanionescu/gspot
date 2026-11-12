@@ -15,10 +15,10 @@ import workspacePackage from '#root-package' with { type: 'json' };
 import { NEXT_MESSAGES } from '#tests/config/setup/configurations.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { tsconfigSchema } from '#tests/setup/schemas.ts';
 import type { Sandbox } from '#tests/types/setup.ts';
 
 const NEXT_PACKAGE = {

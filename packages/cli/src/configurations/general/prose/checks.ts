@@ -9,7 +9,7 @@ import {
     VALE_ERROR_LINE,
 } from '#cli/config/configurations/prose.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SCRIPT_TAG } from '#cli/config/parsers.ts';
+import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import { PROSE_GRAMMARS, VALE_MESSAGE_RULES, VALE_PACKAGES_MESSAGE, VALE_TOOL } from '#cli/config/tools/vale.ts';
 import { readCommitMessage } from '#cli/configurations/general/commits/checks.ts';

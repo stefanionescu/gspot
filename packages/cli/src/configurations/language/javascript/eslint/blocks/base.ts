@@ -6,7 +6,6 @@ import {
     GSPOT_RULE_PREFIX,
     IMPORT_BOUNDARIES_RULE,
     IMPORT_LAYOUT_RULES,
-    JAVASCRIPT_CONFIGURATION,
     NODE_RULES,
     NODE_RUNTIMES,
     PACKAGE_JSON_PATTERN,
@@ -23,7 +22,9 @@ import {
 import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/eslint/rules.ts';
 import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import {
     buildImportBoundariesRule,
     buildImportIgnores,
@@ -39,7 +40,6 @@ import {
 } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { readScopeAliases } from '#cli/repository/javascript/aliases.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { escapeGlob, extractParentFolder } from '#cli/system/paths.ts';

@@ -1,14 +1,15 @@
 import { join, relative } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
-import { NODE_MODULES } from '#cli/config/system.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
+import { GSPOT_FOLDER, NODE_MODULES } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { AVAILABLE_TOOL_STATES, INSTALL_HELP, MISE_INSTALL_URL } from '#cli/config/tools/programs.ts';
 import { listProjectDependencyNames, readPackageJson } from '#cli/repository/dependencies.ts';
-import { detectPackageManager, selectInstallCommand } from '#cli/repository/javascript/package-manager.ts';
+import { detectPackageManager } from '#cli/repository/package-manager.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { selectInstallCommand } from '#cli/repository/version-pin.ts';
 import { remember } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { isInside, listEnclosingFolders } from '#cli/system/paths.ts';

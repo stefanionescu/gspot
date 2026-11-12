@@ -7,15 +7,20 @@ import {
     DOWNLOAD_PROTOCOLS,
     LOCKFILE_KEY_SUFFIX,
     LOCKFILE_UPDATE_COMMANDS,
-    MISE_FILES,
     NPM_TOOL_PREFIX,
     PACKAGE_MANAGER_HASH_SEPARATOR,
     PACKAGE_MANAGER_VERSION_SEPARATOR,
     STALE_LOCKFILE_SECTIONS,
     UNBUNDLED_PACKAGE_MANAGERS,
-} from '#cli/config/configurations/general.ts';
-import { IMPORTER_LOCKFILES, JAVASCRIPT_LOCKFILES, PACKAGE_JSON, PNPM_ROOT_IMPORTER } from '#cli/config/parsers.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+} from '#cli/config/configurations/dependencies.ts';
+import { MISE_FILES } from '#cli/config/configurations/general.ts';
+import {
+    IMPORTER_LOCKFILES,
+    JAVASCRIPT_LOCKFILES,
+    LOCKFILES,
+    PACKAGE_JSON,
+    PNPM_ROOT_IMPORTER,
+} from '#cli/config/parsers/projects.ts';
 import {
     LOCKFILE_EXPLANATIONS,
     PACKAGE_MANAGER_PIN_EXPLANATIONS,
@@ -30,7 +35,7 @@ import {
 } from '#cli/parsers/projects/lockfiles.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
+import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { miseToolsSchema } from '#cli/schemas/parsers.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';

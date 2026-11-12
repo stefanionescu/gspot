@@ -13,11 +13,11 @@ import type { TomlTable } from '#cli/types/settings.ts';
 import { STOPPED_APPLY_FILES, STRING_SETTING_VALUES } from '#tests/config/commands/edits.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/reports.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
+import { settingsListOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { settingsListOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test('set writes and unset removes a setting of a selected configuration', async () => {

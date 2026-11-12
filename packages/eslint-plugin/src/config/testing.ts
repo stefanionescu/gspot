@@ -160,7 +160,7 @@ export const TABLE_MODULES = ['bun:test', 'jest', '@jest/globals', 'vitest'];
 
 export const TABLE_DEPENDENCIES = ['jest', 'vitest'];
 
-export const TABLE_ORIGINS: ReadonlySet<string | undefined> = new Set(['bun:test', 'jest', '@jest/globals', 'vitest']);
+export const TABLE_ORIGINS: ReadonlySet<string | undefined> = new Set(TABLE_MODULES);
 
 export const TABLE_CALL =
     'CallExpression[callee.type="CallExpression"][callee.callee.type="MemberExpression"][callee.callee.property.name="each"][arguments.length>1]';
@@ -189,8 +189,6 @@ export const CONCRETE_TEST_MODIFIERS = new Set([
 ]);
 
 export const SIMILAR_TEST_LIMITS = { tests: 3, statements: 2, parameters: 3 };
-
-export const TEST_FILE_PATTERN = /\.(?:test|spec|cy)\.(?:js|mjs|cjs|jsx|vue|ts|mts|cts|tsx)$/u;
 
 export const TEST_DECLARATIONS = new Set([
     ...['it', 'test'].flatMap((name) =>
@@ -237,6 +235,11 @@ export const TEST_DECLARATIONS = new Set([
 export const TITLED_TEST_DECLARATIONS = new Set(['test.skip', 'test.fail', 'test.fail.only', 'test.fixme']);
 
 export const TEST_FILE_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx', 'vue', 'ts', 'mts', 'cts', 'tsx'];
+
+export const TEST_FILE_PATTERN = new RegExp(
+    String.raw`\.(?:test|spec|cy)\.(?:${TEST_FILE_EXTENSIONS.join('|')})$`,
+    'u',
+);
 
 export const TEST_FILE_MARKERS = ['test', 'spec', 'cy', 'e2e', 'mock'];
 
@@ -316,5 +319,3 @@ export const REMOVAL_CALLBACK = [
     'CallExpression > ArrowFunctionExpression.arguments:first-child[async=false] > CallExpression.body',
     'CallExpression > :matches(ArrowFunctionExpression, FunctionExpression).arguments:first-child[async=false][generator=false] > BlockStatement.body[body.length=1] > ReturnStatement > CallExpression.argument',
 ].join(', ');
-
-export const SIGNED_NUMBER_OPERATORS = new Set(['+', '-']);

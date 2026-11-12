@@ -16,7 +16,7 @@ import {
     SCRIPT_TAG,
     TSX_LANGUAGES,
     YAML_SCALAR_TOKENS,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/code.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';

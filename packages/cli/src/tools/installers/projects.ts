@@ -3,8 +3,7 @@ import { join } from 'node:path';
 import which from 'which';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL, UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG, UV_TOOL } from '#cli/config/tools/installers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
@@ -36,7 +35,7 @@ import {
     listPackagePins,
 } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
-import type { ReplacementRequest } from '#cli/types/repository.ts';
+import type { ReplacementRequest, ToolPackageManagerName } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';
 import type {
     GeneratedFile,
@@ -44,7 +43,6 @@ import type {
     Session,
     StaleLockfile,
     ToolInstall,
-    ToolPackageManagerName,
     ToolProjectsInstall,
 } from '#cli/types/tools.ts';
 

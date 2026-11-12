@@ -26,7 +26,7 @@ import {
     UNSTAGED_TOOLS_NOTE,
 } from '#cli/config/commands/reports.ts';
 import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
-import { TOOL_PROJECT_FILES } from '#cli/config/generation.ts';
+import { TOOL_PROJECT_FILES } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
@@ -206,22 +206,20 @@ async function runStagedCheck(
     // The disk holds the staged bytes, so checks run in place, unless gspot.toml has edits that the commit leaves out.
     if (selection.unstagedChanges === 0 && !unstagedPaths.has(SETTINGS_FILE))
         return await runTreeCheck(root, options, cancelSignal, {
-            toolsRoot: root,
+            session: { toolsRoot: root, untracked: { paths: [], unreadablePaths: untracked.unreadablePaths } },
             started,
             selection: { ...selection, reference: await readIndexTree(root, cancelSignal) },
-            untracked: { paths: [], unreadablePaths: untracked.unreadablePaths },
         });
     using copy = await copyRevision(root, { kind: 'index', paths: stagedPaths }, cancelSignal);
     // The tools on disk follow the tool files on disk, and the copy asks for the tools of the staged settings.
     const toolFiles = TOOL_PROJECT_FILES.filter((path) => unstagedPaths.has(path));
     const changed = `${formatNameList(toolFiles)} ${toolFiles.length === 1 ? 'has' : 'have'}`;
     return await runTreeCheck(copy.root, options, cancelSignal, {
-        toolsRoot: root,
+        session: { toolsRoot: root, unreadablePaths: copy.unreadablePaths },
         started,
         selection: { ...selection, reference: copy.tree },
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
         ...(toolFiles.length > 0 && { missingToolsNote: UNSTAGED_TOOLS_NOTE.replace('<files>', () => changed) }),
-        unreadablePaths: copy.unreadablePaths,
     });
 }
 
@@ -238,7 +236,8 @@ async function runCheckSelection(
     if (options.hook === 'commit-msg') {
         const text = await readGitText(root, GIT_STAGED_SETTINGS_ARGUMENTS, { cancelSignal });
         const listing = { root, index: [], attributes: new Map(), files: [], unreadablePaths: [] };
-        return await runTreeCheck(root, { ...options, settings: readSettings(text, root), listing }, cancelSignal);
+        const session = { settings: readSettings(text, root), listing };
+        return await runTreeCheck(root, { ...options, session }, cancelSignal);
     }
     return await (options.staged
         ? runStagedCheck(root, options, cancelSignal)

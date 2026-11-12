@@ -1,5 +1,3 @@
-import { RUNNER_NAMES } from '#cli/config/repository/setup.ts';
-
 export const GIT_COMMIT_MESSAGE_ARGUMENTS = [
     'log',
     '--stdin',
@@ -48,95 +46,6 @@ export const MESSAGE_REFERENCES = [
         message: 'stops CI. Remove the marker: every commit runs the checks.',
     },
 ] as const;
-
-export const STALE_LOCKFILE_SECTIONS = [
-    'dependencies',
-    'devDependencies',
-    'optionalDependencies',
-    'peerDependencies',
-] as const;
-
-export const DOWNLOAD_PROTOCOLS: ReadonlySet<string> = new Set([
-    'http:',
-    'https:',
-    'git:',
-    'git+http:',
-    'git+https:',
-    'git+ssh:',
-]);
-
-export const NPM_TOOL_PREFIX = 'npm:';
-
-export const LOCKFILE_UPDATE_COMMANDS = {
-    'bun.lock': 'bun install',
-    'package-lock.json': 'npm install',
-    'pnpm-lock.yaml': 'pnpm install',
-} as const;
-
-export const PACKAGE_MANAGER_HASH_SEPARATOR = '+';
-
-export const PACKAGE_MANAGER_VERSION_SEPARATOR = '@';
-
-export const DEPENDENCY_RULES = {
-    packageManagerPin: 'package-manager-pin',
-    staleLockfile: 'stale-lockfile',
-    host: 'host',
-    foreignLockfile: 'foreign-lockfile',
-} as const;
-
-export const LOCKFILE_KEY_SUFFIX = /^["']?:[ \t]*(?:\r?\n|$)/u;
-
-export const MARKDOWN_EXTENSIONS = ['.md', '.mdx'] as const;
-
-export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
-
-export const TRAILING_PUNCTUATION = '.,;:';
-
-export const PATH_CHARACTERS = /^[\w./-]+$/u;
-
-export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|]+/u;
-
-export const COMMAND_FENCES = new Set(['sh', 'bash', 'console', 'shell', 'zsh', 'shellsession']);
-
-export const PATH_TOKEN_SKIPS = [/^\.\.?\/?$/u, /^\d+\/\d+$/u, /^\//u] as const;
-
-export const REMOTE_ARGUMENTS = [
-    /\bgh\s+api\s+(?:"[^"\n]*"|'[^'\n]*'|[^\s`]+)/gu,
-    /\b(?:Accept|Content-Type):\s*[a-z]+\/[\w!#$&^.+-]+/giu,
-] as const;
-
-export const MISE_RUN = 'mise run ';
-
-export const BUN_RUN = 'bun run ';
-
-export const MISE_CONFIG_GLOB = '.mise/conf.d/*.toml';
-
-export const README_FILE = 'README.md';
-
-export const LICENSE_PATH = 'LICENSE';
-
-export const TITLE_ATTRIBUTE = 'title=';
-
-export const RELATIVE_PATH_PREFIXES = ['./', '../'] as const;
-
-export const RUN_COMMAND = new RegExp(
-    String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:(?:-[a-z]|--[\w-]+)\s+)*[\w./][\w:/.-]*`,
-    'gu',
-);
-
-export const MISSING_LICENSE_MESSAGE = 'The root has no LICENSE file.';
-
-export const DOCS_RULES = {
-    versionString: 'version-string',
-    missingTask: 'missing-task',
-    missingReadme: 'missing-readme',
-    missingLicense: 'missing-license',
-    missingPath: 'missing-path',
-} as const;
-
-export const CHANGELOG_FILE = /(?:^|\/)(?:CHANGELOG|HISTORY)[^/]*$/u;
-
-export const VERSION_STRING_MESSAGE = 'This copy of the package version goes stale. Read it from the manifest.';
 
 export const JSCPD_TOOL = 'jscpd';
 
@@ -209,32 +118,6 @@ export const COMMITLINT_PARSER_PRESET = {
     },
 } as const;
 
-export const OSV_SCANNER_NOTES = [
-    '# This file stops OSV-Scanner from reading an osv-scanner.toml next to a lockfile.',
-    '# Accept a vulnerability with gspot ignore dependencies/osv-scanner --rule <ID> and a reason.',
-];
-
-export const BUNFIG_FILE = 'bunfig.toml';
-
-export const SCANNER_KEY = ['install', 'security', 'scanner'] as const;
-
-export const OSV_SCANNER_CHECK = 'dependencies/osv-scanner';
-
-export const LYCHEE_REPOSITORY_LINKS = 'file://$1/';
-
-export const LYCHEE_ROOT_LINKS = String.raw`^file://(.*)/\.gspot/root-links/`;
-
-export const LYCHEE_MDX_EXPRESSION = '%7B[^/]*%7D';
-
-export const LYCHEE_NOTES = [
-    '# This file stops lychee from reading a lychee.toml in the folder where it runs.',
-    '# Allow a URL with the docs.allowed_urls setting.',
-];
-
-export const LYCHEE_ROOT_NOTE = '# A link that starts with / starts at the repository root, as on GitHub.';
-
-export const LYCHEE_SITE_NOTE = '# A link that starts with / names a route of the site, so lychee skips it.';
-
 export const JSCPD_IMPORT_PATTERNS = [
     String.raw`import\s[^;]*?from\s*['"][^'"]+['"]\s*;`,
     String.raw`(?:^|\n)[\t ]*(?:from[\t ]+(?:\\\r?\n[\t ]*)*[\w.]+[\t ]+(?:\\\r?\n[\t ]*)*)?import[\t ]+(?:\\\r?\n[\t ]*)*(?:\([^;)]*\)|(?:\\\r?\n|[^;\r\n])*)`,
@@ -264,8 +147,6 @@ export const EDITORCONFIG_ROOT_LINE = 'root = true\n\n';
 
 export const PRETTIER_CHECK = 'format/prettier';
 
-export const UNBUNDLED_PACKAGE_MANAGERS: readonly string[] = ['pnpm', 'yarn', 'bun'];
-
 export const MISE_FILES = [
     '.mise.local.toml',
     'mise.local.toml',
@@ -276,5 +157,3 @@ export const MISE_FILES = [
     '.config/mise.toml',
     '.config/mise/config.toml',
 ] as const;
-
-export const SITE_CONFIGURATION = 'site';

@@ -1,7 +1,9 @@
 import { posix } from 'node:path';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, JAVASCRIPT_RUNTIMES, MARKERS, SCRIPT_TAG, WHITESPACE_RUN } from '#cli/config/parsers.ts';
+import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
+import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
+import { MARKERS } from '#cli/config/parsers/formats.ts';
+import { JAVASCRIPT_RUNTIMES, LOCKFILES } from '#cli/config/parsers/projects.ts';
 import {
     BANNER_BYTES,
     BINARY_EXTENSIONS,
@@ -34,7 +36,6 @@ import {
     SET_VALUES,
     SHEBANG_INTERPRETERS,
     SHEBANG_PREFIX,
-    SHEBANG_TAG,
     SHEBANG_TAGS,
     SOURCE_KIND,
     TEXT_ATTRIBUTE,
@@ -44,14 +45,13 @@ import {
     VENDORED_ATTRIBUTE,
     VENDORED_FOLDERS,
 } from '#cli/config/repository/files.ts';
-import { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import { GSPOT_FOLDER, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractExtension, isInScope } from '#cli/system/paths.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
+import type { Config, Configuration } from '#cli/types/manifests.ts';
 import type {
-    Config,
     FileClassification,
     FileKindRules,
     FileTags,

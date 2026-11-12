@@ -2,7 +2,6 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 import { parseAllDocuments } from 'yaml';
 
-import { SYNTAX_RULE } from '#cli/config/configurations/infrastructure.ts';
 import {
     ANGLE_PLACEHOLDER,
     CAMEL_CASE_BOUNDARY,
@@ -13,7 +12,9 @@ import {
     PLACEHOLDER_VALUE,
     SYNTAX_ERROR_MESSAGE,
 } from '#cli/config/configurations/language.ts';
-import { FENCE_GRAMMARS, JSONC_OPTIONS } from '#cli/config/parsers.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
+import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { readText } from '#cli/system/files/reads.ts';

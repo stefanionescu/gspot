@@ -7,9 +7,9 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { SCAN_SETTINGS_MESSAGE } from '#cli/config/commands/reports.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
+import { scanOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { scanOutputSchema } from '#tests/setup/schemas.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 

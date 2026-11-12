@@ -1,12 +1,12 @@
+import { REACT_FILES } from '#cli/config/configurations/framework.ts';
 import {
     NEXT_PACKAGE,
     NEXT_PAGES_FOLDERS,
     NEXT_RULE_OPTIONS,
     NEXT_RULES,
     NEXT_SERVER_FILES,
-    REACT_FILES,
-} from '#cli/config/configurations/framework.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+} from '#cli/config/configurations/nextjs.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { extractParentFolder, findEnclosingFolder } from '#cli/system/paths.ts';
 import {
     type ConfigurationBlocks,

@@ -32,17 +32,17 @@ async function checkRevisionTree(
     { revision, cleanHead }: { revision: PushRevision; cleanHead: CleanHead | undefined },
 ): Promise<RevisionCheckResult> {
     const { hash, base, paths, commits, range, shallow } = revision;
-    const source = {
-        toolsRoot: root,
-        selection: { content: 'commit', reference: hash, base, paths, commits, range, shallow },
-    } as const;
+    const selection = { content: 'commit', reference: hash, base, paths, commits, range, shallow } as const;
     if (revision.hash === cleanHead?.hash)
-        return await runTreeCheck(root, options, cancelSignal, { ...source, untracked: cleanHead.untracked });
+        return await runTreeCheck(root, options, cancelSignal, {
+            session: { toolsRoot: root, untracked: cleanHead.untracked },
+            selection,
+        });
     using copy = await copyRevision(root, { kind: 'commit', hash, paths }, cancelSignal);
     return await runTreeCheck(copy.root, options, cancelSignal, {
-        ...source,
+        session: { toolsRoot: root, unreadablePaths: copy.unreadablePaths },
+        selection,
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
-        unreadablePaths: copy.unreadablePaths,
     });
 }
 
@@ -101,10 +101,10 @@ export async function runPushCheck(
     const revisions: PushReport['revisions'] = [];
     const text: string[] = selected.revisions.length === 0 && selected.skipped.length === 0 ? [EMPTY_PUSH_MESSAGE] : [];
     let revisionCount = 0;
-    const toolCache = createRunCache(root);
+    const session = { toolCache: createRunCache(root) };
     const cleanHead = await readCleanHead(root, selected, cancelSignal);
     for (const revision of selected.revisions) {
-        const result = await runRevisionCheck(root, { ...options, toolCache }, cancelSignal, { revision, cleanHead });
+        const result = await runRevisionCheck(root, { ...options, session }, cancelSignal, { revision, cleanHead });
         if (result === undefined) break;
         revisionCount += 1;
         if ('skipped' in result) {

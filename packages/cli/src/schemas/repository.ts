@@ -2,7 +2,7 @@ import semver from 'semver';
 import { z } from 'zod';
 
 import { GIT_MODES } from '#cli/config/repository/files.ts';
-import { PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
+import { PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
 import { configTableSchema, stringValuesSchema } from '#cli/schemas/parsers.ts';
 
 export const gitFileSchema = z.object({

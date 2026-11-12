@@ -9,7 +9,7 @@ import {
     SVELTE_TSCONFIG_FLAG,
     TSCONFIG_COPY_FOLDER,
 } from '#cli/config/configurations/framework.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { buildTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';

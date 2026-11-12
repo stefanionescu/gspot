@@ -4,9 +4,9 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { formatExplainCommand, mergeCheckResults, restoreCommandPaths, runBuiltInCheck } from '#cli/engine/results.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { CHECK_GENERATION } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

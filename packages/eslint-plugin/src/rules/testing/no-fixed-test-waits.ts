@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { SIGNED_NUMBER_OPERATORS } from '../../config/testing.ts';
+import { NUMERIC_SIGNS } from '../../config/plugin.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { isCypressChain, isTestRelatedPath } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
@@ -8,7 +8,7 @@ import { createRule } from '../../rule.ts';
 function isNumericDelay(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): boolean {
     let value = getExpressionValue(node, source);
     if (value?.type === AST_NODE_TYPES.UnaryExpression) {
-        if (!SIGNED_NUMBER_OPERATORS.has(value.operator)) return false;
+        if (!NUMERIC_SIGNS.has(value.operator)) return false;
         value = value.argument;
     }
     return value?.type === AST_NODE_TYPES.Literal && typeof value.value === 'number';

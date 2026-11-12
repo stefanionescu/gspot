@@ -1,13 +1,12 @@
 import { realpathSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
+import { EXCLUDE_FLAG } from '#cli/config/configurations/framework.ts';
 import { listOwnTestScopes, stripCoverageArguments } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
-
-const EXCLUDE_FLAG = '--exclude';
 
 /**
 Leave the nested scopes that run Vitest on their own out of this run, so that their tests run once. A project of a root

@@ -7,7 +7,7 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { canIgnoreRule, hasRuleExplanations } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { assertCheckExists, findToolName, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { assertCheckExists, findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
@@ -27,7 +27,7 @@ function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined
 }
 
 function findRuleCheck({ settings }: Session, checkId: string): Check {
-    const shippedCheck = listChecksById(readConfigurations().values()).get(checkId)?.check;
+    const shippedCheck = readShippedChecks().get(checkId)?.check;
     const check = settings.commandChecks[checkId] ?? shippedCheck;
     if (check === undefined || !canIgnoreRule(check, selectCheckCode(check)))
         throw new GspotError(

@@ -1,5 +1,5 @@
 import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { stripCoverageArguments } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';

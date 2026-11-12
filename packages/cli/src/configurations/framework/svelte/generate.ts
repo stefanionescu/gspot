@@ -1,4 +1,5 @@
-import { SVELTE_FILES, SVELTE_RULES, TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/framework.ts';
+import { SVELTE_FILES, SVELTE_RULES } from '#cli/config/configurations/framework.ts';
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/language.ts';
 import { type ConfigurationBuilder } from '#cli/types/configurations/language.ts';
 
 export const SVELTE_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {

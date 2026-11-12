@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { runInit } from '#tests/setup/cli/commands.ts';
+import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([
@@ -18,7 +18,7 @@ test.each([
         'tests/test_main.py': 'VALUE = 4\n',
         'setup.py': 'VALUE = 5\n',
     });
-    const { plan, settings } = await runInit(sandbox.path, ['--configurations', 'python']);
+    const { plan, settings } = await planSandboxInit(sandbox.path, ['--configurations', 'python']);
     const unchecked = ['**/*.py', '!src/app', '!src/app/**'];
     const reason = `Carried over from ${file}.`;
     expect(settings['ignore']).toContainEqual({ check: 'python/basedpyright', paths: unchecked, reason });
@@ -35,7 +35,7 @@ test('init carries a pyright include only for what the repository tracks, becaus
         'src/app/main.py': 'VALUE = 1\n',
         'stubs/app.pyi': 'VALUE: int\n',
     });
-    const { settings } = await runInit(sandbox.path, ['--configurations', 'python']);
+    const { settings } = await planSandboxInit(sandbox.path, ['--configurations', 'python']);
     expect(settings['ignore']).toContainEqual({
         check: 'python/basedpyright',
         paths: ['**/*.py', '**/*.pyi', '!src/app', '!src/app/**'],
@@ -48,7 +48,7 @@ test('init lists the typeCheckingMode of a pyright config as dropped', async () 
         'pyrightconfig.json': '{"typeCheckingMode": "basic"}\n',
         'main.py': 'VALUE = 1\n',
     });
-    const { plan } = await runInit(sandbox.path, ['--configurations', 'python']);
+    const { plan } = await planSandboxInit(sandbox.path, ['--configurations', 'python']);
     expect(plan.carryover.find(({ path }) => path === 'pyrightconfig.json')?.dropped).toStrictEqual([
         'typeCheckingMode',
     ]);

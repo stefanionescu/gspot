@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 
-import { GSPOT_PACKAGES } from '#cli/config/repository/javascript.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
 import { MINUTES_PER_DAY, RELEASE_AGE_FILES, SECONDS_PER_DAY } from '#cli/config/tools/installers.ts';
 import type { PackageManager } from '#cli/types/repository.ts';
 

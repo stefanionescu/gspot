@@ -5,11 +5,11 @@ import { expect, test } from 'bun:test';
 
 import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/framework.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { doctorOutputSchema } from '#tests/schemas/setup.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { doctorOutputSchema } from '#tests/setup/schemas.ts';
 
 const ASTRO_PAGE = `---
 const title: string = 'Home';

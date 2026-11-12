@@ -5,7 +5,7 @@ import { parse, stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import prettier from 'prettier';
 
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

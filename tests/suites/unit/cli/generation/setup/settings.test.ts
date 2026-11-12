@@ -6,9 +6,9 @@ import { findValueAt } from '#cli/system/tables.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { initOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { initOutputSchema } from '#tests/setup/schemas.ts';
 
 const IMPORT_STYLE_CASES = [
     {

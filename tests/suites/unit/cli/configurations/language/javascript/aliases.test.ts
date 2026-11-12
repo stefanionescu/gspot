@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { readPackageAliases, readScopeAliases } from '#cli/repository/javascript/aliases.ts';
+import { readPackageAliases, readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';

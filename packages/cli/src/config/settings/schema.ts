@@ -1,4 +1,4 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 
 export const LEFT_OUT_NOTES = {
     ci: 'CI stays off; run gspot set ci.enabled true',

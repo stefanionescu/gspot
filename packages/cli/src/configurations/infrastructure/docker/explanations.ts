@@ -3,7 +3,7 @@ import {
     INSTRUCTION_RULES,
     SERVICE_SECURITY_MESSAGES,
     SERVICE_SECURITY_RULES,
-} from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/docker.ts';
 import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 

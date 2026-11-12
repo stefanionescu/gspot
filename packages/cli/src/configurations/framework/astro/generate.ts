@@ -4,8 +4,8 @@ import {
     ASTRO_RULES,
     ASTRO_SCRIPT_FILES,
     ASTRO_TYPED_RULES,
-    TYPESCRIPT_CONFIGURATION,
 } from '#cli/config/configurations/framework.ts';
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/language.ts';
 import {
     type ConfigurationBlocks,
     type ConfigurationBuilder,

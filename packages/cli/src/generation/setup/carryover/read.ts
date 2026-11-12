@@ -1,13 +1,14 @@
 import { posix } from 'node:path';
 
 import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/language.ts';
-import { EDITORCONFIG_FILE } from '#cli/config/generation.ts';
+import { RUFF_CHECK } from '#cli/config/configurations/python.ts';
 import {
     CARRIED_TOOLS,
     CARRYOVER_ROW_START,
     COMMITLINT_CHECK_ID,
     COMMITLINT_CONFIG_PATH,
     COMMITLINT_TARGET,
+    EDITORCONFIG_FILE,
     EMPTY_CARRYOVER,
     IGNORE_REASON_START,
     MARKDOWNLINT_ALIASES,
@@ -19,14 +20,13 @@ import {
     PRETTIER_EXCLUDE_KEY,
     PRETTIER_OVERRIDES_KEY,
     PRINTED_RULE_TOOLS,
-    RUFF_CHECK,
     RUFF_CHECK_IDS,
     RUFF_FORMAT_KEYS,
     RUFF_STYLE_KEYS,
     SCAN_FIRST_MESSAGE,
     UNREAD_CONFIG_MESSAGE,
     UNREADABLE_CONFIG_MESSAGE,
-} from '#cli/config/repository/setup.ts';
+} from '#cli/config/generation/setup.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { convertIgnorePattern, readIgnoreFiles } from '#cli/generation/setup/carryover/ignore-files.ts';

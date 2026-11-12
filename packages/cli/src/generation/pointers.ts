@@ -7,8 +7,8 @@ import {
     OVERRIDES_PLACEHOLDER,
     TARGET_MODULE_PLACEHOLDER,
     TARGET_PLACEHOLDER,
-} from '#cli/config/generation.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+} from '#cli/config/generation/files.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { listCheckTools } from '#cli/engine/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
@@ -31,7 +31,8 @@ import { getRequired } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { ConfigOwner } from '#cli/types/configurations/language.ts';
 import type { PlannedPointerField } from '#cli/types/generation.ts';
-import type { Config, ManagedKeys } from '#cli/types/repository.ts';
+import type { Config } from '#cli/types/manifests.ts';
+import type { ManagedKeys } from '#cli/types/repository.ts';
 import type { GeneratedFile, Session } from '#cli/types/tools.ts';
 
 function fillTarget(body: string, pointerPath: string, targetPath: string): string {

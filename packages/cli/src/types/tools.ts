@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { LOCKFILES } from '#cli/config/repository/javascript.ts';
+import type { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import type {
@@ -19,6 +19,7 @@ import type {
     PackageManagerPin,
     Repository,
     StartRunner,
+    ToolPackageManagerName,
 } from '#cli/types/repository.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { CancelableSpawnOptions, Files, RunCache } from '#cli/types/system.ts';
@@ -151,8 +152,6 @@ export type InstallResult = {
     notes: string[];
     steps: ReadonlyArray<readonly string[]>;
 };
-
-export type ToolPackageManagerName = Exclude<PackageManager['name'], 'yarn'>;
 
 export type ToolPackageManager = PackageManager & {
     name: ToolPackageManagerName;

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';

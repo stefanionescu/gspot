@@ -10,9 +10,9 @@ import type { ConfigOutput, FormatSettings, PlannedConfig } from '#cli/types/con
 import type { ConfigurationTables } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
-import type { Check, Configuration } from '#cli/types/manifests.ts';
+import type { Check, Config, Configuration } from '#cli/types/manifests.ts';
 import type { NumberedLine, ParsedTsconfig, SqlFile } from '#cli/types/parsers.ts';
-import type { Config, TrackedFile } from '#cli/types/repository.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
 import type { ImportRule, Level, TableSettings } from '#cli/types/settings.ts';
 import type { RunCache } from '#cli/types/system.ts';
 import type { ProseRoute } from '#cli/types/tools.ts';

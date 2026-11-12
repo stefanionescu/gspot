@@ -6,10 +6,10 @@ import { expect, test } from 'bun:test';
 
 import { runReportSchema } from '#cli/schemas/engine.ts';
 import { compareText } from '#cli/system/text.ts';
+import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { settingsEditOutputSchema } from '#tests/setup/schemas.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 function readKeys(stdout: string): string[] {

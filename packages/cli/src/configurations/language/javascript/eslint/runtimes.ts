@@ -6,11 +6,11 @@ import {
     COMMONJS_PACKAGE_TYPE,
     ESLINT_BROWSER_CONFIGURATIONS,
     ESLINT_SETTINGS_TABLE,
-    NEXTJS_CONFIGURATION,
     TYPELESS_JAVASCRIPT_FILES,
 } from '#cli/config/configurations/javascript.ts';
+import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/nextjs.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { compareScopeDepth, joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';

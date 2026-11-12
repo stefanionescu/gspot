@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
-import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/javascript.ts';
+import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/version-pin.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import type { ScanReport } from '#cli/types/commands/reports.ts';
 import type { CheckResult, Finding } from '#cli/types/engine/run.ts';
@@ -120,6 +120,34 @@ test('scan names the largest rules, takes examples from the largest, and groups 
     expect(report.notRun).toStrictEqual(['a/one, a/two: Install it.']);
     expect(formatScanText(report)).toContain(
         'To leave a rule out: gspot ignore python/ruff --rule E2 --reason "<why>"',
+    );
+});
+
+test('scan quotes a rule that a shell would split in the ignore line', async () => {
+    await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
+    const planning = await planInit(sandbox.path, { cwd: sandbox.path });
+    const report = buildScanReport({
+        planning,
+        session: planning.session,
+        report: {
+            ...SCAN_RUN_REPORT,
+            checks: [
+                {
+                    scope: '',
+                    fileCount: 1,
+                    duration: 1,
+                    check: 'python/ruff',
+                    status: 'failed',
+                    findings: [buildRuffFinding('two words', 1)],
+                },
+            ],
+        },
+        toolBytes: 0,
+        ruleRows: [],
+        leftOut: [],
+    });
+    expect(formatScanText(report)).toContain(
+        `To leave a rule out: gspot ignore python/ruff --rule 'two words' --reason "<why>"`,
     );
 });
 

@@ -4,7 +4,6 @@ import {
     GIT_SUFFIX,
     INLINE_COMMENT,
     JAVASCRIPT_RUNTIMES,
-    LINE_BREAK,
     LINE_CONTINUATION,
     PACKAGE_JSON,
     PACKAGE_SWIFT,
@@ -15,7 +14,8 @@ import {
     REQUIREMENT_NAME_END,
     REQUIREMENTS_TXT,
     RUNTIME_COMMAND,
-} from '#cli/config/parsers.ts';
+} from '#cli/config/parsers/projects.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';

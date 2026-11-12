@@ -9,7 +9,7 @@ import {
     STANDALONE_OPTIONS,
 } from '#cli/config/configurations/javascript.ts';
 import { JSCONFIG_FILE } from '#cli/config/engine.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';

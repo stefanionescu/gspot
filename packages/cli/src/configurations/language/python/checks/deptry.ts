@@ -10,7 +10,8 @@ import {
     PYTHON_SOURCE_FOLDER,
 } from '#cli/config/configurations/python.ts';
 import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/structure.ts';
-import { GSPOT_FOLDER, PYPROJECT_TOML } from '#cli/config/parsers.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
@@ -19,7 +20,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
-import { buildUvRunCommand } from '#cli/tools/uv.ts';
+import { buildUvRunCommand } from '#cli/tools/python-environment.ts';
 import { type DeptryProject } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';

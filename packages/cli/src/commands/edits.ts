@@ -7,8 +7,8 @@ import {
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION } from '#cli/config/commands/help.ts';
-import { BUNFIG_FILE, SCANNER_KEY } from '#cli/config/configurations/general.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/generation.ts';
+import { BUNFIG_FILE, SCANNER_KEY } from '#cli/config/configurations/dependencies.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findEmptySetting } from '#cli/engine/skips.ts';

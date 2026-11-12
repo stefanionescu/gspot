@@ -8,7 +8,7 @@ import {
     SWIFTFORMAT_OFF_REASONS,
     SWIFTFORMAT_OPTIONS,
 } from '#cli/config/configurations/swift.ts';
-import { PACKAGE_SWIFT, PBXPROJ_FILE } from '#cli/config/parsers.ts';
+import { PACKAGE_SWIFT, PBXPROJ_FILE } from '#cli/config/parsers/projects.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { getTable, selectFormat } from '#cli/settings/scopes.ts';

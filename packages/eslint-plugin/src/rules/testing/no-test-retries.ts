@@ -1,8 +1,8 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { MARKED_TEST_MODIFIERS, RETRY_MODULES } from '../../config/testing.ts';
+import { RETRY_MODULES } from '../../config/testing.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 
 function getJestOrigin(node: TSESTree.Node, source: TSESLint.SourceCode): string | undefined {
@@ -43,12 +43,9 @@ export const noTestRetries = createRule<[], 'retry'>({
             'CallExpression[callee.object.type="ThisExpression"][callee.property.name="retries"]'(
                 node: TSESTree.CallExpression,
             ) {
-                const isInSuite = source.getAncestors(node).some((ancestor) => {
-                    const call =
-                        ancestor.type === AST_NODE_TYPES.CallExpression ? getTestCall(ancestor, source) : undefined;
-                    const isMarked = call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true;
-                    return isMarked && (call.name === 'describe' || call.name === 'context');
-                });
+                const isInSuite = listEnclosingTestCalls(node, source).some(
+                    ({ name }) => name === 'describe' || name === 'context',
+                );
                 if (isInSuite) context.report({ node, messageId: 'retry' });
             },
         };

@@ -12,19 +12,19 @@ import {
     SETTING_ONLY_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
 } from '#cli/config/engine.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { extractConfigName } from '#cli/engine/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { addPluginExtensions } from '#cli/repository/files/selection.ts';
-import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { compareText, formatScope } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { CommandArgument, CommandLine, ConfigTargets, Substitutions } from '#cli/types/engine/tool-runs.ts';
-import type { Config } from '#cli/types/repository.ts';
+import type { Config } from '#cli/types/manifests.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {

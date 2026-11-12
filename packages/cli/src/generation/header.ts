@@ -5,7 +5,7 @@ import {
     JSON_EXTENSIONS,
     SLASH_COMMENT_EXTENSIONS,
     SLASH_COMMENT_FILES,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/files.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 

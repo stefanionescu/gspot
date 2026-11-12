@@ -6,8 +6,8 @@ import { globSync } from 'tinyglobby';
 import { YAMLError } from 'yaml';
 import { z } from 'zod';
 
-import { PACKAGE_JSON } from '#cli/config/parsers.ts';
-import { LERNA_FILE, PNPM_WORKSPACE_FILE, RUSH_FILE } from '#cli/config/repository/javascript.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { LERNA_FILE, PNPM_WORKSPACE_FILE, RUSH_FILE } from '#cli/config/repository/package-managers.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';

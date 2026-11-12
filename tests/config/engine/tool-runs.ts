@@ -1,4 +1,4 @@
-import { GSPOT_FOLDER } from '#cli/config/parsers.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 
 export const SESSION_FILES = {
     'package.json': '{"private":true,"packageManager":"bun@1.2.3"}\n',

@@ -2,9 +2,9 @@ import { readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { LINE_BREAK } from '#cli/config/parsers.ts';
 import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 import { PRE_COMMIT_FILE } from '#cli/config/repository/setup.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
 import {
     CHECK_HOOKS,
     HOOK_CHECKS,
